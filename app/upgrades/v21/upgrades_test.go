@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	v21UpgradeHeight = 10
+	v21UpgradeHeight = int64(10)
 )
 
 type UpgradeTestSuite struct {
@@ -46,10 +46,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	allProtocolRevenue := s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
 	// Check all accounting start heights should be the same height as the upgrade
-	s.Require().Equal(uint64(v21UpgradeHeight), allProtocolRevenue.CyclicArbTracker.HeightAccountingStartsFrom)
-	s.Require().Equal(uint64(v21UpgradeHeight), allProtocolRevenue.TakerFeesToCommunityPoolTracker.HeightAccountingStartsFrom)
-	s.Require().Equal(uint64(v21UpgradeHeight), allProtocolRevenue.TakerFeesToStakersTracker.HeightAccountingStartsFrom)
-	s.Require().Equal(uint64(v21UpgradeHeight), allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.CyclicArbTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TakerFeesToCommunityPoolTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TakerFeesToStakersTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
 	// All values should be nill except for the cyclic arb profits, which should start at the value it was at time of upgrade
 	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
 	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesToStakersTracker.TakerFeesToStakers)
