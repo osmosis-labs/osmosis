@@ -92,8 +92,10 @@ service Query {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
   }
   // ListPoolsByDenom return all pools by denom
-  rpc ListPoolsByDenom(ListPoolsByDenomRequest) returns (ListPoolsByDenomResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/list-pools-by-denom";
+  rpc ListPoolsByDenom(ListPoolsByDenomRequest)
+      returns (ListPoolsByDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/list-pools-by-denom";
   }
 
   // SpotPrice defines a gRPC query handler that returns the spot price given
@@ -241,10 +243,8 @@ message AllPoolsResponse {
 // =======================================================
 // ListPoolsByDenomRequest
 message ListPoolsByDenomRequest {
-  string denom = 1
-      [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
 }
-
 
 message ListPoolsByDenomResponse {
   repeated google.protobuf.Any pools = 1
