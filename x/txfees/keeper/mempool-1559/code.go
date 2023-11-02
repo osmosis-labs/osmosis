@@ -115,6 +115,7 @@ func (e *EipState) tryLoad() sdk.Dec {
 	bz, err := os.ReadFile(BackupFile)
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)
+		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
 		return MinBaseFee
 	}
 
@@ -122,8 +123,10 @@ func (e *EipState) tryLoad() sdk.Dec {
 	err = json.Unmarshal(bz, &loaded)
 	if err != nil {
 		fmt.Println("Error unmarshalling eip1559 state", err)
+		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
 		return MinBaseFee
 	}
 
+	fmt.Println("Loaded eip1559 state. CurBaseFee=", loaded.CurBaseFee)
 	return loaded.CurBaseFee
 }
