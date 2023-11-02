@@ -35,6 +35,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
+	interchainqueriestypes "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
@@ -53,6 +54,10 @@ import (
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
+	contractmanagerkeeper "github.com/osmosis-labs/osmosis/v20/x/contractmanager/keeper"
+	contractmanagertypes "github.com/osmosis-labs/osmosis/v20/x/contractmanager/types"
+	interchainquerieskeeper "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/keeper"
+
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v4/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -149,6 +154,8 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
+	ContractManagerKeeper        *contractmanagerkeeper.Keeper
+	InterchainQueriesKeeper      *interchainquerieskeeper.Keeper
 
 	// IBC modules
 	// transfer module
@@ -456,7 +463,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2"
 
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper, app.InterchainQueriesKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(
@@ -480,6 +487,26 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
+
+	appKeepers.ContractManagerKeeper = contractmanagerkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[contractmanagertypes.StoreKey],
+		appKeepers.keys[contractmanagertypes.MemStoreKey],
+		appKeepers.GetSubspace(contractmanagertypes.ModuleName),
+		appKeepers.WasmKeeper,
+	)
+
+	appKeepers.InterchainQueriesKeeper = interchainquerieskeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[interchainqueriestypes.StoreKey],
+		appKeepers.keys[interchainqueriestypes.MemStoreKey],
+		appKeepers.GetSubspace(interchainqueriestypes.ModuleName),
+		appKeepers.IBCKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.ContractManagerKeeper,
+		interchainquerieskeeper.Verifier{},
+		interchainquerieskeeper.TransactionVerifier{},
+	)
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -802,5 +829,7 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
+		contractmanagertypes.StoreKey,
+		interchainqueriestypes.StoreKey,
 	}
 }

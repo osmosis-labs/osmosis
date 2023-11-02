@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"fmt"
+	interchainquerieskeeper "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -11,12 +12,14 @@ import (
 
 type QueryPlugin struct {
 	tokenFactoryKeeper *tokenfactorykeeper.Keeper
+	icqKeeper          *interchainquerieskeeper.Keeper
 }
 
 // NewQueryPlugin returns a reference to a new QueryPlugin.
-func NewQueryPlugin(tfk *tokenfactorykeeper.Keeper) *QueryPlugin {
+func NewQueryPlugin(tfk *tokenfactorykeeper.Keeper, icqk *interchainquerieskeeper.Keeper) *QueryPlugin {
 	return &QueryPlugin{
 		tokenFactoryKeeper: tfk,
+		icqKeeper:          icqk,
 	}
 }
 
@@ -29,3 +32,25 @@ func (qp QueryPlugin) GetDenomAdmin(ctx sdk.Context, denom string) (*bindings.De
 
 	return &bindings.DenomAdminResponse{Admin: metadata.Admin}, nil
 }
+
+//func (qp *QueryPlugin) GetInterchainQueryResult(ctx sdk.Context, queryID uint64) (*bindings.QueryRegisteredQueryResultResponse, error) {
+//	grpcResp, err := qp.icqKeeper.GetQueryResultByID(ctx, queryID)
+//	if err != nil {
+//		return nil, err
+//	}
+//	resp := bindings.QueryResult{
+//		KvResults: make([]*bindings.StorageValue, 0, len(grpcResp.KvResults)),
+//		Height:    grpcResp.GetHeight(),
+//		Revision:  grpcResp.GetRevision(),
+//	}
+//	for _, grpcKv := range grpcResp.GetKvResults() {
+//		kv := bindings.StorageValue{
+//			StoragePrefix: grpcKv.GetStoragePrefix(),
+//			Key:           grpcKv.GetKey(),
+//			Value:         grpcKv.GetValue(),
+//		}
+//		resp.KvResults = append(resp.KvResults, &kv)
+//	}
+//
+//	return &bindings.QueryRegisteredQueryResultResponse{Result: &resp}, nil
+//}

@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	interchainquerieskeeper "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,8 +16,9 @@ import (
 func RegisterCustomPlugins(
 	bank *bankkeeper.BaseKeeper,
 	tokenFactory *tokenfactorykeeper.Keeper,
+	interchainQueries *interchainquerieskeeper.Keeper,
 ) []wasmkeeper.Option {
-	wasmQueryPlugin := NewQueryPlugin(tokenFactory)
+	wasmQueryPlugin := NewQueryPlugin(tokenFactory, interchainQueries)
 
 	queryPluginOpt := wasmkeeper.WithQueryPlugins(&wasmkeeper.QueryPlugins{
 		Custom: CustomQuerier(wasmQueryPlugin),

@@ -7,6 +7,8 @@ import (
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	"github.com/osmosis-labs/osmosis/v20/x/contractmanager"
+	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -124,4 +126,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ibcratelimitmodule.AppModuleBasic{},
 	router.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
+	contractmanager.AppModuleBasic{},
+	interchainqueries.AppModuleBasic{},
 }

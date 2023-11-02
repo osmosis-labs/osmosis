@@ -6,14 +6,16 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
-
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/contractmanager"
+	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries"
 
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
+	interchainqueriestypes "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
@@ -123,6 +125,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
+	interchainqueriestypes.ModuleName:             nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -186,6 +189,8 @@ func appModules(
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
+		contractmanager.NewAppModule(appCodec, *app.ContractManagerKeeper),
+		interchainqueries.NewAppModule(appCodec, *app.InterchainQueriesKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
