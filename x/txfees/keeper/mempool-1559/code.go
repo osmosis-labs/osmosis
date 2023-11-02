@@ -1,7 +1,9 @@
 package mempool1559
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,6 +33,7 @@ var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
 var TargetGas = int64(70_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
+var BackupFile = "eip1559state.json"
 
 type EipState struct {
 	// Signal when we are starting a new block
@@ -38,18 +41,24 @@ type EipState struct {
 	lastBlockHeight         int64
 	totalGasWantedThisBlock int64
 
-	CurBaseFee sdk.Dec
+	CurBaseFee sdk.Dec `json:"cur_base_fee"`
 }
 
 var CurEipState = EipState{
 	lastBlockHeight:         0,
 	totalGasWantedThisBlock: 0,
-	CurBaseFee:              DefaultBaseFee.Clone(),
+	CurBaseFee:              sdk.NewDec(0),
 }
 
 func (e *EipState) startBlock(height int64) {
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
+
+	if e.CurBaseFee.Equal(sdk.NewDec(0)) {
+		// CurBaseFee has not been initialized yet. This only happens when the node has just started.
+		// Try to read the previous value from the backup file and if not available, set it to the default.
+		e.CurBaseFee = e.tryLoad()
+	}
 
 	if height%ResetInterval == 0 {
 		e.CurBaseFee = DefaultBaseFee.Clone()
@@ -84,8 +93,44 @@ func (e *EipState) updateBaseFee(height int64) {
 	if e.CurBaseFee.LT(MinBaseFee) {
 		e.CurBaseFee = MinBaseFee.Clone()
 	}
+
+	go e.tryPersist()
 }
 
 func (e *EipState) GetCurBaseFee() sdk.Dec {
 	return e.CurBaseFee.Clone()
+}
+
+func (e *EipState) tryPersist() {
+	bz, err := json.Marshal(e)
+	if err != nil {
+		fmt.Println("Error marshalling eip1559 state", err)
+		return
+	}
+
+	err = os.WriteFile(BackupFile, bz, 0644)
+	if err != nil {
+		fmt.Println("Error writing eip1559 state", err)
+		return
+	}
+}
+
+func (e *EipState) tryLoad() sdk.Dec {
+	bz, err := os.ReadFile(BackupFile)
+	if err != nil {
+		fmt.Println("Error reading eip1559 state", err)
+		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
+		return MinBaseFee
+	}
+
+	var loaded EipState
+	err = json.Unmarshal(bz, &loaded)
+	if err != nil {
+		fmt.Println("Error unmarshalling eip1559 state", err)
+		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
+		return MinBaseFee
+	}
+
+	fmt.Println("Loaded eip1559 state. CurBaseFee=", loaded.CurBaseFee)
+	return loaded.CurBaseFee
 }
