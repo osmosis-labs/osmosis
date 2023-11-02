@@ -17,17 +17,17 @@ type ImageConfig struct {
 const (
 	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
-	// This image should be pre-built with `make docker-build-debug` either in CI or locally.
+	// This image should be pre-built with `make e2e-docker-build-debug` either in CI or locally.
 	CurrentBranchOsmoRepository = "osmosis"
 	CurrentBranchOsmoTag        = "debug"
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
 	previousVersionOsmoRepository = "osmolabs/osmosis"
-	previousVersionOsmoTag        = "19.0.0-alpine"
+	previousVersionOsmoTag        = "20.1.0-alpine"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "19.0.0"
+	previousVersionInitTag        = "20.1.0"
 	// Hermes repo/version for relayer
 	relayerRepository = "informalsystems/hermes"
 	relayerTag        = "1.5.1"

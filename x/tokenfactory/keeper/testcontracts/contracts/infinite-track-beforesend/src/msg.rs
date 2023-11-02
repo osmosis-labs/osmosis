@@ -11,4 +11,9 @@ pub enum SudoMsg {
         to: String,
         amount: Coin,
     },
+    BlockBeforeSend {
+        from: String,
+        to: String,
+        amount: Coin,
+    },
 }
