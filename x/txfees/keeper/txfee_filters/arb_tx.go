@@ -58,11 +58,27 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 		}
 	}
 
+	multiSwapMsg, isMultiSwapMsg := msg.(poolmanagertypes.MultiSwapMsgRoute)
+	if isMultiSwapMsg {
+		for _, swapMsg := range multiSwapMsg.GetSwapMsgs() {
+			// TODO: Fix this later
+			swapInDenom, isArb := isArbTxLooseSwapMsg(swapMsg, swapInDenom)
+			if isArb {
+				return swapInDenom, true
+			}
+		}
+		return swapInDenom, false
+	}
+
 	swapMsg, isSwapMsg := msg.(poolmanagertypes.SwapMsgRoute)
 	if !isSwapMsg {
 		return swapInDenom, false
 	}
 
+	return isArbTxLooseSwapMsg(swapMsg, swapInDenom)
+}
+
+func isArbTxLooseSwapMsg(swapMsg poolmanagertypes.SwapMsgRoute, swapInDenom string) (string, bool) {
 	// (1) Check that swap denom in != swap denom out
 	if swapMsg.TokenInDenom() == swapMsg.TokenOutDenom() {
 		return swapInDenom, true
