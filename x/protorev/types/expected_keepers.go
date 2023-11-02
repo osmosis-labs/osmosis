@@ -62,7 +62,7 @@ type PoolManagerKeeper interface {
 	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 	GetTakerFeeTrackerForStakers(ctx sdk.Context) sdk.Coins
 	GetTakerFeeTrackerForCommunityPool(ctx sdk.Context) sdk.Coins
-	GetTakerFeeTrackerStartHeight(ctx sdk.Context) uint64
+	GetTakerFeeTrackerStartHeight(ctx sdk.Context) int64
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when
@@ -84,5 +84,5 @@ type ConcentratedLiquidityKeeper interface {
 
 type TxFeesKeeper interface {
 	GetTxFeesTrackerValue(ctx sdk.Context) (currentTxFees sdk.Coins)
-	GetTxFeesTrackerStartHeight(ctx sdk.Context) uint64
+	GetTxFeesTrackerStartHeight(ctx sdk.Context) int64
 }

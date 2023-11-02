@@ -98,7 +98,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if genState.CyclicArbTracker.HeightAccountingStartsFrom != 0 {
 		k.SetCyclicArbProfitTrackerStartHeight(ctx, genState.CyclicArbTracker.HeightAccountingStartsFrom)
 	} else {
-		k.SetCyclicArbProfitTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+		k.SetCyclicArbProfitTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
 }
 

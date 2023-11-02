@@ -54,8 +54,8 @@ func (s *KeeperTestSuite) TestGetSetTxFeesTrackerValue() {
 
 func (s *KeeperTestSuite) TestGetSetTxFeesTrackerStartHeight() {
 	tests := map[string]struct {
-		firstTxFeesTrackerStartHeight  uint64
-		secondTxFeesTrackerStartHeight uint64
+		firstTxFeesTrackerStartHeight  int64
+		secondTxFeesTrackerStartHeight int64
 	}{
 		"replace tracker height with a higher height": {
 			firstTxFeesTrackerStartHeight:  100,

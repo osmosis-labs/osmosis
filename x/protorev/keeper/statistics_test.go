@@ -244,8 +244,8 @@ func (s *KeeperTestSuite) TestGetSetCyclicArbProfitTrackerValue() {
 
 func (s *KeeperTestSuite) TestGetSetCyclicArbProfitTrackerStartHeight() {
 	tests := map[string]struct {
-		firstCyclicArbStartHeight  uint64
-		secondCyclicArbStartHeight uint64
+		firstCyclicArbStartHeight  int64
+		secondCyclicArbStartHeight int64
 	}{
 		"replace tracker height with a higher height": {
 			firstCyclicArbStartHeight:  100,

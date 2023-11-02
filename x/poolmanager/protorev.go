@@ -89,13 +89,13 @@ func (k Keeper) GetTakerFeeTrackerForCommunityPool(ctx sdk.Context) (currentTake
 }
 
 // GetTakerFeeTrackerStartHeight gets the height from which we started accounting for taker fees.
-func (k Keeper) GetTakerFeeTrackerStartHeight(ctx sdk.Context) uint64 {
-	startHeight := gogotypes.UInt64Value{}
+func (k Keeper) GetTakerFeeTrackerStartHeight(ctx sdk.Context) int64 {
+	startHeight := gogotypes.Int64Value{}
 	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.KeyTakerFeeProtoRevAccountingHeight, &startHeight)
 	return startHeight.Value
 }
 
 // SetTakerFeeTrackerStartHeight sets the height from which we started accounting for taker fees.
-func (k Keeper) SetTakerFeeTrackerStartHeight(ctx sdk.Context, startHeight uint64) {
-	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyTakerFeeProtoRevAccountingHeight, &gogotypes.UInt64Value{Value: startHeight})
+func (k Keeper) SetTakerFeeTrackerStartHeight(ctx sdk.Context, startHeight int64) {
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyTakerFeeProtoRevAccountingHeight, &gogotypes.Int64Value{Value: startHeight})
 }

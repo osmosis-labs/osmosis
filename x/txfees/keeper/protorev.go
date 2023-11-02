@@ -51,13 +51,13 @@ func (k Keeper) GetTxFeesTrackerValue(ctx sdk.Context) (currentTxFees sdk.Coins)
 }
 
 // GetTxFeesTrackerStartHeight gets the height from which we started accounting for txfees.
-func (k Keeper) GetTxFeesTrackerStartHeight(ctx sdk.Context) uint64 {
-	startHeight := gogotypes.UInt64Value{}
+func (k Keeper) GetTxFeesTrackerStartHeight(ctx sdk.Context) int64 {
+	startHeight := gogotypes.Int64Value{}
 	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.KeyTxFeeProtorevTrackerStartHeight, &startHeight)
 	return startHeight.Value
 }
 
 // SetTxFeesTrackerStartHeight sets the height from which we started accounting for txfees.
-func (k Keeper) SetTxFeesTrackerStartHeight(ctx sdk.Context, startHeight uint64) {
-	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyTxFeeProtorevTrackerStartHeight, &gogotypes.UInt64Value{Value: startHeight})
+func (k Keeper) SetTxFeesTrackerStartHeight(ctx sdk.Context, startHeight int64) {
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyTxFeeProtorevTrackerStartHeight, &gogotypes.Int64Value{Value: startHeight})
 }

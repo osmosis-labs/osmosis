@@ -115,15 +115,15 @@ func (k Keeper) GetCyclicArbProfitTrackerValue(ctx sdk.Context) (currentCyclicAr
 }
 
 // GetCyclicArbProfitTrackerStartHeight gets the height from which we started accounting for cyclic arb profits.
-func (k Keeper) GetCyclicArbProfitTrackerStartHeight(ctx sdk.Context) uint64 {
-	startHeight := gogotypes.UInt64Value{}
+func (k Keeper) GetCyclicArbProfitTrackerStartHeight(ctx sdk.Context) int64 {
+	startHeight := gogotypes.Int64Value{}
 	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTrackerStartHeight, &startHeight)
 	return startHeight.Value
 }
 
 // SetCyclicArbProfitTrackerStartHeight sets the height from which we started accounting for cyclic arb profits.
-func (k Keeper) SetCyclicArbProfitTrackerStartHeight(ctx sdk.Context, startHeight uint64) {
-	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTrackerStartHeight, &gogotypes.UInt64Value{Value: startHeight})
+func (k Keeper) SetCyclicArbProfitTrackerStartHeight(ctx sdk.Context, startHeight int64) {
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTrackerStartHeight, &gogotypes.Int64Value{Value: startHeight})
 }
 
 // UpdateProfitsByDenom updates the profits made by the ProtoRev module for the given denom

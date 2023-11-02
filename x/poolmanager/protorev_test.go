@@ -78,8 +78,8 @@ func (s *KeeperTestSuite) TestGetSetTakerFeeTrackerForStakersAndCommunityPool() 
 
 func (s *KeeperTestSuite) TestGetSetTakerFeeTrackerStartHeight() {
 	tests := map[string]struct {
-		firstTakerFeeTrackerStartHeight  uint64
-		secondTakerFeeTrackerStartHeight uint64
+		firstTakerFeeTrackerStartHeight  int64
+		secondTakerFeeTrackerStartHeight int64
 	}{
 		"replace tracker height with a higher height": {
 			firstTakerFeeTrackerStartHeight:  100,

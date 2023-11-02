@@ -26,7 +26,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetTxFeesTrackerStartHeight(ctx, genState.TxFeesTracker.HeightAccountingStartsFrom)
 	} else {
 		k.SetTxFeesTrackerValue(ctx, sdk.NewCoins())
-		k.SetTxFeesTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+		k.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
 }
 

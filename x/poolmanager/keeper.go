@@ -106,14 +106,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesToStakersTracker.HeightAccountingStartsFrom)
 	} else {
 		k.SetTakerFeeTrackerForStakers(ctx, sdk.NewCoins())
-		k.SetTakerFeeTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
 	if genState.TakerFeesToCommunityPoolTracker != nil {
 		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
 		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesToCommunityPoolTracker.HeightAccountingStartsFrom)
 	} else {
 		k.SetTakerFeeTrackerForCommunityPool(ctx, sdk.NewCoins())
-		k.SetTakerFeeTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
 }
 
