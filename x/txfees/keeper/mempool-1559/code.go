@@ -20,7 +20,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 // TODO: Change this percentage update time to be faster
 
 // TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
-// ALt: do that with an enable/disable flag.
+// ALt: do that with an enable/disable flag. THat seems likes a better idea
 var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
 var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
 var TargetGas = int64(90_000_000)
@@ -39,7 +39,7 @@ type EipState struct {
 var CurEipState = EipState{
 	lastBlockHeight:         0,
 	totalGasWantedThisBlock: 0,
-	CurBaseFee:              DefaultBaseFee,
+	CurBaseFee:              DefaultBaseFee.Clone(),
 }
 
 func (e *EipState) startBlock(height int64) {
@@ -47,7 +47,7 @@ func (e *EipState) startBlock(height int64) {
 	e.totalGasWantedThisBlock = 0
 
 	if height%ResetInterval == 0 {
-		e.CurBaseFee = DefaultBaseFee
+		e.CurBaseFee = DefaultBaseFee.Clone()
 	}
 }
 
@@ -70,10 +70,10 @@ func (e *EipState) updateBaseFee(height int64) {
 
 	// Make a min base fee
 	if e.CurBaseFee.LT(MinBaseFee) {
-		e.CurBaseFee = MinBaseFee
+		e.CurBaseFee = MinBaseFee.Clone()
 	}
 }
 
 func (e *EipState) GetCurBaseFee() sdk.Dec {
-	return e.CurBaseFee
+	return e.CurBaseFee.Clone()
 }
