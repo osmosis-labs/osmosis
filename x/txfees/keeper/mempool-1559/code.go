@@ -27,7 +27,7 @@ import (
 // ALt: do that with an enable/disable flag. THat seems likes a better idea
 var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
 var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
-var TargetGas = int64(90_000_000)
+var TargetGas = int64(40_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
 
