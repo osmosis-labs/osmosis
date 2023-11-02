@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 
@@ -136,6 +137,9 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 	return nil
 }
 
+// TODO: Go read this from mfd.Opts
+var is1559enabled = true
+
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
@@ -144,6 +148,9 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	}
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+	}
+	if is1559enabled {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
 	}
 	return cfgMinGasPrice
 }
