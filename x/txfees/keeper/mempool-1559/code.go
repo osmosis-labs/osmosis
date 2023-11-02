@@ -35,6 +35,7 @@ var TargetGas = int64(70_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
 var BackupFile = "eip1559state.json"
+var RecheckFeeConstant = int64(10)
 
 type EipState struct {
 	// Signal when we are starting a new block
@@ -105,6 +106,10 @@ func (e *EipState) updateBaseFee(height int64) {
 
 func (e *EipState) GetCurBaseFee() sdk.Dec {
 	return e.CurBaseFee.Clone()
+}
+
+func (e *EipState) GetCurRecheckBaseFee() sdk.Dec {
+	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
 }
 
 func (e *EipState) tryPersist() {

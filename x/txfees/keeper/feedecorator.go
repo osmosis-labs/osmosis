@@ -159,6 +159,10 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
 	}
+	// RecheckTx only
+	if is1559enabled && ctx.IsReCheckTx() {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
+	}
 	return cfgMinGasPrice
 }
 
