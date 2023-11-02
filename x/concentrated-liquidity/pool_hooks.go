@@ -23,29 +23,31 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 	}()
 
 	cosmwasmAddress := k.getPoolHookContract(ctx, poolId, actionPrefix)
-	if cosmwasmAddress != "" {
-		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
-		if err != nil {
-			return err
-		}
-
-		em := sdk.NewEventManager()
-
-		// Since it is possible for this hook to be triggered in begin block code, we need to
-		// directly meter its execution and set a limit. See comments on `ContractHookGasLimit`
-		// for details on how the specific limit was chosen.
-		//
-		// We ensure this limit only applies to this call by creating a child context with a gas
-		// limit and then metering the gas used in parent context once the operation is completed.
-		childCtx := ctx.WithGasMeter(sdk.NewGasMeter(k.GetParams(ctx).HookGasLimit))
-		_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
-		if err != nil {
-			return err
-		}
-
-		// Consume gas used for calling contract to the parent ctx
-		ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track CL action contract call gas")
+	if cosmwasmAddress == "" {
+		return nil
 	}
+
+	cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
+	if err != nil {
+		return err
+	}
+
+	em := sdk.NewEventManager()
+
+	// Since it is possible for this hook to be triggered in begin block code, we need to
+	// directly meter its execution and set a limit. See comments on `ContractHookGasLimit`
+	// for details on how the specific limit was chosen.
+	//
+	// We ensure this limit only applies to this call by creating a child context with a gas
+	// limit and then metering the gas used in parent context once the operation is completed.
+	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(k.GetParams(ctx).HookGasLimit))
+	_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
+	if err != nil {
+		return err
+	}
+
+	// Consume gas used for calling contract to the parent ctx
+	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track CL action contract call gas")
 
 	return nil
 }

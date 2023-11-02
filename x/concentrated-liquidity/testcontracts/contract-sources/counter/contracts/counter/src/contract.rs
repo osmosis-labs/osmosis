@@ -8,7 +8,7 @@ use crate::msg::{InstantiateMsg, SudoMsg};
 use crate::state::{State, STATE};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:infinite-track-beforesend";
+const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Handling contract instantiation
