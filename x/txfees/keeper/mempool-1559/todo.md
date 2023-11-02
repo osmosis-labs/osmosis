@@ -24,3 +24,5 @@ Make a setting to turn on/off this 1559
 - Maybe I described it in a github issue?
 
 ## Fix the problem mentioned, but dont want to put in github (OOO)
+
+## File persistence

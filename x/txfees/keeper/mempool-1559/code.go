@@ -13,6 +13,7 @@ import (
 // - Evaluate CheckTx/RecheckTx against this.
 //
 // 1000 blocks = almost 2 hours, maybe we need a smaller time for resets?
+// Lets say 500 blocks = 1 hour
 //
 // PROBLEMS: Currently, a node will throw out any tx that gets under its gas bound here.
 // :OOO We can just do this on checkTx not recheck
@@ -27,7 +28,7 @@ import (
 // ALt: do that with an enable/disable flag. THat seems likes a better idea
 var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
 var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
-var TargetGas = int64(40_000_000)
+var TargetGas = int64(70_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
 
@@ -60,16 +61,19 @@ func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 		fmt.Println("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
 	}
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
-	fmt.Println("height, tx gas, blockGas", ctx.BlockHeight(), tx.GetGas(), e.totalGasWantedThisBlock)
+	// fmt.Println("height, tx gas, blockGas", ctx.BlockHeight(), tx.GetGas(), e.totalGasWantedThisBlock)
 }
 
 // Equation is:
 // baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
 // newBaseFee = baseFee * baseFeeMultiplier
 func (e *EipState) updateBaseFee(height int64) {
-	gasUsed := e.totalGasWantedThisBlock
-	// obvi fix
+	if height != e.lastBlockHeight {
+		fmt.Println("Something is off here? height != e.lastBlockHeight", height, e.lastBlockHeight)
+	}
 	e.lastBlockHeight = height
+
+	gasUsed := e.totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
 	//  (gasUsed - targetGas) / targetGas * maxChangeRate
 	baseFeeIncrement := sdk.NewDec(gasDiff).Quo(sdk.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
