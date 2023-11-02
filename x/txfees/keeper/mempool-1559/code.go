@@ -26,7 +26,7 @@ var TargetGas = int64(90_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
 
-type eipState struct {
+type EipState struct {
 	// Signal when we are starting a new block
 	// TODO: Or just use begin block
 	lastBlockHeight         int64
@@ -35,13 +35,13 @@ type eipState struct {
 	CurBaseFee sdk.Dec
 }
 
-var CurEipState = eipState{
+var CurEipState = EipState{
 	lastBlockHeight:         0,
 	totalGasWantedThisBlock: 0,
 	CurBaseFee:              DefaultBaseFee,
 }
 
-func (e *eipState) startBlock(height int64) {
+func (e *EipState) startBlock(height int64) {
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
 
@@ -50,14 +50,14 @@ func (e *eipState) startBlock(height int64) {
 	}
 }
 
-func (e *eipState) deliverTxCode(_ sdk.Context, tx sdk.FeeTx) {
+func (e *EipState) deliverTxCode(_ sdk.Context, tx sdk.FeeTx) {
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
 }
 
 // Equation is:
 // baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
 // newBaseFee = baseFee * baseFeeMultiplier
-func (e *eipState) updateBaseFee(height int64) {
+func (e *EipState) updateBaseFee(height int64) {
 	gasUsed := e.totalGasWantedThisBlock
 	// obvi fix
 	e.lastBlockHeight = height
@@ -68,6 +68,6 @@ func (e *eipState) updateBaseFee(height int64) {
 	e.CurBaseFee.MulMut(baseFeeMultiplier)
 }
 
-func (e *eipState) GetCurBaseFee() sdk.Dec {
+func (e *EipState) GetCurBaseFee() sdk.Dec {
 	return e.CurBaseFee
 }

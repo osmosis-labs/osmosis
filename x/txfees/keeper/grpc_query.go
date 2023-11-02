@@ -19,6 +19,7 @@ var _ types.QueryServer = Querier{}
 // handlers.
 type Querier struct {
 	Keeper
+	mempool1559.EipState
 }
 
 func NewQuerier(k Keeper) Querier {
