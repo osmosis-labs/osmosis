@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -107,7 +108,23 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// Calculate the amount of liquidity that will be added to the pool when this position is created.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
-		return CreatePositionData{}, errors.New("liquidityDelta calculated equals zero")
+		// Note that it is impossible to reach the case with both tokens being zero because that case is handled above.
+
+		if !amount0Desired.IsZero() && !amount1Desired.IsZero() {
+			return CreatePositionData{}, fmt.Errorf(`failed to translate amount0 (%d) and amount1 (%d) to positive liquidity. Possible reasons could be:
+			Not providing enough liquidity in both tokens
+			The desired tick range becoming inactive. If range becomes inactive before getting on chain, more of one token will be required as opposed to two tokens of the original amount`, amount0Desired, amount1Desired)
+		} else if amount0Desired.IsZero() {
+			return CreatePositionData{}, fmt.Errorf(`failed to translate amount1 (%d) to positive liquidity. Possible reasons could be:
+			Not providing enough liquidity in token 1.
+			The given tick range becoming activated after being inactive. If the given range becomes activated, two tokens will be needed as opposed to one.`, amount1Desired)
+		}
+
+		// amount1Desired is zero
+
+		return CreatePositionData{}, fmt.Errorf(`failed to translate amount0 (%d) to positive liquidity. Possible reasons could be:
+		Not providing enough liquidity in token 0.
+		The given tick range becoming activated after being inactive. If the given range becomes activated, two tokens will be needed as opposed to one.`, amount0Desired)
 	}
 
 	// Initialize / update the position in the pool based on the provided tick range and liquidity delta.
