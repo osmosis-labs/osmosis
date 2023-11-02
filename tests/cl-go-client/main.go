@@ -67,8 +67,8 @@ const (
 const (
 	expectedPoolId           uint64 = 1
 	addressPrefix                   = "osmo"
-	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "3000uosmo"
+	localosmosisFromHomePath        = "/.test"
+	consensusFee                    = "200000uosmo"
 	denom0                          = "uosmo"
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
@@ -116,6 +116,7 @@ func main() {
 		log.Fatal(err)
 	}
 	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
+	// igniteClient.Context().BroadcastMode
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
@@ -203,10 +204,13 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 }
 
 func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
-	for i := 0; i < numSwaps; i++ {
+
+	wg := sync.WaitGroup{}
+
+	for {
 		var (
-			randAccountNum = rand.Intn(8) + 1
-			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+			// randAccountNum = rand.Intn(8) + 1
+			accountName = "lo-test1"
 
 			isToken0In = rand.Intn(2) == 0
 
@@ -221,11 +225,18 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 		}
 		tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
-		runMessageWithRetries(func() error {
-			_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
-			return err
-		})
+		wg.Add(1)
+		go func() {
+			runMessageWithRetries(func() error {
+				_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+
+				wg.Done()
+				return err
+			})
+		}()
 	}
+
+	wg.Wait()
 
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
@@ -673,10 +684,17 @@ func claimIncentivesOp(igniteClient cosmosclient.Client) {
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
-	account, err := igniteClient.Account(accountName)
+	fmt.Println("ACCOUNT", accountName)
+	account, err := igniteClient.AccountRegistry.GetByName(accountName)
 	if err != nil {
 		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
 	}
+
+	// if account == nil {
+	// 	fmt.Println("nil account")
+	// }
+	fmt.Println("HEEERREEE")
+	fmt.Println(account)
 
 	address := account.Address(addressPrefix)
 	if err != nil {
