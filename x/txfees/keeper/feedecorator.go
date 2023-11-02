@@ -58,6 +58,12 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, types.ErrTooManyFeeCoins
 	}
 
+	// TODO: Is there a better way to do this?
+	// I want ctx.IsDeliverTx()
+	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		mempool1559.DeliverTxCode(ctx, feeTx)
+	}
+
 	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
 	if err != nil {
 		return ctx, err
@@ -149,7 +155,8 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
-	if is1559enabled {
+	// Initial tx only, no recheck
+	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
 	}
 	return cfgMinGasPrice

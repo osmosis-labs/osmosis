@@ -11,6 +11,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 // 1000 blocks = almost 2 hours, maybe we need a smaller time for resets?
 //
 // PROBLEMS: Currently, a node will throw out any tx that gets under its gas bound here.
+// :OOO We can just do this on checkTx not recheck
 //
 // Variables we can control for:
 // - fees paid per unit gas
@@ -20,9 +21,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
 // ALt: do that with an enable/disable flag.
-var defaultBaseFee = sdk.MustNewDecFromStr("1.0")
-var target_gas = int64(90_000_000)
-var max_block_change_rate = sdk.NewDec(1).Quo(sdk.NewDec(16))
+var DefaultBaseFee = sdk.MustNewDecFromStr("1.0")
+var TargetGas = int64(90_000_000)
+var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 
 type eipState struct {
 	// Signal when we are starting a new block
@@ -49,8 +50,8 @@ func (e *eipState) updateBaseFee(height int64) {
 	gasUsed := e.totalGasWantedThisBlock
 	// obvi fix
 	e.lastBlockHeight = height
-	gasDiff := gasUsed - target_gas
-	baseFeeMultiplier := sdk.NewDec(1).Add(sdk.NewDec((gasDiff)).Mul(max_block_change_rate))
+	gasDiff := gasUsed - TargetGas
+	baseFeeMultiplier := sdk.NewDec(1).Add(sdk.NewDec((gasDiff)).Mul(MaxBlockChangeRate))
 	e.CurBaseFee = e.CurBaseFee.Mul(baseFeeMultiplier)
 }
 
