@@ -1,6 +1,10 @@
 package mempool1559
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // Sections to this right now:
 // - Maintain something thats gets parsed from chain tx execution
@@ -51,8 +55,12 @@ func (e *EipState) startBlock(height int64) {
 	}
 }
 
-func (e *EipState) deliverTxCode(_ sdk.Context, tx sdk.FeeTx) {
+func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
+	if ctx.BlockHeight() != e.lastBlockHeight {
+		fmt.Println("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
+	}
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
+	fmt.Println("height, tx gas, blockGas", ctx.BlockHeight(), tx.GetGas(), e.totalGasWantedThisBlock)
 }
 
 // Equation is:

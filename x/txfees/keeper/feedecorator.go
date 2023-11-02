@@ -61,8 +61,6 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// TODO: Is there a better way to do this?
 	// I want ctx.IsDeliverTx() but that doesn't exist.
 	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-		fmt.Println("Am I being ran?")
-		fmt.Println("If so here is my gas", feeTx.GetGas())
 		mempool1559.DeliverTxCode(ctx, feeTx)
 	}
 
