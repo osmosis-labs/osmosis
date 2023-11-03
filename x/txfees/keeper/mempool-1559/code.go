@@ -132,7 +132,7 @@ func (e *EipState) GetCurBaseFee() osmomath.Dec {
 }
 
 // GetCurRecheckBaseFee returns a clone of the CurBaseFee / RecheckFeeConstant to account for
-// rechecked tranasctions in the feedecorator ante handler
+// rechecked transactions in the feedecorator ante handler
 func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
 }
