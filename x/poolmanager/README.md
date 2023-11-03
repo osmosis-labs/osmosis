@@ -340,8 +340,7 @@ by the routes.
 
 The `EstimateTradeBasedOnPriceImpact` query allows users to estimate a trade for all pool types given the following parameters are provided for this request `EstimateTradeBasedOnPriceImpactRequest`:
 
-
-- **FromCoin**: (`sdk.Coin`): the total amount of tokens one wants to sell.
+- **FromCoin**: (`sdk.Coin`): is the total amount of tokens one wants to sell.
 - **ToCoinDenom**: (`string`): is the denom they want to buy with the tokens being sold.
 - **PoolId**: (`uint64`): is the identifier of the pool that the trade will happen on.
 - **MaxPriceImpact**: (`sdk.Dec`): is the maximum percentage that the user is willing to affect the price of the pool.
@@ -367,20 +366,19 @@ The following is the process in which the query finds a trade that will stay bel
    1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `ExternalPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `sdk.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
 6. Then according to the pool type we attempt to find a viable trade, we must process each pool type differently as they return different results for different scenarios. The sections below explain the different pool types and how they each handle input.
 
-
 #### Balancer Pool Type Process
 
 The following is the example input/output when executing `CalcOutAmtGivenIn` on balancer pools:
 
 - If the input is greater than the total liquidity of the pool, the output will be the total liquidity of the target token.
 - If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
-- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the output will be `1`, regardless of slippage.
+- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the output will be a small value which can be either positive (greater or equal to 1) or zero, depending on the pool's weights. In the latter case an `ErrInvalidMathApprox` is returned.
 
-Here is the following process for the `estimateTradeBasedOnPriceImpactBalancerPool` function:
+Here is the following process for the `EstimateTradeBasedOnPriceImpactBalancerPool` function:
 
 1. The function initially calculates the output amount (`tokenOut`) using the input amount (`FromCoin`) without including a swap fee using the `CalcOutAmtGivenIn` function.
 
-   1. If `tokenOut` is zero, the function returns zero for both the input and output coin, signifying that trading a negligible amount yields no output. It is not likely that this pool type returns a zero but it is still catered for.
+   1. If `tokenOut` is zero or an `ErrInvalidMathApprox` is returned, the function returns zero for both the input and output coin, signifying that trading a negligible amount yields no output.
 
 2. The function calculates the current trade price (`currTradePrice`) using the initially estimated `tokenOut`. Following that, it calculates the deviation of this price from the spot price (`priceDeviation`).
 
@@ -402,7 +400,7 @@ The following is the example input/output when executing `CalcOutAmtGivenIn` on 
 - If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
 - If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the function will throw an error.
 
-Here is the following process for the `estimateTradeBasedOnPriceImpactStableSwapPool` function:
+Here is the following process for the `EstimateTradeBasedOnPriceImpactStableSwapPool` function:
 
 1. The function begins by attempting to estimate the output amount (`tokenOut`) for a given input amount (`req.FromCoin`). This calculation is done without accounting for the swap fee.
 
@@ -424,10 +422,9 @@ Here is the following process for the `estimateTradeBasedOnPriceImpactStableSwap
 
 7. If the new trade amount does not cause an error or panic, and its `priceDeviation` is within limits, the function adjusts the `lowAmount` upwards to continue the search.
 
-8.  If the loop completes without finding an acceptable trade amount, the function returns zero coins for both the input and the output.
+8. If the loop completes without finding an acceptable trade amount, the function returns zero coins for both the input and the output.
 
-9.  If a viable trade is found, the function performs a final recalculation considering the swap fee and returns the estimated trade.
-
+9. If a viable trade is found, the function performs a final recalculation considering the swap fee and returns the estimated trade.
 
 #### Concentrated Liquidity Pool Type Process
 
@@ -437,7 +434,7 @@ The following is the example input/output when executing `CalcOutAmtGivenIn` on 
 - If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
 - f the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the function will return a zero.
 
-Here is the following process for the `estimateTradeBasedOnPriceImpactConcentratedLiquidity` function:
+Here is the following process for the `EstimateTradeBasedOnPriceImpactConcentratedLiquidity` function:
 
 1. The function starts by attempting to estimate the output amount (`tokenOut`) for a given input amount (`req.FromCoin`), using the `CalcOutAmtGivenIn` method of the `swapModule`.
 
