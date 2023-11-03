@@ -27,6 +27,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/client/cli"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
+	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
@@ -164,11 +165,14 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	mempool1559.BeginBlockCode(ctx)
+}
 
 // EndBlock executes all ABCI EndBlock logic respective to the txfees module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	mempool1559.EndBlockCode(ctx)
 	return []abci.ValidatorUpdate{}
 }
 

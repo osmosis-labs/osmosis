@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 
@@ -55,6 +56,12 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	if len(feeCoins) > 1 {
 		return ctx, types.ErrTooManyFeeCoins
+	}
+
+	// TODO: Is there a better way to do this?
+	// I want ctx.IsDeliverTx() but that doesn't exist.
+	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		mempool1559.DeliverTxCode(ctx, feeTx)
 	}
 
 	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
@@ -137,6 +144,8 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 }
 
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
+	var is1559enabled = mfd.Opts.Mempool1559Enabled
+
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
@@ -144,6 +153,14 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	}
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+	}
+	// Initial tx only, no recheck
+	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
+	}
+	// RecheckTx only
+	if is1559enabled && ctx.IsReCheckTx() {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
 	}
 	return cfgMinGasPrice
 }

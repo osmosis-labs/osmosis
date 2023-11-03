@@ -454,6 +454,9 @@ arbitrage-min-gas-fee = ".005"
 # This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
 # Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
 min-gas-price-for-high-gas-tx = ".0025"
+
+# This parameter enables EIP-1559 like fee market logic in the mempool
+adaptive-fee-enabled = "false"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg
