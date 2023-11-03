@@ -104,11 +104,6 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				s.NoError(err)
 				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.FeeCollectorForStakingRewardsName, sdk.Coins{coin})
 				s.NoError(err)
-
-				// Update the tx fee tracker
-				currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
-				newTxFeesTrackerValue := currentTxFeesTrackerValue.Add(sdk.NewCoins(coin)...)
-				s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, newTxFeesTrackerValue)
 			}
 
 			// checks the balance of the non-native denom in module account
