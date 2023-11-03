@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
-	cosmossdk.io/math v1.1.3-rc.1
+	cosmossdk.io/math v1.1.2
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.40.1
 	github.com/cometbft/cometbft v0.37.2
@@ -363,6 +363,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/math => cosmossdk.io/math v1.1.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231030033644-c3c7ab7f52ea
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
