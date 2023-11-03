@@ -85,6 +85,28 @@ Any JSON object is accepted as a valid memo, as long as it doesn't contain the
 key "ibc_callback". That key is used internally for the contract to track the 
 success or failure of the packet delivery.
 
+
+### Error handling
+
+This is general high level description of failures happen during cross chain swaps.
+
+When doing cross chain transfers and swaps it is important to know where funds will end up in case of inability to transfer tokens, swap tokens, or some generic infrastructure failures.
+
+We will consider scenario  when user transfers tokens from chain A to Osmosis, swaps and transfers output further to chain B.
+
+On chain A user may send token using his wallet directly, or `outpost` contract.
+When user sends tokens directly, in case of packet timeout or failure, when transaction on Osmosis never settled, user returned all his tokens.
+In case using `outpost`, in case of failure of IBC packet delivery, tokens will stuck on the contract account. User will need help from governance to get tokens back.
+
+When token arrives to Osmosis, it can be swapped. 
+If swap fails, IBC packet rollbacks. Described above. Works for multi hop too.
+
+In case of success of swap, swapped tokens are forwarded to chain B.
+If for any reason delivery to chain B fails. 
+Tokens are retained on `crosschain-swaps` contract if no failed delivery address specified.
+In case it was, tokens transferred to account on Osmosis.
+Osmosis ensures that both timeout and failures of IBC packets attempted to be delivered to B work like that.
+
 #### Response
 
 The contract will return the following response:
