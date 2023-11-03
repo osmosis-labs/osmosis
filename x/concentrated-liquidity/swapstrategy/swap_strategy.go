@@ -141,9 +141,6 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}
-		if err != nil {
-			return osmomath.BigDec{}, err
-		}
 		return osmomath.BigDecFromDec(sqrtPriceLimit), nil
 	}
 
