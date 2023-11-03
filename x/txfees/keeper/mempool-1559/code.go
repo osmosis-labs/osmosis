@@ -44,6 +44,9 @@ var (
 	MinBaseFee         = sdk.MustNewDecFromStr("0.0025")
 	MaxBaseFee         = sdk.MustNewDecFromStr("10")
 	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
+)
+
+const (
 	TargetGas          = int64(60_000_000)
 	ResetInterval      = int64(1000)
 	BackupFile         = "eip1559state.json"
@@ -161,7 +164,7 @@ func (e *EipState) tryLoad() osmomath.Dec {
 	bz, err := os.ReadFile(BackupFile)
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)
-		fmt.Println("Setting eip1559 current base fee to min value", MinBaseFee)
+		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
 		return MinBaseFee.Clone()
 	}
 
@@ -169,7 +172,7 @@ func (e *EipState) tryLoad() osmomath.Dec {
 	err = json.Unmarshal(bz, &loaded)
 	if err != nil {
 		fmt.Println("Error unmarshalling eip1559 state", err)
-		fmt.Println("Setting eip1559 current base fee to min value", MinBaseFee)
+		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
 		return MinBaseFee.Clone()
 	}
 

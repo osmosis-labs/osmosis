@@ -33,16 +33,6 @@ func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) M
 	}
 }
 
-func InitEipVars(opts types.MempoolFeeOptions) {
-	mempool1559.DefaultBaseFee = opts.Mempool1559Min
-	mempool1559.MinBaseFee = opts.Mempool1559Min
-	mempool1559.MaxBaseFee = opts.Mempool1559Max
-	mempool1559.TargetGas = opts.Mempool1559TargetGas
-	mempool1559.MaxBlockChangeRate = opts.Mempool1559MaxBlockChangeRate
-	mempool1559.ResetInterval = opts.Mempool1559ResetInterval
-	mempool1559.RecheckFeeConstant = opts.Mempool1559RecheckFeeConstant
-}
-
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// The SDK currently requires all txs to be FeeTx's in CheckTx, within its mempool fee decorator.
 	// See: https://github.com/cosmos/cosmos-sdk/blob/f726a2398a26bdaf71d78dbf56a82621e84fd098/x/auth/middleware/fee.go#L34-L37
