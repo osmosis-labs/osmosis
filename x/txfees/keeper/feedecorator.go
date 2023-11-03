@@ -143,10 +143,9 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 	return nil
 }
 
-// TODO: Go read this from mfd.Opts
-var is1559enabled = true
-
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
+	var is1559enabled = mfd.Opts.Mempool1559Enabled
+
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
