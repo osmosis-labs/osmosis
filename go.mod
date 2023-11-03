@@ -10,10 +10,10 @@ require (
 	github.com/CosmWasm/wasmd v0.40.1
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogoproto v1.4.10
+	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.0.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231103233016-7d0118625736
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103233016-7d0118625736
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231103233016-7d0118625736
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231103233016-7d0118625736
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231103234316-a43985716535
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103234316-a43985716535
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231103234316-a43985716535
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231103234316-a43985716535
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/pob v1.0.4
@@ -363,7 +363,12 @@ require (
 )
 
 replace (
+	cosmossdk.io/math => cosmossdk.io/math v1.1.2
+
+	// force utilizing the following versions
+	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231030033644-c3c7ab7f52ea
+	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
@@ -371,11 +376,6 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
-
-	// force utilizing the following versions
-	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	cosmossdk.io/math => cosmossdk.io/math v1.1.2
-	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
