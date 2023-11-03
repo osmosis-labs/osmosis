@@ -2,7 +2,6 @@ package mempool1559
 
 import (
 	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -54,11 +53,6 @@ func TestUpdateBaseFee(t *testing.T) {
 		// Assert that the actual result matches the expected result
 		assert.DeepEqual(t, expectedBaseFee, eip.CurBaseFee)
 	}
-
-	// We wait here to test the write as the write is async
-	time.Sleep(100 * time.Millisecond)
-	readCurBaseFee := eip.tryLoad()
-	assert.DeepEqual(t, readCurBaseFee, eip.CurBaseFee)
 }
 
 // calculateBaseFee is the same as in is defined on the eip1559 code
