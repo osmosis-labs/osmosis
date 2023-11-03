@@ -6,6 +6,8 @@ import (
 	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // Sections to this right now:
@@ -28,6 +30,7 @@ import (
 
 // TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
 // ALt: do that with an enable/disable flag. THat seems likes a better idea
+
 var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
 var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
 var MaxBaseFee = sdk.MustNewDecFromStr("10")
@@ -43,7 +46,7 @@ type EipState struct {
 	lastBlockHeight         int64
 	totalGasWantedThisBlock int64
 
-	CurBaseFee sdk.Dec `json:"cur_base_fee"`
+	CurBaseFee osmomath.Dec `json:"cur_base_fee"`
 }
 
 var CurEipState = EipState{
@@ -104,11 +107,11 @@ func (e *EipState) updateBaseFee(height int64) {
 	go e.tryPersist()
 }
 
-func (e *EipState) GetCurBaseFee() sdk.Dec {
+func (e *EipState) GetCurBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone()
 }
 
-func (e *EipState) GetCurRecheckBaseFee() sdk.Dec {
+func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
 }
 
@@ -126,7 +129,7 @@ func (e *EipState) tryPersist() {
 	}
 }
 
-func (e *EipState) tryLoad() sdk.Dec {
+func (e *EipState) tryLoad() osmomath.Dec {
 	bz, err := os.ReadFile(BackupFile)
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)
