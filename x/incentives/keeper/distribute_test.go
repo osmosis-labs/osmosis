@@ -1348,6 +1348,125 @@ func withGaugeDistrType(gauge types.Gauge, gaugeType lockuptypes.LockQueryType) 
 	return gauge
 }
 
+// TestCalculateGroupWeights should test the same invariants as TestSyncVolumeSplitGroup,
+// except the result should not be stored in state and no GroupTotalWeightZeroError case.
+func (s *KeeperTestSuite) TestCalculateGroupWeights() {
+	const clPoolID uint64 = 1
+	tests := map[string]struct {
+		groupToSync types.Group
+
+		// Each element updates either a CL or a balancer pool volume.
+		// These pools are created at the beginning of each test.
+		updatedPoolVolumes []osmomath.Int
+
+		expectedUpdatedGroup types.Group
+		expectedError        error
+	}{
+		"happy path: valid update on group with even volume growth": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(300),
+				osmomath.NewInt(300),
+			},
+
+			expectedUpdatedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{osmomath.NewInt(300), osmomath.NewInt(300)}),
+			expectedError:        nil,
+		},
+		"valid update on group with different volume growth": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(253),
+				osmomath.NewInt(659),
+			},
+
+			expectedUpdatedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{osmomath.NewInt(253), osmomath.NewInt(659)}),
+			expectedError:        nil,
+		},
+		"valid update on group with only one record to sync": {
+			groupToSync: deepCopyGroup(singleRecordGroup),
+
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(933),
+			},
+
+			expectedUpdatedGroup: s.withUpdatedVolumes(singleRecordGroup, []osmomath.Int{osmomath.NewInt(933)}),
+			expectedError:        nil,
+		},
+
+		// Error catching
+		"tracked volume has dropped to zero for a pool (no pool volume or volume cannot be found)": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(300),
+				osmomath.NewInt(0),
+			},
+
+			expectedError: types.NoPoolVolumeError{PoolId: uint64(2)},
+		},
+		"cumulative volume has decreased for a pool (impossible/invalid state)": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(300),
+				osmomath.NewInt(100),
+			},
+
+			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: osmomath.NewInt(200), NewVolume: osmomath.NewInt(100)},
+		},
+
+		"no volume since the last sync": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight,
+				defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight,
+			},
+
+			expectedError: types.NoVolumeSinceLastSyncError{PoolID: clPoolID},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			ik := s.App.IncentivesKeeper
+
+			// Prepare pools so gauges and pool ids are set in state
+			clPool := s.PrepareConcentratedPool()
+			s.Require().Equal(clPoolID, clPool.GetId())
+			balPoolId := s.PrepareBalancerPool()
+
+			poolIds := []uint64{clPool.GetId(), balPoolId}
+
+			// Update cumulative volumes for pools
+			s.overwriteVolumes(poolIds, tc.updatedPoolVolumes)
+
+			// Save original input to help with mutation-related assertions
+			originalGroup := deepCopyGroup(tc.groupToSync)
+
+			// Set group in state to make stronger assertions later
+			ik.SetGroup(s.Ctx, tc.groupToSync)
+
+			// --- System under test ---
+			updatedGroup, err := ik.CalculateGroupWeights(s.Ctx, tc.groupToSync)
+
+			// --- Assertions ---
+
+			// Whether it fails or not, the group should not be mutated
+			groupInState, getGroupErr := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
+			s.Require().NoError(getGroupErr)
+			s.Require().Equal(tc.groupToSync.String(), groupInState.String())
+			s.Require().Equal(originalGroup.String(), tc.groupToSync.String())
+
+			if tc.expectedError != nil {
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedUpdatedGroup, updatedGroup)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 	const clPoolID uint64 = 1
 	tests := map[string]struct {

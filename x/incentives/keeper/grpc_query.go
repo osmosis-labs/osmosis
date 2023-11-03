@@ -221,6 +221,20 @@ func (q Querier) GroupByGroupGaugeID(goCtx context.Context, req *types.QueryGrou
 	return &types.QueryGroupByGroupGaugeIDResponse{Group: group}, nil
 }
 
+func (q Querier) CurrentWeightByGroupGaugeID(goCtx context.Context, req *types.QueryCurrentWeightByGroupGaugeIDRequest) (*types.QueryCurrentWeightByGroupGaugeIDResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	group, err := q.Keeper.GetGroupByGaugeID(ctx, req.GroupGaugeId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	gaugeWeights, err := q.Keeper.queryWeightSplitGroup(ctx, group)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryCurrentWeightByGroupGaugeIDResponse{GaugeWeight: gaugeWeights}, nil
+}
+
 // getGaugeFromIDJsonBytes returns gauges from the json bytes of gaugeIDs.
 func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
@@ -271,4 +285,35 @@ func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, deno
 		return true, nil
 	})
 	return pageRes, gauges, err
+}
+
+// queryWeightSplitGroup calculates the ratio of volume for each gauge in a group since the last epoch.
+// It first updates the group weights based on the pool volumes.
+// Then, for each gauge in the updated group, it calculates the ratio of the gauge's current weight to the total weight of the group.
+// If the total weight of the group is zero, the ratio of volume for the gauge is set to zero.
+// The function returns a slice of GaugeVolume, each representing a gauge and its ratio of volume.
+// It returns an error if there is an issue updating the group weights.
+func (k Keeper) queryWeightSplitGroup(ctx sdk.Context, group types.Group) ([]types.GaugeWeight, error) {
+	updatedGroup, err := k.calculateGroupWeights(ctx, group)
+	if err != nil {
+		return nil, err
+	}
+
+	gaugeVolumes := make([]types.GaugeWeight, len(updatedGroup.InternalGaugeInfo.GaugeRecords))
+
+	for i, gaugeRecord := range updatedGroup.InternalGaugeInfo.GaugeRecords {
+		if updatedGroup.InternalGaugeInfo.TotalWeight.IsZero() {
+			gaugeVolumes[i] = types.GaugeWeight{
+				GaugeId:     gaugeRecord.GaugeId,
+				WeightRatio: sdk.ZeroDec(),
+			}
+		} else {
+			gaugeVolumes[i] = types.GaugeWeight{
+				GaugeId:     gaugeRecord.GaugeId,
+				WeightRatio: gaugeRecord.CurrentWeight.ToLegacyDec().Quo(updatedGroup.InternalGaugeInfo.TotalWeight.ToLegacyDec()),
+			}
+		}
+	}
+
+	return gaugeVolumes, nil
 }

@@ -83,3 +83,8 @@ queries:
       response: "*queryproto.EstimateTradeBasedOnPriceImpactResponse"
     cli:
       cmd: "EstimateTradeBasedOnPriceImpact"
+  TradingPairTakerFee:
+    proto_wrapper:
+      query_func: "k.GetTradingPairTakerFee"
+    cli:
+      cmd: "TradingPairTakerFee"

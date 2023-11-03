@@ -15,6 +15,7 @@ tags=(
     "v17.0.0"
     "v18.0.0"
     "v19.2.0"
+    "v20.1.0"
 )
 
 echo "## Upgrade binaries"

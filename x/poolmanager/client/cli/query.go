@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
@@ -181,11 +182,20 @@ func GetCmdTotalVolumeForPool() (*osmocli.QueryDescriptor, *queryproto.TotalVolu
 	}, &queryproto.TotalVolumeForPoolRequest{}
 }
 
+func GetCmdTradingPairTakerFee() (*osmocli.QueryDescriptor, *queryproto.TradingPairTakerFeeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "trading-pair-taker-fee",
+		Short: "Query trading pair taker fee",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} trading-pair-taker-fee uosmo uatom`,
+	}, &queryproto.TradingPairTakerFeeRequest{}
+}
+
 func GetCmdEstimateTradeBasedOnPriceImpact() (
 	*osmocli.QueryDescriptor, *queryproto.EstimateTradeBasedOnPriceImpactRequest,
 ) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-trade-based-on-price-impact  <fromCoin> <toCoinDenom> <poolId> <maxPriceImpact> <externalPrice>",
+		Use:   "estimate-trade-based-on-price-impact",
 		Short: "Query estimate-trade-based-on-price-impact",
 		Long: `{{.Short}}
 		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,

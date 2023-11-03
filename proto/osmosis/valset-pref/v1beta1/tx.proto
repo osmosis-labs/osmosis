@@ -27,6 +27,13 @@ service Msg {
   rpc UndelegateFromValidatorSet(MsgUndelegateFromValidatorSet)
       returns (MsgUndelegateFromValidatorSetResponse);
 
+  // UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+  // the validator set, but takes into consideration the current delegations
+  // to the user's validator set to determine the weights assigned to each.
+  rpc UndelegateFromRebalancedValidatorSet(
+      MsgUndelegateFromRebalancedValidatorSet)
+      returns (MsgUndelegateFromRebalancedValidatorSetResponse);
+
   // RedelegateValidatorSet takes the existing validator set and redelegates to
   // a new set.
   rpc RedelegateValidatorSet(MsgRedelegateValidatorSet)
@@ -97,6 +104,27 @@ message MsgUndelegateFromValidatorSet {
 }
 
 message MsgUndelegateFromValidatorSetResponse {}
+
+message MsgUndelegateFromRebalancedValidatorSet {
+  option (amino.name) = "osmosis/MsgUndelegateFromRebalancedValidatorSet";
+
+  // delegator is the user who is trying to undelegate.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // the amount the user wants to undelegate
+  // For ex: Undelegate 50 osmo with validator-set {ValA -> 0.5, ValB -> 0.5}
+  // Our undelegate logic would first check the current delegation balance.
+  // If the user has 90 osmo delegated to ValA and 10 osmo delegated to ValB,
+  // the rebalanced validator set would be {ValA -> 0.9, ValB -> 0.1}
+  // So now the 45 osmo would be undelegated from ValA and 5 osmo would be
+  // undelegated from ValB.
+  cosmos.base.v1beta1.Coin coin = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message MsgUndelegateFromRebalancedValidatorSetResponse {}
 
 message MsgRedelegateValidatorSet {
   option (amino.name) = "osmosis/MsgRedelegateValidatorSet";
