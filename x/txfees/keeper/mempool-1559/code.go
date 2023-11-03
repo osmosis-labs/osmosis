@@ -30,8 +30,10 @@ import (
    - DefaultBaseFee: Default base fee, initialized to 0.0025.
    - MinBaseFee: Minimum base fee, initialized to 0.0025.
    - MaxBaseFee: Maximum base fee, initialized to 10.
-   - TargetGas: Gas wanted per block, initialized to 60,000,000.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/16.
+
+   Global constants:
+   - TargetGas: Gas wanted per block, initialized to 60,000,000.
    - ResetInterval: The interval at which eipState is reset, initialized to 1000 blocks.
    - BackupFile: File for backup, set to "eip1559state.json".
    - RecheckFeeConstant: A constant value for rechecking fees, initialized to 4.
@@ -41,8 +43,11 @@ var (
 	DefaultBaseFee     = sdk.MustNewDecFromStr("0.0025")
 	MinBaseFee         = sdk.MustNewDecFromStr("0.0025")
 	MaxBaseFee         = sdk.MustNewDecFromStr("10")
-	TargetGas          = int64(60_000_000)
 	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
+)
+
+const (
+	TargetGas          = int64(60_000_000)
 	ResetInterval      = int64(1000)
 	BackupFile         = "eip1559state.json"
 	RecheckFeeConstant = int64(4)
@@ -87,7 +92,7 @@ func (e *EipState) startBlock(height int64) {
 // deliverTxCode runs on every transaction in the feedecorator ante handler and sums the gas of each transaction
 func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 	if ctx.BlockHeight() != e.lastBlockHeight {
-		fmt.Println("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
+		ctx.Logger().Error("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
 	}
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
 }

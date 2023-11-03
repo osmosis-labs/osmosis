@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/assert"
 
@@ -30,7 +31,7 @@ func TestUpdateBaseFee(t *testing.T) {
 	// we iterate over 1000 blocks as the reset happens after 1000 blocks
 	for i := 1; i <= 1002; i++ {
 		// create a new block
-		ctx := sdk.NewContext(nil, tmproto.Header{Height: int64(i)}, false, nil)
+		ctx := sdk.NewContext(nil, tmproto.Header{Height: int64(i)}, false, log.NewNopLogger())
 
 		// start the new block
 		eip.startBlock(int64(i))
@@ -42,7 +43,7 @@ func TestUpdateBaseFee(t *testing.T) {
 				eip.deliverTxCode(ctx, tx.(sdk.FeeTx))
 			}
 		}
-		baseFeeBeforeUpdate := eip.CurBaseFee.Clone()
+		baseFeeBeforeUpdate := eip.GetCurBaseFee()
 
 		// update base fee
 		eip.updateBaseFee(int64(i))
