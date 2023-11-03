@@ -89,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6692](https://github.com/osmosis-labs/osmosis/pull/6692) chore: add cur sqrt price to LiquidityNetInDirection return value
 * [#6757](https://github.com/osmosis-labs/osmosis/pull/6757) fix: add gas metering to block before send for token factory bank hook
 * [#6710](https://github.com/osmosis-labs/osmosis/pull/6710) fix: `{overflow}` bug when querying cosmwasmpool spot price
+* [#6734](https://github.com/osmosis-labs/osmosis/pull/6734) fix: PFM serialization error
 * [#6767](https://github.com/osmosis-labs/osmosis/pull/6767) fix: typo in ibc lifecycle message in crosschain swap contract
 
 ## v19.2.0
