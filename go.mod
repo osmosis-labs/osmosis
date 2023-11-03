@@ -363,7 +363,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/math => cosmossdk.io/math v1.1.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231030033644-c3c7ab7f52ea
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
@@ -372,6 +371,11 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+
+	// force utilizing the following versions
+	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	cosmossdk.io/math => cosmossdk.io/math v1.1.2
+	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
@@ -383,8 +387,8 @@ replace (
 // exclusion so we use v1.0.0
 exclude github.com/coinbase/rosetta-sdk-go v0.7.9
 
-// exclusion so we use v1.0.0-beta.2
-exclude github.com/cosmos/cosmos-proto v1.0.0-beta.3
+// // exclusion so we use v1.0.0-beta.2
+// exclude github.com/cosmos/cosmos-proto v1.0.0-beta.3
 
-// exclusion so we use v1.4.10
-exclude github.com/cosmos/gogoproto v1.4.11
+// // exclusion so we use v1.4.10
+// exclude github.com/cosmos/gogoproto v1.4.11
