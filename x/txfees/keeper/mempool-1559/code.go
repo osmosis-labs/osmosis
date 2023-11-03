@@ -10,51 +10,64 @@ import (
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 )
 
-// Sections to this right now:
-// - Maintain something thats gets parsed from chain tx execution
-// update eipState according to that.
-// - Every time blockheight % 1000 = 0, reset eipState to default. (B/c this isn't committed on-chain, still gives us some consistency guarantees)
-// - Evaluate CheckTx/RecheckTx against this.
-//
-// 1000 blocks = almost 2 hours, maybe we need a smaller time for resets?
-// Lets say 500 blocks = 1 hour
-//
-// PROBLEMS: Currently, a node will throw out any tx that gets under its gas bound here.
-// :OOO We can just do this on checkTx not recheck
-//
-// Variables we can control for:
-// - fees paid per unit gas
-// - gas wanted per block (Ethereum)
-// - gas used and gas wanted difference
-// TODO: Change this percentage update time to be faster
+/*
+   This is the logic for the Osmosis implementation for EIP-1559 fee market,
+	 the goal of this code is to prevent spam by charging more for transactions when the network is busy.
 
-// TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
-// ALt: do that with an enable/disable flag. That seems likes a better idea
+	 This logic does two things:
+   - Maintaining data parsed from chain transaction execution and updating eipState accordingly.
+   - Resetting eipState to default every ResetInterval (1000) block height intervals to maintain consistency.
 
-var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
-var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
-var MaxBaseFee = sdk.MustNewDecFromStr("10")
-var TargetGas = int64(60_000_000)
-var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
-var ResetInterval = int64(1000)
-var BackupFile = "eip1559state.json"
-var RecheckFeeConstant = int64(4)
+   Additionally:
+   - Periodically evaluating CheckTx and RecheckTx for compliance with these parameters.
 
+   Note: The reset interval is set to 1000 blocks, which is approximately 2 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
+
+   Challenges:
+   - Transactions falling under their gas bounds are currently discarded by nodes. This behavior can be modified for CheckTx, rather than RecheckTx.
+
+   Global variables stored in memory:
+   - DefaultBaseFee: Default base fee, initialized to 0.0025.
+   - MinBaseFee: Minimum base fee, initialized to 0.0025.
+   - MaxBaseFee: Maximum base fee, initialized to 10.
+   - TargetGas: Gas wanted per block, initialized to 60,000,000.
+   - MaxBlockChangeRate: The maximum block change rate, initialized to 1/16.
+   - ResetInterval: The interval at which eipState is reset, initialized to 1000 blocks.
+   - BackupFile: File for backup, set to "eip1559state.json".
+   - RecheckFeeConstant: A constant value for rechecking fees, initialized to 4.
+*/
+
+var (
+	DefaultBaseFee     = sdk.MustNewDecFromStr("0.0025")
+	MinBaseFee         = sdk.MustNewDecFromStr("0.0025")
+	MaxBaseFee         = sdk.MustNewDecFromStr("10")
+	TargetGas          = int64(60_000_000)
+	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
+	ResetInterval      = int64(1000)
+	BackupFile         = "eip1559state.json"
+	RecheckFeeConstant = int64(4)
+)
+
+// EipState tracks the current base fee and totalGasWantedThisBlock
+// this structure is never written to state
 type EipState struct {
-	// Signal when we are starting a new block
-	// TODO: Or just use begin block
 	lastBlockHeight         int64
 	totalGasWantedThisBlock int64
 
 	CurBaseFee osmomath.Dec `json:"cur_base_fee"`
 }
 
+// CurEipState is a global variable used in the BeginBlock, EndBlock and
+// DeliverTx (fee decorator AnteHandler) functions, it's also using when determining
+// if a transaction has enough gas to successfully execute
 var CurEipState = EipState{
 	lastBlockHeight:         0,
 	totalGasWantedThisBlock: 0,
 	CurBaseFee:              sdk.NewDec(0),
 }
 
+// startBlock is executed at the start of each block and is responsible for reseting the state
+// of the CurBaseFee when the node reaches the reset interval
 func (e *EipState) startBlock(height int64) {
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
@@ -65,22 +78,27 @@ func (e *EipState) startBlock(height int64) {
 		e.CurBaseFee = e.tryLoad()
 	}
 
+	// we reset the CurBaseFee every ResetInterval
 	if height%ResetInterval == 0 {
 		e.CurBaseFee = DefaultBaseFee.Clone()
 	}
 }
 
+// deliverTxCode runs on every transaction in the feedecorator ante handler and sums the gas of each transaction
 func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 	if ctx.BlockHeight() != e.lastBlockHeight {
 		fmt.Println("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
 	}
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
-	// fmt.Println("height, tx gas, blockGas", ctx.BlockHeight(), tx.GetGas(), e.totalGasWantedThisBlock)
 }
 
-// Equation is:
-// baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
-// newBaseFee = baseFee * baseFeeMultiplier
+// updateBaseFee updates of a base fee in Osmosis.
+// It employs the following equation to calculate the new base fee:
+//
+//	baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
+//	newBaseFee = baseFee * baseFeeMultiplier
+//
+// updateBaseFee runs at the end of every block
 func (e *EipState) updateBaseFee(height int64) {
 	if height != e.lastBlockHeight {
 		fmt.Println("Something is off here? height != e.lastBlockHeight", height, e.lastBlockHeight)
@@ -94,12 +112,12 @@ func (e *EipState) updateBaseFee(height int64) {
 	baseFeeMultiplier := sdk.NewDec(1).Add(baseFeeIncrement)
 	e.CurBaseFee.MulMut(baseFeeMultiplier)
 
-	// Make a min base fee
+	// Enforce the minimum base fee by resetting the CurBaseFee is it drops below the MinBaseFee
 	if e.CurBaseFee.LT(MinBaseFee) {
 		e.CurBaseFee = MinBaseFee.Clone()
 	}
 
-	// Make a max base fee
+	// Enforce the maximum base fee by resetting the CurBaseFee is it goes above the MaxBaseFee
 	if e.CurBaseFee.GT(MaxBaseFee) {
 		e.CurBaseFee = MaxBaseFee.Clone()
 	}
@@ -107,14 +125,20 @@ func (e *EipState) updateBaseFee(height int64) {
 	go e.tryPersist()
 }
 
+// GetCurBaseFee returns a clone of the CurBaseFee to avoid overwriting the initial value in
+// the EipState, we use this in the AnteHandler to Check transactions
 func (e *EipState) GetCurBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone()
 }
 
+// GetCurRecheckBaseFee returns a clone of the CurBaseFee / RecheckFeeConstant to account for
+// rechecked tranasctions in the feedecorator ante handler
 func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
 }
 
+// tryPersist persists the eip1559 state to disk in the form of a json file
+// we do this incase a node stops and it can continue functioning as normal
 func (e *EipState) tryPersist() {
 	bz, err := json.Marshal(e)
 	if err != nil {
@@ -129,6 +153,8 @@ func (e *EipState) tryPersist() {
 	}
 }
 
+// tryLoad reads eip1559 state from disk and initializes the CurEipState to
+// the previous state when a node is restarted
 func (e *EipState) tryLoad() osmomath.Dec {
 	bz, err := os.ReadFile(BackupFile)
 	if err != nil {
