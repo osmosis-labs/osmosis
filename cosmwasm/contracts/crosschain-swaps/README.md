@@ -92,19 +92,23 @@ This is general high level description of failures happen during cross chain swa
 
 When doing cross chain transfers and swaps it is important to know where funds will end up in case of inability to transfer tokens, swap tokens, or some generic infrastructure failures.
 
-We will consider scenario  when user transfers tokens from chain A to Osmosis, swaps and transfers output further to chain B.
+We will consider the scenario where a user transfers tokens from chain A to Osmosis, swaps, and transfers the result further to chain B.
 
-On chain A user may send token using his wallet directly, or `outpost` contract.
-When user sends tokens directly, in case of packet timeout or failure, when transaction on Osmosis never settled, user returned all his tokens.
-In case using `outpost`, in case of failure of IBC packet delivery, tokens will stuck on the contract account. User will need help from governance to get tokens back.
+When user sends tokens for XCS, in case of packet timeout or failure, the transaction on Osmosis is never settled and the user is returned all his tokens.
+It is important to consider who the sender is here. If the sender is a contract (like the `outpost` contract, which is a thin wrapper around IBC sends),
+the contract is considered the sender and tokens will be refunded to it. It is the contract's responsibility to allow the original user to recover these funds.
+The outpost contract does not currently provide this functionality as it is currently mostly used as an example for integrators. If tokens were to get stuck on
+the outpost contract, the user would need either a contract migration or help from governance to recover them.
 
-When token arrives to Osmosis, it can be swapped. 
-If swap fails, IBC packet rollbacks. Described above. Works for multi hop too.
+In the case of multi-hop sends, the behaviour may vary (and depends on the versions of packet forward middleware 
+implemented in the intermediate chains. In the latest version of pfm, the tx will fail and the tokens will be refunded to the sender.
+on XCSv1, if the intermediate chain does not implement PFM, the tokens will be stuck on the intermediate chain; XCSv2, however, 
+implements a registry of which chains that support PFM and will not allow sending tokens to chains that don't support it.  
 
-In case of success of swap, swapped tokens are forwarded to chain B.
-If for any reason delivery to chain B fails. 
-Tokens are retained on `crosschain-swaps` contract if no failed delivery address specified.
-In case it was, tokens transferred to account on Osmosis.
+In case of success of swap, swapped tokens are forwarded to chain B.  If for any reason delivery to chain B fails, 
+the tokens are retained on the `crosschain-swaps` contract and can be recovered by the failed delivery address if specified.
+Failed delivery addresses are an osmosis account. The owner of that account needs to be able to use it to call the contract 
+and the recovered tokens will be sent to that account.  
 Osmosis ensures that both timeout and failures of IBC packets attempted to be delivered to B work like that.
 
 #### Response
