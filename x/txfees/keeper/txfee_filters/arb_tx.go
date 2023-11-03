@@ -2,6 +2,7 @@ package txfee_filters
 
 import (
 	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,7 +34,7 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 			}
 		}
 
-		swapMsg, isSwapMsg := m.(gammtypes.SwapMsgRoute)
+		swapMsg, isSwapMsg := m.(poolmanagertypes.SwapMsgRoute)
 		if !isSwapMsg {
 			continue
 		}

@@ -72,7 +72,7 @@ pub fn receive_ack(
 
     if success {
         // If the acc is successful, there is nothing else to do and the crosschain swap has been completed
-        return Ok(response.add_attribute("msg", "packet successfully delviered"));
+        return Ok(response.add_attribute("msg", "packet successfully delivered"));
     }
 
     // If the ack is a failure, we create a recovery for the original sender of the packet.

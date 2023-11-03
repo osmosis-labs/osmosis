@@ -136,7 +136,7 @@ func (e InsufficientLiquidityCreatedError) Error() string {
 	if !e.IsTokenZero {
 		tokenNum = 1
 	}
-	return fmt.Sprintf("insufficient amount of token %d created. Actual: (%s). Minimum (%s)", tokenNum, e.Actual, e.Minimum)
+	return fmt.Sprintf("slippage bound: insufficient amount of token %d created. Actual: (%s). Minimum estimated: (%s)", tokenNum, e.Actual, e.Minimum)
 }
 
 type NegativeLiquidityError struct {
