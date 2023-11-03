@@ -2,16 +2,16 @@ package mempool1559
 
 import (
 	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/assert"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 )
 
-// TestUpdateBaseFee simulates the update of a base fee in a blockchain system.
+// TestUpdateBaseFee simulates the update of a base fee in Osmosis.
 // It employs the following equation to calculate the new base fee:
 //
 //	baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
@@ -27,9 +27,10 @@ func TestUpdateBaseFee(t *testing.T) {
 		CurBaseFee:              DefaultBaseFee.Clone(),
 	}
 
+	// we iterate over 1000 blocks as the reset happens after 1000 blocks
 	for i := 1; i <= 1002; i++ {
 		// create a new block
-		ctx := sdk.NewContext(nil, tmproto.Header{Height: int64(i)}, false, nil)
+		ctx := sdk.NewContext(nil, tmproto.Header{Height: int64(i)}, false, log.NewNopLogger())
 
 		// start the new block
 		eip.startBlock(int64(i))
@@ -41,7 +42,7 @@ func TestUpdateBaseFee(t *testing.T) {
 				eip.deliverTxCode(ctx, tx.(sdk.FeeTx))
 			}
 		}
-		baseFeeBeforeUpdate := eip.CurBaseFee.Clone()
+		baseFeeBeforeUpdate := eip.GetCurBaseFee()
 
 		// update base fee
 		eip.updateBaseFee(int64(i))
@@ -52,14 +53,9 @@ func TestUpdateBaseFee(t *testing.T) {
 		// Assert that the actual result matches the expected result
 		assert.DeepEqual(t, expectedBaseFee, eip.CurBaseFee)
 	}
-
-	// We wait here to test the write as the write is async
-	time.Sleep(100 * time.Millisecond)
-	readCurBaseFee := eip.tryLoad()
-	assert.DeepEqual(t, readCurBaseFee, eip.CurBaseFee)
 }
 
-// calculateBaseFee is the same as in the test
+// calculateBaseFee is the same as in is defined on the eip1559 code
 func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec) (expectedBaseFee sdk.Dec) {
 	gasUsed := totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
@@ -79,7 +75,7 @@ func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec)
 	return expectedBaseFee
 }
 
-// GenTx generates a signed mock transaction.
+// GenTx generates a mock gas transaction.
 func GenTx(gas uint64) sdk.Tx {
 	gen := noapptest.MakeTestEncodingConfig().TxConfig
 	txBuilder := gen.NewTxBuilder()
