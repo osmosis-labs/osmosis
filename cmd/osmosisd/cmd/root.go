@@ -455,8 +455,31 @@ arbitrage-min-gas-fee = ".005"
 # Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
 min-gas-price-for-high-gas-tx = ".0025"
 
+# EIP-1559 mempool parameters
+
 # This parameter enables EIP-1559 like fee market logic in the mempool
 adaptive-fee-enabled = "false"
+
+# This parameter sets the starting fee charged (EIP-1559)
+adaptive-fee-default = "0.025"
+
+# This parameter sets the min fee charged (EIP-1559)
+adaptive-fee-min = "0.025"
+
+# This parameter sets the max fee charged (EIP-1559)
+adaptive-fee-max = "10"
+
+# This parameter sets the target gas (EIP-1559)
+adaptive-fee-target-gas = "60000000"
+
+# This parameter sets the max block change rate (EIP-1559)
+adaptive-fee-max-block-change-rate = "0.0625"
+
+# This parameter sets the interval in which the gas resets back to default (EIP-1559)
+adaptive-fee-reset-interval = "1000"
+
+# This parameter sets the constant used in the recheck fee calculation (EIP-1559)
+adaptive-fee-recheck-fee-constant = "4"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg
