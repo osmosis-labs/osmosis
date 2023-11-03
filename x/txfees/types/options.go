@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cast"
@@ -99,20 +100,21 @@ func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValu
 }
 
 func parseBoolFromConfig(opts servertypes.AppOptions, optName string, defaultValue bool) bool {
-	valueInterface := opts.Get("osmosis-mempool." + optName)
+	fullOptName := "osmosis-mempool." + optName
+	valueInterface := opts.Get(fullOptName)
 	value := defaultValue
 	if valueInterface != nil {
 		valueStr, ok := valueInterface.(string)
 		if !ok {
 			panic("invalidly configured osmosis-mempool." + optName)
 		}
-		valueStr = strings.ToLower(valueStr)
-
-		if valueStr == "true" {
-			return true
-		} else if valueStr == "false" {
+		valueStr = strings.TrimSpace(valueStr)
+		v, err := strconv.ParseBool(valueStr)
+		if err != nil {
+			fmt.Println("error in parsing" + fullOptName + " as bool, setting to false")
 			return false
 		}
+		return v
 	}
 	return value
 }

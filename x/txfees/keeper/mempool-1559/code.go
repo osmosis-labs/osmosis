@@ -29,7 +29,7 @@ import (
 // TODO: Change this percentage update time to be faster
 
 // TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
-// ALt: do that with an enable/disable flag. THat seems likes a better idea
+// ALt: do that with an enable/disable flag. That seems likes a better idea
 
 var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
 var MinBaseFee = sdk.MustNewDecFromStr("0.0025")

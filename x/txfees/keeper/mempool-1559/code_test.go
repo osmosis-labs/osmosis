@@ -5,9 +5,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/assert"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 )
 
 // TestUpdateBaseFee simulates the update of a base fee in a blockchain system.
@@ -34,8 +35,8 @@ func TestUpdateBaseFee(t *testing.T) {
 		eip.startBlock(int64(i))
 
 		// generate transactions
-		for j := 1; j <= 3; j++ {
-			if i%10 == 0 {
+		if i%10 == 0 {
+			for j := 1; j <= 3; j++ {
 				tx := GenTx(uint64(500000000 + i))
 				eip.deliverTxCode(ctx, tx.(sdk.FeeTx))
 			}
@@ -46,7 +47,7 @@ func TestUpdateBaseFee(t *testing.T) {
 		eip.updateBaseFee(int64(i))
 
 		// calcualte the base fees
-		expectedBaseFee := calcualteBaseFee(eip.totalGasWantedThisBlock, baseFeeBeforeUpdate)
+		expectedBaseFee := calculateBaseFee(eip.totalGasWantedThisBlock, baseFeeBeforeUpdate)
 
 		// Assert that the actual result matches the expected result
 		assert.DeepEqual(t, expectedBaseFee, eip.CurBaseFee)
@@ -59,7 +60,7 @@ func TestUpdateBaseFee(t *testing.T) {
 }
 
 // calculateBaseFee is the same as in the test
-func calcualteBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec) (expectedBaseFee sdk.Dec) {
+func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec) (expectedBaseFee sdk.Dec) {
 	gasUsed := totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
 
