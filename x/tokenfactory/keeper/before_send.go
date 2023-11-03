@@ -91,7 +91,7 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errorsmod.Wrapf(types.ErrTrackBeforeSendOutOfGas, "%v", r)
+			err = errorsmod.Wrapf(types.ErrBeforeSendHookOutOfGas, "%v", r)
 		}
 	}()
 
@@ -133,22 +133,14 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			}
 			em := sdk.NewEventManager()
 
-			// if its track before send, apply gas meter to prevent infinite loop
-			if blockBeforeSend {
-				_, err = k.contractKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
-				if err != nil {
-					return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
-				}
-			} else {
-				childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.TrackBeforeSendGasLimit))
-				_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
-				if err != nil {
-					return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
-				}
-
-				// consume gas used for calling contract to the parent ctx
-				ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
+			childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.BeforeSendHookGasLimit))
+			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
+			if err != nil {
+				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
+
+			// consume gas used for calling contract to the parent ctx
+			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
 		}
 	}
 	return nil
