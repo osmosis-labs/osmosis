@@ -133,6 +133,8 @@ func appModules(
 ) []module.AppModule {
 	appCodec := encodingConfig.Marshaler
 
+	feeConfig := txfeestypes.FeeConfig{}
+
 	return []module.AppModule{
 		genutil.NewAppModule(
 			app.AccountKeeper,
@@ -164,7 +166,7 @@ func appModules(
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
-		txfees.NewAppModule(*app.TxFeesKeeper),
+		txfees.NewAppModule(*app.TxFeesKeeper, feeConfig),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(*app.PoolIncentivesKeeper),

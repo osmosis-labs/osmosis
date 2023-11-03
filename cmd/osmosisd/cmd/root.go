@@ -303,6 +303,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
+			feeConfig, err := retrieveFeeConfig(initClientCtx)
+			if err != nil {
+				return err
+			}
+
 			// Only loads asset list into a map if human readable denoms are enabled.
 			assetMap, assetMapRev := map[string]DenomUnitMap{}, map[string]string{}
 			if humanReadableDenomsInput || humanReadableDenomsOutput {
@@ -739,4 +744,9 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 		}
 	}
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
+}
+
+// ensureConfigPath creates a directory configPath if it does not exist
+func ensureConfigPath(configPath string) error {
+	return os.MkdirAll(configPath, os.ModePerm)
 }

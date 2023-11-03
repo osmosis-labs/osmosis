@@ -62,13 +62,15 @@ const (
 
 	// withdrawPositions withdraws a position
 	withdrawPositions
+
+	maxAccounts = 95
 )
 
 const (
 	expectedPoolId           uint64 = 1
 	addressPrefix                   = "osmo"
-	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "3000uosmo"
+	localosmosisFromHomePath        = "/.test"
+	consensusFee                    = "200000uosmo"
 	denom0                          = "uosmo"
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
@@ -105,19 +107,26 @@ func main() {
 
 	clientHome := getClientHomePath()
 
+	fmt.Println("client home", clientHome)
+
 	// Create a Cosmos igniteClient instance
 	igniteClient, err := cosmosclient.New(
 		ctx,
 		cosmosclient.WithAddressPrefix(addressPrefix),
 		cosmosclient.WithKeyringBackend(cosmosaccount.KeyringTest),
 		cosmosclient.WithHome(clientHome),
+		cosmosclient.WithNodeAddress("http://localhost:26657"),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
+	// igniteClient.Context().BroadcastMode
 
 	statusResp, err := igniteClient.Status(ctx)
+
+	fmt.Println("status ", statusResp)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,29 +212,47 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 }
 
 func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
-	for i := 0; i < numSwaps; i++ {
-		var (
-			randAccountNum = rand.Intn(8) + 1
-			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
 
-			isToken0In = rand.Intn(2) == 0
+	wg := sync.WaitGroup{}
 
-			tokenOutMinAmount = osmomath.OneInt()
-		)
+	i := 0
+	for {
+		for j := 1; j < maxAccounts; j++ {
+			var (
+				// randAccountNum = rand.Intn(8) + 1
+				accountName = "lo-test" + fmt.Sprintf("%d", j)
 
-		tokenInDenom := denom0
-		tokenOutDenom := denom1
-		if !isToken0In {
-			tokenInDenom = denom1
-			tokenOutDenom = denom0
+				isToken0In = rand.Intn(2) == 0
+
+				tokenOutMinAmount = osmomath.OneInt()
+			)
+
+			tokenInDenom := denom0
+			tokenOutDenom := denom1
+			if !isToken0In {
+				tokenInDenom = denom1
+				tokenOutDenom = denom0
+			}
+			tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(maxAmountSingleSwap)))
+
+			wg.Add(1)
+			go func() {
+				runMessageWithRetries(func() error {
+					_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+
+					wg.Done()
+					return err
+				})
+			}()
+			i++
 		}
-		tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
-		runMessageWithRetries(func() error {
-			_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
-			return err
-		})
+		if i == 10000 {
+			time.Sleep(time.Second)
+		}
 	}
+
+	wg.Wait()
 
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
@@ -673,10 +700,19 @@ func claimIncentivesOp(igniteClient cosmosclient.Client) {
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
-	account, err := igniteClient.Account(accountName)
+	fmt.Println("ACCOUNT", accountName)
+	account, err := igniteClient.AccountRegistry.GetByName(accountName)
 	if err != nil {
 		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
 	}
+
+	// if account == nil {
+	// 	fmt.Println("nil account")
+	// }
+	// fmt.Println("HEEERREEE")
+	// fmt.Println(account)
+	fmt.Println("address prefix ", addressPrefix)
+	fmt.Println("account ", account)
 
 	address := account.Address(addressPrefix)
 	if err != nil {

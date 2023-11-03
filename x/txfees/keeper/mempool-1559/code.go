@@ -6,6 +6,8 @@ import (
 	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
 // Sections to this right now:
@@ -51,7 +53,7 @@ var CurEipState = EipState{
 	CurBaseFee:              sdk.NewDec(0),
 }
 
-func (e *EipState) startBlock(height int64) {
+func (e *EipState) startBlock(height int64, feeConfig txfeestypes.FeeConfig) {
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
 

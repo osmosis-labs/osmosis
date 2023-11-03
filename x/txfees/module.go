@@ -29,6 +29,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
 	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
 var (
@@ -104,10 +105,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper keeper.Keeper
+	feeConfig txfeestypes.FeeConfig
+	keeper    keeper.Keeper
 }
 
-func NewAppModule(keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper, config txfeestypes.FeeConfig) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
@@ -166,7 +168,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	mempool1559.BeginBlockCode(ctx)
+	mempool1559.BeginBlockCode(ctx, am.feeConfig)
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the txfees module. It

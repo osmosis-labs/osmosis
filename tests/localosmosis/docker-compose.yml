@@ -16,7 +16,7 @@ services:
       - ./scripts/stableswapPool.json:/osmosis/stableswapPool.json
       - ./scripts/setup.sh:/osmosis/setup.sh
       - ../cl-genesis-positions:/osmosis/cl-genesis-positions
-      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
+      - $HOME/.test/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
     command:
