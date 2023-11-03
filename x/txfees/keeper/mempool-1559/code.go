@@ -138,7 +138,7 @@ func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 }
 
 // tryPersist persists the eip1559 state to disk in the form of a json file
-// we do this incase a node stops and it can continue functioning as normal
+// we do this in case a node stops and it can continue functioning as normal
 func (e *EipState) tryPersist() {
 	bz, err := json.Marshal(e)
 	if err != nil {
