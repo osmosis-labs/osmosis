@@ -25,6 +25,8 @@ var (
 	DefaultMempool1559Enabled      = false
 )
 
+var GlobalMempool1559Enabled = false
+
 type MempoolFeeOptions struct {
 	MaxGasWantedPerTx         uint64
 	MinGasPriceForArbitrageTx osmomath.Dec
@@ -74,7 +76,8 @@ func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) osmomath.Dec {
 }
 
 func parseMempool1559(opts servertypes.AppOptions) bool {
-	return parseBoolFromConfig(opts, "adaptive-fee-enabled", DefaultMempool1559Enabled)
+	GlobalMempool1559Enabled = parseBoolFromConfig(opts, "adaptive-fee-enabled", DefaultMempool1559Enabled)
+	return GlobalMempool1559Enabled
 }
 
 func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValue osmomath.Dec) osmomath.Dec {
