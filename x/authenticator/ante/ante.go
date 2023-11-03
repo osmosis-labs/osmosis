@@ -18,17 +18,14 @@ import (
 // before transaction execution.
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
-	maxFeePayerGas      uint64
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
-	maxFeePayerGas uint64,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
-		maxFeePayerGas:      maxFeePayerGas,
 	}
 }
 
@@ -53,7 +50,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// this approach presents challenges due to the implementation of the InfiniteGasMeter.
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
-	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
+	maximumUnauthenticatedGasParam := ad.authenticatorKeeper.GetParams(ctx)
+	payerGasMeter := sdk.NewGasMeter(maximumUnauthenticatedGasParam.MaximumUnauthenticatedGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
 	feeTx, ok := tx.(sdk.FeeTx)
@@ -76,7 +74,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
-					ad.maxFeePayerGas, payerGasMeter.GasConsumed())
+					defaultGasReductionParam.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
 				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
 				panic(r)

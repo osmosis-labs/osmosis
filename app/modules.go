@@ -256,6 +256,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
+		authenticatortypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
@@ -279,7 +280,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
-		authenticatortypes.ModuleName,
 	}
 }
 
