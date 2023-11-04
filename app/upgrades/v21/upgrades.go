@@ -48,8 +48,8 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// UNFORKINGNOTE: If we don't manually set this to 1, the gov modules doesn't go through its necessary migrations to version 4
-		fromVM[govtypes.ModuleName] = 1
+		// UNFORKINGNOTE: If we don't manually set this to 2, the gov modules doesn't go through its necessary migrations to version 4
+		fromVM[govtypes.ModuleName] = 2
 		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
