@@ -3,11 +3,11 @@ module github.com/osmosis-labs/osmosis/osmoutils
 go 1.20
 
 require (
-	cosmossdk.io/math v1.1.3-rc.1
+	cosmossdk.io/math v1.1.2
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
-	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231026175343-311472e85591
