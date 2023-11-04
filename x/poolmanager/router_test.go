@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
@@ -1559,9 +1560,10 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 	maxPriceImpactHalved := sdk.MustNewDecFromStr("0.005") // 0.5%
 	maxPriceImpactTiny := sdk.MustNewDecFromStr("0.0005")  // 0.05%
 
-	externalPriceOneBalancer := sdk.MustNewDecFromStr("0.666666667")   // Spot Price
-	externalPriceTwoBalancer := sdk.MustNewDecFromStr("0.622222222")   // Cheaper than spot price
-	externalPriceThreeBalancer := sdk.MustNewDecFromStr("0.663349917") // Transform adjusted max price impact by 50%
+	externalPriceOneBalancer := sdk.MustNewDecFromStr("0.666666667")                 // Spot Price
+	externalPriceOneBalancerInv := math.LegacyOneDec().Quo(externalPriceOneBalancer) // Inverse of externalPriceOneBalancer
+	externalPriceTwoBalancer := sdk.MustNewDecFromStr("0.622222222")                 // Cheaper than spot price
+	externalPriceThreeBalancer := sdk.MustNewDecFromStr("0.663349917")               // Transform adjusted max price impact by 50%
 
 	externalPriceOneStableSwap := sdk.MustNewDecFromStr("1.00000002")             // Spot Price
 	externalPriceTwoStableSwap := sdk.MustNewDecFromStr("0.98989903")             // Cheaper than spot price
@@ -1623,6 +1625,19 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 			},
 			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(39_947)),
 			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(59_327)),
+		},
+		"valid balancer pool - estimate trying to trade 1 token": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBar, sdk.NewInt(1)),
+				ToCoinDenom:    assetBaz,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				ExternalPrice:  externalPriceOneBalancerInv,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBar, sdk.NewInt(0)),
+			expectedOutputCoin: sdk.NewCoin(assetBaz, sdk.NewInt(0)),
 		},
 		"valid balancer pool - estimate trying to trade dust": {
 			preCreatePoolType: types.Balancer,
@@ -1934,6 +1949,21 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 			poolId:            poolId,
 			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
 				FromCoin:       sdk.NewCoin(assetUsdc, sdk.NewInt(20)),
+				ToCoinDenom:    assetEth,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				ExternalPrice:  externalPriceOneConcentratedInv,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetUsdc, sdk.NewInt(0)),
+			expectedOutputCoin:   sdk.NewCoin(assetEth, sdk.NewInt(0)),
+		},
+		"valid concentrated pool - estimate trying to trade one unit": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetUsdc, math.OneInt()),
 				ToCoinDenom:    assetEth,
 				PoolId:         poolId,
 				MaxPriceImpact: maxPriceImpact,

@@ -273,7 +273,7 @@ func BenchmarkGetTickLiquidityForFullRange(b *testing.B) {
 		b.StartTimer()
 
 		// System under test
-		liquidityNet, err := clKeeper.GetTickLiquidityForFullRange(s.Ctx, pool.GetId())
+		liquidityNet, _, err := clKeeper.GetTickLiquidityForFullRange(s.Ctx, pool.GetId())
 		b.StopTimer()
 		noError(b, err)
 

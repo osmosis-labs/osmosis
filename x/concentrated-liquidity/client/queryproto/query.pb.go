@@ -705,7 +705,8 @@ func (m *LiquidityPerTickRangeRequest) GetPoolId() uint64 {
 }
 
 type LiquidityPerTickRangeResponse struct {
-	Liquidity []LiquidityDepthWithRange `protobuf:"bytes,1,rep,name=liquidity,proto3" json:"liquidity"`
+	Liquidity   []LiquidityDepthWithRange `protobuf:"bytes,1,rep,name=liquidity,proto3" json:"liquidity"`
+	BucketIndex int64                     `protobuf:"varint,2,opt,name=bucket_index,json=bucketIndex,proto3" json:"bucket_index,omitempty" yaml:"bucket_index"`
 }
 
 func (m *LiquidityPerTickRangeResponse) Reset()         { *m = LiquidityPerTickRangeResponse{} }
@@ -746,6 +747,13 @@ func (m *LiquidityPerTickRangeResponse) GetLiquidity() []LiquidityDepthWithRange
 		return m.Liquidity
 	}
 	return nil
+}
+
+func (m *LiquidityPerTickRangeResponse) GetBucketIndex() int64 {
+	if m != nil {
+		return m.BucketIndex
+	}
+	return 0
 }
 
 // ===================== QueryClaimableSpreadRewards
@@ -2998,6 +3006,11 @@ func (m *LiquidityPerTickRangeResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	_ = i
 	var l int
 	_ = l
+	if m.BucketIndex != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.BucketIndex))
+		i--
+		dAtA[i] = 0x10
+	}
 	if len(m.Liquidity) > 0 {
 		for iNdEx := len(m.Liquidity) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -3915,6 +3928,9 @@ func (m *LiquidityPerTickRangeResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	if m.BucketIndex != 0 {
+		n += 1 + sovQuery(uint64(m.BucketIndex))
 	}
 	return n
 }
@@ -5659,6 +5675,25 @@ func (m *LiquidityPerTickRangeResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BucketIndex", wireType)
+			}
+			m.BucketIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BucketIndex |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

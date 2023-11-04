@@ -227,6 +227,8 @@ message LiquidityPerTickRangeRequest {
 message LiquidityPerTickRangeResponse {
   repeated LiquidityDepthWithRange liquidity = 1
       [ (gogoproto.nullable) = false ];
+
+  int64 bucket_index = 2 [ (gogoproto.moretags) = "yaml:\"bucket_index\"" ];
 }
 
 // ===================== QueryClaimableSpreadRewards

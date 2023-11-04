@@ -3,11 +3,9 @@ package poolmanager
 import (
 	"errors"
 	"fmt"
-
 	"math/big"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,6 +13,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -35,8 +35,7 @@ func (k Keeper) RouteExactAmountIn(
 	tokenOutMinAmount osmomath.Int,
 ) (tokenOutAmount osmomath.Int, err error) {
 	// Ensure that provided route is not empty and has valid denom format.
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -234,8 +233,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 	}()
 
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -290,8 +288,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 ) (tokenInAmount osmomath.Int, err error) {
 	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, osmomath.Dec{}, osmomath.Dec{}
 	// Ensure that provided route is not empty and has valid denom format.
-	routeStep := types.SwapAmountOutRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountOutRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -744,10 +741,14 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are handled
-	// anyway.
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
 	if err != nil {
+		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if tokenOut.IsZero() {
@@ -765,6 +766,12 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 			ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
 		)
 		if err != nil {
+			if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+				}, nil
+			}
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
@@ -798,15 +805,18 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
-		// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are
-		// handled anyway.
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
 			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec(),
 		)
 		if err != nil {
+			if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+				}, nil
+			}
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-
 		if tokenOut.IsZero() {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
