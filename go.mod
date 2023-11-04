@@ -26,7 +26,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231103234316-a43985716535
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231104014315-0e6ea39760ab
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103234316-a43985716535
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231103234316-a43985716535
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231103234316-a43985716535
@@ -386,6 +386,8 @@ replace (
 
 // exclusion so we use v1.0.0
 exclude github.com/coinbase/rosetta-sdk-go v0.7.9
+
+exclude cosmossdk.io/math v1.1.3-rc.1
 
 // // exclusion so we use v1.0.0-beta.2
 // exclude github.com/cosmos/cosmos-proto v1.0.0-beta.3
