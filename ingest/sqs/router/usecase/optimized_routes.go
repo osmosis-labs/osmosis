@@ -93,7 +93,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string)
 	return bestSingleRouteQuote, nil
 }
 
-func (*Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 0 {
 		return nil, errors.New("no routes were provided")
 	}

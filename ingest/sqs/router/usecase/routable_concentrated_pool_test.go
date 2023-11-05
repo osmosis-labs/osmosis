@@ -36,6 +36,8 @@ var (
 		CurrentTickIndex: 0,
 		HasNoLiquidity:   false,
 	}
+
+	noTakerFee = osmomath.ZeroDec()
 )
 
 func deepCopyTickModel(tickModel *domain.TickModel) *domain.TickModel {
@@ -111,7 +113,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_SuccessCha
 					PoolDenoms:                []string{"foo", "bar"},
 				},
 			}
-			routablePool := routerusecase.NewRoutablePool(poolWrapper, tc.TokenOutDenom)
+			routablePool := routerusecase.NewRoutablePool(poolWrapper, tc.TokenOutDenom, noTakerFee)
 
 			err = routablePool.Validate(osmomath.NewInt(100))
 			s.Require().NoError(err)

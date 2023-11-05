@@ -74,7 +74,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 			}
 
 			mock := &mockPool{ChainPoolModel: cosmwasmPool, Balances: tc.balances, poolType: poolType}
-			routablePool := routerusecase.RoutableTransmuterPoolImpl{mock, tc.tokenOutDenom}
+			routablePool := routerusecase.RoutableTransmuterPoolImpl{mock, tc.tokenOutDenom, noTakerFee}
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
 

@@ -2,6 +2,7 @@ package redis
 
 import (
 	"errors"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -27,6 +28,7 @@ import (
 // has a flag to indicate that there was an error in TVL calculation.
 type poolIngester struct {
 	poolsRepository    domain.PoolsRepository
+	routerRepository   domain.RouterRepository
 	repositoryManager  domain.TxManager
 	gammKeeper         common.PoolKeeper
 	concentratedKeeper common.ConcentratedKeeper
@@ -47,9 +49,10 @@ type denomRoutingInfo struct {
 const UOSMO = "uosmo"
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
+func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository domain.RouterRepository, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
+		routerRepository:   routerRepository,
 		repositoryManager:  repositoryManager,
 		gammKeeper:         gammKeeper,
 		concentratedKeeper: concentratedKeeper,
@@ -62,12 +65,13 @@ func NewPoolIngester(poolsRepository domain.PoolsRepository, repositoryManager d
 
 // ProcessBlock implements ingest.Ingester.
 func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx domain.Tx) error {
-	return pi.updatePoolState(ctx, tx)
+	return pi.processPoolState(ctx, tx)
 }
 
 var _ ingest.AtomicIngester = &poolIngester{}
 
-func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
+// processPoolState processes the pool state. an
+func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// Create a map from denom to routable pool ID.
@@ -80,11 +84,14 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 		return err
 	}
 
+	denomPairToTakerFeeMap := make(map[domain.DenomPair]osmomath.Dec, 0)
+
 	// Parse CFMM pool to the standard SQS types.
 	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
 	for _, pool := range cfmmPools {
+
 		// Parse CFMM pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
 		if err != nil {
 			return err
 		}
@@ -102,7 +109,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	concentratedPoolsParsed := make([]domain.PoolI, 0, len(concentratedPools))
 	for _, pool := range concentratedPools {
 		// Parse concentrated pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
 		if err != nil {
 			return err
 		}
@@ -120,7 +127,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool.AsSerializablePool(), denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
+		pool, err := pi.convertPool(ctx, pool.AsSerializablePool(), denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
 		if err != nil {
 			return err
 		}
@@ -131,6 +138,12 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	ctx.Logger().Info("ingesting pools to Redis", "height", ctx.BlockHeight(), "num_cfmm", len(cfmmPools), "num_concentrated", len(concentratedPools), "num_cosmwasm", len(cosmWasmPools))
 
 	err = pi.poolsRepository.StorePools(goCtx, tx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
+	if err != nil {
+		return err
+	}
+
+	// persist taker fees
+	err = pi.persistTakerFees(ctx, tx, denomPairToTakerFeeMap)
 	if err != nil {
 		return err
 	}
@@ -146,16 +159,13 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 // - TVL is calculated using spot price. TODO: use TWAP (https://app.clickup.com/t/86a182835)
 // - TVL does not account for token precision. TODO: use assetlist for pulling token precision data
 // (https://app.clickup.com/t/86a18287v)
-func convertPool(
+func (pi *poolIngester) convertPool(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
 	denomToRoutingInfoMap map[string]denomRoutingInfo,
-	bankKeeper common.BankKeeper,
-	protorevKeeper common.ProtorevKeeper,
-	poolManagerKeeper common.PoolManagerKeeper,
-	concentratedKeeper common.ConcentratedKeeper,
+	denomPairToTakerFeeMap domain.TakerFeeMap,
 ) (domain.PoolI, error) {
-	balances := bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
 	osmoPoolTVL := osmomath.ZeroInt()
 
@@ -169,14 +179,14 @@ func convertPool(
 		// Check if routable poolID already exists for the denom
 		routingInfo, ok := denomToRoutingInfoMap[balance.Denom]
 		if !ok {
-			poolForDenomPair, err := protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
+			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
 			if err != nil {
 				ctx.Logger().Error("error getting OSMO-based pool", "denom", balance.Denom, "error", err)
 				isErrorInTVL = true
 				continue
 			}
 
-			uosmoBaseAssetSpotPrice, err := poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
+			uosmoBaseAssetSpotPrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
 			if err != nil {
 				ctx.Logger().Error("error calculating spot price for denom", "denom", balance.Denom, "error", err)
 				isErrorInTVL = true
@@ -194,7 +204,16 @@ func convertPool(
 
 	// Get pool denoms. Although these can be inferred from balances, this is safer.
 	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
-	denoms, err := poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
+	denoms, err := pi.poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort denoms for consistent ordering.
+	denoms = sort.StringSlice(denoms)
+
+	// Mutates denomPairToTakerFeeMap with the taker fee for every uniquer denom pair in the denoms list.
+	err = retrieveTakerFeeToMapIfNotExists(ctx, denoms, denomPairToTakerFeeMap, pi.poolManagerKeeper)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +223,7 @@ func convertPool(
 
 	// For CL pools, get the tick data
 	if pool.GetType() == poolmanagertypes.Concentrated {
-		tickData, currentTickIndex, err := concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
+		tickData, currentTickIndex, err := pi.concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
 		// If there is no error, we set the tick model
 		if err == nil {
 			tickModel = &domain.TickModel{
@@ -235,4 +254,16 @@ func convertPool(
 		},
 		TickModel: tickModel,
 	}, nil
+}
+
+// persistTakerFees persists all taker fees to the router repository.
+func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx domain.Tx, takerFeeMap domain.TakerFeeMap) error {
+	for denomPair, takerFee := range takerFeeMap {
+		err := pi.routerRepository.SetTakerFee(sdk.WrapSDKContext(ctx), tx, denomPair.Denom0, denomPair.Denom1, takerFee)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

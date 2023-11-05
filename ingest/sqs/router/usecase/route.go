@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 )
 
@@ -27,8 +28,8 @@ func (r routeImpl) DeepCopy() domain.Route {
 	}
 }
 
-func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string) {
-	routablePool := NewRoutablePool(pool, tokenOutDenom)
+func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee osmomath.Dec) {
+	routablePool := NewRoutablePool(pool, tokenOutDenom, takerFee)
 	r.Pools = append(r.Pools, routablePool)
 }
 

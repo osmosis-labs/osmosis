@@ -20,6 +20,7 @@ import (
 	poolsRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/repository/redis"
 	poolsUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/usecase"
 	redisrepo "github.com/osmosis-labs/osmosis/v20/ingest/sqs/repository/redis"
+	routerRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/repository/redis"
 
 	routerHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
 	routerUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
@@ -31,16 +32,23 @@ import (
 type SideCarQueryServer interface {
 	GetTxManager() domain.TxManager
 	GetPoolsRepository() domain.PoolsRepository
+	GetRouterRepository() domain.RouterRepository
 }
 
 type sideCarQueryServer struct {
-	txManager       domain.TxManager
-	poolsRepository domain.PoolsRepository
+	txManager        domain.TxManager
+	poolsRepository  domain.PoolsRepository
+	routerRepository domain.RouterRepository
 }
 
 // GetPoolsRepository implements SideCarQueryServer.
 func (sqs *sideCarQueryServer) GetPoolsRepository() domain.PoolsRepository {
 	return sqs.poolsRepository
+}
+
+// GetRouterRepository implements SideCarQueryServer.
+func (sqs *sideCarQueryServer) GetRouterRepository() domain.RouterRepository {
+	return sqs.routerRepository
 }
 
 // GetTxManager implements SideCarQueryServer.
@@ -119,7 +127,8 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	}
 
 	// Initialize router usecase and HTTP handler
-	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, poolsUseCase, routerConfig, logger)
+	routerRepository := routerRedisRepository.NewRedisRouterRepo(redisTxManager)
+	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, routerRepository, poolsUseCase, routerConfig, logger)
 	routerHttpDelivery.NewRouterHandler(e, routerUsecase)
 
 	// Start server in a separate goroutine
@@ -132,7 +141,8 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	}()
 
 	return &sideCarQueryServer{
-		txManager:       redisTxManager,
-		poolsRepository: poolsRepository,
+		txManager:        redisTxManager,
+		poolsRepository:  poolsRepository,
+		routerRepository: routerRepository,
 	}, nil
 }

@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -15,7 +16,8 @@ var _ domain.RoutablePool = &routableTransmuterPoolImpl{}
 
 type routableTransmuterPoolImpl struct {
 	domain.PoolI
-	TokenOutDenom string "json:\"token_out_denom\""
+	TokenOutDenom string       "json:\"token_out_denom\""
+	TakerFee      osmomath.Dec "json:\"taker_fee\""
 }
 
 // CalculateTokenOutByTokenIn implements domain.RoutablePool.
@@ -60,6 +62,12 @@ func (r *routableTransmuterPoolImpl) String() string {
 	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
 }
 
+// ChargeTakerFeeExactIn implements domain.RoutablePool.
+// Returns tokenInAmount and does not charge any fee for transmuter pools.
+func (r *routableTransmuterPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (inAmountAfterFee sdk.Coin) {
+	return tokenIn
+}
+
 // validateBalance validates that the balance of the denom to validate is greater than the token in amount.
 // Returns nil on success, error otherwise.
 func validateBalance(tokenInAmount osmomath.Int, balances sdk.Coins, denomToValidate string) error {
@@ -73,4 +81,9 @@ func validateBalance(tokenInAmount osmomath.Int, balances sdk.Coins, denomToVali
 	}
 
 	return nil
+}
+
+// GetTakerFee implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) GetTakerFee() math.LegacyDec {
+	return r.TakerFee
 }

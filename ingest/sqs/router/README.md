@@ -3,7 +3,7 @@
 ## Query
 
 
-## Quote
+### Quote
 
 ```bash
 curl "localhost:9092/quote?tokenIn=5000000uosmo&tokenOutDenom=uusdc" | jq .

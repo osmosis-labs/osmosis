@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -85,6 +86,8 @@ func (p *PoolWrapper) GetTotalValueLockedUOSMO() osmomath.Int {
 
 // GetPoolDenoms implements PoolI.
 func (p *PoolWrapper) GetPoolDenoms() []string {
+	// sort pool denoms
+	sort.Strings(p.SQSModel.PoolDenoms)
 	return p.SQSModel.PoolDenoms
 }
 

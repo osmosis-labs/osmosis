@@ -7,9 +7,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -258,7 +259,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			return osmomath.Int{}, err
 		}
 
-		tokenInAfterSubTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, takerFee)
+		tokenInAfterSubTakerFee, _ := CalcTakerFeeExactIn(tokenIn, takerFee)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
@@ -584,7 +585,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		tokenInAfterTakerFee, _ := k.calcTakerFeeExactOut(tokenIn, takerFee)
+		tokenInAfterTakerFee, _ := CalcTakerFeeExactOut(tokenIn, takerFee)
 
 		insExpected[i] = tokenInAfterTakerFee.Amount
 		tokenOut = tokenInAfterTakerFee
