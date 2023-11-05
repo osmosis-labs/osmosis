@@ -186,6 +186,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	containerId := m.resources[containerName].Container.ID
 
 	var (
+		exec   *docker.Exec
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer
 		err    error
@@ -210,7 +211,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			outBuf.Reset()
 			errBuf.Reset()
 
-			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err = m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -326,8 +327,10 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 	containerId := m.resources[containerName].Container.ID
 
 	var (
+		exec   *docker.Exec
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer
+		err    error
 	)
 
 	var command []string
@@ -351,7 +354,7 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 		outBuf.Reset()
 		errBuf.Reset()
 
-		exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
+		exec, err = m.pool.Client.CreateExec(docker.CreateExecOptions{
 			Context:      ctx,
 			AttachStdout: true,
 			AttachStderr: true,
@@ -394,8 +397,8 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 	}
 
 	if !successConditionMet {
-		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" was not met.\nstdout:\n %s\nstderr:\n %s\n",
-			txHash, outBuf.String(), errBuf.String())
+		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %s\n",
+			txHash, outBuf.String(), errBuf.String(), err)
 	}
 
 	return outBuf, errBuf, nil
