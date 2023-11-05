@@ -15,7 +15,6 @@ import (
 
 type redisPoolsRepo struct {
 	appCodec          codec.Codec
-	client            *redis.Client
 	repositoryManager domain.TxManager
 }
 

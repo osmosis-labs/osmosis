@@ -199,7 +199,12 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 			copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
 			updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
 
-			updatedCurrentRoute.AddPool(pool, poolDenom)
+			takerFee, err := r.takerFeeMap.GetTakerFee(previousTokenOutDenom, poolDenom)
+			if err != nil {
+				return nil, err
+			}
+
+			updatedCurrentRoute.AddPool(pool, poolDenom, takerFee)
 
 			// If we find token in denom in the intermediary pool in the route,
 			// we know for sure that it is more beneficial to start from this pool directly.
@@ -253,4 +258,8 @@ func (r Router) GetMaxSplitIterations() int {
 // GetLogger returns the logger.
 func (r Router) GetLogger() log.Logger {
 	return r.logger
+}
+
+func (r Router) GetTakerFeeMap() domain.TakerFeeMap {
+	return r.takerFeeMap
 }

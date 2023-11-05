@@ -21,6 +21,7 @@ type mockPool struct {
 	totalValueLockedUSDC osmomath.Int
 	poolType             poolmanagertypes.PoolType
 	tokenOutDenom        string
+	takerFee             osmomath.Dec
 }
 
 var (
@@ -65,6 +66,16 @@ func (*mockPool) Validate(minUOSMOTVL math.Int) error {
 // GetTokenOutDenom implements routerusecase.RoutablePool.
 func (mp *mockPool) GetTokenOutDenom() string {
 	return mp.tokenOutDenom
+}
+
+// ChargeTakerFee implements domain.RoutablePool.
+func (*mockPool) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
+	panic("unimplemented")
+}
+
+// GetTakerFee implements domain.PoolI.
+func (mp *mockPool) GetTakerFee() math.LegacyDec {
+	return mp.takerFee
 }
 
 var _ domain.PoolI = &mockPool{}
@@ -140,7 +151,7 @@ func denomNum(i int) string {
 func withRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
 	newRoute := r.DeepCopy()
 	for _, pool := range pools {
-		newRoute.AddPool(pool, pool.GetTokenOutDenom())
+		newRoute.AddPool(pool, pool.GetTokenOutDenom(), pool.GetTakerFee())
 	}
 	return newRoute
 }
@@ -536,7 +547,10 @@ func (s *RouterTestSuite) TestFindRoutes() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 0, 0, nil)
+			// Get taker fees for all pools.
+			takerFees := s.getTakerFeeMapForAllPoolTokenPairs(tc.pools)
+
+			r := routerusecase.NewRouter([]uint64{}, tc.pools, takerFees, tc.maxHops, tc.maxRoutes, 0, 0, nil)
 
 			routes, err := r.FindRoutes(tc.tokenInDenom, tc.tokenOutDenom, tc.currentRoute, tc.poolsUsed, tc.previousTokenOutDenoms)
 
@@ -656,7 +670,9 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 3, 0, nil)
+			takerFees := s.getTakerFeeMapForAllPoolTokenPairs(tc.pools)
+
+			r := routerusecase.NewRouter([]uint64{}, tc.pools, takerFees, tc.maxHops, tc.maxRoutes, 3, 0, nil)
 
 			routes, err := r.GetCandidateRoutes(tc.tokenInDenom, tc.tokenOutDenom)
 

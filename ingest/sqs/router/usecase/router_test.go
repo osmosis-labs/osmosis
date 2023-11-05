@@ -149,8 +149,10 @@ func (s *RouterTestSuite) TestNewRouter() {
 		}
 	)
 
+	takerFees := s.getTakerFeeMapForAllPoolTokenPairs(defaultAllPools)
+
 	// System under test
-	router := routerusecase.NewRouter(preferredPoolIDs, defaultAllPools, maxHops, maxRoutes, maxSplitIterations, minOsmoLiquidity, logger)
+	router := routerusecase.NewRouter(preferredPoolIDs, defaultAllPools, takerFees, maxHops, maxRoutes, maxSplitIterations, minOsmoLiquidity, logger)
 
 	// Assert
 	s.Require().Equal(maxHops, router.GetMaxHops())
@@ -158,4 +160,31 @@ func (s *RouterTestSuite) TestNewRouter() {
 	s.Require().Equal(maxSplitIterations, router.GetMaxSplitIterations())
 	s.Require().Equal(logger, router.GetLogger())
 	s.Require().Equal(expectedSortedPoolIDs, router.GetSortedPoolIDs())
+	s.Require().Equal(takerFees, router.GetTakerFeeMap())
+}
+
+// getTakerFeeMapForAllPoolTokenPairs returns a map of all pool token pairs to their taker fees.
+func (s *RouterTestSuite) getTakerFeeMapForAllPoolTokenPairs(pools []domain.PoolI) domain.TakerFeeMap {
+	pairs := make(domain.TakerFeeMap, 0)
+
+	for _, pool := range pools {
+		poolDenoms := pool.GetPoolDenoms()
+
+		for i := 0; i < len(poolDenoms); i++ {
+			for j := i + 1; j < len(poolDenoms); j++ {
+
+				hasTakerFee := pairs.Has(poolDenoms[i], poolDenoms[j])
+				if hasTakerFee {
+					continue
+				}
+
+				takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, poolDenoms[i], poolDenoms[j])
+				s.Require().NoError(err)
+
+				pairs.SetTakerFee(poolDenoms[i], poolDenoms[j], takerFee)
+			}
+		}
+	}
+
+	return pairs
 }

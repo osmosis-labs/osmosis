@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -11,6 +12,7 @@ import (
 	clmath "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
 	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -18,7 +20,13 @@ var _ domain.RoutablePool = &routableConcentratedPoolImpl{}
 
 type routableConcentratedPoolImpl struct {
 	domain.PoolI
-	TokenOutDenom string "json:\"token_out_denom\""
+	TokenOutDenom string       "json:\"token_out_denom\""
+	TakerFee      osmomath.Dec "json:\"taker_fee\""
+}
+
+// GetTakerFee implements domain.RoutablePool.
+func (*routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
+	panic("unimplemented")
 }
 
 // CalculateTokenOutByTokenIn implements domain.RoutablePool.
@@ -160,6 +168,13 @@ func (rp *routableConcentratedPoolImpl) GetTokenOutDenom() string {
 // String implements domain.RoutablePool.
 func (r *routableConcentratedPoolImpl) String() string {
 	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
+}
+
+// ChargeTakerFee implements domain.RoutablePool.
+// Charges the taker fee for the given token in and returns the token in after the fee has been charged.
+func (r *routableConcentratedPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
+	tokenInAfterTakerFee, _ := poolmanager.CalcTakerFeeExactIn(tokenIn, r.GetTakerFee())
+	return tokenInAfterTakerFee
 }
 
 // TODO: switch to proper logging

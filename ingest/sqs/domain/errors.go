@@ -32,3 +32,12 @@ type ConcentratedPoolNoTickModelError struct {
 func (e ConcentratedPoolNoTickModelError) Error() string {
 	return fmt.Sprintf("concentrated pool (%d) has no tick model", e.PoolId)
 }
+
+type TakerFeeNotFoundForDenomPairError struct {
+	Denom0 string
+	Denom1 string
+}
+
+func (e TakerFeeNotFoundForDenomPairError) Error() string {
+	return fmt.Sprintf("taker fee not found for denom pair (%s, %s)", e.Denom0, e.Denom1)
+}

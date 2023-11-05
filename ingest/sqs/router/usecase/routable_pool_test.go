@@ -38,7 +38,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_CFMM() {
 			s.Require().NoError(err)
 
 			mock := &mockPool{ChainPoolModel: pool}
-			routablePool := routerusecase.NewRoutablePool(mock, tc.tokenOutDenom)
+			routablePool := routerusecase.NewRoutablePool(mock, tc.tokenOutDenom, noTakerFee)
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
 

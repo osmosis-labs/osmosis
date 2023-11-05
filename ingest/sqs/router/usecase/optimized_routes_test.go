@@ -163,7 +163,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			logger, err := log.NewLogger(false)
 			s.Require().NoError(err)
 
-			r := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, 0, 0, tc.maxSplitIterations, 0, logger)
+			r := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, domain.TakerFeeMap{}, 0, 0, tc.maxSplitIterations, 0, logger)
 
 			quote, err := r.GetBestSplitRoutesQuote(tc.routes, tc.tokenIn)
 
@@ -378,7 +378,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 		tc := tc
 		s.Run(name, func() {
 
-			router := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, 0, 0, 0, 0, &log.NoOpLogger{})
+			router := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, domain.TakerFeeMap{}, 0, 0, 0, 0, &log.NoOpLogger{})
 
 			filteredRoutes, err := router.ValidateAndFilterRoutes(tc.routes, tc.tokenInDenom)
 
