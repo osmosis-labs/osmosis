@@ -312,8 +312,8 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		},
 		time.Minute,
 		10*time.Millisecond,
-		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %s\n",
-			success, outBuf.String(), errBuf.String(), err),
+		fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			success, command, outBuf.String(), errBuf.String(), err),
 	)
 
 	return outBuf, errBuf, nil
@@ -397,8 +397,8 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 	}
 
 	if !successConditionMet {
-		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %s\n",
-			txHash, outBuf.String(), errBuf.String(), err)
+		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			txHash, command, outBuf.String(), errBuf.String(), err)
 	}
 
 	return outBuf, errBuf, nil
