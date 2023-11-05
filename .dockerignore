@@ -3,7 +3,6 @@ build/
 docs/
 networks/
 proto/
-scripts/
 tools/
 tests/localosmosis/
 tests/localrelayer/
