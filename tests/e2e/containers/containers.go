@@ -188,6 +188,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	var (
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer
+		err    error
 	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -310,8 +311,8 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		},
 		time.Minute,
 		10*time.Millisecond,
-		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
-			success, outBuf.String(), errBuf.String()),
+		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %s\n",
+			success, outBuf.String(), errBuf.String(), err),
 	)
 
 	return outBuf, errBuf, nil
