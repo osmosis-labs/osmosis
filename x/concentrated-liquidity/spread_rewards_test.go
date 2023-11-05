@@ -495,11 +495,11 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 	// utilizing the production listeners, because we are testing a case that should be impossible
 	s.setListenerMockOnConcentratedLiquidityKeeper()
 
-	err = s.clk.SetPool(s.Ctx, &pool)
+	err = s.Clk.SetPool(s.Ctx, &pool)
 	s.Require().NoError(err)
 
 	// System under test.
-	_, err = s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, &pool, 0)
+	_, err = s.Clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, &pool, 0)
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, accum.AccumDoesNotExistError{AccumName: types.KeySpreadRewardPoolAccumulator(validPoolId)})
 }
@@ -537,9 +537,9 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 			pool := s.preparePoolAndDefaultPosition()
 			s.AddToSpreadRewardAccumulator(pool.GetId(), initialGlobalSpreadRewardGrowth)
 
-			clpool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+			clpool, err := s.Clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, clpool, tc.tick)
+			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := s.Clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, clpool, tc.tick)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal, initialSpreadRewardGrowthOppositeDirectionOfLastTraversal)
 		})
