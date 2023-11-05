@@ -33,6 +33,14 @@ const (
 var (
 	defaultAmount     = osmomath.NewInt(1_000_000_000)
 	halfDefaultAmount = defaultAmount.QuoRaw(2)
+
+	// Sets precision tof test tokens to match the precision of UOSMO
+	// for simplicity.
+	defaultOneToOneUosmoPrecisionMap = map[string]int{
+		USDT: redisingester.OneToOnePrecision,
+		USDC: redisingester.OneToOnePrecision,
+		USDW: redisingester.OneToOnePrecision,
+	}
 )
 
 func TestIngesterTestSuite(t *testing.T) {
@@ -80,7 +88,7 @@ func (s *IngesterTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee()
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 	s.Require().NoError(err)
 
 	// 2 for the spot price (each denom is worth 2 OSMO) and 2 for each denom
@@ -127,7 +135,7 @@ func (s *IngesterTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
 	// 2 OSMO per USDT amount + 4 OSMO per USDC amount (overwritten by routing info)
 	expectedTVL := defaultAmount.MulRaw(2).Add(defaultAmount.MulRaw(4))
@@ -159,7 +167,7 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPoo
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
 	// 2 OSMO per USDT amount + half amount OSMO itself
 	expectedTVL := defaultAmount.MulRaw(2).Add(halfDefaultAmount)
@@ -187,7 +195,7 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsItself()
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
 	// 2 OSMO per USDT amount + half amount OSMO itself
 	expectedTVL := defaultAmount.MulRaw(2).Add(halfDefaultAmount)
@@ -216,7 +224,7 @@ func (s *IngesterTestSuite) TestConvertPool_NoRouteSet() {
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
 	// Only counts half amount of OSMO because USDT has no route set.
 	expectedTVL := halfDefaultAmount
@@ -244,7 +252,7 @@ func (s *IngesterTestSuite) TestConvertPool_InvalidPoolSetInRoutes_SilentSpotPri
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
 	// Only counts half amount of OSMO because USDT has no route set.
 	expectedTVL := halfDefaultAmount
@@ -277,7 +285,7 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated() {
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, concentratedPool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, concentratedPool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 	s.Require().NoError(err)
 
 	// 1:1 ration, twice the default amount
@@ -330,7 +338,7 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	poolIngester := s.initializePoolIngester()
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, concentratedPool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, concentratedPool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 	s.Require().NoError(err)
 
 	// 1:1 ration, twice the default amount
@@ -363,6 +371,80 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	s.Require().True(actualModel.HasNoLiquidity)
 }
 
+// This test validates TVL calculation for a pool that has a token with non-osmo (6) precision
+// that is set by the precision map given as a parameter.c
+func (s *IngesterTestSuite) TestConvertPool_NonOsmoPrecision() {
+	s.Setup()
+
+	s.setDefaultPoolManagerTakerFee()
+
+	// Create OSMO / USDT pool and set the protorev route
+	// Note that spot price is 1 OSMO = 2 USDT
+	usdtOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdtOsmoPoolID)
+
+	// Prepare a stablecoin pool that we attempt to convert
+	stableCoinPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
+
+	// Fetch the pool from state.
+	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, stableCoinPoolID)
+	s.Require().NoError(err)
+
+	denomToRoutingInfoMap := map[string]redisingester.DenomRoutingInfo{}
+	denomPairToTakerFeeMap := domain.TakerFeeMap{}
+	customPrecisionMap := map[string]int{
+		USDT: 18,
+	}
+
+	poolIngester := s.initializePoolIngester()
+
+	// System under test
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, customPrecisionMap)
+	s.Require().NoError(err)
+
+	// 1 for the OSMO-denominated TVL. 3 for the USDT-denominated TVL.
+	// 1:1 spot price based on the reserves. However, precision multiplier is 3 (18 (osmo) / 6 (usdt) = 3)
+	expectedTVL := defaultAmount.MulRaw(4)
+	expectTVLError := false
+	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
+	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+}
+
+func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
+	s.Setup()
+
+	s.setDefaultPoolManagerTakerFee()
+
+	// Create OSMO / USDT pool and set the protorev route
+	// Note that spot price is 1 OSMO = 2 USDT
+	usdtOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdtOsmoPoolID)
+
+	// Prepare a stablecoin pool that we attempt to convert
+	stableCoinPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
+
+	// Fetch the pool from state.
+	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, stableCoinPoolID)
+	s.Require().NoError(err)
+
+	denomToRoutingInfoMap := map[string]redisingester.DenomRoutingInfo{}
+	denomPairToTakerFeeMap := domain.TakerFeeMap{}
+	emptyPrecisionMap := map[string]int{}
+
+	poolIngester := s.initializePoolIngester()
+
+	// System under test
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, emptyPrecisionMap)
+	s.Require().NoError(err)
+
+	// 1 for the OSMO-denominated TVL. No USDT-denominated TVL because precision is not given in the map
+	expectedTVL := defaultAmount.MulRaw(1)
+	// TVL error due to no USDT precision in the map.
+	expectTVLError := true
+	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
+	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+}
+
 // This test validates that the block is processes correctly.
 // That is, it checks that:
 // - the appropriate pools are ingested
@@ -377,6 +459,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		redisRouterMock = &redisRouterRepositoryMock{
 			takerFeeMap: domain.TakerFeeMap{},
 		}
+		tokensUseCaseMock = &tokensUseCaseMock{}
 
 		// Note: this is a dummy tx that is not initialized correctly.
 		// We do note expect it to be called or used by the system under test
@@ -394,7 +477,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	customTakerFeeConcentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, USDC, 1, osmomath.ZeroDec())
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 
-	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
 
 	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
 	s.Require().NoError(err)
@@ -467,7 +550,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 }
 
 func (s *IngesterTestSuite) initializePoolIngester() *redisingester.PoolIngester {
-	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
 	poolIngester, ok := atomicIngester.(*redisingester.PoolIngester)
 	s.Require().True(ok)
 	return poolIngester

@@ -21,6 +21,7 @@ import (
 	poolsUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/usecase"
 	redisrepo "github.com/osmosis-labs/osmosis/v20/ingest/sqs/repository/redis"
 	routerRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/repository/redis"
+	tokensUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/tokens/usecase"
 
 	routerHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
 	routerUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
@@ -33,12 +34,19 @@ type SideCarQueryServer interface {
 	GetTxManager() domain.TxManager
 	GetPoolsRepository() domain.PoolsRepository
 	GetRouterRepository() domain.RouterRepository
+	GetTokensUseCase() domain.TokensUsecase
 }
 
 type sideCarQueryServer struct {
 	txManager        domain.TxManager
 	poolsRepository  domain.PoolsRepository
 	routerRepository domain.RouterRepository
+	tokensUseCase    domain.TokensUsecase
+}
+
+// GetTokensUseCase implements SideCarQueryServer.
+func (sqs *sideCarQueryServer) GetTokensUseCase() domain.TokensUsecase {
+	return sqs.tokensUseCase
 }
 
 // GetPoolsRepository implements SideCarQueryServer.
@@ -126,10 +134,13 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 		MaxSplitIterations: 10,
 	}
 
-	// Initialize router usecase and HTTP handler
+	// Initialize router repository, usecase and HTTP handler
 	routerRepository := routerRedisRepository.NewRedisRouterRepo(redisTxManager)
 	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, routerRepository, poolsUseCase, routerConfig, logger)
 	routerHttpDelivery.NewRouterHandler(e, routerUsecase)
+
+	// Initialized tokens usecase
+	tokensUseCase := tokensUseCase.NewTokensUsecase(timeoutContext)
 
 	// Start server in a separate goroutine
 	go func() {
@@ -144,5 +155,6 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 		txManager:        redisTxManager,
 		poolsRepository:  poolsRepository,
 		routerRepository: routerRepository,
+		tokensUseCase:    tokensUseCase,
 	}, nil
 }
