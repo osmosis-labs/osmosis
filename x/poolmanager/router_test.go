@@ -1340,7 +1340,7 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(routes []types.Swa
 		s.Require().NoError(err)
 
 		tokenInCoin := sdk.NewCoin(hop.TokenInDenom, tokenInAmt)
-		tokenInCoinAfterAddTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
+		tokenInCoinAfterAddTakerFee, _ := poolmanager.CalcTakerFeeExactOut(tokenInCoin, takerFee)
 
 		nextTokenOut = tokenInCoinAfterAddTakerFee
 	}
@@ -1365,7 +1365,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(routes []types
 		takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
 		s.Require().NoError(err)
 
-		nextTokenInAfterSubTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
+		nextTokenInAfterSubTakerFee, _ := poolmanager.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 		// we then do individual swaps until we reach the end of the swap route
 		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, osmomath.OneInt(), spreadFactor)
