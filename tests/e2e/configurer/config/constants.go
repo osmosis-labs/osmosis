@@ -12,9 +12,9 @@ const (
 	// estimated number of blocks it takes to deposit for a proposal
 	PropDepositBlocks float32 = 1
 	// number of blocks it takes to vote for a single validator to vote for a proposal
-	PropVoteBlocks float32 = 1.2
+	PropVoteBlocks float32 = 1
 	// number of blocks used as a calculation buffer
-	PropBufferBlocks float32 = 6
+	PropBufferBlocks float32 = 8
 	// max retries for json unmarshalling
 	MaxRetries = 60
 )
