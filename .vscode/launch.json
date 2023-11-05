@@ -304,7 +304,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestNewRouter",
+                "TestRouterTestSuite/TestFindRoutes",
                 "-test.v"
             ],
         },
@@ -318,7 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEdgeCases/22",
+                "TestRouterTestSuite/TestFindRoutes",
                 "-test.v"
             ],
         },
@@ -332,7 +332,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestIngesterTestSuite/TestConvertPool_Concentrated",
+                "TestIngesterTestSuite/TestConvertPool_NonOsmoPrecision",
                 "-test.v"
             ],
         },

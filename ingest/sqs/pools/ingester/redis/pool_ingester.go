@@ -29,6 +29,7 @@ import (
 type poolIngester struct {
 	poolsRepository    domain.PoolsRepository
 	routerRepository   domain.RouterRepository
+	tokensUseCase      domain.TokensUsecase
 	repositoryManager  domain.TxManager
 	gammKeeper         common.PoolKeeper
 	concentratedKeeper common.ConcentratedKeeper
@@ -46,13 +47,19 @@ type denomRoutingInfo struct {
 	Price  osmomath.BigDec
 }
 
-const UOSMO = "uosmo"
+const (
+	UOSMO          = "uosmo"
+	uosmoPrecision = 6
+)
+
+var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository domain.RouterRepository, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
+func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository domain.RouterRepository, tokensUseCase domain.TokensUsecase, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		routerRepository:   routerRepository,
+		tokensUseCase:      tokensUseCase,
 		repositoryManager:  repositoryManager,
 		gammKeeper:         gammKeeper,
 		concentratedKeeper: concentratedKeeper,
@@ -74,6 +81,12 @@ var _ ingest.AtomicIngester = &poolIngester{}
 func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
+	// TODO: can be cached
+	tokenPrecisionMap, err := pi.tokensUseCase.GetDenomPrecisions(goCtx)
+	if err != nil {
+		return err
+	}
+
 	// Create a map from denom to routable pool ID.
 	denomToRoutablePoolIDMap := make(map[string]denomRoutingInfo)
 
@@ -91,7 +104,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	for _, pool := range cfmmPools {
 
 		// Parse CFMM pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
 			return err
 		}
@@ -109,7 +122,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	concentratedPoolsParsed := make([]domain.PoolI, 0, len(concentratedPools))
 	for _, pool := range concentratedPools {
 		// Parse concentrated pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
 			return err
 		}
@@ -127,7 +140,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool.AsSerializablePool(), denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
+		pool, err := pi.convertPool(ctx, pool.AsSerializablePool(), denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
 			return err
 		}
@@ -164,6 +177,7 @@ func (pi *poolIngester) convertPool(
 	pool poolmanagertypes.PoolI,
 	denomToRoutingInfoMap map[string]denomRoutingInfo,
 	denomPairToTakerFeeMap domain.TakerFeeMap,
+	tokenPrecisionMap map[string]int,
 ) (domain.PoolI, error) {
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
@@ -186,12 +200,24 @@ func (pi *poolIngester) convertPool(
 				continue
 			}
 
+			basePrecison, ok := tokenPrecisionMap[balance.Denom]
+			if !ok {
+				ctx.Logger().Error("error getting token precision", "denom", balance.Denom)
+				isErrorInTVL = true
+				continue
+			}
+
 			uosmoBaseAssetSpotPrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
 			if err != nil {
 				ctx.Logger().Error("error calculating spot price for denom", "denom", balance.Denom, "error", err)
 				isErrorInTVL = true
 				continue
 			}
+
+			// Scale on-chain spot price to the correct token precision.
+			precisionMultiplier := osmomath.NewBigDec(int64(basePrecison)).Quo(uosmoPrecisionBigDec)
+
+			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
 
 			routingInfo = denomRoutingInfo{
 				PoolID: poolForDenomPair,

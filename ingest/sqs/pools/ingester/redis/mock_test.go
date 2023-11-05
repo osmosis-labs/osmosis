@@ -79,3 +79,14 @@ func (r *redisRouterRepositoryMock) SetTakerFee(ctx context.Context, tx domain.T
 }
 
 var _ domain.RouterRepository = &redisRouterRepositoryMock{}
+
+type tokensUseCaseMock struct {
+	tokenPrecisionMap map[string]int
+}
+
+// GetDenomPrecisions implements domain.TokensUsecase.
+func (tu *tokensUseCaseMock) GetDenomPrecisions(ctx context.Context) (map[string]int, error) {
+	return tu.tokenPrecisionMap, nil
+}
+
+var _ domain.TokensUsecase = &tokensUseCaseMock{}
