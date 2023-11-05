@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -143,26 +142,26 @@ func parseTxResponse(outStr string) (txResponse TxResponse, err error) {
 	if strings.Contains(outStr, "{\"height\":\"") {
 		startIdx := strings.Index(outStr, "{\"height\":\"")
 		if startIdx == -1 {
-			log.Fatalf("Start of JSON data not found")
+			return txResponse, fmt.Errorf("Start of JSON data not found")
 		}
 		// Trim the string to start from the identified index
 		outStrTrimmed := outStr[startIdx:]
 		// JSON format
 		err = json.Unmarshal([]byte(outStrTrimmed), &txResponse)
 		if err != nil {
-			log.Fatalf("JSON Unmarshal error: %v", err)
+			return txResponse, fmt.Errorf("JSON Unmarshal error: %v", err)
 		}
 	} else {
 		// Find the start of the YAML data
 		startIdx := strings.Index(outStr, "code: ")
 		if startIdx == -1 {
-			log.Fatalf("Start of YAML data not found")
+			return txResponse, fmt.Errorf("Start of YAML data not found")
 		}
 		// Trim the string to start from the identified index
 		outStrTrimmed := outStr[startIdx:]
 		err = yaml.Unmarshal([]byte(outStrTrimmed), &txResponse)
 		if err != nil {
-			log.Fatalf("YAML Unmarshal error: %v", err)
+			return txResponse, fmt.Errorf("YAML Unmarshal error: %v", err)
 		}
 	}
 	return txResponse, err
