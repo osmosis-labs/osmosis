@@ -32,7 +32,7 @@ var (
 
 // AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on uptime accumulators.
 func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
-	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
+	uptimeAccumulators, err := s.Clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
 	for _, positionId := range positionIds {
@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 
 // GetTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each uptime accumulator.
 func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []sdk.DecCoins {
-	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
+	uptimeAccumulators, err := s.Clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
 	unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
@@ -84,14 +84,14 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 // It also asserts that no more incentives can be claimed for the position.
 func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
 	// Initial claim and assertion
-	claimedRewards, forfeitedRewards, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, forfeitedRewards, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedRewards, claimedRewards)
 	s.Require().Equal(expectedForfeited, forfeitedRewards)
 
 	// Sanity check that cannot claim again.
-	claimedRewards, _, err = s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, _, err = s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -1797,13 +1797,13 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	swapAddr := testAccs[2]
 	desiredTokenOut := sdk.NewCoin(USDC, osmomath.NewInt(10000))
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(1000000000000000000))))
-	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroBigDec())
+	_, _, _, err := s.Clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroBigDec())
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully
-	_, _, err = s.clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
+	_, _, err = s.Clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
 	s.Require().NoError(err)
-	_, _, err = s.clk.WithdrawPosition(s.Ctx, secondPositionAddr, secondPosId, secondPosLiq)
+	_, _, err = s.Clk.WithdrawPosition(s.Ctx, secondPositionAddr, secondPosId, secondPosLiq)
 	s.Require().NoError(err)
 }
 
@@ -2023,7 +2023,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	)
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(incentiveCoin))
-	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], incentiveCoin, rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
+	_, err := s.Clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], incentiveCoin, rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
 	s.Require().NoError(err)
 
 	// Estimates how much to swap in to approximately reach the given tick
@@ -2031,7 +2031,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	// from the refeteched pool as well as its liquidity. Assumes that
 	// liquidity is constant between current tick and toTick.
 	estimateCoinZeroIn := func(toTick int64) sdk.Coin {
-		pool, err := s.clk.GetPoolById(s.Ctx, poolId)
+		pool, err := s.Clk.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		s.Require().True(toTick < pool.GetCurrentTick())
@@ -2047,7 +2047,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	// from the refeteched pool as well as its liquidity. Assumes that
 	// liquidity is constant between current tick and toTick.
 	estimateCoinOneIn := func(toTick int64) sdk.Coin {
-		pool, err := s.clk.GetPoolById(s.Ctx, poolId)
+		pool, err := s.Clk.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		s.Require().True(toTick > pool.GetCurrentTick())
@@ -2084,7 +2084,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
 
 	// Refetch pool
-	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
+	pool, err = s.Clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Swap to approximately DefaultCurrTick + 150
@@ -2231,7 +2231,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 	// Export and import genesis to make sure that negative accumulation does not lead to unexpected
 	// panics in serialization and deserialization.
-	spreadRewardAccumulator, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, poolId)
+	spreadRewardAccumulator, err := s.Clk.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	accum, err := spreadRewardAccumulator.GetPosition(types.KeySpreadRewardPositionAccumulator(negativeIntervalAccumPositionData.ID))
@@ -2240,11 +2240,11 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	// Validate that at least one accumulator is negative for the test to be valid.
 	s.Require().True(accum.AccumValuePerShare.IsAnyNegative())
 
-	export := s.clk.ExportGenesis(s.Ctx)
+	export := s.Clk.ExportGenesis(s.Ctx)
 
 	s.SetupTest()
 
-	s.clk.InitGenesis(s.Ctx, *export)
+	s.Clk.InitGenesis(s.Ctx, *export)
 }
 
 // TestTransferPositions validates the following:

@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -658,7 +657,7 @@ func (k Keeper) updatePoolForSwap(
 ) error {
 	// Fixed gas consumption per swap to prevent spam
 	poolId := pool.GetId()
-	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
+	ctx.GasMeter().ConsumeGas(types.ConcentratedGasFeeForSwap, "cl pool swap computation")
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err

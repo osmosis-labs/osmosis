@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) assertGlobalInvariants(expectedGlobalRewardValues Expe
 // * Total pool incentives across all pools
 func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]model.Position, sdk.Coins, sdk.Coins, sdk.Coins) {
 	// Get total spread rewards distributed to all pools
-	allPools, err := s.clk.GetPools(ctx)
+	allPools, err := s.Clk.GetPools(ctx)
 	totalPoolAssets, totalSpreadRewards, totalIncentives := sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()
 
 	// Sum up pool balances across all pools
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]mod
 	}
 
 	// Get all positions in state
-	allPoolPositions, err := s.clk.GetAllPositions(ctx)
+	allPoolPositions, err := s.Clk.GetAllPositions(ctx)
 	s.Require().NoError(err)
 
 	return allPoolPositions, totalPoolAssets, totalSpreadRewards, totalIncentives
@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 		initialBalance := s.App.BankKeeper.GetAllBalances(cachedCtx, owner)
 
 		// Collect spread rewards.
-		collectedSpread, err := s.clk.CollectSpreadRewards(cachedCtx, owner, position.PositionId)
+		collectedSpread, err := s.Clk.CollectSpreadRewards(cachedCtx, owner, position.PositionId)
 		s.Require().NoError(err)
 
 		// Collect incentives.
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 		//
 		// Balancer full range incentives are also not factored in because they are claimed and sent to
 		// gauge immediately upon distribution.
-		collectedIncentives, _, err := s.clk.CollectIncentives(cachedCtx, owner, position.PositionId)
+		collectedIncentives, _, err := s.Clk.CollectIncentives(cachedCtx, owner, position.PositionId)
 		s.Require().NoError(err)
 
 		// Ensure position owner's balance was updated correctly
@@ -168,11 +168,11 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 		s.Require().NoError(err)
 
 		// Withdraw all assets from position
-		amt0Withdrawn, amt1Withdrawn, err := s.clk.WithdrawPosition(cachedCtx, owner, position.PositionId, position.Liquidity)
+		amt0Withdrawn, amt1Withdrawn, err := s.Clk.WithdrawPosition(cachedCtx, owner, position.PositionId, position.Liquidity)
 		s.Require().NoError(err)
 
 		// Convert withdrawn assets to coins
-		positionPool, err := s.clk.GetPoolById(cachedCtx, position.PoolId)
+		positionPool, err := s.Clk.GetPoolById(cachedCtx, position.PoolId)
 		s.Require().NoError(err)
 		withdrawn := sdk.NewCoins(
 			sdk.NewCoin(positionPool.GetToken0(), amt0Withdrawn),
