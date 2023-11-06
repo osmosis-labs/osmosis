@@ -218,4 +218,4 @@ replace (
 )
 
 // exclusion so we use v1.0.0
-exclude github.com/coinbase/rosetta-sdk-go/types v1.0.0
+exclude github.com/coinbase/rosetta-sdk-go v0.7.0
