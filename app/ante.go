@@ -19,7 +19,6 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 
-	"github.com/skip-mev/block-sdk/block"
 	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 )
@@ -37,11 +36,10 @@ func NewAnteHandler(
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper *ibckeeper.Keeper,
-	txEncoder sdk.TxEncoder,
-	feeGrantKeeper txfeestypes.FeegrantKeeper,
-	freeLane block.Lane,
 	auctionKeeper *auctionkeeper.Keeper,
+	txEncoder sdk.TxEncoder,
 	mevLane auctionante.MEVLane,
+	mempool auctionante.Mempool,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -62,15 +60,6 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
-		block.NewIgnoreDecorator(
-			ante.NewDeductFeeDecorator(
-				ak,
-				bankKeeper,
-				feeGrantKeeper,
-				nil,
-			),
-			freeLane,
-		),
 		deductFeeDecorator,
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
@@ -78,6 +67,6 @@ func NewAnteHandler(
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
-		auctionante.NewAuctionDecorator(auctionKeeper, txEncoder, mevLane),
+		auctionante.NewAuctionDecorator(*auctionKeeper, txEncoder, mevLane, mempool),
 	)
 }

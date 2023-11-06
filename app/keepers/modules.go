@@ -7,7 +7,6 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	auctionmodule "github.com/skip-mev/block-sdk/x/auction"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -65,6 +64,8 @@ import (
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v20/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+
+	"github.com/skip-mev/block-sdk/x/auction"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -109,7 +110,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	feegrantmodule.AppModuleBasic{},
 	authzmodule.AppModuleBasic{},
 	consensus.AppModuleBasic{},
-	auctionmodule.AppModuleBasic{},
+	auction.AppModuleBasic{},
 	ibc.AppModuleBasic{},
 	upgrade.AppModuleBasic{},
 	evidence.AppModuleBasic{},

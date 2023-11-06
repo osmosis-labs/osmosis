@@ -40,7 +40,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/math"
 
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 
@@ -96,13 +95,22 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v20/x/mint"
 
-	skipabci "github.com/skip-mev/block-sdk/abci"
-	signer_extraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
-	"github.com/skip-mev/block-sdk/block"
-	"github.com/skip-mev/block-sdk/block/base"
-	defaultlane "github.com/skip-mev/block-sdk/lanes/base"
-	"github.com/skip-mev/block-sdk/lanes/free"
-	"github.com/skip-mev/block-sdk/lanes/mev"
+	// skipabci "github.com/skip-mev/block-sdk/abci"
+	// signer_extraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
+	// "github.com/skip-mev/block-sdk/block"
+	// "github.com/skip-mev/block-sdk/block/base"
+	// defaultlane "github.com/skip-mev/block-sdk/lanes/base"
+	// "github.com/skip-mev/block-sdk/lanes/free"
+	// "github.com/skip-mev/block-sdk/lanes/mev"
+
+	// Block-sdk imports
+	blocksdkabci "github.com/skip-mev/block-sdk/abci"
+	signer_extraction_adapter "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
+	blocksdk "github.com/skip-mev/block-sdk/block"
+	blocksdkbase "github.com/skip-mev/block-sdk/block/base"
+	base_lane "github.com/skip-mev/block-sdk/lanes/base"
+	mev_lane "github.com/skip-mev/block-sdk/lanes/mev"
+	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 )
 
 const appName = "OsmosisApp"
@@ -184,7 +192,11 @@ type OsmosisApp struct {
 	homePath     string
 
 	// custom checkTx handler
-	checkTxHandler mev.CheckTx
+	checkTxHandler mev_lane.CheckTx
+
+	// lanes
+	Mempool auctionante.Mempool
+	MEVLane auctionante.MEVLane
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -363,59 +375,37 @@ func NewOsmosisApp(
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
-	// Set POB's mempool into the app.
-	// Create the lanes.
-	//
-	// NOTE: The lanes are ordered by priority. The first lane is the highest priority
-	// lane and the last lane is the lowest priority lane.
-	// MEV lane allows transactions to bid for inclusion at the top of the next block.
-	mevConfig := base.LaneConfig{
+	// initialize block-sdk Mempool
+	maxTxs := 0 // no limit
+	cfg := blocksdkbase.LaneConfig{
 		Logger:          app.Logger(),
-		TxEncoder:       app.GetTxConfig().TxEncoder(),
 		TxDecoder:       app.GetTxConfig().TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
-		SignerExtractor: signer_extraction.NewDefaultAdapter(),
-		MaxTxs:          1000,
+		TxEncoder:       app.GetTxConfig().TxEncoder(),
+		SignerExtractor: signer_extraction_adapter.NewDefaultAdapter(),
+		MaxBlockSpace:   sdk.ZeroDec(),
+		MaxTxs:          maxTxs,
 	}
-	mevLane := mev.NewMEVLane(
-		mevConfig,
-		mev.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder(), signer_extraction.NewDefaultAdapter()),
+
+	baseLane := base_lane.NewDefaultLane(cfg)
+
+	mevLane := mev_lane.NewMEVLane(
+		cfg,
+		mev_lane.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder(), signer_extraction_adapter.NewDefaultAdapter()),
+	)
+	app.MEVLane = mevLane
+	// initialize mempool
+	mempool := blocksdk.NewLanedMempool(
+		app.Logger(),
+		true,
+		[]blocksdk.Lane{
+			mevLane,  // mev-lane is first to prioritize bids being placed at the TOB
+			baseLane, // finally, all the rest of txs...
+		}...,
 	)
 
-	// Free lane allows transactions to be included in the next block for free.
-	freeConfig := base.LaneConfig{
-		Logger:          app.Logger(),
-		TxEncoder:       app.GetTxConfig().TxEncoder(),
-		TxDecoder:       app.GetTxConfig().TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
-		SignerExtractor: signer_extraction.NewDefaultAdapter(),
-		MaxTxs:          1000,
-	}
-	freeLane := free.NewFreeLane(
-		freeConfig,
-		base.DefaultTxPriority(),
-		free.DefaultMatchHandler(),
-	)
-
-	// Default lane accepts all other transactions.
-	defaultConfig := base.LaneConfig{
-		Logger:          app.Logger(),
-		TxEncoder:       app.GetTxConfig().TxEncoder(),
-		TxDecoder:       app.GetTxConfig().TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.6"),
-		SignerExtractor: signer_extraction.NewDefaultAdapter(),
-		MaxTxs:          1000,
-	}
-	defaultLane := defaultlane.NewDefaultLane(defaultConfig)
-
-	// Set the lanes into the mempool.
-	lanes := []block.Lane{
-		mevLane,
-		freeLane,
-		defaultLane,
-	}
-	mempool := block.NewLanedMempool(app.Logger(), true, lanes...)
+	// set the mempool first
 	app.SetMempool(mempool)
+	app.Mempool = mempool
 
 	anteHandler := NewAnteHandler(
 		appOpts,
@@ -428,44 +418,37 @@ func NewOsmosisApp(
 		ante.DefaultSigVerificationGasConsumer,
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
-		app.GetTxConfig().TxEncoder(),
-		app.FeeGrantKeeper,
-		freeLane,
 		app.AuctionKeeper,
-		mevLane,
-	)
-
-	// Set the lane config on the lanes.
-	for _, lane := range lanes {
-		lane.SetAnteHandler(anteHandler)
-	}
-
-	// Set the abci handlers on base app
-	proposalHandler := skipabci.NewProposalHandler(
-		app.Logger(),
-		app.GetTxConfig().TxDecoder(),
 		app.GetTxConfig().TxEncoder(),
+		mevLane,
 		mempool,
 	)
-	app.SetPrepareProposal(proposalHandler.PrepareProposalHandler())
-	app.SetProcessProposal(proposalHandler.ProcessProposalHandler())
-
-	// Set the custom CheckTx handler on BaseApp.
-	checkTxHandler := mev.NewCheckTxHandler(
-		app,
-		app.GetTxConfig().TxDecoder(),
-		mevLane,
-		anteHandler,
-		app.ChainID(),
-	)
-	app.SetCheckTx(checkTxHandler.CheckTx())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
+	mevLane.SetAnteHandler(anteHandler)
+	baseLane.SetAnteHandler(anteHandler)
 	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
+
+	handler := blocksdkabci.NewProposalHandler(
+		app.Logger(),
+		app.GetTxConfig().TxDecoder(),
+		mempool,
+	)
+	app.SetPrepareProposal(handler.PrepareProposalHandler())
+	app.SetProcessProposal(handler.ProcessProposalHandler())
+
+	checkTxHandler := mev_lane.NewCheckTxHandler(
+		app.BaseApp,
+		encodingConfig.TxConfig.TxDecoder(),
+		mevLane,
+		anteHandler,
+		app.ChainID(),
+	)
+	app.SetCheckTx(checkTxHandler.CheckTx())
 
 	// Register snapshot extensions to enable state-sync for wasm.
 	if manager := app.SnapshotManager(); manager != nil {
@@ -512,7 +495,7 @@ func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 }
 
 // SetCheckTx sets the checkTxHandler for the app.
-func (app *OsmosisApp) SetCheckTx(handler mev.CheckTx) {
+func (app *OsmosisApp) SetCheckTx(handler mev_lane.CheckTx) {
 	app.checkTxHandler = handler
 }
 

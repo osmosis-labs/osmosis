@@ -9,7 +9,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 
-	auctionmodule "github.com/skip-mev/block-sdk/x/auction"
+	auction "github.com/skip-mev/block-sdk/x/auction"
 	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -167,7 +167,7 @@ func appModules(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasm.ModuleName)),
-		auctionmodule.NewAppModule(appCodec, *app.AuctionKeeper),
+		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, *app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),

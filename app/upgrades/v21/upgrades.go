@@ -141,20 +141,25 @@ func CreateUpgradeHandler(
 		}
 
 		// set POB params
-		pobAddr := keepers.AccountKeeper.GetModuleAddress(auctiontypes.ModuleName)
-
-		builderParams := auctiontypes.DefaultGenesisState().GetParams()
-		builderParams.EscrowAccountAddress = pobAddr
-		builderParams.MaxBundleSize = 4
-		builderParams.FrontRunningProtection = false
-		builderParams.MinBidIncrement.Denom = keepers.StakingKeeper.BondDenom(ctx)
-		builderParams.MinBidIncrement.Amount = math.NewInt(1000000)
-		builderParams.ReserveFee.Denom = keepers.StakingKeeper.BondDenom(ctx)
-		builderParams.ReserveFee.Amount = math.NewInt(1000000)
-		if err := keepers.AuctionKeeper.SetParams(ctx, builderParams); err != nil {
+		err = setAuctionParams(ctx, keepers)
+		if err != nil {
 			return nil, err
 		}
 
 		return migrations, nil
 	}
+}
+
+func setAuctionParams(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+	pobAddr := keepers.AccountKeeper.GetModuleAddress(auctiontypes.ModuleName)
+
+	auctionParams := auctiontypes.Params{
+		MaxBundleSize:          2,
+		EscrowAccountAddress:   pobAddr,
+		ReserveFee:             sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1_000_000)},
+		MinBidIncrement:        sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1_000_000)},
+		FrontRunningProtection: true,
+		ProposerFee:            math.LegacyNewDecWithPrec(25, 2),
+	}
+	return keepers.AuctionKeeper.SetParams(ctx, auctionParams)
 }
