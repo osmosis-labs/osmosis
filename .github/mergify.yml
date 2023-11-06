@@ -7,12 +7,12 @@ defaults:
 queue_rules:
   - name: default
     conditions:
-      - "#approved-reviews-by>=1"
+      - "#approved-reviews-by>=2"
 
 pull_request_rules:
   - name: automerge to the base branch with label automerge and branch protection passing
     conditions:
-      - "#approved-reviews-by>=1"
+      - "#approved-reviews-by>=2"
       - base=main
       - label=A:automerge
     actions:
