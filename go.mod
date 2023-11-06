@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231106005604-d3f3eafb0702
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231106005604-d3f3eafb0702
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231106005604-d3f3eafb0702
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231106005604-d3f3eafb0702
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231104014315-0e6ea39760ab
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103234316-a43985716535
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231103234316-a43985716535
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231103234316-a43985716535
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/pob v1.0.4
@@ -43,7 +43,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
-	google.golang.org/grpc v1.58.3
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
