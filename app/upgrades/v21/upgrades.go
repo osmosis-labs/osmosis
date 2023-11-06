@@ -3,7 +3,7 @@ package v21
 import (
 	"cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	buildertypes "github.com/skip-mev/pob/x/builder/types"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,7 +90,7 @@ func CreateUpgradeHandler(
 				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
 
 			// POB
-			case buildertypes.ModuleName:
+			case auctiontypes.ModuleName:
 				// already SDK v47
 				continue
 
@@ -141,9 +141,9 @@ func CreateUpgradeHandler(
 		}
 
 		// set POB params
-		pobAddr := keepers.AccountKeeper.GetModuleAddress(buildertypes.ModuleName)
+		pobAddr := keepers.AccountKeeper.GetModuleAddress(auctiontypes.ModuleName)
 
-		builderParams := buildertypes.DefaultGenesisState().GetParams()
+		builderParams := auctiontypes.DefaultGenesisState().GetParams()
 		builderParams.EscrowAccountAddress = pobAddr
 		builderParams.MaxBundleSize = 4
 		builderParams.FrontRunningProtection = false
@@ -151,7 +151,7 @@ func CreateUpgradeHandler(
 		builderParams.MinBidIncrement.Amount = math.NewInt(1000000)
 		builderParams.ReserveFee.Denom = keepers.StakingKeeper.BondDenom(ctx)
 		builderParams.ReserveFee.Amount = math.NewInt(1000000)
-		if err := keepers.BuildKeeper.SetParams(ctx, builderParams); err != nil {
+		if err := keepers.AuctionKeeper.SetParams(ctx, builderParams); err != nil {
 			return nil, err
 		}
 

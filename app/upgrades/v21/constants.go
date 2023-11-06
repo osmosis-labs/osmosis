@@ -1,7 +1,7 @@
 package v21
 
 import (
-	buildertypes "github.com/skip-mev/pob/x/builder/types"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 
@@ -22,7 +22,7 @@ var Upgrade = upgrades.Upgrade{
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			// new modules
-			buildertypes.ModuleName,
+			auctiontypes.ModuleName,
 
 			// v47 modules
 			crisistypes.ModuleName,

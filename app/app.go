@@ -32,8 +32,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	pobabci "github.com/skip-mev/pob/abci"
-	pobmempool "github.com/skip-mev/pob/mempool"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -42,6 +40,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/math"
 
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 
@@ -96,6 +95,14 @@ import (
 	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v20/x/mint"
+
+	skipabci "github.com/skip-mev/block-sdk/abci"
+	signer_extraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
+	"github.com/skip-mev/block-sdk/block"
+	"github.com/skip-mev/block-sdk/block/base"
+	defaultlane "github.com/skip-mev/block-sdk/lanes/base"
+	"github.com/skip-mev/block-sdk/lanes/free"
+	"github.com/skip-mev/block-sdk/lanes/mev"
 )
 
 const appName = "OsmosisApp"
@@ -176,7 +183,8 @@ type OsmosisApp struct {
 	configurator module.Configurator
 	homePath     string
 
-	checkTxHandler pobabci.CheckTx
+	// custom checkTx handler
+	checkTxHandler mev.CheckTx
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -355,13 +363,58 @@ func NewOsmosisApp(
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
-	factory := pobmempool.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder())
-	mempool := pobmempool.NewAuctionMempool(
-		app.GetTxConfig().TxDecoder(),
-		app.GetTxConfig().TxEncoder(),
-		0,
-		factory,
+	// Set POB's mempool into the app.
+	// Create the lanes.
+	//
+	// NOTE: The lanes are ordered by priority. The first lane is the highest priority
+	// lane and the last lane is the lowest priority lane.
+	// MEV lane allows transactions to bid for inclusion at the top of the next block.
+	mevConfig := base.LaneConfig{
+		Logger:          app.Logger(),
+		TxEncoder:       app.GetTxConfig().TxEncoder(),
+		TxDecoder:       app.GetTxConfig().TxDecoder(),
+		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
+		SignerExtractor: signer_extraction.NewDefaultAdapter(),
+		MaxTxs:          1000,
+	}
+	mevLane := mev.NewMEVLane(
+		mevConfig,
+		mev.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder(), signer_extraction.NewDefaultAdapter()),
 	)
+
+	// Free lane allows transactions to be included in the next block for free.
+	freeConfig := base.LaneConfig{
+		Logger:          app.Logger(),
+		TxEncoder:       app.GetTxConfig().TxEncoder(),
+		TxDecoder:       app.GetTxConfig().TxDecoder(),
+		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
+		SignerExtractor: signer_extraction.NewDefaultAdapter(),
+		MaxTxs:          1000,
+	}
+	freeLane := free.NewFreeLane(
+		freeConfig,
+		base.DefaultTxPriority(),
+		free.DefaultMatchHandler(),
+	)
+
+	// Default lane accepts all other transactions.
+	defaultConfig := base.LaneConfig{
+		Logger:          app.Logger(),
+		TxEncoder:       app.GetTxConfig().TxEncoder(),
+		TxDecoder:       app.GetTxConfig().TxDecoder(),
+		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.6"),
+		SignerExtractor: signer_extraction.NewDefaultAdapter(),
+		MaxTxs:          1000,
+	}
+	defaultLane := defaultlane.NewDefaultLane(defaultConfig)
+
+	// Set the lanes into the mempool.
+	lanes := []block.Lane{
+		mevLane,
+		freeLane,
+		defaultLane,
+	}
+	mempool := block.NewLanedMempool(app.Logger(), true, lanes...)
 	app.SetMempool(mempool)
 
 	anteHandler := NewAnteHandler(
@@ -375,26 +428,33 @@ func NewOsmosisApp(
 		ante.DefaultSigVerificationGasConsumer,
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
-		app.BuildKeeper,
 		app.GetTxConfig().TxEncoder(),
-		mempool,
+		app.FeeGrantKeeper,
+		freeLane,
+		app.AuctionKeeper,
+		mevLane,
 	)
 
-	proposalHandlers := pobabci.NewProposalHandler(
-		mempool,
+	// Set the lane config on the lanes.
+	for _, lane := range lanes {
+		lane.SetAnteHandler(anteHandler)
+	}
+
+	// Set the abci handlers on base app
+	proposalHandler := skipabci.NewProposalHandler(
 		app.Logger(),
-		anteHandler,
-		app.GetTxConfig().TxEncoder(),
 		app.GetTxConfig().TxDecoder(),
+		app.GetTxConfig().TxEncoder(),
+		mempool,
 	)
-	app.SetPrepareProposal(proposalHandlers.PrepareProposalHandler())
-	app.SetProcessProposal(proposalHandlers.ProcessProposalHandler())
+	app.SetPrepareProposal(proposalHandler.PrepareProposalHandler())
+	app.SetProcessProposal(proposalHandler.ProcessProposalHandler())
 
 	// Set the custom CheckTx handler on BaseApp.
-	checkTxHandler := pobabci.NewCheckTxHandler(
-		app.BaseApp,
+	checkTxHandler := mev.NewCheckTxHandler(
+		app,
 		app.GetTxConfig().TxDecoder(),
-		mempool,
+		mevLane,
 		anteHandler,
 		app.ChainID(),
 	)
@@ -452,7 +512,7 @@ func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 }
 
 // SetCheckTx sets the checkTxHandler for the app.
-func (app *OsmosisApp) SetCheckTx(handler pobabci.CheckTx) {
+func (app *OsmosisApp) SetCheckTx(handler mev.CheckTx) {
 	app.checkTxHandler = handler
 }
 

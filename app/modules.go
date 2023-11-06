@@ -8,8 +8,9 @@ import (
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
-	buildermodule "github.com/skip-mev/pob/x/builder"
-	buildertypes "github.com/skip-mev/pob/x/builder/types"
+
+	auctionmodule "github.com/skip-mev/block-sdk/x/auction"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
@@ -136,7 +137,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
-	buildertypes.ModuleName:                       nil,
+	auctiontypes.ModuleName:                       nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -166,7 +167,7 @@ func appModules(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasm.ModuleName)),
-		buildermodule.NewAppModule(appCodec, *app.BuildKeeper),
+		auctionmodule.NewAppModule(appCodec, *app.AuctionKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, *app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -276,7 +277,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		consensusparamtypes.ModuleName,
-		buildertypes.ModuleName,
+		auctiontypes.ModuleName,
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,

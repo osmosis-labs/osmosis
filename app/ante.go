@@ -6,9 +6,6 @@ import (
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	builderante "github.com/skip-mev/pob/x/builder/ante"
-	builderkeeper "github.com/skip-mev/pob/x/builder/keeper"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -21,6 +18,10 @@ import (
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+
+	"github.com/skip-mev/block-sdk/block"
+	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
+	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 )
 
 // Link to default ante handler used by cosmos sdk:
@@ -36,9 +37,11 @@ func NewAnteHandler(
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper *ibckeeper.Keeper,
-	builderKeeper *builderkeeper.Keeper,
 	txEncoder sdk.TxEncoder,
-	mempool builderante.Mempool,
+	feeGrantKeeper txfeestypes.FeegrantKeeper,
+	freeLane block.Lane,
+	auctionKeeper *auctionkeeper.Keeper,
+	mevLane auctionante.MEVLane,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -59,6 +62,15 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
+		block.NewIgnoreDecorator(
+			ante.NewDeductFeeDecorator(
+				ak,
+				bankKeeper,
+				feeGrantKeeper,
+				nil,
+			),
+			freeLane,
+		),
 		deductFeeDecorator,
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
@@ -66,6 +78,6 @@ func NewAnteHandler(
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
-		builderante.NewBuilderDecorator(*builderKeeper, txEncoder, mempool),
+		auctionante.NewAuctionDecorator(auctionKeeper, txEncoder, mevLane),
 	)
 }
