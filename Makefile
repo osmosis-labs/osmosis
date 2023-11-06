@@ -627,6 +627,20 @@ go-mock-update:
 	mockgen -source=ingest/sqs/domain/pools.go -destination=tests/mocks/sqs_pool.go -package=mocks -mock_names=PoolI=MockSQSPoolI
 
 ###############################################################################
+###                                SQS                                      ###
+###############################################################################
+
+redis-start:
+	docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 -v ./redis-cache/:/data redis/redis-stack:7.2.0-v3
+
+redis-stop:
+	docker container rm -f redis-stack
+
+sqs-start: build
+	INGEST_TYPE=sqs INGEST_SQS_DBHOST=localhost INGEST_SQS_DBPORT=6379 INGEST_SQS_SERVER_ADDRESS=:9092 INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS=2 build/osmosisd start
+
+
+###############################################################################
 ###                                Release                                  ###
 ###############################################################################
 
