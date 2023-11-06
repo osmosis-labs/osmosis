@@ -30,10 +30,6 @@ import (
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
-
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
@@ -103,11 +99,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 			incentivesclient.HandleCreateGroupsProposal,
 		},
 	),
-	groupmodule.AppModuleBasic{},
 	params.AppModuleBasic{},
 	crisis.AppModuleBasic{},
 	slashing.AppModuleBasic{},
-	feegrantmodule.AppModuleBasic{},
 	authzmodule.AppModuleBasic{},
 	consensus.AppModuleBasic{},
 	auction.AppModuleBasic{},
@@ -129,7 +123,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
-	nftmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},

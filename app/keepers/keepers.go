@@ -106,11 +106,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 )
 
@@ -139,7 +134,6 @@ type AppKeepers struct {
 	BankKeeper                   bankkeeper.BaseKeeper
 	AuthzKeeper                  *authzkeeper.Keeper
 	AuctionKeeper                *auctionkeeper.Keeper
-	FeeGrantKeeper               *feegrantkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
 	DowntimeKeeper               *downtimedetector.Keeper
@@ -168,8 +162,6 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
-	GroupKeeper                  *groupkeeper.Keeper
-	NFTKeeper                    *nftkeeper.Keeper
 
 	// IBC modules
 	// transfer module
@@ -225,13 +217,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 	)
 	appKeepers.AuthzKeeper = &authzKeeper
-
-	feeGrantKeeper := feegrantkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[feegrant.StoreKey],
-		appKeepers.AccountKeeper,
-	)
-	appKeepers.FeeGrantKeeper = &feeGrantKeeper
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
@@ -497,18 +482,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
 		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper)
-
-	groupConfig := group.DefaultConfig()
-	groupKeeper := groupkeeper.NewKeeper(appKeepers.keys[group.StoreKey], appCodec, bApp.MsgServiceRouter(), appKeepers.AccountKeeper, groupConfig)
-	appKeepers.GroupKeeper = &groupKeeper
-
-	nftKeeper := nftkeeper.NewKeeper(
-		appKeepers.keys[nftkeeper.StoreKey],
-		appCodec,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-	)
-	appKeepers.NFTKeeper = &nftKeeper
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -849,7 +822,6 @@ func KVStoreKeys() []string {
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
-		feegrant.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,
 		lockuptypes.StoreKey,
@@ -869,8 +841,6 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		group.StoreKey,
-		nftkeeper.StoreKey,
 		auctiontypes.StoreKey,
 	}
 }

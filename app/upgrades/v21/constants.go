@@ -8,9 +8,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v21 upgrade.
@@ -27,9 +24,6 @@ var Upgrade = upgrades.Upgrade{
 			// v47 modules
 			crisistypes.ModuleName,
 			consensustypes.ModuleName,
-			feegranttypes.ModuleName,
-			group.ModuleName,
-			nft.ModuleName,
 		},
 		Deleted: []string{},
 	},

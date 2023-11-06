@@ -63,13 +63,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
-
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
@@ -121,7 +114,6 @@ var moduleAccountPermissions = map[string][]string{
 	stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
 	stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
 	govtypes.ModuleName:                           {authtypes.Burner},
-	nft.ModuleName:                                nil,
 	ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
@@ -169,7 +161,6 @@ func appModules(
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasm.ModuleName)),
 		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
-		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, *app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
@@ -256,10 +247,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		distrtypes.ModuleName,
 		downtimetypes.ModuleName,
 		stakingtypes.ModuleName,
-		nft.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
-		feegrant.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
@@ -270,7 +259,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
-		group.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
