@@ -46,5 +46,4 @@ func validateMaximumUnauthenticatedGas(i interface{}) error {
 	}
 
 	return nil
-
 }
