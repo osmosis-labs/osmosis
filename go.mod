@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
-	cosmossdk.io/math v1.1.3-rc.1
+	cosmossdk.io/math v1.1.2
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.40.1
 	github.com/cometbft/cometbft v0.37.2
@@ -364,7 +364,7 @@ require (
 
 replace (
 	cosmossdk.io/math => cosmossdk.io/math v1.1.2
-	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.7.9
+
 	// force utilizing the following versions
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231030033644-c3c7ab7f52ea
@@ -384,10 +384,10 @@ replace (
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
-// // exclusion so we use v1.0.0
-// exclude github.com/coinbase/rosetta-sdk-go v0.7.9
+// exclusion so we use v1.0.0
+exclude github.com/coinbase/rosetta-sdk-go v0.7.9
 
-// exclude cosmossdk.io/math v1.1.3-rc.1
+exclude cosmossdk.io/math v1.1.3-rc.1
 
 // // exclusion so we use v1.0.0-beta.2
 // exclude github.com/cosmos/cosmos-proto v1.0.0-beta.3
