@@ -7,7 +7,7 @@ require (
 	github.com/ignite/cli v0.23.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231104014315-0e6ea39760ab
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103234316-a43985716535
-	github.com/osmosis-labs/osmosis/v20 v20.0.0
+	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231106011704-63e927e3b8c8
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231103234316-a43985716535
 
 )
@@ -49,7 +49,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
-	github.com/cosmos/ibc-go/v4 v4.3.1 // indirect
+	github.com/cosmos/ibc-go/v4 v4.3.0 // indirect
 	github.com/cosmos/ibc-go/v7 v7.2.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
@@ -178,8 +178,6 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/ignite/cli => github.com/p0mvn/cli v0.23.1
-
-	github.com/osmosis-labs/osmosis/v20 => ../..
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
