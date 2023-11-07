@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
@@ -39,6 +41,7 @@ type poolIngester struct {
 	bankKeeper         common.BankKeeper
 	protorevKeeper     common.ProtorevKeeper
 	poolManagerKeeper  common.PoolManagerKeeper
+	logger             log.Logger
 }
 
 // denomRoutingInfo encapsulates the routing information for a pool.
@@ -150,7 +153,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 		cosmWasmPoolsParsed = append(cosmWasmPoolsParsed, pool)
 	}
 
-	ctx.Logger().Info("ingesting pools to Redis", "height", ctx.BlockHeight(), "num_cfmm", len(cfmmPools), "num_concentrated", len(concentratedPools), "num_cosmwasm", len(cosmWasmPools))
+	pi.logger.Info("ingesting pools to Redis", zap.Int64("height", ctx.BlockHeight()), zap.Int("num_cfmm", len(cfmmPools)), zap.Int("num_concentrated", len(concentratedPools)), zap.Int("num_cosmwasm", len(cosmWasmPools)))
 
 	err = pi.poolsRepository.StorePools(goCtx, tx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
 	if err != nil {
@@ -202,21 +205,21 @@ func (pi *poolIngester) convertPool(
 		if !ok {
 			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
 			if err != nil {
-				ctx.Logger().Debug("error getting OSMO-based pool", "denom", balance.Denom, "error", err)
+				pi.logger.Debug("error getting OSMO-based pool", zap.String("denom", balance.Denom), zap.Error(err))
 				isErrorInTVL = true
 				continue
 			}
 
 			basePrecison, ok := tokenPrecisionMap[balance.Denom]
 			if !ok {
-				ctx.Logger().Debug("error getting token precision", "denom", balance.Denom)
+				pi.logger.Debug("error getting token precision", zap.String("denom", balance.Denom))
 				isErrorInTVL = true
 				continue
 			}
 
 			uosmoBaseAssetSpotPrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
 			if err != nil {
-				ctx.Logger().Error("error calculating spot price for denom", "denom", balance.Denom, "error", err)
+				pi.logger.Debug("error calculating spot price for denom", zap.String("denom", balance.Denom), zap.Error(err))
 				isErrorInTVL = true
 				continue
 			}
@@ -299,4 +302,9 @@ func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx domain.Tx, takerFee
 	}
 
 	return nil
+}
+
+// SetLogger implements ingest.AtomicIngester.
+func (pi *poolIngester) SetLogger(logger log.Logger) {
+	pi.logger = logger
 }

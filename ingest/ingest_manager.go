@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 )
 
 // IngestManager is an interface that defines the methods for the ingest manager.
@@ -35,6 +36,8 @@ type AtomicIngester interface {
 	// Returns error if fails to process.
 	// It does not flush data to sink. The caller must call Exec on the transaction
 	ProcessBlock(ctx sdk.Context, tx domain.Tx) error
+
+	SetLogger(log.Logger)
 }
 
 // ingesterImpl is an implementation of IngesterManager.

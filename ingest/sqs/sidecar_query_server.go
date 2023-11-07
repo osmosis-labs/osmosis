@@ -35,6 +35,7 @@ type SideCarQueryServer interface {
 	GetPoolsRepository() domain.PoolsRepository
 	GetRouterRepository() domain.RouterRepository
 	GetTokensUseCase() domain.TokensUsecase
+	GetLogger() log.Logger
 }
 
 type sideCarQueryServer struct {
@@ -42,6 +43,7 @@ type sideCarQueryServer struct {
 	poolsRepository  domain.PoolsRepository
 	routerRepository domain.RouterRepository
 	tokensUseCase    domain.TokensUsecase
+	logger           log.Logger
 }
 
 // GetTokensUseCase implements SideCarQueryServer.
@@ -62,6 +64,11 @@ func (sqs *sideCarQueryServer) GetRouterRepository() domain.RouterRepository {
 // GetTxManager implements SideCarQueryServer.
 func (sqs *sideCarQueryServer) GetTxManager() domain.TxManager {
 	return sqs.txManager
+}
+
+// GetLogger implements SideCarQueryServer.
+func (sqs *sideCarQueryServer) GetLogger() log.Logger {
+	return sqs.logger
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
@@ -157,5 +164,6 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 		poolsRepository:  poolsRepository,
 		routerRepository: routerRepository,
 		tokensUseCase:    tokensUseCase,
+		logger:           logger,
 	}, nil
 }
