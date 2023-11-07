@@ -72,7 +72,7 @@ localnet-clean:
 localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
 
 localnet-state-export-build:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+	@export GIT_COMMIT=$(git log -1 --format='%H') && DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
 
 localnet-state-export-start:
 	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up

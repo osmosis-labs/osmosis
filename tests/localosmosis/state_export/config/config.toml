@@ -1,0 +1,113 @@
+abci = "socket"
+db_backend = "goleveldb"
+db_dir = "data"
+fast_sync = false
+filter_peers = false
+genesis_file = "config/genesis.json"
+log_format = "plain"
+log_level = "info"
+moniker = "validator"
+node_key_file = "config/node_key.json"
+priv_validator_key_file = "config/priv_validator_key.json"
+priv_validator_laddr = ""
+priv_validator_state_file = "data/priv_validator_state.json"
+proxy_app = "tcp://127.0.0.1:26658"
+
+[consensus]
+  create_empty_blocks = true
+  create_empty_blocks_interval = "10s"
+  discard_abci_responses = false
+  double_sign_check_height = 0
+  peer_gossip_sleep_duration = "100ms"
+  peer_query_maj23_sleep_duration = "2s"
+  skip_timeout_commit = false
+  timeout_commit = "2s"
+  timeout_precommit = "1s"
+  timeout_precommit_delta = "500ms"
+  timeout_prevote = "1s"
+  timeout_prevote_delta = "500ms"
+  timeout_propose = "3s"
+  timeout_propose_delta = "500ms"
+  wal_file = "data/cs.wal/wal"
+
+[fastsync]
+  version = "v0"
+
+[instrumentation]
+  max_open_connections = 3
+  namespace = "tendermint"
+  prometheus = false
+  prometheus_listen_addr = ":26660"
+
+[mempool]
+  broadcast = true
+  cache_size = 10000
+  keep-invalid-txs-in-cache = false
+  max_batch_bytes = 0
+  max_tx_bytes = 2097152
+  max_txs_bytes = 1073741824
+  recheck = true
+  size = 10000
+  ttl-duration = "0s"
+  ttl-num-blocks = 0
+  version = "v0"
+  wal_dir = ""
+
+[p2p]
+  addr_book_file = "config/addrbook.json"
+  addr_book_strict = true
+  allow_duplicate_ip = false
+  dial_timeout = "3s"
+  external_address = ""
+  flush_throttle_timeout = "100ms"
+  handshake_timeout = "20s"
+  laddr = "tcp://0.0.0.0:26656"
+  max_num_inbound_peers = 320
+  max_num_outbound_peers = 40
+  max_packet_msg_payload_size = 1024
+  persistent_peers = ""
+  persistent_peers_max_dial_period = "0s"
+  pex = true
+  private_peer_ids = ""
+  recv_rate = 5120000
+  seed_mode = false
+  seeds = ""
+  send_rate = 5120000
+  unconditional_peer_ids = ""
+  upnp = false
+
+[rpc]
+  cors_allowed_methods = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT',]
+  cors_allowed_headers = ["Origin", "Accept", "Accept-Encoding", "Content-Type", "X-Requested-With", "X-Server-Time", ]
+  cors_allowed_origins = ["*"]
+  experimental_close_on_slow_client = false
+  experimental_subscription_buffer_size = 200
+  experimental_websocket_write_buffer_size = 200
+  grpc_laddr = ""
+  grpc_max_open_connections = 900
+  laddr = "tcp://0.0.0.0:26657"
+  max_body_bytes = 1000000
+  max_header_bytes = 1048576
+  max_open_connections = 900
+  max_subscription_clients = 100
+  max_subscriptions_per_client = 5
+  pprof_laddr = "localhost:6060"
+  timeout_broadcast_tx_commit = "10s"
+  tls_cert_file = ""
+  tls_key_file = ""
+  unsafe = false
+
+[statesync]
+  chunk_fetchers = "4"
+  chunk_request_timeout = "10s"
+  discovery_time = "15s"
+  enable = false
+  rpc_servers = ""
+  temp_dir = ""
+  trust_hash = ""
+  trust_height = 0
+  trust_period = "112h0m0s"
+
+[tx_index]
+  indexer = "kv"
+  psql-conn = ""
