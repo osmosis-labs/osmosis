@@ -3842,7 +3842,7 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 			denom:            FOO,
 			expectedNumPools: 0,
 		},
-		"Tow pools, pools contains denom": {
+		"Two pools, pools contains denom": {
 			poolType: []types.PoolType{types.Balancer, types.Balancer},
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
