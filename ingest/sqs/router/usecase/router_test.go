@@ -21,6 +21,8 @@ func TestRouterTestSuite(t *testing.T) {
 	suite.Run(t, new(RouterTestSuite))
 }
 
+const dummyTotalValueLockedErrorStr = "total value locked error string"
+
 // This test validates a happy path expected behavior that
 // when router is created, it first takes the preferred pool IDs,
 // then sorts by TVL.
@@ -72,7 +74,7 @@ func (s *RouterTestSuite) TestNewRouter() {
 		maxRoutes          = 5
 		maxSplitIterations = 10
 		minOsmoLiquidity   = 2
-		logger, _          = log.NewLogger(false, "")
+		logger, _          = log.NewLogger(false, "", "")
 		defaultAllPools    = []domain.PoolI{
 			&domain.PoolWrapper{
 				ChainModel: balancerPool,
@@ -114,23 +116,23 @@ func (s *RouterTestSuite) TestNewRouter() {
 				},
 			},
 
-			// Note that the pools below have highes TVL.
+			// Note that the pools below have higher TVL.
 			// However, since they have TVL error flag set, they
 			// should be sorted after other pools, unless overriden by preferredPoolIDs.
 			&domain.PoolWrapper{
 				ChainModel: secondBalancerPool,
 				SQSModel: domain.SQSPool{
-					TotalValueLockedUSDC:      osmomath.NewInt(10 * usecase.OsmoPrecisionMultiplier), // 10
-					PoolDenoms:                defaultDenoms,
-					IsErrorInTotalValueLocked: true,
+					TotalValueLockedUSDC:  osmomath.NewInt(10 * usecase.OsmoPrecisionMultiplier), // 10
+					PoolDenoms:            defaultDenoms,
+					TotalValueLockedError: dummyTotalValueLockedErrorStr,
 				},
 			},
 			&domain.PoolWrapper{
 				ChainModel: thirdBalancerPool,
 				SQSModel: domain.SQSPool{
-					TotalValueLockedUSDC:      osmomath.NewInt(11 * usecase.OsmoPrecisionMultiplier), // 11
-					PoolDenoms:                defaultDenoms,
-					IsErrorInTotalValueLocked: true,
+					TotalValueLockedUSDC:  osmomath.NewInt(11 * usecase.OsmoPrecisionMultiplier), // 11
+					PoolDenoms:            defaultDenoms,
+					TotalValueLockedError: dummyTotalValueLockedErrorStr,
 				},
 			},
 		}

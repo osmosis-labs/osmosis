@@ -107,10 +107,10 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_SuccessCha
 					HasNoLiquidity:   false,
 				},
 				SQSModel: domain.SQSPool{
-					TotalValueLockedUSDC:      osmomath.NewInt(100),
-					IsErrorInTotalValueLocked: false,
-					Balances:                  sdk.Coins{},
-					PoolDenoms:                []string{"foo", "bar"},
+					TotalValueLockedUSDC:  osmomath.NewInt(100),
+					TotalValueLockedError: "",
+					Balances:              sdk.Coins{},
+					PoolDenoms:            []string{"foo", "bar"},
 				},
 			}
 			routablePool := routerusecase.NewRoutablePool(poolWrapper, tc.TokenOutDenom, noTakerFee)
@@ -134,10 +134,10 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 
 	var (
 		defaultSQSModel = domain.SQSPool{
-			TotalValueLockedUSDC:      osmomath.NewInt(100),
-			IsErrorInTotalValueLocked: false,
-			Balances:                  sdk.Coins{},
-			PoolDenoms:                []string{Denom0, Denom1},
+			TotalValueLockedUSDC:  osmomath.NewInt(100),
+			TotalValueLockedError: "",
+			Balances:              sdk.Coins{},
+			PoolDenoms:            []string{Denom0, Denom1},
 		}
 	)
 

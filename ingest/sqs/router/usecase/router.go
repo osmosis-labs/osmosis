@@ -50,6 +50,8 @@ const (
 
 	// Transmuter pools should be prioritized due to no slippage swaps.
 	transmuterPoints = preferredPoints * 2
+
+	noTotalValueLockedError = ""
 )
 
 // NewRouter returns a new Router.
@@ -97,7 +99,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 		rating := tvlProportion.Mul(osmomath.NewDec(proRataTVLPointsTotal)).RoundInt64()
 
 		// 100 points for no error in TVL
-		if !pool.GetSQSPoolModel().IsErrorInTotalValueLocked {
+		if pool.GetSQSPoolModel().TotalValueLockedError == noTotalValueLockedError {
 			rating += noTVLErrorPoints
 		}
 
@@ -130,7 +132,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 	logger.Info("initial pool order")
 	for i, pool := range ratedPools {
 		sqsModel := pool.pool.GetSQSPoolModel()
-		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool.GetId()), zap.Int64("rate", pool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.Bool("is_tvl_error", sqsModel.IsErrorInTotalValueLocked))
+		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool.GetId()), zap.Int64("rate", pool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.String("tvl_error", sqsModel.TotalValueLockedError))
 	}
 
 	// Convert back to pools

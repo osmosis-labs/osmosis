@@ -13,7 +13,10 @@ type (
 	RoutableTransmuterPoolImpl   = routableTransmuterPoolImpl
 )
 
-const OsmoPrecisionMultiplier = osmoPrecisionMultiplier
+const (
+	OsmoPrecisionMultiplier = osmoPrecisionMultiplier
+	NoTotalValueLockedError = noTotalValueLockedError
+)
 
 func (r Router) FindRoutes(tokenInDenom, tokenOutDenom string, currentRoute domain.Route, poolsUsed []bool, previousTokenOutDenoms []string) ([]domain.Route, error) {
 	return r.findRoutes(tokenInDenom, tokenOutDenom, currentRoute, poolsUsed, previousTokenOutDenoms)
