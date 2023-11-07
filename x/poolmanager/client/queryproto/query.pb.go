@@ -120,7 +120,7 @@ func (m *ParamsResponse) GetParams() types.Params {
 
 // =============================== EstimateSwapExactAmountIn
 type EstimateSwapExactAmountInRequest struct {
-	PoolId  uint64                    `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId  uint64                    `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"` // Deprecated: Do not use.
 	TokenIn string                    `protobuf:"bytes,3,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty" yaml:"token_in"`
 	Routes  []types.SwapAmountInRoute `protobuf:"bytes,4,rep,name=routes,proto3" json:"routes" yaml:"routes"`
 }
@@ -158,6 +158,7 @@ func (m *EstimateSwapExactAmountInRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EstimateSwapExactAmountInRequest proto.InternalMessageInfo
 
+// Deprecated: Do not use.
 func (m *EstimateSwapExactAmountInRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
@@ -180,7 +181,7 @@ func (m *EstimateSwapExactAmountInRequest) GetRoutes() []types.SwapAmountInRoute
 }
 
 type EstimateSwapExactAmountInWithPrimitiveTypesRequest struct {
-	PoolId              uint64   `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId              uint64   `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"` // Deprecated: Do not use.
 	TokenIn             string   `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty" yaml:"token_in"`
 	RoutesPoolId        []uint64 `protobuf:"varint,3,rep,packed,name=routes_pool_id,json=routesPoolId,proto3" json:"routes_pool_id,omitempty" yaml:"routes_pool_id"`
 	RoutesTokenOutDenom []string `protobuf:"bytes,4,rep,name=routes_token_out_denom,json=routesTokenOutDenom,proto3" json:"routes_token_out_denom,omitempty" yaml:"routes_token_out_denom"`
@@ -223,6 +224,7 @@ func (m *EstimateSwapExactAmountInWithPrimitiveTypesRequest) XXX_DiscardUnknown(
 
 var xxx_messageInfo_EstimateSwapExactAmountInWithPrimitiveTypesRequest proto.InternalMessageInfo
 
+// Deprecated: Do not use.
 func (m *EstimateSwapExactAmountInWithPrimitiveTypesRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
@@ -354,7 +356,7 @@ var xxx_messageInfo_EstimateSwapExactAmountInResponse proto.InternalMessageInfo
 
 // =============================== EstimateSwapExactAmountOut
 type EstimateSwapExactAmountOutRequest struct {
-	PoolId   uint64                     `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId   uint64                     `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"` // Deprecated: Do not use.
 	Routes   []types.SwapAmountOutRoute `protobuf:"bytes,3,rep,name=routes,proto3" json:"routes" yaml:"routes"`
 	TokenOut string                     `protobuf:"bytes,4,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty" yaml:"token_out"`
 }
@@ -392,6 +394,7 @@ func (m *EstimateSwapExactAmountOutRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EstimateSwapExactAmountOutRequest proto.InternalMessageInfo
 
+// Deprecated: Do not use.
 func (m *EstimateSwapExactAmountOutRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
@@ -414,7 +417,7 @@ func (m *EstimateSwapExactAmountOutRequest) GetTokenOut() string {
 }
 
 type EstimateSwapExactAmountOutWithPrimitiveTypesRequest struct {
-	PoolId             uint64   `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId             uint64   `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"` // Deprecated: Do not use.
 	RoutesPoolId       []uint64 `protobuf:"varint,2,rep,packed,name=routes_pool_id,json=routesPoolId,proto3" json:"routes_pool_id,omitempty" yaml:"routes_pool_id"`
 	RoutesTokenInDenom []string `protobuf:"bytes,3,rep,name=routes_token_in_denom,json=routesTokenInDenom,proto3" json:"routes_token_in_denom,omitempty" yaml:"routes_token_in_denom"`
 	TokenOut           string   `protobuf:"bytes,4,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty" yaml:"token_out"`
@@ -457,6 +460,7 @@ func (m *EstimateSwapExactAmountOutWithPrimitiveTypesRequest) XXX_DiscardUnknown
 
 var xxx_messageInfo_EstimateSwapExactAmountOutWithPrimitiveTypesRequest proto.InternalMessageInfo
 
+// Deprecated: Do not use.
 func (m *EstimateSwapExactAmountOutWithPrimitiveTypesRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
