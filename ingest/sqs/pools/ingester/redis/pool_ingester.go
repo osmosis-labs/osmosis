@@ -2,6 +2,7 @@ package redis
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -55,6 +56,9 @@ type denomRoutingInfo struct {
 const (
 	UOSMO          = "uosmo"
 	uosmoPrecision = 6
+
+	noTokenPrecisionErrorFmtStr = "error getting token precision %s"
+	spotPriceErrorFmtStr        = "error calculating spot price for denom %s, %s"
 )
 
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
@@ -188,7 +192,7 @@ func (pi *poolIngester) convertPool(
 
 	osmoPoolTVL := osmomath.ZeroInt()
 
-	isErrorInTVL := false
+	var errorInTVLStr string
 	for _, balance := range balances {
 		if strings.Contains(balance.Denom, gammtypes.GAMMTokenPrefix) {
 			// Skip gamm shares
@@ -206,21 +210,21 @@ func (pi *poolIngester) convertPool(
 			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
 			if err != nil {
 				pi.logger.Debug("error getting OSMO-based pool", zap.String("denom", balance.Denom), zap.Error(err))
-				isErrorInTVL = true
+				errorInTVLStr = err.Error()
 				continue
 			}
 
 			basePrecison, ok := tokenPrecisionMap[balance.Denom]
 			if !ok {
-				pi.logger.Debug("error getting token precision", zap.String("denom", balance.Denom))
-				isErrorInTVL = true
+				errorInTVLStr = fmt.Sprintf(noTokenPrecisionErrorFmtStr, balance.Denom)
+				pi.logger.Debug(errorInTVLStr)
 				continue
 			}
 
 			uosmoBaseAssetSpotPrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
 			if err != nil {
-				pi.logger.Debug("error calculating spot price for denom", zap.String("denom", balance.Denom), zap.Error(err))
-				isErrorInTVL = true
+				errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
+				pi.logger.Debug(errorInTVLStr)
 				continue
 			}
 
@@ -283,10 +287,10 @@ func (pi *poolIngester) convertPool(
 	return &domain.PoolWrapper{
 		ChainModel: pool,
 		SQSModel: domain.SQSPool{
-			TotalValueLockedUSDC:      osmoPoolTVL,
-			IsErrorInTotalValueLocked: isErrorInTVL,
-			Balances:                  balances,
-			PoolDenoms:                denoms,
+			TotalValueLockedUSDC:  osmoPoolTVL,
+			TotalValueLockedError: errorInTVLStr,
+			Balances:              balances,
+			PoolDenoms:            denoms,
 		},
 		TickModel: tickModel,
 	}, nil

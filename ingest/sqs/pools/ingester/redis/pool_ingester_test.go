@@ -1,6 +1,7 @@
 package redis_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,10 +11,13 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 	redisingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 	clqueryproto "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
 type IngesterTestSuite struct {
@@ -28,6 +32,8 @@ const (
 	USDW = "usdw"
 
 	UOSMO = redisingester.UOSMO
+
+	noTotalValueLockedErrorStr = ""
 )
 
 var (
@@ -93,9 +99,9 @@ func (s *IngesterTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee()
 
 	// 2 for the spot price (each denom is worth 2 OSMO) and 2 for each denom
 	expectedTVL := defaultAmount.MulRaw(2 * 2)
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(USDC, defaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 
 	// Validate that the input denom pair to taker fee map is updated correctly.
 	s.Require().Equal(expectedDenomPairToTakerFeeMap, denomPairToTakerFeeMap)
@@ -139,9 +145,9 @@ func (s *IngesterTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
 
 	// 2 OSMO per USDT amount + 4 OSMO per USDC amount (overwritten by routing info)
 	expectedTVL := defaultAmount.MulRaw(2).Add(defaultAmount.MulRaw(4))
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(USDC, defaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // This test validates that converting an OSMO paired pool that has to get TVL from another
@@ -171,9 +177,9 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPoo
 
 	// 2 OSMO per USDT amount + half amount OSMO itself
 	expectedTVL := defaultAmount.MulRaw(2).Add(halfDefaultAmount)
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // This test validates that converting an OSMO paired pool that has to get TVL from itself
@@ -199,9 +205,9 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsItself()
 
 	// 2 OSMO per USDT amount + half amount OSMO itself
 	expectedTVL := defaultAmount.MulRaw(2).Add(halfDefaultAmount)
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // Tests that if no route is set, the pool is converted correctly and the method does not error.
@@ -228,9 +234,12 @@ func (s *IngesterTestSuite) TestConvertPool_NoRouteSet() {
 
 	// Only counts half amount of OSMO because USDT has no route set.
 	expectedTVL := halfDefaultAmount
-	expectTVLError := true
+	expectTVLErrorStr := protorevtypes.NoPoolForDenomPairError{
+		BaseDenom:  UOSMO,
+		MatchDenom: USDT,
+	}.Error()
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // Tests that if route is set incorrectly, the error is silently skipped and the error flag is set.
@@ -256,9 +265,10 @@ func (s *IngesterTestSuite) TestConvertPool_InvalidPoolSetInRoutes_SilentSpotPri
 
 	// Only counts half amount of OSMO because USDT has no route set.
 	expectedTVL := halfDefaultAmount
-	expectTVLError := true
+	// Note: empty string is set for simplicity, omitting the actual error in the assertion
+	expectTVLErrorStr := fmt.Sprintf(redis.SpotPriceErrorFmtStr, USDT, "")
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // This test validates that converting a concentrated pool works as expected.
@@ -302,9 +312,9 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated() {
 	osmoassert.Equal(s.T(), tolerance, defaultAmount, osmoBalance.Amount)
 
 	expectedTVL := defaultAmount.Add(osmoBalance.Amount)
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), osmoBalance)
-	s.validatePoolConversion(concentratedPool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(concentratedPool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 
 	// Validate that ticks are set for full range position
 
@@ -348,7 +358,7 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	// osmoBalance := s.App.BankKeeper.GetBalance(s.Ctx, concentratedPool.GetAddress(), UOSMO)
 
 	expectedTVL := osmomath.ZeroInt()
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.Coins{
 		sdk.Coin{
 			Denom:  UOSMO,
@@ -359,7 +369,7 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 			Amount: osmomath.ZeroInt(),
 		},
 	}
-	s.validatePoolConversion(concentratedPool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(concentratedPool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 
 	// Validate that ticks are set for full range position
 
@@ -405,9 +415,9 @@ func (s *IngesterTestSuite) TestConvertPool_NonOsmoPrecision() {
 	// 1 for the OSMO-denominated TVL. 3 for the USDT-denominated TVL.
 	// 1:1 spot price based on the reserves. However, precision multiplier is 3 (18 (osmo) / 6 (usdt) = 3)
 	expectedTVL := defaultAmount.MulRaw(4)
-	expectTVLError := false
+	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
@@ -440,9 +450,9 @@ func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
 	// 1 for the OSMO-denominated TVL. No USDT-denominated TVL because precision is not given in the map
 	expectedTVL := defaultAmount.MulRaw(1)
 	// TVL error due to no USDT precision in the map.
-	expectTVLError := true
+	expectTVLErrorStr := fmt.Sprintf(redis.NoTokenPrecisionErrorFmtStr, USDT)
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
-	s.validatePoolConversion(pool, expectedTVL, expectTVLError, actualPool, expectedBalances)
+	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // This test validates that the block is processes correctly.
@@ -478,6 +488,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 
 	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+	poolIngester.SetLogger(&log.NoOpLogger{})
 
 	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
 	s.Require().NoError(err)
@@ -523,7 +534,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 // - the pool type of the actual pool is equal to the expected pool type.
 // - the TVL of the actual pool is equal to the expected TVL.
 // - the balances of the actual pool is equal to the expected balances.
-func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes.PoolI, expectedTVL osmomath.Int, expectTVLError bool, actualPool domain.PoolI, expectedBalances sdk.Coins) {
+func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes.PoolI, expectedTVL osmomath.Int, expectTVLErrorStr string, actualPool domain.PoolI, expectedBalances sdk.Coins) {
 	// Correct ID
 	s.Require().Equal(expectedPool.GetId(), actualPool.GetId())
 
@@ -533,7 +544,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 	// Validate TVL
 	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUOSMO().String())
 	sqsPoolModel := actualPool.GetSQSPoolModel()
-	s.Require().Equal(expectTVLError, sqsPoolModel.IsErrorInTotalValueLocked)
+	s.Require().Contains(sqsPoolModel.TotalValueLockedError, expectTVLErrorStr)
 
 	// Validate pool denoms
 	poolDenoms := actualPool.GetPoolDenoms()
@@ -552,6 +563,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 func (s *IngesterTestSuite) initializePoolIngester() *redisingester.PoolIngester {
 	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
 	poolIngester, ok := atomicIngester.(*redisingester.PoolIngester)
+	poolIngester.SetLogger(&log.NoOpLogger{})
 	s.Require().True(ok)
 	return poolIngester
 }

@@ -8,7 +8,11 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
-const OneToOnePrecision = uosmoPrecision
+const (
+	OneToOnePrecision           = uosmoPrecision
+	SpotPriceErrorFmtStr        = spotPriceErrorFmtStr
+	NoTokenPrecisionErrorFmtStr = noTokenPrecisionErrorFmtStr
+)
 
 type (
 	DenomRoutingInfo = denomRoutingInfo
