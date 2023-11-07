@@ -13,7 +13,6 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/MsgSetValidatorSetPreference", nil)
 	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "osmosis/MsgDelegateToValidatorSet", nil)
 	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "osmosis/MsgUndelegateFromValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgUndelegateFromRebalancedValidatorSet{}, "osmosis/MsgUndelegateFromRebalancedValidatorSet", nil)
 	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "osmosis/MsgWithdrawDelegationRewards", nil)
 	cdc.RegisterConcrete(&MsgRedelegateValidatorSet{}, "osmosis/MsgRedelegateValidatorSet", nil)
 }
