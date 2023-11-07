@@ -160,7 +160,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			logger, err := log.NewLogger(false)
+			logger, err := log.NewLogger(false, "")
 			s.Require().NoError(err)
 
 			r := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, domain.TakerFeeMap{}, 0, 0, tc.maxSplitIterations, 0, logger)
