@@ -23,9 +23,9 @@ func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 
 	r.logger.Info("found routes ", zap.Int("routes_count", len(routes)))
 
-	// for k, route := range routes {
-	// 	r.logger.Info("route", zap.Int("num", k), zap.Stringer("route", route))
-	// }
+	for k, route := range routes {
+		r.logger.Debug("route", zap.Int("num", k), zap.Stringer("route", route))
+	}
 
 	// Sort routes by number of hops.
 	sort.Slice(routes, func(i, j int) bool {
