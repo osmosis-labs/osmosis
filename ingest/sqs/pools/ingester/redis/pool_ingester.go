@@ -59,6 +59,8 @@ const (
 
 	noTokenPrecisionErrorFmtStr = "error getting token precision %s"
 	spotPriceErrorFmtStr        = "error calculating spot price for denom %s, %s"
+
+	noTotalValueLockedError = ""
 )
 
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)

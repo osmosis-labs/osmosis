@@ -59,7 +59,7 @@ func (tu *tokensUseCase) GetDenomPrecisions(ctx context.Context) (map[string]int
 		denomPrecisions[token.ChainDenom] = token.Precision
 	}
 
-	return nil, nil
+	return denomPrecisions, nil
 }
 
 // getTokensFromChainRegistry fetches the tokens from the chain registry.
