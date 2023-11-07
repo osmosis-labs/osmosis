@@ -3852,7 +3852,7 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 			expectedNumPools: 2,
 		},
 		"Two pools, pools does not contains denom": {
-			poolType: []types.PoolType{types.Balancer, types.Balancer},
+			poolType: []types.PoolType{types.Balancer, types.Concentrated},
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
 				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2. baz-foo
@@ -3861,7 +3861,7 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 			expectedNumPools: 0,
 		},
 		"Many pools": {
-			poolType: []types.PoolType{types.Balancer, types.Balancer, types.Balancer, types.Balancer},
+			poolType: []types.PoolType{types.Concentrated, types.Balancer, types.Concentrated, types.Balancer},
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
 				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
