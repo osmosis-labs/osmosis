@@ -72,16 +72,10 @@ func (sqs *sideCarQueryServer) GetLogger() log.Logger {
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
-func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int, loggerFileName string) (SideCarQueryServer, error) {
+func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int, logger log.Logger) (SideCarQueryServer, error) {
 	// Handle SIGINT and SIGTERM signals to initiate shutdown
 	exitChan := make(chan os.Signal, 1)
 	signal.Notify(exitChan, os.Interrupt, syscall.SIGTERM)
-
-	// logger
-	// TODO: figure out logging to file
-	isProductionLogger := true
-	logger, err := log.NewLogger(isProductionLogger, loggerFileName)
-	logger.Info("Starting sidecar query server")
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -119,7 +113,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 		DB:       0,  // use default DB
 	})
 	redisStatus := redisClient.Ping(ctx)
-	_, err = redisStatus.Result()
+	_, err := redisStatus.Result()
 	if err != nil {
 		return nil, err
 	}
