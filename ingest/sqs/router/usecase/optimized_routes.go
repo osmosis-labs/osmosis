@@ -48,14 +48,19 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain
 		return nil, err
 	}
 
-	r.logger.Info("bestSingleRouteQuote ", zap.Any("value", bestSingleRouteQuote))
+	r.logger.Info("bestSingleRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()), zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
 
 	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
 
-	r.logger.Info("bestSplitRouteQuote ", zap.Any("value", bestSplitRouteQuote))
+	splitRoutes := []zap.Field{}
+	for i, route := range bestSingleRouteQuote.GetRoute() {
+		splitRoutes = append(splitRoutes, zap.Stringer(fmt.Sprintf("route %d", i), route))
+	}
+
+	r.logger.Info("bestSplitRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
 
 	// If the split route quote is better than the single route quote, return the split route quote
 	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
@@ -88,7 +93,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string)
 		return nil, err
 	}
 
-	r.logger.Info("bestSingleRouteQuote ", zap.Any("value", bestSingleRouteQuote))
+	r.logger.Info("bestSingleRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
 
 	return bestSingleRouteQuote, nil
 }
@@ -104,7 +109,8 @@ func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk
 	for _, route := range routes {
 		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn)
 		if err != nil {
-			return nil, err
+			r.logger.Debug("skipping single route due to error in estimate", zap.Error(err))
+			continue
 		}
 
 		if !directRouteTokenOut.IsNil() && (bestRoute.OutAmount.IsNil() || directRouteTokenOut.Amount.LT(bestRoute.OutAmount)) {
@@ -115,6 +121,11 @@ func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk
 			}
 		}
 	}
+
+	if bestRoute.OutAmount.IsNil() {
+		return nil, errors.New("did not find a working direct route")
+	}
+
 	return &quoteImpl{
 		AmountIn:  tokenIn,
 		AmountOut: bestRoute.OutAmount,
