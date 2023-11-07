@@ -74,7 +74,8 @@ func NewLogger(isProduction bool, fileName string, logLevelStr string) (Logger, 
 	}
 
 	logLevel := zap.InfoLevel
-	if logLevelStr == "debug" {
+	isDebugLevel := logLevelStr == "debug"
+	if isDebugLevel {
 		logLevel = zap.DebugLevel
 	}
 
@@ -105,6 +106,8 @@ func NewLogger(isProduction bool, fileName string, logLevelStr string) (Logger, 
 	}
 
 	logger := zap.New(core)
+
+	logger.Info("log level", zap.Bool("is_debug", isDebugLevel), zap.String("log_level", loggerConfig.Level.String()))
 
 	return logger, nil
 }
