@@ -3,6 +3,7 @@ package redis
 import (
 	"errors"
 	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -185,6 +187,11 @@ func (pi *poolIngester) convertPool(
 
 	isErrorInTVL := false
 	for _, balance := range balances {
+		if strings.Contains(balance.Denom, gammtypes.GAMMTokenPrefix) {
+			// Skip gamm shares
+			continue
+		}
+
 		if balance.Denom == UOSMO {
 			osmoPoolTVL = osmoPoolTVL.Add(balance.Amount)
 			continue
@@ -195,14 +202,14 @@ func (pi *poolIngester) convertPool(
 		if !ok {
 			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
 			if err != nil {
-				ctx.Logger().Error("error getting OSMO-based pool", "denom", balance.Denom, "error", err)
+				ctx.Logger().Debug("error getting OSMO-based pool", "denom", balance.Denom, "error", err)
 				isErrorInTVL = true
 				continue
 			}
 
 			basePrecison, ok := tokenPrecisionMap[balance.Denom]
 			if !ok {
-				ctx.Logger().Error("error getting token precision", "denom", balance.Denom)
+				ctx.Logger().Debug("error getting token precision", "denom", balance.Denom)
 				isErrorInTVL = true
 				continue
 			}

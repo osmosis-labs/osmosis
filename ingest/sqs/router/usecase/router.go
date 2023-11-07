@@ -129,7 +129,8 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 	logger.Debug("pool count in router ", zap.Int("pool_count", len(ratedPools)))
 	logger.Info("initial pool order")
 	for i, pool := range ratedPools {
-		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool), zap.Int64("rate", pool.rating))
+		sqsModel := pool.pool.GetSQSPoolModel()
+		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool.GetId()), zap.Int64("rate", pool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.Bool("is_tvl_error", sqsModel.IsErrorInTotalValueLocked))
 	}
 
 	// Convert back to pools
@@ -145,4 +146,18 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 		logger:             logger,
 		maxSplitIterations: maxSplitIterations,
 	}
+}
+
+// FilterSlice filters a slice of integers based on a provided predicate function.
+// TODO: move to osmoutils
+func FilterSlice(slice []int, predicate func(int) bool) []int {
+	result := slice[:0] // Reuse the original slice's storage
+
+	for _, item := range slice {
+		if predicate(item) {
+			result = append(result, item)
+		}
+	}
+
+	return result
 }

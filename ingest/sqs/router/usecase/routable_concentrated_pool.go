@@ -25,8 +25,8 @@ type routableConcentratedPoolImpl struct {
 }
 
 // GetTakerFee implements domain.RoutablePool.
-func (*routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
-	panic("unimplemented")
+func (r *routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
+	return r.TakerFee
 }
 
 // CalculateTokenOutByTokenIn implements domain.RoutablePool.
@@ -150,7 +150,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 		amountOutTotal = amountOutTotal.AddMut(amountOutComputed)
 
 		// Logs
-		// r.emitSwapDebugLogs(currentSqrtPrice, sqrtPriceNext, currentBucket.LiquidityAmount, amountInConsumed, amountOutComputed, spreadRewardChargeTotal)
+		r.emitSwapDebugLogs(currentSqrtPrice, sqrtPriceNext, currentBucket.LiquidityAmount, amountInConsumed, amountOutComputed, spreadRewardChargeTotal)
 
 		// Update current sqrt price
 		currentSqrtPrice = sqrtPriceNext

@@ -15,7 +15,7 @@ type redisRouterRepo struct {
 }
 
 const (
-	keySeparator = "/"
+	keySeparator = "-"
 
 	routerPrefix   = "r" + keySeparator
 	takerFeePrefix = routerPrefix + "tf" + keySeparator
