@@ -90,6 +90,7 @@ const (
 	ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS = "INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS"
 	ENV_NAME_INGEST_SQS_LOGGER_FILENAME              = "INGEST_SQS_LOGGER_FILENAME"
 	ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION         = "INGEST_SQS_LOGGER_IS_PRODUCTION"
+	ENV_NAME_INGEST_SQS_LOGGER_LEVEL                 = "INGEST_SQS_LOGGER_LEVEL"
 	ENV_VALUE_INGESTER_SQS                           = "sqs"
 )
 
@@ -278,9 +279,10 @@ func NewOsmosisApp(
 		loggerFileName := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_FILENAME)
 		isProductionLoggerStr := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION)
 		isProductionLogger := isProductionLoggerStr == "true"
+		logLevel := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_LEVEL)
 
 		// logger
-		logger, err := sqslog.NewLogger(isProductionLogger, loggerFileName)
+		logger, err := sqslog.NewLogger(isProductionLogger, loggerFileName, logLevel)
 		logger.Info("Starting sidecar query server")
 
 		// Create sidecar query server

@@ -67,11 +67,18 @@ func (l *loggerImpl) Warn(msg string, fields ...zapcore.Field) {
 // NewLogger creates a new logger.
 // If fileName is non-empty, it pipes logs to file and stdout.
 // if filename is empty, it pipes logs only to stdout.
-func NewLogger(isProduction bool, fileName string) (Logger, error) {
+func NewLogger(isProduction bool, fileName string, logLevelStr string) (Logger, error) {
 	loggerConfig := zap.NewProductionConfig()
 	if !isProduction {
 		loggerConfig = zap.NewDevelopmentConfig()
 	}
+
+	logLevel := zap.InfoLevel
+	if logLevelStr == "debug" {
+		logLevel = zap.DebugLevel
+	}
+
+	loggerConfig.Level.SetLevel(logLevel)
 
 	consoleEncoder := zapcore.NewConsoleEncoder(loggerConfig.EncoderConfig)
 
