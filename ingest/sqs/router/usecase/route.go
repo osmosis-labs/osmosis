@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,6 +36,14 @@ func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee os
 
 // CalculateTokenOutByTokenIn implements Route.
 func (r *routeImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.Coin, err error) {
+	defer func() {
+		// TODO: cover this by test
+		if r := recover(); r != nil {
+			tokenOut = sdk.Coin{}
+			err = fmt.Errorf("error when calculating out by in in route: %v", r)
+		}
+	}()
+
 	for _, pool := range r.Pools {
 		tokenOut, err = pool.CalculateTokenOutByTokenIn(tokenIn)
 		if err != nil {
