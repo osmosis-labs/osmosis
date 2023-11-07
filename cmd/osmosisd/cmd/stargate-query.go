@@ -596,7 +596,7 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			v.PoolId = poolId
 			return v, nil
 		case "IncentiveRecordsRequest":
-			v := &concentratedliquidityquery.PoolAccumulatorRewardsRequest{}
+			v := &concentratedliquidityquery.IncentiveRecordsRequest{}
 			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
 			if err != nil {
 				return nil, err
