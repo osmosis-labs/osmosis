@@ -86,6 +86,7 @@ const (
 	ENV_NAME_INGEST_SQS_DBPORT                       = "INGEST_SQS_DBPORT"
 	ENV_NAME_INGEST_SQS_SERVER_ADDRESS               = "INGEST_SQS_SERVER_ADDRESS"
 	ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS = "INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS"
+	ENV_NAME_INGEST_SQS_LOGGER_FILENAME              = "INGEST_SQS_LOGGER_FILENAME"
 	ENV_VALUE_INGESTER_SQS                           = "sqs"
 )
 
@@ -266,12 +267,13 @@ func NewOsmosisApp(
 		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
 		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
 		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
+		loggerFileName := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_FILENAME)
 		if err != nil {
 			panic(fmt.Sprintf("error while parsing timeout duration: %s", err))
 		}
 
 		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration)
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, loggerFileName)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
 		}

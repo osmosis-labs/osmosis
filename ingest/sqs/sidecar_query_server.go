@@ -65,7 +65,7 @@ func (sqs *sideCarQueryServer) GetTxManager() domain.TxManager {
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
-func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int) (SideCarQueryServer, error) {
+func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int, loggerFileName string) (SideCarQueryServer, error) {
 	// Handle SIGINT and SIGTERM signals to initiate shutdown
 	exitChan := make(chan os.Signal, 1)
 	signal.Notify(exitChan, os.Interrupt, syscall.SIGTERM)
@@ -73,7 +73,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	// logger
 	// TODO: figure out logging to file
 	isProductionLogger := true
-	logger, err := log.NewLogger(isProductionLogger)
+	logger, err := log.NewLogger(isProductionLogger, loggerFileName)
 	logger.Info("Starting sidecar query server")
 
 	defer func() {

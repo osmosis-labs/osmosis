@@ -72,7 +72,7 @@ func (s *RouterTestSuite) TestNewRouter() {
 		maxRoutes          = 5
 		maxSplitIterations = 10
 		minOsmoLiquidity   = 2
-		logger, _          = log.NewLogger(false)
+		logger, _          = log.NewLogger(false, "")
 		defaultAllPools    = []domain.PoolI{
 			&domain.PoolWrapper{
 				ChainModel: balancerPool,

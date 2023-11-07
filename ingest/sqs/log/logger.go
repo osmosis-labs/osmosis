@@ -1,6 +1,8 @@
 package log
 
 import (
+	"os"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -63,18 +65,39 @@ func (l *loggerImpl) Warn(msg string, fields ...zapcore.Field) {
 }
 
 // NewLogger creates a new logger.
-func NewLogger(isProduction bool) (Logger, error) {
-	// logger
-	// TODO: figure out logging to file
+// If fileName is non-empty, it pipes logs to file and stdout.
+// if filename is empty, it pipes logs only to stdout.
+func NewLogger(isProduction bool, fileName string) (Logger, error) {
 	loggerConfig := zap.NewProductionConfig()
 	if !isProduction {
 		loggerConfig = zap.NewDevelopmentConfig()
 	}
 
-	logger, err := loggerConfig.Build()
-	if err != nil {
-		return nil, err
+	consoleEncoder := zapcore.NewConsoleEncoder(loggerConfig.EncoderConfig)
+
+	// Configure piping to stdout and to fileName if it is non-empty
+	var core zapcore.Core
+	if fileName != "" {
+		fileEncoder := zapcore.NewJSONEncoder(loggerConfig.EncoderConfig)
+
+		fileName := "sqs.log"
+
+		f, err := os.Create(fileName)
+		if err != nil {
+			return nil, err
+		}
+
+		core = zapcore.NewTee(
+			zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
+			zapcore.NewCore(fileEncoder, zapcore.AddSync(f), zapcore.InfoLevel),
+		)
+	} else {
+		core = zapcore.NewTee(
+			zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
+		)
 	}
+
+	logger := zap.New(core)
 
 	return logger, nil
 }
