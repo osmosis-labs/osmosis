@@ -29,6 +29,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	sqslog "github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -87,6 +89,7 @@ const (
 	ENV_NAME_INGEST_SQS_SERVER_ADDRESS               = "INGEST_SQS_SERVER_ADDRESS"
 	ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS = "INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS"
 	ENV_NAME_INGEST_SQS_LOGGER_FILENAME              = "INGEST_SQS_LOGGER_FILENAME"
+	ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION         = "INGEST_SQS_LOGGER_IS_PRODUCTION"
 	ENV_VALUE_INGESTER_SQS                           = "sqs"
 )
 
@@ -267,13 +270,21 @@ func NewOsmosisApp(
 		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
 		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
 		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
-		loggerFileName := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_FILENAME)
 		if err != nil {
 			panic(fmt.Sprintf("error while parsing timeout duration: %s", err))
 		}
 
+		// logger configs
+		loggerFileName := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_FILENAME)
+		isProductionLoggerStr := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION)
+		isProductionLogger := isProductionLoggerStr == "true"
+
+		// logger
+		logger, err := sqslog.NewLogger(isProductionLogger, loggerFileName)
+		logger.Info("Starting sidecar query server")
+
 		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, loggerFileName)
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, logger)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
 		}
