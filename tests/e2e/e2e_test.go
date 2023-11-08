@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -45,6 +47,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.SetDefaultTakerFeeChainB()
 	})
 
+	s.T().Run("SetExpeditedVotingPeriodChainB", func(t *testing.T) {
+		s.T().Log("setting the expedited voting period to 7 seconds on chain B only")
+		s.SetExpeditedVotingPeriodChainB()
+	})
+
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()
@@ -71,11 +78,10 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.AddToExistingLock()
 	})
 
-	// UNFORKINGNOTE: Test currently disabled until v0.50.0
-	// s.T().Run("ExpeditedProposals", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.ExpeditedProposals()
-	// })
+	s.T().Run("ExpeditedProposals", func(t *testing.T) {
+		t.Parallel()
+		s.ExpeditedProposals()
+	})
 
 	s.T().Run("GeometricTWAP", func(t *testing.T) {
 		t.Parallel()
@@ -846,7 +852,30 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
-	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", false, true)
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+	govModuleAccount := chainABNode.QueryGovModuleAccount()
+	propMetadata := []byte{42}
+	validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+			"authority": "%s",
+			"content": {
+				"@type": "/cosmos.gov.v1beta1.TextProposal",
+				"title": "My awesome title",
+				"description": "My awesome description"
+			}
+		}
+	],
+	"title": "My awesome title",
+	"summary": "My awesome description",
+	"metadata": "%s",
+	"deposit": "%s",
+	"expedited": true
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(5000000000)))
+
+	propNumber := chainABNode.SubmitNewV1ProposalType(validProp, sender)
 
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainABNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
@@ -980,4 +1009,63 @@ func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
 	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB, true)
 	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
+	chainB, chainBNode := s.getChainBCfgs()
+
+	sender := chainBNode.GetWallet(initialization.ValidatorWalletName)
+	govModuleAccount := chainBNode.QueryGovModuleAccount()
+	propMetadata := []byte{42}
+	validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.gov.v1.MsgUpdateParams",
+			"authority": "%s",
+			"params": {
+				"min_deposit": [
+					{
+					"denom": "uosmo",
+					"amount": "10000000"
+					}
+				],
+				"max_deposit_period": "172800s",
+				"voting_period": "11s",
+				"quorum": "0.334000000000000000",
+				"threshold": "0.500000000000000000",
+				"veto_threshold": "0.334000000000000000",
+				"min_initial_deposit_ratio": "0.000000000000000000",
+				"expedited_voting_period": "7s",
+				"expedited_threshold": "0.667000000000000000",
+				"expedited_min_deposit": [
+				{
+					"denom": "uosmo",
+					"amount": "50000000"
+				}
+				],
+				"burn_vote_quorum": false,
+				"burn_proposal_deposit_prevote": false,
+				"burn_vote_veto": true
+			}
+		}
+	],
+	"title": "Gov params update",
+	"summary": "Gov params update description",
+	"metadata": "%s",
+	"deposit": "%s",
+	"expedited": false
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+
+	proposalID := chainBNode.SubmitNewV1ProposalType(validProp, sender)
+
+	chain.AllValsVoteOnProposal(chainB, proposalID)
+
+	s.Eventually(func() bool {
+		status, err := chainBNode.QueryPropStatus(proposalID)
+		if err != nil {
+			return false
+		}
+		return status == "PROPOSAL_STATUS_PASSED"
+	}, time.Minute, 10*time.Millisecond)
 }

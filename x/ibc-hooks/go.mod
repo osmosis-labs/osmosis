@@ -192,8 +192,9 @@ require (
 
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231030033644-c3c7ab7f52ea
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231108005754-ee4c51caf467
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.40.2-0.20231108035253-e6a55f40958c
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils

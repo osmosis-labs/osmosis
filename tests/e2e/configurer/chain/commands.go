@@ -231,6 +231,35 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string, isLega
 	return proposalID
 }
 
+func (n *NodeConfig) SubmitNewV1ProposalType(proposalJson, from string) int {
+	n.LogActionF("submitting new v1 proposal type %s", proposalJson)
+	// ToDo: Is there a better way to do this?
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	currentTime := time.Now().Format("20060102-150405.000")
+	localProposalFile := wd + fmt.Sprintf("/scripts/new_v1_prop_%s.json", currentTime)
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.WriteString(proposalJson)
+	require.NoError(n.t, err)
+	err = f.Close()
+	require.NoError(n.t, err)
+
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", fmt.Sprintf("/osmosis/new_v1_prop_%s.json", currentTime), fmt.Sprintf("--from=%s", from)}
+
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	os.Remove(localProposalFile)
+
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted new v1 proposal type")
+
+	return proposalID
+}
+
 func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
 
@@ -764,8 +793,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 				Value:    value,
 			},
 		},
-		// UNFORKINGTODO N: When expedited props are implemented, uncomment this
-		// IsExpedited: true,
 		Deposit: strconv.Itoa(int(config.InitialMinExpeditedDeposit)) + appparams.BaseCoinUnit,
 	}
 	proposalJson, err := json.Marshal(proposal)

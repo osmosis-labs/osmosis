@@ -24,7 +24,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -199,45 +200,32 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
+
 			content, err := parseReplaceMigrationRecordsArgsToContent(cmd)
 			if err != nil {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	// UNFORKINGTODO N: Uncomment when merge expedited feat
-	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
+	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -256,45 +244,32 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
+
 			content, err := parseUpdateMigrationRecordsArgsToContent(cmd)
 			if err != nil {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	// UNFORKINGTODO N: Uncomment when merge expedited feat
-	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
+	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -308,45 +283,32 @@ func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
 		Short: "Submit a create clpool and link to cfmm proposal",
 		Long:  strings.TrimSpace(`submit a proposal to create CL pool and link to Balancer pool.`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
+
 			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd)
 			if err != nil {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	// UNFORKINGTODO N: Uncomment when merge expedited feat
-	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
+	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
 
 	return cmd
@@ -380,47 +342,34 @@ Sample proposal with flags
 		--controller-address osmoYYY
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
+
 			content, err := parseSetScalingFactorControllerArgsToContent(cmd)
 			if err != nil {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().Uint64(FlagPoolId, 0, "stableswap pool-id")
 	cmd.Flags().String(FlagScalingFactorControllerAddress, "", "target scaling factor controller address")
-	// UNFORKINGTODO N: Uncomment when merge expedited feat
-	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 
 	return cmd
 }
@@ -797,7 +746,7 @@ func parseMigrationRecords(cmd *cobra.Command) ([]gammmigration.BalancerToConcen
 	return replaceMigrations, nil
 }
 
-func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
+func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -821,7 +770,7 @@ func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.C
 	return content, nil
 }
 
-func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
+func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -845,7 +794,7 @@ func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.Co
 	return content, nil
 }
 
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -926,7 +875,7 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 	return finalPoolRecords, nil
 }
 
-func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
+func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	proposalFile, err := cmd.Flags().GetString(govcli.FlagProposal) //nolint:staticcheck
 	if err != nil {
 		return nil, err

@@ -47,7 +47,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	msgStoreCode := wasmtypes.MsgStoreCode{Sender: addr.String(), WASMByteCode: wasmCode, InstantiatePermission: &types.AccessConfig{Permission: types.AccessTypeEverybody}}
 	msgStoreCodeSlice := []sdk.Msg{&msgStoreCode}
 
-	storedProposal, err := govKeeper.SubmitProposal(ctx, msgStoreCodeSlice, "", "title", "summary", addr)
+	storedProposal, err := govKeeper.SubmitProposal(ctx, msgStoreCodeSlice, "", "title", "summary", addr, false)
 	require.NoError(t, err)
 
 	messages, err := storedProposal.GetMsgs()
