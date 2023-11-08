@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -448,7 +447,6 @@ func GetProposalInfo(cmd *cobra.Command) (client.Context, string, string, sdk.Co
 }
 
 func AddCommonProposalFlags(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(cli.FlagTitle, "", "Title of proposal")
 	cmd.Flags().String(cli.FlagSummary, "", "Summary of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "Deposit of proposal")
