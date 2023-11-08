@@ -122,7 +122,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 // - attempts to create non-perpetual gauge with numEpochsPaidOver of 0
 //
 // On success, returns the gauge ID.
-func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
+func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, gaugeDenom string, gaugeType types.GaugeType, gaugeDuration time.Duration, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
 	if numEpochsPaidOver == types.PerpetualNumEpochsPaidOver && !isPerpetual {
 		return 0, types.ErrZeroNumEpochsPaidOver
 	}
@@ -132,22 +132,22 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	// the gauge "lock" duration is an authorized uptime. Otherwise,
 	// proceed with the normal lock duration check.
 	var durations []time.Duration
-	if distrTo.LockQueryType == lockuptypes.NoLock {
+	if gaugeType == types.Concentrated {
 		durations = k.clk.GetParams(ctx).AuthorizedUptimes
 	} else {
 		durations = k.GetLockableDurations(ctx)
 	}
 
-	if distrTo.LockQueryType == lockuptypes.ByDuration {
+	if gaugeType == types.LockByDuration {
 		durationOk := false
 		for _, duration := range durations {
-			if duration == distrTo.Duration {
+			if duration == gaugeDuration {
 				durationOk = true
 				break
 			}
 		}
 		if !durationOk {
-			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
+			return 0, fmt.Errorf("invalid duration: %d", gaugeDuration)
 		}
 	}
 
@@ -155,21 +155,22 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 	// For no lock gauges, a pool id must be set.
 	// A pool with such id must exist and be a concentrated pool.
-	if distrTo.LockQueryType == lockuptypes.NoLock {
+	if gaugeType == types.Concentrated {
 		if poolId == 0 {
+			// TODO (refactor): make this a custom error type
 			return 0, fmt.Errorf("'no lock' type gauges must have a pool id")
 		}
 
 		// If not internal gauge denom, then must be set to ""
 		// and get overwritten with the external prefix + pool id
 		// for internal query purposes.
-		distrToDenom := distrTo.Denom
-		if distrToDenom != types.NoLockInternalGaugeDenom(poolId) {
+		if gaugeDenom != types.NoLockInternalGaugeDenom(poolId) {
 			// If denom is set, then fails.
-			if distrToDenom != "" {
-				return 0, fmt.Errorf("'no lock' type external gauges must have an empty denom set, was %s", distrToDenom)
+			if gaugeDenom != "" {
+				// TODO (refactor): make this a custom error type
+				return 0, fmt.Errorf("'no lock' type external gauges must have an empty denom set, was %s", gaugeDenom)
 			}
-			distrTo.Denom = types.NoLockExternalGaugeDenom(poolId)
+			gaugeDenom = types.NoLockExternalGaugeDenom(poolId)
 		}
 
 		pool, err := k.pmk.GetPool(ctx, poolId)
@@ -178,6 +179,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		}
 
 		if pool.GetType() != poolmanagertypes.Concentrated {
+			// TODO (refactor): make this a custom error type
 			return 0, fmt.Errorf("'no lock' type gauges must be created for concentrated pools only")
 		}
 
@@ -190,22 +192,46 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	} else {
 		// For all other gauges, pool id must be 0.
 		if poolId != 0 {
+			// TODO (refactor): make this a custom error type
 			return 0, fmt.Errorf("pool id must be 0 for gauges with lock")
 		}
 
 		// Group gauges do not distribute to a denom. skip this check for group gauges.
-		if distrTo.LockQueryType != lockuptypes.ByGroup {
+		// TODO (refactor): use new `gaugeType` parameter here
+		if gaugeType != types.GroupGauge {
 			// check if denom this gauge pays out to exists on-chain
 			// N.B.: The reason we check for osmovaloper is to account for gauges that pay out to
 			// superfluid synthetic locks. These locks have the following format:
 			// "cl/pool/1/superbonding/osmovaloper1wcfyglfgjs2xtsyqu7pl60d0mpw5g7f4wh7pnm"
 			// See x/superfluid module README for details.
-			if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
-				return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
+			if !k.bk.HasSupply(ctx, gaugeDenom) && !strings.Contains(gaugeDenom, "osmovaloper") {
+				// TODO (refactor): make this a custom error type
+				return 0, fmt.Errorf("denom does not exist: %s", gaugeDenom)
 			}
 		}
 	}
 
+	// Add setup logic here for backwards compatibility
+	// This is slightly verbose, but it is necessary for backwards compatibility and ensuring
+	// that we can maintain a clean gauge creation API without having to do a large state migration.
+	// TODO (refactor): extract this into a helper
+	distrTo := lockuptypes.QueryCondition{
+		Denom:    gaugeDenom,
+		Duration: gaugeDuration,
+	}
+	switch gaugeType {
+	case types.LockByDuration:
+		distrTo.LockQueryType = lockuptypes.ByDuration
+	case types.Concentrated:
+		distrTo.LockQueryType = lockuptypes.NoLock
+	case types.GroupGauge:
+		distrTo.LockQueryType = lockuptypes.ByGroup
+	default:
+		// TODO (refactor): make this a custom error type
+		return 0, fmt.Errorf("invalid gauge type: %s", gaugeType)
+	}
+
+	// TODO (refactor): add new duration parameter here and update distribution logic to rely on it
 	gauge := types.Gauge{
 		Id:                nextGaugeId,
 		IsPerpetual:       isPerpetual,

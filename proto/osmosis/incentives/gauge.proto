@@ -58,3 +58,19 @@ message LockableDurationsInfo {
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
 }
+
+// GaugeType defines the type of the gauge, which determines distribution logic
+// for the gauge
+enum GaugeType {
+  option (gogoproto.goproto_enum_prefix) = false;
+  // Lock-based gauge using duration
+  LockByDuration = 0;
+  // Lock-based gauge using time
+  LockByTime = 1;
+  // Non-lock-based gauge for concentrated pools
+  Concentrated = 2;
+  // Non-lock-based group gauge for distributing to a group of pools
+  // Note that we use `GroupGauge` instead of `Group` to avoid conflict with the
+  // `Group` proto type
+  GroupGauge = 3;
+}
