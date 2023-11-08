@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"fmt"
+
 	interchainquerieskeeper "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
