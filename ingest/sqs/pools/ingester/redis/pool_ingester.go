@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/zap"
@@ -16,7 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -151,7 +149,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool.AsSerializablePool(), denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
 			return err
 		}
@@ -194,10 +192,30 @@ func (pi *poolIngester) convertPool(
 
 	osmoPoolTVL := osmomath.ZeroInt()
 
+	poolDenoms := pool.GetPoolDenoms(ctx)
+	poolDenomsMap := map[string]struct{}{}
+
+	// Convert pool denoms to map
+	for _, poolDenom := range poolDenoms {
+		poolDenomsMap[poolDenom] = struct{}{}
+	}
+
+	// Note that this must follow the call to GetPoolDenoms()
+	// Otherwise, the CosmWasmPool model panics.
+	pool = pool.AsSerializablePool()
+
 	var errorInTVLStr string
 	for _, balance := range balances {
-		if strings.Contains(balance.Denom, gammtypes.GAMMTokenPrefix) {
-			// Skip gamm shares
+
+		// Note that there are edge cases where gamm shares or some random
+		// garbage tokens are in the balance that do not belong to the pool.
+		// A mainnet example is pool ID 2 with the following extra denoms:
+		// ibc/65BCD5909ED3D9E6223529017BC828ECBECCBE3F63D444EC44CE7412EF8C82D6
+		// ibc/778F0504E33BBB66D0950FE12E29BA81C258ED0A10CCEF9CB0096BA9E22C5D61
+		// As a result, we skilently skip them
+		// TODO: cover with test
+		_, exists := poolDenomsMap[balance.Denom]
+		if !exists {
 			continue
 		}
 

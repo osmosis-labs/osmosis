@@ -8,11 +8,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	domain "github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	types0 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	types "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 // MockSQSPoolI is a mock of PoolI interface.
@@ -110,10 +109,10 @@ func (mr *MockSQSPoolIMockRecorder) GetTotalValueLockedUOSMO() *gomock.Call {
 }
 
 // GetType mocks base method.
-func (m *MockSQSPoolI) GetType() types0.PoolType {
+func (m *MockSQSPoolI) GetType() types.PoolType {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetType")
-	ret0, _ := ret[0].(types0.PoolType)
+	ret0, _ := ret[0].(types.PoolType)
 	return ret0
 }
 
@@ -124,10 +123,10 @@ func (mr *MockSQSPoolIMockRecorder) GetType() *gomock.Call {
 }
 
 // GetUnderlyingPool mocks base method.
-func (m *MockSQSPoolI) GetUnderlyingPool() types0.PoolI {
+func (m *MockSQSPoolI) GetUnderlyingPool() types.PoolI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUnderlyingPool")
-	ret0, _ := ret[0].(types0.PoolI)
+	ret0, _ := ret[0].(types.PoolI)
 	return ret0
 }
 
@@ -284,57 +283,4 @@ func (m *MockPoolsUsecase) GetAllPools(ctx context.Context) ([]domain.PoolI, err
 func (mr *MockPoolsUsecaseMockRecorder) GetAllPools(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPools", reflect.TypeOf((*MockPoolsUsecase)(nil).GetAllPools), ctx)
-}
-
-// MockRouterUsecase is a mock of RouterUsecase interface.
-type MockRouterUsecase struct {
-	ctrl     *gomock.Controller
-	recorder *MockRouterUsecaseMockRecorder
-}
-
-// MockRouterUsecaseMockRecorder is the mock recorder for MockRouterUsecase.
-type MockRouterUsecaseMockRecorder struct {
-	mock *MockRouterUsecase
-}
-
-// NewMockRouterUsecase creates a new mock instance.
-func NewMockRouterUsecase(ctrl *gomock.Controller) *MockRouterUsecase {
-	mock := &MockRouterUsecase{ctrl: ctrl}
-	mock.recorder = &MockRouterUsecaseMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockRouterUsecase) EXPECT() *MockRouterUsecaseMockRecorder {
-	return m.recorder
-}
-
-// GetBestSingleRouteQuote mocks base method.
-func (m *MockRouterUsecase) GetBestSingleRouteQuote(ctx context.Context, tokenIn types.Coin, tokenOutDenom string) (domain.Quote, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBestSingleRouteQuote", ctx, tokenIn, tokenOutDenom)
-	ret0, _ := ret[0].(domain.Quote)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetBestSingleRouteQuote indicates an expected call of GetBestSingleRouteQuote.
-func (mr *MockRouterUsecaseMockRecorder) GetBestSingleRouteQuote(ctx, tokenIn, tokenOutDenom interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBestSingleRouteQuote", reflect.TypeOf((*MockRouterUsecase)(nil).GetBestSingleRouteQuote), ctx, tokenIn, tokenOutDenom)
-}
-
-// GetOptimalQuote mocks base method.
-func (m *MockRouterUsecase) GetOptimalQuote(ctx context.Context, tokenIn types.Coin, tokenOutDenom string) (domain.Quote, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOptimalQuote", ctx, tokenIn, tokenOutDenom)
-	ret0, _ := ret[0].(domain.Quote)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetOptimalQuote indicates an expected call of GetOptimalQuote.
-func (mr *MockRouterUsecaseMockRecorder) GetOptimalQuote(ctx, tokenIn, tokenOutDenom interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptimalQuote", reflect.TypeOf((*MockRouterUsecase)(nil).GetOptimalQuote), ctx, tokenIn, tokenOutDenom)
 }
