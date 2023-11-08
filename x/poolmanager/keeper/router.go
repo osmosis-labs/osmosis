@@ -211,7 +211,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		swapFee := pool.GetSwapFee(ctx)
-
 		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr

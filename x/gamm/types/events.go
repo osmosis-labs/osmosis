@@ -15,3 +15,5 @@ const (
 	AttributeKeyTokensIn       = "tokens_in"
 	AttributeKeyTokensOut      = "tokens_out"
 )
+
+//FIXME: Add events for taker fee

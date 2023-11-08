@@ -162,8 +162,6 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 		return nil, err
 	}
 
-	//FIXME: reduce taker fee
-
 	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
 	if err != nil {
 		return nil, err
@@ -441,7 +439,10 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
+	takerFee := q.Keeper.GetParams(sdkCtx).GlobalFees.TakerFee
+	tokenInAfterSubTakerFee, _ := q.Keeper.calcTakerFeeExactIn(tokenIn, takerFee)
+
+	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenInAfterSubTakerFee)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -475,7 +476,11 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	tokenInCoin := sdk.NewCoin(req.Routes[0].TokenInDenom, tokenInAmount)
+	takerFee := q.Keeper.GetParams(sdkCtx).GlobalFees.TakerFee
+	tokenInAfterSubTakerFee, _ := q.Keeper.calcTakerFeeExactIn(tokenInCoin, takerFee)
+
 	return &types.QuerySwapExactAmountOutResponse{
-		TokenInAmount: tokenInAmount,
+		TokenInAmount: tokenInAfterSubTakerFee.Amount,
 	}, nil
 }

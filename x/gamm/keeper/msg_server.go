@@ -59,10 +59,9 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	}
 
 	//set global fees
-	if params.GetGlobalFees() {
-		msg.PoolParams.SwapFee = params.PoolParams.SwapFee
-		msg.PoolParams.ExitFee = params.PoolParams.ExitFee
-		msg.PoolParams.TakerFeeParams = params.PoolParams.TakerFeeParams
+	if params.EnableGlobalPoolFees {
+		msg.PoolParams.SwapFee = params.GlobalFees.SwapFee
+		msg.PoolParams.ExitFee = params.GlobalFees.ExitFee
 	}
 
 	//validate uniqueness of pool assets
@@ -226,7 +225,15 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+	takerFee := server.keeper.GetParams(ctx).GlobalFees.TakerFee
+	tokenInAfterSubTakerFee, takerFeesCoins := server.keeper.calcTakerFeeExactIn(msg.TokenIn, takerFee)
+
+	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, tokenInAfterSubTakerFee, msg.TokenOutMinAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.chargeTakerFee(ctx, takerFeesCoins, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +258,16 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
+	takerFee := server.keeper.GetParams(ctx).GlobalFees.TakerFee
+	maxTokenIn := sdk.NewCoin(msg.Routes[0].TokenInDenom, msg.TokenInMaxAmount)
+	tokenInAfterSubTakerFee, takerFeesCoins := server.keeper.calcTakerFeeExactIn(maxTokenIn, takerFee)
+
+	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, msg.Routes, tokenInAfterSubTakerFee.Amount, msg.TokenOut)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.chargeTakerFee(ctx, takerFeesCoins, sender)
 	if err != nil {
 		return nil, err
 	}
