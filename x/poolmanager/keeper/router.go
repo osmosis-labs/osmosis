@@ -6,8 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/dymensionxyz/dymension/app/params"
-
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -21,33 +19,9 @@ func (k Keeper) RouteExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	var (
-		isMultiHopRouted bool
-		routeSwapFee     sdk.Dec
-		sumOfSwapFees    sdk.Dec
-	)
-
 	route := types.SwapAmountInRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
-	}
-
-	// In this loop, we check if:
-	// - the route is of length 2
-	// - route 1 and route 2 don't trade via the same pool
-	// - route 1 contains uosmo
-	// - both route 1 and route 2 are incentivized pools
-	//
-	// If all of the above is true, then we collect the additive and max fee between the
-	// two pools to later calculate the following:
-	// total_swap_fee = total_swap_fee = max(swapfee1, swapfee2)
-	// fee_per_pool = total_swap_fee * ((pool_fee) / (swapfee1 + swapfee2))
-	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenOutDenom, tokenIn.Denom) {
-		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
-		if err != nil {
-			return sdk.Int{}, err
-		}
 	}
 
 	for i, route := range routes {
@@ -75,12 +49,6 @@ func (k Keeper) RouteExactAmountIn(
 		}
 
 		swapFee := pool.GetSwapFee(ctx)
-
-		// If we determined the route is an osmo multi-hop and both routes are incentivized,
-		// we modify the swap fee accordingly.
-		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
-		}
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
@@ -137,12 +105,6 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
 ) (tokenOutAmount sdk.Int, err error) {
-	var (
-		isMultiHopRouted bool
-		routeSwapFee     sdk.Dec
-		sumOfSwapFees    sdk.Dec
-	)
-
 	// recover from panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -154,14 +116,6 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	route := types.SwapAmountInRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
-	}
-
-	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenOutDenom, tokenIn.Denom) {
-		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
-		if err != nil {
-			return sdk.Int{}, err
-		}
 	}
 
 	for _, route := range routes {
@@ -177,12 +131,6 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		swapFee := poolI.GetSwapFee(ctx)
-
-		// If we determined the route is an osmo multi-hop and both routes are incentivized,
-		// we modify the swap fee accordingly.
-		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
-		}
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, route.TokenOutDenom, swapFee)
 		if err != nil {
@@ -210,7 +158,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
 	route := types.SwapAmountOutRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -223,31 +170,9 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 	}()
 
-	// in this loop, we check if:
-	// - the route is of length 2
-	// - route 1 and route 2 don't trade via the same pool
-	// - route 1 contains uosmo
-	// - both route 1 and route 2 are incentivized pools
-	// if all of the above is true, then we collect the additive and max fee between the two pools to later calculate the following:
-	// total_swap_fee = total_swap_fee = max(swapfee1, swapfee2)
-	// fee_per_pool = total_swap_fee * ((pool_fee) / (swapfee1 + swapfee2))
-	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenInDenom, tokenOut.Denom) {
-		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-	}
-
 	// Determine what the estimated input would be for each pool along the multi-hop route
-	// if we determined the route is an osmo multi-hop and both routes are incentivized,
-	// we utilize a separate function that calculates the discounted swap fees
 	var insExpected []sdk.Int
-	if isMultiHopRouted {
-		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
-	} else {
-		insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
-	}
+	insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -286,9 +211,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		swapFee := pool.GetSwapFee(ctx)
-		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
-		}
 
 		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
 		if swapErr != nil {
@@ -311,7 +233,6 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	routes []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
 	var insExpected []sdk.Int
 
 	// recover from panic
@@ -327,22 +248,9 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenInDenom, tokenOut.Denom) {
-		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-	}
-
 	// Determine what the estimated input would be for each pool along the multi-hop route
-	// if we determined the route is an osmo multi-hop and both routes are incentivized,
-	// we utilize a separate function that calculates the discounted swap fees
-	if isMultiHopRouted {
-		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
-	} else {
-		insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
-	}
+	insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
+
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -351,54 +259,6 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	}
 
 	return insExpected[0], nil
-}
-
-func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
-	if route.Length() != 2 {
-		return false
-	}
-	intemediateDenoms := route.IntermediateDenoms()
-	if len(intemediateDenoms) != 1 || intemediateDenoms[0] != appparams.BaseDenom {
-		return false
-	}
-	if inDenom == outDenom {
-		return false
-	}
-	poolIds := route.PoolIds()
-	if poolIds[0] == poolIds[1] {
-		return false
-	}
-
-	// route0Incentivized := k.poolIncentivesKeeper.IsPoolIncentivized(ctx, poolIds[0])
-	// route1Incentivized := k.poolIncentivesKeeper.IsPoolIncentivized(ctx, poolIds[1])
-
-	// return route0Incentivized && route1Incentivized
-	return false
-}
-
-func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
-) {
-	additiveSwapFee := sdk.ZeroDec()
-	maxSwapFee := sdk.ZeroDec()
-
-	for _, poolId := range route.PoolIds() {
-		swapModule, err := k.GetPoolModule(ctx, poolId)
-		if err != nil {
-			return sdk.Dec{}, sdk.Dec{}, err
-		}
-
-		pool, poolErr := swapModule.GetPool(ctx, poolId)
-		if poolErr != nil {
-			return sdk.Dec{}, sdk.Dec{}, poolErr
-		}
-		swapFee := pool.GetSwapFee(ctx)
-		additiveSwapFee = additiveSwapFee.Add(swapFee)
-		maxSwapFee = sdk.MaxDec(maxSwapFee, swapFee)
-	}
-	averageSwapFee := additiveSwapFee.QuoInt64(2)
-	maxSwapFee = sdk.MaxDec(maxSwapFee, averageSwapFee)
-	return maxSwapFee, additiveSwapFee, nil
 }
 
 // createMultihopExpectedSwapOuts defines the output denom and output amount for the last pool in
