@@ -225,7 +225,7 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	takerFee := server.keeper.GetParams(ctx).GlobalFees.TakerFee
+	takerFee := server.keeper.GetParams(ctx).TakerFee
 	tokenInAfterSubTakerFee, takerFeesCoins := server.keeper.calcTakerFeeExactIn(msg.TokenIn, takerFee)
 
 	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, tokenInAfterSubTakerFee, msg.TokenOutMinAmount)
@@ -258,7 +258,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	takerFee := server.keeper.GetParams(ctx).GlobalFees.TakerFee
+	takerFee := server.keeper.GetParams(ctx).TakerFee
 	maxTokenIn := sdk.NewCoin(msg.Routes[0].TokenInDenom, msg.TokenInMaxAmount)
 	tokenInAfterSubTakerFee, takerFeesCoins := server.keeper.calcTakerFeeExactIn(maxTokenIn, takerFee)
 

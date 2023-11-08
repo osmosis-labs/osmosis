@@ -32,6 +32,11 @@ message Params {
     (gogoproto.nullable) = false
   ];
 
+  string taker_fee = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message GlobalFees {
@@ -43,11 +48,6 @@ message GlobalFees {
   string exit_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
-    (gogoproto.nullable) = false
-  ];
-  string taker_fee = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"taker_fee\"",
     (gogoproto.nullable) = false
   ];
 }

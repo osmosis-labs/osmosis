@@ -49,10 +49,10 @@ func TestGammInitGenesis(t *testing.T) {
 			PoolCreationFee:      sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 			EnableGlobalPoolFees: false,
 			GlobalFees: types.GlobalFees{
-				SwapFee:  sdk.ZeroDec(),
-				ExitFee:  sdk.ZeroDec(),
-				TakerFee: sdk.ZeroDec(),
+				SwapFee: sdk.ZeroDec(),
+				ExitFee: sdk.ZeroDec(),
 			},
+			TakerFee: sdk.ZeroDec(),
 		},
 	}, app.AppCodec())
 

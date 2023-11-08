@@ -25,7 +25,8 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 	return Params{
 		PoolCreationFee:      poolCreationFee,
 		EnableGlobalPoolFees: false,
-		GlobalFees:           GlobalFees{sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()},
+		GlobalFees:           GlobalFees{sdk.ZeroDec(), sdk.ZeroDec()},
+		TakerFee:             sdk.ZeroDec(),
 	}
 }
 
@@ -35,7 +36,8 @@ func DefaultParams() Params {
 		// set correct defaults
 		PoolCreationFee:      sdk.Coins{sdk.NewInt64Coin(appparams.BaseDenom, 1000_000_000)},
 		EnableGlobalPoolFees: false,
-		GlobalFees:           GlobalFees{sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()},
+		GlobalFees:           GlobalFees{sdk.ZeroDec(), sdk.ZeroDec()},
+		TakerFee:             sdk.ZeroDec(),
 	}
 }
 
