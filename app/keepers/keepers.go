@@ -711,6 +711,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
+	paramsKeeper.Subspace(interchainqueriestypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -11,6 +11,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 	"github.com/osmosis-labs/osmosis/v20/x/contractmanager"
+	contractmanagertypes "github.com/osmosis-labs/osmosis/v20/x/contractmanager/types"
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries"
 
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
@@ -126,6 +127,7 @@ var moduleAccountPermissions = map[string][]string{
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
 	interchainqueriestypes.ModuleName:             nil,
+	contractmanagertypes.ModuleName:               nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -278,6 +280,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
+		interchainqueriestypes.ModuleName,
+		contractmanagertypes.ModuleName,
 	}
 }
 
