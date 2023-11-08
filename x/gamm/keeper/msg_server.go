@@ -62,6 +62,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	if params.GetGlobalFees() {
 		msg.PoolParams.SwapFee = params.PoolParams.SwapFee
 		msg.PoolParams.ExitFee = params.PoolParams.ExitFee
+		msg.PoolParams.TakerFeeParams = params.PoolParams.TakerFeeParams
 	}
 
 	//validate uniqueness of pool assets

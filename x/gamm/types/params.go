@@ -25,15 +25,16 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		GlobalFees:      false,
-		PoolParams:      GlobalPoolParams{sdk.ZeroDec(), sdk.ZeroDec()},
+		PoolParams:      GlobalPoolParams{sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()},
 	}
 }
 
 // default gamm module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseDenom, 1000_000_000)},
-		PoolParams:      GlobalPoolParams{sdk.ZeroDec(), sdk.ZeroDec()},
+		// set correct defaults
+		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseDenom, 1)},
+		PoolParams:      GlobalPoolParams{sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()},
 	}
 }
 

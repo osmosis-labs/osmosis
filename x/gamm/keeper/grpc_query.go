@@ -162,6 +162,8 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 		return nil, err
 	}
 
+	//FIXME: reduce taker fee
+
 	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
 	if err != nil {
 		return nil, err

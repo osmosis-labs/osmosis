@@ -19,6 +19,8 @@ func NewMsgServerImpl(keeper *keeper.Keeper) types.MsgServer {
 	}
 }
 
+//FIXME: delete. no need for duplication with GAMM
+
 // TODO: spec and tests, including events
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

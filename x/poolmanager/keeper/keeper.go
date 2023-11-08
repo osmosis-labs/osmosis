@@ -14,7 +14,8 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	gammKeeper           types.SwapI
+	gammKeeper types.SwapI
+	//FIXME: remove
 	concentratedKeeper   types.SwapI
 	poolIncentivesKeeper types.PoolIncentivesKeeperI
 	bankKeeper           types.BankI
@@ -23,6 +24,7 @@ type Keeper struct {
 
 	poolCreationListeners types.PoolCreationListeners
 
+	//FIXME: change to list instead of map for determinism
 	routes map[types.PoolType]types.SwapI
 
 	paramSpace paramtypes.Subspace

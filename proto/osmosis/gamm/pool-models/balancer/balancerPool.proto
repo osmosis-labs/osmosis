@@ -84,7 +84,13 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
-  SmoothWeightChangeParams smooth_weight_change_params = 3 [
+  // taker_fee is the container of taker fee parameters.
+  string taker_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
+  SmoothWeightChangeParams smooth_weight_change_params = 4 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
   ];
