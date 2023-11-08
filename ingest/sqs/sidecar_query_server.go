@@ -130,9 +130,9 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	// TODO: move to config file
 	routerConfig := domain.RouterConfig{
 		PreferredPoolIDs:   []uint64{},
-		MaxPoolsPerRoute:   5,
+		MaxPoolsPerRoute:   4,
 		MaxRoutes:          10,
-		MaxSplitIterations: 20,
+		MaxSplitIterations: 10,
 		MinOSMOLiquidity:   10000, // 20_000 OSMO
 	}
 
