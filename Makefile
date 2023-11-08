@@ -636,7 +636,8 @@ redis-start:
 redis-stop:
 	docker container rm -f redis-stack
 
-sqs-start: build
+sqs-start:
+	./scripts/debug_builder.sh
 	INGEST_TYPE=sqs INGEST_SQS_DBHOST=localhost INGEST_SQS_DBPORT=6379 INGEST_SQS_SERVER_ADDRESS=:9092 INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS=2 INGEST_SQS_LOGGER_FILENAME=sqs.log ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION=false INGEST_SQS_LOGGER_LEVEL=debug build/osmosisd start
 
 

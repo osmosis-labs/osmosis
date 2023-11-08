@@ -15,7 +15,7 @@ import (
 // Once the initial routes are found using DFS, those are sorted by number of hops.
 // If the are overlaps in pool IDs between routes, the routes with more hops are filtered out.
 func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
-	r.logger.Debug("getting candidate routes", zap.String("token_in_denom", tokenInDenom), zap.String("token_out_denom", tokenOutDenom), zap.Int("sorted_pool_count", len(r.sortedPools)))
+	r.logger.Info("getting candidate routes", zap.String("token_in_denom", tokenInDenom), zap.String("token_out_denom", tokenOutDenom), zap.Int("sorted_pool_count", len(r.sortedPools)))
 	routes, err := r.findRoutes(tokenInDenom, tokenOutDenom, &routeImpl{}, make([]bool, len(r.sortedPools)), nil)
 	if err != nil {
 		return nil, err

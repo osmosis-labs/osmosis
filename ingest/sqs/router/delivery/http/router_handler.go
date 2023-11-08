@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 
@@ -23,7 +24,10 @@ type RouterHandler struct {
 }
 
 // Define a regular expression pattern to match sdk.Coin where the first part is the amount and second is the denom name
-var coinPattern = regexp.MustCompile(`([0-9]+)([a-z]+)`)
+// Patterns tested:
+// 500ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+// 100uion
+var coinPattern = regexp.MustCompile(`([0-9]+)(([a-z]+)(\/([A-Z0-9]+))*)`)
 
 // NewRouterHandler will initialize the pools/ resources endpoint
 func NewRouterHandler(e *echo.Echo, us domain.RouterUsecase) {
@@ -41,7 +45,7 @@ func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
 
 	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
 	if err != nil {
-		return err
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
 
 	quote, err := a.RUsecase.GetOptimalQuote(ctx, tokenIn, tokenOutDenom)
@@ -93,16 +97,16 @@ func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
 	tokenOutDenom := c.QueryParam("tokenOutDenom")
 
 	if len(tokenInStr) == 0 {
-		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenIn is required"})
+		return "", sdk.Coin{}, errors.New("tokenIn is required")
 	}
 
 	if len(tokenOutDenom) == 0 {
-		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenOutDenom is required"})
+		return "", sdk.Coin{}, errors.New("tokenOutDenom is required")
 	}
 
 	matches := coinPattern.FindStringSubmatch(tokenInStr)
-	if len(matches) != 3 {
-		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenIn is invalid - must be in the format amountDenom"})
+	if len(matches) != 3 && len(matches) != 6 {
+		return "", sdk.Coin{}, errors.New("tokenIn is invalid - must be in the format amountDenom")
 	}
 
 	tokenIn := sdk.Coin{
