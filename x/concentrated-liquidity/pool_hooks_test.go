@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 				Count: CountMsg{
 					// Each loop in the contract consumes on the order of 1k-10k gas,
 					// so this should push consumed gas over the limit.
-					Amount: types.DefaultContractHookGasLimit / 1000,
+					Amount: int64(types.DefaultContractHookGasLimit) / 1000,
 				},
 			},
 
