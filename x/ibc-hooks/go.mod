@@ -15,7 +15,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366
 	github.com/spf13/cobra v1.7.0
 	github.com/tendermint/tendermint v0.37.0-rc1
-	google.golang.org/grpc v1.58.2
+	google.golang.org/grpc v1.58.3
 )
 
 require (

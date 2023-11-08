@@ -58,7 +58,8 @@ func init() {
 
 	// bank
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Balance", &banktypes.QueryBalanceResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomsMetadataResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomMetadataResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomsMetadata", &banktypes.QueryDenomsMetadataResponse{})
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Params", &banktypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SupplyOf", &banktypes.QuerySupplyOfResponse{})
 
@@ -146,6 +147,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/TotalPoolLiquidity", &poolmanagerqueryproto.TotalPoolLiquidityResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Params", &poolmanagerqueryproto.ParamsResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/TradingPairTakerFee", &poolmanagerqueryproto.TradingPairTakerFeeResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateTradeBasedOnPriceImpact", &poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})

@@ -42,9 +42,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fix Localosmosis docker-compose with state.
+
+* Updated the docker-compose for localosmosis with state to be inline with Operations updated process.
+
 ### State Breaks
 
 * [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
+* [#6836](https://github.com/osmosis-labs/osmosis/pull/6836) Add DenomsMetadata to stargate whitelist and fixs the DenomMetadata response type 
+* [#6814](https://github.com/osmosis-labs/osmosis/pull/6814) Add EstimateTradeBasedOnPriceImpact to stargate whitelist
 
 ### Misc Improvements
 
@@ -53,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API Breaks
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
+* [#6530](https://github.com/osmosis-labs/osmosis/pull/6530) Improve error message when CL LP fails due to slippage bound hit.
+
+### Bug Fixes
+
+* [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
 
 ## v20.0.0
 
@@ -83,7 +94,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6666](https://github.com/osmosis-labs/osmosis/pull/6666) fix: cosmwasmpool state export bug
 * [#6674](https://github.com/osmosis-labs/osmosis/pull/6674) fix: remove dragonberry replace directive
 * [#6692](https://github.com/osmosis-labs/osmosis/pull/6692) chore: add cur sqrt price to LiquidityNetInDirection return value
+* [#6757](https://github.com/osmosis-labs/osmosis/pull/6757) fix: add gas metering to block before send for token factory bank hook
 * [#6710](https://github.com/osmosis-labs/osmosis/pull/6710) fix: `{overflow}` bug when querying cosmwasmpool spot price
+* [#6734](https://github.com/osmosis-labs/osmosis/pull/6734) fix: PFM serialization error
+* [#6767](https://github.com/osmosis-labs/osmosis/pull/6767) fix: typo in ibc lifecycle message in crosschain swap contract
 
 ## v19.2.0
 

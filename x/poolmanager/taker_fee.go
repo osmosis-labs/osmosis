@@ -100,9 +100,9 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	var tokenInAfterTakerFee sdk.Coin
 	var takerFeeCoin sdk.Coin
 	if exactIn {
-		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactIn(tokenIn, takerFee)
+		tokenInAfterTakerFee, takerFeeCoin = CalcTakerFeeExactIn(tokenIn, takerFee)
 	} else {
-		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactOut(tokenIn, takerFee)
+		tokenInAfterTakerFee, takerFeeCoin = CalcTakerFeeExactOut(tokenIn, takerFee)
 	}
 
 	// N.B. We truncate from the community pool calculation, then remove that from the total, and use the remaining for staking rewards.
@@ -176,7 +176,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 // Returns remaining amount in to swap, and takerFeeCoins.
 // returns (1 - takerFee) * tokenIn, takerFee * tokenIn
-func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
+func CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterSubTakerFee := tokenIn.Amount.ToLegacyDec().MulTruncate(osmomath.OneDec().Sub(takerFee))
 	tokenInAfterSubTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterSubTakerFee.TruncateInt())
 	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(tokenInAfterSubTakerFee.Amount))
@@ -184,7 +184,7 @@ func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sd
 	return tokenInAfterSubTakerFee, takerFeeCoin
 }
 
-func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
+func CalcTakerFeeExactOut(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterAddTakerFee := tokenIn.Amount.ToLegacyDec().Quo(osmomath.OneDec().Sub(takerFee))
 	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.Ceil().TruncateInt())
 	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount))
