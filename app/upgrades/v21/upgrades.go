@@ -5,6 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 )
@@ -22,6 +24,8 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyHookGasLimit, cltypes.DefaultContractHookGasLimit)
 
 		return migrations, nil
 	}

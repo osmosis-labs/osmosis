@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) TestSetAndGetPoolHookContract() {
 			s.SetupTest()
 
 			// Set contract address using SetPoolHookContract
-			err := s.clk.SetPoolHookContract(s.Ctx, 1, tc.actionPrefix, tc.cosmwasmAddress)
+			err := s.Clk.SetPoolHookContract(s.Ctx, 1, tc.actionPrefix, tc.cosmwasmAddress)
 
 			// If expect error on set, check here
 			if tc.expectErrOnSet {
@@ -74,15 +74,15 @@ func (s *KeeperTestSuite) TestSetAndGetPoolHookContract() {
 			s.Require().NoError(err)
 
 			// Get contract address and ensure it was the one we set in state
-			contractAddress := s.clk.GetPoolHookContract(s.Ctx, 1, tc.actionPrefix)
+			contractAddress := s.Clk.GetPoolHookContract(s.Ctx, 1, tc.actionPrefix)
 			s.Require().Equal(tc.cosmwasmAddress, contractAddress)
 
 			// Delete contract address
-			err = s.clk.SetPoolHookContract(s.Ctx, 1, tc.actionPrefix, "")
+			err = s.Clk.SetPoolHookContract(s.Ctx, 1, tc.actionPrefix, "")
 			s.Require().NoError(err)
 
 			// Ensure contract was correctly removed from state
-			contractAddress = s.clk.GetPoolHookContract(s.Ctx, 1, tc.actionPrefix)
+			contractAddress = s.Clk.GetPoolHookContract(s.Ctx, 1, tc.actionPrefix)
 			s.Require().Equal("", contractAddress)
 		})
 	}
@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 			cosmwasmAddressBech32 := s.uploadAndInstantiateContract(tc.wasmFile)
 
 			// Set pool hook contract to the newly instantiated contract
-			err := s.clk.SetPoolHookContract(s.Ctx, validPoolId, validActionPrefix, cosmwasmAddressBech32)
+			err := s.Clk.SetPoolHookContract(s.Ctx, validPoolId, validActionPrefix, cosmwasmAddressBech32)
 			s.Require().NoError(err)
 
 			// Marshal test case msg to pass into contract
@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 
 			// --- System under test ---
 
-			err = s.clk.CallPoolActionListener(s.Ctx, msgBz, validPoolId, validActionPrefix)
+			err = s.Clk.CallPoolActionListener(s.Ctx, msgBz, validPoolId, validActionPrefix)
 
 			// --- Assertions ---
 
