@@ -587,11 +587,10 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 	}
 
 	tests := []struct {
-		name              string
-		param             param
-		expectPass        bool
-		reducedFeeApplied bool
-		poolType          types.PoolType
+		name       string
+		param      param
+		expectPass bool
+		poolType   types.PoolType
 	}{
 		{
 			name: "Proper swap - foo -> bar(pool 1) - bar(pool 2) -> baz",
@@ -647,8 +646,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			reducedFeeApplied: true,
-			expectPass:        true,
+			expectPass: true,
 		},
 		{
 			name: "Proper swap (stableswap pool) - foo -> bar(pool 1) - bar(pool 2) -> baz",
@@ -975,8 +973,6 @@ func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, 
 func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []poolmanagertypes.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
-		// extract route from swap
-		// route := types.SwapAmountInRoutes(routes)
 		nextTokenIn := tokenIn
 		for _, hop := range routes {
 			// extract the current pool's swap fee

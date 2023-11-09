@@ -38,7 +38,7 @@ func DefaultParams() Params {
 		PoolCreationFee:      sdk.Coins{sdk.NewInt64Coin(appparams.BaseDenom, 1000_000_000)},
 		EnableGlobalPoolFees: false,
 		GlobalFees:           GlobalFees{sdk.ZeroDec(), sdk.ZeroDec()},
-		TakerFee:             sdk.ZeroDec(),
+		TakerFee:             sdk.MustNewDecFromStr("0.15"),
 	}
 }
 
