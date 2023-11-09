@@ -30,10 +30,10 @@ import (
    - DefaultBaseFee: Default base fee, initialized to 0.0025.
    - MinBaseFee: Minimum base fee, initialized to 0.0025.
    - MaxBaseFee: Maximum base fee, initialized to 10.
-   - MaxBlockChangeRate: The maximum block change rate, initialized to 1/16.
+   - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
 
    Global constants:
-   - TargetGas: Gas wanted per block, initialized to 60,000,000.
+   - TargetGas: Gas wanted per block, initialized to 70,000,000.
    - ResetInterval: The interval at which eipState is reset, initialized to 1000 blocks.
    - BackupFile: File for backup, set to "eip1559state.json".
    - RecheckFeeConstant: A constant value for rechecking fees, initialized to 4.
