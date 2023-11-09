@@ -318,6 +318,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IncentivesKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.ContractKeeper,
 		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
 
@@ -487,6 +488,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.ConcentratedLiquidityKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)

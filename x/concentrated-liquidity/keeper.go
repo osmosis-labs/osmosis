@@ -27,9 +27,10 @@ type Keeper struct {
 	incentivesKeeper     types.IncentivesKeeper
 	lockupKeeper         types.LockupKeeper
 	communityPoolKeeper  types.CommunityPoolKeeper
+	contractKeeper       types.ContractKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, contractKeeper types.ContractKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// ParamSubspace must be initialized within app/keepers/keepers.go
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -45,6 +46,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, accountKeeper types
 		incentivesKeeper:     incentivesKeeper,
 		lockupKeeper:         lockupKeeper,
 		communityPoolKeeper:  communityPoolKeeper,
+		contractKeeper:       contractKeeper,
 	}
 }
 
@@ -82,6 +84,11 @@ func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentiv
 // Set the incentives keeper.
 func (k *Keeper) SetIncentivesKeeper(incentivesKeeper types.IncentivesKeeper) {
 	k.incentivesKeeper = incentivesKeeper
+}
+
+// Set the contract keeper.
+func (k *Keeper) SetContractKeeper(contractKeeper types.ContractKeeper) {
+	k.contractKeeper = contractKeeper
 }
 
 // GetNextPositionId returns the next position id.
