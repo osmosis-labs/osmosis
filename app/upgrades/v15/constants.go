@@ -2,7 +2,7 @@ package v15
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"

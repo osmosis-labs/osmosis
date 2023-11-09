@@ -2,7 +2,7 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
@@ -128,7 +128,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
-	router.AppModuleBasic{},
+	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
 }

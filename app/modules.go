@@ -18,8 +18,8 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
