@@ -770,8 +770,8 @@ github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0 h1:i9e
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0/go.mod h1:fctjEnz9xaBFOlmYYPdKL8Hs1Y3GUKilSwsJdqBb5QU=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.0.0 h1:mMHedP3Q+mz5gpOWNz0P+X8hxPdamylrBKc/P2cFakA=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.0.0/go.mod h1:/P6l2bWo2AR3rrsfs0DHuFZO3Imzb93sxFD3ihrIgw4=
-github.com/cosmos/ibc-go/v7 v7.2.0 h1:dx0DLUl7rxdyZ8NiT6UsrbzKOJx/w7s+BOaewFRH6cg=
-github.com/cosmos/ibc-go/v7 v7.2.0/go.mod h1:OOcjKIRku/j1Xs1RgKK0yvKRrJ5iFuZYMetR1n3yMlc=
+github.com/cosmos/ibc-go/v7 v7.3.1 h1:bil1IjnHdyWDASFYKfwdRiNtFP6WK3osW7QFEAgU4I8=
+github.com/cosmos/ibc-go/v7 v7.3.1/go.mod h1:wvx4pPBofe5ZdMNV3OFRxSI4auEP5Qfqf8JXLLNV04g=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/cosmos/ledger-cosmos-go v0.12.2 h1:/XYaBlE2BJxtvpkHiBm97gFGSGmYGKunKyF3nNqAXZA=
