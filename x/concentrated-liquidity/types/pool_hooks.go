@@ -10,11 +10,11 @@ import (
 
 // Action prefixes for pool actions
 const (
-	CreatePosition     = "createPosition"
-	AddToPosition      = "addToPosition"
-	WithdrawPosition   = "withdrawPosition"
-	SwapExactAmountIn  = "swapExactAmountIn"
-	SwapExactAmountOut = "swapExactAmountOut"
+	CreatePositionPrefix     = "createPosition"
+	AddToPositionPrefix      = "addToPosition"
+	WithdrawPositionPrefix   = "withdrawPosition"
+	SwapExactAmountInPrefix  = "swapExactAmountIn"
+	SwapExactAmountOutPrefix = "swapExactAmountOut"
 )
 
 // --- Sudo Message Wrappers ---
