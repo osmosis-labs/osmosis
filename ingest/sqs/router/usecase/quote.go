@@ -20,31 +20,34 @@ type quoteImpl struct {
 // Specifically:
 // It strips away unnecessary fields from each pool in the route.
 // Computes an effective spread factor from all routes.
-func (q *quoteImpl) PrepareResult() {
-
+//
+// Returns the updated route and the effective spread factor.
+func (q *quoteImpl) PrepareResult() ([]domain.SplitRoute, osmomath.Dec) {
 	totalAmountIn := q.AmountIn.Amount.ToLegacyDec()
 	totalSpreadFactorAcrossRoutes := osmomath.ZeroDec()
 
-	for _, route := range q.Route {
-
+	for i, route := range q.Route {
 		routeSpreadFactor := osmomath.ZeroDec()
 		routeAmountInFraction := route.GetAmountIn().ToLegacyDec().Quo(totalAmountIn)
 
 		// Calculate the spread factor across pools in the route
 		for _, pool := range route.GetPools() {
-			spreadFactor := pool.GetSQSPoolModel().SpreadFactor
+			poolSpreadFactor := pool.GetSQSPoolModel().SpreadFactor
 
 			routeSpreadFactor = routeSpreadFactor.AddMut(
-				osmomath.OneDec().SubMut(routeSpreadFactor).MulTruncateMut(spreadFactor),
+				//  (1 - routeSpreadFactor) * poolSpreadFactor
+				osmomath.OneDec().SubMut(routeSpreadFactor).MulTruncateMut(poolSpreadFactor),
 			)
 		}
 
 		totalSpreadFactorAcrossRoutes = totalSpreadFactorAcrossRoutes.AddMut(routeSpreadFactor.MulMut(routeAmountInFraction))
 
-		route.PrepareResultPools()
+		q.Route[i].PrepareResultPools()
 	}
 
 	q.EffectiveSpreadFactor = totalSpreadFactorAcrossRoutes
+
+	return q.Route, q.EffectiveSpreadFactor
 }
 
 // GetAmountIn implements Quote.
@@ -60,6 +63,11 @@ func (q *quoteImpl) GetAmountOut() osmomath.Int {
 // GetRoute implements Quote.
 func (q *quoteImpl) GetRoute() []domain.SplitRoute {
 	return q.Route
+}
+
+// GetEffectiveSpreadFactor implements Quote.
+func (q *quoteImpl) GetEffectiveSpreadFactor() osmomath.Dec {
+	return q.EffectiveSpreadFactor
 }
 
 var _ domain.Quote = &quoteImpl{}

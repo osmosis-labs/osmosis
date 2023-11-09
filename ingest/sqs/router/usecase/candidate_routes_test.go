@@ -569,7 +569,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			s.Require().NoError(err)
 
-			s.validateRoutes(tc, routes)
+			s.validateFoundRoutes(tc, routes)
 		})
 	}
 }
@@ -689,13 +689,13 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 			}
 			s.Require().NoError(err)
 
-			s.validateRoutes(tc, routes)
+			s.validateFoundRoutes(tc, routes)
 		})
 	}
 }
 
-// validateRoutes validates that the routes are as expected.
-func (s *RouterTestSuite) validateRoutes(tc routesTestCase, routes []domain.Route) {
+// validateFoundRoutes validates that the routes are as expected.
+func (s *RouterTestSuite) validateFoundRoutes(tc routesTestCase, routes []domain.Route) {
 	s.Require().Equal(len(tc.expectedRoutes), len(routes))
 	for i, expectedRoute := range tc.expectedRoutes {
 		actualRoute := routes[i]
