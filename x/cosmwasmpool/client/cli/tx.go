@@ -68,7 +68,7 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 		Use:     "upload-code-id-and-whitelist [wasm-file-path] [flags]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "Submit an upload code id and whitelist proposal",
-		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --description \"Test\" -b=block --chain-id localosmosis --fees=100000uosmo --gas=20000000",
+		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --summary \"Test\" -b=block --chain-id localosmosis --fees=100000uosmo --gas=20000000",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
@@ -80,10 +80,13 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -92,7 +95,7 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -106,7 +109,7 @@ func parseUploadCodeIdAndWhitelistProposal(cmd *cobra.Command, fileName string) 
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -165,10 +168,13 @@ func NewCmdMigratePoolContractsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -177,7 +183,7 @@ func NewCmdMigratePoolContractsProposal() *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -191,7 +197,7 @@ func parseMigratePoolContractsProposal(cmd *cobra.Command, args []string) (govty
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}

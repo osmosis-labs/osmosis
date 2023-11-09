@@ -48,10 +48,13 @@ Ex) uosmo,1,uion,2,ufoo,0 -> [Adds uosmo<>pool1, uion<>pool2, Removes ufoo as a 
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -60,7 +63,7 @@ Ex) uosmo,1,uion,2,ufoo,0 -> [Adds uosmo<>pool1, uion<>pool2, Removes ufoo as a 
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -108,7 +111,7 @@ func parseFeeTokenRecordsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Cont
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}

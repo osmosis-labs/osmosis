@@ -39,19 +39,29 @@ var (
 	govPropTimeout = time.Minute
 )
 
-// TODO: Find more scalable way to do this
-func (s *IntegrationTestSuite) TestAllE2E() {
+func (s *IntegrationTestSuite) TestPrepE2E() {
 	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
 	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
+		t.Parallel()
 		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
 		s.SetDefaultTakerFeeChainB()
 	})
 
-	s.T().Run("SetExpeditedVotingPeriodChainB", func(t *testing.T) {
-		s.T().Log("setting the expedited voting period to 7 seconds on chain B only")
-		s.SetExpeditedVotingPeriodChainB()
+	s.T().Run("SetExpeditedVotingPeriodChainA", func(t *testing.T) {
+		t.Parallel()
+		s.T().Log("setting the expedited voting period to 7 seconds on chain A")
+		s.SetExpeditedVotingPeriodChainA()
 	})
 
+	s.T().Run("SetExpeditedVotingPeriodChainB", func(t *testing.T) {
+		t.Parallel()
+		s.T().Log("setting the expedited voting period to 7 seconds on chain B")
+		s.SetExpeditedVotingPeriodChainB()
+	})
+}
+
+// TODO: Find more scalable way to do this
+func (s *IntegrationTestSuite) TestStartE2E() {
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()
@@ -1011,6 +1021,65 @@ func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 	s.Require().NoError(err)
 }
 
+func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
+	chainA, chainANode := s.getChainACfgs()
+
+	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
+	govModuleAccount := chainANode.QueryGovModuleAccount()
+	propMetadata := []byte{42}
+	validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.gov.v1.MsgUpdateParams",
+			"authority": "%s",
+			"params": {
+				"min_deposit": [
+					{
+					"denom": "uosmo",
+					"amount": "10000000"
+					}
+				],
+				"max_deposit_period": "172800s",
+				"voting_period": "11s",
+				"quorum": "0.334000000000000000",
+				"threshold": "0.500000000000000000",
+				"veto_threshold": "0.334000000000000000",
+				"min_initial_deposit_ratio": "0.000000000000000000",
+				"expedited_voting_period": "7s",
+				"expedited_threshold": "0.667000000000000000",
+				"expedited_min_deposit": [
+				{
+					"denom": "uosmo",
+					"amount": "50000000"
+				}
+				],
+				"burn_vote_quorum": false,
+				"burn_proposal_deposit_prevote": false,
+				"burn_vote_veto": true
+			}
+		}
+	],
+	"title": "Gov params update",
+	"summary": "Gov params update description",
+	"metadata": "%s",
+	"deposit": "%s",
+	"expedited": false
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+
+	proposalID := chainANode.SubmitNewV1ProposalType(validProp, sender)
+
+	chain.AllValsVoteOnProposal(chainA, proposalID)
+
+	s.Eventually(func() bool {
+		status, err := chainANode.QueryPropStatus(proposalID)
+		if err != nil {
+			return false
+		}
+		return status == "PROPOSAL_STATUS_PASSED"
+	}, time.Minute*2, 10*time.Millisecond)
+}
+
 func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
 
@@ -1067,5 +1136,5 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 			return false
 		}
 		return status == "PROPOSAL_STATUS_PASSED"
-	}, time.Minute, 10*time.Millisecond)
+	}, time.Minute*2, 10*time.Millisecond)
 }

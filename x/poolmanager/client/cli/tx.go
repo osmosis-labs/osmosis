@@ -484,10 +484,13 @@ Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosm
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -496,7 +499,7 @@ Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosm
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -549,7 +552,7 @@ func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtype
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}

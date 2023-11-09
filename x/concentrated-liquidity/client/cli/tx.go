@@ -128,7 +128,7 @@ Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			msg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
@@ -140,7 +140,7 @@ Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -172,10 +172,13 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -184,7 +187,7 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -199,7 +202,7 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govt
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +227,7 @@ func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypesv
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}

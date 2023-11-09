@@ -344,18 +344,29 @@ func (n *NodeConfig) SubmitProposal(cmdArgs []string, isExpedited bool, propDesc
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin, isLegacy bool) int {
-	cmd := []string{"software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val"}
+	var cmd []string
+	if isLegacy {
+		cmd = []string{"software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--summary=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val"}
+	} else {
+		cmd = []string{"software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val"}
+	}
 	return n.SubmitProposal(cmd, false, fmt.Sprintf("upgrade proposal %s for height %d", upgradeVersion, upgradeHeight), isLegacy)
 }
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, isLegacy bool) int {
-	cmd := []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=5000uosmo"}
+	var cmd []string
+	if isLegacy {
+		cmd = []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--summary=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=5000uosmo"}
+	} else {
+		cmd = []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=5000uosmo"}
+	}
+
 	// TODO: no expedited flag for some reason
 	return n.SubmitProposal(cmd, false, fmt.Sprintf("superfluid proposal for asset %s", asset), isLegacy)
 }
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(isExpedited, isLegacy bool) int {
-	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool\"", "--from=val", "--gas=400000", "--fees=5000uosmo"}
+	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--summary=\"create concentrated pool\"", "--from=val", "--gas=400000", "--fees=5000uosmo"}
 	return n.SubmitProposal(cmd, isExpedited, "create concentrated liquidity pool", isLegacy)
 }
 
@@ -365,7 +376,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, isExpedited, isLegacy bool)
 }
 
 func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, isExpedited, isLegacy bool) int {
-	cmd := []string{"tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
+	cmd := []string{"tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--summary=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
 	return n.SubmitProposal(cmd, isExpedited, "tick spacing reduction proposal", isLegacy)
 }
 

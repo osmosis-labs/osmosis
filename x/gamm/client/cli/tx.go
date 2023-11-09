@@ -210,10 +210,13 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -222,7 +225,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -254,10 +257,13 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -266,7 +272,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -293,10 +299,13 @@ func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -305,7 +314,7 @@ func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -336,7 +345,7 @@ Sample proposal file:
 Sample proposal with flags
 >>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --title "Set Scaling Factor Controller Proposal" \
-		--description "Change scaling factor controller address from osmoXXX to osmoYYY"
+		--summary "Change scaling factor controller address from osmoXXX to osmoYYY"
 		--deposit 1600000000uosmo
 		--pool-id 1
 		--controller-address osmoYYY
@@ -352,10 +361,13 @@ Sample proposal with flags
 				return err
 			}
 
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(content, deposit, authority)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
+
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
@@ -364,7 +376,7 @@ Sample proposal with flags
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
 	osmocli.AddCommonProposalFlags(cmd)
@@ -752,7 +764,7 @@ func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1be
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -776,7 +788,7 @@ func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1bet
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -800,7 +812,7 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govt
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -899,7 +911,7 @@ func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypesv
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
