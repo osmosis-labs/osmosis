@@ -200,7 +200,9 @@ func (pi *poolIngester) convertPool(
 		poolDenomsMap[poolDenom] = struct{}{}
 	}
 
-	// Note that this must follow the call to GetPoolDenoms()
+	spreadFactor := pool.GetSpreadFactor(ctx)
+
+	// Note that this must follow the call to GetPoolDenoms() and GetSpreadFactor.
 	// Otherwise, the CosmWasmPool model panics.
 	pool = pool.AsSerializablePool()
 
@@ -311,6 +313,7 @@ func (pi *poolIngester) convertPool(
 			TotalValueLockedError: errorInTVLStr,
 			Balances:              balances,
 			PoolDenoms:            denoms,
+			SpreadFactor:          spreadFactor,
 		},
 		TickModel: tickModel,
 	}, nil

@@ -18,11 +18,21 @@ const defaultPoolID = uint64(1)
 
 // TODO: copy exists in candidate_routes_test.go - share & reuse
 var (
+	defaultTakerFee     = osmomath.MustNewDecFromStr("0.002")
+	defaultPoolBalances = sdk.NewCoins(
+		sdk.NewCoin(denomOne, DefaultAmt0),
+		sdk.NewCoin(denomTwo, DefaultAmt1),
+	)
+	defaultSpreadFactor = osmomath.MustNewDecFromStr("0.005")
+
 	defaultPool = &mockPool{
 		ID:                   defaultPoolID,
 		denoms:               []string{denomOne, denomTwo},
 		totalValueLockedUSDC: osmomath.NewInt(10),
 		poolType:             poolmanagertypes.Balancer,
+		Balances:             defaultPoolBalances,
+		takerFee:             defaultTakerFee,
+		spreadFactor:         defaultSpreadFactor,
 	}
 	emptyRoute = &routerusecase.RouteImpl{}
 

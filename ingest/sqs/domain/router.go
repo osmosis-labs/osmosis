@@ -29,6 +29,13 @@ type Route interface {
 
 	GetTokenOutDenom() string
 
+	// PrepareResultPools strips away unnecessary fields
+	// from each pool in the route,
+	// leaving only the data needed by client
+	// Note that it mutates the route.
+	// Returns the resulting pools.
+	PrepareResultPools() []RoutablePool
+
 	String() string
 }
 
@@ -57,6 +64,10 @@ type Quote interface {
 	GetAmountIn() sdk.Coin
 	GetAmountOut() osmomath.Int
 	GetRoute() []SplitRoute
+
+	// PrepareResult mutates the quote to prepare
+	// it with the data formatted for output to the client.
+	PrepareResult()
 }
 
 type RouterConfig struct {
