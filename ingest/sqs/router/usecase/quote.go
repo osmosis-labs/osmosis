@@ -34,13 +34,14 @@ func (q *quoteImpl) PrepareResult() ([]domain.SplitRoute, osmomath.Dec) {
 		for _, pool := range route.GetPools() {
 			poolSpreadFactor := pool.GetSQSPoolModel().SpreadFactor
 
-			routeSpreadFactor = routeSpreadFactor.AddMut(
+			routeSpreadFactor.AddMut(
 				//  (1 - routeSpreadFactor) * poolSpreadFactor
 				osmomath.OneDec().SubMut(routeSpreadFactor).MulTruncateMut(poolSpreadFactor),
 			)
 		}
 
-		totalSpreadFactorAcrossRoutes = totalSpreadFactorAcrossRoutes.AddMut(routeSpreadFactor.MulMut(routeAmountInFraction))
+		// Update the spread factor pro-rated by the amount in
+		totalSpreadFactorAcrossRoutes.AddMut(routeSpreadFactor.MulMut(routeAmountInFraction))
 
 		q.Route[i].PrepareResultPools()
 	}

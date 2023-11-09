@@ -17,6 +17,7 @@ var (
 	// Concentrated liquidity constants
 	ETH    = apptesting.ETH
 	USDC   = apptesting.USDC
+	USDT   = "usdt"
 	Denom0 = ETH
 	Denom1 = USDC
 
