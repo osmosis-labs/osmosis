@@ -8,10 +8,10 @@ import (
 )
 
 type quoteImpl struct {
-	AmountIn              sdk.Coin            "json:\"amount_in\""
-	AmountOut             osmomath.Int        "json:\"amount_out\""
-	Route                 []domain.SplitRoute "json:\"route\""
-	EffectiveSpreadFactor osmomath.Dec        "json:\"effective_spread_factor\""
+	AmountIn     sdk.Coin            "json:\"amount_in\""
+	AmountOut    osmomath.Int        "json:\"amount_out\""
+	Route        []domain.SplitRoute "json:\"route\""
+	EffectiveFee osmomath.Dec        "json:\"effective_fee\""
 }
 
 // PrepareResult implements domain.Quote.
@@ -24,31 +24,34 @@ type quoteImpl struct {
 // Returns the updated route and the effective spread factor.
 func (q *quoteImpl) PrepareResult() ([]domain.SplitRoute, osmomath.Dec) {
 	totalAmountIn := q.AmountIn.Amount.ToLegacyDec()
-	totalSpreadFactorAcrossRoutes := osmomath.ZeroDec()
+	totalFeeAcrossRoutes := osmomath.ZeroDec()
 
 	for i, route := range q.Route {
-		routeSpreadFactor := osmomath.ZeroDec()
+		routeTotalFee := osmomath.ZeroDec()
 		routeAmountInFraction := route.GetAmountIn().ToLegacyDec().Quo(totalAmountIn)
 
 		// Calculate the spread factor across pools in the route
 		for _, pool := range route.GetPools() {
 			poolSpreadFactor := pool.GetSQSPoolModel().SpreadFactor
+			poolTakerFee := pool.GetTakerFee()
 
-			routeSpreadFactor.AddMut(
+			totalPoolFee := poolSpreadFactor.Add(poolTakerFee)
+
+			routeTotalFee.AddMut(
 				//  (1 - routeSpreadFactor) * poolSpreadFactor
-				osmomath.OneDec().SubMut(routeSpreadFactor).MulTruncateMut(poolSpreadFactor),
+				osmomath.OneDec().SubMut(routeTotalFee).MulTruncateMut(totalPoolFee),
 			)
 		}
 
 		// Update the spread factor pro-rated by the amount in
-		totalSpreadFactorAcrossRoutes.AddMut(routeSpreadFactor.MulMut(routeAmountInFraction))
+		totalFeeAcrossRoutes.AddMut(routeTotalFee.MulMut(routeAmountInFraction))
 
 		q.Route[i].PrepareResultPools()
 	}
 
-	q.EffectiveSpreadFactor = totalSpreadFactorAcrossRoutes
+	q.EffectiveFee = totalFeeAcrossRoutes
 
-	return q.Route, q.EffectiveSpreadFactor
+	return q.Route, q.EffectiveFee
 }
 
 // GetAmountIn implements Quote.
@@ -68,7 +71,7 @@ func (q *quoteImpl) GetRoute() []domain.SplitRoute {
 
 // GetEffectiveSpreadFactor implements Quote.
 func (q *quoteImpl) GetEffectiveSpreadFactor() osmomath.Dec {
-	return q.EffectiveSpreadFactor
+	return q.EffectiveFee
 }
 
 var _ domain.Quote = &quoteImpl{}
