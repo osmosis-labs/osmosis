@@ -1,13 +1,118 @@
 package concentrated_liquidity
 
 import (
+	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
-// nolint: unused
+// Helper function to generate before action prefix
+func beforeActionPrefix(action string) string {
+	return "before" + action
+}
+
+// Helper function to generate after action prefix
+func afterActionPrefix(action string) string {
+	return "after" + action
+}
+
+// --- Pool Hooks ---
+
+func (k Keeper) BeforeCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
+	msg := types.BeforeCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
+	msgBz, err := json.Marshal(types.BeforeCreatePositionSudoMsg{BeforeCreatePosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.CreatePosition))
+}
+
+func (k Keeper) AfterCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
+	msg := types.AfterCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
+	msgBz, err := json.Marshal(types.AfterCreatePositionSudoMsg{AfterCreatePosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.CreatePosition))
+}
+
+func (k Keeper) BeforeAddToPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amount0Added osmomath.Int, amount1Added osmomath.Int, amount0Min osmomath.Int, amount1Min osmomath.Int) error {
+	msg := types.BeforeAddToPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, Amount0Added: amount0Added, Amount1Added: amount1Added, Amount0Min: amount0Min, Amount1Min: amount1Min}
+	msgBz, err := json.Marshal(types.BeforeAddToPositionSudoMsg{BeforeAddToPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.AddToPosition))
+}
+
+func (k Keeper) AfterAddToPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amount0Added osmomath.Int, amount1Added osmomath.Int, amount0Min osmomath.Int, amount1Min osmomath.Int) error {
+	msg := types.AfterAddToPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, Amount0Added: amount0Added, Amount1Added: amount1Added, Amount0Min: amount0Min, Amount1Min: amount1Min}
+	msgBz, err := json.Marshal(types.AfterAddToPositionSudoMsg{AfterAddToPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.AddToPosition))
+}
+
+func (k Keeper) BeforeWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amountToWithdraw osmomath.Dec) error {
+	msg := types.BeforeWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
+	msgBz, err := json.Marshal(types.BeforeWithdrawPositionSudoMsg{BeforeWithdrawPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.WithdrawPosition))
+}
+
+func (k Keeper) AfterWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amountToWithdraw osmomath.Dec) error {
+	msg := types.AfterWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
+	msgBz, err := json.Marshal(types.AfterWithdrawPositionSudoMsg{AfterWithdrawPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.WithdrawPosition))
+}
+
+func (k Keeper) BeforeSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) error {
+	msg := types.BeforeSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.BeforeSwapExactAmountInSudoMsg{BeforeSwapExactAmountIn: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.SwapExactAmountIn))
+}
+
+func (k Keeper) AfterSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) error {
+	msg := types.AfterSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.AfterSwapExactAmountInSudoMsg{AfterSwapExactAmountIn: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.SwapExactAmountIn))
+}
+
+func (k Keeper) BeforeSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut sdk.Coin, spreadFactor osmomath.Dec) error {
+	msg := types.BeforeSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.BeforeSwapExactAmountOutSudoMsg{BeforeSwapExactAmountOut: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.SwapExactAmountOut))
+}
+
+func (k Keeper) AfterSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut sdk.Coin, spreadFactor osmomath.Dec) error {
+	msg := types.AfterSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.AfterSwapExactAmountOutSudoMsg{AfterSwapExactAmountOut: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.SwapExactAmountOut))
+}
+
 // callPoolActionListener processes and dispatches the passed in message to the contract corresponding to the hook
 // defined by the given pool ID and action prefix (e.g. pool Id: 1, action prefix: "beforeSwap").
 //
