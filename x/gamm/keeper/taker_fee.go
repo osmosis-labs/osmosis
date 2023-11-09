@@ -2,21 +2,20 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 const (
 	defaultTakerFeeDenom = "udym"
 )
 
-// chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
-// module account. It returns the tokenIn after the taker fee has been extracted.
 func (k Keeper) chargeTakerFee(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress) error {
-	// We determine the distributution of the taker fee based on its denom
 	// If the denom is the base denom:
 	if takerFeeCoin.Denom == defaultTakerFeeDenom {
-		//FIXME: BURN!
-		return nil
+		return k.burnTakerFee(ctx, takerFeeCoin, sender)
 	} else {
+		//TODO: Swap to DYM and burn. will be handled in the future.
 		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
 	}
 }
@@ -37,4 +36,20 @@ func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Co
 	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.Ceil().TruncateInt())
 	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount))
 	return tokenInAfterAddTakerFee, takerFeeCoin
+}
+
+// BurnPoolShareFromAccount burns `amount` of the given pools shares held by `addr`.
+func (k Keeper) burnTakerFee(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress) error {
+	amt := sdk.NewCoins(takerFeeCoin)
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amt)
+	if err != nil {
+		return err
+	}
+
+	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, amt)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
