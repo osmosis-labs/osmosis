@@ -39,7 +39,7 @@ pub enum RegistryError {
     #[error("denom {denom:?} is not an IBC denom")]
     InvalidIBCDenom { denom: String },
 
-    #[error("No deom trace found for: {denom:?}")]
+    #[error("No denom trace found for: {denom:?}")]
     NoDenomTrace { denom: String },
 
     #[error("Invalid denom trace: {error}")]
