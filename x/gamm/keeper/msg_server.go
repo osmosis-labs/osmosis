@@ -258,6 +258,11 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
+	route := types.SwapAmountOutRoutes(msg.Routes)
+	if err := route.Validate(); err != nil {
+		return nil, err
+	}
+
 	takerFee := server.keeper.GetParams(ctx).TakerFee
 	maxTokenIn := sdk.NewCoin(msg.Routes[0].TokenInDenom, msg.TokenInMaxAmount)
 	tokenInAfterSubTakerFee, takerFeesCoins := server.keeper.calcTakerFeeExactIn(maxTokenIn, takerFee)

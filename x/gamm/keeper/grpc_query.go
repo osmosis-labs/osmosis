@@ -421,8 +421,6 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 }
 
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
-// This query is deprecated and has been moved to poolmanager module.
-// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -453,8 +451,6 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 }
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
-// This query is deprecated and has been moved to poolmanager module.
-// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -478,9 +474,9 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	tokenInCoin := sdk.NewCoin(req.Routes[0].TokenInDenom, tokenInAmount)
 	takerFee := q.Keeper.GetParams(sdkCtx).TakerFee
-	tokenInAfterSubTakerFee, _ := q.Keeper.calcTakerFeeExactIn(tokenInCoin, takerFee)
+	tokenInAfterAddTakerFee, _ := q.Keeper.calcTakerFeeExactOut(tokenInCoin, takerFee)
 
 	return &types.QuerySwapExactAmountOutResponse{
-		TokenInAmount: tokenInAfterSubTakerFee.Amount,
+		TokenInAmount: tokenInAfterAddTakerFee.Amount,
 	}, nil
 }
