@@ -67,6 +67,7 @@ type BankKeeper interface {
 	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount osmomath.Int)
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
 // StakingKeeper expected staking keeper.
