@@ -36,6 +36,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// The SDK currently requires all txs to be FeeTx's in CheckTx, within its mempool fee decorator.
 	// See: https://github.com/cosmos/cosmos-sdk/blob/f726a2398a26bdaf71d78dbf56a82621e84fd098/x/auth/middleware/fee.go#L34-L37
 	// So this is not a real restriction at the moment.
+	fmt.Println("MempoolFeeDecorator.AnteHandle", "simulate", simulate)
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
