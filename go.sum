@@ -956,8 +956,8 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231109095644-7d82d6421265 h1:ESD1Eqt7w1P8r6miUKk+QSrDYxhtf40dzc8WqyMTm9U=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231109095644-7d82d6421265/go.mod h1:lXH5Nip2dQBMV5p36Dg31tFFK7jBr63jJvAYDPJynzo=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231109102914-490c57192cc0 h1:bWnBUQXlf2wgzZGrIz3MJjHh3xCSUxBG1KlhsCm1RDw=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231109102914-490c57192cc0/go.mod h1:cQHr16p2BN2Zn/rPSgmaS5mmuPAAdNl/jnimQvsmLrw=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee h1:Ki30YyIgI1DNbGzR9zs9/Q+PxCHGq5VKfbyPZKQToL8=
@@ -971,8 +971,8 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366 h1
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366/go.mod h1:vU0IHK5W38dqMeux3MkSaT3MZU6whAkx7vNuxv1IzeU=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb h1:6lYLEiJERdD+QK925XYyHkvNyvQTghVFufMH5VAQLpg=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb/go.mod h1:3xD12hg/OzBdtrCOJHGGJrI2zRAdOXBfqFoPP33x0jQ=
-github.com/osmosis-labs/tendermint-informal v0.34.24 h1:SQrvywd/szx9T0p5JTFx7qSzcdUwGu45Gf6NAX1D8UY=
-github.com/osmosis-labs/tendermint-informal v0.34.24/go.mod h1:rXVrl4OYzmIa1I91av3iLv2HS0fGSiucyW9J4aMTpKI=
+github.com/osmosis-labs/tendermint-informal v0.34.22-0.20231109102738-90945b0bc57c h1:IIiYNC09DzE6hToLVFon4mb4CHPFC9pyy1HgDFaPJ98=
+github.com/osmosis-labs/tendermint-informal v0.34.22-0.20231109102738-90945b0bc57c/go.mod h1:rXVrl4OYzmIa1I91av3iLv2HS0fGSiucyW9J4aMTpKI=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16/go.mod h1:Rf8zW/GgBQyFRRB4s62VQHWA6sTlMFSjoDQQpoq64iI=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
