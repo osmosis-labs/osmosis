@@ -5,11 +5,11 @@ import (
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
@@ -194,13 +194,13 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 				accSeqs[0],
 			)
 
-			err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, tc.txFee)
+			err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, tc.txFee)
 			s.Require().NoError(err)
 
 			tx := s.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
 
 			mfd := keeper.NewMempoolFeeDecorator(*s.App.TxFeesKeeper, mempoolFeeOpts)
-			dfd := keeper.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, *s.App.BankKeeper, nil)
+			dfd := keeper.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, s.App.BankKeeper, nil)
 			antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
 			_, err = antehandlerMFD(s.Ctx, tx, tc.isSimulate)
 

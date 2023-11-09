@@ -95,6 +95,17 @@ func ConvertCoinsToDecCoins(coins sdk.Coins) sdk.DecCoins {
 	return decCoins
 }
 
+// FilterDenoms returns the coins with only the passed in denoms
+func FilterDenoms(coins sdk.Coins, denoms []string) sdk.Coins {
+	filteredCoins := sdk.NewCoins()
+
+	for _, denom := range denoms {
+		filteredCoins = filteredCoins.Add(sdk.NewCoin(denom, coins.AmountOf(denom)))
+	}
+
+	return filteredCoins
+}
+
 // MergeCoinMaps takes two maps of type map[T]sdk.Coins and merges them together, adding the values of the second map to the first.
 func MergeCoinMaps[T comparable](currentEpochExpectedDistributionsOne map[T]sdk.Coins, poolIDToExpectedDistributionMapOne map[T]sdk.Coins) map[T]sdk.Coins {
 	newMap := map[T]sdk.Coins{}

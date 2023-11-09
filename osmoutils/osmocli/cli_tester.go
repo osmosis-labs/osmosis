@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
@@ -92,10 +92,7 @@ func newClientContextWithFrom(t *testing.T, fs *pflag.FlagSet) client.Context {
 	t.Helper()
 	clientCtx := client.Context{}
 	from, _ := fs.GetString(flags.FlagFrom)
-	fromAddr, fromName, _, err := client.GetFromFields(nil, from, true)
-	require.NoError(t, err)
-
-	clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
+	clientCtx = clientCtx.WithFrom(from).WithFromAddress(sdk.MustAccAddressFromBech32(from)).WithFromName(from)
 	return clientCtx
 }
 
