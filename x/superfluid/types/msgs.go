@@ -23,7 +23,7 @@ const (
 	TypeMsgUnlockAndMigrateShares                       = "unlock_and_migrate_shares"
 	TypeMsgCreateFullRangePositionAndSuperfluidDelegate = "create_full_range_position_and_delegate"
 	TypeMsgAddToConcentratedLiquiditySuperfluidPosition = "add_to_concentrated_liquidity_superfluid_position"
-	TypeMsgUnbondConvertAndStake                        = "add_to_concentrated_liquidity_superfluid_position"
+	TypeMsgUnbondConvertAndStake                        = "unbond_convert_and_stake"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
