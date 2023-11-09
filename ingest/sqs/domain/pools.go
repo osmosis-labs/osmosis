@@ -43,8 +43,9 @@ type SQSPool struct {
 	TotalValueLockedUSDC  osmomath.Int `json:"total_value_locked_uosmo"`
 	TotalValueLockedError string       `json:"total_value_locked_error,omitempty"`
 	// Only CL and Cosmwasm pools need balances appended
-	Balances   sdk.Coins `json:"balances,string"`
-	PoolDenoms []string  `json:"pool_denoms"`
+	Balances     sdk.Coins    `json:"balances,string"`
+	PoolDenoms   []string     `json:"pool_denoms"`
+	SpreadFactor osmomath.Dec `json:"spread_factor"`
 }
 
 type LiquidityDepthsWithRange = clqueryproto.LiquidityDepthWithRange

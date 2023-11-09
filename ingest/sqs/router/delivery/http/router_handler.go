@@ -53,6 +53,8 @@ func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
 
+	quote.PrepareResult()
+
 	return c.JSON(http.StatusOK, quote)
 }
 

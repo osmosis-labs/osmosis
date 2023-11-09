@@ -13,7 +13,39 @@ import (
 var _ domain.Route = &routeImpl{}
 
 type routeImpl struct {
-	Pools []domain.RoutablePool
+	Pools []domain.RoutablePool "json:\"pools\""
+}
+
+// PrepareResultPools implements domain.Route.
+// Strips away unnecessary fields from each pool in the route,
+// leaving only the data needed by client
+// The following are the list of fields that are returned to the client in each pool:
+// - ID
+// - Type
+// - Balances
+// - Spread Factor
+// - Token Out Denom
+// - Taker Fee
+// Note that it mutates the route.
+// Returns the resulting pools.
+func (r *routeImpl) PrepareResultPools() []domain.RoutablePool {
+	for i, pool := range r.Pools {
+
+		sqsModel := pool.GetSQSPoolModel()
+
+		r.Pools[i] = &routableResultPoolImpl{
+			ID:       pool.GetId(),
+			Type:     pool.GetType(),
+			Balances: sqsModel.Balances,
+			// Note that we cannot get the SpreadFactor method on
+			// the CosmWasm pool models as it does not implement it.
+			// As a result, we propagate it via SQS model.
+			SpreadFactor:  sqsModel.SpreadFactor,
+			TokenOutDenom: pool.GetTokenOutDenom(),
+			TakerFee:      pool.GetTakerFee(),
+		}
+	}
+	return r.Pools
 }
 
 // GetPools implements Route.

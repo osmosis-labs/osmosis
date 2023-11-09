@@ -13,9 +13,45 @@ import (
 )
 
 type quoteImpl struct {
-	AmountIn  sdk.Coin            "json:\"amount_in\""
-	AmountOut osmomath.Int        "json:\"amount_out\""
-	Route     []domain.SplitRoute "json:\"route\""
+	AmountIn              sdk.Coin            "json:\"amount_in\""
+	AmountOut             osmomath.Int        "json:\"amount_out\""
+	Route                 []domain.SplitRoute "json:\"route\""
+	EffectiveSpreadFactor osmomath.Dec        "json:\"effective_spread_factor\""
+}
+
+var _ domain.Quote = &quoteImpl{}
+
+// PrepareResult implements domain.Quote.
+// PrepareResult mutates the quote to prepare
+// it with the data formatted for output to the client.
+// Specifically:
+// It strips away unnecessary fields from each pool in the route.
+// Computes an effective spread factor from all routes.
+func (q *quoteImpl) PrepareResult() {
+
+	totalAmountIn := q.AmountIn.Amount.ToLegacyDec()
+	totalSpreadFactorAcrossRoutes := osmomath.ZeroDec()
+
+	for _, route := range q.Route {
+
+		routeSpreadFactor := osmomath.ZeroDec()
+		routeAmountInFraction := route.GetAmountIn().ToLegacyDec().Quo(totalAmountIn)
+
+		// Calculate the spread factor across pools in the route
+		for _, pool := range route.GetPools() {
+			spreadFactor := pool.GetSQSPoolModel().SpreadFactor
+
+			routeSpreadFactor = routeSpreadFactor.AddMut(
+				osmomath.OneDec().SubMut(routeSpreadFactor).MulTruncateMut(spreadFactor),
+			)
+		}
+
+		totalSpreadFactorAcrossRoutes = totalSpreadFactorAcrossRoutes.AddMut(routeSpreadFactor.MulMut(routeAmountInFraction))
+
+		route.PrepareResultPools()
+	}
+
+	q.EffectiveSpreadFactor = totalSpreadFactorAcrossRoutes
 }
 
 // GetAmountIn implements Quote.
@@ -126,11 +162,13 @@ func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk
 		return nil, errors.New("did not find a working direct route")
 	}
 
-	return &quoteImpl{
+	finalQuote := &quoteImpl{
 		AmountIn:  tokenIn,
 		AmountOut: bestRoute.OutAmount,
 		Route:     []domain.SplitRoute{bestRoute},
-	}, nil
+	}
+
+	return finalQuote, nil
 }
 
 // CONTRACT: all routes are valid. Must be validated by the caller with validateRoutes method.
@@ -150,11 +188,13 @@ func (r *Router) estimateBestSplitRouteQuote(routes []domain.Route, tokenIn sdk.
 
 	r.logger.Debug("bestSplit", zap.Any("value", bestSplit))
 
-	return &quoteImpl{
+	finalQuote := &quoteImpl{
 		AmountIn:  tokenIn,
 		AmountOut: bestSplit.CurrentTotalOut,
 		Route:     bestSplit.Routes,
-	}, nil
+	}
+
+	return finalQuote, nil
 }
 
 // validateAndFilterRoutes validates all routes. Specifically:

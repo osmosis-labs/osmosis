@@ -22,6 +22,7 @@ type mockPool struct {
 	poolType             poolmanagertypes.PoolType
 	tokenOutDenom        string
 	takerFee             osmomath.Dec
+	spreadFactor         osmomath.Dec
 }
 
 var (
@@ -39,6 +40,7 @@ func (mp *mockPool) GetSQSPoolModel() domain.SQSPool {
 	return domain.SQSPool{
 		Balances:             mp.Balances,
 		TotalValueLockedUSDC: mp.totalValueLockedUSDC,
+		SpreadFactor:         defaultSpreadFactor,
 	}
 }
 
@@ -108,6 +110,8 @@ func deepCopyPool(mp *mockPool) *mockPool {
 
 	newTotalValueLocker := osmomath.NewIntFromBigInt(mp.totalValueLockedUSDC.BigInt())
 
+	newBalances := sdk.NewCoins(mp.Balances...)
+
 	return &mockPool{
 		ID:                   mp.ID,
 		denoms:               newDenoms,
@@ -117,6 +121,9 @@ func deepCopyPool(mp *mockPool) *mockPool {
 		// Note these are not deep copied.
 		ChainPoolModel: mp.ChainPoolModel,
 		tokenOutDenom:  mp.tokenOutDenom,
+		Balances:       newBalances,
+		takerFee:       mp.takerFee.Clone(),
+		spreadFactor:   mp.spreadFactor.Clone(),
 	}
 }
 
