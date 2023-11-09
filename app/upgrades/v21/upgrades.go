@@ -13,6 +13,8 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
@@ -153,6 +155,8 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyHookGasLimit, cltypes.DefaultContractHookGasLimit)
 
 		return migrations, nil
 	}

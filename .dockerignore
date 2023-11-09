@@ -4,7 +4,6 @@ docs/
 networks/
 proto/
 tools/
-tests/localosmosis/
 tests/localrelayer/
 tests/cl-genesis-positions
 tests/cl-go-client

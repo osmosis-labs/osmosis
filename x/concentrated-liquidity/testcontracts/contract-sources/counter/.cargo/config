@@ -1,0 +1,8 @@
+[alias]
+wasm = "build --release --lib --target wasm32-unknown-unknown"
+unit-test = "test --lib"
+all-test = "test --workspace"
+schema = "run --bin schema"
+
+[env]
+RUSTFLAGS = "-C link-arg=-s"

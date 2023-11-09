@@ -63,4 +63,7 @@ message Params {
   // double creation of pools, etc.
   repeated string unrestricted_pool_creator_whitelist = 7
       [ (gogoproto.moretags) = "yaml:\"unrestricted_pool_creator_whitelist\"" ];
+
+  uint64 hook_gas_limit = 8
+      [ (gogoproto.moretags) = "yaml:\"hook_gas_limit\"" ];
 }

@@ -42,9 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fix Localosmosis docker-compose with state.
+
+* Updated the docker-compose for localosmosis with state to be inline with Operations updated process.
+
 ### State Breaks
 
 * [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
+* [#6836](https://github.com/osmosis-labs/osmosis/pull/6836) Add DenomsMetadata to stargate whitelist and fixs the DenomMetadata response type 
 * [#6814](https://github.com/osmosis-labs/osmosis/pull/6814) Add EstimateTradeBasedOnPriceImpact to stargate whitelist
 
 ### Misc Improvements
@@ -58,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
+* [#6840](https://github.com/osmosis-labs/osmosis/pull/6840) fix: change TypeMsgUnbondConvertAndStake value to "unbond_convert_and_stake" and improve error message when epoch currentEpochStartHeight less than zero
 * [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
 
 ## v20.0.0
