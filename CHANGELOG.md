@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
+* [#6840](https://github.com/osmosis-labs/osmosis/pull/6840) fix: change TypeMsgUnbondConvertAndStake value to "unbond_convert_and_stake" and improve error message when epoch currentEpochStartHeight less than zero
 * [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
 
 ## v20.0.0
