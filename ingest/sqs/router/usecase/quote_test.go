@@ -22,6 +22,8 @@ import (
 // Validate that the effective swap fee is computed correctly.
 // TODO: validate that taker fees are accounted for.
 func (s *RouterTestSuite) TestPrepareResult() {
+	s.SetupTest()
+
 	var (
 		takerFeeOne   = osmomath.NewDecWithPrec(2, 2)
 		takerFeeTwo   = osmomath.NewDecWithPrec(4, 4)
@@ -150,7 +152,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 				OutAmount: totalOutAmount.QuoRaw(2),
 			},
 		},
-		EffectiveSpreadFactor: osmomath.ZeroDec(),
+		EffectiveFee: osmomath.ZeroDec(),
 	}
 
 	expectedRoutes := []domain.SplitRoute{
@@ -202,8 +204,16 @@ func (s *RouterTestSuite) TestPrepareResult() {
 		},
 	}
 
-	// (0.01 + (1 - 0.01) * 0.03) * 0.5 + 0.005 * 0.5
-	expectedEffectiveSpreadFactor := osmomath.MustNewDecFromStr("0.02235")
+	// Compute expected total fee and validate against actual
+	expectedPoolOneTotalFee := poolOne.GetSpreadFactor(sdk.Context{}).Add(takerFeeOne)
+	expectedPoolTwoTotalFee := poolTwo.GetSpreadFactor(sdk.Context{}).Add(takerFeeTwo)
+	expectedPoolThreeTotalFee := poolThree.GetSpreadFactor(sdk.Context{}).Add(takerFeeThree)
+
+	expectedRouteOneFee := expectedPoolOneTotalFee.Add(osmomath.OneDec().Sub(expectedPoolOneTotalFee).MulMut(expectedPoolTwoTotalFee)).MulMut(osmomath.NewDecWithPrec(5, 1))
+	expectedRouteTwoFee := expectedPoolThreeTotalFee.MulMut(osmomath.NewDecWithPrec(5, 1))
+
+	// ((0.01 + 0.02) + (1 - (0.01 + 0.02)) * (0.03 + 0.0004)) * 0.5 + (0.005 + 0.003) * 0.5
+	expectedEffectiveSpreadFactor := expectedRouteOneFee.Add(expectedRouteTwoFee)
 
 	// System under test
 	routes, effectiveSpreadFactor := testQuote.PrepareResult()
