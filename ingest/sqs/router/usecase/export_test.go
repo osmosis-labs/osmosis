@@ -12,6 +12,8 @@ type (
 	RoutableConcentratedPoolImpl = routableConcentratedPoolImpl
 	RoutableTransmuterPoolImpl   = routableTransmuterPoolImpl
 	RoutableResultPoolImpl       = routableResultPoolImpl
+
+	QuoteImpl = quoteImpl
 )
 
 const (

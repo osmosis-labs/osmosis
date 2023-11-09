@@ -64,9 +64,13 @@ type PoolWrapper struct {
 
 var _ PoolI = &PoolWrapper{}
 
-func NewPool(model poolmanagertypes.PoolI) PoolI {
+func NewPool(model poolmanagertypes.PoolI, spreadFactor osmomath.Dec, balances sdk.Coins) PoolI {
 	return &PoolWrapper{
 		ChainModel: model,
+		SQSModel: SQSPool{
+			SpreadFactor: spreadFactor,
+			Balances:     balances,
+		},
 	}
 }
 
