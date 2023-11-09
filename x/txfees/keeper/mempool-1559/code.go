@@ -40,17 +40,22 @@ import (
 */
 
 var (
-	DefaultBaseFee     = sdk.MustNewDecFromStr("0.0025")
-	MinBaseFee         = sdk.MustNewDecFromStr("0.0025")
-	MaxBaseFee         = sdk.MustNewDecFromStr("10")
-	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
+	DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
+	MinBaseFee     = sdk.MustNewDecFromStr("0.0025")
+	MaxBaseFee     = sdk.MustNewDecFromStr("10")
+
+	// Max increase per block is a factor of 15/14, max decrease is 9/10
+	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(10))
+	TargetGas          = int64(70_000_000)
+	// In face of continuous spam, will take ~21 blocks from base fee > spam cost, to mempool eviction
+	// ceil(log_{15/14}(RecheckFeeConstant))
+	// So potentially 2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
+	RecheckFeeConstant = int64(4)
+	ResetInterval      = int64(1000)
 )
 
 const (
-	TargetGas          = int64(60_000_000)
-	ResetInterval      = int64(1000)
-	BackupFile         = "eip1559state.json"
-	RecheckFeeConstant = int64(4)
+	BackupFile = "eip1559state.json"
 )
 
 // EipState tracks the current base fee and totalGasWantedThisBlock
