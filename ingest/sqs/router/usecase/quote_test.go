@@ -13,10 +13,19 @@ import (
 // TestPrepareResult prepares the result of the quote for output to the client.
 // First, it strips away unnecessary fields from each pool in the route.
 // Additionally, it computes the effective spread factor from all routes.
+//
+// The test structure is as follows:
+// - Set up a 50-50 split route
+// Route 1: 2 hop
+// Route 2: 1 hop
+//
+// Validate that the effective swap fee is computed correctly.
+// TODO: validate that taker fees are accounted for.
 func (s *RouterTestSuite) TestPrepareResult() {
 	var (
-		takerFeeOne = osmomath.NewDecWithPrec(2, 2)
-		takerFeeTwo = osmomath.NewDecWithPrec(3, 3)
+		takerFeeOne   = osmomath.NewDecWithPrec(2, 2)
+		takerFeeTwo   = osmomath.NewDecWithPrec(4, 4)
+		takerFeeThree = osmomath.NewDecWithPrec(3, 3)
 
 		defaultAmount = sdk.NewInt(100_000_00)
 
@@ -24,22 +33,29 @@ func (s *RouterTestSuite) TestPrepareResult() {
 		totalOutAmount = defaultAmount.MulRaw(4)
 
 		poolOneBalances = sdk.NewCoins(
-			sdk.NewCoin(USDC, defaultAmount.MulRaw(5)),
+			sdk.NewCoin(USDT, defaultAmount.MulRaw(5)),
 			sdk.NewCoin(ETH, defaultAmount),
 		)
 
 		poolTwoBalances = sdk.NewCoins(
+			sdk.NewCoin(USDC, defaultAmount),
+			sdk.NewCoin(USDT, defaultAmount),
+		)
+
+		poolThreeBalances = sdk.NewCoins(
 			sdk.NewCoin(ETH, defaultAmount),
 			sdk.NewCoin(USDC, defaultAmount.MulRaw(4)),
 		)
 	)
 
-	// Prepare 2 pools
+	// Prepare 2 routes
+	// Route 1: 2 hops
+	// Route 2: 1 hop
 
-	// Pool USDC / ETH -> 0.01 spread factor & 5 USDC for 1 ETH
+	// Pool USDT / ETH -> 0.01 spread factor & 5 USDTfor 1 ETH
 	poolIDOne := s.PrepareCustomBalancerPool([]balancer.PoolAsset{
 		{
-			Token:  sdk.NewCoin(USDC, defaultAmount.MulRaw(5)),
+			Token:  sdk.NewCoin(USDT, defaultAmount.MulRaw(5)),
 			Weight: sdk.NewInt(100),
 		},
 		{
@@ -54,8 +70,26 @@ func (s *RouterTestSuite) TestPrepareResult() {
 	poolOne, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolIDOne)
 	s.Require().NoError(err)
 
-	// Pool ETH / USDC -> 0.005 spread factor & 4 USDC for 1 ETH
+	// Pool USDC / USDT -> 0.01 spread factor & 1 USDC for 1 USDT
 	poolIDTwo := s.PrepareCustomBalancerPool([]balancer.PoolAsset{
+		{
+			Token:  sdk.NewCoin(USDC, defaultAmount),
+			Weight: sdk.NewInt(100),
+		},
+		{
+			Token:  sdk.NewCoin(USDT, defaultAmount),
+			Weight: sdk.NewInt(100),
+		},
+	}, balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(3, 2),
+		ExitFee: osmomath.ZeroDec(),
+	})
+
+	poolTwo, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolIDTwo)
+	s.Require().NoError(err)
+
+	// Pool ETH / USDC -> 0.005 spread factor & 4 USDC for 1 ETH
+	poolIDThree := s.PrepareCustomBalancerPool([]balancer.PoolAsset{
 		{
 			Token:  sdk.NewCoin(ETH, defaultAmount),
 			Weight: sdk.NewInt(100),
@@ -69,7 +103,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 		ExitFee: osmomath.ZeroDec(),
 	})
 
-	poolTwo, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolIDTwo)
+	poolThree, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolIDThree)
 	s.Require().NoError(err)
 
 	testQuote := &usecase.QuoteImpl{
@@ -85,8 +119,13 @@ func (s *RouterTestSuite) TestPrepareResult() {
 					Pools: []domain.RoutablePool{
 						&usecase.RoutableCFMMPoolImpl{
 							PoolI:         domain.NewPool(poolOne, poolOne.GetSpreadFactor(sdk.Context{}), poolOneBalances),
-							TokenOutDenom: USDC,
+							TokenOutDenom: USDT,
 							TakerFee:      takerFeeOne,
+						},
+						&usecase.RoutableCFMMPoolImpl{
+							PoolI:         domain.NewPool(poolTwo, poolTwo.GetSpreadFactor(sdk.Context{}), poolTwoBalances),
+							TokenOutDenom: USDC,
+							TakerFee:      takerFeeTwo,
 						},
 					},
 				},
@@ -100,9 +139,9 @@ func (s *RouterTestSuite) TestPrepareResult() {
 				Route: &usecase.RouteImpl{
 					Pools: []domain.RoutablePool{
 						&usecase.RoutableCFMMPoolImpl{
-							PoolI:         domain.NewPool(poolTwo, poolTwo.GetSpreadFactor(sdk.Context{}), poolTwoBalances),
+							PoolI:         domain.NewPool(poolThree, poolThree.GetSpreadFactor(sdk.Context{}), poolThreeBalances),
 							TokenOutDenom: USDC,
-							TakerFee:      takerFeeTwo,
+							TakerFee:      takerFeeThree,
 						},
 					},
 				},
@@ -111,7 +150,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 				OutAmount: totalOutAmount.QuoRaw(2),
 			},
 		},
-		EffectiveSpreadFactor: osmomath.OneDec(),
+		EffectiveSpreadFactor: osmomath.ZeroDec(),
 	}
 
 	expectedRoutes := []domain.SplitRoute{
@@ -125,20 +164,9 @@ func (s *RouterTestSuite) TestPrepareResult() {
 						Type:          poolmanagertypes.Balancer,
 						Balances:      poolOneBalances,
 						SpreadFactor:  poolOne.GetSpreadFactor(sdk.Context{}),
-						TokenOutDenom: USDC,
+						TokenOutDenom: USDT,
 						TakerFee:      takerFeeOne,
 					},
-				},
-			},
-
-			InAmount:  totalInAmount.QuoRaw(2),
-			OutAmount: totalOutAmount.QuoRaw(2),
-		},
-
-		// Route 2
-		&usecase.RouteWithOutAmount{
-			Route: &usecase.RouteImpl{
-				Pools: []domain.RoutablePool{
 					&usecase.RoutableResultPoolImpl{
 						ID:            poolIDTwo,
 						Type:          poolmanagertypes.Balancer,
@@ -153,19 +181,40 @@ func (s *RouterTestSuite) TestPrepareResult() {
 			InAmount:  totalInAmount.QuoRaw(2),
 			OutAmount: totalOutAmount.QuoRaw(2),
 		},
+
+		// Route 2
+		&usecase.RouteWithOutAmount{
+			Route: &usecase.RouteImpl{
+				Pools: []domain.RoutablePool{
+					&usecase.RoutableResultPoolImpl{
+						ID:            poolIDThree,
+						Type:          poolmanagertypes.Balancer,
+						Balances:      poolThreeBalances,
+						SpreadFactor:  poolThree.GetSpreadFactor(sdk.Context{}),
+						TokenOutDenom: USDC,
+						TakerFee:      takerFeeThree,
+					},
+				},
+			},
+
+			InAmount:  totalInAmount.QuoRaw(2),
+			OutAmount: totalOutAmount.QuoRaw(2),
+		},
 	}
 
-	// 0.01 * 0.5  + 0.005 * 0.5
-	expectedEffectiveSpreadFactor := osmomath.MustNewDecFromStr("0.0075")
+	// (0.01 + (1 - 0.01) * 0.03) * 0.5 + 0.005 * 0.5
+	expectedEffectiveSpreadFactor := osmomath.MustNewDecFromStr("0.02235")
 
 	// System under test
 	routes, effectiveSpreadFactor := testQuote.PrepareResult()
 
 	// Validate routes.
 	s.validateRoutes(expectedRoutes, routes)
+	s.validateRoutes(expectedRoutes, testQuote.GetRoute())
 
 	// Validate effective spread factor.
 	s.Require().Equal(expectedEffectiveSpreadFactor.String(), effectiveSpreadFactor.String())
+	s.Require().Equal(expectedEffectiveSpreadFactor.String(), testQuote.GetEffectiveSpreadFactor().String())
 }
 
 // validateRoutes validates that the given routes are equal.
