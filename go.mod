@@ -8,7 +8,7 @@ require (
 	github.com/CosmWasm/wasmd v0.31.0
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.47.5
+	github.com/cosmos/cosmos-sdk v0.50.1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0
@@ -43,6 +43,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/grpc v1.58.2
 	gopkg.in/yaml.v2 v2.4.0
+	gotest.tools v2.2.0+incompatible
 	mvdan.cc/gofumpt v0.5.0
 )
 
