@@ -9,44 +9,66 @@ import (
 	"reflect"
 	"strings"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/capability"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/log"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
@@ -70,6 +92,24 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v20/x/mint"
+
+	// skipabci "github.com/skip-mev/block-sdk/abci"
+	// signer_extraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
+	// "github.com/skip-mev/block-sdk/block"
+	// "github.com/skip-mev/block-sdk/block/base"
+	// defaultlane "github.com/skip-mev/block-sdk/lanes/base"
+	// "github.com/skip-mev/block-sdk/lanes/free"
+	// "github.com/skip-mev/block-sdk/lanes/mev"
+
+	// Block-sdk imports
+	blocksdkabci "github.com/skip-mev/block-sdk/abci"
+	signer_extraction_adapter "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
+	blocksdk "github.com/skip-mev/block-sdk/block"
+	blocksdkbase "github.com/skip-mev/block-sdk/block/base"
+	base_lane "github.com/skip-mev/block-sdk/lanes/base"
+	mev_lane "github.com/skip-mev/block-sdk/lanes/mev"
+	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 )
 
 const appName = "OsmosisApp"
@@ -105,7 +145,7 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasm.Option
 
-	// _ sdksimapp.App = (*OsmosisApp)(nil)
+	_ runtime.AppI = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
@@ -146,8 +186,16 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
+	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
+
+	// custom checkTx handler
+	checkTxHandler mev_lane.CheckTx
+
+	// lanes
+	Mempool auctionante.Mempool
+	MEVLane auctionante.MEVLane
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -197,9 +245,11 @@ func NewOsmosisApp(
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
+	txConfig := encodingConfig.TxConfig
+
 	wasmEnabledProposals := GetWasmEnabledProposals()
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -233,6 +283,7 @@ func NewOsmosisApp(
 	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers(
 		appCodec,
+		encodingConfig,
 		bApp,
 		maccPerms,
 		wasmDir,
@@ -282,41 +333,120 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+
 	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
 	app.setupUpgradeHandlers()
 
-	// app.sm.RegisterStoreDecoders()
+	app.sm = module.NewSimulationManager(
+		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		params.NewAppModule(*app.ParamsKeeper),
+		evidence.NewAppModule(*app.EvidenceKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
+		ibc.NewAppModule(app.IBCKeeper),
+		transfer.NewAppModule(*app.TransferKeeper),
+	)
 
-	// add test gRPC service for testing gRPC queries in isolation
-	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
+	app.sm.RegisterStoreDecoders()
+
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
+
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
+
+	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
+	// initialize block-sdk Mempool
+	maxTxs := 0 // no limit
+	cfg := blocksdkbase.LaneConfig{
+		Logger:          app.Logger(),
+		TxDecoder:       app.GetTxConfig().TxDecoder(),
+		TxEncoder:       app.GetTxConfig().TxEncoder(),
+		SignerExtractor: signer_extraction_adapter.NewDefaultAdapter(),
+		MaxBlockSpace:   sdk.ZeroDec(),
+		MaxTxs:          maxTxs,
+	}
+
+	baseLane := base_lane.NewDefaultLane(cfg)
+
+	mevLane := mev_lane.NewMEVLane(
+		cfg,
+		mev_lane.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder(), signer_extraction_adapter.NewDefaultAdapter()),
+	)
+	app.MEVLane = mevLane
+	// initialize mempool
+	mempool := blocksdk.NewLanedMempool(
+		app.Logger(),
+		true,
+		[]blocksdk.Lane{
+			mevLane,  // mev-lane is first to prioritize bids being placed at the TOB
+			baseLane, // finally, all the rest of txs...
+		}...,
+	)
+
+	// set the mempool first
+	app.SetMempool(mempool)
+	app.Mempool = mempool
+
+	anteHandler := NewAnteHandler(
+		appOpts,
+		wasmConfig,
+		app.GetKey(wasm.StoreKey),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.TxFeesKeeper,
+		app.GAMMKeeper,
+		ante.DefaultSigVerificationGasConsumer,
+		encodingConfig.TxConfig.SignModeHandler(),
+		app.IBCKeeper,
+		app.AuctionKeeper,
+		app.GetTxConfig().TxEncoder(),
+		mevLane,
+		mempool,
+	)
+
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(
-		NewAnteHandler(
-			appOpts,
-			wasmConfig,
-			app.GetKey(wasm.StoreKey),
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.TxFeesKeeper,
-			app.GAMMKeeper,
-			ante.DefaultSigVerificationGasConsumer,
-			encodingConfig.TxConfig.SignModeHandler(),
-			app.IBCKeeper,
-		),
-	)
+	app.SetAnteHandler(anteHandler)
+	mevLane.SetAnteHandler(anteHandler)
+	baseLane.SetAnteHandler(anteHandler)
 	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
+
+	handler := blocksdkabci.NewProposalHandler(
+		app.Logger(),
+		app.GetTxConfig().TxDecoder(),
+		mempool,
+	)
+	app.SetPrepareProposal(handler.PrepareProposalHandler())
+	app.SetProcessProposal(handler.ProcessProposalHandler())
+
+	checkTxHandler := mev_lane.NewCheckTxHandler(
+		app.BaseApp,
+		encodingConfig.TxConfig.TxDecoder(),
+		mevLane,
+		anteHandler,
+		app.ChainID(),
+	)
+	app.SetCheckTx(checkTxHandler.CheckTx())
 
 	// Register snapshot extensions to enable state-sync for wasm.
 	if manager := app.SnapshotManager(); manager != nil {
@@ -352,6 +482,19 @@ func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 
 func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
+}
+
+// CheckTx will check the transaction with the provided checkTxHandler. We override the default
+// handler so that we can verify bid transactions before they are inserted into the mempool.
+// With the POB CheckTx, we can verify the bid transaction and all of the bundled transactions
+// before inserting the bid transaction into the mempool.
+func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	return app.checkTxHandler(req)
+}
+
+// SetCheckTx sets the checkTxHandler for the app.
+func (app *OsmosisApp) SetCheckTx(handler mev_lane.CheckTx) {
+	app.checkTxHandler = handler
 }
 
 // Name returns the name of the App.
@@ -414,17 +557,16 @@ func (app *OsmosisApp) ModuleManager() module.Manager {
 // API server.
 func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
-	// Register legacy tx routes.
-	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {
@@ -437,10 +579,31 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
-// RegisterTendermintService implements the Application.RegisterTendermintService
-// method.
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+	tmservice.RegisterTendermintService(
+		clientCtx,
+		app.BaseApp.GRPCQueryRouter(),
+		app.interfaceRegistry,
+		app.Query,
+	)
+}
+
+// RegisterNodeService registers the node gRPC Query service.
+func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
+	return app.sm
+}
+
+// ChainID gets chainID from private fields of BaseApp
+// Should be removed once SDK 0.50.x will be adopted
+func (app *OsmosisApp) ChainID() string {
+	field := reflect.ValueOf(app.BaseApp).Elem().FieldByName("chainID")
+	return field.String()
 }
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades
@@ -468,7 +631,7 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	}
 }
 
-func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
+func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
 	switch upgradeInfo.Name {
 	case "v16":
 		// v16 upgrade handler

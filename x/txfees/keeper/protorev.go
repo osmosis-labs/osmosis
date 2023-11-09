@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"

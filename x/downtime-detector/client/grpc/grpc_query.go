@@ -2,7 +2,7 @@
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
-// SOURCE AT `proto/osmosis/downtime-detector/v1beta1/query.yml`
+// SOURCE AT `proto/osmosis/downtimedetector/v1beta1/query.yml`
 
 import (
 	context "context"

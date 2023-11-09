@@ -121,7 +121,7 @@ var (
 				numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 				poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
-				expectErr:           fmt.Errorf("0uosmo is smaller than %s: insufficient funds", defaultCoins),
+				expectErr:           fmt.Errorf("spendable balance  is smaller than %s: insufficient funds", defaultCoins),
 			},
 			{
 				name:                "error: owner does not have enough funds to pay creation fee",
@@ -130,7 +130,7 @@ var (
 				numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 				poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
-				expectErr:           errorNoCustomFeeInBalance,
+				expectErr:           fmt.Errorf("spendable balance  is smaller than %s: insufficient funds", customGroupCreationFee),
 			},
 			{
 				name:             "error: duplicate pool IDs",
@@ -611,7 +611,7 @@ func (s *KeeperTestSuite) TestChargeGroupCreationFeeIfNotWhitelisted() {
 
 			// Validate balance updates.
 			if didChargeFee {
-				s.Require().Equal(senderBalanceBefore.Sub(customGroupCreationFee).String(), senderBalanceAfter.String())
+				s.Require().Equal(senderBalanceBefore.Sub(customGroupCreationFee...).String(), senderBalanceAfter.String())
 				s.Require().Equal(communityPoolBalanceBefore.Add(customGroupCreationFee...).String(), communityPoolBalanceAfter.String())
 			} else {
 				s.Require().Equal(senderBalanceBefore.String(), senderBalanceAfter.String())
@@ -761,7 +761,7 @@ func (s *KeeperTestSuite) validateGroupInState(expectedGroup types.Group) {
 func (s *KeeperTestSuite) validateCommunityPoolBalanceUpdatedBy(expectedCoinUpdate, originalCommunityPoolBalance sdk.Coins) {
 	communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 	communityPoolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-	s.Require().Equal(expectedCoinUpdate.String(), communityPoolBalance.Sub(originalCommunityPoolBalance).String())
+	s.Require().Equal(expectedCoinUpdate.String(), communityPoolBalance.Sub(originalCommunityPoolBalance...).String())
 }
 
 // validates that the given actual group equals the expected group

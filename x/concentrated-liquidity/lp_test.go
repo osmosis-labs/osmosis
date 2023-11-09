@@ -484,7 +484,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			}
 
 			// Check account balances
-			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))).String(), userBalancePostPositionCreation.String())
+			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))...).String(), userBalancePostPositionCreation.String())
 			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
 
 			hasPosition := clKeeper.HasPosition(s.Ctx, tc.positionId)
@@ -533,13 +533,13 @@ func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint6
 	)
 
 	if ls == locked {
-		fullRangePositionData, _, err = s.clk.CreateFullRangePositionLocked(s.Ctx, poolId, owner, providedCoins, dur)
+		fullRangePositionData, _, err = s.Clk.CreateFullRangePositionLocked(s.Ctx, poolId, owner, providedCoins, dur)
 	} else if ls == unlocking {
-		fullRangePositionData, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur+time.Hour)
+		fullRangePositionData, _, err = s.Clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur+time.Hour)
 	} else if ls == unlocked {
-		fullRangePositionData, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
+		fullRangePositionData, _, err = s.Clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
 	} else {
-		positionData, err = s.clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), lowerTick, upperTick)
+		positionData, err = s.Clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), lowerTick, upperTick)
 		s.Require().NoError(err)
 		return positionData.ID, positionData.Liquidity
 	}
@@ -765,7 +765,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
-			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
+			largestSupportedUptime := s.Clk.GetLargestSupportedUptimeDuration(s.Ctx)
 			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, largestSupportedUptime, defaultMultiplier)
 			s.FundAcc(pool.GetIncentivesAddress(), expectedFullIncentivesFromAllUptimes)
 
@@ -808,12 +808,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// owner should only have tokens equivilent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedSpreadRewardsClaimed...)
-			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
+			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw...)
 
-			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
-			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw).Sub(communityPoolBalanceDelta)
+			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
+			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw...).Sub(communityPoolBalanceDelta...)
 
-			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeWithdraw.Sub(poolBalanceAfterWithdraw).String())
+			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeWithdraw.Sub(poolBalanceAfterWithdraw...).String())
 			s.Require().NotEmpty(expectedOwnerBalanceDelta)
 			for _, coin := range expectedOwnerBalanceDelta {
 				expected := expectedOwnerBalanceDelta.AmountOf(coin.Denom)
@@ -830,7 +830,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().True(expected.Equal(actual))
 			}
 
-			s.Require().Equal(poolSpreadRewardBalanceBeforeWithdraw.Sub(poolSpreadRewardBalanceAfterWithdraw).String(), expectedSpreadRewardsClaimed.String())
+			s.Require().Equal(poolSpreadRewardBalanceBeforeWithdraw.Sub(poolSpreadRewardBalanceAfterWithdraw...).String(), expectedSpreadRewardsClaimed.String())
 
 			// if the position's expected remaining liquidity is equal to zero, we check if all state
 			// have been correctly deleted.
@@ -1393,7 +1393,7 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 
 			// Create a position from the parameters in the test case.
 			testCoins := sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd), sdk.NewCoin(USDC, tc.amount1ToAdd))
-			positionData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), owner, testCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), config.lowerTick, config.upperTick)
+			positionData, err := s.Clk.CreatePosition(s.Ctx, pool.GetId(), owner, testCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), config.lowerTick, config.upperTick)
 			s.Require().NoError(err)
 
 			// Move the block time forward
@@ -1687,7 +1687,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			}
 
 			// otherwise, ensure balances are added/deducted appropriately
-			expectedPostSendBalanceSender := preSendBalanceSender.Sub(sdk.NewCoins(tc.coin0, tc.coin1))
+			expectedPostSendBalanceSender := preSendBalanceSender.Sub(sdk.NewCoins(tc.coin0, tc.coin1)...)
 			expectedPostSendBalanceReceiver := preSendBalanceReceiver.Add(tc.coin0, tc.coin1)
 
 			s.Require().NoError(err)
@@ -2386,11 +2386,11 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 			updateInitiator := s.TestAccs[tc.updateInitiatorIndex]
 
 			if tc.modifyPositionLiquidity {
-				position, err := s.clk.GetPosition(s.Ctx, tc.positionId)
+				position, err := s.Clk.GetPosition(s.Ctx, tc.positionId)
 				s.Require().NoError(err)
 				owner, err := sdk.AccAddressFromBech32(position.Address)
 				s.Require().NoError(err)
-				s.clk.SetPosition(s.Ctx, defaultPoolId, owner, position.LowerTick, position.UpperTick, position.JoinTime, osmomath.OneDec(), position.PositionId, 0)
+				s.Clk.SetPosition(s.Ctx, defaultPoolId, owner, position.LowerTick, position.UpperTick, position.JoinTime, osmomath.OneDec(), position.PositionId, 0)
 			}
 
 			err := clKeeper.ValidatePositionUpdateById(s.Ctx, tc.positionId, updateInitiator, tc.lowerTickGiven, tc.upperTickGiven, tc.liquidityDeltaGiven, tc.joinTimeGiven, tc.poolIdGiven)

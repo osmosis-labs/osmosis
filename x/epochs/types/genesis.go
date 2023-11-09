@@ -50,7 +50,7 @@ func (epoch EpochInfo) Validate() error {
 		return errors.New("epoch CurrentEpoch must be non-negative")
 	}
 	if epoch.CurrentEpochStartHeight < 0 {
-		return errors.New("epoch CurrentEpoch must be non-negative")
+		return errors.New("epoch CurrentEpochStartHeight must be non-negative")
 	}
 	return nil
 }

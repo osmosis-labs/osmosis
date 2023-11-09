@@ -147,7 +147,6 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		s.SetupTest(false)
 		s.Run(tc.name, func() {
 			preFeeDecoratorTxFeeTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
-
 			err := s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, tc.minGasPrices, tc.gasRequested, tc.isCheckTx, tc.isSimulate, tc.txFee)
 			if tc.expectPass {
 				// ensure fee was collected

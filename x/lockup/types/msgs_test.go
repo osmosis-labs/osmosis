@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 
 	appParams "github.com/osmosis-labs/osmosis/v20/app/params"
 )

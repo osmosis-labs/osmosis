@@ -493,7 +493,7 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 	currentCyclicArbCoins := osmoutils.ConvertCoinArrayToCoins(currentCyclicArb)
 
 	cyclicArbTracker := types.CyclicArbTracker{
-		CyclicArb:                  currentCyclicArbCoins.Sub(k.GetCyclicArbProfitTrackerValue(ctx)),
+		CyclicArb:                  currentCyclicArbCoins.Sub(k.GetCyclicArbProfitTrackerValue(ctx)...),
 		HeightAccountingStartsFrom: k.GetCyclicArbProfitTrackerStartHeight(ctx),
 	}
 
