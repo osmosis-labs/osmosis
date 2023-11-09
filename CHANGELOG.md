@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 * [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
+* [#6841](https://github.com/osmosis-labs/osmosis/pull/6841) fix: fix receive_ack response field and imporove error message of InvalidCrosschainSwapsContract and NoDenomTrace
 
 ## v20.0.0
 
