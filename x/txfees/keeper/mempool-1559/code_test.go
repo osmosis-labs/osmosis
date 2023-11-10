@@ -3,9 +3,9 @@ package mempool1559
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/assert"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
