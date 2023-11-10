@@ -3,153 +3,12 @@ package usecase_test
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
-
-type mockPool struct {
-	ChainPoolModel       poolmanagertypes.PoolI
-	TickModel            *domain.TickModel
-	ID                   uint64
-	Balances             sdk.Coins
-	denoms               []string
-	totalValueLockedUSDC osmomath.Int
-	poolType             poolmanagertypes.PoolType
-	tokenOutDenom        string
-	takerFee             osmomath.Dec
-	spreadFactor         osmomath.Dec
-}
-
-var (
-	_ domain.PoolI        = &mockPool{}
-	_ domain.RoutablePool = &mockPool{}
-)
-
-// GetUnderlyingPool implements routerusecase.RoutablePool.
-func (mp *mockPool) GetUnderlyingPool() poolmanagertypes.PoolI {
-	return mp.ChainPoolModel
-}
-
-// GetSQSPoolModel implements domain.PoolI.
-func (mp *mockPool) GetSQSPoolModel() domain.SQSPool {
-	return domain.SQSPool{
-		Balances:             mp.Balances,
-		TotalValueLockedUSDC: mp.totalValueLockedUSDC,
-		SpreadFactor:         defaultSpreadFactor,
-	}
-}
-
-// CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
-func (*mockPool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
-	panic("unimplemented")
-}
-
-// String implements domain.RoutablePool.
-func (*mockPool) String() string {
-	panic("unimplemented")
-}
-
-// GetTickModel implements domain.RoutablePool.
-func (mp *mockPool) GetTickModel() (*domain.TickModel, error) {
-	return mp.TickModel, nil
-}
-
-// Validate implements domain.PoolI.
-func (*mockPool) Validate(minUOSMOTVL math.Int) error {
-	// Note: always valid for tests.
-	return nil
-}
-
-// GetTokenOutDenom implements routerusecase.RoutablePool.
-func (mp *mockPool) GetTokenOutDenom() string {
-	return mp.tokenOutDenom
-}
-
-// ChargeTakerFee implements domain.RoutablePool.
-func (*mockPool) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
-	panic("unimplemented")
-}
-
-// GetTakerFee implements domain.PoolI.
-func (mp *mockPool) GetTakerFee() math.LegacyDec {
-	return mp.takerFee
-}
-
-var _ domain.PoolI = &mockPool{}
-var _ domain.RoutablePool = &mockPool{}
-
-// GetId implements domain.PoolI.
-func (mp *mockPool) GetId() uint64 {
-	return mp.ID
-}
-
-// GetPoolDenoms implements domain.PoolI.
-func (mp *mockPool) GetPoolDenoms() []string {
-	return mp.denoms
-}
-
-// GetTotalValueLockedUOSMO implements domain.PoolI.
-func (mp *mockPool) GetTotalValueLockedUOSMO() math.Int {
-	return mp.totalValueLockedUSDC
-}
-
-// GetType implements domain.PoolI.
-func (mp *mockPool) GetType() poolmanagertypes.PoolType {
-	return mp.poolType
-}
-
-func deepCopyPool(mp *mockPool) *mockPool {
-
-	newDenoms := make([]string, len(mp.denoms))
-	copy(newDenoms, mp.denoms)
-
-	newTotalValueLocker := osmomath.NewIntFromBigInt(mp.totalValueLockedUSDC.BigInt())
-
-	newBalances := sdk.NewCoins(mp.Balances...)
-
-	return &mockPool{
-		ID:                   mp.ID,
-		denoms:               newDenoms,
-		totalValueLockedUSDC: newTotalValueLocker,
-		poolType:             mp.poolType,
-
-		// Note these are not deep copied.
-		ChainPoolModel: mp.ChainPoolModel,
-		tokenOutDenom:  mp.tokenOutDenom,
-		Balances:       newBalances,
-		takerFee:       mp.takerFee.Clone(),
-		spreadFactor:   mp.spreadFactor.Clone(),
-	}
-}
-
-func withPoolID(mockPool *mockPool, id uint64) *mockPool {
-	newPool := deepCopyPool(mockPool)
-	newPool.ID = id
-	return newPool
-}
-
-func withDenoms(mockPool *mockPool, denoms []string) *mockPool {
-	newPool := deepCopyPool(mockPool)
-	newPool.denoms = denoms
-	return newPool
-}
-
-func withTokenOutDenom(mockPool *mockPool, tokenOutDenom string) *mockPool {
-	newPool := deepCopyPool(mockPool)
-	newPool.tokenOutDenom = tokenOutDenom
-	return newPool
-}
-
-func withChainPoolModel(mockPool *mockPool, chainPool poolmanagertypes.PoolI) *mockPool {
-	newPool := deepCopyPool(mockPool)
-	newPool.ChainPoolModel = chainPool
-	return newPool
-}
 
 func denomNum(i int) string {
 	return fmt.Sprintf("denom%d", i)
@@ -162,8 +21,6 @@ func withRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
 	}
 	return newRoute
 }
-
-var _ domain.PoolI = &mockPool{}
 
 type routesTestCase struct {
 	pools []domain.PoolI
@@ -187,13 +44,13 @@ func (s *RouterTestSuite) TestFindRoutes() {
 	denomOne := denomOne
 	denomTwo := denomTwo
 
-	defaultPool := &mockPool{
+	defaultPool := &mocks.MockRoutablePool{
 		ID:                   1,
-		denoms:               []string{denomOne, denomTwo},
-		totalValueLockedUSDC: osmomath.NewInt(10),
-		poolType:             poolmanagertypes.Balancer,
-		takerFee:             osmomath.ZeroDec(),
-		spreadFactor:         osmomath.ZeroDec(),
+		Denoms:               []string{denomOne, denomTwo},
+		TotalValueLockedUSDC: osmomath.NewInt(10),
+		PoolType:             poolmanagertypes.Balancer,
+		TakerFee:             osmomath.ZeroDec(),
+		SpreadFactor:         osmomath.ZeroDec(),
 	}
 
 	tests := map[string]routesTestCase{
@@ -219,7 +76,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false},
 			expectedRoutes: []domain.Route{
-				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{withTokenOutDenom(defaultPool, denomTwo)}),
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{mocks.WithTokenOutDenom(defaultPool, denomTwo)}),
 			},
 		},
 		"one pool; tokens in & out match but max hops stops route from being found": {
@@ -281,7 +138,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 		"two pools; valid 2 hop route": {
 			pools: []domain.PoolI{
 				defaultPool,
-				withDenoms(defaultPool, []string{denomTwo, denomThree}),
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}),
 			},
 
 			maxHops:   2,
@@ -293,15 +150,15 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			poolsUsed:     []bool{false, false},
 			expectedRoutes: []domain.Route{
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(defaultPool, denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
 				}),
 			},
 		},
 		"two pools; max hops of one does not let route to be found": {
 			pools: []domain.PoolI{
 				defaultPool,
-				withDenoms(defaultPool, []string{denomTwo, denomThree}),
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}),
 			},
 
 			maxHops:   1,
@@ -316,9 +173,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 		"4 pools; valid 4 hop route (not in order)": {
 			pools: []domain.PoolI{
 				defaultPool, // A: denom 1, 2
-				withDenoms(defaultPool, []string{denomTwo, denomThree}), // B: denom 2, 3
-				withDenoms(defaultPool, []string{denomFour, denomOne}),  // C: denom 4, 1
-				withDenoms(defaultPool, []string{denomFour, denomFive}), // D: denom 4, 5
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), // B: denom 2, 3
+				mocks.WithDenoms(defaultPool, []string{denomFour, denomOne}),  // C: denom 4, 1
+				mocks.WithDenoms(defaultPool, []string{denomFour, denomFive}), // D: denom 4, 5
 			},
 
 			maxHops:   4,
@@ -331,18 +188,18 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			poolsUsed:     []bool{false, false, false, false},
 			expectedRoutes: []domain.Route{
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomFour, denomFive}), denomFour),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomFour, denomOne}), denomOne),
-					withTokenOutDenom(defaultPool, denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomFour, denomFive}), denomFour),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomFour, denomOne}), denomOne),
+					mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
 				}),
 			},
 		},
 		"2 routes; direct and 2 hop": {
 			pools: []domain.PoolI{
 				defaultPool, // A: denom 1, 2
-				withDenoms(defaultPool, []string{denomTwo, denomThree}), // B: denom 2, 3
-				withDenoms(defaultPool, []string{denomOne, denomThree}), // C: denom 1, 3
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), // B: denom 2, 3
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}), // C: denom 1, 3
 			},
 
 			maxHops:   2,
@@ -356,21 +213,21 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			poolsUsed:     []bool{false, false, false},
 			expectedRoutes: []domain.Route{
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(defaultPool, denomTwo),
+					mocks.WithTokenOutDenom(defaultPool, denomTwo),
 				}),
 
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomTwo),
 				}),
 			},
 		},
 		"routes: first over 4 hops, second over 1 hop. Second is subroute of first. Token in in intermediary path. Make sure second one is not filtered out": {
 			pools: []domain.PoolI{
-				withDenoms(defaultPool, []string{denomOne, denomThree}),  // A: denom 1, 3
-				withDenoms(defaultPool, []string{denomThree, denomFour}), // B: denom 3, 4
-				withDenoms(defaultPool, []string{denomFour, denomOne}),   // C: denom 4, 1
-				withDenoms(defaultPool, []string{denomOne, denomTwo}),    // D: denom 1, 2
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}),  // A: denom 1, 3
+				mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), // B: denom 3, 4
+				mocks.WithDenoms(defaultPool, []string{denomFour, denomOne}),   // C: denom 4, 1
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}),    // D: denom 1, 2
 			},
 
 			maxHops:   4,
@@ -386,17 +243,17 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false, false, false, false},
 			expectedRoutes: []domain.Route{
-				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{withTokenOutDenom(defaultPool, denomTwo)}),
-				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{withTokenOutDenom(defaultPool, denomTwo)}),
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{mocks.WithTokenOutDenom(defaultPool, denomTwo)}),
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{mocks.WithTokenOutDenom(defaultPool, denomTwo)}),
 			},
 		},
 		"2 possible routes with overlap ": {
 			pools: []domain.PoolI{
-				withDenoms(defaultPool, []string{denomOne, denomTwo}),    // A: denom 1, 2
-				withDenoms(defaultPool, []string{denomTwo, denomThree}),  // B: denom 2, 3
-				withDenoms(defaultPool, []string{denomThree, denomFour}), // C: denom 3, 4
-				withDenoms(defaultPool, []string{denomFive, denomFour}),  // D: denom 5, 4
-				withDenoms(defaultPool, []string{denomThree, denomFive}), // E: denom 3, 5
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}),    // A: denom 1, 2
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}),  // B: denom 2, 3
+				mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), // C: denom 3, 4
+				mocks.WithDenoms(defaultPool, []string{denomFive, denomFour}),  // D: denom 5, 4
+				mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), // E: denom 3, 5
 			},
 
 			maxHops:   4,
@@ -413,24 +270,24 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			// Note that we expect the first one (which is longer) to not be accounted for.
 			expectedRoutes: []domain.Route{
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomFour}), denomFour),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomFive, denomFour}), denomFive),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), denomFour),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomFive, denomFour}), denomFive),
 				}),
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomFive}), denomFive),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), denomFive),
 				}),
 			},
 		},
 		"possible routes; overlapping in the beginning but second one is shorter (second not filtered out)": {
 			pools: []domain.PoolI{
-				withDenoms(defaultPool, []string{denomTwo, denomThree}),            // A: denom 2, 3
-				withDenoms(defaultPool, []string{denomThree, denomTwo}),            // B: denom 3, 2
-				withDenoms(defaultPool, []string{denomOne, denomTwo}),              // C: denom 1, 2
-				withDenoms(defaultPool, []string{denomTwo, denomFour, denomThree}), // D: denom 2, 4, 3
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}),            // A: denom 2, 3
+				mocks.WithDenoms(defaultPool, []string{denomThree, denomTwo}),            // B: denom 3, 2
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}),              // C: denom 1, 2
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomFour, denomThree}), // D: denom 2, 4, 3
 			},
 
 			maxHops:   4,
@@ -445,15 +302,15 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			// Route 2: C -> A -> D
 			expectedRoutes: []domain.Route{
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomTwo}), denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomFour, denomThree}), denomFour),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomTwo}), denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomFour, denomThree}), denomFour),
 				}),
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomFour, denomThree}), denomFour),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomFour, denomThree}), denomFour),
 				}),
 			},
 		},
@@ -461,14 +318,14 @@ func (s *RouterTestSuite) TestFindRoutes() {
 		"3 routes limit; 4 hop, 4 hop, and 3 hop (better routes not selected)": {
 			pools: []domain.PoolI{
 				defaultPool, // A: denom 1, 2
-				withDenoms(defaultPool, []string{denomTwo, denomThree}),  // B: denom 2, 3
-				withDenoms(defaultPool, []string{denomFour, denomSix}),   // C: denom 4, 6
-				withDenoms(defaultPool, []string{denomThree, denomFour}), // D: denom 3, 4
-				withDenoms(defaultPool, []string{denomOne, denomThree}),  // E: denom 1, 3
-				withDenoms(defaultPool, []string{denomThree, denomFive}), // F: denom 3, 5
-				withDenoms(defaultPool, []string{denomTwo, denomFour}),   // G: denom 2, 4
-				withDenoms(defaultPool, []string{denomOne, denomFive}),   // H: denom 1, 5 // note that direct route is not selected due to max routes
-				withDenoms(defaultPool, []string{denomFour, denomFive}),  // I: denom 4, 5
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}),  // B: denom 2, 3
+				mocks.WithDenoms(defaultPool, []string{denomFour, denomSix}),   // C: denom 4, 6
+				mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), // D: denom 3, 4
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}),  // E: denom 1, 3
+				mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), // F: denom 3, 5
+				mocks.WithDenoms(defaultPool, []string{denomTwo, denomFour}),   // G: denom 2, 4
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomFive}),   // H: denom 1, 5 // note that direct route is not selected due to max routes
+				mocks.WithDenoms(defaultPool, []string{denomFour, denomFive}),  // I: denom 4, 5
 			},
 
 			maxHops:   4,
@@ -489,27 +346,27 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			expectedRoutes: []domain.Route{
 				// Route 1
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(defaultPool, denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomFour}), denomFour),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomFour, denomFive}), denomFive),
+					mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), denomFour),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomFour, denomFive}), denomFive),
 				}),
 
 				// Route 2
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					// The comments below are left for reference.
 					// This is what the route would have been if we did not have detection of obsolete routes.
-					// withTokenOutDenom(defaultPool, denomTwo),
-					// withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					// withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomThree}), denomOne),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomFive}), denomFive),
+					// mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					// mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					// mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}), denomOne),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomFive}), denomFive),
 				}),
 
 				// Route 3
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(defaultPool, denomTwo),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomFive}), denomFive),
+					mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), denomFive),
 				}),
 			},
 		},
@@ -594,11 +451,11 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 	}{
 		"2 possible routes with overlap ": {
 			pools: []domain.PoolI{
-				withDenoms(defaultPool, []string{denomOne, denomTwo}),                                 // A: denom 1, 2
-				withPoolID(withDenoms(defaultPool, []string{denomTwo, denomThree}), defaultPoolID+1),  // B: denom 2, 3
-				withPoolID(withDenoms(defaultPool, []string{denomThree, denomFour}), defaultPoolID+2), // C: denom 3, 4
-				withPoolID(withDenoms(defaultPool, []string{denomFive, denomFour}), defaultPoolID+3),  // D: denom 5, 4
-				withPoolID(withDenoms(defaultPool, []string{denomThree, denomFive}), defaultPoolID+4), // E: denom 3, 5
+				mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}),                                 // A: denom 1, 2
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), defaultPoolID+1),  // B: denom 2, 3
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), defaultPoolID+2), // C: denom 3, 4
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomFive, denomFour}), defaultPoolID+3),  // D: denom 5, 4
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), defaultPoolID+4), // E: denom 3, 5
 			},
 
 			maxHops:   4,
@@ -616,9 +473,9 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 			// due to overlapping pool IDs.
 			expectedRoutes: []domain.Route{
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
-					withPoolID(withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree), defaultPoolID+1),
-					withPoolID(withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomFive}), denomFive), defaultPoolID+4),
+					mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomTwo}), denomTwo),
+					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree), defaultPoolID+1),
+					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), denomFive), defaultPoolID+4),
 				}),
 			},
 		},
@@ -626,14 +483,14 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 		"routes limit; 4 hop, 4 hop, and 3 hop (better routes not selected)": {
 			pools: []domain.PoolI{
 				defaultPool, // A: denom 1, 2
-				withPoolID(withDenoms(defaultPool, []string{denomTwo, denomThree}), defaultPoolID+1),  // B: denom 2, 3
-				withPoolID(withDenoms(defaultPool, []string{denomFour, denomSix}), defaultPoolID+2),   // C: denom 4, 6
-				withPoolID(withDenoms(defaultPool, []string{denomThree, denomFour}), defaultPoolID+3), // D: denom 3, 4
-				withPoolID(withDenoms(defaultPool, []string{denomOne, denomThree}), defaultPoolID+4),  // E: denom 1, 3
-				withPoolID(withDenoms(defaultPool, []string{denomThree, denomFive}), defaultPoolID+5), // F: denom 3, 5
-				withPoolID(withDenoms(defaultPool, []string{denomTwo, denomFour}), defaultPoolID+6),   // G: denom 2, 4
-				withPoolID(withDenoms(defaultPool, []string{denomOne, denomFive}), defaultPoolID+7),   // H: denom 1, 5 // note that direct route is not selected due to max routes
-				withPoolID(withDenoms(defaultPool, []string{denomFour, denomFive}), defaultPoolID+8),  // I: denom 4, 5
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), defaultPoolID+1),  // B: denom 2, 3
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomFour, denomSix}), defaultPoolID+2),   // C: denom 4, 6
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomThree, denomFour}), defaultPoolID+3), // D: denom 3, 4
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}), defaultPoolID+4),  // E: denom 1, 3
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), defaultPoolID+5), // F: denom 3, 5
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomTwo, denomFour}), defaultPoolID+6),   // G: denom 2, 4
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomOne, denomFive}), defaultPoolID+7),   // H: denom 1, 5 // note that direct route is not selected due to max routes
+				mocks.WithPoolID(mocks.WithDenoms(defaultPool, []string{denomFour, denomFive}), defaultPoolID+8),  // I: denom 4, 5
 			},
 
 			maxHops:   4,
@@ -658,17 +515,17 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					// The comments below are left for reference.
 					// This is what the route would have been if we did not have detection of obsolete routes.
-					// withTokenOutDenom(defaultPool, denomTwo),
-					// withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
-					// withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomThree}), denomOne),
-					withPoolID(withTokenOutDenom(withDenoms(defaultPool, []string{denomOne, denomFive}), denomFive), defaultPoolID+7),
+					// mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					// mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree),
+					// mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomThree}), denomOne),
+					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomOne, denomFive}), denomFive), defaultPoolID+7),
 				}),
 
 				// Route 3
 				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-					withTokenOutDenom(defaultPool, denomTwo),
-					withPoolID(withTokenOutDenom(withDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree), defaultPoolID+1),
-					withPoolID(withTokenOutDenom(withDenoms(defaultPool, []string{denomThree, denomFive}), denomFive), defaultPoolID+5),
+					mocks.WithTokenOutDenom(defaultPool, denomTwo),
+					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomTwo, denomThree}), denomThree), defaultPoolID+1),
+					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(defaultPool, []string{denomThree, denomFive}), denomFive), defaultPoolID+5),
 				}),
 
 				// Note that the third route is removed. See similar test in TestFindRoutes for comparison.

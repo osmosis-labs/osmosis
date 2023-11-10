@@ -1,15 +1,62 @@
-package usecase_test
+package pools_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"testing"
 
-	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+)
+
+type RoutablePoolTestSuite struct {
+	apptesting.ConcentratedKeeperTestHelper
+}
+
+func TestRoutablePoolTestSuite(t *testing.T) {
+	suite.Run(t, new(RoutablePoolTestSuite))
+}
+
+const (
+	defaultPoolID = uint64(1)
+)
+
+var (
+	// Concentrated liquidity constants
+	ETH    = apptesting.ETH
+	USDC   = apptesting.USDC
+	USDT   = "usdt"
+	Denom0 = ETH
+	Denom1 = USDC
+
+	DefaultCurrentTick = apptesting.DefaultCurrTick
+
+	DefaultAmt0 = apptesting.DefaultAmt0
+	DefaultAmt1 = apptesting.DefaultAmt1
+
+	DefaultCoin0 = apptesting.DefaultCoin0
+	DefaultCoin1 = apptesting.DefaultCoin1
+
+	DefaultLiquidityAmt = apptesting.DefaultLiquidityAmt
+
+	// router specific variables
+	defaultTickModel = &domain.TickModel{
+		Ticks:            []domain.LiquidityDepthsWithRange{},
+		CurrentTickIndex: 0,
+		HasNoLiquidity:   false,
+	}
+
+	noTakerFee = osmomath.ZeroDec()
 )
 
 // Test quote logic over a specific pool that is of CFMM type.
 // CFMM pools are balancert and stableswap.
-func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_CFMM() {
+func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_CFMM() {
 	tests := map[string]struct {
 		tokenIn          sdk.Coin
 		tokenOutDenom    string
@@ -37,8 +84,8 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_CFMM() {
 			pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			mock := &mockPool{ChainPoolModel: pool}
-			routablePool := routerusecase.NewRoutablePool(mock, tc.tokenOutDenom, noTakerFee)
+			mock := &mocks.MockRoutablePool{ChainPoolModel: pool}
+			routablePool := pools.NewRoutablePool(mock, tc.tokenOutDenom, noTakerFee)
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
 

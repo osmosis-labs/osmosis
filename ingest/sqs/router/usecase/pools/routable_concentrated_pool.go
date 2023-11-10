@@ -1,4 +1,4 @@
-package usecase
+package pools
 
 import (
 	"fmt"
@@ -60,7 +60,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 
 	// Ensure pool has liquidity.
 	if tickModel.HasNoLiquidity {
-		return sdk.Coin{}, ConcentratedNoLiquidityError{
+		return sdk.Coin{}, domain.ConcentratedNoLiquidityError{
 			PoolId: r.GetId(),
 		}
 	}
@@ -69,7 +69,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 	currentBucketIndex := tickModel.CurrentTickIndex
 
 	if currentBucketIndex < 0 || currentBucketIndex >= int64(len(tickModel.Ticks)) {
-		return sdk.Coin{}, ConcentratedCurrentTickNotWithinBucketError{
+		return sdk.Coin{}, domain.ConcentratedCurrentTickNotWithinBucketError{
 			PoolId:             r.GetId(),
 			CurrentBucketIndex: currentBucketIndex,
 			TotalBuckets:       int64(len(tickModel.Ticks)),
@@ -80,7 +80,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 
 	isCurrentTickWithinBucket := concentratedPool.IsCurrentTickInRange(currentBucket.LowerTick, currentBucket.UpperTick)
 	if !isCurrentTickWithinBucket {
-		return sdk.Coin{}, ConcentratedCurrentTickAndBucketMismatchError{
+		return sdk.Coin{}, domain.ConcentratedCurrentTickAndBucketMismatchError{
 			CurrentTick: concentratedPool.CurrentTick,
 			LowerTick:   currentBucket.LowerTick,
 			UpperTick:   currentBucket.UpperTick,
@@ -106,7 +106,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 	)
 
 	if currentSqrtPrice.IsZero() {
-		return sdk.Coin{}, ConcentratedZeroCurrentSqrtPriceError{
+		return sdk.Coin{}, domain.ConcentratedZeroCurrentSqrtPriceError{
 			PoolId: r.GetId(),
 		}
 	}
@@ -116,7 +116,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 		if currentBucketIndex >= int64(len(tickModel.Ticks)) {
 			// This happens when there is not enough liquidity in the pool to complete the swap
 			// for a given amount of token in.
-			return sdk.Coin{}, ConcentratedNotEnoughLiquidityToCompleteSwapError{
+			return sdk.Coin{}, domain.ConcentratedNotEnoughLiquidityToCompleteSwapError{
 				PoolId:   r.GetId(),
 				AmountIn: sdk.NewCoins(tokenIn).String(),
 			}

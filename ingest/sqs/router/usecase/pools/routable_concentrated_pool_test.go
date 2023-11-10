@@ -1,4 +1,4 @@
-package usecase_test
+package pools_test
 
 import (
 	"strings"
@@ -8,37 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
-	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-)
-
-var (
-	// Concentrated liquidity constants
-	ETH    = apptesting.ETH
-	USDC   = apptesting.USDC
-	USDT   = "usdt"
-	Denom0 = ETH
-	Denom1 = USDC
-
-	DefaultCurrentTick = apptesting.DefaultCurrTick
-
-	DefaultAmt0 = apptesting.DefaultAmt0
-	DefaultAmt1 = apptesting.DefaultAmt1
-
-	DefaultCoin0 = apptesting.DefaultCoin0
-	DefaultCoin1 = apptesting.DefaultCoin1
-
-	DefaultLiquidityAmt = apptesting.DefaultLiquidityAmt
-
-	// router specific variables
-	defaultTickModel = &domain.TickModel{
-		Ticks:            []domain.LiquidityDepthsWithRange{},
-		CurrentTickIndex: 0,
-		HasNoLiquidity:   false,
-	}
-
-	noTakerFee = osmomath.ZeroDec()
 )
 
 func deepCopyTickModel(tickModel *domain.TickModel) *domain.TickModel {
@@ -74,7 +45,7 @@ func withTicks(tickModel *domain.TickModel, ticks []domain.LiquidityDepthsWithRa
 //
 // It uses the same success test cases as the chain logic.
 // The error cases are tested in a separate fixture because the edge cases are different..
-func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_SuccessChainVectors() {
+func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_SuccessChainVectors() {
 	tests := apptesting.SwapOutGivenInCases
 
 	for name, tc := range tests {
@@ -114,7 +85,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_SuccessCha
 					PoolDenoms:            []string{"foo", "bar"},
 				},
 			}
-			routablePool := routerusecase.NewRoutablePool(poolWrapper, tc.TokenOutDenom, noTakerFee)
+			routablePool := pools.NewRoutablePool(poolWrapper, tc.TokenOutDenom, noTakerFee)
 
 			err = routablePool.Validate(osmomath.NewInt(100))
 			s.Require().NoError(err)
@@ -128,7 +99,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_SuccessCha
 }
 
 // This test cases focuses on testing error and edge cases for CL quote calculation out by token in.
-func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEdgeCases() {
+func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEdgeCases() {
 	const (
 		defaultCurrentTick = int64(0)
 	)
@@ -178,7 +149,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 
 			tickModelOverwrite: withCurrentTickIndex(defaultTickModel, -1),
 
-			expectError: usecase.ConcentratedCurrentTickNotWithinBucketError{
+			expectError: domain.ConcentratedCurrentTickNotWithinBucketError{
 				PoolId:             defaultPoolID,
 				CurrentBucketIndex: -1,
 				TotalBuckets:       0,
@@ -190,7 +161,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 
 			tickModelOverwrite: defaultTickModel,
 
-			expectError: usecase.ConcentratedCurrentTickNotWithinBucketError{
+			expectError: domain.ConcentratedCurrentTickNotWithinBucketError{
 				PoolId:             defaultPoolID,
 				CurrentBucketIndex: defaultCurrentTick,
 				TotalBuckets:       defaultCurrentTick,
@@ -202,7 +173,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 
 			tickModelOverwrite: withHasNoLiquidity(defaultTickModel),
 
-			expectError: usecase.ConcentratedNoLiquidityError{
+			expectError: domain.ConcentratedNoLiquidityError{
 				PoolId: defaultPoolID,
 			},
 		},
@@ -218,7 +189,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 				},
 			}),
 
-			expectError: usecase.ConcentratedCurrentTickAndBucketMismatchError{
+			expectError: domain.ConcentratedCurrentTickAndBucketMismatchError{
 				CurrentTick: defaultCurrentTick,
 				LowerTick:   defaultCurrentTick - 2,
 				UpperTick:   defaultCurrentTick - 1,
@@ -244,7 +215,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 				HasNoLiquidity: false,
 			},
 
-			expectError: usecase.ConcentratedZeroCurrentSqrtPriceError{PoolId: defaultPoolID},
+			expectError: domain.ConcentratedZeroCurrentSqrtPriceError{PoolId: defaultPoolID},
 		},
 		"error: not enough liquidity to complete swap": {
 			tokenIn:       DefaultCoin1,
@@ -260,7 +231,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 				},
 			}),
 
-			expectError: usecase.ConcentratedNotEnoughLiquidityToCompleteSwapError{
+			expectError: domain.ConcentratedNotEnoughLiquidityToCompleteSwapError{
 				PoolId:   defaultPoolID,
 				AmountIn: DefaultCoin1.String(),
 			},
@@ -313,7 +284,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEd
 				}
 			}
 
-			routablePool := routerusecase.RoutableConcentratedPoolImpl{
+			routablePool := pools.RoutableConcentratedPoolImpl{
 				PoolI: &domain.PoolWrapper{
 					ChainModel: chainModel,
 					TickModel:  tickModel,
