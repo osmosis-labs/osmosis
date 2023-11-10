@@ -69,6 +69,8 @@ type Quote interface {
 	// PrepareResult mutates the quote to prepare
 	// it with the data formatted for output to the client.
 	PrepareResult() ([]SplitRoute, osmomath.Dec)
+
+	String() string
 }
 
 type RouterConfig struct {

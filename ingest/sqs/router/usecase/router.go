@@ -27,7 +27,7 @@ type Router struct {
 
 type ratedPool struct {
 	pool   domain.PoolI
-	rating int64
+	rating osmomath.Int
 }
 
 const (
@@ -35,21 +35,6 @@ const (
 	osmoPrecisionMultiplier = 1000000
 
 	// Pool ordering constants below:
-
-	// 100 points for no error in TVL
-	noTVLErrorPoints = 100
-
-	// each pool gets a proportion of this value depending on its on-chain TVL.
-	proRataTVLPointsTotal = 10000
-
-	// points for being a preferred pool
-	preferredPoints = 1000
-
-	// points for being concentrated
-	concentratedPoints = 20
-
-	// Transmuter pools should be prioritized due to no slippage swaps.
-	transmuterPoints = preferredPoints * 2
 
 	noTotalValueLockedError = ""
 )
@@ -66,7 +51,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 	}
 
 	// TODO: consider mutating directly on allPools
-	poolsCopy := make([]domain.PoolI, 0)
+	sortedPools := make([]domain.PoolI, 0)
 	totalTVL := osmomath.ZeroInt()
 
 	minUOSMOTVL := osmomath.NewInt(int64(minOSMOTVL * osmoPrecisionMultiplier))
@@ -78,7 +63,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 			continue
 		}
 
-		poolsCopy = append(poolsCopy, pool)
+		sortedPools = append(sortedPools, pool)
 
 		totalTVL = totalTVL.Add(pool.GetTotalValueLockedUOSMO())
 	}
@@ -88,33 +73,65 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 		preferredPoolIDsMap[poolID] = struct{}{}
 	}
 
-	// TODO: move rating into a separate function
-	// https://app.clickup.com/t/86a19n1ge
-	ratedPools := make([]ratedPool, 0, len(poolsCopy))
-	for _, pool := range poolsCopy {
-		osmoTVL := pool.GetTotalValueLockedUOSMO()
-		tvlProportion := osmoTVL.ToLegacyDec().Quo(totalTVL.ToLegacyDec())
+	// sort pools so that the appropriate pools are at the top
+	sortedPools = sortPools(sortedPools, totalTVL, preferredPoolIDsMap, logger)
 
-		// Get points proportional to 100 depending on the total on-chain TVL.
-		rating := tvlProportion.Mul(osmomath.NewDec(proRataTVLPointsTotal)).RoundInt64()
+	return Router{
+		sortedPools:        sortedPools,
+		takerFeeMap:        takerFeeMap,
+		maxHops:            maxHops,
+		maxRoutes:          maxRoutes,
+		logger:             logger,
+		maxSplitIterations: maxSplitIterations,
+	}
+}
 
-		// 100 points for no error in TVL
+// sortPools sorts the given pools so that the most appropriate pools are at the top.
+// The details of the sorting follow. Assign a rating to each pool based on the following criteria:
+// - Initial rating equals to the pool's total value locked denominated in OSMO.
+// - If the pool has no error in TVL, add 1/100 of total value locked across all pools to the rating.
+// - If the pool is a preferred pool, add the total value locked across all pools to the rating.
+// - If the pool is a concentrated pool, add 1/2 of total value locked across all pools to the rating.
+// - If the pool is a transmuter pool, add 3/2 of total value locked across all pools to the rating.
+// - Sort all pools by the rating score.
+//
+// This sorting exists to pursue the following heuristics:
+// - The TVL is the main metric to sort pools by.
+// - Preferred pools are prioritized by getting a boost.
+// - Transmuter pools are the most efficient due to no slippage swaps so they get a boost.
+// - Concentrated pools follow so they get a smaller boost.
+// - Pools with no error in TVL are prioritized by getting an even smaller boost.
+//
+// These heuristics are imperfect and subject to change.
+func sortPools(pools []domain.PoolI, totalTVL osmomath.Int, preferredPoolIDsMap map[uint64]struct{}, logger log.Logger) []domain.PoolI {
+	logger.Debug("total tvl", zap.Stringer("total_tvl", totalTVL))
+
+	ratedPools := make([]ratedPool, 0, len(pools))
+	for _, pool := range pools {
+
+		// Initialize rating to TVL.
+		rating := pool.GetTotalValueLockedUOSMO()
+
+		// 1/ 100 of toal value locked across all pools for no error in TVL
 		if pool.GetSQSPoolModel().TotalValueLockedError == noTotalValueLockedError {
-			rating += noTVLErrorPoints
+			rating = rating.Add(totalTVL.QuoRaw(100))
 		}
 
+		// Preferred pools get a boost equal to the total value locked across all pools
 		_, isPreferred := preferredPoolIDsMap[pool.GetId()]
 		if isPreferred {
-			rating += preferredPoints
+			rating = rating.Add(totalTVL)
 		}
 
+		// Concentrated pools get a boost equal to 1/2 of total value locked across all pools
 		isConcentrated := pool.GetType() == poolmanagertypes.Concentrated
 		if isConcentrated {
-			rating += concentratedPoints
+			rating = rating.Add(totalTVL.QuoRaw(2))
 		}
 
+		// Transmuter pools get a boost equal to 3/2 of total value locked across all pools
 		if isTransmuter := pool.GetType() == poolmanagertypes.CosmWasm; isTransmuter {
-			rating += transmuterPoints
+			rating = rating.Add(totalTVL.MulRaw(3).QuoRaw(2))
 		}
 
 		ratedPools = append(ratedPools, ratedPool{
@@ -125,29 +142,21 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap d
 
 	// Sort all pools by the rating score
 	sort.Slice(ratedPools, func(i, j int) bool {
-		return ratedPools[i].rating > ratedPools[j].rating
+		return ratedPools[i].rating.GT(ratedPools[j].rating)
 	})
 
 	logger.Debug("pool count in router ", zap.Int("pool_count", len(ratedPools)))
 	logger.Info("initial pool order")
 	for i, pool := range ratedPools {
 		sqsModel := pool.pool.GetSQSPoolModel()
-		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool.GetId()), zap.Int64("rate", pool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.String("tvl_error", sqsModel.TotalValueLockedError))
+		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool.GetId()), zap.Stringer("rate", pool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.String("tvl_error", sqsModel.TotalValueLockedError))
 	}
 
 	// Convert back to pools
 	for i, ratedPool := range ratedPools {
-		poolsCopy[i] = ratedPool.pool
+		pools[i] = ratedPool.pool
 	}
-
-	return Router{
-		sortedPools:        poolsCopy,
-		takerFeeMap:        takerFeeMap,
-		maxHops:            maxHops,
-		maxRoutes:          maxRoutes,
-		logger:             logger,
-		maxSplitIterations: maxSplitIterations,
-	}
+	return pools
 }
 
 // FilterSlice filters a slice of integers based on a provided predicate function.
