@@ -192,6 +192,8 @@ func (s *RouterTestSuite) TestFindRoutes() {
 		denoms:               []string{denomOne, denomTwo},
 		totalValueLockedUSDC: osmomath.NewInt(10),
 		poolType:             poolmanagertypes.Balancer,
+		takerFee:             osmomath.ZeroDec(),
+		spreadFactor:         osmomath.ZeroDec(),
 	}
 
 	tests := map[string]routesTestCase{

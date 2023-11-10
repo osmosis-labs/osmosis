@@ -88,8 +88,6 @@ func NewLogger(isProduction bool, fileName string, logLevelStr string) (Logger, 
 	if fileName != "" {
 		fileEncoder := zapcore.NewJSONEncoder(loggerConfig.EncoderConfig)
 
-		fileName := "sqs.log"
-
 		f, err := os.Create(fileName)
 		if err != nil {
 			return nil, err

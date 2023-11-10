@@ -140,14 +140,16 @@ func (s *RouterTestSuite) TestNewRouter() {
 		// Expected
 		// First, preferred pool IDs, then sorted by TVL.
 		expectedSortedPoolIDs = []uint64{
-			// The first 2 pools are preferred due to having higher liquidity despite error in TVL.
-			secondBalancerPoolPoolID, // preferred pool ID with TVL error flag set
-			thirdBalancerPoolID,      // non-preferred pool ID with TVL error flag set
+			// Transmuter pool is first due to no slippage swaps
+			allPool.CosmWasmPoolID,
 
+			secondBalancerPoolPoolID, // preferred pool ID with TVL error flag set
+
+			// Balancer is above concentrated pool due to higher TVL
 			allPool.BalancerPoolID,
 			allPool.ConcentratedPoolID,
 
-			allPool.CosmWasmPoolID,
+			thirdBalancerPoolID, // non-preferred pool ID with TVL error flag set
 		}
 	)
 

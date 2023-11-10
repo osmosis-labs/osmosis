@@ -20,12 +20,16 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain
 		return nil, err
 	}
 
+	for _, route := range routes {
+		r.logger.Info("route", zap.Stringer("route", route))
+	}
+
 	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
 
-	r.logger.Info("bestSingleRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()), zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
+	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
 
 	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tokenIn)
 	if err != nil {
