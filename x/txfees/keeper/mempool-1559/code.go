@@ -55,7 +55,7 @@ var (
 )
 
 const (
-	BackupFile = "eip1559state.json"
+	BackupFilename = "eip1559state.json"
 )
 
 // EipState tracks the current base fee and totalGasWantedThisBlock
@@ -63,8 +63,8 @@ const (
 type EipState struct {
 	lastBlockHeight         int64
 	totalGasWantedThisBlock int64
-
-	CurBaseFee osmomath.Dec `json:"cur_base_fee"`
+	BackupFilePath          string
+	CurBaseFee              osmomath.Dec `json:"cur_base_fee"`
 }
 
 // CurEipState is a global variable used in the BeginBlock, EndBlock and
@@ -73,6 +73,7 @@ type EipState struct {
 var CurEipState = EipState{
 	lastBlockHeight:         0,
 	totalGasWantedThisBlock: 0,
+	BackupFilePath:          "",
 	CurBaseFee:              sdk.NewDec(0),
 }
 
@@ -156,7 +157,7 @@ func (e *EipState) tryPersist() {
 		return
 	}
 
-	err = os.WriteFile(BackupFile, bz, 0644)
+	err = os.WriteFile(e.BackupFilePath, bz, 0644)
 	if err != nil {
 		fmt.Println("Error writing eip1559 state", err)
 		return
@@ -166,7 +167,7 @@ func (e *EipState) tryPersist() {
 // tryLoad reads eip1559 state from disk and initializes the CurEipState to
 // the previous state when a node is restarted
 func (e *EipState) tryLoad() osmomath.Dec {
-	bz, err := os.ReadFile(BackupFile)
+	bz, err := os.ReadFile(e.BackupFilePath)
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)
 		fmt.Println("Setting eip1559 state to default value", MinBaseFee)

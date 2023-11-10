@@ -20,6 +20,7 @@ type Keeper struct {
 	spotPriceCalculator types.SpotPriceCalculator
 	protorevKeeper      types.ProtorevKeeper
 	distributionKeeper  types.DistributionKeeper
+	dataDir             string
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
@@ -32,6 +33,7 @@ func NewKeeper(
 	spotPriceCalculator types.SpotPriceCalculator,
 	protorevKeeper types.ProtorevKeeper,
 	distributionKeeper types.DistributionKeeper,
+	dataDir string,
 ) Keeper {
 	return Keeper{
 		accountKeeper:       accountKeeper,
@@ -41,6 +43,7 @@ func NewKeeper(
 		spotPriceCalculator: spotPriceCalculator,
 		protorevKeeper:      protorevKeeper,
 		distributionKeeper:  distributionKeeper,
+		dataDir:             dataDir,
 	}
 }
 
