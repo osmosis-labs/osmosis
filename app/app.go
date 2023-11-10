@@ -194,7 +194,6 @@ type OsmosisApp struct {
 	checkTxHandler mev_lane.CheckTx
 
 	// lanes
-	Mempool auctionante.Mempool
 	MEVLane auctionante.MEVLane
 }
 
@@ -403,7 +402,6 @@ func NewOsmosisApp(
 
 	// set the mempool first
 	app.SetMempool(mempool)
-	app.Mempool = mempool
 
 	anteHandler := NewAnteHandler(
 		appOpts,
@@ -419,7 +417,6 @@ func NewOsmosisApp(
 		app.AuctionKeeper,
 		app.GetTxConfig().TxEncoder(),
 		mevLane,
-		mempool,
 	)
 
 	// initialize BaseApp
@@ -434,6 +431,7 @@ func NewOsmosisApp(
 	handler := blocksdkabci.NewProposalHandler(
 		app.Logger(),
 		app.GetTxConfig().TxDecoder(),
+		app.GetTxConfig().TxEncoder(),
 		mempool,
 	)
 	app.SetPrepareProposal(handler.PrepareProposalHandler())
