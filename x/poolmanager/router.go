@@ -16,6 +16,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
@@ -49,6 +50,45 @@ func (k Keeper) RouteExactAmountIn(
 		}
 
 		tokenOutAmount, err = k.SwapExactAmountIn(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
+		if err != nil {
+			return osmomath.Int{}, err
+		}
+
+		// Chain output of current pool as the input for the next routed pool
+		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
+	}
+	return tokenOutAmount, nil
+}
+
+// RouteExactAmountInNoTakerFee behaves the same as RouteExactAmountIn, but does not charge a taker fee.
+// This method should ONLY be called by the protorev module.
+func (k Keeper) RouteExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	tokenOutMinAmount osmomath.Int,
+) (tokenOutAmount osmomath.Int, err error) {
+	// Only protorev module can call this method.
+	if !sender.Equals(k.accountKeeper.GetModuleAccount(ctx, protorevtypes.ModuleName).GetAddress()) {
+		return osmomath.Int{}, fmt.Errorf("only the protorev module can call this method")
+	}
+
+	// Ensure that provided route is not empty and has valid denom format.
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
+		return osmomath.Int{}, err
+	}
+
+	// Iterate through the route and execute a series of swaps through each pool.
+	for i, routeStep := range route {
+		// To prevent the multihop swap from being interrupted prematurely, we keep
+		// the minimum expected output at a very low number until the last pool
+		_outMinAmount := osmomath.NewInt(1)
+		if len(route)-1 == i {
+			_outMinAmount = tokenOutMinAmount
+		}
+
+		tokenOutAmount, err = k.SwapExactAmountInNoTakerFee(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
 		if err != nil {
 			return osmomath.Int{}, err
 		}

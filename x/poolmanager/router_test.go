@@ -23,6 +23,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
@@ -709,6 +710,306 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	}
 }
 
+func (s *KeeperTestSuite) TestMultihopSwapExactAmountInNoSwapFee() {
+	tests := []struct {
+		name                   string
+		poolCoins              []sdk.Coins
+		poolSpreadFactor       []osmomath.Dec
+		poolType               []types.PoolType
+		routes                 []types.SwapAmountInRoute
+		incentivizedGauges     []uint64
+		tokenIn                sdk.Coin
+		tokenOutMinAmount      osmomath.Int
+		spreadFactor           osmomath.Dec
+		isNotProtorevModuleAcc bool
+		expectError            bool
+	}{
+		{
+			name:             "One route: Swap - [foo -> bar], 1 percent fee",
+			poolCoins:        []sdk.Coins{sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount))},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor},
+			poolType:         []types.PoolType{types.Balancer},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+			},
+			tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount: osmomath.NewInt(1),
+		},
+		{
+			name:             "Attempt to call the method with an account other than the proto-rev module account",
+			poolCoins:        []sdk.Coins{sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount))},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor},
+			poolType:         []types.PoolType{types.Balancer},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+			},
+			tokenIn:                sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount:      osmomath.NewInt(1),
+			isNotProtorevModuleAcc: true,
+			expectError:            true,
+		},
+		{
+			name: "Two routes: Swap - [foo -> bar](pool 1) - [bar -> baz](pool 2), both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+			},
+			incentivizedGauges: []uint64{},
+			tokenIn:            sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: UOSMO,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:            sdk.NewCoin("foo", osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		{
+			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),   // pool 3.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: UOSMO,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+				{
+					PoolId:        3,
+					TokenOutDenom: BAR,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:            sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		{
+			name: "Two routes: Swap between four asset pools - [foo -> bar](pool 1) - [bar -> baz](pool 2), all pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:            sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		{
+			name: "Three routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 3.                                                                                      // pool 3.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: UOSMO,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+				{
+					PoolId:        3,
+					TokenOutDenom: BAR,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			tokenIn:            sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		{
+			name: "[Concentrated] One route: Swap - [foo -> bar], 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, apptesting.DefaultCoinAmount), sdk.NewCoin(BAR, apptesting.DefaultCoinAmount)),
+			},
+			poolType:         []types.PoolType{types.Concentrated},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+			},
+			tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount: osmomath.NewInt(1),
+		},
+		{
+			name: "[Concentrated[ Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, apptesting.DefaultCoinAmount), sdk.NewCoin(UOSMO, apptesting.DefaultCoinAmount)),
+				sdk.NewCoins(sdk.NewCoin(BAZ, apptesting.DefaultCoinAmount), sdk.NewCoin(UOSMO, apptesting.DefaultCoinAmount)),
+				sdk.NewCoins(sdk.NewCoin(BAR, apptesting.DefaultCoinAmount), sdk.NewCoin(BAZ, apptesting.DefaultCoinAmount)),
+			},
+			poolType:         []types.PoolType{types.Concentrated, types.Concentrated, types.Concentrated},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: UOSMO,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+				{
+					PoolId:        3,
+					TokenOutDenom: BAR,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:            sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		// TODO: wasmd does not allow bank sends to blocked addresses, whereas the other pool modules bypass this
+		// wasmd: https://github.com/CosmWasm/wasmd/blob/7c8f1e8d5450b591c3e62847e8be5cf10ff7a6ad/x/wasm/keeper/keeper.go#L1260
+		// The solution here is to either remove the protorev module account from the blocked addresses, or modify wasmd
+		// to not check for blocked addresses.
+		//
+		// {
+		// 	name: "[Cosmwasm] One route: Swap - [foo -> bar], 1 percent fee",
+		// 	poolCoins: []sdk.Coins{
+		// 		sdk.NewCoins(sdk.NewCoin(FOO, apptesting.DefaultCoinAmount), sdk.NewCoin(BAR, apptesting.DefaultCoinAmount)),
+		// 	},
+		// 	poolType:         []types.PoolType{types.CosmWasm},
+		// 	poolSpreadFactor: []osmomath.Dec{osmomath.OneDec()},
+		// 	routes: []types.SwapAmountInRoute{
+		// 		{
+		// 			PoolId:        1,
+		// 			TokenOutDenom: BAR,
+		// 		},
+		// 	},
+		// 	tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+		// 	tokenOutMinAmount: osmomath.NewInt(1),
+		// },
+		// {
+		// 	name: "[Cosmwasm -> Concentrated] One route: Swap - [foo -> bar] -> [bar -> baz], 1 percent fee",
+		// 	poolCoins: []sdk.Coins{
+		// 		sdk.NewCoins(sdk.NewCoin(FOO, apptesting.DefaultCoinAmount), sdk.NewCoin(BAR, apptesting.DefaultCoinAmount)),
+		// 		sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),
+		// 	},
+		// 	poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
+		// 	poolSpreadFactor: []osmomath.Dec{osmomath.OneDec(), defaultPoolSpreadFactor},
+		// 	routes: []types.SwapAmountInRoute{
+		// 		{
+		// 			PoolId:        1,
+		// 			TokenOutDenom: BAR,
+		// 		},
+		// 		{
+		// 			PoolId:        2,
+		// 			TokenOutDenom: BAZ,
+		// 		},
+		// 	},
+		// 	tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+		// 	tokenOutMinAmount: osmomath.NewInt(1),
+		// },
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			poolmanagerKeeper := s.App.PoolManagerKeeper
+
+			// Set taker fee
+			poolmanagerParams := poolmanagerKeeper.GetParams(s.Ctx)
+			poolmanagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.02")
+			poolmanagerKeeper.SetParams(s.Ctx, poolmanagerParams)
+
+			for i := range tc.poolType {
+				s.FundAcc(s.TestAccs[0], tc.poolCoins[i])
+				s.CreatePoolFromTypeWithCoinsAndSpreadFactor(tc.poolType[i], tc.poolCoins[i], tc.poolSpreadFactor[i])
+			}
+
+			// if test specifies incentivized gauges, set them here
+			if len(tc.incentivizedGauges) > 0 {
+				s.makeGaugesIncentivized(tc.incentivizedGauges)
+			}
+
+			if !tc.isNotProtorevModuleAcc {
+				protorevModuleAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, protorevtypes.ModuleName)
+				s.TestAccs[0] = protorevModuleAcc.GetAddress()
+				s.FundModuleAcc(protorevtypes.ModuleName, sdk.NewCoins(tc.tokenIn))
+			}
+
+			if tc.expectError {
+				// execute the swap
+				_, err := poolmanagerKeeper.RouteExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
+				s.Require().Error(err)
+			} else {
+				// calculate the swap as separate swaps
+				expectedMultihopTokenOutAmount := s.calcOutGivenInAmountAsSeparatePoolSwapsNoTakerFee(tc.routes, tc.tokenIn)
+
+				// execute the swap
+				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
+				// compare the expected tokenOut to the actual tokenOut
+				s.Require().NoError(err)
+				s.Require().Equal(expectedMultihopTokenOutAmount.Amount.String(), multihopTokenOutAmount.String())
+			}
+		})
+	}
+}
+
 // TestMultihopSwapExactAmountOut tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
@@ -1367,6 +1668,30 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(routes []types
 		s.Require().NoError(err)
 
 		nextTokenInAfterSubTakerFee, _ := poolmanager.CalcTakerFeeExactIn(nextTokenIn, takerFee)
+
+		// we then do individual swaps until we reach the end of the swap route
+		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, osmomath.OneInt(), spreadFactor)
+		s.Require().NoError(err)
+
+		nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+
+	}
+	return nextTokenIn
+}
+
+func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwapsNoTakerFee(routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+	cacheCtx, _ := s.Ctx.CacheContext()
+	nextTokenIn := tokenIn
+	for _, hop := range routes {
+		swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+		s.Require().NoError(err)
+
+		pool, err := swapModule.GetPool(s.Ctx, hop.PoolId)
+		s.Require().NoError(err)
+
+		spreadFactor := pool.GetSpreadFactor(cacheCtx)
+
+		nextTokenInAfterSubTakerFee, _ := poolmanager.CalcTakerFeeExactIn(nextTokenIn, osmomath.ZeroDec())
 
 		// we then do individual swaps until we reach the end of the swap route
 		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, osmomath.OneInt(), spreadFactor)

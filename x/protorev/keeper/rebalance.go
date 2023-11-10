@@ -356,7 +356,8 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 	}
 
 	// Use the inputCoin.Amount as the min amount out to ensure profitability
-	tokenOutAmount, err := k.poolmanagerKeeper.RouteExactAmountIn(ctx, protorevModuleAddress, route, inputCoin, inputCoin.Amount)
+	// Have protorev skip (no pun intended) paying the taker fee, as this is redundant / inefficient
+	tokenOutAmount, err := k.poolmanagerKeeper.RouteExactAmountInNoTakerFee(ctx, protorevModuleAddress, route, inputCoin, inputCoin.Amount)
 	if err != nil {
 		return err
 	}

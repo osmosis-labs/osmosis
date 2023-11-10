@@ -32,7 +32,7 @@ type GAMMKeeper interface {
 // PoolManagerKeeper defines the PoolManager contract that must be fulfilled when
 // creating a x/protorev keeper.
 type PoolManagerKeeper interface {
-	RouteExactAmountIn(
+	RouteExactAmountInNoTakerFee(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
 		routes []poolmanagertypes.SwapAmountInRoute,
