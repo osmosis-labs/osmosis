@@ -32,7 +32,7 @@ require (
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231108202153-af031b1367bb
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/skip-mev/block-sdk v1.0.0
+	github.com/skip-mev/block-sdk v1.1.0
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5

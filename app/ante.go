@@ -39,7 +39,6 @@ func NewAnteHandler(
 	auctionKeeper *auctionkeeper.Keeper,
 	txEncoder sdk.TxEncoder,
 	mevLane auctionante.MEVLane,
-	mempool auctionante.Mempool,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -67,6 +66,6 @@ func NewAnteHandler(
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
-		auctionante.NewAuctionDecorator(*auctionKeeper, txEncoder, mevLane, mempool),
+		auctionante.NewAuctionDecorator(*auctionKeeper, txEncoder, mevLane),
 	)
 }
