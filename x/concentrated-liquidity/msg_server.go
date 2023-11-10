@@ -45,7 +45,6 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 	return &clmodel.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
 }
 
-// TODO: tests, including events
 func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCreatePosition) (*types.MsgCreatePositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
