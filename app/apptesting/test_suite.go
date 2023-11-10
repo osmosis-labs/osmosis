@@ -117,6 +117,31 @@ func (s *KeeperTestHelper) Setup() {
 	}
 }
 
+func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
+	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
+	s.App = app.SetupWithCustomHomeAndChainId(false, dir, chainId)
+	s.setupGeneralCustomChainId(chainId)
+
+	// Manually set validator signing info, otherwise we panic
+	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	for _, val := range vals {
+		consAddr, _ := val.GetConsAddr()
+		signingInfo := slashingtypes.NewValidatorSigningInfo(
+			consAddr,
+			s.Ctx.BlockHeight(),
+			0,
+			time.Unix(0, 0),
+			false,
+			0,
+		)
+		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+	}
+}
+
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
 // Additionally, attaches an internal gauge ID for each pool.
 func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
@@ -177,6 +202,23 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 
 func (s *KeeperTestHelper) setupGeneral() {
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
+	if s.withCaching {
+		s.Ctx, _ = s.Ctx.CacheContext()
+	}
+	s.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: s.App.GRPCQueryRouter(),
+		Ctx:             s.Ctx,
+	}
+
+	s.SetEpochStartTime()
+	s.TestAccs = []sdk.AccAddress{}
+	s.TestAccs = append(s.TestAccs, baseTestAccts...)
+	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+	s.hasUsedAbci = false
+}
+
+func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: chainId, Time: defaultTestStartTime})
 	if s.withCaching {
 		s.Ctx, _ = s.Ctx.CacheContext()
 	}

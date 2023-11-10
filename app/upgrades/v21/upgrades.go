@@ -49,8 +49,17 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// UNFORKINGNOTE: If we don't manually set this to 2, the gov modules doesn't go through its necessary migrations to version 4
-		fromVM[govtypes.ModuleName] = 2
+		// I spent a very long time trying to figure out how to test this in a non hacky way.
+		// TL;DR, on mainnet, we run a fork of v0.43, so we should be starting at version 2.
+		// Without this change, since we unfork to the primary repo, we start at version 5, which
+		// wouldn't allow us to run each migration.
+		//
+		// Now, starting from 2 only works on mainnet because the legacysubspace is set.
+		// Because the legacysubspace is not set in the gotest, we cant simply run these migrations without setting the legacysubspace.
+		// This legacysubspace can only be set at the initChain level, so it isn't clear to me how to directly set this in the test.
+		if ctx.ChainID() != TestingChainId {
+			fromVM[govtypes.ModuleName] = 2
+		}
 		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files

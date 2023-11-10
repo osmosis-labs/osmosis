@@ -7,6 +7,8 @@ import (
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	v21 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v21"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -31,7 +33,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) TestUpgrade() {
-	s.Setup()
+	s.SetupWithCustomChainId(v21.TestingChainId)
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
