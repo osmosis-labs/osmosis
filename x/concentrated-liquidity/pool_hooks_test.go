@@ -13,7 +13,7 @@ import (
 var (
 	validCosmwasmAddress   = "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
 	invalidCosmwasmAddress = "osmo1{}{}4hj2tfpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
-	validActionPrefix      = "beforeCreatePosition"
+	validActionPrefix      = "beforeSwapExactAmountIn"
 	counterContractPath    = "./testcontracts/compiled-wasm/counter.wasm"
 )
 
@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 // at the contract setting stage at a higher level of abstraction. Thus, this class of errors is not covered
 // by these tests.
 func (s *KeeperTestSuite) TestPoolHooks() {
-	testContractFilePath := "./testcontracts/compiled-wasm/hooks.wasm"
+	hookContractFilePath := "./testcontracts/compiled-wasm/hooks.wasm"
 
 	allBeforeHooks := []string{
 		before(types.CreatePositionPrefix),
@@ -237,19 +237,19 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 	for name, tc := range testCases {
 		s.Run(name, func() {
 			s.SetupTest()
-
 			clPool := s.PrepareConcentratedPool()
 
 			// Upload and instantiate wasm code
-			rawCosmwasmAddress, cosmwasmAddressBech32 := s.uploadAndInstantiateContract(testContractFilePath)
+			rawCosmwasmAddress, cosmwasmAddressBech32 := s.uploadAndInstantiateContract(hookContractFilePath)
 
-			// Fund the contract (rawCosmwasmAddress) with tokens for all action prefixes using a helper
+			// Fund the contract with tokens for all action prefixes using a helper
 			for _, actionPrefix := range tc.actionPrefixes {
 				s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(actionPrefix, sdk.NewInt(10))))
 			}
 
-			// Set the contract (cosmwasmAddressBech32) for all hooks as defined by tc.actionPrefixes
+			// Set the contract for all hooks as defined by tc.actionPrefixes
 			for _, actionPrefix := range tc.actionPrefixes {
+				// We use the bech32 address here since the set function expects it for security reasons
 				err := s.Clk.SetPoolHookContract(s.Ctx, validPoolId, actionPrefix, cosmwasmAddressBech32)
 
 				if tc.expectedSetError != nil {
@@ -261,7 +261,7 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 				s.Require().NoError(err)
 			}
 
-			// --- Execute a series of actions that trigger all hooks ---
+			// --- Execute a series of actions that trigger all supported hooks if set ---
 
 			// Create position to trigger position creation related hooks
 			_, positionId := s.SetupPosition(clPool.GetId(), s.TestAccs[0], DefaultCoins, types.MinInitializedTick, types.MaxTick, true)
