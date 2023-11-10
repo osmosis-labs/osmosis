@@ -184,6 +184,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	encodingConfig appparams.EncodingConfig,
 	bApp *baseapp.BaseApp,
 	maccPerms map[string][]string,
+	dataDir string,
 	wasmDir string,
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
@@ -402,6 +403,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.DistrKeeper,
+		dataDir,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
 	appKeepers.ProtoRevKeeper.SetTxFeesKeeper(appKeepers.TxFeesKeeper)
