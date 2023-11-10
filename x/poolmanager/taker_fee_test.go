@@ -117,8 +117,16 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 			// Validate results.
 			s.Require().Equal(tc.expectedResult.String(), tokenInAfterTakerFee.String())
-			s.Require().Equal(takerFeeTrackerForStakersBefore.Add(expectedTakerFeeToStakers), takerFeeTrackerForStakersAfter)
-			s.Require().Equal(takerFeeTrackerForCommunityPoolBefore.Add(expectedTakerFeeToCommunityPool), takerFeeTrackerForCommunityPoolAfter)
+			expectedTakerFeeTrackerForStakersAfter := takerFeeTrackerForStakersBefore.Add(expectedTakerFeeToStakers)
+			if expectedTakerFeeTrackerForStakersAfter.Empty() {
+				expectedTakerFeeTrackerForStakersAfter = sdk.Coins(nil)
+			}
+			s.Require().Equal(expectedTakerFeeTrackerForStakersAfter, takerFeeTrackerForStakersAfter)
+			expectedTakerFeeTrackerForCommunityPoolAfter := takerFeeTrackerForCommunityPoolBefore.Add(expectedTakerFeeToCommunityPool)
+			if expectedTakerFeeTrackerForCommunityPoolAfter.Empty() {
+				expectedTakerFeeTrackerForCommunityPoolAfter = sdk.Coins(nil)
+			}
+			s.Require().Equal(expectedTakerFeeTrackerForCommunityPoolAfter, takerFeeTrackerForCommunityPoolAfter)
 		})
 	}
 }

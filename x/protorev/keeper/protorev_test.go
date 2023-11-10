@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -331,7 +332,21 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
 	allProtoRev := s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
-	s.Require().Empty(allProtoRev)
+	s.Require().Equal(types.AllProtocolRevenue{
+		TakerFeesTracker: poolmanagertypes.TakerFeesTracker{
+			TakerFeesToStakers:         sdk.Coins(nil),
+			TakerFeesToCommunityPool:   sdk.Coins(nil),
+			HeightAccountingStartsFrom: 0,
+		},
+		TxFeesTracker: txfeestypes.TxFeesTracker{
+			TxFees:                     sdk.Coins(nil),
+			HeightAccountingStartsFrom: 0,
+		},
+		CyclicArbTracker: types.CyclicArbTracker{
+			CyclicArb:                  sdk.NewCoins(),
+			HeightAccountingStartsFrom: 0,
+		},
+	}, allProtoRev)
 
 	// Swap on a pool to charge taker fee
 	swapInCoin := sdk.NewCoin("Atom", osmomath.NewInt(1000))

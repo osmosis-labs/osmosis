@@ -59,7 +59,7 @@ func (k Keeper) GetTakerFeeTrackerForStakers(ctx sdk.Context) (currentTakerFeeFo
 	// If no volume was found, we treat the existing volume as 0.
 	// While we can technically require volume to exist, we would need to store empty coins in state for each pool (past and present),
 	// which is a high storage cost to pay for a weak guardrail.
-	currentTakerFeeForStakers = sdk.NewCoins()
+	currentTakerFeeForStakers = sdk.Coins(nil)
 	if takerFeeFound {
 		currentTakerFeeForStakers = takerFeeForStakers.Amount
 	}
@@ -80,7 +80,7 @@ func (k Keeper) GetTakerFeeTrackerForCommunityPool(ctx sdk.Context) (currentTake
 	// If no volume was found, we treat the existing volume as 0.
 	// While we can technically require volume to exist, we would need to store empty coins in state for each pool (past and present),
 	// which is a high storage cost to pay for a weak guardrail.
-	currentTakerFeeForCommunityPool = sdk.NewCoins()
+	currentTakerFeeForCommunityPool = sdk.Coins(nil)
 	if takerFeeFound {
 		currentTakerFeeForCommunityPool = takerFeeForCommunityPool.Amount
 	}
