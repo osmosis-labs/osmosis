@@ -1,7 +1,7 @@
 package v15
 
 import (
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
