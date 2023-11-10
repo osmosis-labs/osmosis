@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -119,16 +120,16 @@ func (s *RouterTestSuite) TestPrepareResult() {
 			&usecase.RouteWithOutAmount{
 				Route: &usecase.RouteImpl{
 					Pools: []domain.RoutablePool{
-						&usecase.RoutableCFMMPoolImpl{
-							PoolI:         domain.NewPool(poolOne, poolOne.GetSpreadFactor(sdk.Context{}), poolOneBalances),
-							TokenOutDenom: USDT,
-							TakerFee:      takerFeeOne,
-						},
-						&usecase.RoutableCFMMPoolImpl{
-							PoolI:         domain.NewPool(poolTwo, poolTwo.GetSpreadFactor(sdk.Context{}), poolTwoBalances),
-							TokenOutDenom: USDC,
-							TakerFee:      takerFeeTwo,
-						},
+						pools.NewRoutablePool(
+							domain.NewPool(poolOne, poolOne.GetSpreadFactor(sdk.Context{}), poolOneBalances),
+							USDT,
+							takerFeeOne,
+						),
+						pools.NewRoutablePool(
+							domain.NewPool(poolTwo, poolTwo.GetSpreadFactor(sdk.Context{}), poolTwoBalances),
+							USDC,
+							takerFeeTwo,
+						),
 					},
 				},
 
@@ -140,11 +141,11 @@ func (s *RouterTestSuite) TestPrepareResult() {
 			&usecase.RouteWithOutAmount{
 				Route: &usecase.RouteImpl{
 					Pools: []domain.RoutablePool{
-						&usecase.RoutableCFMMPoolImpl{
-							PoolI:         domain.NewPool(poolThree, poolThree.GetSpreadFactor(sdk.Context{}), poolThreeBalances),
-							TokenOutDenom: USDC,
-							TakerFee:      takerFeeThree,
-						},
+						pools.NewRoutablePool(
+							domain.NewPool(poolThree, poolThree.GetSpreadFactor(sdk.Context{}), poolThreeBalances),
+							USDC,
+							takerFeeThree,
+						),
 					},
 				},
 
@@ -161,22 +162,22 @@ func (s *RouterTestSuite) TestPrepareResult() {
 		&usecase.RouteWithOutAmount{
 			Route: &usecase.RouteImpl{
 				Pools: []domain.RoutablePool{
-					&usecase.RoutableResultPoolImpl{
-						ID:            poolIDOne,
-						Type:          poolmanagertypes.Balancer,
-						Balances:      poolOneBalances,
-						SpreadFactor:  poolOne.GetSpreadFactor(sdk.Context{}),
-						TokenOutDenom: USDT,
-						TakerFee:      takerFeeOne,
-					},
-					&usecase.RoutableResultPoolImpl{
-						ID:            poolIDTwo,
-						Type:          poolmanagertypes.Balancer,
-						Balances:      poolTwoBalances,
-						SpreadFactor:  poolTwo.GetSpreadFactor(sdk.Context{}),
-						TokenOutDenom: USDC,
-						TakerFee:      takerFeeTwo,
-					},
+					pools.NewRoutableResultPool(
+						poolIDOne,
+						poolmanagertypes.Balancer,
+						poolOneBalances,
+						poolOne.GetSpreadFactor(sdk.Context{}),
+						USDT,
+						takerFeeOne,
+					),
+					pools.NewRoutableResultPool(
+						poolIDTwo,
+						poolmanagertypes.Balancer,
+						poolTwoBalances,
+						poolTwo.GetSpreadFactor(sdk.Context{}),
+						USDC,
+						takerFeeTwo,
+					),
 				},
 			},
 
@@ -188,14 +189,14 @@ func (s *RouterTestSuite) TestPrepareResult() {
 		&usecase.RouteWithOutAmount{
 			Route: &usecase.RouteImpl{
 				Pools: []domain.RoutablePool{
-					&usecase.RoutableResultPoolImpl{
-						ID:            poolIDThree,
-						Type:          poolmanagertypes.Balancer,
-						Balances:      poolThreeBalances,
-						SpreadFactor:  poolThree.GetSpreadFactor(sdk.Context{}),
-						TokenOutDenom: USDC,
-						TakerFee:      takerFeeThree,
-					},
+					pools.NewRoutableResultPool(
+						poolIDThree,
+						poolmanagertypes.Balancer,
+						poolThreeBalances,
+						poolThree.GetSpreadFactor(sdk.Context{}),
+						USDC,
+						takerFeeThree,
+					),
 				},
 			},
 

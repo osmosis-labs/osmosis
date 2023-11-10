@@ -2,7 +2,8 @@ package usecase_test
 
 import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -36,19 +37,19 @@ func (s *RouterTestSuite) TestPrepareResultPools() {
 			route: withRoutePools(
 				emptyRoute,
 				[]domain.RoutablePool{
-					withChainPoolModel(withTokenOutDenom(defaultPool, denomOne), balancerPool),
+					mocks.WithChainPoolModel(mocks.WithTokenOutDenom(defaultPool, denomOne), balancerPool),
 				},
 			),
 
 			expectedPools: []domain.RoutablePool{
-				&usecase.RoutableResultPoolImpl{
-					ID:            balancerPoolID,
-					Type:          poolmanagertypes.Balancer,
-					Balances:      defaultPoolBalances,
-					SpreadFactor:  defaultSpreadFactor,
-					TokenOutDenom: denomOne,
-					TakerFee:      defaultTakerFee,
-				},
+				pools.NewRoutableResultPool(
+					balancerPoolID,
+					poolmanagertypes.Balancer,
+					defaultPoolBalances,
+					defaultSpreadFactor,
+					denomOne,
+					defaultTakerFee,
+				),
 			},
 		},
 
@@ -84,18 +85,18 @@ func (s *RouterTestSuite) validateRoutePools(expectedPools []domain.RoutablePool
 	for i, expectedPool := range expectedPools {
 		actualPool := actualPools[i]
 
-		expectedResultPool, ok := expectedPool.(*usecase.RoutableResultPoolImpl)
+		expectedResultPool, ok := expectedPool.(domain.RoutableResultPool)
 		s.Require().True(ok)
 
 		// Cast to result pool
-		actualResultPool, ok := actualPool.(*usecase.RoutableResultPoolImpl)
+		actualResultPool, ok := actualPool.(domain.RoutableResultPool)
 		s.Require().True(ok)
 
-		s.Require().Equal(expectedResultPool.ID, actualResultPool.ID)
-		s.Require().Equal(expectedResultPool.Type, actualResultPool.Type)
-		s.Require().Equal(expectedResultPool.Balances.String(), actualResultPool.Balances.String())
-		s.Require().Equal(expectedResultPool.SpreadFactor.String(), actualResultPool.SpreadFactor.String())
-		s.Require().Equal(expectedResultPool.TokenOutDenom, actualResultPool.TokenOutDenom)
-		s.Require().Equal(expectedResultPool.TakerFee.String(), actualResultPool.TakerFee.String())
+		s.Require().Equal(expectedResultPool.GetId(), actualResultPool.GetId())
+		s.Require().Equal(expectedResultPool.GetType(), actualResultPool.GetType())
+		s.Require().Equal(expectedResultPool.GetBalances().String(), actualResultPool.GetBalances().String())
+		s.Require().Equal(expectedResultPool.GetSQSPoolModel().SpreadFactor.String(), actualResultPool.GetSQSPoolModel().SpreadFactor.String())
+		s.Require().Equal(expectedResultPool.GetTokenOutDenom(), actualResultPool.GetTokenOutDenom())
+		s.Require().Equal(expectedResultPool.GetTakerFee().String(), actualResultPool.GetTakerFee().String())
 	}
 }

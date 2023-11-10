@@ -19,6 +19,11 @@ type RoutablePool interface {
 	String() string
 }
 
+type RoutableResultPool interface {
+	RoutablePool
+	GetBalances() sdk.Coins
+}
+
 type Route interface {
 	GetPools() []RoutablePool
 	DeepCopy() Route

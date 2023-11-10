@@ -1,16 +1,17 @@
-package usecase_test
+package pools_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v19/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 // Tests no slippage quotes and validation edge cases aroun transmuter pools.
-func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
+func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 	defaultAmount := DefaultAmt0
 	defaultBalances := sdk.NewCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(ETH, defaultAmount))
 
@@ -31,7 +32,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 			tokenOutDenom: ETH,
 			balances:      defaultBalances,
 
-			expectError: routerusecase.TransmuterInsufficientBalanceError{
+			expectError: domain.TransmuterInsufficientBalanceError{
 				Denom:         USDC,
 				BalanceAmount: defaultAmount.String(),
 				Amount:        defaultAmount.Add(osmomath.OneInt()).String(),
@@ -44,7 +45,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 			// Make token out amount 1 smaller than the default amount
 			balances: sdk.NewCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(ETH, defaultAmount.Sub(osmomath.OneInt()))),
 
-			expectError: routerusecase.TransmuterInsufficientBalanceError{
+			expectError: domain.TransmuterInsufficientBalanceError{
 				Denom:         ETH,
 				BalanceAmount: defaultAmount.Sub(osmomath.OneInt()).String(),
 				Amount:        defaultAmount.String(),
@@ -68,13 +69,14 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 			cosmwasmPool := s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{tc.tokenIn.Denom, tc.tokenOutDenom})
 
 			poolType := cosmwasmPool.GetType()
+
+			mock := &mocks.MockRoutablePool{ChainPoolModel: cosmwasmPool, Balances: tc.balances, PoolType: poolType}
+			routablePool := pools.NewRoutablePool(mock, tc.tokenOutDenom, noTakerFee)
+
 			// Overwrite pool type for edge case testing
 			if tc.isInvalidPoolType {
-				poolType = poolmanagertypes.Concentrated
+				mock.PoolType = poolmanagertypes.Concentrated
 			}
-
-			mock := &mockPool{ChainPoolModel: cosmwasmPool, Balances: tc.balances, poolType: poolType}
-			routablePool := routerusecase.RoutableTransmuterPoolImpl{mock, tc.tokenOutDenom, noTakerFee}
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
 

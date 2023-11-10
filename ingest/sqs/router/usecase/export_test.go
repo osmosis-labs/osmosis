@@ -7,11 +7,7 @@ import (
 )
 
 type (
-	RouteImpl                    = routeImpl
-	RoutableCFMMPoolImpl         = routableCFMMPoolImpl
-	RoutableConcentratedPoolImpl = routableConcentratedPoolImpl
-	RoutableTransmuterPoolImpl   = routableTransmuterPoolImpl
-	RoutableResultPoolImpl       = routableResultPoolImpl
+	RouteImpl = routeImpl
 
 	QuoteImpl = quoteImpl
 )

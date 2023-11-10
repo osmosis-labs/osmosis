@@ -1,4 +1,4 @@
-package usecase
+package pools
 
 import (
 	"errors"
@@ -14,7 +14,10 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
-var _ domain.RoutablePool = &routableCFMMPoolImpl{}
+var (
+	_ domain.RoutablePool       = &routableResultPoolImpl{}
+	_ domain.RoutableResultPool = &routableResultPoolImpl{}
+)
 
 // routableResultPoolImpl is a generalized implementation that is returned to the client
 // side in quotes. It contains all the relevant pool data needed for Osmosis frontend
@@ -25,6 +28,18 @@ type routableResultPoolImpl struct {
 	SpreadFactor  osmomath.Dec              "json:\"spread_factor\""
 	TokenOutDenom string                    "json:\"token_out_denom\""
 	TakerFee      osmomath.Dec              "json:\"taker_fee\""
+}
+
+// NewRoutableResultPool returns the new routable result pool with the given parameters.
+func NewRoutableResultPool(ID uint64, poolType poolmanagertypes.PoolType, balances sdk.Coins, spreadFactor osmomath.Dec, tokenOutDenom string, takerFee osmomath.Dec) domain.RoutablePool {
+	return &routableResultPoolImpl{
+		ID:            ID,
+		Type:          poolType,
+		Balances:      balances,
+		SpreadFactor:  spreadFactor,
+		TokenOutDenom: tokenOutDenom,
+		TakerFee:      takerFee,
+	}
 }
 
 // GetId implements domain.RoutablePool.
@@ -101,4 +116,9 @@ func (r *routableResultPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenI
 // GetTakerFee implements domain.RoutablePool.
 func (r *routableResultPoolImpl) GetTakerFee() math.LegacyDec {
 	return r.TakerFee
+}
+
+// GetBalances implements domain.RoutableResultPool.
+func (r *routableResultPoolImpl) GetBalances() sdk.Coins {
+	return r.Balances
 }

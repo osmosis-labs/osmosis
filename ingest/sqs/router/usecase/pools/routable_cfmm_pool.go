@@ -1,4 +1,4 @@
-package usecase
+package pools
 
 import (
 	"fmt"
@@ -61,7 +61,7 @@ func (r *routableCFMMPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk
 	// Cast to CFMM extension
 	cfmmPool, ok := osmosisPool.(gammtypes.CFMMPoolI)
 	if !ok {
-		return sdk.Coin{}, FailedToCastPoolModelError{
+		return sdk.Coin{}, domain.FailedToCastPoolModelError{
 			ExpectedModel: reflect.TypeOf((gammtypes.CFMMPoolI)(nil)).Elem().Name(),
 			ActualModel:   reflect.TypeOf(r).Elem().Name(),
 		}

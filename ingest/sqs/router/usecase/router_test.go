@@ -23,6 +23,34 @@ func TestRouterTestSuite(t *testing.T) {
 
 const dummyTotalValueLockedErrorStr = "total value locked error string"
 
+var (
+	// Concentrated liquidity constants
+	ETH    = apptesting.ETH
+	USDC   = apptesting.USDC
+	USDT   = "usdt"
+	Denom0 = ETH
+	Denom1 = USDC
+
+	DefaultCurrentTick = apptesting.DefaultCurrTick
+
+	DefaultAmt0 = apptesting.DefaultAmt0
+	DefaultAmt1 = apptesting.DefaultAmt1
+
+	DefaultCoin0 = apptesting.DefaultCoin0
+	DefaultCoin1 = apptesting.DefaultCoin1
+
+	DefaultLiquidityAmt = apptesting.DefaultLiquidityAmt
+
+	// router specific variables
+	defaultTickModel = &domain.TickModel{
+		Ticks:            []domain.LiquidityDepthsWithRange{},
+		CurrentTickIndex: 0,
+		HasNoLiquidity:   false,
+	}
+
+	noTakerFee = osmomath.ZeroDec()
+)
+
 // This test validates a happy path expected behavior that
 // when router is created, it first takes the preferred pool IDs,
 // then sorts by TVL.

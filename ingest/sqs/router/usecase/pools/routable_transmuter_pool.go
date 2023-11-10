@@ -1,4 +1,4 @@
-package usecase
+package pools
 
 import (
 	"fmt"
@@ -73,7 +73,7 @@ func (r *routableTransmuterPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (in
 func validateBalance(tokenInAmount osmomath.Int, balances sdk.Coins, denomToValidate string) error {
 	balanceToValidate := balances.AmountOf(denomToValidate)
 	if tokenInAmount.GT(balanceToValidate) {
-		return TransmuterInsufficientBalanceError{
+		return domain.TransmuterInsufficientBalanceError{
 			Denom:         denomToValidate,
 			BalanceAmount: balanceToValidate.String(),
 			Amount:        tokenInAmount.String(),

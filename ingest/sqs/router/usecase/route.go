@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 )
 
@@ -33,17 +34,17 @@ func (r *routeImpl) PrepareResultPools() []domain.RoutablePool {
 
 		sqsModel := pool.GetSQSPoolModel()
 
-		r.Pools[i] = &routableResultPoolImpl{
-			ID:       pool.GetId(),
-			Type:     pool.GetType(),
-			Balances: sqsModel.Balances,
+		r.Pools[i] = pools.NewRoutableResultPool(
+			pool.GetId(),
+			pool.GetType(),
+			sqsModel.Balances,
 			// Note that we cannot get the SpreadFactor method on
 			// the CosmWasm pool models as it does not implement it.
 			// As a result, we propagate it via SQS model.
-			SpreadFactor:  sqsModel.SpreadFactor,
-			TokenOutDenom: pool.GetTokenOutDenom(),
-			TakerFee:      pool.GetTakerFee(),
-		}
+			sqsModel.SpreadFactor,
+			pool.GetTokenOutDenom(),
+			pool.GetTakerFee(),
+		)
 	}
 	return r.Pools
 }
@@ -62,8 +63,7 @@ func (r routeImpl) DeepCopy() domain.Route {
 }
 
 func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee osmomath.Dec) {
-	routablePool := NewRoutablePool(pool, tokenOutDenom, takerFee)
-	r.Pools = append(r.Pools, routablePool)
+	r.Pools = append(r.Pools, pools.NewRoutablePool(pool, tokenOutDenom, takerFee))
 }
 
 // CalculateTokenOutByTokenIn implements Route.
