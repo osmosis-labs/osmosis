@@ -13,6 +13,7 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
@@ -48,8 +49,17 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// UNFORKINGNOTE: If we don't manually set this to 2, the gov modules doesn't go through its necessary migrations to version 4
-		fromVM[govtypes.ModuleName] = 2
+		// I spent a very long time trying to figure out how to test this in a non hacky way.
+		// TL;DR, on mainnet, we run a fork of v0.43, so we should be starting at version 2.
+		// Without this change, since we unfork to the primary repo, we start at version 5, which
+		// wouldn't allow us to run each migration.
+		//
+		// Now, starting from 2 only works on mainnet because the legacysubspace is set.
+		// Because the legacysubspace is not set in the gotest, we cant simply run these migrations without setting the legacysubspace.
+		// This legacysubspace can only be set at the initChain level, so it isn't clear to me how to directly set this in the test.
+		if ctx.ChainID() != TestingChainId {
+			fromVM[govtypes.ModuleName] = 2
+		}
 		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
@@ -140,13 +150,13 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// set POB params
+		// Set POB Params:
 		err = setAuctionParams(ctx, keepers)
 		if err != nil {
 			return nil, err
 		}
 
-		// set expedited proposal param
+		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
 		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)))
 		err = keepers.GovKeeper.SetParams(ctx, govParams)
@@ -154,7 +164,19 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Set CL param:
 		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, concentratedliquiditytypes.KeyHookGasLimit, concentratedliquiditytypes.DefaultContractHookGasLimit)
+
+		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
+		// that generates protocol rev.
+		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
+		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
+		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
+		// This will allow us to display the amount of cyclic arb profits that have been generated from a certain block height.
+		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)
+		allCyclicArbProfitsCoins := osmoutils.ConvertCoinArrayToCoins(allCyclicArbProfits)
+		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(ctx, allCyclicArbProfitsCoins)
+		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(ctx, ctx.BlockHeight())
 
 		return migrations, nil
 	}

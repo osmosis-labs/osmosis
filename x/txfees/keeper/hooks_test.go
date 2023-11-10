@@ -133,9 +133,10 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 	s.Setup()
 
 	var (
-		defaultTxFeesDenom, _ = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-		defaultPoolCoins      = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(100)))
-		defaultBalanceToSwap  = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)))
+		defaultTxFeesDenom, _  = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+		defaultPoolCoins       = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(100)))
+		balanceToSwapFoo       = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(50)))
+		balanceToSwapBaseDenom = sdk.NewCoins(sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(50)))
 	)
 
 	tests := []struct {
@@ -148,9 +149,15 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 	}{
 		{
 			name:          "happy path",
-			denomToSwapTo: defaultTxFeesDenom,
+			denomToSwapTo: balanceToSwapBaseDenom[0].Denom,
 			poolCoins:     defaultPoolCoins,
-			preFundCoins:  defaultBalanceToSwap,
+			preFundCoins:  balanceToSwapFoo,
+		},
+		{
+			name:          "same denom to swap to",
+			denomToSwapTo: balanceToSwapFoo[0].Denom,
+			poolCoins:     defaultPoolCoins,
+			preFundCoins:  balanceToSwapFoo,
 		},
 
 		// TODO: add more test cases
@@ -399,6 +406,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		// Prepare coins with all edge cases and success scenarios for swapping to denomToSwapTo.
 		preFundCollectorCoins := prepareCoinsForSwapToDenomTest(denomToSwapTo)
 		s.FundModuleAcc(collectorName, preFundCollectorCoins)
+
+		currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
+		s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, currentTxFeesTrackerValue.Add(preFundCollectorCoins...))
 
 		// Prepare pools.
 		s.preparePoolsForSwappingToDenom(otherPreSwapDenom, preSwapDenom, denomToSwapTo)

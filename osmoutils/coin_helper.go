@@ -125,3 +125,11 @@ func MergeCoinMaps[T comparable](currentEpochExpectedDistributionsOne map[T]sdk.
 	}
 	return newMap
 }
+
+func ConvertCoinArrayToCoins(coinArray []sdk.Coin) sdk.Coins {
+	coins := sdk.Coins{}
+	for _, coin := range coinArray {
+		coins = append(coins, coin)
+	}
+	return coins
+}

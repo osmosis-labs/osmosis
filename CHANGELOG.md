@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
+
 ### Fix Localosmosis docker-compose with state.
 
 * Updated the docker-compose for localosmosis with state to be inline with Operations updated process.

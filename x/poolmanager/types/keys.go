@@ -28,6 +28,15 @@ var (
 
 	// DenomTradePairPrefix defines prefix to store denom trade pair for taker fee.
 	DenomTradePairPrefix = []byte{0x04}
+
+	// KeyTakerFeeStakersProtoRev defines key to store the taker fee for stakers tracker.
+	KeyTakerFeeStakersProtoRev = []byte{0x05}
+
+	// KeyTakerFeeCommunityPoolProtoRev defines key to store the taker fee for community pool tracker.
+	KeyTakerFeeCommunityPoolProtoRev = []byte{0x06}
+
+	// KeyTakerFeeProtoRevAccountingHeight defines key to store the accounting height for the above taker fee trackers.
+	KeyTakerFeeProtoRevAccountingHeight = []byte{0x07}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.

@@ -136,6 +136,29 @@ func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 	return app
 }
 
+func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *OsmosisApp {
+	db := cometbftdb.NewMemDB()
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
+	if !isCheckTx {
+		genesisState := GenesisStateWithValSet(app)
+		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+		if err != nil {
+			panic(err)
+		}
+
+		app.InitChain(
+			abci.RequestInitChain{
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: sims.DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
+				ChainId:         chainId,
+			},
+		)
+	}
+
+	return app
+}
+
 // Setup initializes a new OsmosisApp.
 func Setup(isCheckTx bool) *OsmosisApp {
 	return SetupWithCustomHome(isCheckTx, DefaultNodeHome)

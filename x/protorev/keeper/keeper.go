@@ -25,6 +25,7 @@ type (
 		epochKeeper                 types.EpochKeeper
 		poolmanagerKeeper           types.PoolManagerKeeper
 		concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
+		txfeesKeeper                types.TxFeesKeeper
 	}
 )
 
@@ -38,6 +39,7 @@ func NewKeeper(
 	epochKeeper types.EpochKeeper,
 	poolmanagerKeeper types.PoolManagerKeeper,
 	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper,
+	txfeesKeeper types.TxFeesKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -54,9 +56,14 @@ func NewKeeper(
 		epochKeeper:                 epochKeeper,
 		poolmanagerKeeper:           poolmanagerKeeper,
 		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
+		txfeesKeeper:                txfeesKeeper,
 	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k *Keeper) SetTxFeesKeeper(txFeesKeeper types.TxFeesKeeper) {
+	k.txfeesKeeper = txFeesKeeper
 }
