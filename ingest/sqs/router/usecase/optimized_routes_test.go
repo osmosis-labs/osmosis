@@ -290,7 +290,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 
 			tokenInDenom: denomTwo,
 
-			expectError: usecase.NoPoolsInRoute{RouteIndex: 0},
+			expectError: usecase.NoPoolsInRouteError{RouteIndex: 0},
 		},
 		"error: token out mismatch between multiple routes": {
 			routes: []domain.Route{withRoutePools(emptyRoute, []domain.RoutablePool{

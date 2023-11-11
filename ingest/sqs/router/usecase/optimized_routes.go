@@ -36,11 +36,6 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain
 		return nil, err
 	}
 
-	splitRoutes := []zap.Field{}
-	for i, route := range bestSingleRouteQuote.GetRoute() {
-		splitRoutes = append(splitRoutes, zap.Stringer(fmt.Sprintf("route %d", i), route))
-	}
-
 	r.logger.Info("bestSplitRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
 
 	// If the split route quote is better than the single route quote, return the split route quote
@@ -162,7 +157,7 @@ ROUTE_LOOP:
 	for i, route := range routes {
 		currentRoutePools := route.GetPools()
 		if len(currentRoutePools) == 0 {
-			return nil, NoPoolsInRoute{RouteIndex: i}
+			return nil, NoPoolsInRouteError{RouteIndex: i}
 		}
 
 		lastPool := route.GetPools()[len(route.GetPools())-1]

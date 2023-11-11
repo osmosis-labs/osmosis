@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
@@ -19,8 +18,6 @@ const (
 
 	routerPrefix   = "r" + keySeparator
 	takerFeePrefix = routerPrefix + "tf" + keySeparator
-
-	noExpiryDuration time.Duration = 0
 )
 
 var (

@@ -57,8 +57,6 @@ const (
 
 	noTokenPrecisionErrorFmtStr = "error getting token precision %s"
 	spotPriceErrorFmtStr        = "error calculating spot price for denom %s, %s"
-
-	noTotalValueLockedError = ""
 )
 
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
@@ -270,7 +268,7 @@ func (pi *poolIngester) convertPool(
 	}
 
 	// Sort denoms for consistent ordering.
-	denoms = sort.StringSlice(denoms)
+	sort.Strings(denoms)
 
 	// Mutates denomPairToTakerFeeMap with the taker fee for every uniquer denom pair in the denoms list.
 	err = retrieveTakerFeeToMapIfNotExists(ctx, denoms, denomPairToTakerFeeMap, pi.poolManagerKeeper)
