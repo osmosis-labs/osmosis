@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -38,7 +37,7 @@ func (r *routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
 // - tick model has no liquidity flag set
 // - the current sqrt price is zero
 // - rans out of ticks during swap (token in is too high for liquidity in the pool)
-func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.Coin) (types.Coin, error) {
+func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	poolType := r.GetType()
 
 	// Esnure that the pool is concentrated
@@ -161,8 +160,8 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 }
 
 // GetTokenOutDenom implements RoutablePool.
-func (rp *routableConcentratedPoolImpl) GetTokenOutDenom() string {
-	return rp.TokenOutDenom
+func (r *routableConcentratedPoolImpl) GetTokenOutDenom() string {
+	return r.TokenOutDenom
 }
 
 // String implements domain.RoutablePool.
@@ -178,7 +177,7 @@ func (r *routableConcentratedPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (
 }
 
 // TODO: switch to proper logging
-func (rp *routableConcentratedPoolImpl) emitSwapDebugLogs(currentSqrtPrice, reachedPrice osmomath.BigDec, liquidity osmomath.Dec, amountIn, amountOut, spreadCharge osmomath.Dec) {
+func (r *routableConcentratedPoolImpl) emitSwapDebugLogs(currentSqrtPrice, reachedPrice osmomath.BigDec, liquidity osmomath.Dec, amountIn, amountOut, spreadCharge osmomath.Dec) {
 	fmt.Println("start sqrt price", currentSqrtPrice)
 	fmt.Println("reached sqrt price", reachedPrice)
 	fmt.Println("liquidity", liquidity)

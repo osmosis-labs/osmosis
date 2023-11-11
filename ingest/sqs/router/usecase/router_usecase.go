@@ -52,19 +52,19 @@ func (r *routerUseCase) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, t
 }
 
 // GetBestSingleRouteQuote returns the best single route quote to be done directly without a split.
-func (a *routerUseCase) GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
-	allPools, err := a.poolsUsecase.GetAllPools(ctx)
+func (r *routerUseCase) GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
+	allPools, err := r.poolsUsecase.GetAllPools(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// Note that retrieving pools and taker fees is done in separate transactions.
 	// This is fine because taker fees don't change often.
-	takerFees, err := a.routerRepository.GetAllTakerFees(ctx)
+	takerFees, err := r.routerRepository.GetAllTakerFees(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	router := NewRouter([]uint64{}, allPools, takerFees, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.config.MinOSMOLiquidity, a.logger)
+	router := NewRouter([]uint64{}, allPools, takerFees, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
 	return router.getBestSingleRouteQuote(tokenIn, tokenOutDenom)
 }

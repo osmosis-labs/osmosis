@@ -327,6 +327,9 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey 
 			}
 
 			serializedTickModel, err := json.Marshal(tickModel)
+			if err != nil {
+				return err
+			}
 
 			err = pipeliner.HSet(ctx, concentratedTicksModelKey(storeKey), pool.GetId(), serializedTickModel).Err()
 			if err != nil {

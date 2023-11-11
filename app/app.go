@@ -283,6 +283,9 @@ func NewOsmosisApp(
 
 		// logger
 		logger, err := sqslog.NewLogger(isProductionLogger, loggerFileName, logLevel)
+		if err != nil {
+			panic(fmt.Sprintf("error while creating logger: %s", err))
+		}
 		logger.Info("Starting sidecar query server")
 
 		// Create sidecar query server

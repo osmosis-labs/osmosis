@@ -77,8 +77,8 @@ func (r *routableCFMMPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk
 }
 
 // GetTokenOutDenom implements RoutablePool.
-func (rp *routableCFMMPoolImpl) GetTokenOutDenom() string {
-	return rp.TokenOutDenom
+func (r *routableCFMMPoolImpl) GetTokenOutDenom() string {
+	return r.TokenOutDenom
 }
 
 // String implements domain.RoutablePool.

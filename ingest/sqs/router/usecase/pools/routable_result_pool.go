@@ -50,8 +50,8 @@ func (r *routableResultPoolImpl) GetId() uint64 {
 // GetPoolDenoms implements domain.RoutablePool.
 func (r *routableResultPoolImpl) GetPoolDenoms() []string {
 	denoms := make([]string, len(r.Balances))
-	for _, balance := range r.Balances {
-		denoms = append(denoms, balance.Denom)
+	for i, balance := range r.Balances {
+		denoms[i] = balance.Denom
 	}
 
 	return denoms
@@ -72,7 +72,7 @@ func (r *routableResultPoolImpl) GetTickModel() (*domain.TickModel, error) {
 }
 
 // GetTotalValueLockedUOSMO implements domain.RoutablePool.
-func (*routableResultPoolImpl) GetTotalValueLockedUOSMO() math.Int {
+func (r *routableResultPoolImpl) GetTotalValueLockedUOSMO() math.Int {
 	return osmomath.Int{}
 }
 
@@ -82,7 +82,7 @@ func (r *routableResultPoolImpl) GetType() poolmanagertypes.PoolType {
 }
 
 // GetUnderlyingPool implements domain.RoutablePool.
-func (*routableResultPoolImpl) GetUnderlyingPool() poolmanagertypes.PoolI {
+func (r *routableResultPoolImpl) GetUnderlyingPool() poolmanagertypes.PoolI {
 	return nil
 }
 
@@ -97,8 +97,8 @@ func (r *routableResultPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (s
 }
 
 // GetTokenOutDenom implements RoutablePool.
-func (rp *routableResultPoolImpl) GetTokenOutDenom() string {
-	return rp.TokenOutDenom
+func (r *routableResultPoolImpl) GetTokenOutDenom() string {
+	return r.TokenOutDenom
 }
 
 // String implements domain.RoutablePool.

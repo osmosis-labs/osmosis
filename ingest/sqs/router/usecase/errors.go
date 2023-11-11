@@ -35,11 +35,11 @@ func (e TokenOutDenomMatchesTokenInDenomError) Error() string {
 	return fmt.Sprintf("token out denom matches token in denom (%s). Must be different", e.Denom)
 }
 
-type NoPoolsInRoute struct {
+type NoPoolsInRouteError struct {
 	RouteIndex int
 }
 
-func (e NoPoolsInRoute) Error() string {
+func (e NoPoolsInRouteError) Error() string {
 	return fmt.Sprintf("route %d has no pools", e.RouteIndex)
 }
 

@@ -95,10 +95,6 @@ func getTokensFromChainRegistry(chainRegistryAssetsFileURL string) (map[string]d
 			continue
 		}
 
-		if len(asset.DenomUnits) > 3 {
-			// fmt.Printf("tokens with greater than 3 denom units (%d), %v\n\n", len(asset.DenomUnits), asset.DenomUnits)
-		}
-
 		for _, denom := range asset.DenomUnits {
 			if denom.Exponent == 0 {
 				token.ChainDenom = denom.Denom

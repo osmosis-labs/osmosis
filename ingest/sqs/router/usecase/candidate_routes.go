@@ -197,6 +197,7 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 
 			updatedPreviousTokenOutDenoms = make([]string, len(previousTokenOutDenoms))
 			copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
+			// nolint: makezero
 			updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
 
 			takerFee, err := r.takerFeeMap.GetTakerFee(previousTokenOutDenom, poolDenom)

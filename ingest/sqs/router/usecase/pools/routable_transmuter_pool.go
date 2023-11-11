@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -27,7 +26,7 @@ type routableTransmuterPoolImpl struct {
 // - the underlying chain pool set on the routable pool is not of transmuter type
 // - the token in amount is greater than the balance of the token in
 // - the token in amount is greater than the balance of the token out
-func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.Coin) (types.Coin, error) {
+func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	poolType := r.GetType()
 
 	// Esnure that the pool is concentrated
@@ -53,8 +52,8 @@ func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.Co
 }
 
 // GetTokenOutDenom implements RoutablePool.
-func (rp *routableTransmuterPoolImpl) GetTokenOutDenom() string {
-	return rp.TokenOutDenom
+func (r *routableTransmuterPoolImpl) GetTokenOutDenom() string {
+	return r.TokenOutDenom
 }
 
 // String implements domain.RoutablePool.
