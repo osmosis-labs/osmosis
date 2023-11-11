@@ -78,6 +78,20 @@ func (mr *MockPoolIMockRecorder) GetId() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockPoolI)(nil).GetId))
 }
 
+// GetPoolDenoms mocks base method.
+func (m *MockPoolI) GetPoolDenoms(arg0 types.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolDenoms", arg0)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetPoolDenoms indicates an expected call of GetPoolDenoms.
+func (mr *MockPoolIMockRecorder) GetPoolDenoms(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolDenoms", reflect.TypeOf((*MockPoolI)(nil).GetPoolDenoms), arg0)
+}
+
 // GetSpreadFactor mocks base method.
 func (m *MockPoolI) GetSpreadFactor(ctx types.Context) osmomath.Dec {
 	m.ctrl.T.Helper()
