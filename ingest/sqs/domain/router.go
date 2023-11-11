@@ -88,7 +88,7 @@ type RouterConfig struct {
 }
 
 // DenomPair encapsulates a pair of denoms.
-// The order of the denoms ius that Denom0 preceeds
+// The order of the denoms ius that Denom0 precedes
 // Denom1 lexicographically.
 type DenomPair struct {
 	Denom0 string

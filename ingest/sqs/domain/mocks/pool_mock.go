@@ -106,7 +106,6 @@ func (mp *MockRoutablePool) GetType() poolmanagertypes.PoolType {
 }
 
 func deepCopyPool(mp *MockRoutablePool) *MockRoutablePool {
-
 	newDenoms := make([]string, len(mp.Denoms))
 	copy(newDenoms, mp.Denoms)
 
