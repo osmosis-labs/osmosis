@@ -102,7 +102,6 @@ func getTokensFromChainRegistry(chainRegistryAssetsFileURL string) (map[string]d
 		for _, denom := range asset.DenomUnits {
 			if denom.Exponent == 0 {
 				token.ChainDenom = denom.Denom
-
 			}
 
 			if denom.Exponent > 0 {

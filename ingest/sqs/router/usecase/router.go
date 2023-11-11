@@ -108,7 +108,6 @@ func sortPools(pools []domain.PoolI, totalTVL osmomath.Int, preferredPoolIDsMap 
 
 	ratedPools := make([]ratedPool, 0, len(pools))
 	for _, pool := range pools {
-
 		// Initialize rating to TVL.
 		rating := pool.GetTotalValueLockedUOSMO()
 

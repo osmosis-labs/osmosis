@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 )
 
 var _ domain.Route = &routeImpl{}
@@ -31,7 +31,6 @@ type routeImpl struct {
 // Returns the resulting pools.
 func (r *routeImpl) PrepareResultPools() []domain.RoutablePool {
 	for i, pool := range r.Pools {
-
 		sqsModel := pool.GetSQSPoolModel()
 
 		r.Pools[i] = pools.NewRoutableResultPool(

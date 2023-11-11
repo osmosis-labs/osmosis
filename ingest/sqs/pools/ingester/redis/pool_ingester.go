@@ -111,7 +111,6 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	// Parse CFMM pool to the standard SQS types.
 	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
 	for _, pool := range cfmmPools {
-
 		// Parse CFMM pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
@@ -208,7 +207,6 @@ func (pi *poolIngester) convertPool(
 
 	var errorInTVLStr string
 	for _, balance := range balances {
-
 		// Note that there are edge cases where gamm shares or some random
 		// garbage tokens are in the balance that do not belong to the pool.
 		// A mainnet example is pool ID 2 with the following extra denoms:
