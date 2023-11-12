@@ -1,12 +1,106 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
+
+func TestRouteToBaseDenomFromOutRoutes(t *testing.T) {
+	tests := []struct {
+		name     string
+		routes   poolmanagertypes.SwapAmountOutRoutes
+		outDenom string
+		expected poolmanagertypes.SwapAmountInRoutes
+	}{
+		{
+			name: "(bar->foo)(foo->udym)(udym->baz)",
+			routes: poolmanagertypes.SwapAmountOutRoutes{
+				{
+					PoolId:       1,
+					TokenInDenom: "bar",
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: "foo",
+				},
+				{
+					PoolId:       3,
+					TokenInDenom: "udym",
+				},
+			},
+			outDenom: "baz",
+			expected: poolmanagertypes.SwapAmountInRoutes{
+				{
+					PoolId:        1,
+					TokenOutDenom: "foo",
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: "udym",
+				},
+			},
+		},
+		{
+			name: "(bar->udym)",
+			routes: poolmanagertypes.SwapAmountOutRoutes{
+				{
+					PoolId:       1,
+					TokenInDenom: "bar",
+				},
+			},
+			outDenom: "udym",
+			expected: poolmanagertypes.SwapAmountInRoutes{
+				{
+					PoolId:        1,
+					TokenOutDenom: "udym",
+				},
+			},
+		},
+		{
+			name: "(bar->foo)(foo->baz)",
+			routes: poolmanagertypes.SwapAmountOutRoutes{
+				{
+					PoolId:       1,
+					TokenInDenom: "bar",
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: "foo",
+				},
+			},
+			outDenom: "baz",
+			//error here as no udym in routes
+			expected: poolmanagertypes.SwapAmountInRoutes{},
+		},
+		{
+			name: "(udym->foo)",
+			routes: poolmanagertypes.SwapAmountOutRoutes{
+				{
+					PoolId:       1,
+					TokenInDenom: "udym",
+				},
+			},
+			outDenom: "foo",
+			//error here as tokenInDenom is udym
+			expected: poolmanagertypes.SwapAmountInRoutes{},
+		},
+	}
+
+	for _, test := range tests {
+		routes := keeper.RouteToBaseDenomFromOutRoutes(test.routes, test.outDenom)
+		require.Equal(t, len(test.expected), len(routes), "test: %v", test.name)
+		if len(routes) > 0 {
+			require.Equal(t, test.expected, poolmanagertypes.SwapAmountInRoutes(routes), "test: %v", test.name)
+			require.True(t, routes[len(routes)-1].TokenOutDenom == "udym")
+		}
+	}
+}
 
 func (suite *KeeperTestSuite) TestDYMIsBurned() {
 	suite.SetupTest()

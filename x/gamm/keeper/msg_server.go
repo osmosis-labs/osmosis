@@ -233,7 +233,7 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	err = server.keeper.chargeTakerFee(ctx, takerFeesCoins, sender)
+	err = server.keeper.chargeTakerFeeSwapAmountIn(ctx, takerFeesCoins, sender, msg.Routes)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	err = server.keeper.chargeTakerFee(ctx, takerFeesCoins, sender)
+	err = server.keeper.chargeTakerFeeSwapAmountOut(ctx, takerFeesCoins, sender, msg.Routes, msg.TokenOut.Denom)
 	if err != nil {
 		return nil, err
 	}

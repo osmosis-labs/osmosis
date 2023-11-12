@@ -3,21 +3,131 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 const (
 	defaultTakerFeeDenom = "udym"
 )
 
-func (k Keeper) chargeTakerFee(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress) error {
-	// If the denom is the base denom:
+func RouteToBaseDenomFromOutRoutes(routes poolmanagertypes.SwapAmountOutRoutes, denomOut string) []poolmanagertypes.SwapAmountInRoute {
+	var newRoutes []poolmanagertypes.SwapAmountInRoute
+	var found bool
+	var idx int
+
+	//if the denomOut is the defaultTakerFeeDenom, we need to swap all the routes
+	if denomOut == defaultTakerFeeDenom {
+		for i, route := range routes[:len(routes)-1] {
+			newRoutes = append(newRoutes, poolmanagertypes.SwapAmountInRoute{
+				PoolId:        route.PoolId,
+				TokenOutDenom: routes[i+1].TokenInDenom,
+			})
+		}
+		newRoutes = append(newRoutes, poolmanagertypes.SwapAmountInRoute{
+			PoolId:        routes[len(routes)-1].PoolId,
+			TokenOutDenom: denomOut,
+		})
+		return newRoutes
+	}
+
+	// else, check where it swapped to defaultTakerFeeDenom on the routes
+	for i, route := range routes {
+		if route.TokenInDenom == defaultTakerFeeDenom {
+			found = true
+			idx = i
+			break
+		}
+	}
+
+	//if not found, return empty as we can't swap to the defaultTakerFeeDenom
+	if idx == 0 || !found {
+		return newRoutes
+	}
+
+	// name: "(bar->udym)",
+	// (tokenin = bar)
+	// (tokenout = udym)
+
+	// (bar -> foo)(foo->udym)(udym->baz)
+	// (tokenin = bar) (tokein = foo) (tokenin = udym)
+	//required:
+	//(tokenout = foo) (tokenout = udym)
+
+	for i, route := range routes[:idx] {
+		newRoutes = append(newRoutes, poolmanagertypes.SwapAmountInRoute{
+			PoolId:        route.PoolId,
+			TokenOutDenom: routes[i+1].TokenInDenom,
+		})
+	}
+
+	return newRoutes
+}
+
+func (k Keeper) chargeTakerFeeSwapAmountOut(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress, outRoutes []poolmanagertypes.SwapAmountOutRoute, denomOut string) error {
 	if takerFeeCoin.Denom == defaultTakerFeeDenom {
 		return k.burnTakerFee(ctx, takerFeeCoin, sender)
-	} else {
-		//TODO: Swap to DYM and burn. will be handled in the future.
+	}
+
+	routes := RouteToBaseDenomFromOutRoutes(outRoutes, denomOut)
+	if len(routes) == 0 {
+		ctx.Logger().Error("failed to swap taker fee to base denom")
 		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
 	}
+
+	err := k.swapAndBurn(ctx, sender, routes, takerFeeCoin)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) chargeTakerFeeSwapAmountIn(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress, routes []poolmanagertypes.SwapAmountInRoute) error {
+	if takerFeeCoin.Denom == defaultTakerFeeDenom {
+		return k.burnTakerFee(ctx, takerFeeCoin, sender)
+	}
+
+	//build new subroute to swap takerFeeCoin to base denom
+	var newRoutes []poolmanagertypes.SwapAmountInRoute
+	for i, route := range routes {
+		if route.TokenOutDenom == defaultTakerFeeDenom {
+			newRoutes = routes[:i]
+			break
+		}
+	}
+	if len(newRoutes) == 0 {
+		ctx.Logger().Error("failed to swap taker fee to base denom")
+		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
+	}
+
+	err := k.swapAndBurn(ctx, sender, newRoutes, takerFeeCoin)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) swapAndBurn(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	routes []poolmanagertypes.SwapAmountInRoute,
+	tokenIn sdk.Coin) error {
+	minAmountOut := sdk.ZeroInt()
+	// Do the swap of this fee token denom to base denom.
+	return osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+		// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
+		// but even then the point is a bit moot.
+		// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
+		// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
+		out, err := k.poolManager.RouteExactAmountIn(ctx, sender, routes, tokenIn, minAmountOut)
+		if err != nil {
+			return err
+		}
+
+		return k.burnTakerFee(ctx, sdk.NewCoin(defaultTakerFeeDenom, out), sender)
+	})
+
 }
 
 // Returns remaining amount in to swap, and takerFeeCoins.
