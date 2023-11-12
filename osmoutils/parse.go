@@ -17,7 +17,7 @@ type Proposal struct {
 
 var ProposalFlags = []string{
 	cli.FlagTitle,
-	cli.FlagDescription,
+	cli.FlagDescription, //nolint:staticcheck
 	cli.FlagDeposit,
 }
 
@@ -38,7 +38,7 @@ func ParseProposalFlags(fs *pflag.FlagSet) (*Proposal, error) {
 
 	if proposalFile == "" {
 		proposal.Title, _ = fs.GetString(cli.FlagTitle)
-		proposal.Description, _ = fs.GetString(cli.FlagDescription)
+		proposal.Description, _ = fs.GetString(cli.FlagDescription) //nolint:staticcheck
 		proposal.Deposit, _ = fs.GetString(cli.FlagDeposit)
 		if err := proposal.validate(); err != nil {
 			return nil, err

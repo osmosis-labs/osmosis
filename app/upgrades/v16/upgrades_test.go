@@ -7,11 +7,11 @@ import (
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -176,8 +176,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				s.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 
 				// Validate that expedited quorum was set to 2/3
-				expQuorum := s.App.GovKeeper.GetTallyParams(s.Ctx).ExpeditedQuorum
-				s.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
+				// UNFORKINGNOTE: GetTallyParams no longer exists, keeping commented for historical purposes
+				//expQuorum := s.App.GovKeeper.GetTallyParams(s.Ctx).ExpeditedQuorum
+				//s.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
 
 				// Validate that cw pool module address is allowed to upload contract code
 				allowedAddresses := s.App.WasmKeeper.GetParams(s.Ctx).CodeUploadAccess.Addresses

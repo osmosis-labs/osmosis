@@ -15,8 +15,8 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -178,7 +178,7 @@ func initChain(
 	// TODO: Cleanup the whole config dependency with appStateFn
 	accounts, req := initChainFn(simManager, r, accounts, config.InitializationConfig)
 	// Valid app version can only be zero on app initialization.
-	req.ConsensusParams.Version.AppVersion = 0
+	req.ConsensusParams.Version.App = 0
 	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 

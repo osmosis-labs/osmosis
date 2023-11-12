@@ -6,7 +6,7 @@ import (
 	protorevkeeper "github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
 )
 
-func NewPostHandler(protoRevKeeper *protorevkeeper.Keeper) sdk.AnteHandler {
+func NewPostHandler(protoRevKeeper *protorevkeeper.Keeper) sdk.PostHandler {
 	protoRevDecorator := protorevkeeper.NewProtoRevDecorator(*protoRevKeeper)
-	return sdk.ChainAnteDecorators(protoRevDecorator)
+	return sdk.ChainPostDecorators(protoRevDecorator)
 }

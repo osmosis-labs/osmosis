@@ -939,7 +939,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 			s.PrepareConcentratedPool()
 
 			for _, pos := range test.setupPositions {
-				s.SetupPosition(pos.PoolId, sdk.AccAddress(pos.Address), DefaultCoins, pos.LowerTick, pos.UpperTick, false)
+				s.SetupPosition(pos.PoolId, sdk.MustAccAddressFromBech32(pos.Address), DefaultCoins, pos.LowerTick, pos.UpperTick, false)
 			}
 
 			// System under test
@@ -1159,7 +1159,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			lockupModuleAccountBalancePost := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
 			// Check that the lockup module account balance increased by the amount expected to be locked
-			s.Require().Equal(underlyingLiquidityTokenized[0].String(), lockupModuleAccountBalancePost.Sub(lockupModuleAccountBalancePre).String())
+			s.Require().Equal(underlyingLiquidityTokenized[0].String(), lockupModuleAccountBalancePost.Sub(lockupModuleAccountBalancePre...).String())
 
 			// Check that the positionId is mapped to the lockId
 			positionLockId, err := s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
@@ -2453,8 +2453,8 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				for _, positionId := range tc.positionsToTransfer {
 					fundsToClaim, fundsToForefeit, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionId)
 					s.Require().NoError(err)
-					s.Require().Equal(sdk.Coins(nil), fundsToClaim)
-					s.Require().Equal(sdk.Coins(nil), fundsToForefeit)
+					s.Require().Equal(sdk.Coins{}, fundsToClaim)
+					s.Require().Equal(sdk.Coins{}, fundsToForefeit)
 
 					spreadRewards, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId)
 					s.Require().NoError(err)
@@ -2524,7 +2524,7 @@ func (s *KeeperTestSuite) fundIncentiveAddr(ctx sdk.Context, incentivesAddress s
 		totalExpectedRewards = totalExpectedRewards.Add(coinsToFundForIncentivesToUser...)
 		s.FundAcc(incentivesAddress, coinsToFundForIncentivesToUser)
 		// Determine how much position will forfeit and fund
-		coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
+		coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)...)
 		s.FundAcc(incentivesAddress, coinsToFundForForefeitToPool)
 	}
 	return

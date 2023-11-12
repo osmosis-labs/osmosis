@@ -2817,7 +2817,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			newCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances...)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
@@ -3168,7 +3168,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			name:           "CL Pool:only non-pool coin - does not show up in result",
 			poolId:         1,
 			poolLiquidity:  sdk.NewCoins(nonPoolCool),
-			expectedResult: sdk.Coins(nil),
+			expectedResult: sdk.Coins{},
 		},
 		{
 			name:           "Balancer Pool: with default pool assets",
@@ -3616,12 +3616,10 @@ func (s *KeeperTestSuite) TestTakerFee() {
 		tokenInDenom      string
 		tokenOutMinAmount osmomath.Int
 
-		expectedTokenOutEstimate                            osmomath.Int
-		expectedTakerFees                                   expectedTakerFees
-		expectedCommunityPoolBalancesDelta                  sdk.Coins // actual community pool
-		expectedCommunityPoolFeeCollectorBalanceDelta       sdk.Coins // where non whitelisted fees are staged prior to being swapped and sent to community pool
-		expectedStakingRewardFeeCollectorMainBalanceDelta   sdk.Coins // where fees are staged prior to being distributed to stakers
-		expectedStakingRewardFeeCollectorTxfeesBalanceDelta sdk.Coins // where tx fees are initially sent, swapped, and then sent to main fee collector
+		expectedTokenOutEstimate                          osmomath.Int
+		expectedTakerFees                                 expectedTakerFees
+		expectedCommunityPoolBalancesDelta                sdk.Coins // actual community pool
+		expectedStakingRewardFeeCollectorMainBalanceDelta sdk.Coins // where fees are staged prior to being distributed to stakers
 
 		expectError error
 	}{
@@ -3632,12 +3630,13 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
-				communityPoolQuoteAssets:    sdk.NewCoins(),
-				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				communityPoolQuoteAssets:    sdk.Coins{},
+				communityPoolNonQuoteAssets: sdk.Coins{},
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// full native denom set in the main fee collector addr
 			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
+			expectedCommunityPoolBalancesDelta:                sdk.Coins{},
 		},
 		"quote denom taker fee": {
 			routes:            quoteQuoteDenomRoute,
@@ -3647,7 +3646,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
 				communityPoolQuoteAssets:    sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
-				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				communityPoolNonQuoteAssets: sdk.Coins{},
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// since foo is whitelisted token, it is sent directly to community pool
@@ -3662,7 +3661,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
-				communityPoolQuoteAssets:    sdk.NewCoins(),
+				communityPoolQuoteAssets:    sdk.Coins{},
 				communityPoolNonQuoteAssets: sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
@@ -3734,7 +3733,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			communityPoolBalancesAfterSwap := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook...)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address txfees community pool address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
@@ -3752,16 +3751,16 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			stakingRewardFeeCollectorTxfeesBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
 			commPoolFeeCollectorBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
 
-			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook)
-			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook)
-			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook)
-			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook)
+			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook...)
+			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook...)
+			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook...)
+			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook...)
 
 			// Ensure balances are as expected
 			s.Require().Equal(tc.expectedCommunityPoolBalancesDelta, communityPoolBalancesDelta)
-			s.Require().Equal(tc.expectedCommunityPoolFeeCollectorBalanceDelta, commPoolFeeCollectorBalanceDelta) // should always be empty after hook if all routes exist
+			s.Require().Equal(sdk.Coins{}, commPoolFeeCollectorBalanceDelta) // should always be empty after hook if all routes exist
 			s.Require().Equal(tc.expectedStakingRewardFeeCollectorMainBalanceDelta, stakingRewardFeeCollectorMainBalanceDelta)
-			s.Require().Equal(tc.expectedStakingRewardFeeCollectorTxfeesBalanceDelta, stakingRewardFeeCollectorTxfeesBalanceDelta) // should always be empty after hook if all routes exist
+			s.Require().Equal(sdk.Coins{}, stakingRewardFeeCollectorTxfeesBalanceDelta) // should always be empty after hook if all routes exist
 		})
 	}
 }

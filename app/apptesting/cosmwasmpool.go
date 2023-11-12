@@ -84,13 +84,14 @@ func (s *KeeperTestHelper) StoreCosmWasmPoolContractCode(contractName string) ui
 
 	// Allow the cosmwasm pool module to upload code.
 	params := s.App.WasmKeeper.GetParams(s.Ctx)
-	s.App.WasmKeeper.SetParams(s.Ctx, wasmtypes.Params{
+	err := s.App.WasmKeeper.SetParams(s.Ctx, wasmtypes.Params{
 		CodeUploadAccess: wasmtypes.AccessConfig{
 			Permission: wasmtypes.AccessTypeAnyOfAddresses,
 			Addresses:  []string{cosmwasmpoolModuleAddr.String()},
 		},
 		InstantiateDefaultPermission: params.InstantiateDefaultPermission,
 	})
+	s.Require().NoError(err)
 
 	code := s.GetContractCode(contractName)
 

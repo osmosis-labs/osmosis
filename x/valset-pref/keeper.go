@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -13,17 +13,19 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Keeper struct {
-	storeKey           sdk.StoreKey
+	storeKey           storetypes.StoreKey
 	paramSpace         paramtypes.Subspace
 	stakingKeeper      types.StakingInterface
 	distirbutionKeeper types.DistributionKeeper
 	lockupKeeper       types.LockupKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey,
+func NewKeeper(storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingInterface,
 	distirbutionKeeper types.DistributionKeeper,

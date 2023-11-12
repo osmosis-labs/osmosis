@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -703,4 +703,14 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 		})
 	}
 	return clPoolUserPositionRecords, nil
+}
+
+// TEMPORARY CODE
+func (q Querier) RestSupply(goCtx context.Context, req *types.QueryRestSupplyRequest) (*types.QueryRestSupplyResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	supply := q.bk.GetSupply(sdk.UnwrapSDKContext(goCtx), req.Denom)
+	return &types.QueryRestSupplyResponse{Amount: supply}, nil
 }

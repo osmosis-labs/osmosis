@@ -1,7 +1,7 @@
 package lockup
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
 

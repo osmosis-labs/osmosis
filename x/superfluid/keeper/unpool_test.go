@@ -5,8 +5,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 			poolCreateAcc := delAddrs[0]
 			poolJoinAcc := delAddrs[1]
 			for _, acc := range delAddrs {
-				err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+				err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 				s.Require().NoError(err)
 			}
 
@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 			s.Require().NoError(err)
 			balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
 
-			joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin)
+			joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin...)
 
 			pool, err := gammKeeper.GetPoolAndPoke(ctx, poolId)
 			s.Require().NoError(err)
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 			// exitPool has rounding difference,
 			// we test if correct amt has been exited and locked via comparing with rounding tolerance
 			roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin(defaultFooAsset.Token.Denom, osmomath.NewInt(5)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(5)))
-			roundDownTolerance, _ := joinPoolAmt.SafeSub(roundingToleranceCoins)
+			roundDownTolerance, _ := joinPoolAmt.SafeSub(roundingToleranceCoins...)
 			roundUpTolerance := joinPoolAmt.Add(roundingToleranceCoins...)
 			s.Require().True(cumulativeNewLockCoins.AmountOf("foo").GTE(roundDownTolerance.AmountOf("foo")))
 			s.Require().True(cumulativeNewLockCoins.AmountOf(sdk.DefaultBondDenom).GTE(roundDownTolerance.AmountOf(sdk.DefaultBondDenom)))
