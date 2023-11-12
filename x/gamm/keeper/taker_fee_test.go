@@ -3,11 +3,98 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-//TODO: test taker fee charge - DYM and non-DYM
+func (suite *KeeperTestSuite) TestDYMIsBurned() {
+	suite.SetupTest()
+	ctx := suite.Ctx
+
+	suite.PrepareBalancerPool()
+
+	//check total supply before swap
+	totalSupplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
+
+	// check taker fee is not 0
+	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
+
+	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+
+	// Reset event counts to 0 by creating a new manager.
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	suite.Equal(0, len(ctx.EventManager().Events()))
+
+	routes :=
+		[]poolmanagertypes.SwapAmountInRoute{
+			{
+				PoolId:        1,
+				TokenOutDenom: "bar",
+			},
+		}
+
+	// make swap
+	_, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
+		Sender:            suite.TestAccs[0].String(),
+		Routes:            routes,
+		TokenIn:           sdk.NewCoin("udym", sdk.NewInt(100000)),
+		TokenOutMinAmount: sdk.NewInt(1),
+	})
+	suite.Require().NoError(err)
+
+	// check total supply after swap
+	totalSupplyAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
+
+	//validate total supply is reduced by taker fee
+	takerFeeAmount := suite.App.GAMMKeeper.GetParams(ctx).TakerFee.MulInt(sdk.NewInt(100000)).TruncateInt()
+	suite.Require().True(totalSupplyAfter.Amount.LT(totalSupplyBefore.Amount))
+	suite.Require().True(totalSupplyBefore.Amount.Sub(totalSupplyAfter.Amount).Equal(takerFeeAmount))
+}
+
+func (suite *KeeperTestSuite) TestNonDYMIsSentToCommunity() {
+	suite.SetupTest()
+	ctx := suite.Ctx
+	suite.PrepareBalancerPool()
+	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+
+	//check total supply before swap
+	totalSupplyFooBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "foo")
+	totalSupplyDYMBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
+
+	// check taker fee is not 0
+	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
+
+	routes :=
+		[]poolmanagertypes.SwapAmountInRoute{
+			{
+				PoolId:        1,
+				TokenOutDenom: "udym",
+			},
+		}
+
+	// make swap
+	_, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
+		Sender:            suite.TestAccs[0].String(),
+		Routes:            routes,
+		TokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+		TokenOutMinAmount: sdk.NewInt(1),
+	})
+	suite.Require().NoError(err)
+
+	// check total supply after swap
+	totalSupplyFooAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "foo")
+	totalSupplyDYMAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
+
+	//validate total supply is NOT reduced by taker fee
+	suite.Require().True(totalSupplyFooAfter.Amount.Equal(totalSupplyFooBefore.Amount))
+	suite.Require().True(totalSupplyDYMAfter.Amount.Equal(totalSupplyDYMBefore.Amount))
+
+	takerFeeAmount := suite.App.GAMMKeeper.GetParams(ctx).TakerFee.MulInt(sdk.NewInt(100000))
+
+	communityAfter := suite.App.DistrKeeper.GetFeePoolCommunityCoins(ctx)
+	suite.Require().True(communityAfter.AmountOf("foo").Equal(takerFeeAmount))
+}
 
 //TODO: test estimation when taker fee is 0
 
