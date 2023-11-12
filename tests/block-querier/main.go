@@ -9,41 +9,6 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 )
 
-// operation defines the desired operation to be run by this script.
-type operation int
-
-const (
-	// createPositions creates positions in the CL pool with id expectedPoolId.
-	createPositions operation = iota
-
-	// makeManySmallSwaps makes many swaps in the CL pool with id expectedPoolId.
-	makeManySmallSwaps
-
-	// makeManyLargeSwaps makes many large swaps in the CL pool with id expectedPoolId.
-	// it takes one large amount and swaps it into the pool. Then, takes output token
-	// and swaps it back while accounting for the spread factor. This is done to
-	// ensure that we cross ticks while minimizing the chance of running out of funds or liquidity.
-	makeManyInvertibleLargeSwaps
-
-	// createExternalCLIncentives creates external CL incentives.
-	createExternalCLIncentives
-
-	// createPoolOperation creates a pool with expectedPoolId.
-	createPoolOperation
-
-	// claimSpreadRewardsOperation claims a random subset of spread rewards from a random account.
-	claimSpreadRewardsOperation
-
-	// claimIncentivesOperation claims a random subset of incentives from a random account.
-	claimIncentivesOperation
-
-	// addToPositions creates a position and adds to it
-	addToPositions
-
-	// withdrawPositions withdraws a position
-	withdrawPositions
-)
-
 const (
 	addressPrefix            = "osmo"
 	localosmosisFromHomePath = "/.osmosisd-local"
