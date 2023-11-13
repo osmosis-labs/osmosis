@@ -144,7 +144,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 		}
 
 		if sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
-			return nil, fmt.Errorf("receveing redelegation is not allowed for target validators")
+			return nil, fmt.Errorf("receiving redelegation is not allowed for target validators")
 		}
 	}
 
@@ -193,7 +193,7 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 	}
 
 	if !totalWeight.Equal(osmomath.OneDec()) {
-		return nil, fmt.Errorf("generated weights donot equal 1 got: %d", totalWeight)
+		return nil, fmt.Errorf("generated weights do not equal 1 got: %d", totalWeight)
 	}
 
 	return preferences, nil
