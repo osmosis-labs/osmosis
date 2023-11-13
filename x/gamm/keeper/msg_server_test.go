@@ -3,6 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -27,6 +29,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		tokenIn               sdk.Coin
 		tokenOutMinAmount     sdk.Int
 		expectError           bool
+		expectedBurnEvents    bool
 		expectedSwapEvents    int
 		expectedMessageEvents int
 	}{
@@ -43,10 +46,24 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "bar",
 				},
 			},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
+			tokenIn:               sdk.NewCoin("udym", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedBurnEvents:    true,
+			expectedMessageEvents: 4, // 1 gamm + 2 bank send for swap + 1 bank send when burn
+		},
+		"one hop_noBurn": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: "bar",
+				},
+			},
+			tokenIn:               sdk.NewCoin("baz", sdk.NewInt(tokenIn)),
+			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			expectedSwapEvents:    1,
+			expectedBurnEvents:    false,
+			expectedMessageEvents: 4, // 1 gamm + 2 bank send for swap + 1 bank send to community
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -59,10 +76,28 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
+			tokenIn:               sdk.NewCoin("udym", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedBurnEvents:    true,
+			expectedMessageEvents: 6, // 1 gamm + 4 swap + 1 burn
+		},
+		"two hops_nonNativeTakerFee": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: "bar",
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: "udym",
+				},
+			},
+			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
+			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			expectedBurnEvents:    true,
+			expectedSwapEvents:    3, //2 for the swap + 1 for taker fee
+			expectedMessageEvents: 8, // 1 gamm + 6 swap + 1 burn
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -106,9 +141,12 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 				suite.NoError(err)
 				suite.NotNil(response)
 			}
+			if tc.expectedBurnEvents {
+				suite.AssertEventEmitted(ctx, banktypes.EventTypeCoinBurn, 1)
+			}
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
-			// suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
@@ -126,6 +164,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		tokenOut              sdk.Coin
 		tokenInMaxAmount      sdk.Int
 		expectError           bool
+		expectedBurnEvents    bool
 		expectedSwapEvents    int
 		expectedMessageEvents int
 	}{
@@ -139,13 +178,27 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
+					TokenInDenom: "udym",
+				},
+			},
+			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
+			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
+			expectedBurnEvents:    true,
+			expectedSwapEvents:    1,
+			expectedMessageEvents: 4, // 1 gamm + 2 for swap + 1 for burn
+		},
+		"one hop_no_burn": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
+				{
+					PoolId:       1,
 					TokenInDenom: "bar",
 				},
 			},
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
+			expectedBurnEvents:    false,
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents: 4, // 1 gamm + 2 for swap + 1 for send to community
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -161,7 +214,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 6, // 1 gamm + 4 for swap + 1 for send to community
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -206,8 +259,12 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 				suite.NotNil(response)
 			}
 
+			if tc.expectedBurnEvents {
+				suite.AssertEventEmitted(ctx, banktypes.EventTypeCoinBurn, 1)
+			}
+
 			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
-			// suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
