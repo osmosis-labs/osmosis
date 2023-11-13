@@ -125,14 +125,6 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Erro
 		expectedTokenOut sdk.Coin
 		expectError      error
 	}{
-		"error: chain model is not concentrated": {
-			tokenIn:       DefaultCoin1,
-			tokenOutDenom: Denom0,
-
-			isWrongChainModel: true,
-
-			expectError: domain.InvalidPoolTypeError{PoolType: int32(poolmanagertypes.Balancer)},
-		},
 		"error: failed to get tick model": {
 			tokenIn:       DefaultCoin1,
 			tokenOutDenom: Denom0,
@@ -284,14 +276,15 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Erro
 				}
 			}
 
-			routablePool := pools.RoutableConcentratedPoolImpl{
-				PoolI: &domain.PoolWrapper{
+			routablePool := pools.NewRoutablePool(
+				&domain.PoolWrapper{
 					ChainModel: chainModel,
 					TickModel:  tickModel,
 					SQSModel:   defaultSQSModel,
 				},
-				TokenOutDenom: tc.tokenOutDenom,
-			}
+				tc.tokenOutDenom,
+				osmomath.ZeroDec(),
+			)
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
 
