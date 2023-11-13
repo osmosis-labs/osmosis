@@ -8,10 +8,10 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (suite *KeeperTestSuite) TestDYMIsBurned() {
+func (suite *KeeperTestSuite) TestDYMIsBurned_ExactIn() {
 	suite.SetupTest()
 	ctx := suite.Ctx
-
+	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
 	suite.PrepareBalancerPool()
 
 	//check total supply before swap
@@ -19,12 +19,6 @@ func (suite *KeeperTestSuite) TestDYMIsBurned() {
 
 	// check taker fee is not 0
 	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
-
-	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
-
-	// Reset event counts to 0 by creating a new manager.
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	suite.Equal(0, len(ctx.EventManager().Events()))
 
 	routes :=
 		[]poolmanagertypes.SwapAmountInRoute{
@@ -39,7 +33,7 @@ func (suite *KeeperTestSuite) TestDYMIsBurned() {
 		Sender:            suite.TestAccs[0].String(),
 		Routes:            routes,
 		TokenIn:           sdk.NewCoin("udym", sdk.NewInt(100000)),
-		TokenOutMinAmount: sdk.NewInt(1),
+		TokenOutMinAmount: sdk.NewInt(100),
 	})
 	suite.Require().NoError(err)
 
@@ -50,6 +44,47 @@ func (suite *KeeperTestSuite) TestDYMIsBurned() {
 	takerFeeAmount := suite.App.GAMMKeeper.GetParams(ctx).TakerFee.MulInt(sdk.NewInt(100000)).TruncateInt()
 	suite.Require().True(totalSupplyAfter.Amount.LT(totalSupplyBefore.Amount))
 	suite.Require().True(totalSupplyBefore.Amount.Sub(totalSupplyAfter.Amount).Equal(takerFeeAmount))
+}
+
+func (suite *KeeperTestSuite) TestDYMIsBurned_ExactOut() {
+	suite.SetupTest()
+	ctx := suite.Ctx
+	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+	suite.PrepareBalancerPool()
+
+	//check total supply before swap
+	totalSupplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
+
+	// check taker fee is not 0
+	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
+
+	routes :=
+		[]poolmanagertypes.SwapAmountOutRoute{
+			{
+				PoolId:       1,
+				TokenInDenom: "udym",
+			},
+		}
+
+	// make swap
+	resp, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountOut{
+		Sender:           suite.TestAccs[0].String(),
+		Routes:           routes,
+		TokenOut:         sdk.NewCoin("bar", sdk.NewInt(1000)),
+		TokenInMaxAmount: sdk.NewInt(100000000),
+	})
+	suite.Require().NoError(err)
+	tokenInCoin := sdk.NewCoin("udym", resp.TokenInAmount)
+
+	// check total supply after swap
+	totalSupplyAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
+
+	//validate total supply is reduced by taker fee
+
+	_, takerFeeCoin := suite.App.GAMMKeeper.SubTakerFee(tokenInCoin, suite.App.GAMMKeeper.GetParams(ctx).TakerFee)
+
+	suite.Require().True(totalSupplyAfter.Amount.LT(totalSupplyBefore.Amount))
+	suite.Require().Equal(takerFeeCoin.Amount, totalSupplyBefore.Amount.Sub(totalSupplyAfter.Amount))
 }
 
 func (suite *KeeperTestSuite) TestNonDYMIsSentToCommunity() {
