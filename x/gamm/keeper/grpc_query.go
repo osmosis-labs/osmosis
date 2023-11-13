@@ -438,7 +438,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	takerFee := q.Keeper.GetParams(sdkCtx).TakerFee
-	tokenInAfterSubTakerFee, _ := q.Keeper.calcTakerFeeExactIn(tokenIn, takerFee)
+	tokenInAfterSubTakerFee, _ := q.Keeper.SubTakerFee(tokenIn, takerFee)
 
 	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenInAfterSubTakerFee)
 	if err != nil {
@@ -474,7 +474,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	tokenInCoin := sdk.NewCoin(req.Routes[0].TokenInDenom, tokenInAmount)
 	takerFee := q.Keeper.GetParams(sdkCtx).TakerFee
-	tokenInAfterAddTakerFee, _ := q.Keeper.calcTakerFeeExactOut(tokenInCoin, takerFee)
+	tokenInAfterAddTakerFee, _ := q.Keeper.AddTakerFee(tokenInCoin, takerFee)
 
 	return &types.QuerySwapExactAmountOutResponse{
 		TokenInAmount: tokenInAfterAddTakerFee.Amount,
