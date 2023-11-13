@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
@@ -166,7 +166,7 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 
 	cmd := []string{"osmosisd", "debug", "addr", n.PublicKey}
 	n.t.Logf("extracting validator operator addresses for validator: %s", n.Name)
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	if err != nil {
 		return err
 	}

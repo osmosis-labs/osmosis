@@ -9,10 +9,10 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -203,7 +203,7 @@ func (m *TwapRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.LastErrorTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.LastErrorTime):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LastErrorTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastErrorTime):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -261,7 +261,7 @@ func (m *TwapRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x32
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Time):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -327,7 +327,7 @@ func (m *TwapRecord) Size() (n int) {
 	if m.Height != 0 {
 		n += 1 + sovTwapRecord(uint64(m.Height))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Time)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time)
 	n += 1 + l + sovTwapRecord(uint64(l))
 	l = m.P0LastSpotPrice.Size()
 	n += 1 + l + sovTwapRecord(uint64(l))
@@ -339,7 +339,7 @@ func (m *TwapRecord) Size() (n int) {
 	n += 1 + l + sovTwapRecord(uint64(l))
 	l = m.GeometricTwapAccumulator.Size()
 	n += 1 + l + sovTwapRecord(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.LastErrorTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastErrorTime)
 	n += 1 + l + sovTwapRecord(uint64(l))
 	return n
 }
@@ -510,7 +510,7 @@ func (m *TwapRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Time, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.Time, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -713,7 +713,7 @@ func (m *TwapRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.LastErrorTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.LastErrorTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

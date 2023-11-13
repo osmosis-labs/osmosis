@@ -7,8 +7,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -867,7 +867,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			poolCreateAcc := delAddrs[0]
 			poolJoinAcc := delAddrs[1]
 			for _, acc := range delAddrs {
-				err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+				err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 				s.Require().NoError(err)
 			}
 
@@ -974,7 +974,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	poolCreateAcc = delAddrs[0]
 	poolJoinAcc = delAddrs[1]
 	for _, acc := range delAddrs {
-		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 		s.Require().NoError(err)
 	}
 
@@ -997,7 +997,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
 
 	// The balancer join pool amount is the difference between the account balance before and after joining the pool.
-	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
+	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin...)
 
 	// Determine the balancer pool's LP token denomination.
 	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
@@ -1099,7 +1099,6 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 	s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 		ctx,
 		valAddr,
-		ctx.BlockHeight(),
 		slashFactor)
 
 	// Retrieve the concentrated lock and gamm lock after slashing.

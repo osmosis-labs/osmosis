@@ -36,6 +36,8 @@ const (
 	prefixLatestBlockHeight
 	prefixInfoByPoolType
 	prefixSwapsToBackrun
+	prefixcyclicArbTracker
+	prefixcyclicArbTrackerStartHeight
 )
 
 var (
@@ -89,6 +91,12 @@ var (
 
 	// KeyPrefixSwapsToBackrun is the prefix for store that keeps track of the swaps that need to be backrun for a given tx
 	KeyPrefixSwapsToBackrun = []byte{prefixSwapsToBackrun}
+
+	// KeyCyclicArbTracker is the prefix for store that keeps track of the profits made by cyclic arbitrage
+	KeyCyclicArbTracker = []byte{prefixcyclicArbTracker}
+
+	// KeyCyclicArbTracker is the prefix for store that keeps track of the height we began tracking cyclic arbitrage
+	KeyCyclicArbTrackerStartHeight = []byte{prefixcyclicArbTrackerStartHeight}
 )
 
 // Returns the key needed to fetch the pool id for a given denom
