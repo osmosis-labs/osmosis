@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
 			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
 			incentivesToBeSentToUsers := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
-			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers)
+			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers...)
 			totalAmountToFund := incentivesToBeSentToUsers.Add(incentivesToBeSentToCommunityPool...)
 			s.FundAcc(pool.GetIncentivesAddress(), totalAmountToFund)
 

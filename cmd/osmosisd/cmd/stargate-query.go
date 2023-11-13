@@ -19,9 +19,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v20/x/downtime-detector/client/queryproto"
@@ -128,7 +129,7 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 	case "gov":
 		switch structName {
 		case "QueryDepositRequest":
-			v := &govtypes.QueryDepositRequest{}
+			v := &govtypesv1.QueryDepositRequest{}
 			proposalId, err := strconv.ParseUint(structArguments[0], 10, 64)
 			if err != nil {
 				return nil, err
@@ -137,10 +138,10 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			v.Depositor = structArguments[1]
 			return v, nil
 		case ParamRequest:
-			v := &govtypes.QueryParamsRequest{}
+			v := &govtypesv1.QueryParamsRequest{}
 			return v, nil
 		case "QueryVoteRequest":
-			v := &govtypes.QueryVoteRequest{}
+			v := &govtypesv1.QueryVoteRequest{}
 			proposalId, err := strconv.ParseUint(structArguments[0], 10, 64)
 			if err != nil {
 				return nil, err

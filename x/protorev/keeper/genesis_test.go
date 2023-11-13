@@ -60,4 +60,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	profits := s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)
 	s.Require().Equal(len(profits), len(exportedGenesis.Profits))
 	s.Require().Equal(profits, exportedGenesis.Profits)
+
+	cyclicArbProfit := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx)
+	s.Require().Equal(cyclicArbProfit, exportedGenesis.CyclicArbTracker.CyclicArb)
+
+	cyclicArbProfitAccountingHeight := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerStartHeight(s.Ctx)
+	s.Require().Equal(cyclicArbProfitAccountingHeight, exportedGenesis.CyclicArbTracker.HeightAccountingStartsFrom)
 }

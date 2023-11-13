@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
 )
