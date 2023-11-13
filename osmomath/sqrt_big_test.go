@@ -14,7 +14,7 @@ var (
 )
 
 func generateRandomDecForEachBitlenBigDec(r *rand.Rand, numPerBitlen int) []BigDec {
-	return generateRandomDecForEachBitlen[BigDec](r, numPerBitlen, NewBigDecFromBigIntWithPrec, BigDecPrecision)
+	return generateRandomDecForEachBitlen(r, numPerBitlen, NewBigDecFromBigIntWithPrec, BigDecPrecision)
 }
 
 func TestSdkApproxSqrtVectors_BigDec(t *testing.T) {
