@@ -1,13 +1,139 @@
 package concentrated_liquidity
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
-// nolint: unused
+// Helper function to generate before action prefix
+func beforeActionPrefix(action string) string {
+	return fmt.Sprintf("before%s", action)
+}
+
+// Helper function to generate after action prefix
+func afterActionPrefix(action string) string {
+	return fmt.Sprintf("after%s", action)
+}
+
+// --- Pool Hooks ---
+
+// BeforeCreatePosition is a hook that is called before a position is created.
+func (k Keeper) BeforeCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.BeforeCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
+	msgBz, err := json.Marshal(types.BeforeCreatePositionSudoMsg{BeforeCreatePosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.CreatePositionPrefix))
+}
+
+// AfterCreatePosition is a hook that is called after a position is created.
+func (k Keeper) AfterCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.AfterCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
+	msgBz, err := json.Marshal(types.AfterCreatePositionSudoMsg{AfterCreatePosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.CreatePositionPrefix))
+}
+
+// BeforeAddToPosition is a hook that is called before liquidity is added to a position.
+func (k Keeper) BeforeAddToPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amount0Added osmomath.Int, amount1Added osmomath.Int, amount0Min osmomath.Int, amount1Min osmomath.Int) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.BeforeAddToPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, Amount0Added: amount0Added, Amount1Added: amount1Added, Amount0Min: amount0Min, Amount1Min: amount1Min}
+	msgBz, err := json.Marshal(types.BeforeAddToPositionSudoMsg{BeforeAddToPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.AddToPositionPrefix))
+}
+
+// AfterAddToPosition is a hook that is called after liquidity is added to a position.
+func (k Keeper) AfterAddToPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amount0Added osmomath.Int, amount1Added osmomath.Int, amount0Min osmomath.Int, amount1Min osmomath.Int) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.AfterAddToPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, Amount0Added: amount0Added, Amount1Added: amount1Added, Amount0Min: amount0Min, Amount1Min: amount1Min}
+	msgBz, err := json.Marshal(types.AfterAddToPositionSudoMsg{AfterAddToPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.AddToPositionPrefix))
+}
+
+// BeforeWithdrawPosition is a hook that is called before liquidity is withdrawn from a position.
+func (k Keeper) BeforeWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amountToWithdraw osmomath.Dec) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.BeforeWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
+	msgBz, err := json.Marshal(types.BeforeWithdrawPositionSudoMsg{BeforeWithdrawPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.WithdrawPositionPrefix))
+}
+
+// AfterWithdrawPosition is a hook that is called after liquidity is withdrawn from a position.
+func (k Keeper) AfterWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amountToWithdraw osmomath.Dec) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.AfterWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
+	msgBz, err := json.Marshal(types.AfterWithdrawPositionSudoMsg{AfterWithdrawPosition: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.WithdrawPositionPrefix))
+}
+
+// BeforeSwapExactAmountIn is a hook that is called before a swap is executed (exact amount in).
+func (k Keeper) BeforeSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.BeforeSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.BeforeSwapExactAmountInSudoMsg{BeforeSwapExactAmountIn: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.SwapExactAmountInPrefix))
+}
+
+// AfterSwapExactAmountIn is a hook that is called after a swap is executed (exact amount in).
+func (k Keeper) AfterSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.AfterSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.AfterSwapExactAmountInSudoMsg{AfterSwapExactAmountIn: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.SwapExactAmountInPrefix))
+}
+
+// BeforeSwapExactAmountOut is a hook that is called before a swap is executed (exact amount out).
+func (k Keeper) BeforeSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut sdk.Coin, spreadFactor osmomath.Dec) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.BeforeSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.BeforeSwapExactAmountOutSudoMsg{BeforeSwapExactAmountOut: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.SwapExactAmountOutPrefix))
+}
+
+// AfterSwapExactAmountOut is a hook that is called after a swap is executed (exact amount out).
+func (k Keeper) AfterSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut sdk.Coin, spreadFactor osmomath.Dec) error {
+	// Build and marshal the message to be passed to the contract
+	msg := types.AfterSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
+	msgBz, err := json.Marshal(types.AfterSwapExactAmountOutSudoMsg{AfterSwapExactAmountOut: msg})
+	if err != nil {
+		return err
+	}
+	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.SwapExactAmountOutPrefix))
+}
+
 // callPoolActionListener processes and dispatches the passed in message to the contract corresponding to the hook
 // defined by the given pool ID and action prefix (e.g. pool Id: 1, action prefix: "beforeSwap").
 //
