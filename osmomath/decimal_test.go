@@ -1701,3 +1701,23 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 		})
 	}
 }
+
+func (s *decimalTestSuite) TestBigIntMut() {
+	r := big.NewInt(30)
+	d := osmomath.NewBigDecFromBigInt(r)
+
+	// Compare value of BigInt & BigIntMut
+	s.Require().Equal(d.BigInt(), d.BigIntMut())
+
+	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
+	p1 := d.BigIntMut()
+	p1.SetInt64(40)
+	s.Require().Equal(big.NewInt(40), d.BigIntMut())
+	s.Require().Equal(big.NewInt(40), d.BigInt())
+
+	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
+	p2 := d.BigInt()
+	p2.SetInt64(50)
+	s.Require().NotEqual(big.NewInt(50), d.BigIntMut())
+	s.Require().NotEqual(big.NewInt(50), d.BigInt())
+}
