@@ -83,15 +83,19 @@ func CreateUpgradeHandler(
 
 		// Update expedited governance param
 		// In particular, set expedited quorum to 2/3.
-		params := keepers.GovKeeper.GetTallyParams(ctx)
-		params.ExpeditedQuorum = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
-		keepers.GovKeeper.SetTallyParams(ctx, params)
+		// UNFORKINGNOTE: GetTallyParams no longer exists, keeping commented for historical purposes
+		// params := keepers.GovKeeper.GetTallyParams(ctx)
+		// params.ExpeditedQuorum = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
+		// keepers.GovKeeper.SetTallyParams(ctx, params)
 
 		// Add cosmwasmpool module address to the list of allowed addresses to upload contract code.
 		cwPoolModuleAddress := keepers.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName)
 		wasmParams := keepers.WasmKeeper.GetParams(ctx)
 		wasmParams.CodeUploadAccess.Addresses = append(wasmParams.CodeUploadAccess.Addresses, cwPoolModuleAddress.String())
-		keepers.WasmKeeper.SetParams(ctx, wasmParams)
+		err = keepers.WasmKeeper.SetParams(ctx, wasmParams)
+		if err != nil {
+			return nil, err
+		}
 
 		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
 		hostParams := keepers.ICAHostKeeper.GetParams(ctx)

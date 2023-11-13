@@ -11,16 +11,16 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/query"
-	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types1 "github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	types "github.com/osmosis-labs/osmosis/v20/x/twap/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -512,7 +512,7 @@ func (m *ParamsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_ParamsRequest proto.InternalMessageInfo
 
 type ParamsResponse struct {
-	Params types1.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Params types.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
 func (m *ParamsResponse) Reset()         { *m = ParamsResponse{} }
@@ -548,11 +548,11 @@ func (m *ParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ParamsResponse proto.InternalMessageInfo
 
-func (m *ParamsResponse) GetParams() types1.Params {
+func (m *ParamsResponse) GetParams() types.Params {
 	if m != nil {
 		return m.Params
 	}
-	return types1.Params{}
+	return types.Params{}
 }
 
 func init() {
@@ -869,7 +869,7 @@ func (m *ArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.EndTime != nil {
-		n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime):])
+		n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.EndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.EndTime):])
 		if err1 != nil {
 			return 0, err1
 		}
@@ -878,7 +878,7 @@ func (m *ArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -961,7 +961,7 @@ func (m *ArithmeticTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
-	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
 	if err3 != nil {
 		return 0, err3
 	}
@@ -1045,7 +1045,7 @@ func (m *GeometricTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.EndTime != nil {
-		n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime):])
+		n4, err4 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.EndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.EndTime):])
 		if err4 != nil {
 			return 0, err4
 		}
@@ -1054,7 +1054,7 @@ func (m *GeometricTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n5, err5 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
 	if err5 != nil {
 		return 0, err5
 	}
@@ -1137,7 +1137,7 @@ func (m *GeometricTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	n6, err6 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n6, err6 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
 	if err6 != nil {
 		return 0, err6
 	}
@@ -1284,10 +1284,10 @@ func (m *ArithmeticTwapRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovQuery(uint64(l))
 	if m.EndTime != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.EndTime)
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1321,7 +1321,7 @@ func (m *ArithmeticTwapToNowRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1354,10 +1354,10 @@ func (m *GeometricTwapRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovQuery(uint64(l))
 	if m.EndTime != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.EndTime)
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1391,7 +1391,7 @@ func (m *GeometricTwapToNowRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1574,7 +1574,7 @@ func (m *ArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1610,7 +1610,7 @@ func (m *ArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 			if m.EndTime == nil {
 				m.EndTime = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1860,7 +1860,7 @@ func (m *ArithmeticTwapToNowRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2110,7 +2110,7 @@ func (m *GeometricTwapRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2146,7 +2146,7 @@ func (m *GeometricTwapRequest) Unmarshal(dAtA []byte) error {
 			if m.EndTime == nil {
 				m.EndTime = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2396,7 +2396,7 @@ func (m *GeometricTwapToNowRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

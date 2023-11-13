@@ -332,3 +332,15 @@ func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum *accum.Accum
 func (k Keeper) TransferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
 	return k.transferPositions(ctx, positionIds, sender, recipient)
 }
+
+func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix string, cosmwasmAddress string) error {
+	return k.setPoolHookContract(ctx, poolID, actionPrefix, cosmwasmAddress)
+}
+
+func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
+	return k.callPoolActionListener(ctx, msgBz, poolId, actionPrefix)
+}
+
+func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
+	return k.getPoolHookContract(ctx, poolId, actionPrefix)
+}

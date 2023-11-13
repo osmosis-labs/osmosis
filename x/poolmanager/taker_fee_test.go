@@ -19,7 +19,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 	var (
 		defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
-		defaultAmount   = sdk.NewInt(100)
+		defaultAmount   = sdk.NewInt(10000000)
 	)
 
 	tests := map[string]struct {
@@ -89,17 +89,44 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			// Pre-fund owner.
 			s.FundAcc(s.TestAccs[tc.senderIndex], sdk.NewCoins(tc.tokenIn))
 
+			// Check the taker fee tracker before the taker fee is charged.
+			takerFeeTrackerForStakersBefore := poolManager.GetTakerFeeTrackerForStakers(s.Ctx)
+			takerFeeTrackerForCommunityPoolBefore := poolManager.GetTakerFeeTrackerForCommunityPool(s.Ctx)
+
 			// System under test.
 			tokenInAfterTakerFee, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[tc.senderIndex], tc.exactIn)
 
+			// Check the taker fee tracker after the taker fee is charged.
+			takerFeeTrackerForStakersAfter := poolManager.GetTakerFeeTrackerForStakers(s.Ctx)
+			takerFeeTrackerForCommunityPoolAfter := poolManager.GetTakerFeeTrackerForCommunityPool(s.Ctx)
+
 			if tc.expectError != nil {
 				s.Require().Error(err)
+				s.Require().Equal(takerFeeTrackerForStakersBefore, takerFeeTrackerForStakersAfter)
+				s.Require().Equal(takerFeeTrackerForCommunityPoolBefore, takerFeeTrackerForCommunityPoolAfter)
 				return
 			}
 			s.Require().NoError(err)
 
+			params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+			expectedTotalTakerFee := defaultAmount.Sub(tc.expectedResult.Amount)
+			expectedTakerFeeToStakersAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
+			expectedTakerFeeToCommunityPoolAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
+			expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToStakersAmount.TruncateInt())
+			expectedTakerFeeToCommunityPool := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())
+
 			// Validate results.
 			s.Require().Equal(tc.expectedResult.String(), tokenInAfterTakerFee.String())
+			expectedTakerFeeTrackerForStakersAfter := takerFeeTrackerForStakersBefore.Add(expectedTakerFeeToStakers)
+			if expectedTakerFeeTrackerForStakersAfter.Empty() {
+				expectedTakerFeeTrackerForStakersAfter = sdk.Coins(nil)
+			}
+			s.Require().Equal(expectedTakerFeeTrackerForStakersAfter, takerFeeTrackerForStakersAfter)
+			expectedTakerFeeTrackerForCommunityPoolAfter := takerFeeTrackerForCommunityPoolBefore.Add(expectedTakerFeeToCommunityPool)
+			if expectedTakerFeeTrackerForCommunityPoolAfter.Empty() {
+				expectedTakerFeeTrackerForCommunityPoolAfter = sdk.Coins(nil)
+			}
+			s.Require().Equal(expectedTakerFeeTrackerForCommunityPoolAfter, takerFeeTrackerForCommunityPoolAfter)
 		})
 	}
 }

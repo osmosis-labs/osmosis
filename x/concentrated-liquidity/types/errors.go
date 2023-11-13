@@ -913,3 +913,11 @@ type LastPositionTransferError struct {
 func (e LastPositionTransferError) Error() string {
 	return fmt.Sprintf("cannot transfer position %d because it is the last position in pool %d", e.PositionId, e.PoolId)
 }
+
+type ContractHookOutOfGasError struct {
+	GasLimit uint64
+}
+
+func (e ContractHookOutOfGasError) Error() string {
+	return fmt.Sprintf("A single contract call cannot exceed %d gas in a CL hook call.", e.GasLimit)
+}

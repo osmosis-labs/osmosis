@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 
 			// make sure sender's balance is updated correctly
 			senderBal := bankKeeper.GetAllBalances(s.Ctx, sender)
-			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
+			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee...).Sub(expectedPoolTokens...).Add(expectedPoolShares)
 			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased
