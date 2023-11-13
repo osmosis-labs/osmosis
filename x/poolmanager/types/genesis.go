@@ -1,12 +1,21 @@
 package types
 
-import "errors"
+import (
+	"errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // DefaultGenesis returns the default poolmanager genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params:     DefaultParams(),
 		NextPoolId: 1,
+		TakerFeesTracker: &TakerFeesTracker{
+			TakerFeesToStakers:         sdk.NewCoins(),
+			TakerFeesToCommunityPool:   sdk.NewCoins(),
+			HeightAccountingStartsFrom: 0,
+		},
 	}
 }
 

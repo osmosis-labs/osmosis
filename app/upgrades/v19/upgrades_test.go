@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -42,7 +42,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) TestUpgrade() {
-	initialTokenBonded := osmomath.NewInt(100)
+	initialTokenBonded := sdk.DefaultPowerReduction
 	s.Setup()
 
 	// prepare superfluid delegation

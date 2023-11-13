@@ -10,7 +10,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -185,7 +185,7 @@ func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	s.Require().False(found)
 
 	// system under test.
-	v15.RegisterOsmoIonMetadata(ctx, *bankKeeper)
+	v15.RegisterOsmoIonMetadata(ctx, bankKeeper)
 
 	uosmoMetadata, found := s.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	s.Require().True(found)

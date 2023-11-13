@@ -26,9 +26,9 @@ func NewProtoRevDecorator(protoRevDecorator Keeper) ProtoRevDecorator {
 
 // This posthandler will first check if there were any swaps in the tx. If so, collect all of the pools, build routes for cyclic arbitrage,
 // and then execute the optimal route if it exists.
-func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (sdk.Context, error) {
 	if ctx.IsCheckTx() {
-		return next(ctx, tx, simulate)
+		return next(ctx, tx, success, simulate)
 	}
 
 	// Create a cache context to execute the posthandler such that
@@ -46,13 +46,13 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 
 	// Check if the protorev posthandler can be executed
 	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
-		return next(ctx, tx, simulate)
+		return next(ctx, tx, success, simulate)
 	}
 
 	// Extract all of the pools that were swapped in the tx
 	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx)
 	if len(swappedPools) == 0 {
-		return next(ctx, tx, simulate)
+		return next(ctx, tx, success, simulate)
 	}
 
 	// Attempt to execute arbitrage trades
@@ -68,7 +68,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
 	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, success, simulate)
 }
 
 // AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.

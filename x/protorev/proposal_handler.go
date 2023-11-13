@@ -2,7 +2,7 @@ package protorev
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,8 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
-func NewProtoRevProposalHandler(k keeper.Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewProtoRevProposalHandler(k keeper.Keeper) govtypesv1.Handler {
+	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {
 		case *types.SetProtoRevAdminAccountProposal:
 			return HandleSetProtoRevAdminAccount(ctx, k, c)
