@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
