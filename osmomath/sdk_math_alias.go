@@ -35,16 +35,17 @@ var (
 	SmallestDec              = sdkmath.LegacySmallestDec
 
 	// Int
-	NewInt            = sdkmath.NewInt
-	NewIntFromUint64  = sdkmath.NewIntFromUint64
-	NewIntFromBigInt  = sdkmath.NewIntFromBigInt
-	NewIntFromString  = sdkmath.NewIntFromString
-	NewIntWithDecimal = sdkmath.NewIntWithDecimal
-	ZeroInt           = sdkmath.ZeroInt
-	OneInt            = sdkmath.OneInt
-	IntEq             = sdkmath.IntEq
-	MinInt            = sdkmath.MinInt
-	MaxInt            = sdkmath.MaxInt
+	NewInt              = sdkmath.NewInt
+	NewIntFromUint64    = sdkmath.NewIntFromUint64
+	NewIntFromBigInt    = sdkmath.NewIntFromBigInt
+	NewIntFromBigIntMut = sdkmath.NewIntFromBigIntMut
+	NewIntFromString    = sdkmath.NewIntFromString
+	NewIntWithDecimal   = sdkmath.NewIntWithDecimal
+	ZeroInt             = sdkmath.ZeroInt
+	OneInt              = sdkmath.OneInt
+	IntEq               = sdkmath.IntEq
+	MinInt              = sdkmath.MinInt
+	MaxInt              = sdkmath.MaxInt
 
 	// Uint
 	NewUint           = sdkmath.NewUint

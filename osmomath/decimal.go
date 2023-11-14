@@ -248,6 +248,29 @@ func (d BigDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
+// helper TruncateSDKInt
+func (d BigDec) TruncateSDKInt() Int {
+	var precisionFactor *big.Int
+	precisionFactor = precisionFactors[0]
+	// Truncate any additional decimal values that exist due to BigDec's additional precision
+	// This relies on big.Int's Quo function doing floor division
+	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
+	// convert int representation back to SDK Int precision
+	truncatedInt := NewIntFromBigInt(intRepresentation)
+
+	return truncatedInt
+}
+
+// helper TruncateSDKIntMut
+func (d BigDec) TruncateSDKIntMut() Int {
+	var precisionFactor *big.Int
+	precisionFactor = precisionFactors[0]
+	// big.Quo truncates numbers that would have been after decimal point
+	intRepresentation := d.i.Quo(d.i, precisionFactor)
+
+	return NewIntFromBigIntMut(intRepresentation)
+}
+
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
 	copy := d.Clone()
