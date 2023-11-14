@@ -210,7 +210,7 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 
 	// This is to ensure that malicious actor cannot send dust to
 	// a pool address.
-	filteredPoolBalance := poolBalance.FilterDenoms([]string{pool.GetToken0(), pool.GetToken1()})
+	filteredPoolBalance := osmoutils.FilterDenoms(poolBalance, []string{pool.GetToken0(), pool.GetToken1()})
 
 	return filteredPoolBalance, nil
 }

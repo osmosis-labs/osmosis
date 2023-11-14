@@ -596,7 +596,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			name:           "only non-pool coin - does not show up in result",
 			poolId:         defaultPoolId,
 			poolLiquidity:  sdk.NewCoins(nonPoolCool),
-			expectedResult: sdk.Coins(nil),
+			expectedResult: sdk.Coins{},
 		},
 		{
 			name:        "invalid pool id",

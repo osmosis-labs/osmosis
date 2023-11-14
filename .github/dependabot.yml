@@ -15,7 +15,7 @@ updates:
   labels:
     - "A:no-changelog"
   ignore:
-    - dependency-name: "github.com/tendermint/tendermint"
+    - dependency-name: "github.com/cometbft/cometbft"
       update-types: ["version-update:semver-major", "version-update:semver-minor"]
   ignore:
     - dependency-name: "github.com/cosmos/ibc-go"

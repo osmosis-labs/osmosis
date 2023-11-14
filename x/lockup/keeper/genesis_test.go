@@ -4,17 +4,17 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	osmoapp "github.com/osmosis-labs/osmosis/v20/app"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
 var (
@@ -82,7 +82,7 @@ func TestExportGenesis(t *testing.T) {
 	genesis := testGenesis
 	app.LockupKeeper.InitGenesis(ctx, genesis)
 
-	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
+	err := testutil.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
 	_, err = app.LockupKeeper.CreateLock(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)
@@ -137,7 +137,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	appCodec := encodingConfig.Marshaler
 	am := lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 
-	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
+	err := testutil.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
 	_, err = app.LockupKeeper.CreateLock(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)

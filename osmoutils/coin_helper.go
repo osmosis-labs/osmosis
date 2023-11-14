@@ -3,6 +3,7 @@ package osmoutils
 import (
 	"fmt"
 
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -95,6 +96,17 @@ func ConvertCoinsToDecCoins(coins sdk.Coins) sdk.DecCoins {
 	return decCoins
 }
 
+// FilterDenoms returns the coins with only the passed in denoms
+func FilterDenoms(coins sdk.Coins, denoms []string) sdk.Coins {
+	filteredCoins := sdk.NewCoins()
+
+	for _, denom := range denoms {
+		filteredCoins = filteredCoins.Add(sdk.NewCoin(denom, coins.AmountOf(denom)))
+	}
+
+	return filteredCoins
+}
+
 // MergeCoinMaps takes two maps of type map[T]sdk.Coins and merges them together, adding the values of the second map to the first.
 func MergeCoinMaps[T comparable](currentEpochExpectedDistributionsOne map[T]sdk.Coins, poolIDToExpectedDistributionMapOne map[T]sdk.Coins) map[T]sdk.Coins {
 	newMap := map[T]sdk.Coins{}
@@ -113,4 +125,29 @@ func MergeCoinMaps[T comparable](currentEpochExpectedDistributionsOne map[T]sdk.
 		}
 	}
 	return newMap
+}
+
+// Convert sdk.Coins to wasmvmtypes.Coins
+func CWCoinsFromSDKCoins(in sdk.Coins) wasmvmtypes.Coins {
+	var cwCoins wasmvmtypes.Coins
+	for _, coin := range in {
+		cwCoins = append(cwCoins, CWCoinFromSDKCoin(coin))
+	}
+	return cwCoins
+}
+
+// Convert sdk.Coin to wasmvmtypes.Coin
+func CWCoinFromSDKCoin(in sdk.Coin) wasmvmtypes.Coin {
+	return wasmvmtypes.Coin{
+		Denom:  in.GetDenom(),
+		Amount: in.Amount.String(),
+	}
+}
+
+func ConvertCoinArrayToCoins(coinArray []sdk.Coin) sdk.Coins {
+	coins := sdk.Coins{}
+	for _, coin := range coinArray {
+		coins = append(coins, coin)
+	}
+	return coins
 }

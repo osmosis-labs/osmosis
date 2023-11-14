@@ -10,14 +10,15 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
-	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -2259,7 +2260,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Marsh
 	_ = i
 	var l int
 	_ = l
-	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
+	n5, err5 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JoinTime):])
 	if err5 != nil {
 		return 0, err5
 	}
@@ -2777,7 +2778,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Size(
 	n += 1 + l + sovTx(uint64(l))
 	l = m.LiquidityCreated.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JoinTime)
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -4579,7 +4580,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Unmar
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -42,6 +42,9 @@ message GenesisState {
   Params params = 2 [ (gogoproto.nullable) = false ];
   // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+
+  // KVStore state
+  TakerFeesTracker taker_fees_tracker = 4;
 }
 
 // TakerFeeParams consolidates the taker fee parameters for the poolmanager.
@@ -116,4 +119,17 @@ message TakerFeeDistributionPercentage {
     (gogoproto.moretags) = "yaml:\"community_pool\"",
     (gogoproto.nullable) = false
   ];
+}
+
+message TakerFeesTracker {
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  int64 height_accounting_starts_from = 3
+      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }
