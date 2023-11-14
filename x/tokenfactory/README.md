@@ -18,11 +18,11 @@ created denom. Once a denom is created, the original creator is given
   of the asset.
 
 ## Bank hooks (`TrackBeforeSend`, `BlockBeforeSend`)
-In our fork of cosmos-sdk (https://github.com/osmosis-labs/cosmos-sdk), we have added two hooks: TrackBeforeSend and BlockBeforeSend.
+In our fork of [cosmos-sdk](https://github.com/osmosis-labs/cosmos-sdk), we have added two hooks: TrackBeforeSend and BlockBeforeSend.
 
 The APIs for TrackBeforeSend and BlockBeforeSend are as follows:
 
-```
+```go
 TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) 
 BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error 
 ```
@@ -31,7 +31,7 @@ Note that both hooks take the same arguments, but BlockBeforeSend returns and tr
 
 TrackBeforeSend and BlockBeforeSend are both triggered before any send action occurs, specifically before we call sendCoins, the internal API for transferring coins.
 
-```
+```go
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	// BlockBeforeSend hook should always be called before the TrackBeforeSend hook.
 	err := k.BlockBeforeSend(ctx, fromAddr, toAddr, amt)
@@ -45,7 +45,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 ```
 Note that for Module to Module send, the BlockBeforeSend hooks are not triggered, as we do not want to block module-to-module sends in any case.
 
-Please see https://github.com/osmosis-labs/cosmos-sdk/pull/421 for more implementation details.
+Please see [PR421](https://github.com/osmosis-labs/cosmos-sdk/pull/421) for more implementation details.
 
 
 ### Token factory integration with Bank Hooks
