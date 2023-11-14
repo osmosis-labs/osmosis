@@ -3,6 +3,7 @@ package poolmanager_test
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -145,12 +146,18 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			if tc.exactIn {
 				expectedTotalTakerFee = defaultAmount.Sub(tc.expectedResult.Amount)
 			} else {
-				expectedTotalTakerFee = tc.expectedResult.Amount.Sub(defaultAmount).Add(osmomath.NewInt(1))
+				expectedTotalTakerFee = tc.expectedResult.Amount.Sub(defaultAmount)
 			}
-
 			expectedTakerFeeToStakersAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
 			expectedTakerFeeToCommunityPoolAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
-			expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToStakersAmount.TruncateInt())
+
+			roundup := func(d sdkmath.LegacyDec) sdkmath.Int {
+				if d.Sub(sdkmath.LegacyNewDecFromInt(d.TruncateInt())).GT(sdkmath.LegacyZeroDec()) {
+					return d.TruncateInt().Add(sdkmath.NewInt(1))
+				}
+				return d.TruncateInt()
+			}
+			expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, roundup(expectedTakerFeeToStakersAmount))
 			expectedTakerFeeToCommunityPool := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())
 
 			// Validate results.
