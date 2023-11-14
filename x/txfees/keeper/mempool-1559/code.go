@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -65,6 +66,7 @@ type EipState struct {
 	totalGasWantedThisBlock int64
 	BackupFilePath          string
 	CurBaseFee              osmomath.Dec `json:"cur_base_fee"`
+	mu                      sync.Mutex   // Mutex to control access to the backup file
 }
 
 // CurEipState is a global variable used in the BeginBlock, EndBlock and
@@ -151,6 +153,9 @@ func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 // tryPersist persists the eip1559 state to disk in the form of a json file
 // we do this in case a node stops and it can continue functioning as normal
 func (e *EipState) tryPersist() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	bz, err := json.Marshal(e)
 	if err != nil {
 		fmt.Println("Error marshalling eip1559 state", err)
@@ -167,6 +172,9 @@ func (e *EipState) tryPersist() {
 // tryLoad reads eip1559 state from disk and initializes the CurEipState to
 // the previous state when a node is restarted
 func (e *EipState) tryLoad() osmomath.Dec {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	bz, err := os.ReadFile(e.BackupFilePath)
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)
