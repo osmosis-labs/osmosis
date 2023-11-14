@@ -77,6 +77,7 @@ var CurEipState = EipState{
 	totalGasWantedThisBlock: 0,
 	BackupFilePath:          "",
 	CurBaseFee:              sdk.NewDec(0),
+	mu:                      sync.Mutex{},
 }
 
 // startBlock is executed at the start of each block and is responsible for reseting the state
