@@ -139,31 +139,14 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			}
 			s.Require().NoError(err)
 
-			if tc.exactIn {
-				params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-				expectedTotalTakerFee := defaultAmount.Sub(tc.expectedResult.Amount)
-				expectedTakerFeeToStakersAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
-				expectedTakerFeeToCommunityPoolAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
-				expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToStakersAmount.TruncateInt())
-				expectedTakerFeeToCommunityPool := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())
-
-				// Validate results.
-				s.Require().Equal(tc.expectedResult.String(), tokenInAfterTakerFee.String())
-				expectedTakerFeeTrackerForStakersAfter := takerFeeTrackerForStakersBefore.Add(expectedTakerFeeToStakers)
-				if expectedTakerFeeTrackerForStakersAfter.Empty() {
-					expectedTakerFeeTrackerForStakersAfter = sdk.Coins(nil)
-				}
-				s.Require().Equal(expectedTakerFeeTrackerForStakersAfter, takerFeeTrackerForStakersAfter)
-				expectedTakerFeeTrackerForCommunityPoolAfter := takerFeeTrackerForCommunityPoolBefore.Add(expectedTakerFeeToCommunityPool)
-				if expectedTakerFeeTrackerForCommunityPoolAfter.Empty() {
-					expectedTakerFeeTrackerForCommunityPoolAfter = sdk.Coins(nil)
-				}
-				s.Require().Equal(expectedTakerFeeTrackerForCommunityPoolAfter, takerFeeTrackerForCommunityPoolAfter)
-				return
-			}
-
 			params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-			expectedTotalTakerFee := tc.expectedResult.Amount.Sub(defaultAmount).Add(osmomath.NewInt(1))
+
+			var expectedTotalTakerFee osmomath.Int
+			if tc.exactIn {
+				expectedTotalTakerFee = defaultAmount.Sub(tc.expectedResult.Amount)
+			} else {
+				expectedTotalTakerFee = tc.expectedResult.Amount.Sub(defaultAmount).Add(osmomath.NewInt(1))
+			}
 
 			expectedTakerFeeToStakersAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
 			expectedTakerFeeToCommunityPoolAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
