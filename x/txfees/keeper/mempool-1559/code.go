@@ -83,6 +83,9 @@ var CurEipState = EipState{
 // startBlock is executed at the start of each block and is responsible for reseting the state
 // of the CurBaseFee when the node reaches the reset interval
 func (e *EipState) startBlock(height int64) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
 
@@ -100,6 +103,9 @@ func (e *EipState) startBlock(height int64) {
 
 // deliverTxCode runs on every transaction in the feedecorator ante handler and sums the gas of each transaction
 func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if ctx.BlockHeight() != e.lastBlockHeight {
 		ctx.Logger().Error("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
 	}
@@ -114,6 +120,9 @@ func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 //
 // updateBaseFee runs at the end of every block
 func (e *EipState) updateBaseFee(height int64) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if height != e.lastBlockHeight {
 		fmt.Println("Something is off here? height != e.lastBlockHeight", height, e.lastBlockHeight)
 	}
@@ -142,12 +151,18 @@ func (e *EipState) updateBaseFee(height int64) {
 // GetCurBaseFee returns a clone of the CurBaseFee to avoid overwriting the initial value in
 // the EipState, we use this in the AnteHandler to Check transactions
 func (e *EipState) GetCurBaseFee() osmomath.Dec {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	return e.CurBaseFee.Clone()
 }
 
 // GetCurRecheckBaseFee returns a clone of the CurBaseFee / RecheckFeeConstant to account for
 // rechecked transactions in the feedecorator ante handler
 func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
 }
 
