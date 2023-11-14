@@ -1,10 +1,12 @@
 package mempool1559
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -145,7 +147,10 @@ func (e *EipState) updateBaseFee(height int64) {
 		e.CurBaseFee = MaxBaseFee.Clone()
 	}
 
-	go e.tryPersist()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30) // Adjust the timeout as needed
+	defer cancel()
+
+	go e.tryPersist(ctx)
 }
 
 // GetCurBaseFee returns a clone of the CurBaseFee to avoid overwriting the initial value in
@@ -168,21 +173,28 @@ func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 
 // tryPersist persists the eip1559 state to disk in the form of a json file
 // we do this in case a node stops and it can continue functioning as normal
-func (e *EipState) tryPersist() {
+func (e *EipState) tryPersist(ctx context.Context) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	bz, err := json.Marshal(e)
-	if err != nil {
-		fmt.Println("Error marshalling eip1559 state", err)
+	select {
+	case <-ctx.Done():
+		fmt.Println("tryPersist canceled due to context deadline")
 		return
+	default:
+		bz, err := json.Marshal(e)
+		if err != nil {
+			fmt.Println("Error marshalling eip1559 state", err)
+			return
+		}
+
+		err = os.WriteFile(e.BackupFilePath, bz, 0644)
+		if err != nil {
+			fmt.Println("Error writing eip1559 state", err)
+			return
+		}
 	}
 
-	err = os.WriteFile(e.BackupFilePath, bz, 0644)
-	if err != nil {
-		fmt.Println("Error writing eip1559 state", err)
-		return
-	}
 }
 
 // tryLoad reads eip1559 state from disk and initializes the CurEipState to
