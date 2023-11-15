@@ -16,6 +16,8 @@ import (
 // Define a structure to represent the graph
 type Graph map[string]map[string][]uint64
 
+var tempGraph Graph
+
 // Function to add an edge to the graph
 func (g Graph) AddEdge(start, end string, poolID uint64) {
 	if g[start] == nil {
@@ -77,14 +79,25 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 		}
 	}
 
-	k.routeMap = graph
-	fmt.Println("routeMap", k.routeMap)
+	// k.routeMap = graph
+	// fmt.Println("routeMap", k.routeMap)
+
+	tempGraph = graph
 	return nil
 }
 
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
+	// fmt.Println("chceking route map")
+	// if k.routeMap == nil {
+	// 	fmt.Println("setting route map")
+	// 	err := k.SetDenomPairRoutes(ctx)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
 	fmt.Println("chceking route map")
-	if k.routeMap == nil {
+	if tempGraph == nil {
 		fmt.Println("setting route map")
 		err := k.SetDenomPairRoutes(ctx)
 		if err != nil {
@@ -93,12 +106,12 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 	}
 
 	// Get all direct routes
-	directPoolIDs, _ := HasDirectRoute(k.routeMap, inputDenom, outputDenom)
+	directPoolIDs, _ := HasDirectRoute(tempGraph, inputDenom, outputDenom)
 
 	fmt.Println("directPoolIDs", directPoolIDs)
 
 	// Get all two-hop routes
-	_, twoHopPoolIDs := FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
+	_, twoHopPoolIDs := FindTwoHopRoute(tempGraph, inputDenom, outputDenom)
 
 	fmt.Println("twoHopPoolIDs", twoHopPoolIDs)
 
