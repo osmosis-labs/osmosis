@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryGetBech32PrefixFromChainNameResponse",
+  "type": "object",
+  "required": [
+    "bech32_prefix"
+  ],
+  "properties": {
+    "bech32_prefix": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

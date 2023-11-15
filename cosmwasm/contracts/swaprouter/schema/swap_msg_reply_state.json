@@ -36,6 +36,7 @@
       }
     },
     "MsgSwapExactAmountIn": {
+      "description": "===================== MsgSwapExactAmountIn",
       "type": "object",
       "required": [
         "routes",
@@ -68,7 +69,6 @@
       }
     },
     "SwapAmountInRoute": {
-      "description": "===================== MsgSwapExactAmountIn",
       "type": "object",
       "required": [
         "pool_id",

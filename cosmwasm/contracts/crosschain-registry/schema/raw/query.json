@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryMsg",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "get_address_from_alias"
+      ],
+      "properties": {
+        "get_address_from_alias": {
+          "type": "object",
+          "required": [
+            "contract_alias"
+          ],
+          "properties": {
+            "contract_alias": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_channel_from_chain_pair"
+      ],
+      "properties": {
+        "get_channel_from_chain_pair": {
+          "type": "object",
+          "required": [
+            "destination_chain",
+            "source_chain"
+          ],
+          "properties": {
+            "destination_chain": {
+              "type": "string"
+            },
+            "source_chain": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_destination_chain_from_source_chain_via_channel"
+      ],
+      "properties": {
+        "get_destination_chain_from_source_chain_via_channel": {
+          "type": "object",
+          "required": [
+            "on_chain",
+            "via_channel"
+          ],
+          "properties": {
+            "on_chain": {
+              "type": "string"
+            },
+            "via_channel": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_bech32_prefix_from_chain_name"
+      ],
+      "properties": {
+        "get_bech32_prefix_from_chain_name": {
+          "type": "object",
+          "required": [
+            "chain_name"
+          ],
+          "properties": {
+            "chain_name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_chain_name_from_bech32_prefix"
+      ],
+      "properties": {
+        "get_chain_name_from_bech32_prefix": {
+          "type": "object",
+          "required": [
+            "prefix"
+          ],
+          "properties": {
+            "prefix": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_denom_trace"
+      ],
+      "properties": {
+        "get_denom_trace": {
+          "type": "object",
+          "required": [
+            "ibc_denom"
+          ],
+          "properties": {
+            "ibc_denom": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "has_packet_forwarding"
+      ],
+      "properties": {
+        "has_packet_forwarding": {
+          "type": "object",
+          "required": [
+            "chain"
+          ],
+          "properties": {
+            "chain": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_alias_for_denom_path"
+      ],
+      "properties": {
+        "get_alias_for_denom_path": {
+          "type": "object",
+          "required": [
+            "denom_path"
+          ],
+          "properties": {
+            "denom_path": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_denom_path_for_alias"
+      ],
+      "properties": {
+        "get_denom_path_for_alias": {
+          "type": "object",
+          "required": [
+            "alias"
+          ],
+          "properties": {
+            "alias": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

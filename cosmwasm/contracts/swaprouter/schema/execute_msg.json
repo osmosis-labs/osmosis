@@ -76,6 +76,15 @@
             "output_denom": {
               "type": "string"
             },
+            "route": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "$ref": "#/definitions/SwapAmountInRoute"
+              }
+            },
             "slippage": {
               "$ref": "#/definitions/Slippage"
             }
@@ -152,7 +161,6 @@
       ]
     },
     "SwapAmountInRoute": {
-      "description": "===================== MsgSwapExactAmountIn",
       "type": "object",
       "required": [
         "pool_id",

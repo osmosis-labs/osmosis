@@ -16,7 +16,6 @@
   "additionalProperties": false,
   "definitions": {
     "SwapAmountInRoute": {
-      "description": "===================== MsgSwapExactAmountIn",
       "type": "object",
       "required": [
         "pool_id",
