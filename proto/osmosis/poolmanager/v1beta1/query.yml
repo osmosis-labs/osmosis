@@ -88,3 +88,8 @@ queries:
       query_func: "k.GetTradingPairTakerFee"
     cli:
       cmd: "TradingPairTakerFee"
+  DenomPairRoutes:
+    proto_wrapper:
+      query_func: "k.GetDenomPairRoute"
+    cli:
+      cmd: "DenomPairRoutes"

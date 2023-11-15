@@ -33,6 +33,8 @@ type Keeper struct {
 	poolModules []types.PoolModuleI
 
 	paramSpace paramtypes.Subspace
+
+	routeMap map[string]map[string][]uint64
 }
 
 func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
@@ -65,6 +67,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper
 		poolModules:         routesList,
 		stakingKeeper:       stakingKeeper,
 		protorevKeeper:      protorevKeeper,
+		routeMap:            nil,
 	}
 }
 

@@ -32,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdDenomPairRoutes)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -201,4 +202,14 @@ func GetCmdEstimateTradeBasedOnPriceImpact() (
 		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,
 		QueryFnName: "EstimateTradeBasedOnPriceImpact",
 	}, &queryproto.EstimateTradeBasedOnPriceImpactRequest{}
+}
+
+func GetCmdDenomPairRoutes() (
+	*osmocli.QueryDescriptor, *queryproto.DenomPairRoutesRequest,
+) {
+	return &osmocli.QueryDescriptor{
+		Use:         "denom-pair-routes",
+		Short:       "Query a basic route to get from denom A to denom B",
+		QueryFnName: "DenomPairRoutes",
+	}, &queryproto.DenomPairRoutesRequest{}
 }

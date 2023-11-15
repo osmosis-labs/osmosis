@@ -171,6 +171,16 @@ func (q Querier) EstimateSinglePoolSwapExactAmountIn(grpcCtx context.Context,
 	return q.Q.EstimateSinglePoolSwapExactAmountIn(ctx, *req)
 }
 
+func (q Querier) DenomPairRoutes(grpcCtx context.Context,
+	req *queryproto.DenomPairRoutesRequest,
+) (*queryproto.DenomPairRoutesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.DenomPairRoutes(ctx, *req)
+}
+
 func (q Querier) AllPools(grpcCtx context.Context,
 	req *queryproto.AllPoolsRequest,
 ) (*queryproto.AllPoolsResponse, error) {
