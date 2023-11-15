@@ -69,9 +69,9 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 			continue
 		}
 		tokens := pool.GetPoolDenoms(ctx)
-		fmt.Println("tokens", tokens)
+		// fmt.Println("tokens", tokens)
 		poolID := pool.GetId()
-		fmt.Println("poolID", poolID)
+		// fmt.Println("poolID", poolID)
 		// Create edges for all possible combinations of tokens
 		for i := 0; i < len(tokens); i++ {
 			for j := i + 1; j < len(tokens); j++ {
@@ -82,7 +82,7 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	}
 
 	k.routeMap = graph
-	fmt.Println("routeMap", k.routeMap)
+	// fmt.Println("routeMap", k.routeMap)
 	return nil
 }
 
