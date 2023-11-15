@@ -111,31 +111,57 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 
 	// Check liquidity for all direct routes
 	for _, poolID := range directPoolIDs {
-		liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, outputDenom)
+		pool, err := k.GetPool(ctx, poolID)
 		if err != nil {
 			return nil, err
 		}
+		poolDenoms := pool.GetPoolDenoms(ctx)
+		liqInOsmo := osmomath.ZeroInt()
+		for _, denom := range poolDenoms {
+			liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
+			if err != nil {
+				return nil, err
+			}
+			liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+			if err != nil {
+				return nil, err
+			}
+			liqInOsmo = liqInOsmoInternal.Add(liquidity)
+		}
 		routeKey := fmt.Sprintf("%v", poolID)
 		fmt.Println("routeKey", routeKey)
-		routeLiquidity[routeKey] = liquidity
+		routeLiquidity[routeKey] = liqInOsmo
 	}
 
 	// Check liquidity for all two-hop routes
 	for _, poolIDs := range twoHopPoolIDs {
-		totalLiquidity := osmomath.ZeroInt()
+		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", poolIDs)
 		for _, poolID := range poolIDs {
-			liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, outputDenom)
+			pool, err := k.GetPool(ctx, poolID)
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("liquidity", liquidity)
+			poolDenoms := pool.GetPoolDenoms(ctx)
+			liqInOsmo := osmomath.ZeroInt()
+			for _, denom := range poolDenoms {
+				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
+				if err != nil {
+					return nil, err
+				}
+				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+				if err != nil {
+					return nil, err
+				}
+				liqInOsmo = liqInOsmoInternal.Add(liquidity)
+			}
+			fmt.Println("liqInOsmo", liqInOsmo)
 			fmt.Println("poolID", poolID)
 			fmt.Println("outputDenom", outputDenom)
-			totalLiquidity = totalLiquidity.Add(liquidity)
+			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo)
 		}
 		fmt.Println("routeKey", routeKey)
-		routeLiquidity[routeKey] = totalLiquidity
+		routeLiquidity[routeKey] = totalLiquidityInOsmo
 	}
 
 	// Find the route with the highest liquidity
@@ -171,6 +197,87 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 	// Return the route with the highest liquidity
 	fmt.Printf("Route Selected: %v via Pool IDs: %v\n", strings.Join(strings.Split(bestRouteKey, " "), " -> "), bestRoute)
 	return bestRoute, nil
+}
+
+func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
+	fmt.Println("chceking route map")
+	if k.routeMap == nil {
+		fmt.Println("setting route map")
+		err := k.SetDenomPairRoutes(ctx)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	// Get all direct routes
+	directPoolIDs, _ := HasDirectRoute(k.routeMap, inputDenom, "uosmo")
+
+	// Check liquidity for all direct routes
+	routeLiquidity := make(map[string]osmomath.Int)
+	for _, poolID := range directPoolIDs {
+		liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, "uosmo")
+		if err != nil {
+			return 0, err
+		}
+		routeKey := fmt.Sprintf("%v", poolID)
+		fmt.Println("routeKey", routeKey)
+		routeLiquidity[routeKey] = liquidity
+	}
+
+	// Find the route with the highest liquidity
+	fmt.Println("routeLiquidity", routeLiquidity)
+	var bestRouteKey string
+	maxLiquidity := osmomath.ZeroInt()
+	for routeKey, liquidity := range routeLiquidity {
+		if liquidity.GTE(maxLiquidity) {
+			bestRouteKey = routeKey
+			maxLiquidity = liquidity
+		}
+	}
+
+	if bestRouteKey == "" {
+		fmt.Println("No suitable route found.")
+		return 0, fmt.Errorf("no route found with sufficient liquidity")
+	}
+
+	// Convert the best route key back to []uint64
+	var bestRoute []uint64
+	cleanedRouteKey := strings.Trim(bestRouteKey, "[]")
+	idStrs := strings.Split(cleanedRouteKey, " ")
+
+	fmt.Println("idStrs", idStrs)
+	for _, idStr := range idStrs {
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing pool ID: %v", err)
+		}
+		bestRoute = append(bestRoute, id)
+	}
+
+	// Return the route with the highest liquidity
+	fmt.Printf("Route Selected: %v via Pool IDs: %v\n", strings.Join(strings.Split(bestRouteKey, " "), " -> "), bestRoute)
+	return bestRoute[0], nil
+}
+
+func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int) (osmomath.Int, error) {
+	if inputDenom == "uosmo" {
+		return amount, nil
+	}
+	// start by getting the route from the input denom to uosmo
+	route, err := k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom)
+	if err != nil {
+		return osmomath.ZeroInt(), nil
+	}
+
+	// spot price of uosmo to input denom
+	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, route, "uosmo", inputDenom)
+	if err != nil {
+		return osmomath.ZeroInt(), err
+	}
+
+	// convert the input denom to uosmo
+	uosmoAmount := osmomath.NewBigDec(amount.Int64()).Mul(osmoPerInputToken)
+	return uosmoAmount.Dec().TruncateInt(), nil
 }
 
 func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDenom string) (osmomath.Int, error) {
