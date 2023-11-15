@@ -1,3 +1,5 @@
+//go:build !norace
+
 package concentrated_liquidity_test
 
 import (
