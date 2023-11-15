@@ -81,7 +81,9 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 }
 
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
+	fmt.Println("chceking route map")
 	if k.routeMap == nil {
+		fmt.Println("setting route map")
 		err := k.SetDenomPairRoutes(ctx)
 		if err != nil {
 			return nil, err
