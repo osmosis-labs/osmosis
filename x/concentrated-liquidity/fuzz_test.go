@@ -35,12 +35,6 @@ func (e swapAmountsMismatchErr) Error() string {
 	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
 }
 
-type positionAndLiquidity struct {
-	positionId   uint64
-	liquidity    osmomath.Dec
-	accountIndex int
-}
-
 func TestFuzz_Many(t *testing.T) {
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 10)
 }
