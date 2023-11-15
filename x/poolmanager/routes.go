@@ -53,11 +53,11 @@ func FindTwoHopRoute(g Graph, start, end string) ([][]string, [][]uint64) {
 	return routes, routePoolIDs
 }
 
-func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (Graph, error) {
+func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	// Get all the pools
 	pools, err := k.AllPools(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	fmt.Println("pool length", len(pools))
 
@@ -67,7 +67,9 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (Graph, error) {
 	// Iterate through the pools
 	for _, pool := range pools {
 		tokens := pool.GetPoolDenoms(ctx)
+		fmt.Println("tokens", tokens)
 		poolID := pool.GetId()
+		fmt.Println("poolID", poolID)
 		// Create edges for all possible combinations of tokens
 		for i := 0; i < len(tokens); i++ {
 			for j := i + 1; j < len(tokens); j++ {
@@ -79,10 +81,9 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (Graph, error) {
 
 	// k.routeMap = graph
 	// fmt.Println("routeMap", k.routeMap)
-	fmt.Println("test")
 
-	//tempGraph = graph
-	return graph, nil
+	tempGraph = graph
+	return nil
 }
 
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
@@ -94,21 +95,14 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 	// 		return nil, err
 	// 	}
 	// }
-	// var tempGraph Graph
-	// k.
 
-	// fmt.Println("chceking route map")
-	// if tempGraph == nil {
-	// 	fmt.Println("setting route map")
-	// 	err := k.SetDenomPairRoutes(ctx)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
-	tempGraph, err := k.SetDenomPairRoutes(ctx)
-	if err != nil {
-		return nil, err
+	fmt.Println("chceking route map")
+	if tempGraph == nil {
+		fmt.Println("setting route map")
+		err := k.SetDenomPairRoutes(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get all direct routes
