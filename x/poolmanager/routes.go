@@ -276,8 +276,8 @@ func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmo
 	}
 
 	// convert the input denom to uosmo
-	uosmoAmount := osmomath.NewBigDec(amount.Int64()).Mul(osmoPerInputToken)
-	return uosmoAmount.Dec().TruncateInt(), nil
+	uosmoAmount := amount.ToLegacyDec().Mul(osmoPerInputToken.Dec())
+	return uosmoAmount.TruncateInt(), nil
 }
 
 func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDenom string) (osmomath.Int, error) {
