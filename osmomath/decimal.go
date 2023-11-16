@@ -248,7 +248,8 @@ func (d BigDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
-// helper TruncateSDKInt
+// TruncateSDKInt() returns the sdkmath.Int representation of a BigDec.
+// Values in any additional decimal places are truncated.
 func (d BigDec) TruncateSDKInt() Int {
 	var precisionFactor *big.Int
 	precisionFactor = precisionFactors[0]
@@ -261,7 +262,8 @@ func (d BigDec) TruncateSDKInt() Int {
 	return truncatedInt
 }
 
-// helper TruncateSDKIntMut
+// TruncateSDKIntMut() returns the sdkmath.Int representation of a BigDec,mutative the input.
+// Values in any additional decimal places are truncated.
 func (d BigDec) TruncateSDKIntMut() Int {
 	var precisionFactor *big.Int
 	precisionFactor = precisionFactors[0]
