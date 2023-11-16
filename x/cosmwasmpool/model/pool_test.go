@@ -1,11 +1,13 @@
 package model_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 )
 
@@ -56,4 +58,19 @@ func (s *CosmWasmPoolSuite) TestSpotPrice() {
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedSpotPrice, actualSpotPrice)
+}
+
+func (s *CosmWasmPoolSuite) TestGetPoolDenoms() {
+	// var (
+	// 	expectedSwapFee = osmomath.ZeroDec()
+	// )
+
+	pool := s.PrepareCosmWasmPool()
+
+	poolLiquidity := pool.GetTotalPoolLiquidity(s.Ctx)
+	fmt.Println("poolLiquidity", poolLiquidity)
+
+	fmt.Println(osmoutils.CoinsDenoms(poolLiquidity))
+
+	// s.Require().Equal(expectedSwapFee, actualSwapFee)
 }

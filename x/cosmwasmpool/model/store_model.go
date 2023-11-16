@@ -99,7 +99,7 @@ func (p CosmWasmPool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 }
 
 // GetPoolDenoms implements types.PoolI.
-func (p *CosmWasmPool) GetPoolDenoms(ctx sdk.Context) []string {
+func (p CosmWasmPool) GetPoolDenoms(ctx sdk.Context) []string {
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
 	return osmoutils.CoinsDenoms(poolLiquidity)
 }
