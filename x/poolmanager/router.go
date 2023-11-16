@@ -21,7 +21,8 @@ import (
 
 var (
 	// 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
-	intMaxValue   = osmomath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+	intMaxValue = osmomath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+	// lessPoolIFunc is used for sorting pools by poolID
 	lessPoolIFunc = func(i, j types.PoolI) bool {
 		return i.GetId() < j.GetId()
 	}
