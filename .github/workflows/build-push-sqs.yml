@@ -1,17 +1,18 @@
 # This workflow pushes new docker images to osmolabs/sqs-dev on these events:
 # 2. Every new commit to the roman/sqs-poc-v20 branch,
-# tag with: sqs-v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+,
+# tag with: sqs-v[0-9]+.[0-9]+.[0-9],
 # branch push with sqs-v[0-9]+.x
 # `osmolabs/sqs-dev:{SHORT_SHA}-$(date +%s)` is pushed.
-# All the images above have support for linux/amd64 (not linux/arm64).
+# All the images above have support for linux/amd64 (not linux/arm64)
 # All the images are based on an alpine image for easy debugging.
 
 name: Build and Push SQS Images
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - sqs-v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
+      - sqs-v[0-9]+.[0-9]+.[0-9]
     branches:
       - roman/sqs-poc-v20
       - sqs-v[0-9]+.x
@@ -59,7 +60,7 @@ jobs:
           echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Create Docker Image Tag for roman/sqs-poc-v20 branch
-        if: github.ref == 'roman/sqs-poc-v20'
+        if: github.ref == 'refs/heads/roman/sqs-poc-v20'
         run: |
           SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
           echo "DOCKER_IMAGE_TAG=${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
@@ -79,6 +80,7 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
           tags: |
             ${{ env.SQS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+            ${{ env.SQS_DEV_IMAGE_REPOSITORY }}:sqs-latest
 
       - name: Build and Push Docker Images Prod
         uses: docker/build-push-action@v5
@@ -94,3 +96,4 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
           tags: |
             ${{ env.SQS_PROD_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+            ${{ env.SQS_PROD_IMAGE_REPOSITORY }}:sqs-latest
