@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	OneToOnePrecision           = uosmoPrecision
-	SpotPriceErrorFmtStr        = spotPriceErrorFmtStr
-	NoTokenPrecisionErrorFmtStr = noTokenPrecisionErrorFmtStr
+	OneToOnePrecision             = uosmoPrecision
+	SpotPriceErrorFmtStr          = spotPriceErrorFmtStr
+	NoTokenPrecisionErrorFmtStr   = noTokenPrecisionErrorFmtStr
+	RouteIngestDisablePlaceholder = routeIngestDisablePlaceholder
 )
 
 type (

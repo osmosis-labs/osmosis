@@ -23,13 +23,11 @@ type MockRoutablePool struct {
 	SpreadFactor         osmomath.Dec
 }
 
+var DefaultSpreadFactor = osmomath.MustNewDecFromStr("0.005")
+
 var (
 	_ domain.PoolI        = &MockRoutablePool{}
 	_ domain.RoutablePool = &MockRoutablePool{}
-)
-
-var (
-	defaultSpreadFactor = osmomath.MustNewDecFromStr("0.005")
 )
 
 // GetUnderlyingPool implements routerusecase.RoutablePool.
@@ -42,7 +40,7 @@ func (mp *MockRoutablePool) GetSQSPoolModel() domain.SQSPool {
 	return domain.SQSPool{
 		Balances:             mp.Balances,
 		TotalValueLockedUSDC: mp.TotalValueLockedUSDC,
-		SpreadFactor:         defaultSpreadFactor,
+		SpreadFactor:         DefaultSpreadFactor,
 	}
 }
 
@@ -149,5 +147,11 @@ func WithTokenOutDenom(mockPool *MockRoutablePool, tokenOutDenom string) *MockRo
 func WithChainPoolModel(mockPool *MockRoutablePool, chainPool poolmanagertypes.PoolI) *MockRoutablePool {
 	newPool := deepCopyPool(mockPool)
 	newPool.ChainPoolModel = chainPool
+	return newPool
+}
+
+func WithTakerFee(mockPool *MockRoutablePool, takerFee osmomath.Dec) *MockRoutablePool {
+	newPool := deepCopyPool(mockPool)
+	newPool.TakerFee = takerFee
 	return newPool
 }

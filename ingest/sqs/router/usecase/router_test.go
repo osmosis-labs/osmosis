@@ -6,15 +6,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting"
 )
 
 type RouterTestSuite struct {
-	apptesting.ConcentratedKeeperTestHelper
+	routertesting.RouterTestHelper
 }
 
 func TestRouterTestSuite(t *testing.T) {
@@ -25,21 +25,21 @@ const dummyTotalValueLockedErrorStr = "total value locked error string"
 
 var (
 	// Concentrated liquidity constants
-	ETH    = apptesting.ETH
-	USDC   = apptesting.USDC
+	ETH    = routertesting.ETH
+	USDC   = routertesting.USDC
 	USDT   = "usdt"
 	Denom0 = ETH
 	Denom1 = USDC
 
-	DefaultCurrentTick = apptesting.DefaultCurrTick
+	DefaultCurrentTick = routertesting.DefaultCurrentTick
 
-	DefaultAmt0 = apptesting.DefaultAmt0
-	DefaultAmt1 = apptesting.DefaultAmt1
+	DefaultAmt0 = routertesting.DefaultAmt0
+	DefaultAmt1 = routertesting.DefaultAmt1
 
-	DefaultCoin0 = apptesting.DefaultCoin0
-	DefaultCoin1 = apptesting.DefaultCoin1
+	DefaultCoin0 = routertesting.DefaultCoin0
+	DefaultCoin1 = routertesting.DefaultCoin1
 
-	DefaultLiquidityAmt = apptesting.DefaultLiquidityAmt
+	DefaultLiquidityAmt = routertesting.DefaultLiquidityAmt
 
 	// router specific variables
 	defaultTickModel = &domain.TickModel{
@@ -171,20 +171,22 @@ func (s *RouterTestSuite) TestNewRouter() {
 			// Transmuter pool is first due to no slippage swaps
 			allPool.CosmWasmPoolID,
 
+			allPool.ConcentratedPoolID,
+
+			thirdBalancerPoolID, // non-preferred pool ID with TVL error flag set
+
 			secondBalancerPoolPoolID, // preferred pool ID with TVL error flag set
 
 			// Balancer is above concentrated pool due to higher TVL
 			allPool.BalancerPoolID,
-			allPool.ConcentratedPoolID,
-
-			thirdBalancerPoolID, // non-preferred pool ID with TVL error flag set
 		}
 	)
 
 	takerFees := s.getTakerFeeMapForAllPoolTokenPairs(defaultAllPools)
 
 	// System under test
-	router := routerusecase.NewRouter(preferredPoolIDs, defaultAllPools, takerFees, maxHops, maxRoutes, maxSplitIterations, minOsmoLiquidity, logger)
+	router := routerusecase.NewRouter(preferredPoolIDs, takerFees, maxHops, maxRoutes, maxSplitIterations, minOsmoLiquidity, logger)
+	router = routerusecase.WithSortedPools(router, defaultAllPools)
 
 	// Assert
 	s.Require().Equal(maxHops, router.GetMaxHops())
@@ -219,4 +221,8 @@ func (s *RouterTestSuite) getTakerFeeMapForAllPoolTokenPairs(pools []domain.Pool
 	}
 
 	return pairs
+}
+
+func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
+	return routertesting.WithRoutePools(r, pools)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -118,7 +119,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 			// Route 1
 			&usecase.RouteWithOutAmount{
-				Route: &usecase.RouteImpl{
+				Route: &route.RouteImpl{
 					Pools: []domain.RoutablePool{
 						pools.NewRoutablePool(
 							domain.NewPool(poolOne, poolOne.GetSpreadFactor(sdk.Context{}), poolOneBalances),
@@ -139,7 +140,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 			// Route 2
 			&usecase.RouteWithOutAmount{
-				Route: &usecase.RouteImpl{
+				Route: &route.RouteImpl{
 					Pools: []domain.RoutablePool{
 						pools.NewRoutablePool(
 							domain.NewPool(poolThree, poolThree.GetSpreadFactor(sdk.Context{}), poolThreeBalances),
@@ -160,7 +161,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 		// Route 1
 		&usecase.RouteWithOutAmount{
-			Route: &usecase.RouteImpl{
+			Route: &route.RouteImpl{
 				Pools: []domain.RoutablePool{
 					pools.NewRoutableResultPool(
 						poolIDOne,
@@ -187,7 +188,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 		// Route 2
 		&usecase.RouteWithOutAmount{
-			Route: &usecase.RouteImpl{
+			Route: &route.RouteImpl{
 				Pools: []domain.RoutablePool{
 					pools.NewRoutableResultPool(
 						poolIDThree,
@@ -239,7 +240,7 @@ func (s *RouterTestSuite) validateRoutes(expectedRoutes []domain.SplitRoute, act
 		actualRoute := actualRoutes[i]
 
 		// Validate pools
-		s.validateRoutePools(expectedRoute.GetPools(), actualRoute.GetPools())
+		s.ValidateRoutePools(expectedRoute.GetPools(), actualRoute.GetPools())
 
 		// Validate in amount
 		s.Require().Equal(expectedRoute.GetAmountIn().String(), actualRoute.GetAmountIn().String())

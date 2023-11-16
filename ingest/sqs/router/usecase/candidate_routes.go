@@ -7,16 +7,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
-// getCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using DFS.
+// GetCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using DFS.
 // Relies on the constructor to initialize the sorted pools with preferred pool IDs, max routes and max hops.
 // It.
 // Once the initial routes are found using DFS, those are sorted by number of hops.
 // If the are overlaps in pool IDs between routes, the routes with more hops are filtered out.
-func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
+func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
 	r.logger.Info("getting candidate routes", zap.String("token_in_denom", tokenInDenom), zap.String("token_out_denom", tokenOutDenom), zap.Int("sorted_pool_count", len(r.sortedPools)))
-	routes, err := r.findRoutes(tokenInDenom, tokenOutDenom, &routeImpl{}, make([]bool, len(r.sortedPools)), nil)
+	routes, err := r.findRoutes(tokenInDenom, tokenOutDenom, &route.RouteImpl{}, make([]bool, len(r.sortedPools)), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +25,25 @@ func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 	r.logger.Info("found routes ", zap.Int("routes_count", len(routes)))
 
 	for k, route := range routes {
-		r.logger.Debug("route", zap.Int("num", k), zap.Stringer("route", route))
+		r.logger.Info("route", zap.Int("num", k), zap.Stringer("route", route))
 	}
+
+	// https://app.clickup.com/t/86a1dpu8z
+	// inverseRoutes, err := r.findRoutes(tokenOutDenom, tokenInDenom, &routeImpl{}, make([]bool, len(r.sortedPools)), nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // Reverse the slice since we were going from token out denom to token in denom.
+	// inverseRoutes = osmoutils.ReverseSlice(inverseRoutes)
+
+	// r.logger.Info("found inverse routes ", zap.Int("routes_count", len(inverseRoutes)))
+
+	// for k, route := range inverseRoutes {
+	// 	r.logger.Info("route", zap.Int("num", k), zap.Stringer("route", route))
+	// }
+
+	// routes = append(routes, inverseRoutes...)
 
 	// Sort routes by number of hops.
 	sort.Slice(routes, func(i, j int) bool {
@@ -33,7 +51,8 @@ func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 	})
 
 	// Validate the chosen routes.
-	if routes, err = r.validateAndFilterRoutes(routes, tokenInDenom); err != nil {
+	routes, err = r.validateAndFilterRoutes(routes, tokenInDenom)
+	if err != nil {
 		r.logger.Error("validateRoutes failed", zap.Error(err))
 		return nil, err
 	}
@@ -207,12 +226,17 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 
 			updatedCurrentRoute.AddPool(pool, poolDenom, takerFee)
 
+			// TODO: figure out what to do with this.
+			// https://app.clickup.com/t/86a1dq0p4
+			// While this might provide better performance, it has led to suboptimal
+			// routes selected. For example, when swapping ATOM in for stOSMO out.
+			//
 			// If we find token in denom in the intermediary pool in the route,
 			// we know for sure that it is more beneficial to start from this pool directly.
 			// As a result, we reset the current route to be empty. This may lead to duplicate routes.
 			// That should be filtered out later.
 			if poolDenom == tokenInDenom {
-				updatedCurrentRoute = &routeImpl{}
+				updatedCurrentRoute = &route.RouteImpl{}
 				updatedPreviousTokenOutDenoms = []string{}
 			}
 

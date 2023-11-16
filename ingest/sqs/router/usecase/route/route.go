@@ -1,4 +1,4 @@
-package usecase
+package route
 
 import (
 	"fmt"
@@ -11,9 +11,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 )
 
-var _ domain.Route = &routeImpl{}
+var _ domain.Route = &RouteImpl{}
 
-type routeImpl struct {
+type RouteImpl struct {
 	Pools []domain.RoutablePool "json:\"pools\""
 }
 
@@ -29,7 +29,7 @@ type routeImpl struct {
 // - Taker Fee
 // Note that it mutates the route.
 // Returns the resulting pools.
-func (r *routeImpl) PrepareResultPools() []domain.RoutablePool {
+func (r *RouteImpl) PrepareResultPools() []domain.RoutablePool {
 	for i, pool := range r.Pools {
 		sqsModel := pool.GetSQSPoolModel()
 
@@ -49,24 +49,24 @@ func (r *routeImpl) PrepareResultPools() []domain.RoutablePool {
 }
 
 // GetPools implements Route.
-func (r *routeImpl) GetPools() []domain.RoutablePool {
+func (r *RouteImpl) GetPools() []domain.RoutablePool {
 	return r.Pools
 }
 
-func (r routeImpl) DeepCopy() domain.Route {
+func (r RouteImpl) DeepCopy() domain.Route {
 	poolsCopy := make([]domain.RoutablePool, len(r.Pools))
 	copy(poolsCopy, r.Pools)
-	return &routeImpl{
+	return &RouteImpl{
 		Pools: poolsCopy,
 	}
 }
 
-func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee osmomath.Dec) {
+func (r *RouteImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee osmomath.Dec) {
 	r.Pools = append(r.Pools, pools.NewRoutablePool(pool, tokenOutDenom, takerFee))
 }
 
 // CalculateTokenOutByTokenIn implements Route.
-func (r *routeImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.Coin, err error) {
+func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.Coin, err error) {
 	defer func() {
 		// TODO: cover this by test
 		if r := recover(); r != nil {
@@ -88,7 +88,7 @@ func (r *routeImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.C
 }
 
 // String implements domain.Route.
-func (r *routeImpl) String() string {
+func (r *RouteImpl) String() string {
 	var strBuilder strings.Builder
 	for _, pool := range r.Pools {
 		_, err := strBuilder.WriteString(pool.String())
@@ -103,7 +103,7 @@ func (r *routeImpl) String() string {
 // GetTokenOutDenom implements domain.Route.
 // Returns token out denom of the last pool in the route.
 // If route is empty, returns empty string.
-func (r *routeImpl) GetTokenOutDenom() string {
+func (r *RouteImpl) GetTokenOutDenom() string {
 	if len(r.Pools) == 0 {
 		return ""
 	}

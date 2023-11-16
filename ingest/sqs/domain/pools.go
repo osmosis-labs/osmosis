@@ -182,6 +182,8 @@ type PoolsRepository interface {
 	GetAllCosmWasm(context.Context) ([]PoolI, error)
 	// StorePools atomically stores the given pools.
 	StorePools(ctx context.Context, tx Tx, cfmmPools []PoolI, concentratedPools []PoolI, cosmwasmPools []PoolI) error
+	// ClearAllPools atomically clears all pools.
+	ClearAllPools(ctx context.Context, tx Tx) error
 }
 
 // PoolsUsecase represent the pool's usecases

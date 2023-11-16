@@ -21,6 +21,7 @@ const (
 
 var (
 	_   types.ConcentratedPoolExtension = &Pool{}
+	_   poolmanagertypes.PoolI          = &Pool{}
 	one                                 = osmomath.OneDec()
 )
 
