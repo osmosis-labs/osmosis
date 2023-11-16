@@ -1703,23 +1703,44 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 }
 
 func (s *decimalTestSuite) TestTruncateSDKIntMutAndMut() {
-	d := osmomath.NewBigDec(40)
+	tests := []struct {
+		d osmomath.BigDec
+	}{
+		{
+			osmomath.NewBigDec(40),
+		},
+		{
+			osmomath.NewBigDec(30),
+		},
+		{
+			osmomath.NewBigDec(0),
+		},
+		{
+			osmomath.MustNewBigDecFromStr("30.000"),
+		},
+		{
+			osmomath.MustNewBigDecFromStr("0.000"),
+		},
+	}
+	for _, test := range tests {
+		d := test.d
 
-	p1 := d.TruncateSDKInt()
-	p2 := d.TruncateSDKIntMut()
+		p1 := d.TruncateSDKInt()
+		p2 := d.TruncateSDKIntMut()
 
-	s.Require().IsType(osmomath.NewInt(1), p1)
-	s.Require().IsType(osmomath.NewInt(1), p2)
-	// Compare value of TruncateSDKInt() & TruncateSDKIntMut()
-	s.Require().Equal(p2.BigInt(), p1.BigInt())
+		s.Require().IsType(osmomath.NewInt(1), p1)
+		s.Require().IsType(osmomath.NewInt(1), p2)
+		// Compare value of TruncateSDKInt() & TruncateSDKIntMut()
+		s.Require().Equal(p2.BigInt(), p1.BigInt())
 
-	// Modify p1.i pointer and ensure d don't change
-	r1 := big.NewInt(50)
-	p1.BigIntMut().Set(r1)
-	s.Require().NotEqual(big.NewInt(50), d.BigInt())
+		// Modify p1.i pointer and ensure d don't change
+		r1 := big.NewInt(50)
+		p1.BigIntMut().Set(r1)
+		s.Require().NotEqual(big.NewInt(50), d.BigInt())
 
-	// Modify p2.i pointer and ensure d change
-	r2 := big.NewInt(60)
-	p2.BigIntMut().Set(r2)
-	s.Require().Equal(big.NewInt(60), d.BigInt())
+		// Modify p2.i pointer and ensure d change
+		r2 := big.NewInt(60)
+		p2.BigIntMut().Set(r2)
+		s.Require().Equal(big.NewInt(60), d.BigInt())
+	}
 }
