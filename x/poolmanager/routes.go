@@ -90,30 +90,26 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (RoutingGraph, error) {
 	}
 
 	tempRouteGraph = routingGraph
-	return routingGraph, nil
+	return tempRouteGraph, nil
 }
 
 // GetDenomPairRoute returns the route with the highest liquidity between two tokens
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
-	// if tempRouteGraph == nil {
-	// 	var err error
-	// 	tempRouteGraph, err = k.SetDenomPairRoutes(ctx)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-	routeGraph, err := k.SetDenomPairRoutes(ctx)
-	if err != nil {
-		return nil, err
+	if tempRouteGraph == nil {
+		var err error
+		tempRouteGraph, err = k.SetDenomPairRoutes(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get all direct routes
-	directPoolIDs := FindDirectRoute(routeGraph, inputDenom, outputDenom)
+	directPoolIDs := FindDirectRoute(tempRouteGraph, inputDenom, outputDenom)
 
 	// Get all two-hop routes
 	var twoHopPoolIDs [][]uint64
 	if inputDenom != "uosmo" && outputDenom != "uosmo" {
-		twoHopPoolIDs = FindTwoHopRoute(routeGraph, inputDenom, outputDenom)
+		twoHopPoolIDs = FindTwoHopRoute(tempRouteGraph, inputDenom, outputDenom)
 	}
 
 	// Map to store the total liquidity of each route (using string as key)
@@ -211,20 +207,16 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
 func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
 	// Set the route map to the keeper if it is not already set
-	// if tempRouteGraph == nil {
-	// 	var err error
-	// 	tempRouteGraph, err = k.SetDenomPairRoutes(ctx)
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
-	// }
-	routeGraph, err := k.SetDenomPairRoutes(ctx)
-	if err != nil {
-		return 0, err
+	if tempRouteGraph == nil {
+		var err error
+		tempRouteGraph, err = k.SetDenomPairRoutes(ctx)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	// Get all direct routes from the input denom to uosmo
-	directPoolIDs := FindDirectRoute(routeGraph, inputDenom, "uosmo")
+	directPoolIDs := FindDirectRoute(tempRouteGraph, inputDenom, "uosmo")
 
 	// Store liquidity for all direct routes found
 	routeLiquidity := make(map[string]osmomath.Int)
