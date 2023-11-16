@@ -72,7 +72,7 @@ func (sqs *sideCarQueryServer) GetLogger() log.Logger {
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
-func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int, logger log.Logger) (SideCarQueryServer, error) {
+func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfig, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int, logger log.Logger) (SideCarQueryServer, error) {
 	// Handle SIGINT and SIGTERM signals to initiate shutdown
 	exitChan := make(chan os.Signal, 1)
 	signal.Notify(exitChan, os.Interrupt, syscall.SIGTERM)
@@ -126,15 +126,6 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	timeoutContext := time.Duration(useCaseTimeoutDuration) * time.Second
 	poolsUseCase := poolsUseCase.NewPoolsUsecase(timeoutContext, poolsRepository, redisTxManager)
 	poolsHttpDelivery.NewPoolsHandler(e, poolsUseCase)
-
-	// TODO: move to config file
-	routerConfig := domain.RouterConfig{
-		PreferredPoolIDs:   []uint64{},
-		MaxPoolsPerRoute:   4,
-		MaxRoutes:          4,
-		MaxSplitIterations: 10,
-		MinOSMOLiquidity:   10000, // 20_000 OSMO
-	}
 
 	// Initialize router repository, usecase and HTTP handler
 	routerRepository := routerRedisRepository.NewRedisRouterRepo(redisTxManager)

@@ -29,6 +29,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	sqslog "github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -288,8 +289,19 @@ func NewOsmosisApp(
 		}
 		logger.Info("Starting sidecar query server")
 
+		// TODO: move to config file
+		routerConfig := domain.RouterConfig{
+			PreferredPoolIDs:          []uint64{},
+			MaxPoolsPerRoute:          4,
+			MaxRoutes:                 5,
+			MaxSplitIterations:        10,
+			MinOSMOLiquidity:          10000, // 10_000 OSMO
+			RouteUpdateHeightInterval: 0,
+			RouteCacheEnabled:         false,
+		}
+
 		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, logger)
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, routerConfig, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, logger)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
 		}
@@ -297,7 +309,7 @@ func NewOsmosisApp(
 		txManager := sidecarQueryServer.GetTxManager()
 
 		// Create pools ingester
-		poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
+		poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, routerConfig, app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
 		poolsIngester.SetLogger(sidecarQueryServer.GetLogger())
 
 		// Create sqs ingester that encapsulates all ingesters.

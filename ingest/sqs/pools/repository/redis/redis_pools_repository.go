@@ -177,6 +177,24 @@ func (r *redisPoolsRepo) StorePools(ctx context.Context, tx domain.Tx, cfmmPools
 	return nil
 }
 
+func (r *redisPoolsRepo) ClearAllPools(ctx context.Context, tx domain.Tx) error {
+	// CFMM pools
+	if err := r.deletePoolsTx(ctx, tx, cfmmPoolKey); err != nil {
+		return err
+	}
+
+	// Concentrated pools
+	if err := r.deletePoolsTx(ctx, tx, concentratedPoolKey); err != nil {
+		return err
+	}
+
+	// Cosmwasm pools
+	if err := r.deletePoolsTx(ctx, tx, cosmWasmPoolKey); err != nil {
+		return err
+	}
+	return nil
+}
+
 // addCFMMPoolsTx pipelines the given CFMM pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are CFMM.
 // This method does not perform any validation.
@@ -335,6 +353,43 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey 
 			if err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+// deletePoolsTx pipelines the deletion of the pools at a given storeKey to be executed atomically in a transaction.
+func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx domain.Tx, storeKey string) error {
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return err
+	}
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return err
+	}
+
+	// TODO: refactor this in a more general way to avoid having to do this check
+	// Generally, for other pool types we should be able to serialize nil
+	// tick model to empty bytes and deserialize it back to nil
+	isConcentrated := storeKey == concentratedPoolKey
+
+	// Note that we have 2x write and read amplification due to storage layout. We can optimize this later.
+	_, err = pipeliner.HDel(ctx, sqsPoolModelKey(storeKey)).Result()
+	if err != nil {
+		return err
+	}
+
+	_, err = pipeliner.HDel(ctx, chainPoolModelKey(storeKey)).Result()
+	if err != nil {
+		return err
+	}
+
+	// Write concentrated tick model
+	if isConcentrated {
+		_, err = pipeliner.HDel(ctx, concentratedTicksModelKey(storeKey)).Result()
+		if err != nil {
+			return err
 		}
 	}
 	return nil

@@ -12,7 +12,8 @@ import (
 )
 
 type Router struct {
-	sortedPools []domain.PoolI
+	preferredPoolIDS []uint64
+	sortedPools      []domain.PoolI
 	// The maximum number of hops to route through.
 	maxHops int
 	// The maximum number of routes to return.
@@ -21,6 +22,9 @@ type Router struct {
 	maxSplitIterations int
 	// taker fee map
 	takerFeeMap domain.TakerFeeMap
+
+	minOSMOTVL int
+
 	// The logger.
 	logger log.Logger
 }
@@ -45,45 +49,49 @@ const (
 // Each pool has a flag indicating whether there was an error in estimating its on-chain TVL.
 // If that is the case, the pool is to be sorted towards the end. However, the preferredPoolIDs overwrites this rule
 // and prioritizes the preferred pools.
-func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, takerFeeMap domain.TakerFeeMap, maxHops int, maxRoutes int, maxSplitIterations int, minOSMOTVL int, logger log.Logger) Router {
+func NewRouter(preferredPoolIDs []uint64, takerFeeMap domain.TakerFeeMap, maxHops int, maxRoutes int, maxSplitIterations int, minOSMOTVL int, logger log.Logger) *Router {
 	if logger == nil {
 		logger = &log.NoOpLogger{}
 	}
 
-	// TODO: consider mutating directly on allPools
-	sortedPools := make([]domain.PoolI, 0)
-	totalTVL := osmomath.ZeroInt()
-
-	minUOSMOTVL := osmomath.NewInt(int64(minOSMOTVL * osmoPrecisionMultiplier))
-
-	// Make a copy and filter pools
-	for _, pool := range allPools {
-		if err := pool.Validate(minUOSMOTVL); err != nil {
-			logger.Info("pool validation failed, skip silently", zap.Uint64("pool_id", pool.GetId()), zap.Error(err))
-			continue
-		}
-
-		sortedPools = append(sortedPools, pool)
-
-		totalTVL = totalTVL.Add(pool.GetTotalValueLockedUOSMO())
-	}
-
-	preferredPoolIDsMap := make(map[uint64]struct{})
-	for _, poolID := range preferredPoolIDs {
-		preferredPoolIDsMap[poolID] = struct{}{}
-	}
-
-	// sort pools so that the appropriate pools are at the top
-	sortedPools = sortPools(sortedPools, totalTVL, preferredPoolIDsMap, logger)
-
-	return Router{
-		sortedPools:        sortedPools,
+	return &Router{
 		takerFeeMap:        takerFeeMap,
 		maxHops:            maxHops,
 		maxRoutes:          maxRoutes,
 		logger:             logger,
 		maxSplitIterations: maxSplitIterations,
+		minOSMOTVL:         minOSMOTVL,
 	}
+}
+
+func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {
+	// TODO: consider mutating directly on allPools
+	router.sortedPools = make([]domain.PoolI, 0)
+	totalTVL := osmomath.ZeroInt()
+
+	minUOSMOTVL := osmomath.NewInt(int64(router.minOSMOTVL * osmoPrecisionMultiplier))
+
+	// Make a copy and filter pools
+	for _, pool := range allPools {
+		if err := pool.Validate(minUOSMOTVL); err != nil {
+			router.logger.Info("pool validation failed, skip silently", zap.Uint64("pool_id", pool.GetId()), zap.Error(err))
+			continue
+		}
+
+		router.sortedPools = append(router.sortedPools, pool)
+
+		totalTVL = totalTVL.Add(pool.GetTotalValueLockedUOSMO())
+	}
+
+	preferredPoolIDsMap := make(map[uint64]struct{})
+	for _, poolID := range router.preferredPoolIDS {
+		preferredPoolIDsMap[poolID] = struct{}{}
+	}
+
+	// sort pools so that the appropriate pools are at the top
+	router.sortedPools = sortPools(router.sortedPools, totalTVL, preferredPoolIDsMap, router.logger)
+
+	return router
 }
 
 // sortPools sorts the given pools so that the most appropriate pools are at the top.

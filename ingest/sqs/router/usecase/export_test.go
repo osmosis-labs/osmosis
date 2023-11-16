@@ -1,13 +1,15 @@
 package usecase
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 )
 
 type (
-	RouteImpl = routeImpl
+	RouterUseCaseImpl = routerUseCaseImpl
 
 	QuoteImpl = quoteImpl
 )
@@ -29,6 +31,10 @@ func (r *Router) ValidateAndFilterRoutes(routes []domain.Route, tokenInDenom str
 	return r.validateAndFilterRoutes(routes, tokenInDenom)
 }
 
-func (r *Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
-	return r.getCandidateRoutes(tokenInDenom, tokenOutDenom)
+func (r *routerUseCaseImpl) InitializeRouter(ctx context.Context) (*Router, error) {
+	return r.initializeRouter(ctx)
+}
+
+func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
+	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }

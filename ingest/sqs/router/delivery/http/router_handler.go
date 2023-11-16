@@ -36,6 +36,7 @@ func NewRouterHandler(e *echo.Echo, us domain.RouterUsecase) {
 	}
 	e.GET("/quote", handler.GetOptimalQuote)
 	e.GET("/single-quote", handler.GetBestSingleRouteQuote)
+	e.GET("/routes", handler.GetCandidateRoutes)
 }
 
 // GetOptimalQuote will determine the optimal quote for a given tokenIn and tokenOutDenom
@@ -72,7 +73,30 @@ func (a *RouterHandler) GetBestSingleRouteQuote(c echo.Context) error {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
 
+	quote.PrepareResult()
+
 	return c.JSON(http.StatusOK, quote)
+}
+
+// GetCandidateRoutes returns the candidate routes for a given tokenIn and tokenOutDenom
+func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
+	if err != nil {
+		return err
+	}
+
+	routes, err := a.RUsecase.GetCandidateRoutes(ctx, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	for i := range routes {
+		routes[i].PrepareResultPools()
+	}
+
+	return c.JSON(http.StatusOK, routes)
 }
 
 func getStatusCode(err error) int {

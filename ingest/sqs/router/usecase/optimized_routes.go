@@ -14,12 +14,7 @@ import (
 
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
 // Considers all routes and splits.
-func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
-	routes, err := r.getCandidateRoutes(tokenIn.Denom, tokenOutDenom)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []domain.Route) (domain.Quote, error) {
 	for _, route := range routes {
 		r.logger.Info("route", zap.Stringer("route", route))
 	}
@@ -58,12 +53,7 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain
 }
 
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
-func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string) (quote domain.Quote, err error) {
-	routes, err := r.getCandidateRoutes(tokenIn.Denom, tokenOutDenom)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []domain.Route) (quote domain.Quote, err error) {
 	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err

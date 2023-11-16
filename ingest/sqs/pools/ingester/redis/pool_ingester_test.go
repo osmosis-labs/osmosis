@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 	redisingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
@@ -465,11 +466,11 @@ func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
 func (s *IngesterTestSuite) TestProcessBlock() {
 	s.Setup()
 	var (
-		redisRepoMock   = &redisPoolRepositoryMock{}
-		redisRouterMock = &redisRouterRepositoryMock{
-			takerFeeMap: domain.TakerFeeMap{},
+		redisRepoMock   = &mocks.RedisPoolsRepositoryMock{}
+		redisRouterMock = &mocks.RedisRouterRepositoryMock{
+			TakerFees: domain.TakerFeeMap{},
 		}
-		tokensUseCaseMock = &tokensUseCaseMock{}
+		tokensUseCaseMock = &mocks.TokensUseCaseMock{}
 
 		// Note: this is a dummy tx that is not initialized correctly.
 		// We do note expect it to be called or used by the system under test
@@ -487,7 +488,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	customTakerFeeConcentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, USDC, 1, osmomath.ZeroDec())
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 
-	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, domain.RouterConfig{}, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
 	poolIngester.SetLogger(&log.NoOpLogger{})
 
 	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
@@ -561,7 +562,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 }
 
 func (s *IngesterTestSuite) initializePoolIngester() *redisingester.PoolIngester {
-	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, domain.RouterConfig{}, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
 	poolIngester, ok := atomicIngester.(*redisingester.PoolIngester)
 	poolIngester.SetLogger(&log.NoOpLogger{})
 	s.Require().True(ok)

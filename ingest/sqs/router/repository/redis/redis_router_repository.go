@@ -2,11 +2,16 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
 type redisRouterRepo struct {
@@ -18,6 +23,7 @@ const (
 
 	routerPrefix   = "r" + keySeparator
 	takerFeePrefix = routerPrefix + "tf" + keySeparator
+	routesPrefix   = routerPrefix + "r" + keySeparator
 )
 
 var (
@@ -140,4 +146,108 @@ func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx domain.Tx, denom0,
 	}
 
 	return nil
+}
+
+// SetRoutesTx implements domain.RouterRepository.
+func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx domain.Tx, denom0, denom1 string, routes []domain.Route) error {
+	// Ensure increasing lexicographic order.
+	if denom1 < denom0 {
+		denom0, denom1 = denom1, denom0
+	}
+
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return err
+	}
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return err
+	}
+
+	routesStr, err := json.Marshal(routes)
+	if err != nil {
+		return err
+	}
+
+	cmd := pipeliner.HSet(ctx, routesPrefix, denom0+keySeparator+denom1, routesStr)
+	if err := cmd.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetRoutes implements domain.RouterRepository.
+func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, routes []domain.Route) error {
+	// Create transaction
+	tx := r.repositoryManager.StartTx()
+
+	// Set routes
+	if err := r.SetRoutesTx(ctx, tx, denom0, denom1, routes); err != nil {
+		return err
+	}
+
+	// Execute transaction.
+	if err := tx.Exec(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetRoutes implements domain.RouterRepository.
+func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) ([]domain.Route, error) {
+	// Ensure increasing lexicographic order.
+	if denom1 < denom0 {
+		denom0, denom1 = denom1, denom0
+	}
+
+	// Create transaction
+	tx := r.repositoryManager.StartTx()
+
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return nil, err
+	}
+
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create command to retrieve results.
+	getCmd := pipeliner.HGet(ctx, routesPrefix, denom0+keySeparator+denom1)
+
+	_, err = pipeliner.Exec(ctx)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	// Retrieve results
+	resultStr, err := getCmd.Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	// Parse routes
+	var routes []route.RouteImpl
+	err = json.Unmarshal([]byte(resultStr), &routes)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: figure out proper serialization to avoid this
+	// Currently, we cannot deserialize the interface type, so we need to deserialize conrete type and then convert back.
+	routesResult := make([]domain.Route, 0, len(routes))
+	for _, route := range routes {
+		routesResult = append(routesResult, &route)
+	}
+
+	return routesResult, nil
 }
