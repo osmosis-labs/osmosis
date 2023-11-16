@@ -119,7 +119,13 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 			if err != nil {
 				return nil, err
 			}
-			liqInOsmo = liqInOsmoInternal.Add(liquidity)
+
+			if pool.GetType() == types.Concentrated {
+				liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(sdk.MustNewDecFromStr("1.5")).TruncateInt()
+			}
+			// Multiply the liquidity by two. This is because we are comparing single routes to two-hop routes.
+			// To make this simple and comparable, we just multiply the single route liquidity by two.
+			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal.Mul(osmomath.NewIntFromUint64(2)))
 		}
 		routeKey := fmt.Sprintf("%v", poolID)
 		routeLiquidity[routeKey] = liqInOsmo
