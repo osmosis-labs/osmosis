@@ -59,7 +59,7 @@ jobs:
           echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Create Docker Image Tag for roman/sqs-poc-v20 branch
-        if: github.ref == 'roman/sqs-poc-v20'
+        if: github.ref == 'refs/heads/roman/sqs-poc-v20'
         run: |
           SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
           echo "DOCKER_IMAGE_TAG=${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
