@@ -35,6 +35,10 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, err
 		}
 
+		if res.Value == nil {
+			return nil, fmt.Errorf("Res returned from abci query route is nil")
+		}
+
 		bz, err := ConvertProtoToJSONMarshal(protoResponseType, res.Value, cdc)
 		if err != nil {
 			return nil, err
