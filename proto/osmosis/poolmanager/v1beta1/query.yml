@@ -93,3 +93,6 @@ queries:
       query_func: "k.GetDenomPairRoute"
     cli:
       cmd: "DenomPairRoutes"
+  ListPoolsByDenom:
+    proto_wrapper:
+      query_func: "k.ListPoolsByDenom"
