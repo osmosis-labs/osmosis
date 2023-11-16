@@ -16,6 +16,8 @@ import (
 // Define a structure to represent the routing graph
 type RoutingGraph map[string]map[string][]uint64
 
+var tempRouteGraph = RoutingGraph{}
+
 // Function to add an edge to the graph
 func (g RoutingGraph) AddEdge(start, end string, poolID uint64) {
 	if g[start] == nil {
@@ -63,18 +65,18 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	// Iterate through the pools
 	for _, pool := range pools {
 		// skip cosmwasmpool for now
-		// if pool.GetType() == types.CosmWasm {
-		// 	continue
-		// }
 		if pool.GetType() == types.CosmWasm {
-			fmt.Println("cosmwasmpool")
-			pool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
-			if !ok {
-				return fmt.Errorf("invalid pool type")
-			}
-			fmt.Println("pool id", pool.GetId())
-			fmt.Println("pool denoms", pool.GetPoolDenoms(ctx))
+			continue
 		}
+		// if pool.GetType() == types.CosmWasm {
+		// 	fmt.Println("cosmwasmpool")
+		// 	pool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
+		// 	if !ok {
+		// 		return fmt.Errorf("invalid pool type")
+		// 	}
+		// 	fmt.Println("pool id", pool.GetId())
+		// 	fmt.Println("pool denoms", pool.GetPoolDenoms(ctx))
+		// }
 		tokens := pool.GetPoolDenoms(ctx)
 		poolID := pool.GetId()
 
@@ -87,13 +89,13 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 		}
 	}
 
-	k.routeMap = routingGraph
+	tempRouteGraph = routingGraph
 	return nil
 }
 
 // GetDenomPairRoute returns the route with the highest liquidity between two tokens
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
-	if k.routeMap == nil {
+	if tempRouteGraph == nil {
 		err := k.SetDenomPairRoutes(ctx)
 		if err != nil {
 			return nil, err
@@ -101,12 +103,12 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 	}
 
 	// Get all direct routes
-	directPoolIDs := FindDirectRoute(k.routeMap, inputDenom, outputDenom)
+	directPoolIDs := FindDirectRoute(tempRouteGraph, inputDenom, outputDenom)
 
 	// Get all two-hop routes
 	var twoHopPoolIDs [][]uint64
 	if inputDenom != "uosmo" && outputDenom != "uosmo" {
-		twoHopPoolIDs = FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
+		twoHopPoolIDs = FindTwoHopRoute(tempRouteGraph, inputDenom, outputDenom)
 	}
 
 	// Map to store the total liquidity of each route (using string as key)
@@ -204,7 +206,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
 func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
 	// Set the route map to the keeper if it is not already set
-	if k.routeMap == nil {
+	if tempRouteGraph == nil {
 		err := k.SetDenomPairRoutes(ctx)
 		if err != nil {
 			return 0, err
@@ -212,7 +214,7 @@ func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom 
 	}
 
 	// Get all direct routes from the input denom to uosmo
-	directPoolIDs := FindDirectRoute(k.routeMap, inputDenom, "uosmo")
+	directPoolIDs := FindDirectRoute(tempRouteGraph, inputDenom, "uosmo")
 
 	// Store liquidity for all direct routes found
 	routeLiquidity := make(map[string]osmomath.Int)
