@@ -63,9 +63,9 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	// Iterate through the pools
 	for _, pool := range pools {
 		// skip cosmwasmpool for now
-		if pool.GetType() == types.CosmWasm {
-			continue
-		}
+		// if pool.GetType() == types.CosmWasm {
+		// 	continue
+		// }
 		tokens := pool.GetPoolDenoms(ctx)
 		poolID := pool.GetId()
 
