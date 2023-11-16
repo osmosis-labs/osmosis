@@ -153,6 +153,11 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 				if err != nil {
 					return nil, err
 				}
+				// CL pools are more cap efficient
+				// multiply liquidity to account for this
+				if pool.GetType() == types.Concentrated {
+					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(sdk.MustNewDecFromStr("1.25")).TruncateInt()
+				}
 				liqInOsmo = liqInOsmoInternal.Add(liquidity)
 			}
 			fmt.Println("liqInOsmo", liqInOsmo)
