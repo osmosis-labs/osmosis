@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"slices"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -568,7 +567,7 @@ func (k Keeper) ListPoolsByDenom(
 			if err != nil {
 				return nil, err
 			}
-			if slices.Contains(poolDenoms, denom) {
+			if osmoutils.Contains(poolDenoms, denom) {
 				poolsByDenom = append(poolsByDenom, pool)
 			}
 		}
