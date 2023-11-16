@@ -158,7 +158,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 				if pool.GetType() == types.Concentrated {
 					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(sdk.MustNewDecFromStr("1.25")).TruncateInt()
 				}
-				liqInOsmo = liqInOsmoInternal.Add(liquidity)
+				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
 			}
 			fmt.Println("liqInOsmo", liqInOsmo)
 			fmt.Println("poolID", poolID)
