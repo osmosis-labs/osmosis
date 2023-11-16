@@ -52,11 +52,11 @@ func FindTwoHopRoute(g RoutingGraph, start, end string) [][]uint64 {
 }
 
 // SetDenomPairRoutes sets the route map to be used for route calculations
-func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
+func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (RoutingGraph, error) {
 	// Get all the pools
 	pools, err := k.AllPools(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create a routingGraph to represent possible routes between tokens
@@ -90,13 +90,14 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	}
 
 	tempRouteGraph = routingGraph
-	return nil
+	return tempRouteGraph, nil
 }
 
 // GetDenomPairRoute returns the route with the highest liquidity between two tokens
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
 	if tempRouteGraph == nil {
-		err := k.SetDenomPairRoutes(ctx)
+		var err error
+		tempRouteGraph, err = k.SetDenomPairRoutes(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +208,8 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
 	// Set the route map to the keeper if it is not already set
 	if tempRouteGraph == nil {
-		err := k.SetDenomPairRoutes(ctx)
+		var err error
+		tempRouteGraph, err = k.SetDenomPairRoutes(ctx)
 		if err != nil {
 			return 0, err
 		}
