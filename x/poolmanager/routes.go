@@ -66,6 +66,15 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 		// if pool.GetType() == types.CosmWasm {
 		// 	continue
 		// }
+		if pool.GetType() == types.CosmWasm {
+			fmt.Println("cosmwasmpool")
+			pool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
+			if !ok {
+				return fmt.Errorf("invalid pool type")
+			}
+			fmt.Println("pool id", pool.GetId())
+			fmt.Println("pool denoms", pool.GetPoolDenoms(ctx))
+		}
 		tokens := pool.GetPoolDenoms(ctx)
 		poolID := pool.GetId()
 
