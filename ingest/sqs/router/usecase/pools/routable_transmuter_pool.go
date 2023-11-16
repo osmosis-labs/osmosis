@@ -1,7 +1,6 @@
 package pools
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -18,45 +17,6 @@ type routableTransmuterPoolImpl struct {
 	domain.PoolI
 	TokenOutDenom string       "json:\"token_out_denom\""
 	TakerFee      osmomath.Dec "json:\"taker_fee\""
-}
-
-// MarshalJSON implements domain.RoutablePool.
-func (r *routableTransmuterPoolImpl) MarshalJSON() ([]byte, error) {
-	var (
-		routablePoolSerialized routableSerializedPool
-		err                    error
-	)
-	bz, err := json.Marshal(r.PoolI)
-	if err != nil {
-		return nil, err
-	}
-
-	routablePoolSerialized.PoolData = bz
-	routablePoolSerialized.TokenOutDenom = r.TokenOutDenom
-	routablePoolSerialized.TakerFee = r.TakerFee
-
-	return json.Marshal(routablePoolSerialized)
-}
-
-// UnmarshalJSON implements domain.RoutablePool.
-func (r *routableTransmuterPoolImpl) UnmarshalJSON(data []byte) error {
-	var routablePoolSerialized routableSerializedPool
-	err := json.Unmarshal(data, &routablePoolSerialized)
-	if err != nil {
-		return err
-	}
-
-	r.PoolI = &domain.PoolWrapper{}
-
-	err = json.Unmarshal(routablePoolSerialized.PoolData, r.PoolI)
-	if err != nil {
-		return err
-	}
-
-	r.TokenOutDenom = routablePoolSerialized.TokenOutDenom
-	r.TakerFee = routablePoolSerialized.TakerFee
-
-	return nil
 }
 
 // CalculateTokenOutByTokenIn implements domain.RoutablePool.

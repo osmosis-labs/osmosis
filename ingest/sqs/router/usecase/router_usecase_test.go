@@ -81,10 +81,9 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 		name string
 
 		repositoryRoutes []domain.Route
-
-		repositoryPools []domain.PoolI
-
-		takerFeeMap domain.TakerFeeMap
+		repositoryPools  []domain.PoolI
+		takerFeeMap      domain.TakerFeeMap
+		isCacheDisabled  bool
 
 		expectedRoutes []domain.Route
 
@@ -98,6 +97,16 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 			takerFeeMap:      defaultTakerFeeMap,
 
 			expectedRoutes: singleDefaultRoutes,
+		},
+		{
+			name: "cache is disabled in config -> recomputes routes despite having available in cache",
+
+			repositoryRoutes: singleDefaultRoutes,
+			repositoryPools:  emptyPools,
+			takerFeeMap:      defaultTakerFeeMap,
+			isCacheDisabled:  true,
+
+			expectedRoutes: emptyRoutes,
 		},
 		{
 			name: "no routes in cache but relevant pools in store -> recomputes routes",
@@ -156,7 +165,9 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 				Pools: tc.repositoryPools,
 			}
 
-			routerUseCase := usecase.NewRouterUsecase(defaultTimeoutDuration, routerRepositoryMock, poolsUseCaseMock, domain.RouterConfig{}, &log.NoOpLogger{})
+			routerUseCase := usecase.NewRouterUsecase(defaultTimeoutDuration, routerRepositoryMock, poolsUseCaseMock, domain.RouterConfig{
+				RouteCacheEnabled: !tc.isCacheDisabled,
+			}, &log.NoOpLogger{})
 
 			routerUseCaseImpl, ok := routerUseCase.(*usecase.RouterUseCaseImpl)
 			s.Require().True(ok)
@@ -181,6 +192,12 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 			s.Require().Equal(len(tc.expectedRoutes), len(actualRoutes))
 			for i, route := range actualRoutes {
 				s.Require().Equal(tc.expectedRoutes[i].String(), route.String())
+			}
+
+			// For the case where the cache is disabled, the expected routes in cache
+			// will be the same as the original routes in the repository.
+			if tc.isCacheDisabled {
+				tc.expectedRoutes = tc.repositoryRoutes
 			}
 
 			// Check that router repository was updated

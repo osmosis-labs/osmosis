@@ -1,16 +1,13 @@
 package route_test
 
 import (
-	"encoding/json"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -127,42 +124,6 @@ func (s *RouterTestSuite) TestPrepareResultPools() {
 			s.ValidateRoutePools(tc.expectedPools, tc.route.GetPools())
 		})
 	}
-}
-
-// This test validates that serialization and deserialization of the route.
-// It only exists because I have no idea how JSON marshaling and unmarshaling works
-// and Paddy didn't want to teach me the way.
-func (s *RouterTestSuite) TestRouteMarshalUnmarshal() {
-	allPools := s.PrepareAllSupportedPools()
-
-	concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, allPools.ConcentratedPoolID)
-	s.Require().NoError(err)
-
-	concentratedBalance := sdk.NewCoins(sdk.NewCoin(concentratedPool.GetToken0(), DefaultAmt0), sdk.NewCoin(concentratedPool.GetToken1(), DefaultAmt1))
-
-	routablePools := []domain.RoutablePool{
-		pools.NewRoutablePool(domain.NewPool(concentratedPool, routertesting.DefaultSpreadFactor, concentratedBalance), concentratedPool.GetToken1(), DefaultTakerFee),
-	}
-
-	poolBytes, err := json.Marshal(routablePools)
-	s.Require().NoError(err)
-
-	var poolData []pools.SerializedPoolByType
-	err = json.Unmarshal(poolBytes, &poolData)
-	s.Require().NoError(err)
-
-	routes := []domain.Route{
-		&route.RouteImpl{
-			Pools: routablePools,
-		},
-	}
-
-	bytes, err := json.Marshal(routes)
-	s.Require().NoError(err)
-
-	var data []route.RouteImpl
-	err = json.Unmarshal(bytes, &data)
-	s.Require().NoError(err)
 }
 
 func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {

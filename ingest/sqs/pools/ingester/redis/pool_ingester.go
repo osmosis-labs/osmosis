@@ -97,11 +97,6 @@ var _ ingest.AtomicIngester = &poolIngester{}
 func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
-	// // CLear all pools
-	// if err := pi.poolsRepository.ClearAllPools(goCtx, tx); err != nil {
-	// 	return err
-	// }
-
 	// TODO: can be cached
 	tokenPrecisionMap, err := pi.tokensUseCase.GetDenomPrecisions(goCtx)
 	if err != nil {
