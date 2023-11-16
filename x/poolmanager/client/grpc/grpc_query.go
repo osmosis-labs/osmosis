@@ -71,6 +71,16 @@ func (q Querier) SpotPrice(grpcCtx context.Context,
 	return q.Q.SpotPrice(ctx, *req)
 }
 
+func (q Querier) ListPoolsByDenom(grpcCtx context.Context,
+	req *queryproto.ListPoolsByDenomRequest,
+) (*queryproto.ListPoolsByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ListPoolsByDenom(ctx, *req)
+}
+
 func (q Querier) Pool(grpcCtx context.Context,
 	req *queryproto.PoolRequest,
 ) (*queryproto.PoolResponse, error) {
