@@ -2,6 +2,7 @@ package poolmanager
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -12,6 +13,8 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
+
+var OSMO = "uosmo"
 
 // Define a structure to represent the routing graph
 type RoutingGraph map[string]map[string][]uint64
@@ -105,7 +108,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 
 	// Get all two-hop routes
 	var twoHopPoolIDs [][]uint64
-	if inputDenom != "uosmo" && outputDenom != "uosmo" {
+	if inputDenom != OSMO && outputDenom != OSMO {
 		twoHopPoolIDs = FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
 	}
 
@@ -168,11 +171,22 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 		routeLiquidity[routeKey] = totalLiquidityInOsmo
 	}
 
+	// Extract and sort the keys from the routeLiquidity map
+	// This ensures deterministic selection of the best route
+	var keys []string
+	for k := range routeLiquidity {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	// Find the route (single or double hop) with the highest liquidity
 	var bestRouteKey string
 	maxLiquidity := osmomath.ZeroInt()
-	for routeKey, liquidity := range routeLiquidity {
-		if liquidity.GTE(maxLiquidity) {
+	for _, routeKey := range keys {
+		liquidity := routeLiquidity[routeKey]
+		// Update best route if a higher liquidity is found,
+		// or if the liquidity is equal but the routeKey is encountered earlier in the sorted order
+		if liquidity.GT(maxLiquidity) || (liquidity.Equal(maxLiquidity) && bestRouteKey == "") {
 			bestRouteKey = routeKey
 			maxLiquidity = liquidity
 		}
@@ -212,12 +226,12 @@ func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom 
 	}
 
 	// Get all direct routes from the input denom to uosmo
-	directPoolIDs := FindDirectRoute(k.routeMap, inputDenom, "uosmo")
+	directPoolIDs := FindDirectRoute(k.routeMap, inputDenom, OSMO)
 
 	// Store liquidity for all direct routes found
 	routeLiquidity := make(map[string]osmomath.Int)
 	for _, poolID := range directPoolIDs {
-		liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, "uosmo")
+		liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, OSMO)
 		if err != nil {
 			return 0, err
 		}
@@ -260,7 +274,7 @@ func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom 
 // Transform an input denom and its amount to uosmo
 // If a route is not found, returns 0 with no error.
 func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int) (osmomath.Int, error) {
-	if inputDenom == "uosmo" {
+	if inputDenom == OSMO {
 		return amount, nil
 	}
 	// start by getting the route from the input denom to uosmo
@@ -270,7 +284,7 @@ func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmo
 	}
 
 	// spot price of uosmo to input denom
-	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, route, "uosmo", inputDenom)
+	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, route, OSMO, inputDenom)
 	if err != nil {
 		return osmomath.ZeroInt(), err
 	}
