@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -10,9 +9,6 @@ import (
 )
 
 type RoutablePool interface {
-	json.Marshaler
-	json.Unmarshaler
-
 	PoolI
 	GetTokenOutDenom() string
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
@@ -29,7 +25,6 @@ type RoutableResultPool interface {
 }
 
 type Route interface {
-	json.Unmarshaler
 	GetPools() []RoutablePool
 	DeepCopy() Route
 	AddPool(pool PoolI, tokenOut string, takerFee osmomath.Dec)
@@ -106,6 +101,7 @@ type RouterConfig struct {
 	// Denominated in OSMO (not uosmo)
 	MinOSMOLiquidity          int
 	RouteUpdateHeightInterval int64
+	RouteCacheEnabled         bool
 }
 
 // DenomPair encapsulates a pair of denoms.

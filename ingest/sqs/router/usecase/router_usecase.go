@@ -116,13 +116,15 @@ func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, erro
 // - there is an error retrieving routes from cache
 // - there are no routes cached and there is an error computing them
 // - fails to persist the computed routes in cache
-func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
+func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (routes []domain.Route, err error) {
 	r.logger.Info("getting routes")
 
-	// Check cache for routes
-	routes, err := r.routerRepository.GetRoutes(ctx, tokenInDenom, tokenOutDenom)
-	if err != nil {
-		return nil, err
+	// Check cache for routes if enabled
+	if r.config.RouteCacheEnabled {
+		routes, err = r.routerRepository.GetRoutes(ctx, tokenInDenom, tokenOutDenom)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO: swithch to debug

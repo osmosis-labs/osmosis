@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -10,18 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	clqueryproto "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 // PoolI represents a generalized Pool interface.
 type PoolI interface {
-	json.Marshaler
-	json.Unmarshaler
-
 	// GetId returns the ID of the pool.
 	GetId() uint64
 	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
@@ -68,74 +60,6 @@ type PoolWrapper struct {
 	ChainModel poolmanagertypes.PoolI `json:"underlying_pool"`
 	SQSModel   SQSPool                `json:"sqs_model"`
 	TickModel  *TickModel             `json:"tick_model,omitempty"`
-}
-
-type serializePool struct {
-	ChainModelData []byte                    `json:"chain_model"`
-	SQSPoolData    SQSPool                   `json:"sqs_model"`
-	TickModelData  *TickModel                `json:"tick_model,omitempty"`
-	PoolType       poolmanagertypes.PoolType `json:"pool_type"`
-}
-
-// UnmarshalJSON implements PoolI.
-func (p *PoolWrapper) UnmarshalJSON(data []byte) error {
-	var serializedPool serializePool
-	err := json.Unmarshal(data, &serializedPool)
-	if err != nil {
-		return err
-	}
-
-	switch serializedPool.PoolType {
-	case poolmanagertypes.Concentrated:
-		var concentratedPool concentratedmodel.Pool
-		err = json.Unmarshal(serializedPool.ChainModelData, &concentratedPool)
-		if err != nil {
-			return err
-		}
-		p.ChainModel = &concentratedPool
-	case poolmanagertypes.Balancer:
-		var balancerPool balancer.Pool
-		err = json.Unmarshal(serializedPool.ChainModelData, &balancerPool)
-		if err != nil {
-			return err
-		}
-		p.ChainModel = &balancerPool
-	case poolmanagertypes.Stableswap:
-		var stableswapPool stableswap.Pool
-		err = json.Unmarshal(serializedPool.ChainModelData, &stableswapPool)
-		if err != nil {
-			return err
-		}
-		p.ChainModel = &stableswapPool
-	case poolmanagertypes.CosmWasm:
-		var cosmwasmPool cosmwasmpoolmodel.Pool
-		err = json.Unmarshal(serializedPool.ChainModelData, &cosmwasmPool)
-		if err != nil {
-			return err
-		}
-		p.ChainModel = &cosmwasmPool
-	default:
-		return fmt.Errorf("invalid pool type (%d)", serializedPool.PoolType)
-	}
-
-	p.SQSModel = serializedPool.SQSPoolData
-	p.TickModel = serializedPool.TickModelData
-
-	return nil
-}
-
-// MarshalJSON implements PoolI.
-func (p *PoolWrapper) MarshalJSON() ([]byte, error) {
-	bytes, err := json.Marshal(p.ChainModel)
-	if err != nil {
-		return nil, err
-	}
-
-	var serializedPool serializePool
-	serializedPool.ChainModelData = bytes
-	serializedPool.PoolType = p.GetType()
-
-	return json.Marshal(serializedPool)
 }
 
 var _ PoolI = &PoolWrapper{}

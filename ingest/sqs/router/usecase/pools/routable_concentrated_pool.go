@@ -1,13 +1,10 @@
 package pools
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	// "github.com/gogo/protobuf/codec"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
@@ -21,7 +18,6 @@ import (
 var _ domain.RoutablePool = &routableConcentratedPoolImpl{}
 
 type routableConcentratedPoolImpl struct {
-	// codec codec.Codec `json:"-"`
 	domain.PoolI
 	TokenOutDenom string       "json:\"token_out_denom\""
 	TakerFee      osmomath.Dec "json:\"taker_fee\""
@@ -178,45 +174,6 @@ func (r *routableConcentratedPoolImpl) String() string {
 func (r *routableConcentratedPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
 	tokenInAfterTakerFee, _ := poolmanager.CalcTakerFeeExactIn(tokenIn, r.GetTakerFee())
 	return tokenInAfterTakerFee
-}
-
-// MarshalJSON implements domain.RoutablePool.
-func (r *routableConcentratedPoolImpl) MarshalJSON() ([]byte, error) {
-	var (
-		routablePoolSerialized routableSerializedPool
-		err                    error
-	)
-	bz, err := json.Marshal(r.PoolI)
-	if err != nil {
-		return nil, err
-	}
-
-	routablePoolSerialized.PoolData = bz
-	routablePoolSerialized.TokenOutDenom = r.TokenOutDenom
-	routablePoolSerialized.TakerFee = r.TakerFee
-
-	return json.Marshal(routablePoolSerialized)
-}
-
-// UnmarshalJSON implements domain.RoutablePool.
-func (r *routableConcentratedPoolImpl) UnmarshalJSON(data []byte) error {
-	var routablePoolSerialized routableSerializedPool
-	err := json.Unmarshal(data, &routablePoolSerialized)
-	if err != nil {
-		return err
-	}
-
-	r.PoolI = &domain.PoolWrapper{}
-
-	err = json.Unmarshal(routablePoolSerialized.PoolData, r.PoolI)
-	if err != nil {
-		return err
-	}
-
-	r.TokenOutDenom = routablePoolSerialized.TokenOutDenom
-	r.TakerFee = routablePoolSerialized.TakerFee
-
-	return nil
 }
 
 // TODO: switch to proper logging

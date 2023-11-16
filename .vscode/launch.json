@@ -304,7 +304,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestHandleRoutes_NoCacheRoutes",
+                "TestRouterTestSuite/TestFindRoutes",
                 "-test.v"
             ],
         },
@@ -318,21 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestRouteMarshalUnmarshal",
-                "-test.v"
-            ],
-        },
-        {
-            "name": "ingest/sqs/router/usecase/route",
-            "type": "go",
-            "request": "launch",
-            "mode": "test",
-            "program": "${workspaceFolder}/ingest/sqs/router/usecase/route",
-            "args": [
-                "-test.timeout",
-                "30m",
-                "-test.run",
-                "TestRouterTestSuite/TestRouteMarshalUnmarshal",
+                "TestRouterTestSuite/TestFindRoutes",
                 "-test.v"
             ],
         },

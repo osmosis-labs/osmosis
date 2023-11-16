@@ -173,7 +173,6 @@ require (
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
 	github.com/go-toolsmith/astcopy v1.1.0 // indirect
 	github.com/go-toolsmith/astequal v1.1.0 // indirect
