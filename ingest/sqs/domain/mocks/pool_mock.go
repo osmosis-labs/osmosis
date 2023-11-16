@@ -25,6 +25,16 @@ type MockRoutablePool struct {
 
 var DefaultSpreadFactor = osmomath.MustNewDecFromStr("0.005")
 
+// MarshalJSON implements domain.RoutablePool.
+func (*MockRoutablePool) MarshalJSON() ([]byte, error) {
+	panic("unimplemented")
+}
+
+// UnmarshalJSON implements domain.RoutablePool.
+func (*MockRoutablePool) UnmarshalJSON([]byte) error {
+	panic("unimplemented")
+}
+
 var (
 	_ domain.PoolI        = &MockRoutablePool{}
 	_ domain.RoutablePool = &MockRoutablePool{}

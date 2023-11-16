@@ -1,6 +1,7 @@
 package pools
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -21,6 +22,45 @@ type routableCFMMPoolImpl struct {
 	domain.PoolI
 	TokenOutDenom string       "json:\"token_out_denom\""
 	TakerFee      osmomath.Dec "json:\"taker_fee\""
+}
+
+// MarshalJSON implements domain.RoutablePool.
+func (r *routableCFMMPoolImpl) MarshalJSON() ([]byte, error) {
+	var (
+		routablePoolSerialized routableSerializedPool
+		err                    error
+	)
+	bz, err := json.Marshal(r.PoolI)
+	if err != nil {
+		return nil, err
+	}
+
+	routablePoolSerialized.PoolData = bz
+	routablePoolSerialized.TokenOutDenom = r.TokenOutDenom
+	routablePoolSerialized.TakerFee = r.TakerFee
+
+	return json.Marshal(routablePoolSerialized)
+}
+
+// UnmarshalJSON implements domain.RoutablePool.
+func (r *routableCFMMPoolImpl) UnmarshalJSON(data []byte) error {
+	var routablePoolSerialized routableSerializedPool
+	err := json.Unmarshal(data, &routablePoolSerialized)
+	if err != nil {
+		return err
+	}
+
+	r.PoolI = &domain.PoolWrapper{}
+
+	err = json.Unmarshal(routablePoolSerialized.PoolData, r.PoolI)
+	if err != nil {
+		return err
+	}
+
+	r.TokenOutDenom = routablePoolSerialized.TokenOutDenom
+	r.TakerFee = routablePoolSerialized.TakerFee
+
+	return nil
 }
 
 // NewRoutablePool creates a new RoutablePool.
@@ -96,4 +136,9 @@ func (r *routableCFMMPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInA
 // GetTakerFee implements domain.RoutablePool.
 func (r *routableCFMMPoolImpl) GetTakerFee() math.LegacyDec {
 	return r.TakerFee
+}
+
+// UnsmarshalJSON implements domain.RoutablePool.
+func (r *routableCFMMPoolImpl) UnsmarshalJSON(b []byte) error {
+	return r.UnsmarshalJSON(b)
 }

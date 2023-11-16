@@ -33,10 +33,10 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
 
 	goCtx := sdk.WrapSDKContext(ctx)
 
-	// Begin by flushing all previous writes
-	if err := tx.ClearAll(goCtx); err != nil {
-		return err
-	}
+	// // Begin by flushing all previous writes
+	// if err := tx.ClearAll(goCtx); err != nil {
+	// 	return err
+	// }
 
 	// Process block by reading and writing data and ingesting data into sinks
 	if err := i.poolsIngester.ProcessBlock(ctx, tx); err != nil {
