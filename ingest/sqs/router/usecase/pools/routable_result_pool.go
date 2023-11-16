@@ -1,6 +1,7 @@
 package pools
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -28,6 +29,46 @@ type routableResultPoolImpl struct {
 	SpreadFactor  osmomath.Dec              "json:\"spread_factor\""
 	TokenOutDenom string                    "json:\"token_out_denom\""
 	TakerFee      osmomath.Dec              "json:\"taker_fee\""
+}
+
+type auxRoutableResultPoolImpl struct {
+	ID            uint64                    "json:\"id\""
+	Type          poolmanagertypes.PoolType "json:\"type\""
+	Balances      sdk.Coins                 "json:\"balances\""
+	SpreadFactor  osmomath.Dec              "json:\"spread_factor\""
+	TokenOutDenom string                    "json:\"token_out_denom\""
+	TakerFee      osmomath.Dec              "json:\"taker_fee\""
+}
+
+// MarshalJSON implements domain.RoutablePool.
+func (r *routableResultPoolImpl) MarshalJSON() ([]byte, error) {
+	aux := auxRoutableResultPoolImpl{}
+	aux.ID = r.ID
+	aux.Type = r.Type
+	aux.Balances = r.Balances
+	aux.SpreadFactor = r.SpreadFactor
+	aux.TokenOutDenom = r.TokenOutDenom
+	aux.TakerFee = r.TakerFee
+
+	return json.Marshal(aux)
+}
+
+// UnmarshalJSON implements domain.RoutablePool.
+func (r *routableResultPoolImpl) UnmarshalJSON([]byte) error {
+	aux := auxRoutableResultPoolImpl{}
+	err := json.Unmarshal([]byte{}, &aux)
+	if err != nil {
+		return err
+	}
+
+	r.ID = aux.ID
+	r.Type = aux.Type
+	r.Balances = aux.Balances
+	r.SpreadFactor = aux.SpreadFactor
+	r.TokenOutDenom = aux.TokenOutDenom
+	r.TakerFee = aux.TakerFee
+
+	return nil
 }
 
 // NewRoutableResultPool returns the new routable result pool with the given parameters.

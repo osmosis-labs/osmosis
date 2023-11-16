@@ -1,6 +1,7 @@
 package route
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -12,9 +13,65 @@ import (
 )
 
 var _ domain.Route = &RouteImpl{}
+var _ json.Unmarshaler = &RouteImpl{}
+var _ json.Marshaler = &RouteImpl{}
 
 type RouteImpl struct {
 	Pools []domain.RoutablePool "json:\"pools\""
+}
+
+// MarshalJSON implements json.Marshaler.
+func (r *RouteImpl) MarshalJSON() ([]byte, error) {
+	serializedPools := make([]json.RawMessage, len(r.Pools))
+
+	for i, pool := range r.Pools {
+
+		bz, err := pool.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+
+		serializedPool := &pools.SerializedPoolByType{
+			PoolData: bz,
+			PoolType: pool.GetType(),
+		}
+
+		finalBytes, err := json.Marshal(serializedPool)
+		if err != nil {
+			return nil, err
+		}
+
+		serializedPools[i] = finalBytes
+	}
+
+	return json.Marshal(serializedPools)
+}
+
+// UnmarshalJSON implements domain.Route.
+func (r *RouteImpl) UnmarshalJSON(data []byte) error {
+	var serializedPools []json.RawMessage
+	err := json.Unmarshal(data, &serializedPools)
+	if err != nil {
+		return err
+	}
+
+	r.Pools = make([]domain.RoutablePool, len(serializedPools))
+	for i, serialziedPool := range serializedPools {
+		var poolImpl pools.SerializedPoolByType
+
+		if err := json.Unmarshal(serialziedPool, &poolImpl); err != nil {
+			return err
+		}
+
+		pool, err := poolImpl.Unmarshal(serialziedPool)
+		if err != nil {
+			return err
+		}
+
+		r.Pools[i] = pool
+	}
+
+	return nil
 }
 
 // PrepareResultPools implements domain.Route.

@@ -293,11 +293,10 @@ func NewOsmosisApp(
 		routerConfig := domain.RouterConfig{
 			PreferredPoolIDs:          []uint64{},
 			MaxPoolsPerRoute:          4,
-			MaxRoutes:                 5,
+			MaxRoutes:                 10,
 			MaxSplitIterations:        10,
 			MinOSMOLiquidity:          10000, // 10_000 OSMO
 			RouteUpdateHeightInterval: 0,
-			RouteCacheEnabled:         false,
 		}
 
 		// Create sidecar query server
