@@ -14,7 +14,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
-var OSMO = "uosmo"
+var (
+	OSMO                 = "uosmo"
+	superfluidMultiplier = sdk.MustNewDecFromStr("1.5")
+)
 
 // Define a structure to represent the routing graph
 type RoutingGraph map[string]map[string][]uint64
@@ -52,6 +55,30 @@ func FindTwoHopRoute(g RoutingGraph, start, end string) [][]uint64 {
 	return routePoolIDs
 }
 
+// Function to find all three-hop routes between two tokens
+func FindThreeHopRoute(g RoutingGraph, start, end string) [][]uint64 {
+	var routePoolIDs [][]uint64
+
+	for token1, pools1 := range g[start] {
+		for token2, pools2 := range g[token1] {
+			if token2 == start || token2 == end {
+				continue
+			}
+			if endPools, exists := g[token2][end]; exists {
+				for _, startPoolID := range pools1 {
+					for _, middlePoolID := range pools2 {
+						for _, endPoolID := range endPools {
+							routePoolIDs = append(routePoolIDs, []uint64{startPoolID, middlePoolID, endPoolID})
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return routePoolIDs
+}
+
 // SetDenomPairRoutes sets the route map to be used for route calculations
 func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	// Get all the pools
@@ -65,22 +92,8 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 
 	// Iterate through the pools
 	for _, pool := range pools {
-		// skip cosmwasmpool for now
-		// if pool.GetType() == types.CosmWasm {
-		// 	continue
-		// }
-		if pool.GetType() == types.CosmWasm {
-			fmt.Println("cosmwasmpool")
-			pool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
-			if !ok {
-				return fmt.Errorf("invalid pool type")
-			}
-			fmt.Println("pool id", pool.GetId())
-			fmt.Println("pool denoms", pool.GetPoolDenoms(ctx))
-		}
 		tokens := pool.GetPoolDenoms(ctx)
 		poolID := pool.GetId()
-
 		// Create edges for all possible combinations of tokens
 		for i := 0; i < len(tokens); i++ {
 			for j := i + 1; j < len(tokens); j++ {
@@ -97,10 +110,7 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 // GetDenomPairRoute returns the route with the highest liquidity between two tokens
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
 	if k.routeMap == nil {
-		err := k.SetDenomPairRoutes(ctx)
-		if err != nil {
-			return nil, err
-		}
+		return nil, fmt.Errorf("route map not set")
 	}
 
 	// Get all direct routes
@@ -110,6 +120,11 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 	var twoHopPoolIDs [][]uint64
 	if inputDenom != OSMO && outputDenom != OSMO {
 		twoHopPoolIDs = FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
+	}
+
+	var threeHopPoolIDs [][]uint64
+	if inputDenom != OSMO && outputDenom != OSMO {
+		threeHopPoolIDs = FindThreeHopRoute(k.routeMap, inputDenom, outputDenom)
 	}
 
 	// Map to store the total liquidity of each route (using string as key)
@@ -132,7 +147,14 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 			if err != nil {
 				return nil, err
 			}
-			liqInOsmo = liqInOsmoInternal.Add(liquidity)
+
+			if pool.GetType() == types.Concentrated {
+				liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
+			}
+
+			// Multiply the liquidity by six. This is because we are comparing single routes to a max of three-hop routes.
+			// To make this simple and comparable, we just multiply the single route liquidity by six.
+			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal.Mul(osmomath.NewIntFromUint64(6)))
 		}
 		routeKey := fmt.Sprintf("%v", poolID)
 		routeLiquidity[routeKey] = liqInOsmo
@@ -158,11 +180,43 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 				if err != nil {
 					return nil, err
 				}
-				// CL pools are more capital efficient
-				// multiply liquidity to account for this
-				// I know, magic number bad, but this gets us good results (matches frontend router)
+
 				if pool.GetType() == types.Concentrated {
-					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(sdk.MustNewDecFromStr("1.5")).TruncateInt()
+					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
+				}
+				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
+			}
+
+			// Multiply the liquidity by three. This is because we are comparing double route to a max of three-hop routes.
+			// To make this simple and comparable, we just multiply the single route liquidity by three.
+			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo.Mul(osmomath.NewIntFromUint64(3)))
+		}
+		routeLiquidity[routeKey] = totalLiquidityInOsmo
+	}
+
+	// Check liquidity for all three-hop routes
+	for _, poolIDs := range threeHopPoolIDs {
+		totalLiquidityInOsmo := osmomath.ZeroInt()
+		routeKey := fmt.Sprintf("%v", poolIDs)
+		for _, poolID := range poolIDs {
+			pool, err := k.GetPool(ctx, poolID)
+			if err != nil {
+				return nil, err
+			}
+			poolDenoms := pool.GetPoolDenoms(ctx)
+			liqInOsmo := osmomath.ZeroInt()
+			for _, denom := range poolDenoms {
+				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
+				if err != nil {
+					return nil, err
+				}
+				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+				if err != nil {
+					return nil, err
+				}
+
+				if pool.GetType() == types.Concentrated {
+					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
 				}
 				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
 			}
@@ -217,12 +271,8 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
 func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
-	// Set the route map to the keeper if it is not already set
 	if k.routeMap == nil {
-		err := k.SetDenomPairRoutes(ctx)
-		if err != nil {
-			return 0, err
-		}
+		return 0, fmt.Errorf("route map not set")
 	}
 
 	// Get all direct routes from the input denom to uosmo
@@ -239,18 +289,28 @@ func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom 
 		routeLiquidity[routeKey] = liquidity
 	}
 
-	// Find and select the route with the highest liquidity
+	// Extract and sort the keys from the routeLiquidity map
+	// This ensures deterministic selection of the best route
+	var keys []string
+	for k := range routeLiquidity {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Find the route (single or double hop) with the highest liquidity
 	var bestRouteKey string
 	maxLiquidity := osmomath.ZeroInt()
-	for routeKey, liquidity := range routeLiquidity {
-		if liquidity.GTE(maxLiquidity) {
+	for _, routeKey := range keys {
+		liquidity := routeLiquidity[routeKey]
+		// Update best route if a higher liquidity is found,
+		// or if the liquidity is equal but the routeKey is encountered earlier in the sorted order
+		if liquidity.GT(maxLiquidity) || (liquidity.Equal(maxLiquidity) && bestRouteKey == "") {
 			bestRouteKey = routeKey
 			maxLiquidity = liquidity
 		}
 	}
 	if bestRouteKey == "" {
-		fmt.Println("No suitable route found.")
-		return 0, fmt.Errorf("no route found with sufficient liquidity")
+		return 0, fmt.Errorf("no route found with sufficient liquidity, likely no direct pairing with osmo")
 	}
 
 	// Convert the best route key back to []uint64
@@ -267,7 +327,6 @@ func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom 
 	}
 
 	// Return the route with the highest liquidity
-	fmt.Printf("Route Selected: %v via Pool IDs: %v\n", strings.Join(strings.Split(bestRouteKey, " "), " -> "), bestRoute)
 	return bestRoute[0], nil
 }
 
@@ -320,7 +379,6 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 	case types.Concentrated:
 		poolAddress := pool.GetAddress()
 		poolAddressBalances := k.bankKeeper.GetAllBalances(ctx, poolAddress)
-		fmt.Println("poolAddressBalances", poolAddressBalances)
 		return poolAddressBalances.AmountOf(outputDenom), nil
 	case types.CosmWasm:
 		pool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
