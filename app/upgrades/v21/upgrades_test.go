@@ -34,6 +34,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.SetupWithCustomChainId(v21.TestingChainId)
+	s.PrepareAllSupportedPools()
 	routeMap := s.App.PoolManagerKeeper.GetRouteMap()
 	s.Require().Nil(routeMap)
 	dummyUpgrade(s)

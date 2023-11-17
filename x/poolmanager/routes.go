@@ -108,7 +108,13 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 }
 
 // GetDenomPairRoute returns the route with the highest liquidity between two tokens
-func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
+func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
+	// temp, remove later
+	err := k.SetDenomPairRoutes(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if k.routeMap == nil {
 		return nil, fmt.Errorf("route map not set")
 	}
@@ -265,7 +271,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 	}
 
 	// Return the route with the highest liquidity
-	fmt.Printf("Route Selected: %v via Pool IDs: %v\n", strings.Join(strings.Split(bestRouteKey, " "), " -> "), bestRoute)
+	fmt.Printf("Route Selected: %v \n", strings.Join(strings.Split(bestRouteKey, " "), " -> "))
 	return bestRoute, nil
 }
 
@@ -353,6 +359,8 @@ func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmo
 	return uosmoAmount.TruncateInt(), nil
 }
 
+// GetPoolLiquidityOfDenom returns the liquidity of a denom in a pool.
+// This calls different methods depending on the pool type.
 func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDenom string) (osmomath.Int, error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
