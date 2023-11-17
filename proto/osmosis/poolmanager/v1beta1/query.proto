@@ -380,8 +380,8 @@ message EstimateTradeBasedOnPriceImpactResponse {
 // DenomPairRoutesRequest represents a request to get a basic pool route to get
 // from tokenA to tokenB. There is no promise that this will be the best route.
 message DenomPairRoutesRequest {
-  string denom_0 = 1;
-  string denom_1 = 2;
+  cosmos.base.v1beta1.Coin input_coin = 1 [ (gogoproto.nullable) = false ];
+  string output_denom = 2;
 }
 
 message DenomPairRoutesResponse { repeated uint64 pool_route = 1; }

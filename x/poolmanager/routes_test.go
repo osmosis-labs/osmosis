@@ -11,7 +11,7 @@ import (
 func (s *KeeperTestSuite) TestDenomPairRoute() {
 	tests := map[string]struct {
 		setup         func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension)
-		inDenom       string
+		tokenIn       sdk.Coin
 		outDenom      string
 		expectedRoute []uint64
 		expectError   error
@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1100000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1100000000000000000))))
 			},
-			inDenom:       "btc",
+			tokenIn:       sdk.NewCoin("btc", sdk.NewInt(10000000)),
 			outDenom:      "stake",
 			expectedRoute: []uint64{6},
 		},
@@ -36,9 +36,9 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 				s.CreateFullRangePosition(barStake, sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(1000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000))))
 				s.CreateFullRangePosition(btcBar, sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1100000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1100000000000000000))))
-				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
+				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)), sdk.NewCoin("btc", sdk.NewInt(10000000))))
 			},
-			inDenom:       "btc",
+			tokenIn:       sdk.NewCoin("btc", sdk.NewInt(10000000)),
 			outDenom:      "stake",
 			expectedRoute: []uint64{5, 2},
 		},
@@ -49,9 +49,9 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 				s.CreateFullRangePosition(barStake, sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(1000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000))))
 				s.CreateFullRangePosition(btcBar, sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(1100000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1100000000000000000))))
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
-				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
+				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)), sdk.NewCoin("btc", sdk.NewInt(10000000))))
 			},
-			inDenom:       "btc",
+			tokenIn:       sdk.NewCoin("btc", sdk.NewInt(10000000)),
 			outDenom:      "stake",
 			expectedRoute: []uint64{4, 3},
 		},
@@ -62,9 +62,9 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 				s.CreateFullRangePosition(barStake, sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(1000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000))))
 				s.CreateFullRangePosition(btcBar, sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(1100000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1100000000000000000))))
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
-				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
+				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)), sdk.NewCoin("btc", sdk.NewInt(10000000))))
 			},
-			inDenom:       "stake",
+			tokenIn:       sdk.NewCoin("stake", sdk.NewInt(10000000)),
 			outDenom:      "btc",
 			expectedRoute: []uint64{3, 4},
 		},
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)), sdk.NewCoin("btc", sdk.NewInt(1000000000000000000))))
 			},
-			inDenom:       "eth",
+			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(10000000)),
 			outDenom:      "stbtc",
 			expectedRoute: []uint64{8, 9, 10},
 		},
@@ -103,8 +103,8 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"btc", "stake"}) // pool 7
 
 			// Create three route (eth -> bar -> test -> stbtc)
-			s.PrepareConcentratedPoolWithCoins("eth", "bar")                        // pool 8
-			s.PrepareConcentratedPoolWithCoins("test", "bar")                       // pool 9
+			s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("eth", "bar")    // pool 8
+			s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("test", "bar")   // pool 9
 			s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"test", "stbtc"}) // pool 10
 
 			tc.setup(ethStake, barStake, btcBar, btcEth, btcStake)
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			s.Require().NoError(err)
 
 			// Get the route
-			route, err := poolmanagerKeeper.GetDenomPairRoute(s.Ctx, tc.inDenom, tc.outDenom)
+			route, err := poolmanagerKeeper.GetDenomPairRoute(s.Ctx, tc.tokenIn, tc.outDenom)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedRoute, route)
 		})

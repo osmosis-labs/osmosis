@@ -405,7 +405,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 }
 
 func (q Querier) DenomPairRoutes(ctx sdk.Context, req queryproto.DenomPairRoutesRequest) (*queryproto.DenomPairRoutesResponse, error) {
-	routes, err := q.K.GetDenomPairRoute(ctx, req.Denom_0, req.Denom_1)
+	routes, err := q.K.GetDenomPairRoute(ctx, req.InputCoin, req.OutputDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
