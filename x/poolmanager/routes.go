@@ -275,7 +275,10 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
 func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
 	if k.routeMap == nil {
-		return 0, fmt.Errorf("route map not set")
+		err := k.SetDenomPairRoutes(ctx)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	// Get all direct routes from the input denom to uosmo
