@@ -34,10 +34,15 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.SetupWithCustomChainId(v21.TestingChainId)
+	routeMap := s.App.PoolManagerKeeper.GetRouteMap()
+	s.Require().Nil(routeMap)
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
+
+	routeMap = s.App.PoolManagerKeeper.GetRouteMap()
+	s.Require().NotNil(routeMap)
 
 	// Psuedo collect cyclic arb profits
 	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
