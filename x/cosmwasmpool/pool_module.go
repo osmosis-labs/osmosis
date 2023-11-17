@@ -100,12 +100,15 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
-			pool := model.Pool{}
+			pool := model.CosmWasmPool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
 				return nil, err
 			}
-			return &pool, nil
+			return &model.Pool{
+				CosmWasmPool: pool,
+				WasmKeeper:   k.wasmKeeper,
+			}, nil
 		},
 	)
 }
@@ -127,19 +130,16 @@ func (k Keeper) GetPoolsSerializable(ctx sdk.Context) ([]poolmanagertypes.PoolI,
 	)
 }
 
-// GetPoolsWithWasmKeeper behaves the same as GetPools, but it also sets the WasmKeeper field of the pool.
-func (k Keeper) GetPoolsWithWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+// GetPoolsWithoutWasmKeeper behaves the same as GetPools, but does not set the WasmKeeper field of the pool.
+func (k Keeper) GetPoolsWithoutWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
-			pool := model.CosmWasmPool{}
+			pool := model.Pool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
 				return nil, err
 			}
-			return &model.Pool{
-				CosmWasmPool: pool,
-				WasmKeeper:   k.wasmKeeper,
-			}, nil
+			return &pool, nil
 		},
 	)
 }
@@ -400,7 +400,7 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 // GetTotalLiquidity retrieves the total liquidity of all cw pools.
 func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	totalLiquidity := sdk.Coins{}
-	pools, err := k.GetPoolsWithWasmKeeper(ctx)
+	pools, err := k.GetPools(ctx)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

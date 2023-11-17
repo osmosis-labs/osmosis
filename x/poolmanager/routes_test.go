@@ -56,14 +56,17 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 
 			s.PrepareBalancerPool() // pool 1
 
-			// Create pools for indirect route
+			// Create cl pools for indirect routes
 			ethStake := s.PrepareConcentratedPoolWithCoins("eth", "stake") // pool 2
 			barStake := s.PrepareConcentratedPoolWithCoins("bar", "stake") // pool 3
 			btcBar := s.PrepareConcentratedPoolWithCoins("btc", "bar")     // pool 4
 			btcEth := s.PrepareConcentratedPoolWithCoins("btc", "eth")     // pool 5
 
-			// Create pool for direct route
+			// Create cl pool for direct routes
 			btcStake := s.PrepareConcentratedPoolWithCoins("btc", "stake") // pool 6
+
+			// Create cw pools for direct route
+			s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"btc", "stake"}) // pool 7
 
 			tc.setup(ethStake, barStake, btcBar, btcEth, btcStake)
 
