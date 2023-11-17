@@ -531,8 +531,6 @@ github.com/influxdata/promql/v2 v2.12.0/go.mod h1:fxOPu+DY0bqCTCECchSRtWfc+0X19y
 github.com/influxdata/roaring v0.4.13-0.20180809181101-fc520f41fab6/go.mod h1:bSgUQ7q5ZLSO+bKBGqJiCBGAl+9DxyW63zLTujjUlOE=
 github.com/influxdata/tdigest v0.0.0-20181121200506-bf2b5ad3c0a9/go.mod h1:Js0mqiSBE6Ffsg94weZZ2c+v/ciT8QRHFOap7EKDrR0=
 github.com/influxdata/usage-client v0.0.0-20160829180054-6d3895376368/go.mod h1:Wbbw6tYNvwa5dlB6304Sd+82Z3f7PmVZHVKU637d4po=
-github.com/informalsystems/tendermint v0.34.24 h1:2beNEg5tp+U5oj/Md+0xDBsMHGbdue31T3OrstS6xS0=
-github.com/informalsystems/tendermint v0.34.24/go.mod h1:rXVrl4OYzmIa1I91av3iLv2HS0fGSiucyW9J4aMTpKI=
 github.com/jackpal/go-nat-pmp v1.0.2/go.mod h1:QPH045xvCAeXUZOxsnwmrtiCoxIr9eob+4orBN1SBKc=
 github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e/go.mod h1:G1CVv03EnqU1wYL2dFwXxW2An0az9JTl/ZsqXQeBlkU=
 github.com/jessevdk/go-flags v0.0.0-20141203071132-1679536dcc89/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
@@ -713,12 +711,15 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb h1
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb/go.mod h1:jNZ952fypVNMzOsh31LAUS27JbF9naNJGtELxId6ZCg=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366 h1:EJDJ88w2Yv5LnlaJw5x53C0k/dp/fnEYOfBYOQiMsTc=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366/go.mod h1:Zmyx5zMUBN2KV94booSFn2v8KQcUKeCHqyWpKZ4PRMo=
+github.com/osmosis-labs/osmosis/v19 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
 github.com/osmosis-labs/osmosis/v20 v20.0.0 h1:r38aRP+iZVD0XfhgFlK+NUP2ALeMec0uAPv2dJvFAQ8=
 github.com/osmosis-labs/osmosis/v20 v20.0.0/go.mod h1:7qBmLJPdHxxG56ij+4/GURzMX8gJcT+uokdbT4ChZ3Q=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366 h1:E6H0V3MKbSNwo1iXE9Kzatd2M02MgZpS5AiJ6CKK5us=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366/go.mod h1:vU0IHK5W38dqMeux3MkSaT3MZU6whAkx7vNuxv1IzeU=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb h1:6lYLEiJERdD+QK925XYyHkvNyvQTghVFufMH5VAQLpg=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb/go.mod h1:3xD12hg/OzBdtrCOJHGGJrI2zRAdOXBfqFoPP33x0jQ=
+github.com/osmosis-labs/tendermint-informal v0.34.25-0.20231117112816-d5970d73aa68 h1:AwhZSVbUZfHZAz91TVCBvEAyh0RLxlJu7MdFDz2qxjg=
+github.com/osmosis-labs/tendermint-informal v0.34.25-0.20231117112816-d5970d73aa68/go.mod h1:rXVrl4OYzmIa1I91av3iLv2HS0fGSiucyW9J4aMTpKI=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16/go.mod h1:Rf8zW/GgBQyFRRB4s62VQHWA6sTlMFSjoDQQpoq64iI=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=

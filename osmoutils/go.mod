@@ -147,7 +147,7 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/osmosis-labs/osmosis/v20 => github.com/osmosis-labs/osmosis/v20 v20.0.0-20231013004957-68679fa93963
-	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
+	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint-informal d5970d73aa68
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

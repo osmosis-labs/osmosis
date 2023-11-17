@@ -157,7 +157,7 @@ replace (
 	github.com/osmosis-labs/osmosis/v19 => ../../
 
 	// Informal Tendermint fork
-	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
+	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint-informal v0.34.25-0.20231117112816-d5970d73aa68
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
