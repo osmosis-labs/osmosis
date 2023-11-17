@@ -82,13 +82,8 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 
 // GetDenomPairRoute returns the route with the highest liquidity between two tokens
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
-	// if k.routeMap == nil {
-	// 	return nil, fmt.Errorf("route map not set")
-	// }
-	// TODO, undo
-	err := k.SetDenomPairRoutes(ctx)
-	if err != nil {
-		return nil, err
+	if k.routeMap == nil {
+		return nil, fmt.Errorf("route map not set")
 	}
 
 	// Get all direct routes
