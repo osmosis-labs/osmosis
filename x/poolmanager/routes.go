@@ -490,7 +490,6 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 			})
 		}
 
-		fmt.Println("swapRoute: ", swapRoute)
 		// Call MultihopEstimateOutGivenExactAmountIn with swapRoute
 		amtOut, err := k.MultihopEstimateOutGivenExactAmountIn(ctx, swapRoute, inputCoin)
 		if err != nil {
