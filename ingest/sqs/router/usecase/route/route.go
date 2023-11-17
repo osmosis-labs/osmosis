@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 )
@@ -53,9 +54,17 @@ func (r *RouteImpl) GetPools() []domain.RoutablePool {
 	return r.Pools
 }
 
+// DeepCopy implements Route.
 func (r RouteImpl) DeepCopy() domain.Route {
 	poolsCopy := make([]domain.RoutablePool, len(r.Pools))
-	copy(poolsCopy, r.Pools)
+
+	for i, pool := range r.Pools {
+		tokenOutDenom := pool.GetTokenOutDenom()
+		takerFee := pool.GetTakerFee()
+		// TODO: pool is actually not deep copied but this should be fine temporarily
+		poolsCopy[i] = pools.NewRoutablePool(pool, tokenOutDenom, takerFee)
+	}
+
 	return &RouteImpl{
 		Pools: poolsCopy,
 	}
@@ -91,7 +100,7 @@ func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.C
 func (r *RouteImpl) String() string {
 	var strBuilder strings.Builder
 	for _, pool := range r.Pools {
-		_, err := strBuilder.WriteString(pool.String())
+		_, err := strBuilder.WriteString(fmt.Sprintf("{{%s %s}}", pool.String(), pool.GetTokenOutDenom()))
 		if err != nil {
 			panic(err)
 		}
@@ -109,4 +118,36 @@ func (r *RouteImpl) GetTokenOutDenom() string {
 	}
 
 	return r.Pools[len(r.Pools)-1].GetTokenOutDenom()
+}
+
+// Reverse reverses the route, making it become as if the current tokenOutDenom is tokenInDenom.
+// Relies on providing the desiredTokenInDenom which must be the tokenOutDenom of the first pool in the route.
+// Errors if the token out denom of the previous pool is equal to the token out denom of the current pool.
+// Errors if the token out denom of the previous pool is not contained in the pool denoms of the current pool.
+// Returns nil on success.
+func (r *RouteImpl) Reverse(desiredTokenInDenom string) error {
+	previousTokenOut := desiredTokenInDenom
+
+	for i, currentPool := range r.Pools {
+
+		nextTokenOutDenom := currentPool.GetTokenOutDenom()
+
+		// Validate
+		if previousTokenOut == nextTokenOutDenom {
+			return fmt.Errorf("previous token out denom equals next token out denom (%s), %s, pool index (%d)", previousTokenOut, r.Pools, i)
+		}
+
+		currentPoolDenoms := currentPool.GetPoolDenoms()
+		if !osmoutils.Contains(currentPoolDenoms, previousTokenOut) {
+			return fmt.Errorf("previous token out denom %s not in pool denoms %v, route (%s)", nextTokenOutDenom, currentPoolDenoms, r.Pools)
+		}
+
+		currentPool.SetTokenOutDenom(previousTokenOut)
+
+		previousTokenOut = nextTokenOutDenom
+	}
+
+	r.Pools = osmoutils.ReverseSlice(r.Pools)
+
+	return nil
 }

@@ -123,9 +123,10 @@ func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
 	poolType := p.GetType()
 
 	sqsModel := p.GetSQSPoolModel()
+	poolDenoms := p.GetPoolDenoms()
 
-	if len(sqsModel.PoolDenoms) < 2 {
-		return fmt.Errorf("pool (%d) has fewer than 2 denoms (%d)", p.GetId(), len(sqsModel.PoolDenoms))
+	if len(poolDenoms) < 2 {
+		return fmt.Errorf("pool (%d) has fewer than 2 denoms (%d)", p.GetId(), len(poolDenoms))
 	}
 
 	// Note that balances are allowed to be zero because zero coins are filtered out.

@@ -2,6 +2,11 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	// "encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,6 +18,9 @@ type RoutablePool interface {
 	GetTokenOutDenom() string
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
 	ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin)
+
+	// SetTokenOutDenom sets the token out denom on the routable pool.
+	SetTokenOutDenom(tokenOutDenom string)
 
 	GetTakerFee() osmomath.Dec
 
@@ -26,6 +34,7 @@ type RoutableResultPool interface {
 
 type Route interface {
 	GetPools() []RoutablePool
+	// DeepCopy deep copies the route and returns the copy.
 	DeepCopy() Route
 	AddPool(pool PoolI, tokenOut string, takerFee osmomath.Dec)
 	// CalculateTokenOutByTokenIn calculates the token out amount given the token in amount.
@@ -40,6 +49,11 @@ type Route interface {
 	// Note that it mutates the route.
 	// Returns the resulting pools.
 	PrepareResultPools() []RoutablePool
+
+	// Reverse reverses the route, making it so the given denom is the token out denom.
+	// Errors if token out denom is not found in the first pool in the route.
+	// Errors if fails to cons
+	Reverse(desiredTokenOutDenom string) error
 
 	String() string
 }
@@ -72,6 +86,8 @@ type RouterUsecase interface {
 	GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (Quote, error)
 	// GetCandidateRoutes returns the candidate routes for the given tokenIn and tokenOutDenom.
 	GetCandidateRoutes(ctx context.Context, tokenInDenom, tokenOutDenom string) ([]Route, error)
+	// StoreRoutes stores all router state in the files locally. Used for debugging.
+	StoreRouterStateFiles(ctx context.Context) error
 }
 
 type SplitRoute interface {
@@ -115,6 +131,41 @@ type DenomPair struct {
 // TakerFeeMap is a map of DenomPair to taker fee.
 // It sorts the denoms lexicographically before looking up the taker fee.
 type TakerFeeMap map[DenomPair]osmomath.Dec
+
+var _ json.Marshaler = &TakerFeeMap{}
+var _ json.Unmarshaler = &TakerFeeMap{}
+
+// MarshalJSON implements json.Marshaler.
+func (m TakerFeeMap) MarshalJSON() ([]byte, error) {
+	serializedMap := map[string]osmomath.Dec{}
+	for key, value := range m {
+		// Convert DenomPair to a string representation
+		keyString := fmt.Sprintf("%s-%s", key.Denom0, key.Denom1)
+		serializedMap[keyString] = value
+	}
+
+	return json.Marshal(serializedMap)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (m TakerFeeMap) UnmarshalJSON(data []byte) error {
+	var serializedMap map[string]osmomath.Dec
+	if err := json.Unmarshal(data, &serializedMap); err != nil {
+		return err
+	}
+
+	// Convert string keys back to DenomPair
+	for keyString, value := range serializedMap {
+		parts := strings.Split(keyString, "-")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid key format: %s", keyString)
+		}
+		denomPair := DenomPair{Denom0: parts[0], Denom1: parts[1]}
+		(m)[denomPair] = value
+	}
+
+	return nil
+}
 
 // Has returns true if the taker fee for the given denoms is found.
 // It sorts the denoms lexicographically before looking up the taker fee.

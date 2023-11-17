@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 )
 
 var _ domain.RouterUsecase = &routerUseCaseImpl{}
@@ -141,7 +142,7 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 		}
 
 		// Persist routes
-		if len(routes) > 0 {
+		if len(routes) > 0 && r.config.RouteCacheEnabled {
 
 			r.logger.Info("persisting routes", zap.Int("num_routes", len(routes)))
 
@@ -152,4 +153,29 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 	}
 
 	return routes, nil
+}
+
+// StoreRouterStateFiles implements domain.RouterUsecase.
+// TODO: clean up
+func (r *routerUseCaseImpl) StoreRouterStateFiles(ctx context.Context) error {
+	pools, err := r.poolsUsecase.GetAllPools(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if err := parsing.StorePools(pools, "pools.json"); err != nil {
+		return err
+	}
+
+	takerFeesMap, err := r.routerRepository.GetAllTakerFees(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := parsing.StoreTakerFees("taker_fees.json", takerFeesMap); err != nil {
+		return err
+	}
+
+	return nil
 }
