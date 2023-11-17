@@ -52,6 +52,30 @@ func FindTwoHopRoute(g RoutingGraph, start, end string) [][]uint64 {
 	return routePoolIDs
 }
 
+// Function to find all three-hop routes between two tokens
+func FindThreeHopRoute(g RoutingGraph, start, end string) [][]uint64 {
+	var routePoolIDs [][]uint64
+
+	for token1, pools1 := range g[start] {
+		for token2, pools2 := range g[token1] {
+			if token2 == start || token2 == end {
+				continue
+			}
+			if endPools, exists := g[token2][end]; exists {
+				for _, startPoolID := range pools1 {
+					for _, middlePoolID := range pools2 {
+						for _, endPoolID := range endPools {
+							routePoolIDs = append(routePoolIDs, []uint64{startPoolID, middlePoolID, endPoolID})
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return routePoolIDs
+}
+
 // SetDenomPairRoutes sets the route map to be used for route calculations
 func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	// Get all the pools
@@ -95,6 +119,11 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 		twoHopPoolIDs = FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
 	}
 
+	var threeHopPoolIDs [][]uint64
+	if inputDenom != OSMO && outputDenom != OSMO {
+		threeHopPoolIDs = FindThreeHopRoute(k.routeMap, inputDenom, outputDenom)
+	}
+
 	// Map to store the total liquidity of each route (using string as key)
 	routeLiquidity := make(map[string]osmomath.Int)
 
@@ -119,9 +148,9 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 			if pool.GetType() == types.Concentrated {
 				liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(sdk.MustNewDecFromStr("1.5")).TruncateInt()
 			}
-			// Multiply the liquidity by two. This is because we are comparing single routes to two-hop routes.
-			// To make this simple and comparable, we just multiply the single route liquidity by two.
-			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal.Mul(osmomath.NewIntFromUint64(2)))
+			// Multiply the liquidity by six. This is because we are comparing single routes to a max of three-hop routes.
+			// To make this simple and comparable, we just multiply the single route liquidity by six.
+			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal.Mul(osmomath.NewIntFromUint64(6)))
 		}
 		routeKey := fmt.Sprintf("%v", poolID)
 		routeLiquidity[routeKey] = liqInOsmo
@@ -129,6 +158,41 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom strin
 
 	// Check liquidity for all two-hop routes
 	for _, poolIDs := range twoHopPoolIDs {
+		totalLiquidityInOsmo := osmomath.ZeroInt()
+		routeKey := fmt.Sprintf("%v", poolIDs)
+		for _, poolID := range poolIDs {
+			pool, err := k.GetPool(ctx, poolID)
+			if err != nil {
+				return nil, err
+			}
+			poolDenoms := pool.GetPoolDenoms(ctx)
+			liqInOsmo := osmomath.ZeroInt()
+			for _, denom := range poolDenoms {
+				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
+				if err != nil {
+					return nil, err
+				}
+				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+				if err != nil {
+					return nil, err
+				}
+				// CL pools are more capital efficient
+				// multiply liquidity to account for this
+				// I know, magic number bad, but this gets us good results (matches frontend router)
+				if pool.GetType() == types.Concentrated {
+					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(sdk.MustNewDecFromStr("1.5")).TruncateInt()
+				}
+				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
+			}
+			// Multiply the liquidity by three. This is because we are comparing double route to a max of three-hop routes.
+			// To make this simple and comparable, we just multiply the single route liquidity by three.
+			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo.Mul(osmomath.NewIntFromUint64(3)))
+		}
+		routeLiquidity[routeKey] = totalLiquidityInOsmo
+	}
+
+	// Check liquidity for all three-hop routes
+	for _, poolIDs := range threeHopPoolIDs {
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", poolIDs)
 		for _, poolID := range poolIDs {
