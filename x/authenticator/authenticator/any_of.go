@@ -11,9 +11,7 @@ import (
 
 type AnyOfAuthenticator struct {
 	SubAuthenticators []iface.Authenticator
-	executedAuths     []iface.Authenticator // track which sub-authenticators were executed
-
-	am *AuthenticatorManager
+	am                *AuthenticatorManager
 }
 
 type AnyOfAuthenticatorData struct {
@@ -29,7 +27,6 @@ func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
 	return AnyOfAuthenticator{
 		am:                am,
 		SubAuthenticators: []iface.Authenticator{},
-		executedAuths:     []iface.Authenticator{},
 	}
 }
 
@@ -106,7 +103,6 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddre
 	for idx, auth := range aoa.SubAuthenticators {
 		result := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
 		if result.IsAuthenticated() || result.IsRejected() {
-			// TODO: Do we want to wrap the error in  case or rejection?
 			return result
 		}
 	}
@@ -124,10 +120,10 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 }
 
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
-	// Call ConfirmExecution on executed sub-authenticators
-	for _, auth := range aoa.executedAuths {
-		if confirmation := auth.ConfirmExecution(ctx, nil, msg, authenticationData); confirmation.IsBlock() {
-			return confirmation
+	for _, auth := range aoa.SubAuthenticators {
+		result := auth.ConfirmExecution(ctx, account, msg, authenticationData)
+		if result.IsBlock() {
+			return result
 		}
 	}
 	return iface.Confirm()

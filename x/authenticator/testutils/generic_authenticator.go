@@ -3,9 +3,10 @@ package testutils
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 )
 
 var (
@@ -27,6 +28,7 @@ type (
 		GasConsumption int
 		BlockAddition  bool
 		BlockRemoval   bool
+		Confirm        ApproveOn
 	}
 )
 
@@ -37,7 +39,15 @@ func (t TestingAuthenticator) Type() string {
 	} else {
 		when = "Never"
 	}
-	return "TestingAuthenticator" + when + fmt.Sprintf("GasConsumption%d", t.GasConsumption) + fmt.Sprintf("BlockAddition%t", t.BlockAddition) + fmt.Sprintf("BlockRemoval%t", t.BlockRemoval)
+
+	var confirm string
+	if t.Confirm == Always {
+		confirm = "Confirm"
+	} else {
+		confirm = "Block"
+	}
+
+	return "TestingAuthenticator" + when + confirm + fmt.Sprintf("GasConsumption%d", t.GasConsumption) + fmt.Sprintf("BlockAddition%t", t.BlockAddition) + fmt.Sprintf("BlockRemoval%t", t.BlockRemoval)
 }
 
 func (t TestingAuthenticator) StaticGas() uint64 {
@@ -65,7 +75,11 @@ func (t TestingAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 }
 
 func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
-	return iface.Confirm()
+	if t.Confirm == Always {
+		return iface.Confirm()
+	} else {
+		return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block"))
+	}
 }
 
 func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {

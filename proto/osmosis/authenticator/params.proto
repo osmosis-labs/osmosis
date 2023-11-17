@@ -6,4 +6,7 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v20/x/authenticator/types";
 
 // Params defines the parameters for the module.
-message Params { option (gogoproto.goproto_stringer) = false; }
+message Params {
+  uint64 maximum_unauthenticated_gas = 1
+      [ (gogoproto.moretags) = "yaml:\"maximum_unauthenticated_gas\"" ];
+}

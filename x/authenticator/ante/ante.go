@@ -18,17 +18,14 @@ import (
 // before transaction execution.
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
-	maxFeePayerGas      uint64
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
-	maxFeePayerGas uint64,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
-		maxFeePayerGas:      maxFeePayerGas,
 	}
 }
 
@@ -53,7 +50,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// this approach presents challenges due to the implementation of the InfiniteGasMeter.
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
-	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
+	maximumUnauthenticatedGasParam := ad.authenticatorKeeper.GetParams(ctx)
+	payerGasMeter := sdk.NewGasMeter(maximumUnauthenticatedGasParam.MaximumUnauthenticatedGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
 	feeTx, ok := tx.(sdk.FeeTx)
@@ -76,7 +74,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
-					ad.maxFeePayerGas, payerGasMeter.GasConsumed())
+					maximumUnauthenticatedGasParam.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
 				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
 				panic(r)
@@ -179,19 +177,33 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
+// GetSelectedAuthenticators retrieves the selected authenticators for the provided transaction extension
+// and matches them with the number of messages in the transaction.
+// If no selected authenticators are found in the extension, the function initializes the list with -1 values.
+// It returns an array of selected authenticators or an error if the number of selected authenticators does not match
+// the number of messages in the transaction.
 func (ad AuthenticatorDecorator) GetSelectedAuthenticators(extTx authante.HasExtensionOptionsTx, msgCount int) ([]int32, error) {
+	// Initialize the list of selected authenticators with -1 values.
 	selectedAuthenticators := make([]int32, msgCount)
 	for i := range selectedAuthenticators {
 		selectedAuthenticators[i] = -1
 	}
 
+	// Get the transaction options from the AuthenticatorKeeper extension.
 	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+
 	if txOptions != nil {
+		// Retrieve the selected authenticators from the extension.
 		selectedAuthenticatorsFromExtension := txOptions.GetSelectedAuthenticators()
+
 		if len(selectedAuthenticatorsFromExtension) != msgCount {
+			// Return an error if the number of selected authenticators does not match the number of messages.
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Mismatch between the number of selected authenticators and messages")
 		}
+
+		// Use the selected authenticators from the extension.
 		selectedAuthenticators = selectedAuthenticatorsFromExtension
 	}
+
 	return selectedAuthenticators, nil
 }

@@ -17,12 +17,14 @@ import (
 
 type AggregatedAuthenticatorsTest struct {
 	suite.Suite
-	Ctx           sdk.Context
-	OsmosisApp    *app.OsmosisApp
-	AnyOfAuth     authenticator.AnyOfAuthenticator
-	AllOfAuth     authenticator.AllOfAuthenticator
-	alwaysApprove testutils.TestingAuthenticator
-	neverApprove  testutils.TestingAuthenticator
+	Ctx              sdk.Context
+	OsmosisApp       *app.OsmosisApp
+	AnyOfAuth        authenticator.AnyOfAuthenticator
+	AllOfAuth        authenticator.AllOfAuthenticator
+	alwaysApprove    testutils.TestingAuthenticator
+	neverApprove     testutils.TestingAuthenticator
+	approveAndBlock  testutils.TestingAuthenticator
+	rejectAndConfirm testutils.TestingAuthenticator
 }
 
 func TestAggregatedAuthenticatorsTest(t *testing.T) {
@@ -41,16 +43,30 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	s.alwaysApprove = testutils.TestingAuthenticator{
 		Approve:        testutils.Always,
 		GasConsumption: 10,
+		Confirm:        testutils.Always,
 	}
 	s.neverApprove = testutils.TestingAuthenticator{
 		Approve:        testutils.Never,
 		GasConsumption: 10,
+		Confirm:        testutils.Never,
+	}
+	s.approveAndBlock = testutils.TestingAuthenticator{
+		Approve:        testutils.Always,
+		GasConsumption: 10,
+		Confirm:        testutils.Never,
+	}
+	s.rejectAndConfirm = testutils.TestingAuthenticator{
+		Approve:        testutils.Never,
+		GasConsumption: 10,
+		Confirm:        testutils.Always,
 	}
 
 	am.RegisterAuthenticator(s.AnyOfAuth)
 	am.RegisterAuthenticator(s.AllOfAuth)
 	am.RegisterAuthenticator(s.alwaysApprove)
 	am.RegisterAuthenticator(s.neverApprove)
+	am.RegisterAuthenticator(s.approveAndBlock)
+	am.RegisterAuthenticator(s.rejectAndConfirm)
 }
 
 func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
@@ -62,6 +78,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 		name             string
 		authenticators   []iface.Authenticator
 		expectSuccessful bool
+		expectConfirm    bool
 	}
 
 	testCases := []testCase{
@@ -69,46 +86,73 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
+			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
+			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
+		},
+		{
+			name:             "approveAndBlock",
+			authenticators:   []iface.Authenticator{s.approveAndBlock},
+			expectSuccessful: true,
+			expectConfirm:    false,
+		},
+		{
+			name:             "rejectAndConfirm",
+			authenticators:   []iface.Authenticator{s.rejectAndConfirm},
+			expectSuccessful: false,
+			expectConfirm:    true,
+		},
+		{
+			name:             "approveAndBlock + rejectAndConfirm",
+			authenticators:   []iface.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
+			expectSuccessful: true,
+			expectConfirm:    false,
 		},
 	}
 
@@ -135,6 +179,9 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 
 			success := initializedAuth.Authenticate(s.Ctx, nil, nil, authData)
 			s.Require().Equal(tc.expectSuccessful, success.IsAuthenticated())
+
+			result := initializedAuth.ConfirmExecution(s.Ctx, nil, nil, authData)
+			s.Require().Equal(tc.expectConfirm, result.IsConfirm())
 		})
 	}
 }
@@ -148,6 +195,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 		name             string
 		authenticators   []iface.Authenticator
 		expectSuccessful bool
+		expectConfirm    bool
 	}
 
 	testCases := []testCase{
@@ -155,46 +203,73 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			name:             "alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
+			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
+			expectConfirm:    false,
+		},
+		{
+			name:             "approveAndBlock",
+			authenticators:   []iface.Authenticator{s.approveAndBlock},
+			expectSuccessful: true,
+			expectConfirm:    false,
+		},
+		{
+			name:             "rejectAndConfirm",
+			authenticators:   []iface.Authenticator{s.rejectAndConfirm},
+			expectSuccessful: false,
+			expectConfirm:    true,
+		},
+		{
+			name:             "approveAndBlock + rejectAndConfirm",
+			authenticators:   []iface.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
+			expectSuccessful: false,
+			expectConfirm:    false,
 		},
 	}
 
@@ -221,6 +296,9 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 
 			success := initializedAuth.Authenticate(s.Ctx, nil, nil, authData)
 			s.Require().Equal(tc.expectSuccessful, success.IsAuthenticated())
+
+			result := initializedAuth.ConfirmExecution(s.Ctx, nil, nil, authData)
+			s.Require().Equal(tc.expectConfirm, result.IsConfirm())
 		})
 	}
 }

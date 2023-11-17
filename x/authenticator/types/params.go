@@ -1,8 +1,9 @@
 package types
 
 import (
+	fmt "fmt"
+
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -14,7 +15,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams() Params {
-	return Params{}
+	return Params{
+		MaximumUnauthenticatedGas: 20000,
+	}
 }
 
 // DefaultParams returns a default set of parameters
@@ -24,7 +27,9 @@ func DefaultParams() Params {
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{}
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyMaximumUnauthenticatedGas, &p.MaximumUnauthenticatedGas, validateMaximumUnauthenticatedGas),
+	}
 }
 
 // Validate validates the set of params
@@ -32,8 +37,13 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
+// Validate Default Gas Reduction
+func validateMaximumUnauthenticatedGas(i interface{}) error {
+	// Convert the given parameter to a uint64.
+	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
 }
