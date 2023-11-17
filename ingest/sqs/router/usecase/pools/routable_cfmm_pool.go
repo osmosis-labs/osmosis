@@ -83,7 +83,7 @@ func (r *routableCFMMPoolImpl) GetTokenOutDenom() string {
 
 // String implements domain.RoutablePool.
 func (r *routableCFMMPoolImpl) String() string {
-	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
+	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms(), r.TokenOutDenom)
 }
 
 // ChargeTakerFee implements domain.RoutablePool.
@@ -96,4 +96,9 @@ func (r *routableCFMMPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInA
 // GetTakerFee implements domain.RoutablePool.
 func (r *routableCFMMPoolImpl) GetTakerFee() math.LegacyDec {
 	return r.TakerFee
+}
+
+// SetTokenOutDenom implements domain.RoutablePool.
+func (r *routableCFMMPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
+	r.TokenOutDenom = tokenOutDenom
 }

@@ -23,6 +23,11 @@ type MockRoutablePool struct {
 	SpreadFactor         osmomath.Dec
 }
 
+// SetTokenOutDenom implements domain.RoutablePool.
+func (*MockRoutablePool) SetTokenOutDenom(tokenOutDenom string) {
+	panic("unimplemented")
+}
+
 var DefaultSpreadFactor = osmomath.MustNewDecFromStr("0.005")
 
 var (
@@ -41,6 +46,7 @@ func (mp *MockRoutablePool) GetSQSPoolModel() domain.SQSPool {
 		Balances:             mp.Balances,
 		TotalValueLockedUSDC: mp.TotalValueLockedUSDC,
 		SpreadFactor:         DefaultSpreadFactor,
+		PoolDenoms:           mp.Denoms,
 	}
 }
 

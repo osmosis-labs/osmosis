@@ -58,7 +58,7 @@ func (r *routableTransmuterPoolImpl) GetTokenOutDenom() string {
 
 // String implements domain.RoutablePool.
 func (r *routableTransmuterPoolImpl) String() string {
-	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
+	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms(), r.TokenOutDenom)
 }
 
 // ChargeTakerFeeExactIn implements domain.RoutablePool.
@@ -85,4 +85,9 @@ func validateBalance(tokenInAmount osmomath.Int, balances sdk.Coins, denomToVali
 // GetTakerFee implements domain.RoutablePool.
 func (r *routableTransmuterPoolImpl) GetTakerFee() math.LegacyDec {
 	return r.TakerFee
+}
+
+// SetTokenOutDenom implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
+	r.TokenOutDenom = tokenOutDenom
 }

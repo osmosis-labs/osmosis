@@ -166,7 +166,7 @@ func (r *routableConcentratedPoolImpl) GetTokenOutDenom() string {
 
 // String implements domain.RoutablePool.
 func (r *routableConcentratedPoolImpl) String() string {
-	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
+	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms(), r.TokenOutDenom)
 }
 
 // ChargeTakerFee implements domain.RoutablePool.
@@ -174,6 +174,11 @@ func (r *routableConcentratedPoolImpl) String() string {
 func (r *routableConcentratedPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
 	tokenInAfterTakerFee, _ := poolmanager.CalcTakerFeeExactIn(tokenIn, r.GetTakerFee())
 	return tokenInAfterTakerFee
+}
+
+// SetTokenOutDenom implements domain.RoutablePool.
+func (r *routableConcentratedPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
+	r.TokenOutDenom = tokenOutDenom
 }
 
 // TODO: switch to proper logging

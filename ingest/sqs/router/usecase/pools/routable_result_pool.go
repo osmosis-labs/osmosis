@@ -122,3 +122,8 @@ func (r *routableResultPoolImpl) GetTakerFee() math.LegacyDec {
 func (r *routableResultPoolImpl) GetBalances() sdk.Coins {
 	return r.Balances
 }
+
+// SetTokenOutDenom implements domain.RoutablePool.
+func (r *routableResultPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
+	r.TokenOutDenom = tokenOutDenom
+}

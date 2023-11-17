@@ -6,8 +6,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -26,6 +29,12 @@ type routesTestCase struct {
 	expectedRoutes []domain.Route
 	expectedError  error
 }
+
+const (
+	relativePathMainnetFiles = "./routertesting/parsing/"
+	poolsFileName            = "pools.json"
+	takerFeesFileName        = "taker_fees.json"
+)
 
 // Tests that find routes is a greedy algorithm where it does not prioritize the best route
 // in terms of the number of hops. It prioritizes the first route that it finds via DFS.
@@ -539,6 +548,35 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 			s.validateFoundRoutes(tc, routes)
 		})
 	}
+}
+
+// This test reads the mainnet test state and attempts to contruct routes between uosmo and uion.
+func (s *RouterTestSuite) TestGetCandidateRoutes_Mainnet() {
+	pools, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
+	s.Require().NoError(err)
+
+	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
+	s.Require().NoError(err)
+
+	routerConfig := domain.RouterConfig{
+		PreferredPoolIDs:          []uint64{},
+		MaxRoutes:                 4,
+		MaxPoolsPerRoute:          4,
+		MaxSplitIterations:        10,
+		MinOSMOLiquidity:          10000,
+		RouteUpdateHeightInterval: 0,
+		RouteCacheEnabled:         false,
+	}
+
+	logger, err := log.NewLogger(false, "", "info")
+	s.Require().NoError(err)
+	router := usecase.NewRouter(routerConfig.PreferredPoolIDs, takerFeeMap, routerConfig.MaxPoolsPerRoute, routerConfig.MaxRoutes, routerConfig.MaxSplitIterations, routerConfig.MinOSMOLiquidity, logger)
+	router = routerusecase.WithSortedPools(router, pools)
+
+	routes, err := router.GetCandidateRoutes("uosmo", "uion")
+	s.Require().NoError(err)
+
+	s.Require().Greater(len(routes), 0)
 }
 
 // validateFoundRoutes validates that the routes are as expected.

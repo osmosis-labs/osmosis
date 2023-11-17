@@ -37,6 +37,7 @@ func NewRouterHandler(e *echo.Echo, us domain.RouterUsecase) {
 	e.GET("/quote", handler.GetOptimalQuote)
 	e.GET("/single-quote", handler.GetBestSingleRouteQuote)
 	e.GET("/routes", handler.GetCandidateRoutes)
+	e.POST("/store-state", handler.StoreRouterStateInFiles)
 }
 
 // GetOptimalQuote will determine the optimal quote for a given tokenIn and tokenOutDenom
@@ -97,6 +98,17 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, routes)
+}
+
+// TODO: authentication for the endpoint and enable only in dev mode.
+func (a *RouterHandler) StoreRouterStateInFiles(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	if err := a.RUsecase.StoreRouterStateFiles(ctx); err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, "Router state stored in files")
 }
 
 func getStatusCode(err error) int {
