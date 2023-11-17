@@ -291,14 +291,10 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 // }
 
 func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
-	// temp, remove later
-	err := k.SetDenomPairRoutes(ctx)
-	if err != nil {
-		return nil, err
+	if k.routeMap == nil {
+		return nil, fmt.Errorf("route map not set")
 	}
-
 	inputDenom := inputCoin.Denom
-	//inputAmt := inputCoin.Amount
 
 	if k.routeMap == nil {
 		return nil, fmt.Errorf("route map not set")
