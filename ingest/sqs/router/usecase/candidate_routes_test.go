@@ -6,11 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -552,30 +549,15 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 
 // This test reads the mainnet test state and attempts to contruct routes between uosmo and uion.
 func (s *RouterTestSuite) TestGetCandidateRoutes_Mainnet() {
-	pools, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
-	s.Require().NoError(err)
-
-	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
-	s.Require().NoError(err)
-
-	routerConfig := domain.RouterConfig{
-		PreferredPoolIDs:          []uint64{},
-		MaxRoutes:                 4,
-		MaxPoolsPerRoute:          4,
-		MaxSplitIterations:        10,
-		MinOSMOLiquidity:          10000,
-		RouteUpdateHeightInterval: 0,
-		RouteCacheEnabled:         false,
-	}
-
-	logger, err := log.NewLogger(false, "", "info")
-	s.Require().NoError(err)
-	router := usecase.NewRouter(routerConfig.PreferredPoolIDs, takerFeeMap, routerConfig.MaxPoolsPerRoute, routerConfig.MaxRoutes, routerConfig.MaxSplitIterations, routerConfig.MinOSMOLiquidity, logger)
-	router = routerusecase.WithSortedPools(router, pools)
+	router := s.setupMainnetRouter()
 
 	routes, err := router.GetCandidateRoutes("uosmo", "uion")
 	s.Require().NoError(err)
+	s.Require().Greater(len(routes), 0)
 
+	// ATOM / OSMO
+	routes, err = router.GetCandidateRoutes("uosmo", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")
+	s.Require().NoError(err)
 	s.Require().Greater(len(routes), 0)
 }
 

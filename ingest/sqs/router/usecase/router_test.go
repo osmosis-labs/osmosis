@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 )
 
 type RouterTestSuite struct {
@@ -225,4 +226,29 @@ func (s *RouterTestSuite) getTakerFeeMapForAllPoolTokenPairs(pools []domain.Pool
 
 func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
 	return routertesting.WithRoutePools(r, pools)
+}
+
+func (s *RouterTestSuite) setupMainnetRouter() *usecase.Router {
+	pools, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
+	s.Require().NoError(err)
+
+	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
+	s.Require().NoError(err)
+
+	routerConfig := domain.RouterConfig{
+		PreferredPoolIDs:          []uint64{},
+		MaxRoutes:                 4,
+		MaxPoolsPerRoute:          4,
+		MaxSplitIterations:        10,
+		MinOSMOLiquidity:          10000,
+		RouteUpdateHeightInterval: 0,
+		RouteCacheEnabled:         false,
+	}
+
+	logger, err := log.NewLogger(false, "", "info")
+	s.Require().NoError(err)
+	router := usecase.NewRouter(routerConfig.PreferredPoolIDs, takerFeeMap, routerConfig.MaxPoolsPerRoute, routerConfig.MaxRoutes, routerConfig.MaxSplitIterations, routerConfig.MinOSMOLiquidity, logger)
+	router = routerusecase.WithSortedPools(router, pools)
+
+	return router
 }
