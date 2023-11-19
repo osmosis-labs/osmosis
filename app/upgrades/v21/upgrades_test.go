@@ -35,19 +35,20 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.SetupWithCustomChainId(v21.TestingChainId)
 	s.PrepareAllSupportedPools()
-	routeMap := s.App.PoolManagerKeeper.GetRouteMap()
-	s.Require().Nil(routeMap)
+	_, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().Error(err)
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	routeMap = s.App.PoolManagerKeeper.GetRouteMap()
+	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().NotNil(routeMap)
 
 	// Psuedo collect cyclic arb profits
 	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
-	err := s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
+	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
 	s.Require().NoError(err)

@@ -218,11 +218,203 @@ func (m *SwapAmountOutSplitRoute) GetPools() []SwapAmountOutRoute {
 	return nil
 }
 
+// Route proto definitions in order to be able to serialize and deserialize into
+// KVStore
+type Route struct {
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	Token  string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+}
+
+func (m *Route) Reset()         { *m = Route{} }
+func (m *Route) String() string { return proto.CompactTextString(m) }
+func (*Route) ProtoMessage()    {}
+func (*Route) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cddd97a9a05492a8, []int{4}
+}
+func (m *Route) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Route) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Route.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Route) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Route.Merge(m, src)
+}
+func (m *Route) XXX_Size() int {
+	return m.Size()
+}
+func (m *Route) XXX_DiscardUnknown() {
+	xxx_messageInfo_Route.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Route proto.InternalMessageInfo
+
+func (m *Route) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *Route) GetToken() string {
+	if m != nil {
+		return m.Token
+	}
+	return ""
+}
+
+type Routes struct {
+	Routes []*Route `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+}
+
+func (m *Routes) Reset()         { *m = Routes{} }
+func (m *Routes) String() string { return proto.CompactTextString(m) }
+func (*Routes) ProtoMessage()    {}
+func (*Routes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cddd97a9a05492a8, []int{5}
+}
+func (m *Routes) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Routes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Routes.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Routes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Routes.Merge(m, src)
+}
+func (m *Routes) XXX_Size() int {
+	return m.Size()
+}
+func (m *Routes) XXX_DiscardUnknown() {
+	xxx_messageInfo_Routes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Routes proto.InternalMessageInfo
+
+func (m *Routes) GetRoutes() []*Route {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+
+type InnerMap struct {
+	InnerMap map[string]*Routes `protobuf:"bytes,1,rep,name=inner_map,json=innerMap,proto3" json:"inner_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (m *InnerMap) Reset()         { *m = InnerMap{} }
+func (m *InnerMap) String() string { return proto.CompactTextString(m) }
+func (*InnerMap) ProtoMessage()    {}
+func (*InnerMap) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cddd97a9a05492a8, []int{6}
+}
+func (m *InnerMap) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *InnerMap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_InnerMap.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *InnerMap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InnerMap.Merge(m, src)
+}
+func (m *InnerMap) XXX_Size() int {
+	return m.Size()
+}
+func (m *InnerMap) XXX_DiscardUnknown() {
+	xxx_messageInfo_InnerMap.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InnerMap proto.InternalMessageInfo
+
+func (m *InnerMap) GetInnerMap() map[string]*Routes {
+	if m != nil {
+		return m.InnerMap
+	}
+	return nil
+}
+
+type RoutingGraph struct {
+	Graph map[string]*InnerMap `protobuf:"bytes,1,rep,name=graph,proto3" json:"graph,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (m *RoutingGraph) Reset()         { *m = RoutingGraph{} }
+func (m *RoutingGraph) String() string { return proto.CompactTextString(m) }
+func (*RoutingGraph) ProtoMessage()    {}
+func (*RoutingGraph) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cddd97a9a05492a8, []int{7}
+}
+func (m *RoutingGraph) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RoutingGraph) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RoutingGraph.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RoutingGraph) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RoutingGraph.Merge(m, src)
+}
+func (m *RoutingGraph) XXX_Size() int {
+	return m.Size()
+}
+func (m *RoutingGraph) XXX_DiscardUnknown() {
+	xxx_messageInfo_RoutingGraph.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RoutingGraph proto.InternalMessageInfo
+
+func (m *RoutingGraph) GetGraph() map[string]*InnerMap {
+	if m != nil {
+		return m.Graph
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*SwapAmountInRoute)(nil), "osmosis.poolmanager.v1beta1.SwapAmountInRoute")
 	proto.RegisterType((*SwapAmountOutRoute)(nil), "osmosis.poolmanager.v1beta1.SwapAmountOutRoute")
 	proto.RegisterType((*SwapAmountInSplitRoute)(nil), "osmosis.poolmanager.v1beta1.SwapAmountInSplitRoute")
 	proto.RegisterType((*SwapAmountOutSplitRoute)(nil), "osmosis.poolmanager.v1beta1.SwapAmountOutSplitRoute")
+	proto.RegisterType((*Route)(nil), "osmosis.poolmanager.v1beta1.Route")
+	proto.RegisterType((*Routes)(nil), "osmosis.poolmanager.v1beta1.Routes")
+	proto.RegisterType((*InnerMap)(nil), "osmosis.poolmanager.v1beta1.InnerMap")
+	proto.RegisterMapType((map[string]*Routes)(nil), "osmosis.poolmanager.v1beta1.InnerMap.InnerMapEntry")
+	proto.RegisterType((*RoutingGraph)(nil), "osmosis.poolmanager.v1beta1.RoutingGraph")
+	proto.RegisterMapType((map[string]*InnerMap)(nil), "osmosis.poolmanager.v1beta1.RoutingGraph.GraphEntry")
 }
 
 func init() {
@@ -230,35 +422,46 @@ func init() {
 }
 
 var fileDescriptor_cddd97a9a05492a8 = []byte{
-	// 443 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0xbb, 0xae, 0xd3, 0x30,
-	0x1c, 0xc6, 0x63, 0x2e, 0x07, 0x61, 0x0e, 0x05, 0xa2, 0x73, 0x29, 0x07, 0x29, 0xa9, 0x32, 0x55,
-	0x02, 0x6c, 0x5a, 0x86, 0x22, 0x16, 0x44, 0xc4, 0x92, 0xa9, 0x22, 0xdd, 0xca, 0x10, 0x39, 0x4d,
-	0x94, 0x46, 0x4d, 0xec, 0xa8, 0x76, 0x5a, 0xba, 0x22, 0x1e, 0x80, 0xc7, 0xea, 0xd8, 0x05, 0x09,
-	0x75, 0x88, 0x50, 0xfb, 0x06, 0x79, 0x02, 0x94, 0x1b, 0x4d, 0x8a, 0x54, 0x10, 0x9b, 0x2f, 0xff,
-	0xcf, 0xff, 0xdf, 0xf7, 0xd9, 0x86, 0x2f, 0x18, 0x0f, 0x19, 0xf7, 0x39, 0x8e, 0x18, 0x0b, 0x42,
-	0x42, 0x89, 0xe7, 0xce, 0xf1, 0xa2, 0x67, 0xbb, 0x82, 0xf4, 0x30, 0x5f, 0x92, 0xc8, 0x9a, 0xb3,
-	0x58, 0xb8, 0x28, 0x9a, 0x33, 0xc1, 0xe4, 0x67, 0x65, 0x35, 0xaa, 0x55, 0xa3, 0xb2, 0xfa, 0xe6,
-	0xc2, 0x63, 0x1e, 0xcb, 0xeb, 0x70, 0x36, 0x2a, 0x24, 0xda, 0x57, 0x00, 0x9f, 0x8c, 0x96, 0x24,
-	0x7a, 0x1f, 0xb2, 0x98, 0x0a, 0x83, 0x9a, 0xd9, 0x71, 0xf2, 0x73, 0x78, 0x2f, 0x3b, 0xc2, 0xf2,
-	0x9d, 0x36, 0xe8, 0x80, 0xee, 0x1d, 0x5d, 0x4e, 0x13, 0xb5, 0xb5, 0x22, 0x61, 0xf0, 0x56, 0x2b,
-	0x37, 0x34, 0xf3, 0x2c, 0x1b, 0x19, 0x8e, 0xac, 0xc3, 0x47, 0x82, 0xcd, 0x5c, 0x6a, 0xb1, 0x58,
-	0x58, 0x8e, 0x4b, 0x59, 0xd8, 0xbe, 0xd5, 0x01, 0xdd, 0xfb, 0xfa, 0x4d, 0x9a, 0xa8, 0x57, 0x85,
-	0xe8, 0xa8, 0x40, 0x33, 0x1f, 0xe6, 0x2b, 0xc3, 0x58, 0x7c, 0xc8, 0xe7, 0x5f, 0x00, 0x94, 0x0f,
-	0x18, 0xc3, 0x58, 0xfc, 0x07, 0xc7, 0x3b, 0xd8, 0x2a, 0xda, 0xf8, 0xb4, 0x81, 0xf1, 0x34, 0x4d,
-	0xd4, 0xcb, 0x3a, 0x46, 0xb5, 0xaf, 0x99, 0xe7, 0xf9, 0x82, 0x41, 0x0b, 0x88, 0xef, 0x00, 0x5e,
-	0xd5, 0xb3, 0x18, 0x45, 0x81, 0x5f, 0x82, 0x8c, 0xe1, 0xdd, 0xac, 0x0b, 0x6f, 0x83, 0xce, 0xed,
-	0xee, 0x83, 0x3e, 0x42, 0x27, 0x92, 0x46, 0x7f, 0xe4, 0xa9, 0x5f, 0xac, 0x13, 0x55, 0x4a, 0x13,
-	0xf5, 0xfc, 0x80, 0xce, 0x35, 0xb3, 0x38, 0x52, 0xb6, 0xaa, 0xfc, 0x7c, 0x6a, 0x91, 0x5c, 0x56,
-	0x82, 0x0f, 0x32, 0xd5, 0x36, 0x51, 0x2f, 0x27, 0x79, 0x37, 0xee, 0xcc, 0x90, 0xcf, 0x70, 0x48,
-	0xc4, 0x14, 0x19, 0x54, 0x1c, 0x87, 0xfb, 0x5b, 0x5d, 0x85, 0x6b, 0xd0, 0x02, 0x42, 0xdb, 0x02,
-	0x78, 0xdd, 0x08, 0xb7, 0x66, 0xec, 0x53, 0xd3, 0x18, 0xfe, 0x47, 0x63, 0xd5, 0x0d, 0x9d, 0x76,
-	0x66, 0xc3, 0xc7, 0x87, 0x8b, 0x6f, 0x58, 0x7b, 0xf3, 0x37, 0x6b, 0xd7, 0xc7, 0xef, 0xa6, 0xf2,
-	0xd6, 0xaa, 0x1e, 0x4e, 0x01, 0xa2, 0x7f, 0x5c, 0xef, 0x14, 0xb0, 0xd9, 0x29, 0xe0, 0xe7, 0x4e,
-	0x01, 0xdf, 0xf6, 0x8a, 0xb4, 0xd9, 0x2b, 0xd2, 0x8f, 0xbd, 0x22, 0x8d, 0x07, 0x9e, 0x2f, 0xa6,
-	0xb1, 0x8d, 0x26, 0x2c, 0xc4, 0xa5, 0xab, 0x97, 0x01, 0xb1, 0x79, 0x35, 0xc1, 0x8b, 0xfe, 0x2b,
-	0xfc, 0xb9, 0xf1, 0xb3, 0xc4, 0x2a, 0x72, 0xb9, 0x7d, 0x96, 0x7f, 0x8d, 0xd7, 0xbf, 0x02, 0x00,
-	0x00, 0xff, 0xff, 0x1a, 0x61, 0x74, 0x45, 0x7d, 0x03, 0x00, 0x00,
+	// 612 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x41, 0x6f, 0xd3, 0x30,
+	0x18, 0xad, 0x37, 0x5a, 0x56, 0xaf, 0x2b, 0x23, 0xea, 0xd6, 0x52, 0xa4, 0xa4, 0x0a, 0x42, 0xaa,
+	0x04, 0x24, 0xac, 0x43, 0x6c, 0x94, 0x03, 0xa2, 0x1a, 0x42, 0x41, 0x42, 0x83, 0xec, 0x36, 0x0e,
+	0xc1, 0x5d, 0xa3, 0x34, 0x6a, 0x63, 0x47, 0x89, 0xd3, 0xd1, 0x2b, 0xe2, 0x07, 0xf0, 0x7f, 0x90,
+	0x38, 0xef, 0xb8, 0x0b, 0x12, 0xda, 0x21, 0x42, 0xed, 0x3f, 0xe8, 0x2f, 0x40, 0xb1, 0x93, 0xb6,
+	0x29, 0xa8, 0x9d, 0x76, 0xa9, 0x3e, 0xdb, 0xdf, 0x7b, 0x7e, 0xef, 0xe5, 0xab, 0xe1, 0x63, 0xe2,
+	0x3b, 0xc4, 0xb7, 0x7d, 0xd5, 0x25, 0xa4, 0xef, 0x20, 0x8c, 0x2c, 0xd3, 0x53, 0x07, 0x7b, 0x6d,
+	0x93, 0xa2, 0x3d, 0xd5, 0x3f, 0x47, 0xae, 0xe1, 0x91, 0x80, 0x9a, 0x8a, 0xeb, 0x11, 0x4a, 0x84,
+	0xfb, 0x71, 0xb7, 0x32, 0xd7, 0xad, 0xc4, 0xdd, 0xd5, 0x92, 0x45, 0x2c, 0xc2, 0xfa, 0xd4, 0xa8,
+	0xe2, 0x10, 0xf9, 0x1b, 0x80, 0x77, 0x4f, 0xce, 0x91, 0xfb, 0xda, 0x21, 0x01, 0xa6, 0x1a, 0xd6,
+	0x23, 0x3a, 0xe1, 0x11, 0xbc, 0x1d, 0x51, 0x18, 0x76, 0xa7, 0x02, 0x6a, 0xa0, 0x7e, 0xab, 0x25,
+	0x4c, 0x42, 0xa9, 0x38, 0x44, 0x4e, 0xbf, 0x29, 0xc7, 0x07, 0xb2, 0x9e, 0x8b, 0x2a, 0xad, 0x23,
+	0xb4, 0xe0, 0x1d, 0x4a, 0x7a, 0x26, 0x36, 0x48, 0x40, 0x8d, 0x8e, 0x89, 0x89, 0x53, 0x59, 0xab,
+	0x81, 0x7a, 0xbe, 0x55, 0x9d, 0x84, 0xd2, 0x2e, 0x07, 0x2d, 0x34, 0xc8, 0xfa, 0x16, 0xdb, 0x39,
+	0x0e, 0xe8, 0x11, 0x5b, 0x7f, 0x05, 0x50, 0x98, 0xc9, 0x38, 0x0e, 0xe8, 0x0d, 0x74, 0xbc, 0x82,
+	0x45, 0x7e, 0x8d, 0x8d, 0x53, 0x32, 0xee, 0x4d, 0x42, 0x69, 0x67, 0x5e, 0x46, 0x72, 0x2e, 0xeb,
+	0x05, 0xb6, 0xa1, 0x61, 0x2e, 0xe2, 0x17, 0x80, 0xbb, 0xf3, 0x59, 0x9c, 0xb8, 0x7d, 0x3b, 0x16,
+	0x72, 0x0a, 0xb3, 0xd1, 0x2d, 0x7e, 0x05, 0xd4, 0xd6, 0xeb, 0x9b, 0x0d, 0x45, 0x59, 0x92, 0xb4,
+	0xf2, 0x4f, 0x9e, 0xad, 0xd2, 0x45, 0x28, 0x65, 0x26, 0xa1, 0x54, 0x98, 0x49, 0xf7, 0x65, 0x9d,
+	0x53, 0x0a, 0x46, 0x92, 0x9f, 0x8d, 0x0d, 0xc4, 0x60, 0xb1, 0xf0, 0x83, 0x08, 0x75, 0x15, 0x4a,
+	0x3b, 0x67, 0xec, 0x36, 0xbf, 0xd3, 0x53, 0x6c, 0xa2, 0x3a, 0x88, 0x76, 0x15, 0x0d, 0xd3, 0xc5,
+	0x70, 0xa7, 0xe8, 0x24, 0x5c, 0x0d, 0x73, 0x11, 0xf2, 0x15, 0x80, 0xe5, 0x54, 0xb8, 0x73, 0xc6,
+	0x3e, 0xa5, 0x8d, 0xa9, 0xd7, 0x34, 0x96, 0x7c, 0xa1, 0xe5, 0xce, 0xda, 0x70, 0x7b, 0xf6, 0xe1,
+	0x53, 0xd6, 0x0e, 0x57, 0x59, 0x2b, 0x2f, 0xce, 0x4d, 0xe2, 0xad, 0x98, 0x0c, 0x4e, 0x6c, 0xee,
+	0x39, 0xcc, 0x72, 0x27, 0xe5, 0x85, 0x59, 0x99, 0xce, 0x45, 0x09, 0x66, 0x19, 0x86, 0x5f, 0xad,
+	0xf3, 0x85, 0x7c, 0x04, 0x73, 0x0c, 0xe7, 0x0b, 0x4d, 0x98, 0x63, 0x7f, 0xa2, 0x24, 0x03, 0x79,
+	0x69, 0x06, 0x0c, 0xa4, 0xc7, 0x08, 0xf9, 0x27, 0x80, 0x1b, 0x1a, 0xc6, 0xa6, 0xf7, 0x1e, 0xb9,
+	0xc2, 0x07, 0x98, 0xb7, 0xa3, 0xda, 0x70, 0x90, 0x1b, 0x73, 0xed, 0x2f, 0xe5, 0x4a, 0x90, 0xd3,
+	0xe2, 0x0d, 0xa6, 0xde, 0x50, 0xdf, 0xb0, 0xe3, 0x65, 0xf5, 0x33, 0xdc, 0x4a, 0x1d, 0x09, 0xdb,
+	0x70, 0xbd, 0x67, 0x0e, 0x99, 0xc1, 0xbc, 0x1e, 0x95, 0xc2, 0x0b, 0x98, 0x1d, 0xa0, 0x7e, 0x60,
+	0x32, 0x77, 0x9b, 0x8d, 0x07, 0xab, 0xc5, 0xfb, 0x3a, 0x47, 0x34, 0xd7, 0x0e, 0x81, 0xfc, 0x03,
+	0xc0, 0x42, 0xb4, 0x6b, 0x63, 0xeb, 0xad, 0x87, 0xdc, 0xae, 0xf0, 0x0e, 0x66, 0xad, 0xa8, 0x88,
+	0x0d, 0x3c, 0x5b, 0xc9, 0x97, 0x20, 0x15, 0xf6, 0xcb, 0x1d, 0x70, 0x8a, 0xaa, 0x01, 0xe1, 0x6c,
+	0xf3, 0x3f, 0xda, 0x5f, 0xa6, 0xb5, 0x3f, 0xbc, 0x56, 0x58, 0x73, 0xea, 0x5b, 0x1f, 0x2f, 0x46,
+	0x22, 0xb8, 0x1c, 0x89, 0xe0, 0xcf, 0x48, 0x04, 0xdf, 0xc7, 0x62, 0xe6, 0x72, 0x2c, 0x66, 0x7e,
+	0x8f, 0xc5, 0xcc, 0xe9, 0x81, 0x65, 0xd3, 0x6e, 0xd0, 0x56, 0xce, 0x88, 0xa3, 0xc6, 0xac, 0x4f,
+	0xfa, 0xa8, 0xed, 0x27, 0x0b, 0x75, 0xd0, 0x78, 0xaa, 0x7e, 0x49, 0x3d, 0xab, 0x74, 0xe8, 0x9a,
+	0x7e, 0x3b, 0xc7, 0xde, 0xc5, 0xfd, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xcd, 0x72, 0x8b, 0x53,
+	0x7a, 0x05, 0x00, 0x00,
 }
 
 func (m *SwapAmountInRoute) Marshal() (dAtA []byte, err error) {
@@ -425,6 +628,176 @@ func (m *SwapAmountOutSplitRoute) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *Route) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Route) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Route) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Token) > 0 {
+		i -= len(m.Token)
+		copy(dAtA[i:], m.Token)
+		i = encodeVarintSwapRoute(dAtA, i, uint64(len(m.Token)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintSwapRoute(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Routes) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Routes) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Routes) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Routes) > 0 {
+		for iNdEx := len(m.Routes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Routes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintSwapRoute(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *InnerMap) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InnerMap) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InnerMap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.InnerMap) > 0 {
+		for k := range m.InnerMap {
+			v := m.InnerMap[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintSwapRoute(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintSwapRoute(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintSwapRoute(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RoutingGraph) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RoutingGraph) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RoutingGraph) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Graph) > 0 {
+		for k := range m.Graph {
+			v := m.Graph[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintSwapRoute(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintSwapRoute(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintSwapRoute(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintSwapRoute(dAtA []byte, offset int, v uint64) int {
 	offset -= sovSwapRoute(v)
 	base := offset
@@ -499,6 +872,81 @@ func (m *SwapAmountOutSplitRoute) Size() (n int) {
 	}
 	l = m.TokenOutAmount.Size()
 	n += 1 + l + sovSwapRoute(uint64(l))
+	return n
+}
+
+func (m *Route) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovSwapRoute(uint64(m.PoolId))
+	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovSwapRoute(uint64(l))
+	}
+	return n
+}
+
+func (m *Routes) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Routes) > 0 {
+		for _, e := range m.Routes {
+			l = e.Size()
+			n += 1 + l + sovSwapRoute(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *InnerMap) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.InnerMap) > 0 {
+		for k, v := range m.InnerMap {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovSwapRoute(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovSwapRoute(uint64(len(k))) + l
+			n += mapEntrySize + 1 + sovSwapRoute(uint64(mapEntrySize))
+		}
+	}
+	return n
+}
+
+func (m *RoutingGraph) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Graph) > 0 {
+		for k, v := range m.Graph {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovSwapRoute(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovSwapRoute(uint64(len(k))) + l
+			n += mapEntrySize + 1 + sovSwapRoute(uint64(mapEntrySize))
+		}
+	}
 	return n
 }
 
@@ -924,6 +1372,549 @@ func (m *SwapAmountOutSplitRoute) Unmarshal(dAtA []byte) error {
 			if err := m.TokenOutAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSwapRoute(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Route) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSwapRoute
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Route: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Route: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSwapRoute
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSwapRoute
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSwapRoute(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Routes) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSwapRoute
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Routes: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Routes: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Routes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSwapRoute
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Routes = append(m.Routes, &Route{})
+			if err := m.Routes[len(m.Routes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSwapRoute(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InnerMap) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSwapRoute
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InnerMap: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InnerMap: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InnerMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSwapRoute
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.InnerMap == nil {
+				m.InnerMap = make(map[string]*Routes)
+			}
+			var mapkey string
+			var mapvalue *Routes
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowSwapRoute
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSwapRoute
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSwapRoute
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &Routes{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipSwapRoute(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.InnerMap[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSwapRoute(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RoutingGraph) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSwapRoute
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RoutingGraph: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RoutingGraph: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Graph", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSwapRoute
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSwapRoute
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Graph == nil {
+				m.Graph = make(map[string]*InnerMap)
+			}
+			var mapkey string
+			var mapvalue *InnerMap
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowSwapRoute
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSwapRoute
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSwapRoute
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &InnerMap{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipSwapRoute(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthSwapRoute
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Graph[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -2,6 +2,7 @@ package poolmanager
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
@@ -19,45 +21,41 @@ var (
 	superfluidMultiplier = sdk.MustNewDecFromStr("1.5")
 )
 
-// Define a structure to represent the routing graph
-type RoutingGraph map[string]map[string][]Route
+// // Define a structure to represent the routing graph
+// type RoutingGraph map[string]map[string][]types.Route
 
 // Define a structure to represent a route
-type Route struct {
-	PoolID uint64
-	Token  string
-}
-
-// Function to add an edge to the graph
-func (g RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
-	if g[start] == nil {
-		g[start] = make(map[string][]Route)
-	}
-	g[start][end] = append(g[start][end], Route{PoolID: poolID, Token: token})
-}
+// type Route struct {
+// 	PoolID uint64
+// 	Token  string
+// }
 
 // Function to find all direct routes between two tokens
-func FindDirectRoute(g RoutingGraph, start, end string) []Route {
-	if routes, exists := g[start][end]; exists {
-		for i := range routes {
-			routes[i].Token = end
+func FindDirectRoute(g types.RoutingGraph, start, end string) []*types.Route {
+	if innerMap, exists := g.Graph[start]; exists {
+		if routes, exists := innerMap.InnerMap[end]; exists {
+			for i := range routes.Routes {
+				routes.Routes[i].Token = end
+			}
+			return routes.Routes
 		}
-		return routes
 	}
 	return nil
 }
 
 // Function to find all two-hop routes between two tokens
-func FindTwoHopRoute(g RoutingGraph, start, end string) [][]Route {
-	var routeRoutes [][]Route
+func FindTwoHopRoute(g types.RoutingGraph, start, end string) [][]*types.Route {
+	var routeRoutes [][]*types.Route
 
-	for token, routes := range g[start] {
-		if endRoutes, exists := g[token][end]; exists {
-			for _, startRoute := range routes {
-				startRoute.Token = token
-				for _, endRoute := range endRoutes {
-					endRoute.Token = end
-					routeRoutes = append(routeRoutes, []Route{startRoute, endRoute})
+	if startRoutes, exists := g.Graph[start]; exists {
+		for token, routes := range startRoutes.InnerMap {
+			if endRoutes, exists := g.Graph[token].InnerMap[end]; exists {
+				for _, startRoute := range routes.Routes {
+					startRoute.Token = token
+					for _, endRoute := range endRoutes.Routes {
+						endRoute.Token = end
+						routeRoutes = append(routeRoutes, []*types.Route{startRoute, endRoute})
+					}
 				}
 			}
 		}
@@ -67,22 +65,27 @@ func FindTwoHopRoute(g RoutingGraph, start, end string) [][]Route {
 }
 
 // Function to find all three-hop routes between two tokens
-func FindThreeHopRoute(g RoutingGraph, start, end string) [][]Route {
-	var routeRoutes [][]Route
+func FindThreeHopRoute(g types.RoutingGraph, start, end string) [][]*types.Route {
+	var routeRoutes [][]*types.Route
 
-	for token1, routes1 := range g[start] {
-		for token2, routes2 := range g[token1] {
-			if token2 == start || token2 == end {
+	if startRoutes, ok := g.Graph[start]; ok {
+		for token1, routes1 := range startRoutes.InnerMap {
+			if token1 == start || token1 == end {
 				continue
 			}
-			if endRoutes, exists := g[token2][end]; exists {
-				for _, startRoute := range routes1 {
-					startRoute.Token = token1
-					for _, middleRoute := range routes2 {
-						middleRoute.Token = token2
-						for _, endRoute := range endRoutes {
-							endRoute.Token = end
-							routeRoutes = append(routeRoutes, []Route{startRoute, middleRoute, endRoute})
+			for token2, routes2 := range g.Graph[token1].InnerMap {
+				if token2 == start || token2 == end {
+					continue
+				}
+				if endRoutes, ok := g.Graph[token2].InnerMap[end]; ok {
+					for _, startRoute := range routes1.Routes {
+						startRoute.Token = token1
+						for _, middleRoute := range routes2.Routes {
+							middleRoute.Token = token2
+							for _, endRoute := range endRoutes.Routes {
+								endRoute.Token = end
+								routeRoutes = append(routeRoutes, []*types.Route{startRoute, middleRoute, endRoute})
+							}
 						}
 					}
 				}
@@ -102,7 +105,7 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	}
 
 	// Create a routingGraph to represent possible routes between tokens
-	routingGraph := make(RoutingGraph)
+	var routingGraph types.RoutingGraph
 
 	// Iterate through the pools
 	for _, pool := range pools {
@@ -118,200 +121,29 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 		}
 	}
 
-	k.routeMap = routingGraph
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routingGraph)
 	return nil
 }
 
-// // GetDenomPairRoute returns the route with the highest liquidity between two tokens
-// func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputDenom, outputDenom string) ([]uint64, error) {
-// 	// temp, remove later
-// 	err := k.SetDenomPairRoutes(ctx)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if k.routeMap == nil {
-// 		return nil, fmt.Errorf("route map not set")
-// 	}
-
-// 	// Get all direct routes
-// 	directPoolIDs := FindDirectRoute(k.routeMap, inputDenom, outputDenom)
-
-// 	// Get all two-hop routes
-// 	var twoHopPoolIDs [][]uint64
-// 	if inputDenom != OSMO && outputDenom != OSMO {
-// 		twoHopPoolIDs = FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
-// 	}
-
-// 	var threeHopPoolIDs [][]uint64
-// 	if inputDenom != OSMO && outputDenom != OSMO {
-// 		threeHopPoolIDs = FindThreeHopRoute(k.routeMap, inputDenom, outputDenom)
-// 	}
-
-// 	// Map to store the total liquidity of each route (using string as key)
-// 	routeLiquidity := make(map[string]osmomath.Int)
-
-// 	// Check liquidity for all direct routes
-// 	for _, poolID := range directPoolIDs {
-// 		pool, err := k.GetPool(ctx, poolID)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		poolDenoms := pool.GetPoolDenoms(ctx)
-// 		liqInOsmo := osmomath.ZeroInt()
-// 		for _, denom := range poolDenoms {
-// 			liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-
-// 			if pool.GetType() == types.Concentrated {
-// 				liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
-// 			}
-
-// 			// Multiply the liquidity by six. This is because we are comparing single routes to a max of three-hop routes.
-// 			// To make this simple and comparable, we just multiply the single route liquidity by six.
-// 			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal.Mul(osmomath.NewIntFromUint64(6)))
-// 		}
-// 		routeKey := fmt.Sprintf("%v", poolID)
-// 		routeLiquidity[routeKey] = liqInOsmo
-// 	}
-
-// 	// Check liquidity for all two-hop routes
-// 	for _, poolIDs := range twoHopPoolIDs {
-// 		totalLiquidityInOsmo := osmomath.ZeroInt()
-// 		routeKey := fmt.Sprintf("%v", poolIDs)
-// 		for _, poolID := range poolIDs {
-// 			pool, err := k.GetPool(ctx, poolID)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			poolDenoms := pool.GetPoolDenoms(ctx)
-// 			liqInOsmo := osmomath.ZeroInt()
-// 			for _, denom := range poolDenoms {
-// 				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-// 				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-
-// 				if pool.GetType() == types.Concentrated {
-// 					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
-// 				}
-// 				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
-// 			}
-
-// 			// Multiply the liquidity by three. This is because we are comparing double route to a max of three-hop routes.
-// 			// To make this simple and comparable, we just multiply the single route liquidity by three.
-// 			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo.Mul(osmomath.NewIntFromUint64(3)))
-// 		}
-// 		routeLiquidity[routeKey] = totalLiquidityInOsmo
-// 	}
-
-// 	// Check liquidity for all three-hop routes
-// 	for _, poolIDs := range threeHopPoolIDs {
-// 		totalLiquidityInOsmo := osmomath.ZeroInt()
-// 		routeKey := fmt.Sprintf("%v", poolIDs)
-// 		for _, poolID := range poolIDs {
-// 			pool, err := k.GetPool(ctx, poolID)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			poolDenoms := pool.GetPoolDenoms(ctx)
-// 			liqInOsmo := osmomath.ZeroInt()
-// 			for _, denom := range poolDenoms {
-// 				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, poolID, denom)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-// 				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-
-// 				if pool.GetType() == types.Concentrated {
-// 					liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
-// 				}
-// 				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
-// 			}
-// 			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo)
-// 		}
-// 		routeLiquidity[routeKey] = totalLiquidityInOsmo
-// 	}
-
-// 	// Extract and sort the keys from the routeLiquidity map
-// 	// This ensures deterministic selection of the best route
-// 	var keys []string
-// 	for k := range routeLiquidity {
-// 		keys = append(keys, k)
-// 	}
-// 	sort.Strings(keys)
-
-// 	// Find the route (single or double hop) with the highest liquidity
-// 	var bestRouteKey string
-// 	maxLiquidity := osmomath.ZeroInt()
-// 	for _, routeKey := range keys {
-// 		liquidity := routeLiquidity[routeKey]
-// 		// Update best route if a higher liquidity is found,
-// 		// or if the liquidity is equal but the routeKey is encountered earlier in the sorted order
-// 		if liquidity.GT(maxLiquidity) || (liquidity.Equal(maxLiquidity) && bestRouteKey == "") {
-// 			bestRouteKey = routeKey
-// 			maxLiquidity = liquidity
-// 		}
-// 	}
-
-// 	if bestRouteKey == "" {
-// 		fmt.Println("No suitable route found.")
-// 		return nil, fmt.Errorf("no route found with sufficient liquidity")
-// 	}
-
-// 	// Convert the best route key back to []uint64
-// 	var bestRoute []uint64
-// 	cleanedRouteKey := strings.Trim(bestRouteKey, "[]")
-// 	idStrs := strings.Split(cleanedRouteKey, " ")
-
-// 	for _, idStr := range idStrs {
-// 		id, err := strconv.ParseUint(idStr, 10, 64)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error parsing pool ID: %v", err)
-// 		}
-// 		bestRoute = append(bestRoute, id)
-// 	}
-
-// 	// Return the route with the highest liquidity
-// 	fmt.Printf("Route Selected: %v \n", strings.Join(strings.Split(bestRouteKey, " "), " -> "))
-// 	return bestRoute, nil
-// }
-
 func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
-	if k.routeMap == nil {
-		return nil, fmt.Errorf("route map not set")
-	}
 	inputDenom := inputCoin.Denom
-
-	if k.routeMap == nil {
-		return nil, fmt.Errorf("route map not set")
+	routeMap, err := k.GetRouteMap(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	// Get all direct routes
-	directPoolIDs := FindDirectRoute(k.routeMap, inputDenom, outputDenom)
+	directPoolIDs := FindDirectRoute(routeMap, inputDenom, outputDenom)
 
 	// Get all two-hop routes
-	var twoHopPoolIDs [][]Route
+	var twoHopPoolIDs [][]*types.Route
 	if inputDenom != OSMO && outputDenom != OSMO {
-		twoHopPoolIDs = FindTwoHopRoute(k.routeMap, inputDenom, outputDenom)
+		twoHopPoolIDs = FindTwoHopRoute(routeMap, inputDenom, outputDenom)
 	}
 
-	var threeHopPoolIDs [][]Route
+	var threeHopPoolIDs [][]*types.Route
 	if inputDenom != OSMO && outputDenom != OSMO {
-		threeHopPoolIDs = FindThreeHopRoute(k.routeMap, inputDenom, outputDenom)
+		threeHopPoolIDs = FindThreeHopRoute(routeMap, inputDenom, outputDenom)
 	}
 
 	// Map to store the total liquidity of each route (using string as key)
@@ -319,14 +151,14 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 
 	// Check liquidity for all direct routes
 	for _, route := range directPoolIDs {
-		pool, err := k.GetPool(ctx, route.PoolID)
+		pool, err := k.GetPool(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
 		poolDenoms := pool.GetPoolDenoms(ctx)
 		liqInOsmo := osmomath.ZeroInt()
 		for _, denom := range poolDenoms {
-			liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolID, denom)
+			liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, denom)
 			if err != nil {
 				return nil, err
 			}
@@ -352,14 +184,14 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", routes)
 		for _, route := range routes {
-			pool, err := k.GetPool(ctx, route.PoolID)
+			pool, err := k.GetPool(ctx, route.PoolId)
 			if err != nil {
 				return nil, err
 			}
 			poolDenoms := pool.GetPoolDenoms(ctx)
 			liqInOsmo := osmomath.ZeroInt()
 			for _, denom := range poolDenoms {
-				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolID, denom)
+				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, denom)
 				if err != nil {
 					return nil, err
 				}
@@ -386,14 +218,14 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", routes)
 		for _, route := range routes {
-			pool, err := k.GetPool(ctx, route.PoolID)
+			pool, err := k.GetPool(ctx, route.PoolId)
 			if err != nil {
 				return nil, err
 			}
 			poolDenoms := pool.GetPoolDenoms(ctx)
 			liqInOsmo := osmomath.ZeroInt()
 			for _, denom := range poolDenoms {
-				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolID, denom)
+				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, denom)
 				if err != nil {
 					return nil, err
 				}
@@ -452,7 +284,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	}
 
 	// Construct the result map
-	result := make(map[string][]Route)
+	result := make(map[string][]types.Route)
 
 	singleHopRoute, err := parseRouteKey(bestSingleHopRouteKey)
 	if err != nil {
@@ -481,7 +313,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 		for _, route := range value {
 			// Construct SwapAmountInRoute for each poolID
 			swapRoute = append(swapRoute, types.SwapAmountInRoute{
-				PoolId:        route.PoolID,
+				PoolId:        route.PoolId,
 				TokenOutDenom: route.Token,
 			})
 		}
@@ -501,49 +333,56 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 
 	var poolIDs []uint64
 	for _, route := range result[maxKey] {
-		poolIDs = append(poolIDs, route.PoolID)
+		poolIDs = append(poolIDs, route.PoolId)
 	}
 
 	return poolIDs, nil
 }
 
 // Helper function to parse route key into a slice of Route
-func parseRouteKey(routeKey string) ([]Route, error) {
-	var route []Route
+func parseRouteKey(routeKey string) ([]types.Route, error) {
+	var route []types.Route
 	if routeKey == "" {
 		return route, nil
 	}
 	cleanedRouteKey := strings.Trim(routeKey, "[]")
-	idStrs := strings.Split(cleanedRouteKey, " ")
 
-	for i := 0; i < len(idStrs); i += 2 {
-		id, err := strconv.ParseUint(strings.Trim(idStrs[i], "{}"), 10, 64)
+	// Regular expression to match pool_id and token
+	re := regexp.MustCompile(`pool_id:(\d+) token:"(\w+)"`)
+
+	matches := re.FindAllStringSubmatch(cleanedRouteKey, -1)
+	for _, match := range matches {
+		if len(match) != 3 {
+			return nil, fmt.Errorf("invalid route key format: %v", match)
+		}
+		id, err := strconv.ParseUint(match[1], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing pool ID: %v", err)
 		}
-		token := strings.Trim(idStrs[i+1], "{}")
-		route = append(route, Route{PoolID: id, Token: token})
+		token := match[2]
+		route = append(route, types.Route{PoolId: id, Token: token})
 	}
 	return route, nil
 }
 
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
 func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
-	if k.routeMap == nil {
-		return 0, fmt.Errorf("route map not set")
+	routeMap, err := k.GetRouteMap(ctx)
+	if err != nil {
+		return 0, err
 	}
 
 	// Get all direct routes from the input denom to uosmo
-	directRoutes := FindDirectRoute(k.routeMap, inputDenom, OSMO)
+	directRoutes := FindDirectRoute(routeMap, inputDenom, OSMO)
 
 	// Store liquidity for all direct routes found
 	routeLiquidity := make(map[string]osmomath.Int)
 	for _, route := range directRoutes {
-		liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolID, OSMO)
+		liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, OSMO)
 		if err != nil {
 			return 0, err
 		}
-		routeKey := fmt.Sprintf("%v", route.PoolID)
+		routeKey := fmt.Sprintf("%v", route.PoolId)
 		routeLiquidity[routeKey] = liquidity
 	}
 
@@ -650,4 +489,22 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 	default:
 		return osmomath.ZeroInt(), fmt.Errorf("invalid pool type")
 	}
+}
+
+func (k Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
+	var routeGraph types.RoutingGraph
+	found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
+	if err != nil {
+		return types.RoutingGraph{}, err
+	}
+	if !found {
+		// temp, remove
+		err := k.SetDenomPairRoutes(ctx)
+		if err != nil {
+			return types.RoutingGraph{}, err
+		}
+		// temp, uncomment
+		// return types.RoutingGraph{}, fmt.Errorf("route map not found")
+	}
+	return routeGraph, nil
 }

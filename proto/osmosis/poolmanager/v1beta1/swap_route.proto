@@ -38,3 +38,16 @@ message SwapAmountOutSplitRoute {
     (gogoproto.nullable) = false
   ];
 }
+
+// Route proto definitions in order to be able to serialize and deserialize into
+// KVStore
+message Route {
+  uint64 pool_id = 1;
+  string token = 2;
+}
+
+message Routes { repeated Route routes = 1; }
+
+message InnerMap { map<string, Routes> inner_map = 1; }
+
+message RoutingGraph { map<string, InnerMap> graph = 1; }

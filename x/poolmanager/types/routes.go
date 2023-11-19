@@ -167,3 +167,16 @@ func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) erro
 
 	return nil
 }
+
+func (g *RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
+	if g.Graph == nil {
+		g.Graph = make(map[string]*InnerMap)
+	}
+	if _, exists := g.Graph[start]; !exists {
+		g.Graph[start] = &InnerMap{InnerMap: make(map[string]*Routes)}
+	}
+	if _, exists := g.Graph[start].InnerMap[end]; !exists {
+		g.Graph[start].InnerMap[end] = &Routes{Routes: make([]*Route, 0)}
+	}
+	g.Graph[start].InnerMap[end].Routes = append(g.Graph[start].InnerMap[end].Routes, &Route{PoolId: poolID, Token: token})
+}
