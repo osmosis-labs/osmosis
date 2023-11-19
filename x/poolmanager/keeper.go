@@ -35,7 +35,7 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-	routeMap map[string]*types.InnerMap
+	routeMap types.RoutingGraph
 }
 
 func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
@@ -68,7 +68,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		poolModules:         routesList,
 		stakingKeeper:       stakingKeeper,
 		protorevKeeper:      protorevKeeper,
-		routeMap:            nil,
+		routeMap:            types.RoutingGraph{},
 	}
 }
 
@@ -165,8 +165,4 @@ func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
 // SetProtorevKeeper sets protorev keeper
 func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 	k.protorevKeeper = protorevKeeper
-}
-
-func (k *Keeper) SetRouteMap(routeMap map[string]*types.InnerMap) {
-	k.routeMap = routeMap
 }

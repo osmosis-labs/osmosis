@@ -122,6 +122,7 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error)
 	}
 
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routingGraph)
+	k.routeMap = routingGraph
 	return routingGraph, nil
 }
 
@@ -494,8 +495,8 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	var routeGraph types.RoutingGraph
 	fmt.Println("GetRouteMap")
-	if k.routeMap != nil {
-		return types.RoutingGraph{Graph: k.routeMap}, nil
+	if &k.routeMap != (&types.RoutingGraph{}) {
+		return k.routeMap, nil
 	}
 
 	found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
@@ -521,7 +522,7 @@ func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	}
 
 	fmt.Println("setting route map on keeper")
-	k.routeMap = routeGraph.Graph
+	k.routeMap = routeGraph
 
 	return routeGraph, nil
 }
