@@ -1,6 +1,8 @@
 package poolmanager
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
@@ -91,6 +93,7 @@ func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
 // InitGenesis initializes the poolmanager module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+	fmt.Println("InitGenesis")
 	k.SetNextPoolId(ctx, genState.NextPoolId)
 	if err := genState.Validate(); err != nil {
 		panic(err)
@@ -166,3 +169,9 @@ func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
 func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 	k.protorevKeeper = protorevKeeper
 }
+
+// func (k *Keeper) SetPoolRouteKeeper(ctx sdk.Context) {
+// 	var routeGraph types.RoutingGraph
+// 	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
+// 	k.routeMap = routeGraph
+// }
