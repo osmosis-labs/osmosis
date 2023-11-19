@@ -20,7 +20,17 @@ import (
 var (
 	OSMO                 = "uosmo"
 	superfluidMultiplier = sdk.MustNewDecFromStr("1.5")
+
+	poolCache             map[uint64]types.PoolI
+	poolLiquidityCache    map[string]osmomath.Int
+	inputDenomToOSMOCache map[string]osmomath.Int
 )
+
+func init() {
+	poolCache = make(map[uint64]types.PoolI)
+	poolLiquidityCache = make(map[string]osmomath.Int)
+	inputDenomToOSMOCache = make(map[string]osmomath.Int)
+}
 
 // // Define a structure to represent the routing graph
 // type RoutingGraph map[string]map[string][]types.Route
@@ -127,6 +137,8 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error)
 }
 
 func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
+	// Initialize caches
+
 	inputDenom := inputCoin.Denom
 	fmt.Println("getting route map")
 	routeMap, err := k.GetRouteMap(ctx)
@@ -226,14 +238,14 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", routes)
 		for _, route := range routes {
-			pool, err := k.GetPool(ctx, route.PoolId)
+			pool, err := k.GetPoolCached(ctx, route.PoolId)
 			if err != nil {
 				return nil, err
 			}
 			poolDenoms := pool.GetPoolDenoms(ctx)
 			liqInOsmo := osmomath.ZeroInt()
 			for _, denom := range poolDenoms {
-				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, denom)
+				liquidity, err := k.GetPoolLiquidityOfDenomCached(ctx, route.PoolId, denom)
 				if err != nil {
 					return nil, err
 				}
@@ -550,3 +562,44 @@ func (c *RouteGraphCache) Get(ctx sdk.Context, k *Keeper) (types.RoutingGraph, e
 }
 
 var routeGraphCache = &RouteGraphCache{}
+
+func (k Keeper) GetPoolCached(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	pool, ok := poolCache[poolId]
+	if !ok {
+		var err error
+		pool, err = k.GetPool(ctx, poolId)
+		if err != nil {
+			return nil, err
+		}
+		poolCache[poolId] = pool
+	}
+
+	return pool, nil
+}
+
+func (k Keeper) GetPoolLiquidityOfDenomCached(ctx sdk.Context, poolId uint64, denom string) (osmomath.Int, error) {
+	liquidityKey := fmt.Sprintf("%d:%s", poolId, denom)
+	liquidity, ok := poolLiquidityCache[liquidityKey]
+	if !ok {
+		var err error
+		liquidity, err = k.GetPoolLiquidityOfDenom(ctx, poolId, denom)
+		if err != nil {
+			return osmomath.Int{}, err
+		}
+		poolLiquidityCache[liquidityKey] = liquidity
+	}
+	return liquidity, nil
+}
+
+// func (k Keeper) InputDenomToOSMOCached(ctx sdk.Context, osmoKey, denom string, liquidity osmomath.Int, routeMap types.RoutingGraph) (osmomath.Int, error) {
+// 	liqInOsmoInternal, ok := inputDenomToOSMOCache[osmoKey]
+// 	if !ok {
+// 		var err error
+// 		liqInOsmoInternal, err = k.InputDenomToOSMO(ctx, denom, liquidity, routeMap)
+// 		if err != nil {
+// 			return osmomath.Int{}, err
+// 		}
+// 		inputDenomToOSMOCache[osmoKey] = liqInOsmoInternal
+// 	}
+// 	return liqInOsmoInternal, nil
+// }
