@@ -64,6 +64,30 @@ func NewRouter(preferredPoolIDs []uint64, takerFeeMap domain.TakerFeeMap, maxHop
 	}
 }
 
+// GetMaxHops returns the maximum number of hops configured.
+func (r Router) GetMaxHops() int {
+	return r.maxHops
+}
+
+// GetMaxRoutes returns the maximum number of routes configured.
+func (r Router) GetMaxRoutes() int {
+	return r.maxRoutes
+}
+
+// GetMaxSplitIterations returns the maximum number of iterations when searching for split routes.
+func (r Router) GetMaxSplitIterations() int {
+	return r.maxSplitIterations
+}
+
+// GetLogger returns the logger.
+func (r Router) GetLogger() log.Logger {
+	return r.logger
+}
+
+func (r Router) GetTakerFeeMap() domain.TakerFeeMap {
+	return r.takerFeeMap
+}
+
 func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {
 	// TODO: consider mutating directly on allPools
 	router.sortedPools = make([]domain.PoolI, 0)
