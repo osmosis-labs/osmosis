@@ -493,14 +493,18 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 
 func (k Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	var routeGraph types.RoutingGraph
+	fmt.Println("GetRouteMap")
 	found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
 	if err != nil {
+		fmt.Println("error getting route map")
 		return types.RoutingGraph{}, err
 	}
 	if !found {
 		// temp, remove
+		fmt.Println("route map not found")
 		err := k.SetDenomPairRoutes(ctx)
 		if err != nil {
+			fmt.Println("error setting denom pair routes")
 			return types.RoutingGraph{}, err
 		}
 		// temp, uncomment
