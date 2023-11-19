@@ -491,7 +491,7 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 	}
 }
 
-func (k Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
+func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	var routeGraph types.RoutingGraph
 	fmt.Println("GetRouteMap")
 	if k.routeMap != nil {
