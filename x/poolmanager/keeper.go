@@ -166,3 +166,7 @@ func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
 func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 	k.protorevKeeper = protorevKeeper
 }
+
+func (k *Keeper) SetRouteMap(routeMap map[string]*types.InnerMap) {
+	k.routeMap = routeMap
+}

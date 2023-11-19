@@ -97,11 +97,11 @@ func FindThreeHopRoute(g types.RoutingGraph, start, end string) [][]*types.Route
 }
 
 // SetDenomPairRoutes sets the route map to be used for route calculations
-func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
+func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) {
 	// Get all the pools
 	pools, err := k.AllPools(ctx)
 	if err != nil {
-		return err
+		return types.RoutingGraph{}, err
 	}
 
 	// Create a routingGraph to represent possible routes between tokens
@@ -122,7 +122,7 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) error {
 	}
 
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routingGraph)
-	return nil
+	return routingGraph, nil
 }
 
 func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
@@ -506,7 +506,7 @@ func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	if !found {
 		// temp, remove
 		fmt.Println("route map not found")
-		err := k.SetDenomPairRoutes(ctx)
+		routeGraph, err = k.SetDenomPairRoutes(ctx)
 		if err != nil {
 			fmt.Println("error setting denom pair routes")
 			return types.RoutingGraph{}, err

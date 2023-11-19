@@ -185,7 +185,7 @@ func CreateUpgradeHandler(
 		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(ctx, ctx.BlockHeight())
 
 		// Set route mapping in state, to be updated every epoch
-		err = keepers.PoolManagerKeeper.SetDenomPairRoutes(ctx)
+		_, err = keepers.PoolManagerKeeper.SetDenomPairRoutes(ctx)
 		if err != nil {
 			return nil, err
 		}
