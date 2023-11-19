@@ -366,7 +366,7 @@ func parseRouteKey(routeKey string) ([]types.Route, error) {
 }
 
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
-func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
+func (k *Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
 	routeMap, err := k.GetRouteMap(ctx)
 	if err != nil {
 		return 0, err
@@ -520,6 +520,7 @@ func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 		// return types.RoutingGraph{}, fmt.Errorf("route map not found")
 	}
 
+	fmt.Println("setting route map on keeper")
 	k.routeMap = routeGraph.Graph
 
 	return routeGraph, nil
