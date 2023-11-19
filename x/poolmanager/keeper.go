@@ -1,8 +1,6 @@
 package poolmanager
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
@@ -36,8 +34,6 @@ type Keeper struct {
 	poolModules []types.PoolModuleI
 
 	paramSpace paramtypes.Subspace
-
-	routeMap types.RoutingGraph
 }
 
 func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
@@ -70,7 +66,6 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		poolModules:         routesList,
 		stakingKeeper:       stakingKeeper,
 		protorevKeeper:      protorevKeeper,
-		routeMap:            types.RoutingGraph{},
 	}
 }
 
@@ -93,7 +88,6 @@ func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
 // InitGenesis initializes the poolmanager module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
-	fmt.Println("InitGenesis")
 	k.SetNextPoolId(ctx, genState.NextPoolId)
 	if err := genState.Validate(); err != nil {
 		panic(err)

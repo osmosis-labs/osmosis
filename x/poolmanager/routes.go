@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -122,7 +123,6 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error)
 	}
 
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routingGraph)
-	k.routeMap = routingGraph
 	return routingGraph, nil
 }
 
@@ -493,24 +493,57 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 }
 
 func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
-	var routeGraph types.RoutingGraph
-	fmt.Println("GetRouteMap")
-	if len(k.routeMap.Graph) != 0 {
-		fmt.Println("route map already set")
-		return k.routeMap, nil
+	// var routeGraph types.RoutingGraph
+	// fmt.Println("GetRouteMap")
+
+	// found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
+	// if err != nil {
+	// 	fmt.Println("error getting route map")
+	// 	return types.RoutingGraph{}, err
+	// }
+	// if !found {
+	// 	return types.RoutingGraph{}, fmt.Errorf("route map not found")
+	// }
+
+	// return routeGraph, nil
+	return routeGraphCache.Get(ctx, k)
+}
+
+//
+//
+
+type RouteGraphCache struct {
+	routeGraph types.RoutingGraph
+	mu         sync.RWMutex
+}
+
+func (c *RouteGraphCache) Get(ctx sdk.Context, k *Keeper) (types.RoutingGraph, error) {
+	c.mu.RLock()
+	if c.routeGraph.Graph != nil && len(c.routeGraph.Graph) > 0 {
+		defer c.mu.RUnlock()
+		return c.routeGraph, nil
+	}
+	c.mu.RUnlock()
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Double-checking pattern to prevent race conditions
+	if c.routeGraph.Graph != nil && len(c.routeGraph.Graph) > 0 {
+		return c.routeGraph, nil
 	}
 
+	var routeGraph types.RoutingGraph
 	found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
 	if err != nil {
-		fmt.Println("error getting route map")
 		return types.RoutingGraph{}, err
 	}
 	if !found {
 		return types.RoutingGraph{}, fmt.Errorf("route map not found")
 	}
 
-	fmt.Println("setting route map on keeper")
-	k.routeMap = routeGraph
-
+	c.routeGraph = routeGraph
 	return routeGraph, nil
 }
+
+var routeGraphCache = &RouteGraphCache{}
