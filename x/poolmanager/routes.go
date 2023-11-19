@@ -497,7 +497,6 @@ func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	fmt.Println("GetRouteMap")
 	if len(k.routeMap.Graph) != 0 {
 		fmt.Println("route map already set")
-		fmt.Println("route map: ", k.routeMap)
 		return k.routeMap, nil
 	}
 
