@@ -163,7 +163,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 			if err != nil {
 				return nil, err
 			}
-			liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+			liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity, routeMap)
 			if err != nil {
 				return nil, err
 			}
@@ -196,7 +196,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 				if err != nil {
 					return nil, err
 				}
-				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity, routeMap)
 				if err != nil {
 					return nil, err
 				}
@@ -230,7 +230,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 				if err != nil {
 					return nil, err
 				}
-				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity)
+				liqInOsmoInternal, err := k.InputDenomToOSMO(ctx, denom, liquidity, routeMap)
 				if err != nil {
 					return nil, err
 				}
@@ -261,8 +261,8 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 		liquidity := routeLiquidity[routeKey]
 		hopCount := len(strings.Fields(routeKey)) / 2
 
-		fmt.Println("hopCount: ", hopCount)
-		fmt.Println("routeKey: ", routeKey)
+		// fmt.Println("hopCount: ", hopCount)
+		// fmt.Println("routeKey: ", routeKey)
 
 		// Update best route based on hop count and liquidity
 		switch hopCount {
@@ -293,7 +293,6 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	}
 	result["singleHop"] = singleHopRoute
 
-	fmt.Println("bestDoubleHopRouteKey: ", bestDoubleHopRouteKey)
 	doubleHopRoute, err := parseRouteKey(bestDoubleHopRouteKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing double hop route key: %v", err)
@@ -367,12 +366,7 @@ func parseRouteKey(routeKey string) ([]types.Route, error) {
 }
 
 // GetDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
-func (k *Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string) (uint64, error) {
-	routeMap, err := k.GetRouteMap(ctx)
-	if err != nil {
-		return 0, err
-	}
-
+func (k *Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string, routeMap types.RoutingGraph) (uint64, error) {
 	// Get all direct routes from the input denom to uosmo
 	directRoutes := FindDirectRoute(routeMap, inputDenom, OSMO)
 
@@ -430,12 +424,12 @@ func (k *Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom
 
 // Transform an input denom and its amount to uosmo
 // If a route is not found, returns 0 with no error.
-func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int) (osmomath.Int, error) {
+func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraph) (osmomath.Int, error) {
 	if inputDenom == OSMO {
 		return amount, nil
 	}
 	// start by getting the route from the input denom to uosmo
-	route, err := k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom)
+	route, err := k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
 	if err != nil {
 		return osmomath.ZeroInt(), nil
 	}
