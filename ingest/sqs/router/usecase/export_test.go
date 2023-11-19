@@ -38,3 +38,7 @@ func (r *routerUseCaseImpl) InitializeRouter(ctx context.Context) (*Router, erro
 func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
 	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
+
+func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []domain.Route) (domain.Quote, error) {
+	return r.getOptimalQuote(tokenIn, tokenOutDenom, routes)
+}

@@ -66,6 +66,12 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 
 	routes = append(routes, inverseRoutes...)
 
+	// filter the final routes again to remove duplicates
+	routes, err = r.validateAndFilterRoutes(routes, tokenInDenom)
+	if err != nil {
+		return nil, err
+	}
+
 	// Sort routes by number of hops.
 	sort.Slice(routes, func(i, j int) bool {
 		return len(routes[i].GetPools()) < len(routes[j].GetPools())
