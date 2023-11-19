@@ -495,7 +495,7 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 	var routeGraph types.RoutingGraph
 	fmt.Println("GetRouteMap")
-	if &k.routeMap != (&types.RoutingGraph{}) {
+	if len(k.routeMap.Graph) != 0 {
 		fmt.Println("route map already set")
 		fmt.Println("route map: ", k.routeMap)
 		return k.routeMap, nil
