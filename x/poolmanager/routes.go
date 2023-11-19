@@ -506,20 +506,7 @@ func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
 		return types.RoutingGraph{}, err
 	}
 	if !found {
-		// temp, remove
-		fmt.Println("route map not found")
-		routeGraph, err = k.SetDenomPairRoutes(ctx)
-		if err != nil {
-			fmt.Println("error setting denom pair routes")
-			return types.RoutingGraph{}, err
-		}
-		_, err = osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
-		if err != nil {
-			fmt.Println("error getting route map 2")
-			return types.RoutingGraph{}, err
-		}
-		// temp, uncomment
-		// return types.RoutingGraph{}, fmt.Errorf("route map not found")
+		return types.RoutingGraph{}, fmt.Errorf("route map not found")
 	}
 
 	fmt.Println("setting route map on keeper")
