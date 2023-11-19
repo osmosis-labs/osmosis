@@ -6,7 +6,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
@@ -219,28 +218,4 @@ func (r Router) GetSortedPoolIDs() []uint64 {
 		sortedPoolIDs[i] = pool.GetId()
 	}
 	return sortedPoolIDs
-}
-
-// GetMaxHops returns the maximum number of hops configured.
-func (r Router) GetMaxHops() int {
-	return r.maxHops
-}
-
-// GetMaxRoutes returns the maximum number of routes configured.
-func (r Router) GetMaxRoutes() int {
-	return r.maxRoutes
-}
-
-// GetMaxSplitIterations returns the maximum number of iterations when searching for split routes.
-func (r Router) GetMaxSplitIterations() int {
-	return r.maxSplitIterations
-}
-
-// GetLogger returns the logger.
-func (r Router) GetLogger() log.Logger {
-	return r.logger
-}
-
-func (r Router) GetTakerFeeMap() domain.TakerFeeMap {
-	return r.takerFeeMap
 }
