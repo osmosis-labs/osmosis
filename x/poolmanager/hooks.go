@@ -14,7 +14,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // At the end of each epoch, set the denom pair routes.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		_, err := k.GetRouteMap(cacheCtx)
+		_, err := k.SetDenomPairRoutes(cacheCtx)
 		return err
 	})
 
