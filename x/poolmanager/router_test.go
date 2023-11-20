@@ -3814,3 +3814,82 @@ func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant 
 	totalVolume = s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, concentratedPool.GetId())
 	s.Require().Equal(tokenIn.String(), totalVolume.String())
 }
+
+func (suite *KeeperTestSuite) TestListPoolsByDenom() {
+	suite.Setup()
+
+	tests := map[string]struct {
+		denom            string
+		poolCoins        []sdk.Coins
+		expectedNumPools int
+		expectedError    bool
+		poolType         []types.PoolType
+	}{
+		"Single pool, pool contain denom": {
+			poolType: []types.PoolType{types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+			},
+			denom:            BAR,
+			expectedNumPools: 1,
+		},
+		"Single pool, pool does not contain denom": {
+			poolType: []types.PoolType{types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+			},
+			denom:            FOO,
+			expectedNumPools: 0,
+		},
+		"Two pools, pools contains denom": {
+			poolType: []types.PoolType{types.Balancer, types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
+			},
+			denom:            BAR,
+			expectedNumPools: 2,
+		},
+		"Two pools, pools does not contains denom": {
+			poolType: []types.PoolType{types.Balancer, types.Concentrated},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2. baz-foo
+			},
+			denom:            FOO,
+			expectedNumPools: 0,
+		},
+		"Many pools": {
+			poolType: []types.PoolType{types.Concentrated, types.Balancer, types.Concentrated, types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),   // pool 3. bar-baz
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 4. baz-uosmo
+			},
+			denom:            BAR,
+			expectedNumPools: 2,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			for i := range tc.poolType {
+				suite.FundAcc(suite.TestAccs[0], tc.poolCoins[i])
+				suite.CreatePoolFromTypeWithCoins(tc.poolType[i], tc.poolCoins[i])
+			}
+
+			poolsResult, err := poolManagerKeeper.ListPoolsByDenom(ctx, tc.denom)
+			if tc.expectedError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedNumPools, len(poolsResult))
+			}
+		})
+	}
+}
