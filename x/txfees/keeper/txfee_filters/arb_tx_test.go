@@ -2,6 +2,8 @@ package txfee_filters_test
 
 import (
 	"encoding/json"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	"testing"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -62,5 +64,53 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 	}
 
 	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})
+	suite.Require().True(isArb)
+}
+
+// Tests that the arb filter is enabled on the crosschain swap msg.
+func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_CrosschainSwapMsg() {
+	transfer := transfertypes.FungibleTokenPacketData{
+		Denom:    "uatom",
+		Amount:   "10",
+		Sender:   "osmo1yvhfsfzmnqv43exsmu0klahdwtt7p70htsghq5",
+		Receiver: "juno1yvhfsfzmnqv43exsmu0klahdwtt7p70h4ecu36",
+		Memo: `
+{
+  "wasm": {
+    "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",
+    "msg": {
+      "osmosis_swap": {
+        "output_denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+        "slippage": {
+          "twap": {
+            "slippage_percentage": "3",
+            "window_seconds": 10
+          }
+        },
+        "receiver": "juno1yvhfsfzmnqv43exsmu0klahdwtt7p70h4ecu36",
+        "on_failed_delivery": {
+          "local_recovery_addr": "osmo1yvhfsfzmnqv43exsmu0klahdwtt7p70htsghq5"
+        }
+      }
+    }
+  }
+}`,
+	}
+
+	transferBz, err := json.Marshal(transfer)
+	suite.Require().NoError(err)
+
+	msgRecv := &channeltypes.MsgRecvPacket{
+		Packet: channeltypes.Packet{
+			SourcePort:         "transfer",
+			SourceChannel:      "channel-0",
+			DestinationPort:    "transfer",
+			DestinationChannel: "channel-0",
+			Data:               transferBz,
+		},
+	}
+
+	_, isArb := txfee_filters.IsArbTxLooseAuthz(msgRecv, "", map[types.LiquidityChangeType]bool{})
+
 	suite.Require().True(isArb)
 }

@@ -2,6 +2,8 @@ package txfee_filters
 
 import (
 	"encoding/json"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 
@@ -48,6 +50,9 @@ func (m AffiliateSwapMsg) TokenOutDenom() string {
 }
 
 var _ poolmanagertypes.SwapMsgRoute = AffiliateSwapMsg{}
+
+type CrosschainSwap struct {
+}
 
 // We check if a tx is an arbitrage for the mempool right now by seeing:
 // 1) does start token of a msg = final token of msg (definitionally correct)
@@ -118,6 +123,26 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 		return swapInDenom, false
 	}
 
+	// Detect a contract execution via IBC hooks
+	if msgIBCRecv, ok := msg.(*channeltypes.MsgRecvPacket); ok {
+		var transferPacket transfertypes.FungibleTokenPacketData
+		err := json.Unmarshal(msgIBCRecv.Packet.Data, &transferPacket)
+		if err != nil {
+			return swapInDenom, false
+		}
+
+		swapInDenom = getLoalIBCDenom(msgIBCRecv.Packet, transferPacket.Denom)
+
+		payload, valid := isWasmHooksExecutePayload(transferPacket.Memo)
+		if !valid {
+			return swapInDenom, false
+		}
+		if checkWasmHookPayload(payload, swapInDenom) {
+			return swapInDenom, true
+		}
+		return swapInDenom, false
+	}
+
 	// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
 	lpMsg, isLpMsg := msg.(gammtypes.LiquidityChangeMsg)
 	if isLpMsg {
@@ -159,4 +184,69 @@ func isArbTxLooseSwapMsg(swapMsg poolmanagertypes.SwapMsgRoute, swapInDenom stri
 	}
 	swapInDenom = swapMsg.TokenInDenom()
 	return swapInDenom, false
+}
+
+func isWasmHooksExecutePayload(memo string) (map[string]interface{}, bool) {
+	jsonObject := make(map[string]interface{})
+	err := json.Unmarshal([]byte(memo), &jsonObject)
+	if err != nil {
+		return nil, false
+	}
+	wasm, ok := jsonObject["wasm"].(map[string]interface{})
+	if !ok {
+		return nil, false
+	}
+	_, ok = wasm["contract"].(string)
+	if !ok {
+		return nil, false
+	}
+	msg, ok := wasm["msg"].(map[string]interface{})
+	if !ok {
+		return nil, false
+	}
+	return msg, true
+}
+
+func getLoalIBCDenom(packet channeltypes.Packet, denom string) string {
+	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), denom) {
+		// sender chain is not the source, unescrow tokens
+
+		// remove prefix added by sender chain
+		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+		unprefixedDenom := denom[len(voucherPrefix):]
+
+		// coin denomination used in sending from the escrow address
+		denom := unprefixedDenom
+
+		// The denomination used to send the coins is either the native denom or the hash of the path
+		// if the denomination is not native.
+		denomTrace := transfertypes.ParseDenomTrace(unprefixedDenom)
+		if !denomTrace.IsNativeDenom() {
+			denom = denomTrace.IBCDenom()
+		}
+		return denom
+	}
+
+	// sender chain is the source, mint vouchers
+
+	// since SendPacket did not prefix the denomination, we must prefix denomination here
+	sourcePrefix := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+	// NOTE: sourcePrefix contains the trailing "/"
+	prefixedDenom := sourcePrefix + denom
+
+	// construct the denomination trace from the full raw denomination
+	denomTrace := transfertypes.ParseDenomTrace(prefixedDenom)
+	voucherDenom := denomTrace.IBCDenom()
+	return voucherDenom
+}
+
+func checkWasmHookPayload(payload map[string]interface{}, swapInDenom string) bool {
+	// CrossChainSwaps message
+	if swapMsg, ok := payload["osmosis_swap"].(map[string]interface{}); ok {
+		if outputDenom, ok := swapMsg["output_denom"].(string); ok {
+			return outputDenom == swapInDenom
+		}
+	}
+
+	return false
 }
