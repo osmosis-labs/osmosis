@@ -218,8 +218,10 @@ func GetCmdDenomPairRoutes() (
 	*osmocli.QueryDescriptor, *queryproto.DenomPairRoutesRequest,
 ) {
 	return &osmocli.QueryDescriptor{
-		Use:         "denom-pair-routes",
-		Short:       "Query a basic route to get from denom A to denom B",
+		Use:   "denom-pair-routes",
+		Short: "Query a basic route to get from denom A to denom B",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} denom-pair-routes 100uosmo uion`,
 		QueryFnName: "DenomPairRoutes",
 	}, &queryproto.DenomPairRoutesRequest{}
 }

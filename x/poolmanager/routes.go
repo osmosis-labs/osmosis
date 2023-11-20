@@ -301,9 +301,16 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 	result["tripleHop"] = tripleHopRoute
 
 	maxAmtOut := sdk.ZeroInt()
-	var maxKey string
 
-	for key, value := range result {
+	var resultAsString []string
+	for k := range result {
+		resultAsString = append(resultAsString, k)
+	}
+	sort.Strings(keys)
+
+	var maxKey string
+	for _, key := range resultAsString {
+		value := result[key]
 		swapRoute := []types.SwapAmountInRoute{}
 		for _, route := range value {
 			// Construct SwapAmountInRoute for each poolID

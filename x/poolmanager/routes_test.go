@@ -120,9 +120,8 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000)), sdk.NewCoin("test", sdk.NewInt(1000)))...)  // pool 15
 			s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000)), sdk.NewCoin("stbtc", sdk.NewInt(1000)))...) // pool 16
 
-			// Set the routes, this normally happens at the end of an epoch or at time of upgrade to v21
-			_, err := poolmanagerKeeper.SetDenomPairRoutes(s.Ctx)
-			s.Require().NoError(err)
+			// Run epoch, which sets the routes each day
+			s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, "day", 1)
 
 			// Get the route
 			route, err := poolmanagerKeeper.GetDenomPairRoute(s.Ctx, tc.tokenIn, tc.outDenom)
