@@ -139,6 +139,10 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error)
 
 func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
 	inputDenom := inputCoin.Denom
+	_, err := k.SetDenomPairRoutes(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	routeMap, err := k.GetRouteMap(ctx)
 	if err != nil {
