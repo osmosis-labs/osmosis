@@ -78,7 +78,7 @@ var CurEipState = EipState{
 	CurBaseFee:              sdk.NewDec(0),
 }
 
-// startBlock is executed at the start of each block and is responsible for reseting the state
+// startBlock is executed at the start of each block and is responsible for resetting the state
 // of the CurBaseFee when the node reaches the reset interval
 func (e *EipState) startBlock(height int64) {
 	e.lastBlockHeight = height
@@ -159,13 +159,13 @@ var rwMtx = sync.Mutex{}
 // tryPersist persists the eip1559 state to disk in the form of a json file
 // we do this in case a node stops and it can continue functioning as normal
 func (e EipState) tryPersist() {
-	rwMtx.Lock()
-	defer rwMtx.Unlock()
 	bz, err := json.Marshal(e)
 	if err != nil {
 		fmt.Println("Error marshalling eip1559 state", err)
 		return
 	}
+	rwMtx.Lock()
+	defer rwMtx.Unlock()
 
 	err = os.WriteFile(e.BackupFilePath, bz, 0644)
 	if err != nil {
