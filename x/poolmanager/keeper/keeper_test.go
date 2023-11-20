@@ -18,8 +18,7 @@ type KeeperTestSuite struct {
 const testExpectedPoolId = 3
 
 var (
-	testPoolCreationFee = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
-	testPoolRoute       = []types.ModuleRoute{
+	testPoolRoute = []types.ModuleRoute{
 		{
 			PoolId:   1,
 			PoolType: types.Balancer,
@@ -58,15 +57,11 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Setup()
 
 	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
-		Params: types.Params{
-			PoolCreationFee: testPoolCreationFee,
-		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
 	})
 
 	suite.Require().Equal(uint64(testExpectedPoolId), suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))
-	suite.Require().Equal(testPoolCreationFee, suite.App.PoolManagerKeeper.GetParams(suite.Ctx).PoolCreationFee)
 	suite.Require().Equal(testPoolRoute, suite.App.PoolManagerKeeper.GetAllPoolRoutes(suite.Ctx))
 }
 
@@ -74,15 +69,11 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 	suite.Setup()
 
 	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
-		Params: types.Params{
-			PoolCreationFee: testPoolCreationFee,
-		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
 	})
 
 	genesis := suite.App.PoolManagerKeeper.ExportGenesis(suite.Ctx)
 	suite.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
-	suite.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
 	suite.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 }

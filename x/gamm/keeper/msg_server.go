@@ -2,14 +2,12 @@ package keeper
 
 import (
 	"context"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type msgServer struct {
@@ -86,13 +84,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		return nil, types.ErrPoolAlreadyExists
 	}
 
-	// Send pool creation fee to community pool
-	sender := msg.PoolCreator()
-	if err := server.keeper.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
-		return nil, err
-	}
-
-	poolId, err := server.CreatePool(goCtx, msg)
+	poolId, err := server.keeper.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
 
@@ -104,32 +96,6 @@ func contains(slice []string, str string) bool {
 		}
 	}
 	return false
-}
-
-// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
-func (server msgServer) CreatePool(goCtx context.Context, msg poolmanagertypes.CreatePoolMsg) (poolId uint64, err error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	poolId, err = server.keeper.poolManager.CreatePool(ctx, msg)
-	if err != nil {
-		return 0, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
-		),
-	})
-
-	return poolId, nil
 }
 
 // JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated

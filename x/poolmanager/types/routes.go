@@ -72,10 +72,6 @@ type SwapI interface {
 	) (tokenIn sdk.Coin, err error)
 }
 
-type PoolIncentivesKeeperI interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
-}
-
 type SwapAmountInRoutes []SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) Validate() error {

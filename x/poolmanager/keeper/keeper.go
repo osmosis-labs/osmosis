@@ -18,7 +18,6 @@ type Keeper struct {
 	accountKeeper       types.AccountI
 	communityPoolKeeper types.CommunityPoolI
 
-	//FIXME: change to list instead of map for determinism
 	routes map[types.PoolType]types.SwapI
 }
 
