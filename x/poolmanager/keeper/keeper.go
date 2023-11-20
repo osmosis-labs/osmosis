@@ -34,8 +34,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	}
 
 	routes := map[types.PoolType]types.SwapI{
-		types.Balancer:   gammKeeper,
-		types.Stableswap: gammKeeper,
+		types.Balancer: gammKeeper,
 	}
 
 	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, gammKeeper: gammKeeper, concentratedKeeper: concentratedKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}

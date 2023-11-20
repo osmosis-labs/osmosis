@@ -1,7 +1,6 @@
 package poolmanager
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -15,10 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	pmclient "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/grpc"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	keeper "github.com/osmosis-labs/osmosis/v15/x/poolmanager/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -55,17 +50,14 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	if err := queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
+	return nil
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return nil
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
@@ -81,7 +73,6 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
 }
 
 func NewAppModule(poolmanagerKeeper keeper.Keeper, gammKeeper types.SwapI) AppModule {
