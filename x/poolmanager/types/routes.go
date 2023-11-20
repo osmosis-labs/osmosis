@@ -168,15 +168,36 @@ func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) erro
 	return nil
 }
 
-func (g *RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
-	if g.Graph == nil {
-		g.Graph = make(map[string]*InnerMap)
+func (g *RoutingGraphSer) AddEdge(start, end, token string, poolID uint64) {
+	if g.Entries == nil {
+		g.Entries = make([]*RoutingGraphEntry, 0)
 	}
-	if _, exists := g.Graph[start]; !exists {
-		g.Graph[start] = &InnerMap{InnerMap: make(map[string]*Routes)}
+
+	var startEntry *Inner
+	for _, entry := range g.Entries {
+		if entry.Key == start {
+			startEntry = entry.Value
+			break
+		}
 	}
-	if _, exists := g.Graph[start].InnerMap[end]; !exists {
-		g.Graph[start].InnerMap[end] = &Routes{Routes: make([]*Route, 0)}
+
+	if startEntry == nil {
+		startEntry = &Inner{Entries: make([]*InnerMapEntry, 0)}
+		g.Entries = append(g.Entries, &RoutingGraphEntry{Key: start, Value: startEntry})
 	}
-	g.Graph[start].InnerMap[end].Routes = append(g.Graph[start].InnerMap[end].Routes, &Route{PoolId: poolID, Token: token})
+
+	var endEntry *Routes
+	for _, entry := range startEntry.Entries {
+		if entry.Key == end {
+			endEntry = entry.Value
+			break
+		}
+	}
+
+	if endEntry == nil {
+		endEntry = &Routes{Routes: make([]*Route, 0)}
+		startEntry.Entries = append(startEntry.Entries, &InnerMapEntry{Key: end, Value: endEntry})
+	}
+
+	endEntry.Routes = append(endEntry.Routes, &Route{PoolId: poolID, Token: token})
 }
