@@ -5,7 +5,9 @@ import (
 	"log"
 	"os/user"
 
+	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
@@ -18,6 +20,7 @@ const (
 	addressPrefix            = "osmo"
 	localosmosisFromHomePath = "/.osmosisd-local"
 	consensusFee             = "3000uosmo"
+	totalOsmosisValidators   = 150
 )
 
 var (
@@ -31,8 +34,12 @@ type nonEIPBlockData struct {
 }
 
 type nonEIPValidatorData struct {
-	consensusAddress string
-	nonEIPBlockData  []nonEIPBlockData
+	nonEIPBlockData []nonEIPBlockData
+}
+
+type validatorInfo struct {
+	operatorAddress string
+	moniker         string
 }
 
 func main() {
@@ -55,12 +62,8 @@ func main() {
 	}
 	igniteClient.TxFactory = igniteClient.TxFactory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
 
+	// Set correct Osmosis address prefix
 	params.SetAddressPrefixes()
-
-	// config := sdk.GetConfig()
-	// config.SetBech32PrefixForValidator(addressPrefix+"valoper", addressPrefix+"valoperpub")
-
-	// sdk.GetConfig().SetBech32PrefixForValidator(addressPrefix+"valoper", addressPrefix+"valoperpub")
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
@@ -68,6 +71,44 @@ func main() {
 	}
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
+
+	consensusValidators, err := queryAllTendermintValidators(ctx, igniteClient, statusResp.SyncInfo.LatestBlockHeight)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	validatorsMap := make(map[string]validatorInfo)
+	for _, validator := range consensusValidators {
+		validatorsMap[string(validator.PubKey.Address())] = validatorInfo{}
+	}
+
+	stakingClient := stakingtypes.NewQueryClient(igniteClient.Context())
+	stakingValidators, err := queryAllStakingValidators(ctx, stakingClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	encodingConfig := app.GetEncodingConfig()
+	if err := stakingValidators.UnpackInterfaces(encodingConfig.Marshaler); err != nil {
+		log.Fatal(err)
+	}
+	sdkValidators := stakingValidators.ToSDKValidators()
+
+	for _, validator := range sdkValidators {
+		consensusAddress, err := validator.GetConsAddr()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if _, ok := validatorsMap[string(consensusAddress)]; ok {
+			validatorsMap[string(consensusAddress)] = validatorInfo{
+				operatorAddress: validator.GetOperator().String(),
+				moniker:         validator.GetMoniker(),
+			}
+		} else {
+			log.Println("did not find consensus validator", "moniker", validator.GetMoniker())
+		}
+	}
 
 	// Start Block
 	// https://www.mintscan.io/osmosis/block/12300000
@@ -97,18 +138,10 @@ func main() {
 	maxGasThreshold := maxGas * 90 / 100
 	log.Println("max gas", maxGas, "max gas threshold", maxGasThreshold)
 
-	// validatorToMonikerMap := make(map[string]string)
-
-	stakingClient := stakingtypes.NewQueryClient(igniteClient.Context())
-
 	_, err = stakingClient.Params(ctx, &stakingtypes.QueryParamsRequest{})
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// validatorResponse, err := stakingClient.Validator(ctx, &stakingtypes.QueryValidatorRequest{
-	// 	ValidatorAddr: valAddressStr,
-	// })
 
 	log.Println("queried staking params")
 
@@ -174,8 +207,14 @@ func main() {
 		averageGasPrice := gasPriceSum.QuoInt64(int64(len(blockTXs)))
 
 		if gasWanted >= maxGasThreshold && averageGasPrice.LT(baseFeeMin) {
-			log.Println("full block + gas price below min", "proposer address", block.Block.Header.ProposerAddress, "gas wanted", gasWanted, "height", height, "avg gas price", averageGasPrice)
-			proposerAddress := block.Block.Header.ProposerAddress.String()
+			proposerAddress := string(block.Block.Header.ProposerAddress)
+			validatorInfo, ok := validatorsMap[proposerAddress]
+			if !ok {
+				log.Fatal("did not find validator with consensus address ", proposerAddress)
+			}
+			moniker := validatorInfo.moniker
+
+			log.Println("full block + gas price below min", "moniker", moniker, "gas wanted", gasWanted, "height", height, "avg gas price", averageGasPrice)
 
 			blockData := nonEIPBlockData{
 				height:      uint64(height),
@@ -183,27 +222,81 @@ func main() {
 				avgGasPrice: averageGasPrice,
 			}
 
-			if existingValData, ok := nonEIPPatchValidatorMap[proposerAddress]; ok {
+			if existingValData, ok := nonEIPPatchValidatorMap[moniker]; ok {
 				existingValData.nonEIPBlockData = append(existingValData.nonEIPBlockData, blockData)
-				nonEIPPatchValidatorMap[proposerAddress] = existingValData
+				nonEIPPatchValidatorMap[moniker] = existingValData
 			} else {
+
 				newValData := nonEIPValidatorData{
-					consensusAddress: proposerAddress,
-					nonEIPBlockData:  []nonEIPBlockData{blockData},
+					nonEIPBlockData: []nonEIPBlockData{blockData},
 				}
-				nonEIPPatchValidatorMap[proposerAddress] = newValData
+				nonEIPPatchValidatorMap[moniker] = newValData
 			}
 		}
 	}
 
 	log.Println("Summary of non-EIP patch validators")
-	for _, valData := range nonEIPPatchValidatorMap {
-		log.Println("consensus address", valData.consensusAddress)
+	for moniker, valData := range nonEIPPatchValidatorMap {
+		log.Println("moniker", moniker)
 		for _, blockData := range valData.nonEIPBlockData {
 			log.Println("height", blockData.height, "gas wanted", blockData.gasWanted, "avg gas price", blockData.avgGasPrice)
 		}
 		log.Printf("\n\n")
 	}
+}
+
+func queryAllTendermintValidators(ctx context.Context, client cosmosclient.Client, height int64) ([]*types.Validator, error) {
+	// Query tendermint validators
+	var (
+		page    int = 1
+		perPage int = 100
+	)
+
+	result := make([]*types.Validator, 0, totalOsmosisValidators)
+
+	validators, err := client.RPC.Validators(ctx, &height, &page, &perPage)
+	if err != nil {
+		return nil, err
+	}
+
+	page++
+	result = append(result, validators.Validators...)
+
+	validators, err = client.RPC.Validators(ctx, &height, &page, &perPage)
+	if err != nil {
+		return nil, err
+	}
+
+	result = append(result, validators.Validators...)
+
+	return result, nil
+}
+
+// query staking module validators
+func queryAllStakingValidators(ctx context.Context, client stakingtypes.QueryClient) (stakingtypes.Validators, error) {
+	validatorResponse, err := client.Validators(ctx, &stakingtypes.QueryValidatorsRequest{
+		Status: stakingtypes.BondStatusBonded,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result := make(stakingtypes.Validators, 0, totalOsmosisValidators)
+	result = append(result, validatorResponse.Validators...)
+
+	validatorResponse, err = client.Validators(ctx, &stakingtypes.QueryValidatorsRequest{
+		Status: stakingtypes.BondStatusBonded,
+		Pagination: &query.PageRequest{
+			Key: validatorResponse.Pagination.NextKey,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	result = append(result, validatorResponse.Validators...)
+
+	return result, nil
 }
 
 func getClientHomePath() string {
