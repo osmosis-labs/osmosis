@@ -46,17 +46,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			preCreatePoolType: types.Balancer,
 			poolId:            2,
 			expectedModule:    gammKeeperType,
-
-			expectError: types.FailedToFindRouteError{PoolId: 2},
-		},
-		"undefined route": {
-			preCreatePoolType: types.Balancer,
-			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
-				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
-			},
-
-			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+			expectError:       types.FailedToFindRouteError{PoolId: 2},
 		},
 	}
 
@@ -67,10 +57,6 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			suite.createPoolFromType(tc.preCreatePoolType)
-
-			if len(tc.routesOverwrite) > 0 {
-				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
-			}
 
 			swapModule, err := poolmanagerKeeper.GetPoolModule(suite.Ctx, tc.poolId)
 
@@ -767,64 +753,6 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			},
 			expectPass:        true,
 			reducedFeeApplied: true,
-		},
-		{
-			name: "Proper swap, stableswap pool: foo -> bar (pool 1), bar -> baz (pool 2)",
-			param: param{
-				routes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       1,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       2,
-						TokenInDenom: bar,
-					},
-				},
-				estimateRoutes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       3,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       4,
-						TokenInDenom: bar,
-					},
-				},
-				tokenInMaxAmount: sdk.NewInt(90000000),
-				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
-			},
-			expectPass: true,
-			poolType:   types.Stableswap,
-		},
-		{
-			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
-			param: param{
-				routes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       1,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       2,
-						TokenInDenom: bar,
-					},
-				},
-				estimateRoutes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       3,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       4,
-						TokenInDenom: bar,
-					},
-				},
-				tokenInMaxAmount: sdk.NewInt(90000000),
-				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(9000000000000000000)),
-			},
-			expectPass: false,
-			poolType:   types.Stableswap,
 		},
 	}
 

@@ -211,19 +211,6 @@ func (suite *KeeperTestSuite) TestGetAllModuleRoutes() {
 				},
 			},
 		},
-		{
-			name: "all supported pools",
-			preSetRoutes: []types.ModuleRoute{
-				{
-					PoolType: types.Balancer,
-					PoolId:   1,
-				},
-				{
-					PoolType: types.Stableswap,
-					PoolId:   2,
-				},
-			},
-		},
 	}
 
 	for _, tc := range tests {

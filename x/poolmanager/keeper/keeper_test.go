@@ -24,10 +24,6 @@ var (
 			PoolId:   1,
 			PoolType: types.Balancer,
 		},
-		{
-			PoolId:   2,
-			PoolType: types.Stableswap,
-		},
 	}
 )
 

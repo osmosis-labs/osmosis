@@ -68,12 +68,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.QueryPoolParamsResponse{},
 		},
 		{
-			"Query pool type",
-			"/osmosis.gamm.v1beta1.Query/PoolType",
-			&types.QueryPoolTypeRequest{PoolId: 1},
-			&types.QueryPoolTypeResponse{},
-		},
-		{
 			"Query spot price",
 			"/osmosis.gamm.v1beta1.Query/SpotPrice",
 			&types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: fooDenom, QuoteAssetDenom: barDenom},
