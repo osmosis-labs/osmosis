@@ -302,6 +302,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 
 	fmt.Println("bestSingleHopRouteKey", bestSingleHopRouteKey)
 	singleHopRoute, err := parseRouteKey(bestSingleHopRouteKey)
+	fmt.Println("singleHopRoute", singleHopRoute)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing single hop route key: %v", err)
 	}
@@ -309,6 +310,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 
 	fmt.Println("bestDoubleHopRouteKey", bestDoubleHopRouteKey)
 	doubleHopRoute, err := parseRouteKey(bestDoubleHopRouteKey)
+	fmt.Println("doubleHopRoute", doubleHopRoute)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing double hop route key: %v", err)
 	}
@@ -316,6 +318,7 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 
 	fmt.Println("bestTripleHopRouteKey", bestTripleHopRouteKey)
 	tripleHopRoute, err := parseRouteKey(bestTripleHopRouteKey)
+	fmt.Println("tripleHopRoute", tripleHopRoute)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing triple hop route key: %v", err)
 	}
