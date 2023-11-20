@@ -300,18 +300,21 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	// Construct the result map
 	result := make(map[string][]types.Route)
 
+	fmt.Println("bestSingleHopRouteKey", bestSingleHopRouteKey)
 	singleHopRoute, err := parseRouteKey(bestSingleHopRouteKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing single hop route key: %v", err)
 	}
 	result["singleHop"] = singleHopRoute
 
+	fmt.Println("bestDoubleHopRouteKey", bestDoubleHopRouteKey)
 	doubleHopRoute, err := parseRouteKey(bestDoubleHopRouteKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing double hop route key: %v", err)
 	}
 	result["doubleHop"] = doubleHopRoute
 
+	fmt.Println("bestTripleHopRouteKey", bestTripleHopRouteKey)
 	tripleHopRoute, err := parseRouteKey(bestTripleHopRouteKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing triple hop route key: %v", err)
