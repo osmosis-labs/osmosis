@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
 ### Misc Improvements
 
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
