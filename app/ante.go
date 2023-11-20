@@ -18,7 +18,6 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
-// Test
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
 func NewAnteHandler(
