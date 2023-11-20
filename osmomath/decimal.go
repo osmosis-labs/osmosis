@@ -249,7 +249,7 @@ func (d BigDec) BigInt() *big.Int {
 }
 
 // BigIntMut converts BigDec to big.Int, mutative the input
-func (d BigDec) BigIntMut() *big.Int {
+func (d BigDec) ToBigInt() *big.Int {
 	if d.IsNil() {
 		return nil
 	}
