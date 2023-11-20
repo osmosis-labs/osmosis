@@ -367,7 +367,7 @@ func parseRouteKey(routeKey string) ([]types.Route, error) {
 	cleanedRouteKey := strings.Trim(routeKey, "[]")
 
 	// Regular expression to match pool_id and token
-	re := regexp.MustCompile(`pool_id:(\d+) token:"(\w+)"`)
+	re := regexp.MustCompile(`pool_id:(\d+) token:"([^"]+)"`)
 
 	matches := re.FindAllStringSubmatch(cleanedRouteKey, -1)
 	for _, match := range matches {
