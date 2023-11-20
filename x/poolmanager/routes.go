@@ -21,15 +21,19 @@ var (
 	OSMO                 = "uosmo"
 	superfluidMultiplier = sdk.MustNewDecFromStr("1.5")
 
-	poolCache             map[uint64]types.PoolI
-	poolLiquidityCache    map[string]osmomath.Int
-	inputDenomToOSMOCache map[string]osmomath.Int
+	poolCache          map[uint64]types.PoolI
+	poolLiquidityCache map[string]osmomath.Int
+	directRouteCache   (map[string]uint64)
+	spotPriceCache     (map[string]osmomath.BigDec)
+	//inputDenomToOSMOCache map[string]osmomath.Int
 )
 
 func init() {
 	poolCache = make(map[uint64]types.PoolI)
 	poolLiquidityCache = make(map[string]osmomath.Int)
-	inputDenomToOSMOCache = make(map[string]osmomath.Int)
+	directRouteCache = make(map[string]uint64)
+	spotPriceCache = make(map[string]osmomath.BigDec)
+	//inputDenomToOSMOCache = make(map[string]osmomath.Int)
 }
 
 // // Define a structure to represent the routing graph
@@ -169,14 +173,14 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	// Check liquidity for all direct routes
 	fmt.Println("checking liquidity for all direct routes")
 	for _, route := range directPoolIDs {
-		pool, err := k.GetPool(ctx, route.PoolId)
+		pool, err := k.GetPoolCached(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
 		poolDenoms := pool.GetPoolDenoms(ctx)
 		liqInOsmo := osmomath.ZeroInt()
 		for _, denom := range poolDenoms {
-			liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, denom)
+			liquidity, err := k.GetPoolLiquidityOfDenomCached(ctx, route.PoolId, denom)
 			if err != nil {
 				return nil, err
 			}
@@ -203,14 +207,14 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", routes)
 		for _, route := range routes {
-			pool, err := k.GetPool(ctx, route.PoolId)
+			pool, err := k.GetPoolCached(ctx, route.PoolId)
 			if err != nil {
 				return nil, err
 			}
 			poolDenoms := pool.GetPoolDenoms(ctx)
 			liqInOsmo := osmomath.ZeroInt()
 			for _, denom := range poolDenoms {
-				liquidity, err := k.GetPoolLiquidityOfDenom(ctx, route.PoolId, denom)
+				liquidity, err := k.GetPoolLiquidityOfDenomCached(ctx, route.PoolId, denom)
 				if err != nil {
 					return nil, err
 				}
@@ -449,19 +453,38 @@ func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmo
 	if inputDenom == OSMO {
 		return amount, nil
 	}
-	// start by getting the route from the input denom to uosmo
-	route, err := k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
-	if err != nil {
-		return osmomath.ZeroInt(), nil
+
+	var route uint64
+	var err error
+
+	// Check if the route is cached
+	if cachedRoute, ok := directRouteCache[inputDenom]; ok {
+		route = cachedRoute
+	} else {
+		// If not, get the route and cache it
+		route, err = k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
+		if err != nil {
+			return osmomath.ZeroInt(), nil
+		}
+		directRouteCache[inputDenom] = route
 	}
 
-	// spot price of uosmo to input denom
-	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, route, OSMO, inputDenom)
-	if err != nil {
-		return osmomath.ZeroInt(), err
+	var osmoPerInputToken osmomath.BigDec
+
+	// Check if the spot price is cached
+	spotPriceKey := fmt.Sprintf("%d:%s:%s", route, OSMO, inputDenom)
+	if cachedSpotPrice, ok := spotPriceCache[spotPriceKey]; ok {
+		osmoPerInputToken = cachedSpotPrice
+	} else {
+		// If not, calculate the spot price and cache it
+		osmoPerInputToken, err = k.RouteCalculateSpotPrice(ctx, route, OSMO, inputDenom)
+		if err != nil {
+			return osmomath.ZeroInt(), err
+		}
+		spotPriceCache[spotPriceKey] = osmoPerInputToken
 	}
 
-	// convert the input denom to uosmo
+	// Convert the input denom to uosmo
 	uosmoAmount := amount.ToLegacyDec().Mul(osmoPerInputToken.Dec())
 	return uosmoAmount.TruncateInt(), nil
 }
