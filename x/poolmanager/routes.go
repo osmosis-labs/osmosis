@@ -431,46 +431,69 @@ func (k *Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom
 	return bestRoute[0], nil
 }
 
+// // Transform an input denom and its amount to uosmo
+// // If a route is not found, returns 0 with no error.
+// func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraph) (osmomath.Int, error) {
+// 	if inputDenom == OSMO {
+// 		return amount, nil
+// 	}
+
+// 	var (
+// 		route uint64
+// 		err   error
+// 	)
+
+// 	// Check if the route is cached
+// 	if cachedRoute, ok := directRouteCache[inputDenom]; ok {
+// 		route = cachedRoute
+// 	} else {
+// 		// If not, get the route and cache it
+// 		route, err = k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
+// 		if err != nil {
+// 			return osmomath.ZeroInt(), nil
+// 		}
+// 		directRouteCache[inputDenom] = route
+// 	}
+
+// 	var osmoPerInputToken osmomath.BigDec
+
+// 	// Check if the spot price is cached
+// 	spotPriceKey := fmt.Sprintf("%d:%s:%s", route, OSMO, inputDenom)
+// 	if cachedSpotPrice, ok := spotPriceCache[spotPriceKey]; ok {
+// 		osmoPerInputToken = cachedSpotPrice
+// 	} else {
+// 		// If not, calculate the spot price and cache it
+// 		osmoPerInputToken, err = k.RouteCalculateSpotPrice(ctx, route, OSMO, inputDenom)
+// 		if err != nil {
+// 			return osmomath.ZeroInt(), err
+// 		}
+// 		spotPriceCache[spotPriceKey] = osmoPerInputToken
+// 	}
+
+// 	// Convert the input denom to uosmo
+// 	uosmoAmount := amount.ToLegacyDec().Mul(osmoPerInputToken.Dec())
+// 	return uosmoAmount.TruncateInt(), nil
+// }
+
 // Transform an input denom and its amount to uosmo
 // If a route is not found, returns 0 with no error.
 func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraph) (osmomath.Int, error) {
 	if inputDenom == OSMO {
 		return amount, nil
 	}
-
-	var (
-		route uint64
-		err   error
-	)
-
-	// Check if the route is cached
-	if cachedRoute, ok := directRouteCache[inputDenom]; ok {
-		route = cachedRoute
-	} else {
-		// If not, get the route and cache it
-		route, err = k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
-		if err != nil {
-			return osmomath.ZeroInt(), nil
-		}
-		directRouteCache[inputDenom] = route
+	// start by getting the route from the input denom to uosmo
+	route, err := k.GetDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
+	if err != nil {
+		return osmomath.ZeroInt(), nil
 	}
 
-	var osmoPerInputToken osmomath.BigDec
-
-	// Check if the spot price is cached
-	spotPriceKey := fmt.Sprintf("%d:%s:%s", route, OSMO, inputDenom)
-	if cachedSpotPrice, ok := spotPriceCache[spotPriceKey]; ok {
-		osmoPerInputToken = cachedSpotPrice
-	} else {
-		// If not, calculate the spot price and cache it
-		osmoPerInputToken, err = k.RouteCalculateSpotPrice(ctx, route, OSMO, inputDenom)
-		if err != nil {
-			return osmomath.ZeroInt(), err
-		}
-		spotPriceCache[spotPriceKey] = osmoPerInputToken
+	// spot price of uosmo to input denom
+	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, route, OSMO, inputDenom)
+	if err != nil {
+		return osmomath.ZeroInt(), err
 	}
 
-	// Convert the input denom to uosmo
+	// convert the input denom to uosmo
 	uosmoAmount := amount.ToLegacyDec().Mul(osmoPerInputToken.Dec())
 	return uosmoAmount.TruncateInt(), nil
 }
