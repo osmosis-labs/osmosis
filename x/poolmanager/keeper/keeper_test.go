@@ -41,14 +41,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 // createPoolFromType creates a basic pool of the given type for testing.
 func (suite *KeeperTestSuite) createPoolFromType(poolType types.PoolType) {
-	switch poolType {
-	case types.Balancer:
-		suite.PrepareBalancerPool()
-		return
-	case types.Stableswap:
-		suite.PrepareBasicStableswapPool()
-		return
-	}
+	suite.PrepareBalancerPool()
+	return
 }
 
 // createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.

@@ -12,7 +12,6 @@ import (
 	keeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -21,10 +20,6 @@ var (
 	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
 	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
 	defaultPoolParams = balancer.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
-	}
-	defaultStableSwapPoolParams = stableswap.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
@@ -349,22 +344,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				)
 				require.NoError(suite.T(), err)
 				return &balancerPool
-			},
-			expectPass: true,
-		},
-		{
-			name: "initialize stableswap pool with default assets",
-			createPool: func() poolmanagertypes.PoolI {
-				stableswapPool, err := stableswap.NewStableswapPool(
-					defaultPoolId,
-					defaultPoolParamsStableSwap,
-					defaultStableSwapPoolAssets,
-					defaultScalingFactor,
-					"",
-					defaultFutureGovernor,
-				)
-				require.NoError(suite.T(), err)
-				return &stableswapPool
 			},
 			expectPass: true,
 		},

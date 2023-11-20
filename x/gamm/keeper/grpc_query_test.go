@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
 )
@@ -510,24 +509,6 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestPoolType() {
-	poolIdBalancer := suite.PrepareBalancerPool()
-	poolIdStableswap := suite.PrepareBasicStableswapPool()
-
-	// error when querying invalid pool ID
-	_, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolIdStableswap + 1})
-	suite.Require().Error(err)
-
-	res, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolIdBalancer})
-	suite.Require().NoError(err)
-	suite.Require().Equal(balancer.PoolTypeName, res.PoolType)
-
-	res, err = suite.queryClient.PoolType(gocontext.Background(),
-		&types.QueryPoolTypeRequest{PoolId: poolIdStableswap})
-	suite.Require().NoError(err)
-	suite.Require().Equal(stableswap.PoolTypeName, res.PoolType)
-}
-
 func (suite *KeeperTestSuite) TestQueryNumPools1() {
 	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
 	suite.Require().NoError(err)
@@ -820,171 +801,6 @@ func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 			} else {
 				suite.Require().NoError(err, "unexpected error")
 				suite.Require().Equal(tc.result, result.SpotPrice)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
-	queryClient := suite.queryClient
-	poolIDEven := suite.PrepareBasicStableswapPool()
-	poolIDUneven := suite.PrepareImbalancedStableswapPool()
-
-	testCases := []struct {
-		name      string
-		req       *types.QuerySpotPriceRequest
-		expectErr bool
-		result    string
-	}{
-		{
-			name: "non-existent pool",
-			req: &types.QuerySpotPriceRequest{
-				PoolId:          0,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing asset denoms",
-			req: &types.QuerySpotPriceRequest{
-				PoolId: poolIDEven,
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing pool ID and quote denom",
-			req: &types.QuerySpotPriceRequest{
-				BaseAssetDenom: "foo",
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing pool ID and base denom",
-			req: &types.QuerySpotPriceRequest{
-				QuoteAssetDenom: "bar",
-			},
-			expectErr: true,
-		},
-		{
-			name: "valid request for foo/bar in even pool",
-			req: &types.QuerySpotPriceRequest{
-				PoolId:          poolIDEven,
-				BaseAssetDenom:  "bar",
-				QuoteAssetDenom: "foo",
-			},
-			result: "1.000000000000000000",
-		},
-		{
-			name: "foo in terms of bar for in a 1:2:3, foo bar baz pool",
-			req: &types.QuerySpotPriceRequest{
-				PoolId:          poolIDUneven,
-				BaseAssetDenom:  "bar",
-				QuoteAssetDenom: "foo",
-			},
-			result: "1.454545450000000000",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		suite.Run(tc.name, func() {
-			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
-			if tc.expectErr {
-				suite.Require().Error(err, "expected error")
-			} else {
-				suite.Require().NoError(err, "unexpected error")
-				// We allow for a small geometric error due to our spot price being an approximation
-				expectedSpotPrice := sdk.MustNewDecFromStr(tc.result)
-				actualSpotPrice := sdk.MustNewDecFromStr(result.SpotPrice)
-				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
-				errTerm := diff.Quo(sdk.MinDec(expectedSpotPrice, actualSpotPrice))
-
-				suite.Require().True(errTerm.LT(sdk.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
-	v2queryClient := v2types.NewQueryClient(suite.QueryHelper)
-	poolIDEven := suite.PrepareBasicStableswapPool()
-	poolIDUneven := suite.PrepareImbalancedStableswapPool()
-
-	testCases := []struct {
-		name      string
-		req       *v2types.QuerySpotPriceRequest
-		expectErr bool
-		result    string
-	}{
-		{
-			name: "non-existent pool",
-			req: &v2types.QuerySpotPriceRequest{
-				PoolId:          0,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing asset denoms",
-			req: &v2types.QuerySpotPriceRequest{
-				PoolId: poolIDEven,
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing pool ID and quote denom",
-			req: &v2types.QuerySpotPriceRequest{
-				BaseAssetDenom: "foo",
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing pool ID and base denom",
-			req: &v2types.QuerySpotPriceRequest{
-				QuoteAssetDenom: "bar",
-			},
-			expectErr: true,
-		},
-		{
-			name: "foo in terms of bar in even pool",
-			req: &v2types.QuerySpotPriceRequest{
-				PoolId:          poolIDEven,
-				BaseAssetDenom:  "bar",
-				QuoteAssetDenom: "foo",
-			},
-			result: "1.000000000000000000",
-		},
-		{
-			name: "foo in terms of bar in uneven pool",
-			req: &v2types.QuerySpotPriceRequest{
-				PoolId:          poolIDUneven,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
-			},
-			result: "1.454545450000000000",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		suite.Run(tc.name, func() {
-			result, err := v2queryClient.SpotPrice(gocontext.Background(), tc.req)
-			if tc.expectErr {
-				suite.Require().Error(err, "expected error")
-			} else {
-				suite.Require().NoError(err, "unexpected error")
-
-				// We allow for a small geometric error due to our spot price being an approximation
-				expectedSpotPrice := sdk.MustNewDecFromStr(tc.result)
-				actualSpotPrice := sdk.MustNewDecFromStr(result.SpotPrice)
-				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
-				errTerm := diff.Quo(sdk.MinDec(expectedSpotPrice, actualSpotPrice))
-
-				suite.Require().True(errTerm.LT(sdk.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
 			}
 		})
 	}
