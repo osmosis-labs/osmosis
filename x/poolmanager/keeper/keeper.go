@@ -14,15 +14,10 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	gammKeeper types.SwapI
-	//FIXME: remove
-	concentratedKeeper   types.SwapI
-	poolIncentivesKeeper types.PoolIncentivesKeeperI
-	bankKeeper           types.BankI
-	accountKeeper        types.AccountI
-	communityPoolKeeper  types.CommunityPoolI
-
-	poolCreationListeners types.PoolCreationListeners
+	gammKeeper          types.SwapI
+	bankKeeper          types.BankI
+	accountKeeper       types.AccountI
+	communityPoolKeeper types.CommunityPoolI
 
 	//FIXME: change to list instead of map for determinism
 	routes map[types.PoolType]types.SwapI
@@ -30,7 +25,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -40,7 +35,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		types.Balancer: gammKeeper,
 	}
 
-	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, gammKeeper: gammKeeper, concentratedKeeper: concentratedKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}
+	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, gammKeeper: gammKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}
 }
 
 // GetParams returns the total set of poolmanager parameters.
@@ -84,17 +79,6 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	nextPoolId := gogotypes.UInt64Value{}
 	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
 	return nextPoolId.Value
-}
-
-// SetPoolCreationListeners sets the pool creation listeners.
-func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners) *Keeper {
-	if k.poolCreationListeners != nil {
-		panic("cannot set pool creation listeners twice")
-	}
-
-	k.poolCreationListeners = listeners
-
-	return k
 }
 
 // SetNextPoolId sets next pool Id.

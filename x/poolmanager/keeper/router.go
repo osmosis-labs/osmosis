@@ -62,44 +62,6 @@ func (k Keeper) RouteExactAmountIn(
 	return tokenOutAmount, nil
 }
 
-// SwapExactAmountIn is an API for swapping an exact amount of tokens
-// as input to a pool to get a minimum amount of the desired token out.
-// The method succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
-// Errors otherwise. Also, errors if the pool id is invalid, if tokens do not belong to the pool with given
-// id or if sender does not have the swapped-in tokenIn.
-func (k Keeper) SwapExactAmountIn(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	poolId uint64,
-	tokenIn sdk.Coin,
-	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-) (tokenOutAmount sdk.Int, err error) {
-	swapModule, err := k.GetPoolModule(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	pool, poolErr := swapModule.GetPool(ctx, poolId)
-	if poolErr != nil {
-		return sdk.Int{}, poolErr
-	}
-
-	// check if pool is active, if not error
-	if !pool.IsActive(ctx) {
-		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
-	}
-
-	swapFee := pool.GetSwapFee(ctx)
-
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	return tokenOutAmount, nil
-}
-
 func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	ctx sdk.Context,
 	routes []types.SwapAmountInRoute,
@@ -286,40 +248,6 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 		}
 
 		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, poolI.GetSwapFee(ctx))
-		if err != nil {
-			return nil, err
-		}
-
-		insExpected[i] = tokenIn.Amount
-		tokenOut = tokenIn
-	}
-
-	return insExpected, nil
-}
-
-// createOsmoMultihopExpectedSwapOuts does the same as createMultihopExpectedSwapOuts, however discounts the swap fee
-func (k Keeper) createOsmoMultihopExpectedSwapOuts(
-	ctx sdk.Context,
-	routes []types.SwapAmountOutRoute,
-	tokenOut sdk.Coin,
-	cumulativeRouteSwapFee, sumOfSwapFees sdk.Dec,
-) ([]sdk.Int, error) {
-	insExpected := make([]sdk.Int, len(routes))
-	for i := len(routes) - 1; i >= 0; i-- {
-		route := routes[i]
-
-		swapModule, err := k.GetPoolModule(ctx, route.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		poolI, err := swapModule.GetPool(ctx, route.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		swapFee := poolI.GetSwapFee(ctx)
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
 		if err != nil {
 			return nil, err
 		}
