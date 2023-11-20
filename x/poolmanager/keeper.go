@@ -163,9 +163,3 @@ func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
 func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 	k.protorevKeeper = protorevKeeper
 }
-
-// func (k *Keeper) SetPoolRouteKeeper(ctx sdk.Context) {
-// 	var routeGraph types.RoutingGraph
-// 	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
-// 	k.routeMap = routeGraph
-// }

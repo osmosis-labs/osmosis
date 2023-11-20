@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -23,9 +22,8 @@ var (
 
 	poolCache          map[uint64]types.PoolI
 	poolLiquidityCache map[string]osmomath.Int
-	directRouteCache   (map[string]uint64)
-	spotPriceCache     (map[string]osmomath.BigDec)
-	//inputDenomToOSMOCache map[string]osmomath.Int
+	directRouteCache   map[string]uint64
+	spotPriceCache     map[string]osmomath.BigDec
 )
 
 func init() {
@@ -33,7 +31,6 @@ func init() {
 	poolLiquidityCache = make(map[string]osmomath.Int)
 	directRouteCache = make(map[string]uint64)
 	spotPriceCache = make(map[string]osmomath.BigDec)
-	//inputDenomToOSMOCache = make(map[string]osmomath.Int)
 }
 
 // // Define a structure to represent the routing graph
@@ -141,28 +138,23 @@ func (k *Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error)
 }
 
 func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
-	// Initialize caches
-
 	inputDenom := inputCoin.Denom
-	fmt.Println("getting route map")
+
 	routeMap, err := k.GetRouteMap(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get all direct routes
-	fmt.Println("finding direct route")
 	directPoolIDs := FindDirectRoute(routeMap, inputDenom, outputDenom)
 
 	// Get all two-hop routes
 	var twoHopPoolIDs [][]*types.Route
-	fmt.Println("finding two hop route")
 	if inputDenom != OSMO && outputDenom != OSMO {
 		twoHopPoolIDs = FindTwoHopRoute(routeMap, inputDenom, outputDenom)
 	}
 
 	var threeHopPoolIDs [][]*types.Route
-	fmt.Println("finding three hop route")
 	if inputDenom != OSMO && outputDenom != OSMO {
 		threeHopPoolIDs = FindThreeHopRoute(routeMap, inputDenom, outputDenom)
 	}
@@ -171,7 +163,6 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	routeLiquidity := make(map[string]osmomath.Int)
 
 	// Check liquidity for all direct routes
-	fmt.Println("checking liquidity for all direct routes")
 	for _, route := range directPoolIDs {
 		pool, err := k.GetPoolCached(ctx, route.PoolId)
 		if err != nil {
@@ -202,7 +193,6 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	}
 
 	// Check liquidity for all two-hop routes
-	fmt.Println("checking liquidity for all two hop routes")
 	for _, routes := range twoHopPoolIDs {
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", routes)
@@ -237,7 +227,6 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	}
 
 	// Check liquidity for all three-hop routes
-	fmt.Println("checking liquidity for all three hop routes")
 	for _, routes := range threeHopPoolIDs {
 		totalLiquidityInOsmo := osmomath.ZeroInt()
 		routeKey := fmt.Sprintf("%v", routes)
@@ -280,13 +269,9 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	var bestSingleHopRouteKey, bestDoubleHopRouteKey, bestTripleHopRouteKey string
 	maxSingleHopLiquidity, maxDoubleHopLiquidity, maxTripleHopLiquidity := osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt()
 
-	fmt.Println("finding best route")
 	for _, routeKey := range keys {
 		liquidity := routeLiquidity[routeKey]
 		hopCount := len(strings.Fields(routeKey)) / 2
-
-		// fmt.Println("hopCount: ", hopCount)
-		// fmt.Println("routeKey: ", routeKey)
 
 		// Update best route based on hop count and liquidity
 		switch hopCount {
@@ -332,7 +317,6 @@ func (k *Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDe
 	maxAmtOut := sdk.ZeroInt()
 	var maxKey string
 
-	fmt.Println("estimating max amount out")
 	for key, value := range result {
 		swapRoute := []types.SwapAmountInRoute{}
 		for _, route := range value {
@@ -454,8 +438,10 @@ func (k Keeper) InputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmo
 		return amount, nil
 	}
 
-	var route uint64
-	var err error
+	var (
+		route uint64
+		err   error
+	)
 
 	// Check if the route is cached
 	if cachedRoute, ok := directRouteCache[inputDenom]; ok {
@@ -531,47 +517,8 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 }
 
 func (k *Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraph, error) {
-	// var routeGraph types.RoutingGraph
-	// fmt.Println("GetRouteMap")
-
-	// found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
-	// if err != nil {
-	// 	fmt.Println("error getting route map")
-	// 	return types.RoutingGraph{}, err
-	// }
-	// if !found {
-	// 	return types.RoutingGraph{}, fmt.Errorf("route map not found")
-	// }
-
-	// return routeGraph, nil
-	return routeGraphCache.Get(ctx, k)
-}
-
-//
-//
-
-type RouteGraphCache struct {
-	routeGraph types.RoutingGraph
-	mu         sync.RWMutex
-}
-
-func (c *RouteGraphCache) Get(ctx sdk.Context, k *Keeper) (types.RoutingGraph, error) {
-	c.mu.RLock()
-	if c.routeGraph.Graph != nil && len(c.routeGraph.Graph) > 0 {
-		defer c.mu.RUnlock()
-		return c.routeGraph, nil
-	}
-	c.mu.RUnlock()
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Double-checking pattern to prevent race conditions
-	if c.routeGraph.Graph != nil && len(c.routeGraph.Graph) > 0 {
-		return c.routeGraph, nil
-	}
-
 	var routeGraph types.RoutingGraph
+
 	found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
 	if err != nil {
 		return types.RoutingGraph{}, err
@@ -580,11 +527,48 @@ func (c *RouteGraphCache) Get(ctx sdk.Context, k *Keeper) (types.RoutingGraph, e
 		return types.RoutingGraph{}, fmt.Errorf("route map not found")
 	}
 
-	c.routeGraph = routeGraph
 	return routeGraph, nil
+	// return routeGraphCache.Get(ctx, k)
 }
 
-var routeGraphCache = &RouteGraphCache{}
+//
+//
+
+// type RouteGraphCache struct {
+// 	routeGraph types.RoutingGraph
+// 	mu         sync.RWMutex
+// }
+
+// func (c *RouteGraphCache) Get(ctx sdk.Context, k *Keeper) (types.RoutingGraph, error) {
+// 	c.mu.RLock()
+// 	if c.routeGraph.Graph != nil && len(c.routeGraph.Graph) > 0 {
+// 		defer c.mu.RUnlock()
+// 		return c.routeGraph, nil
+// 	}
+// 	c.mu.RUnlock()
+
+// 	c.mu.Lock()
+// 	defer c.mu.Unlock()
+
+// 	// Double-checking pattern to prevent race conditions
+// 	if c.routeGraph.Graph != nil && len(c.routeGraph.Graph) > 0 {
+// 		return c.routeGraph, nil
+// 	}
+
+// 	var routeGraph types.RoutingGraph
+// 	found, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routeGraph)
+// 	if err != nil {
+// 		return types.RoutingGraph{}, err
+// 	}
+// 	if !found {
+// 		return types.RoutingGraph{}, fmt.Errorf("route map not found")
+// 	}
+
+// 	c.routeGraph = routeGraph
+// 	return routeGraph, nil
+// }
+
+// var routeGraphCache = &RouteGraphCache{}
 
 func (k Keeper) GetPoolCached(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, ok := poolCache[poolId]
