@@ -14,14 +14,17 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	gammKeeper          types.SwapI
-	concentratedKeeper  types.SwapI
-	bankKeeper          types.BankI
-	accountKeeper       types.AccountI
-	communityPoolKeeper types.CommunityPoolI
+	gammKeeper types.SwapI
+	//FIXME: remove
+	concentratedKeeper   types.SwapI
+	poolIncentivesKeeper types.PoolIncentivesKeeperI
+	bankKeeper           types.BankI
+	accountKeeper        types.AccountI
+	communityPoolKeeper  types.CommunityPoolI
 
 	poolCreationListeners types.PoolCreationListeners
 
+	//FIXME: change to list instead of map for determinism
 	routes map[types.PoolType]types.SwapI
 
 	paramSpace paramtypes.Subspace

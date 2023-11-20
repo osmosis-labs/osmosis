@@ -11,9 +11,10 @@ import (
 
 // Parameter store keys.
 var (
-	KeyPoolCreationFee  = []byte("PoolCreationFee")
-	KeyGlobalFees       = []byte("GlobalFees")
-	KeyGlobalPoolParams = []byte("GlobalPoolParams")
+	KeyPoolCreationFee   = []byte("PoolCreationFee")
+	KeyEnabledGlobalFees = []byte("EnabledGlobalFees")
+	KeyGlobalFees        = []byte("GlobalPoolFees")
+	KeyTakerFees         = []byte("TakerFees")
 )
 
 // ParamTable for gamm module.
@@ -23,17 +24,21 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(poolCreationFee sdk.Coins) Params {
 	return Params{
-		PoolCreationFee: poolCreationFee,
-		GlobalFees:      false,
-		PoolParams:      GlobalPoolParams{sdk.ZeroDec(), sdk.ZeroDec()},
+		PoolCreationFee:      poolCreationFee,
+		EnableGlobalPoolFees: false,
+		GlobalFees:           GlobalFees{sdk.ZeroDec(), sdk.ZeroDec()},
+		TakerFee:             sdk.ZeroDec(),
 	}
 }
 
 // default gamm module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseDenom, 1000_000_000)},
-		PoolParams:      GlobalPoolParams{sdk.ZeroDec(), sdk.ZeroDec()},
+		// set correct defaults
+		PoolCreationFee:      sdk.Coins{sdk.NewInt64Coin(appparams.BaseDenom, 1000_000_000)},
+		EnableGlobalPoolFees: false,
+		GlobalFees:           GlobalFees{sdk.MustNewDecFromStr("0.2"), sdk.ZeroDec()},
+		TakerFee:             sdk.MustNewDecFromStr("0.1"),
 	}
 }
 
@@ -42,7 +47,7 @@ func (p Params) Validate() error {
 	if err := validatePoolCreationFee(p.PoolCreationFee); err != nil {
 		return err
 	}
-	if err := validateGlobalFees(p.PoolParams); err != nil {
+	if err := validateGlobalFees(p.GlobalFees); err != nil {
 		return err
 	}
 
@@ -53,8 +58,9 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
-		paramtypes.NewParamSetPair(KeyGlobalFees, &p.GlobalFees, func(value interface{}) error { return nil }),
-		paramtypes.NewParamSetPair(KeyGlobalPoolParams, &p.PoolParams, validateGlobalFees),
+		paramtypes.NewParamSetPair(KeyEnabledGlobalFees, &p.EnableGlobalPoolFees, func(value interface{}) error { return nil }),
+		paramtypes.NewParamSetPair(KeyGlobalFees, &p.GlobalFees, validateGlobalFees),
+		paramtypes.NewParamSetPair(KeyTakerFees, &p.TakerFee, validateTakerFees),
 	}
 }
 
@@ -72,7 +78,7 @@ func validatePoolCreationFee(i interface{}) error {
 }
 
 func validateGlobalFees(i interface{}) error {
-	v, ok := i.(GlobalPoolParams)
+	v, ok := i.(GlobalFees)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -93,6 +99,25 @@ func validateGlobalFees(i interface{}) error {
 
 	if v.SwapFee.GTE(sdk.OneDec()) {
 		return ErrTooMuchSwapFee
+	}
+
+	return nil
+}
+
+func validateTakerFees(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNil() {
+		return fmt.Errorf("invalid global pool params: %+v", i)
+	}
+	if v.IsNegative() {
+		return ErrNegativeExitFee
+	}
+
+	if v.GTE(sdk.OneDec()) {
+		return ErrTooMuchExitFee
 	}
 
 	return nil

@@ -51,9 +51,9 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	}
 
 	//set global fees
-	if params.GetGlobalFees() {
-		msg.PoolParams.SwapFee = params.PoolParams.SwapFee
-		msg.PoolParams.ExitFee = params.PoolParams.ExitFee
+	if params.EnableGlobalPoolFees {
+		msg.PoolParams.SwapFee = params.GlobalFees.SwapFee
+		msg.PoolParams.ExitFee = params.GlobalFees.ExitFee
 	}
 
 	//validate uniqueness of pool assets
@@ -199,7 +199,14 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+	tokenInAfterSubTakerFee, takerFeesCoins := server.keeper.SubTakerFee(msg.TokenIn, server.keeper.GetParams(ctx).TakerFee)
+
+	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, tokenInAfterSubTakerFee, msg.TokenOutMinAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.chargeTakerFee(ctx, takerFeesCoins, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -218,13 +225,31 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 
 func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	takerFee := server.keeper.GetParams(ctx).TakerFee
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
+	route := types.SwapAmountOutRoutes(msg.Routes)
+	if err := route.Validate(); err != nil {
+		return nil, err
+	}
+
+	//limit the the TokenInMaxAmount to have enough for taker fee
+	maxTokenIn := sdk.NewCoin(msg.Routes[0].TokenInDenom, msg.TokenInMaxAmount)
+	tokenInAfterSubTakerFee, _ := server.keeper.SubTakerFee(maxTokenIn, takerFee)
+
+	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, msg.Routes, tokenInAfterSubTakerFee.Amount, msg.TokenOut)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenInCoin := sdk.NewCoin(msg.Routes[0].TokenInDenom, tokenInAmount)
+	tokenInAmountWithTakerFee, takerFeeCoin := server.keeper.AddTakerFee(tokenInCoin, takerFee)
+
+	err = server.keeper.chargeTakerFee(ctx, takerFeeCoin, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +263,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		),
 	})
 
-	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
+	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmountWithTakerFee.Amount}, nil
 }
 
 // JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided tokensIn coins.

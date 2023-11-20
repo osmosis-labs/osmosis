@@ -87,7 +87,7 @@ func (suite *KeeperTestSuite) TestGlobalFeeParams() {
 	gammKeeper := suite.App.GAMMKeeper
 
 	params := gammKeeper.GetParams(suite.Ctx)
-	suite.Require().False(params.GlobalFees)
+	suite.Require().False(params.EnableGlobalPoolFees)
 	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
 
 	// fund sender test account
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestGlobalFeeParams() {
 	suite.Require().Equal(defaultPoolParams.SwapFee, pool.GetSwapFee(suite.Ctx))
 
 	//create new pool with global fees enabled
-	params.GlobalFees = true
+	params.EnableGlobalPoolFees = true
 	gammKeeper.SetParams(suite.Ctx, params)
 	msgserver = keeper.NewBalancerMsgServerImpl(gammKeeper)
 

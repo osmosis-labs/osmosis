@@ -1174,8 +1174,6 @@ func (m *QuerySpotPriceResponse) GetSpotPrice() string {
 }
 
 // =============================== EstimateSwapExactAmountIn
-//
-// Deprecated: Do not use.
 type QuerySwapExactAmountInRequest struct {
 	Sender  string                     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolId  uint64                     `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
@@ -1244,7 +1242,6 @@ func (m *QuerySwapExactAmountInRequest) GetRoutes() []types2.SwapAmountInRoute {
 	return nil
 }
 
-// Deprecated: Do not use.
 type QuerySwapExactAmountInResponse struct {
 	TokenOutAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=token_out_amount,json=tokenOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_out_amount" yaml:"token_out_amount"`
 }
@@ -1283,8 +1280,6 @@ func (m *QuerySwapExactAmountInResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QuerySwapExactAmountInResponse proto.InternalMessageInfo
 
 // =============================== EstimateSwapExactAmountOut
-//
-// Deprecated: Do not use.
 type QuerySwapExactAmountOutRequest struct {
 	Sender   string                      `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolId   uint64                      `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
@@ -1353,7 +1348,6 @@ func (m *QuerySwapExactAmountOutRequest) GetTokenOut() string {
 	return ""
 }
 
-// Deprecated: Do not use.
 type QuerySwapExactAmountOutResponse struct {
 	TokenInAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=token_in_amount,json=tokenInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_in_amount" yaml:"token_in_amount"`
 }
@@ -1660,9 +1654,7 @@ type QueryClient interface {
 	// SpotPrice defines a gRPC query handler that returns the spot price given
 	// a base denomination and a quote denomination.
 	SpotPrice(ctx context.Context, in *QuerySpotPriceRequest, opts ...grpc.CallOption) (*QuerySpotPriceResponse, error)
-	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountIn(ctx context.Context, in *QuerySwapExactAmountInRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountInResponse, error)
-	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountOut(ctx context.Context, in *QuerySwapExactAmountOutRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountOutResponse, error)
 }
 
@@ -1793,7 +1785,6 @@ func (c *queryClient) SpotPrice(ctx context.Context, in *QuerySpotPriceRequest, 
 	return out, nil
 }
 
-// Deprecated: Do not use.
 func (c *queryClient) EstimateSwapExactAmountIn(ctx context.Context, in *QuerySwapExactAmountInRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountInResponse, error) {
 	out := new(QuerySwapExactAmountInResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn", in, out, opts...)
@@ -1803,7 +1794,6 @@ func (c *queryClient) EstimateSwapExactAmountIn(ctx context.Context, in *QuerySw
 	return out, nil
 }
 
-// Deprecated: Do not use.
 func (c *queryClient) EstimateSwapExactAmountOut(ctx context.Context, in *QuerySwapExactAmountOutRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountOutResponse, error) {
 	out := new(QuerySwapExactAmountOutResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountOut", in, out, opts...)
@@ -1837,9 +1827,7 @@ type QueryServer interface {
 	// SpotPrice defines a gRPC query handler that returns the spot price given
 	// a base denomination and a quote denomination.
 	SpotPrice(context.Context, *QuerySpotPriceRequest) (*QuerySpotPriceResponse, error)
-	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountIn(context.Context, *QuerySwapExactAmountInRequest) (*QuerySwapExactAmountInResponse, error)
-	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountOut(context.Context, *QuerySwapExactAmountOutRequest) (*QuerySwapExactAmountOutResponse, error)
 }
 

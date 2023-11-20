@@ -170,6 +170,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 }
 
+//TODO: add EstimateSwapExactAmountIn tests from poolmanager
+
 // TestCalcOutAmtGivenIn only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
 // TODO: add failing CL pool tests.
 func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
