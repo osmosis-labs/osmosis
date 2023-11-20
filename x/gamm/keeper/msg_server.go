@@ -86,6 +86,12 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		return nil, types.ErrPoolAlreadyExists
 	}
 
+	// Send pool creation fee to community pool
+	sender := msg.PoolCreator()
+	if err := server.keeper.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
+		return nil, err
+	}
+
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }

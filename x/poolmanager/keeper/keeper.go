@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type Keeper struct {
@@ -21,32 +20,14 @@ type Keeper struct {
 
 	//FIXME: change to list instead of map for determinism
 	routes map[types.PoolType]types.SwapI
-
-	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
+func NewKeeper(storeKey storetypes.StoreKey, gammKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	routes := map[types.PoolType]types.SwapI{
 		types.Balancer: gammKeeper,
 	}
 
-	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, gammKeeper: gammKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}
-}
-
-// GetParams returns the total set of poolmanager parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	return params
-}
-
-// SetParams sets the total set of poolmanager parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
+	return &Keeper{storeKey: storeKey, gammKeeper: gammKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}
 }
 
 // InitGenesis initializes the poolmanager module's state from a provided genesis
@@ -57,8 +38,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(err)
 	}
 
-	k.SetParams(ctx, genState.Params)
-
 	for _, poolRoute := range genState.PoolRoutes {
 		k.SetPoolRoute(ctx, poolRoute.PoolId, poolRoute.PoolType)
 	}
@@ -67,7 +46,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 // ExportGenesis returns the poolmanager module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
-		Params:     k.GetParams(ctx),
 		NextPoolId: k.GetNextPoolId(ctx),
 		PoolRoutes: k.GetAllPoolRoutes(ctx),
 	}
