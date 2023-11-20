@@ -312,6 +312,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 
 	var maxKey string
 	for _, key := range resultAsString {
+		fmt.Println("KEY", key)
 		value := result[key]
 		swapRoute := []types.SwapAmountInRoute{}
 		for _, route := range value {
@@ -327,6 +328,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 		if err != nil {
 			continue
 		}
+		fmt.Println("AMTOUT", amtOut)
 
 		// Update maxAmtOut and maxKey if the current amtOut is greater
 		if amtOut.GT(maxAmtOut) {
