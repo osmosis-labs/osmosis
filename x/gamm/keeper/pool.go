@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -263,31 +262,10 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.Po
 	switch pool := pool.(type) {
 	case *balancer.Pool:
 		return poolmanagertypes.Balancer, nil
-	case *stableswap.Pool:
-		return poolmanagertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
-}
-
-// setStableSwapScalingFactors sets the stable swap scaling factors.
-// errors if the pool does not exist, the sender is not the scaling factor controller, or due to other
-// internal errors.
-func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scalingFactors []uint64, sender string) error {
-	pool, err := k.GetPoolAndPoke(ctx, poolId)
-	if err != nil {
-		return err
-	}
-	stableswapPool, ok := pool.(*stableswap.Pool)
-	if !ok {
-		return fmt.Errorf("pool id %d is not of type stableswap pool", poolId)
-	}
-	if err := stableswapPool.SetScalingFactors(ctx, scalingFactors, sender); err != nil {
-		return err
-	}
-
-	return k.setPool(ctx, stableswapPool)
 }
 
 // convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.

@@ -14,12 +14,11 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	gammKeeper           types.SwapI
-	concentratedKeeper   types.SwapI
-	poolIncentivesKeeper types.PoolIncentivesKeeperI
-	bankKeeper           types.BankI
-	accountKeeper        types.AccountI
-	communityPoolKeeper  types.CommunityPoolI
+	gammKeeper          types.SwapI
+	concentratedKeeper  types.SwapI
+	bankKeeper          types.BankI
+	accountKeeper       types.AccountI
+	communityPoolKeeper types.CommunityPoolI
 
 	poolCreationListeners types.PoolCreationListeners
 
@@ -100,9 +99,4 @@ func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners)
 func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: poolId})
-}
-
-// SetPoolIncentivesKeeper sets pool incentives keeper
-func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeperI) {
-	k.poolIncentivesKeeper = poolIncentivesKeeper
 }

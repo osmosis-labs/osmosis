@@ -51,15 +51,6 @@ type createBalancerPoolInputs struct {
 	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
 }
 
-type createStableswapPoolInputs struct {
-	InitialDeposit          string `json:"initial-deposit"`
-	SwapFee                 string `json:"swap-fee"`
-	ExitFee                 string `json:"exit-fee"`
-	FutureGovernor          string `json:"future-governor"`
-	ScalingFactorController string `json:"scaling-factor-controller"`
-	ScalingFactors          string `json:"scaling-factors"`
-}
-
 type smoothWeightChangeParamsInputs struct {
 	StartTime         string `json:"start-time"`
 	Duration          string `json:"duration"`
