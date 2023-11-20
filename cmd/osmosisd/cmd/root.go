@@ -465,7 +465,7 @@ arbitrage-min-gas-fee = ".005"
 min-gas-price-for-high-gas-tx = ".0025"
 
 # This parameter enables EIP-1559 like fee market logic in the mempool
-adaptive-fee-enabled = "false"
+adaptive-fee-enabled = "true"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg

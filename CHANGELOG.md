@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
 * [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist
 * [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
+* [#6891](https://github.com/osmosis-labs/osmosis/pull/6891) Enable 1559 mempool by default.
 
 ### API Breaks
 
