@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
+* [#6891](https://github.com/osmosis-labs/osmosis/pull/6891) Enable 1559 mempool by default.
 
 ### API Breaks
 
