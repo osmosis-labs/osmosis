@@ -130,20 +130,6 @@ func (k Keeper) GetPoolsSerializable(ctx sdk.Context) ([]poolmanagertypes.PoolI,
 	)
 }
 
-// GetPoolsWithoutWasmKeeper behaves the same as GetPools, but does not set the WasmKeeper field of the pool.
-func (k Keeper) GetPoolsWithoutWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
-	return osmoutils.GatherValuesFromStorePrefix(
-		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
-			pool := model.Pool{}
-			err := k.cdc.Unmarshal(value, &pool)
-			if err != nil {
-				return nil, err
-			}
-			return &pool, nil
-		},
-	)
-}
-
 // GetPoolDenoms retrieves the list of asset denoms in a CosmWasm-based liquidity pool given its ID.
 //
 // Parameters:
