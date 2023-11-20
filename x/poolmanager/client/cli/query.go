@@ -32,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdListPoolsByDenom)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -104,6 +105,15 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 `,
 	}, &queryproto.SpotPriceRequest{}
+}
+func GetCmdListPoolsByDenom() (*osmocli.QueryDescriptor, *queryproto.ListPoolsByDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "list-pools-by-denom",
+		Short: "Query list-pools-by-denom",
+		Long: `Query list-pools-by-denom
+{{.CommandPrefix}} list-pools-by-denom uosmo 
+`,
+	}, &queryproto.ListPoolsByDenomRequest{}
 }
 
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {

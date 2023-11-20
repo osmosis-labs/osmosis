@@ -212,6 +212,30 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 	}, nil
 }
 
+// ListPoolsByDenom returns a list of pools filtered by denom
+func (q Querier) ListPoolsByDenom(ctx sdk.Context, req queryproto.ListPoolsByDenomRequest) (*queryproto.ListPoolsByDenomResponse, error) {
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+	pools, err := q.K.ListPoolsByDenom(ctx, req.Denom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var anyPools []*codectypes.Any
+	for _, pool := range pools {
+		any, err := codectypes.NewAnyWithValue(pool.AsSerializablePool())
+		if err != nil {
+			return nil, err
+		}
+		anyPools = append(anyPools, any)
+	}
+
+	return &queryproto.ListPoolsByDenomResponse{
+		Pools: anyPools,
+	}, nil
+}
+
 // SpotPrice returns the spot price of the pool with the given quote and base asset denoms. 18 decimals.
 func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*queryproto.SpotPriceResponse, error) {
 	if req.BaseAssetDenom == "" {
