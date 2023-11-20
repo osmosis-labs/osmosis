@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
 	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type CosmwasmAuthenticator struct {
@@ -86,11 +84,20 @@ func (cwa CosmwasmAuthenticator) GetAuthenticationData(
 	}, nil
 }
 
+type SignModeData struct {
+	Direct  []byte `json:"sign_mode_direct"`
+	Textual []byte `json:"sign_mode_textual"`
+}
+
 type AuthenticateMsg struct {
-	TxData        []byte         `json:"tx_data"`
-	Account       sdk.AccAddress `json:"account"`
-	Msg           codectypes.Any `json:"msg"`
-	SignatureData SignatureData  `json:"signature_data"`
+	Account        sdk.AccAddress `json:"account"`
+	Msg            codectypes.Any `json:"msg"`
+	SignatureData  SignatureData  `json:"signature_data"`
+	SignModeTxData SignModeData   `json:"sign_mode_tx_data"`
+	TxData         sdk.Tx         `json:"tx_data"`
+}
+
+type AuthenticateResult struct {
 }
 
 func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
@@ -119,24 +126,25 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 		Sequence:      baseAccount.GetSequence(),
 	}
 
-	// TODO: We probably want to pass a form of this to the contract that is easily parsable (or provide a helper function to unmarshall it)
 	signBytes, err := cwa.sigModeHandler.GetSignBytes(txsigning.SignMode_SIGN_MODE_DIRECT, signerData, signatureData.Tx)
 	if err != nil {
 		return iface.Rejected("failed to get signBytes", err)
 	}
 
-	// TODO: We need to improve the api here
+	// TODO: Add other sign modes. Specifically textual when it gets merged
 
 	// Should we use authtypes.StdSignDoc here instead?
 	authMsg := AuthenticateMsg{
-		TxData:        signBytes,
+		TxData: signatureData.Tx,
+		SignModeTxData: SignModeData{
+			Direct: signBytes,
+		},
 		Account:       account,
 		Msg:           *encodedMsg,
 		SignatureData: signatureData,
 	}
 	bz, err := json.Marshal(authMsg)
 	if err != nil {
-		panic(err)
 		return iface.Rejected("failed to marshall AuthenticateMsg", err)
 	}
 
@@ -144,13 +152,12 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	if err != nil {
 		return iface.Rejected("failed to sudo", err)
 	}
-	fmt.Println("result", result)
-	// TODO: interpret the result
-	if len(result) > 0 {
-		return iface.Authenticated()
-	}
 
-	return iface.NotAuthenticated()
+	authResult, err := UnmarshalAuthenticationResult(result)
+	if err != nil {
+		return iface.Rejected("failed to unmarshal authentication result", err)
+	}
+	return authResult
 }
 
 func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
@@ -172,4 +179,31 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	return nil
+}
+
+func UnmarshalAuthenticationResult(data []byte) (iface.AuthenticationResult, error) {
+	// Unmarshal type field
+	var rawType struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(data, &rawType); err != nil {
+		return nil, err
+	}
+
+	switch rawType.Type {
+	case "Authenticated":
+		return iface.Authenticated(), nil
+	case "NotAuthenticated":
+		return iface.NotAuthenticated(), nil
+	case "Rejected":
+		var content struct {
+			Msg string `json:"msg"`
+		}
+		if err := json.Unmarshal(data, &content); err != nil {
+			return nil, err
+		}
+		return iface.Rejected(content.Msg, fmt.Errorf("cosmwasm contract error")), nil
+	default:
+		return nil, fmt.Errorf("invalid authentication result type: %s", rawType.Type)
+	}
 }

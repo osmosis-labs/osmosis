@@ -1,11 +1,15 @@
 package authenticator_test
 
 import (
+	"fmt"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/osmosis-labs/osmosis/v20/app"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/app/params"
@@ -13,7 +17,9 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"os"
 	"testing"
+	"time"
 )
 
 type CosmwasmAuthenticatorTest struct {
@@ -62,7 +68,11 @@ func (s *CosmwasmAuthenticatorTest) TestInitialize() {
 }
 
 func (s *CosmwasmAuthenticatorTest) TestGeneral() {
-	auth, err := s.CosmwasmAuth.Initialize([]byte(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69"}`))
+	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo-aarch64.wasm")
+	addr := s.InstantiateContract("{}", 1)
+
+	auth, err := s.CosmwasmAuth.Initialize([]byte(
+		fmt.Sprintf(`{"contract": "%s"}`, addr)))
 	s.Require().NoError(err, "Should succeed")
 
 	accounts := apptesting.CreateRandomAccounts(2)
@@ -113,6 +123,28 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
 	s.Require().NoError(err, "Should succeed")
 
-	status := auth.Authenticate(s.Ctx, accounts[0], testMsg, authData)
+	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
 	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
+}
+
+func (s *CosmwasmAuthenticatorTest) StoreContractCode(path string) uint64 {
+	osmosisApp := s.OsmosisApp
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	wasmCode, err := os.ReadFile(path)
+	s.Require().NoError(err)
+	accessEveryone := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody}
+	codeID, _, err := govKeeper.Create(s.Ctx.WithBlockTime(time.Now()), creator, wasmCode, &accessEveryone)
+	s.Require().NoError(err)
+	return codeID
+}
+
+func (s *CosmwasmAuthenticatorTest) InstantiateContract(msg string, codeID uint64) sdk.AccAddress {
+	osmosisApp := s.OsmosisApp
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	addr, _, err := contractKeeper.Instantiate(s.Ctx.WithBlockTime(time.Now()), codeID, creator, creator, []byte(msg), "contract", nil)
+	s.Require().NoError(err)
+	return addr
 }
