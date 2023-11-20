@@ -168,7 +168,7 @@ func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) erro
 	return nil
 }
 
-func (g *RoutingGraphSer) AddEdge(start, end, token string, poolID uint64) {
+func (g *RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
 	if g.Entries == nil {
 		g.Entries = make([]*RoutingGraphEntry, 0)
 	}

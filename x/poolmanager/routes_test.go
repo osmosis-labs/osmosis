@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 		expectedRoute []uint64
 		expectError   error
 	}{
-		"direct route is best": {
+		"single hop is best": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
 				// Create positions as per the test case, which determines what the best route is
 				s.CreateFullRangePosition(ethStake, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("stake", sdk.NewInt(20000000))))
@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			outDenom:      "stake",
 			expectedRoute: []uint64{6},
 		},
-		"indirect route is best, route via eth": {
+		"double hop is best, route via eth": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
 				// Create positions as per the test case, which determines what the best route is
 				s.CreateFullRangePosition(ethStake, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("stake", sdk.NewInt(20000000))))
@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			outDenom:      "stake",
 			expectedRoute: []uint64{5, 2},
 		},
-		"indirect route is best, route via bar": {
+		"double hop is best, route via bar": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
 				// Create positions as per the test case, which determines what the best route is
 				s.CreateFullRangePosition(ethStake, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000)), sdk.NewCoin("stake", sdk.NewInt(10000000))))
@@ -68,7 +68,7 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			outDenom:      "btc",
 			expectedRoute: []uint64{3, 4},
 		},
-		"three route happy path": {
+		"three route": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
 				// Create positions as per the test case, which determines what the best route is
 				s.CreateFullRangePosition(ethStake, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("stake", sdk.NewInt(20000000))))
