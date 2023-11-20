@@ -25,16 +25,21 @@ message Params {
     (gogoproto.nullable) = false
   ];
 
-  bool global_fees = 2;
+  bool enable_global_pool_fees = 2;
 
-  GlobalPoolParams pool_params = 3 [
-    (gogoproto.moretags) = "yaml:\"balancer_pool_params\"",
+  GlobalFees global_fees = 3 [
+    (gogoproto.moretags) = "yaml:\"global_fees\"",
     (gogoproto.nullable) = false
   ];
 
+  string taker_fee = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
-message GlobalPoolParams {
+message GlobalFees {
   string swap_fee = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",

@@ -421,8 +421,6 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 }
 
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
-// This query is deprecated and has been moved to poolmanager module.
-// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -439,7 +437,10 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
+	takerFee := q.Keeper.GetParams(sdkCtx).TakerFee
+	tokenInAfterSubTakerFee, _ := q.Keeper.SubTakerFee(tokenIn, takerFee)
+
+	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenInAfterSubTakerFee)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -450,8 +451,6 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 }
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
-// This query is deprecated and has been moved to poolmanager module.
-// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -473,7 +472,11 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	tokenInCoin := sdk.NewCoin(req.Routes[0].TokenInDenom, tokenInAmount)
+	takerFee := q.Keeper.GetParams(sdkCtx).TakerFee
+	tokenInAfterAddTakerFee, _ := q.Keeper.AddTakerFee(tokenInCoin, takerFee)
+
 	return &types.QuerySwapExactAmountOutResponse{
-		TokenInAmount: tokenInAmount,
+		TokenInAmount: tokenInAfterAddTakerFee.Amount,
 	}, nil
 }
