@@ -47,12 +47,14 @@ func FindTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Rout
 
 	if startRoutes, exists := g.Graph[start]; exists {
 		for token, routes := range startRoutes.InnerMap {
-			if endRoutes, exists := g.Graph[token].InnerMap[end]; exists {
-				for _, startRoute := range routes.Routes {
-					startRoute.Token = token
-					for _, endRoute := range endRoutes.Routes {
-						endRoute.Token = end
-						routeRoutes = append(routeRoutes, []*types.Route{startRoute, endRoute})
+			if tokenRoutes, exists := g.Graph[token]; exists {
+				if endRoutes, exists := tokenRoutes.InnerMap[end]; exists {
+					for _, startRoute := range routes.Routes {
+						startRoute.Token = token
+						for _, endRoute := range endRoutes.Routes {
+							endRoute.Token = end
+							routeRoutes = append(routeRoutes, []*types.Route{startRoute, endRoute})
+						}
 					}
 				}
 			}

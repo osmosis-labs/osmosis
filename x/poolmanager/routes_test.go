@@ -1,10 +1,127 @@
 package poolmanager_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
+
+// Manually define a graph so we can test the getters
+var graph = types.RoutingGraphMap{
+	Graph: map[string]*types.InnerMap{
+		"token1": {
+			InnerMap: map[string]*types.Routes{
+				"token2": {
+					Routes: []*types.Route{
+						{PoolId: 1, Token: "token2"},
+					},
+				},
+				"token3": {
+					Routes: []*types.Route{
+						{PoolId: 2, Token: "token3"},
+					},
+				},
+			},
+		},
+		"token2": {
+			InnerMap: map[string]*types.Routes{
+				"token3": {
+					Routes: []*types.Route{
+						{PoolId: 3, Token: "token3"},
+					},
+				},
+				"token4": {
+					Routes: []*types.Route{
+						{PoolId: 4, Token: "token4"},
+					},
+				},
+			},
+		},
+		"token3": {
+			InnerMap: map[string]*types.Routes{
+				"token4": {
+					Routes: []*types.Route{
+						{PoolId: 5, Token: "token4"},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestFindDirectRoute(t *testing.T) {
+	routes := poolmanager.FindDirectRoute(graph, "token1", "token2")
+
+	if len(routes) != 1 {
+		t.Errorf("Expected 1 route, got %d", len(routes))
+	}
+
+	if routes[0].PoolId != 1 || routes[0].Token != "token2" {
+		t.Errorf("Unexpected route: %+v", routes[0])
+	}
+}
+
+func TestFindTwoHopRoute(t *testing.T) {
+	routes := poolmanager.FindTwoHopRoute(graph, "token1", "token3")
+
+	totalRoutes := 0
+	for _, subRoutes := range routes {
+		totalRoutes += len(subRoutes)
+	}
+
+	if totalRoutes != 2 {
+		t.Errorf("Expected 2 routes, got %d", totalRoutes)
+	}
+
+	if routes[0][0].PoolId != 1 || routes[0][0].Token != "token2" {
+		t.Errorf("Unexpected route: %+v", routes[0][0])
+	}
+
+	if routes[0][1].PoolId != 3 || routes[0][1].Token != "token3" {
+		t.Errorf("Unexpected route: %+v", routes[0][1])
+	}
+}
+
+func TestFindThreeHopRoute(t *testing.T) {
+	routes := poolmanager.FindThreeHopRoute(graph, "token1", "token4")
+
+	totalRoutes := 0
+	for _, subRoutes := range routes {
+		totalRoutes += len(subRoutes)
+	}
+
+	if totalRoutes != 3 {
+		t.Errorf("Expected 3 routes, got %d", totalRoutes)
+	}
+
+	if routes[0][0].PoolId != 1 || routes[0][0].Token != "token2" {
+		t.Errorf("Unexpected route: %+v", routes[0][0])
+	}
+
+	if routes[0][1].PoolId != 3 || routes[0][1].Token != "token3" {
+		t.Errorf("Unexpected route: %+v", routes[0][1])
+	}
+
+	if routes[0][2].PoolId != 5 || routes[0][2].Token != "token4" {
+		t.Errorf("Unexpected route: %+v", routes[0][2])
+	}
+}
+
+func (s *KeeperTestSuite) TestSetDenomPairRoutes() {
+	routingGraph, err := s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Empty(routingGraph)
+
+	s.PrepareAllSupportedPools()
+
+	routingGraph, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(routingGraph)
+}
 
 // TestGetPoolModule tests that the correct pool module is returned for a given pool id.
 // Additionally, validates that the expected errors are produced when expected.
