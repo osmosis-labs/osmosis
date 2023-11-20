@@ -11,8 +11,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/types";
 
 
 service Msg {
-  rpc CreatePool(MsgCreatePool)
-    returns (MsgCreatePoolResponse);
+  rpc CreatePool(MsgCreateBalancerPool)
+    returns (MsgCreateBalancerPoolResponse);
 
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc JoinSwapExternAmountIn(MsgJoinSwapExternAmountIn)
