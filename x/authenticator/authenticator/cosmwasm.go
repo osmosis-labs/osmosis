@@ -105,6 +105,10 @@ type simplifiedSignatureData struct {
 	Signatures [][]byte         `json:"signatures"`
 }
 
+type AuthenticateSudoMsg struct {
+	Authenticate AuthenticateMsg `json:"authenticate"`
+}
+
 type AuthenticateMsg struct {
 	Account        sdk.AccAddress          `json:"account"`
 	Msg            codectypes.Any          `json:"msg"`
@@ -198,7 +202,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 			Signatures: signatures,
 		},
 	}
-	bz, err := json.Marshal(authMsg)
+	bz, err := json.Marshal(AuthenticateSudoMsg{authMsg})
 	if err != nil {
 		return iface.Rejected("failed to marshall AuthenticateMsg", err)
 	}
