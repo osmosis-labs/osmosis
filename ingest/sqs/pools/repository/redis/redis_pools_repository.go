@@ -259,7 +259,6 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map
 
 		err := json.Unmarshal([]byte(sqsPoolModelBytes), &pool.SQSModel)
 		if err != nil {
-			fmt.Println(sqsPoolModelBytes)
 			return nil, err
 		}
 

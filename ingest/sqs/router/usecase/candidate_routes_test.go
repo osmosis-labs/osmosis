@@ -549,7 +549,7 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 
 // This test reads the mainnet test state and attempts to contruct routes between uosmo and uion.
 func (s *RouterTestSuite) TestGetCandidateRoutes_Mainnet() {
-	router := s.setupMainnetRouter()
+	router := s.setupDefaultMainnetRouter()
 
 	routes, err := router.GetCandidateRoutes("uosmo", "uion")
 	s.Require().NoError(err)
