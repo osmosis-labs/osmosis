@@ -424,18 +424,3 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 		})
 	}
 }
-
-// Basic test validating that a non-zero quote is returned from mainnet state
-func (s *RouterTestSuite) TestGetOptimalQuote_Mainnet() {
-	router := s.setupDefaultMainnetRouter()
-
-	candidateRoutes, err := router.GetCandidateRoutes(UOSMO, ATOM)
-	s.Require().NoError(err)
-
-	// ATOM / OSMO
-	quote, err := router.GetOptimalQuote(sdk.NewCoin(UOSMO, sdk.NewInt(100_000_000)), ATOM, candidateRoutes)
-	s.Require().NoError(err)
-
-	// at least 6 ATOM
-	s.Require().True(quote.GetAmountOut().GT(osmomath.NewInt(6_000_000)))
-}

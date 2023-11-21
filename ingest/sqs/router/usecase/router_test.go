@@ -18,6 +18,12 @@ type RouterTestSuite struct {
 	routertesting.RouterTestHelper
 }
 
+const (
+	relativePathMainnetFiles = "./routertesting/parsing/"
+	poolsFileName            = "pools.json"
+	takerFeesFileName        = "taker_fees.json"
+)
+
 var defaultRouterConfig = domain.RouterConfig{
 	PreferredPoolIDs:          []uint64{},
 	MaxRoutes:                 4,
