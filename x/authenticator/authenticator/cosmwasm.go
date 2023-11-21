@@ -90,35 +90,42 @@ type SignModeData struct {
 }
 
 type ExplicitTxData struct {
-	ChainID       string `json:"chain_id"`
-	AccountNumber uint64 `json:"account_number"`
-	Sequence      uint64 `json:"sequence"`
-	TimeoutHeight uint64 `json:"timeout_height"`
-	Msgs          []byte `json:"msgs"`
-	AuthInfos     []byte `json:"auth_infos"`
-	Memo          string `json:"memo"`
+	ChainID       string    `json:"chain_id"`
+	AccountNumber uint64    `json:"account_number"`
+	Sequence      uint64    `json:"sequence"`
+	TimeoutHeight uint64    `json:"timeout_height"`
+	Msgs          []sdk.Msg `json:"msgs"`
+	Memo          string    `json:"memo"`
+	Simulate      bool      `json:"simulate"`
+	// TODO: do we want to explicityly include AuthInfos?
+}
+
+type simplifiedSignatureData struct {
+	Signers    []sdk.AccAddress `json:"signers"`
+	Signatures [][]byte         `json:"signatures"`
 }
 
 type AuthenticateMsg struct {
-	Account        sdk.AccAddress `json:"account"`
-	Msg            codectypes.Any `json:"msg"`
-	SignatureData  SignatureData  `json:"signature_data"` // TODO: simplified signatureData to not inclide the TX
-	SignModeTxData SignModeData   `json:"sign_mode_tx_data"`
-	TxData         ExplicitTxData `json:"tx_data"`
+	Account        sdk.AccAddress          `json:"account"`
+	Msg            codectypes.Any          `json:"msg"`
+	Signature      []byte                  `json:"signature"` // Only allowing messages with a single signer
+	SignModeTxData SignModeData            `json:"sign_mode_tx_data"`
+	TxData         ExplicitTxData          `json:"tx_data"`
+	SignatureData  simplifiedSignatureData `json:"signature_data"`
 }
 
 type AuthenticateResult struct {
 }
 
+// TODO: decide if we want to reject or just not authenticate
 func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+	if len(msg.GetSigners()) != 1 {
+		return iface.Rejected("only messages with a single signer are supported", sdkerrors.ErrInvalidType)
+	}
+
 	signatureData, ok := authenticationData.(SignatureData)
 	if !ok {
 		return iface.Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
-	}
-
-	encodedMsg, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil
 	}
 
 	// Retrieve and build the signer data struct
@@ -141,17 +148,55 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 		return iface.Rejected("failed to get signBytes", err)
 	}
 
-	// TODO: Add other sign modes. Specifically textual when it gets merged
+	encodedMsg, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil
+	}
 
-	// Should we use authtypes.StdSignDoc here instead?
+	timeoutTx, ok := signatureData.Tx.(sdk.TxWithTimeoutHeight)
+	if !ok {
+		return iface.Rejected("failed to cast tx to TxWithTimeoutHeight", sdkerrors.ErrInvalidType)
+	}
+	memoTx, ok := signatureData.Tx.(sdk.TxWithMemo)
+	if !ok {
+		return iface.Rejected("failed to cast tx to TxWithMemo", sdkerrors.ErrInvalidType)
+	}
+	txData := ExplicitTxData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      baseAccount.GetSequence(),
+		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
+		Msgs:          signatureData.Tx.GetMsgs(),
+		Memo:          memoTx.GetMemo(),
+		Simulate:      signatureData.Simulate,
+	}
+
+	signer := msg.GetSigners()[0]
+	var signatures [][]byte
+	var msgSignature []byte
+	for i, signature := range signatureData.Signatures {
+		single, ok := signature.Data.(*txsigning.SingleSignatureData)
+		if !ok {
+			return iface.Rejected("failed to cast signature to SingleSignatureData", sdkerrors.ErrInvalidType)
+		}
+		signatures = append(signatures, single.Signature)
+		if signatureData.Signers[i].Equals(signer) {
+			msgSignature = single.Signature
+		}
+	}
+
 	authMsg := AuthenticateMsg{
-		TxData: signatureData.Tx,
-		SignModeTxData: SignModeData{
+		Account:   account,
+		Msg:       *encodedMsg,
+		Signature: msgSignature, // TODO: currently only allowing one signer per message.
+		TxData:    txData,
+		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
 			Direct: signBytes,
 		},
-		Account:       account,
-		Msg:           *encodedMsg,
-		SignatureData: signatureData,
+		SignatureData: simplifiedSignatureData{
+			Signers:    signatureData.Signers,
+			Signatures: signatures,
+		},
 	}
 	bz, err := json.Marshal(authMsg)
 	if err != nil {
