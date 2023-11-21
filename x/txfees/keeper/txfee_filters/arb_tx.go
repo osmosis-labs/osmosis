@@ -108,6 +108,11 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 			return swapInDenom, false
 		}
 
+		// If there are no routes, it's not an affiliate swap message
+		if len(affiliateSwapMsg.Routes) == 0 {
+			return swapInDenom, false
+		}
+
 		// Otherwise, we have an affiliate swap message, so we check if it's an arb
 		affiliateSwapMsg.TokenIn = tokenIn.Denom
 		swapInDenom, isArb := isArbTxLooseSwapMsg(affiliateSwapMsg, swapInDenom)
