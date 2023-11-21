@@ -1,0 +1,34 @@
+name: Weekly Docs Update
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Git Config
+      run: |
+        git config --global user.name 'Your Name'
+        git config --global user.email 'your-email@example.com'
+
+    - name: Run make docs
+      run: make docs
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.COMMIT_TO_BRANCH }}
+        commit-message: Update documentation
+        title: 'Weekly Documentation Update'
+        body: 'Updates the documentation.'
+        branch: 'docs-update-${{ github.run_number }}'
+        base: 'main'
+        delete-branch: true
+        draft: false
