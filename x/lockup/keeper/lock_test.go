@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -617,98 +616,6 @@ func (suite *KeeperTestSuite) TestLock() {
 	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
 }
 
-func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
-	suite.SetupTest()
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-
-	// lock coins on other durations
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
-	suite.LockTokens(addr1, coins, time.Second*2)
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 30)}
-	suite.LockTokens(addr1, coins, time.Second*3)
-
-	synthlocks := []types.SyntheticLock{}
-	// make three synthetic locks on each locks
-	for i := uint64(1); i <= 3; i++ {
-		// testing not unlocking synthlock, with same duration with underlying
-		synthlock := types.SyntheticLock{
-			UnderlyingLockId: i,
-			SynthDenom:       fmt.Sprintf("synth1/%d", i),
-			Duration:         time.Second * time.Duration(i),
-		}
-		err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, i, synthlock.SynthDenom, synthlock.Duration, false)
-		suite.Require().NoError(err)
-		synthlocks = append(synthlocks, synthlock)
-
-		// testing not unlocking synthlock, different duration with underlying
-		synthlock.SynthDenom = fmt.Sprintf("synth2/%d", i)
-		synthlock.Duration = time.Second * time.Duration(i) / 2
-		err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, i, synthlock.SynthDenom, synthlock.Duration, false)
-		suite.Require().NoError(err)
-		synthlocks = append(synthlocks, synthlock)
-
-		// testing unlocking synthlock, different duration with underlying
-		synthlock.SynthDenom = fmt.Sprintf("synth3/%d", i)
-		err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, i, synthlock.SynthDenom, synthlock.Duration, true)
-		suite.Require().NoError(err)
-		synthlocks = append(synthlocks, synthlock)
-	}
-
-	// check synthlocks are all set
-	checkSynthlocks := func(amounts []uint64) {
-		// by GetAllSyntheticLockups
-		for i, synthlock := range suite.App.LockupKeeper.GetAllSyntheticLockups(suite.Ctx) {
-			suite.Require().Equal(synthlock, synthlocks[i])
-		}
-		// by GetAllSyntheticLockupsByLockup
-		for i := uint64(1); i <= 3; i++ {
-			for j, synthlockByLockup := range suite.App.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.Ctx, i) {
-				suite.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+j])
-			}
-		}
-		// by GetAllSyntheticLockupsByAddr
-		for i, synthlock := range suite.App.LockupKeeper.GetAllSyntheticLockupsByAddr(suite.Ctx, addr1) {
-			suite.Require().Equal(synthlock, synthlocks[i])
-		}
-		// by GetPeriodLocksAccumulation
-		for i := 1; i <= 3; i++ {
-			for j := 1; j <= 3; j++ {
-				// get accumulation with always-qualifying condition
-				acc := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-					Denom:    fmt.Sprintf("synth%d/%d", j, i),
-					Duration: time.Second / 10,
-				})
-				// amount retrieved should be equal with underlying lock's locked amount
-				suite.Require().Equal(acc.Int64(), amounts[i])
-
-				// get accumulation with non-qualifying condition
-				acc = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-					Denom:    fmt.Sprintf("synth%d/%d", j, i),
-					Duration: time.Second * 100,
-				})
-				suite.Require().Equal(acc.Int64(), 0)
-			}
-		}
-	}
-
-	checkSynthlocks([]uint64{10, 20, 30})
-
-	// call AddTokensToLock
-	for i := uint64(1); i <= 3; i++ {
-		coins := sdk.NewInt64Coin("stake", int64(i)*10)
-		suite.FundAcc(addr1, sdk.Coins{coins})
-		_, err := suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, i, addr1, coins)
-		suite.Require().NoError(err)
-	}
-
-	// check if all invariants holds after calling AddTokensToLock
-	checkSynthlocks([]uint64{20, 40, 60})
-}
-
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
 
@@ -952,13 +859,6 @@ func (suite *KeeperTestSuite) TestForceUnlock() {
 		{
 			name: "happy path",
 		},
-		{
-			name: "superfluid staked",
-			postLockSetup: func() {
-				err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "testDenom", time.Minute, true)
-				suite.Require().NoError(err)
-			},
-		},
 	}
 	for _, tc := range testCases {
 		// set up test and create default lock
@@ -987,11 +887,6 @@ func (suite *KeeperTestSuite) TestForceUnlock() {
 		// check balance of lock account to confirm
 		balances := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
 		suite.Require().Equal(balances, coinsToLock)
-
-		// if it was superfluid delegated lock,
-		//  confirm that we don't have associated synth locks
-		synthLocks := suite.App.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.Ctx, lock.ID)
-		suite.Require().Equal(0, len(synthLocks))
 
 		// check if lock is deleted by checking trying to get lock ID
 		_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)

@@ -83,28 +83,6 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 	return
 }
 
-// SetupUserSyntheticLocks takes an array of user locks and creates synthetic locks based on this array, then returns the respective account address byte array.
-func (suite *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk.AccAddress) {
-	accs = make([]sdk.AccAddress, len(users))
-	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
-	lockupID := uint64(1)
-	for i, user := range users {
-		suite.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
-		totalLockAmt := user.lockAmounts[0]
-		for j := 1; j < len(user.lockAmounts); j++ {
-			totalLockAmt = totalLockAmt.Add(user.lockAmounts[j]...)
-		}
-		accs[i] = suite.setupAddr(i, "", totalLockAmt)
-		for j := 0; j < len(user.lockAmounts); j++ {
-			suite.LockTokens(accs[i], coins, user.lockDurations[j])
-			err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, lockupID, "lptoken/superbonding", user.lockDurations[j], false)
-			lockupID++
-			suite.Require().NoError(err)
-		}
-	}
-	return
-}
-
 // SetupGauges takes an array of perpGaugeDesc structs. Then returns the corresponding array of Gauge structs.
 func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom string) []types.Gauge {
 	gauges := make([]types.Gauge, len(gaugeDescriptors))

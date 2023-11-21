@@ -175,17 +175,6 @@ func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest)
 	return &types.NextLockIDResponse{LockId: nextLockID}, nil
 }
 
-// SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.
-func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLocks := q.Keeper.GetAllSyntheticLockupsByLockup(ctx, req.LockId)
-	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthLocks}, nil
-}
-
 // AccountLockedLongerDuration returns locks of an account with duration longer than specified.
 func (q Querier) AccountLockedLongerDuration(goCtx context.Context, req *types.AccountLockedLongerDurationRequest) (*types.AccountLockedLongerDurationResponse, error) {
 	if req == nil {

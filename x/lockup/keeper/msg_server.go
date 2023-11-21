@@ -206,12 +206,6 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", lock.Owner)
 	}
 
-	// check that given lock is not superfluid staked
-	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
-	if len(synthLocks) > 0 {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
-	}
-
 	// force unlock given lock
 	// This also supports the case of force unlocking lock as a whole when msg.Coins
 	// provided is empty.
