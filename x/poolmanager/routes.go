@@ -121,35 +121,37 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		}
 	}
 
+	// Set the route map in state
+	// NOTE: This is done with the non map version of the route graph
+	// If we used maps here, the serialization would be non-deterministic
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routingGraph)
 	return routingGraph, nil
 }
 
 // GetDenomPairRoute returns the route with the lowest slippage between an input denom and an output denom
-func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]uint64, error) {
+func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]types.SwapAmountInRoute, error) {
 	inputDenom := inputCoin.Denom
 
+	// Retrieve the route map from state
 	routeMap, err := k.GetRouteMap(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get all direct routes
+	// Get all direct routes, two hop, and three hop routes
 	directPoolIDs := findDirectRoute(routeMap, inputDenom, outputDenom)
 
-	// Get all two-hop routes
 	var twoHopPoolIDs [][]*types.Route
 	if inputDenom != OSMO && outputDenom != OSMO {
 		twoHopPoolIDs = findTwoHopRoute(routeMap, inputDenom, outputDenom)
 	}
 
-	// Get all three-hop routes
 	var threeHopPoolIDs [][]*types.Route
 	if inputDenom != OSMO && outputDenom != OSMO {
 		threeHopPoolIDs = findThreeHopRoute(routeMap, inputDenom, outputDenom)
 	}
 
-	// Map to store the total liquidity of each route (using string as key)
+	// Map the total liquidity of each route (using the route string as the key)
 	routeLiquidity := make(map[string]osmomath.Int)
 
 	// Check liquidity for all direct routes
@@ -165,7 +167,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 			if err != nil {
 				return nil, err
 			}
-			liqInOsmoInternal, err := k.inputDenomToOSMO(ctx, denom, liquidity, routeMap)
+			liqInOsmoInternal, err := k.inputAmountToOSMO(ctx, denom, liquidity, routeMap)
 			if err != nil {
 				return nil, err
 			}
@@ -174,9 +176,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 				liqInOsmoInternal = liqInOsmoInternal.ToLegacyDec().Mul(superfluidMultiplier).TruncateInt()
 			}
 
-			// Multiply the liquidity by six. This is because we are comparing single routes to a max of three-hop routes.
-			// To make this simple and comparable, we just multiply the single route liquidity by six.
-			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal.Mul(osmomath.NewIntFromUint64(6)))
+			liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
 		}
 		routeKey := fmt.Sprintf("%v", route)
 		routeLiquidity[routeKey] = liqInOsmo
@@ -198,7 +198,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 				if err != nil {
 					return nil, err
 				}
-				liqInOsmoInternal, err := k.inputDenomToOSMO(ctx, denom, liquidity, routeMap)
+				liqInOsmoInternal, err := k.inputAmountToOSMO(ctx, denom, liquidity, routeMap)
 				if err != nil {
 					return nil, err
 				}
@@ -209,9 +209,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 				liqInOsmo = liqInOsmo.Add(liqInOsmoInternal)
 			}
 
-			// Multiply the liquidity by three. This is because we are comparing double route to a max of three-hop routes.
-			// To make this simple and comparable, we just multiply the single route liquidity by three.
-			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo.Mul(osmomath.NewIntFromUint64(3)))
+			totalLiquidityInOsmo = totalLiquidityInOsmo.Add(liqInOsmo)
 		}
 		routeLiquidity[routeKey] = totalLiquidityInOsmo
 	}
@@ -232,7 +230,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 				if err != nil {
 					return nil, err
 				}
-				liqInOsmoInternal, err := k.inputDenomToOSMO(ctx, denom, liquidity, routeMap)
+				liqInOsmoInternal, err := k.inputAmountToOSMO(ctx, denom, liquidity, routeMap)
 				if err != nil {
 					return nil, err
 				}
@@ -259,11 +257,11 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 	var bestSingleHopRouteKey, bestDoubleHopRouteKey, bestTripleHopRouteKey string
 	maxSingleHopLiquidity, maxDoubleHopLiquidity, maxTripleHopLiquidity := osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt()
 
+	// Iterate through all viable routes and select the route with the highest liquidity for each hop count
 	for _, routeKey := range keys {
 		liquidity := routeLiquidity[routeKey]
 		hopCount := len(strings.Fields(routeKey)) / 2
 
-		// Update best route based on hop count and liquidity
 		switch hopCount {
 		case 1: // Single hop
 			if liquidity.GT(maxSingleHopLiquidity) {
@@ -286,6 +284,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 	// Construct the result map
 	result := make(map[string][]types.Route)
 
+	// Parse the route keys and store the result in the result map
 	singleHopRoute, err := parseRouteKey(bestSingleHopRouteKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing single hop route key: %v", err)
@@ -312,6 +311,8 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 	}
 	sort.Strings(resultAsString)
 
+	// Iterate through the result map and simulate a swap against each route
+	// Select the route with the highest swap amount out
 	var maxKey string
 	for _, key := range resultAsString {
 		value := result[key]
@@ -329,6 +330,7 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 		if err != nil {
 			continue
 		}
+		fmt.Println("amtOut", amtOut)
 
 		// Update maxAmtOut and maxKey if the current amtOut is greater
 		if amtOut.GT(maxAmtOut) {
@@ -337,13 +339,16 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 		}
 	}
 
-	// Return the poolIDs for the best route
-	var poolIDs []uint64
+	// Return the SwapAmountInRoute for the best route
+	var swapRoutes []types.SwapAmountInRoute
 	for _, route := range result[maxKey] {
-		poolIDs = append(poolIDs, route.PoolId)
+		swapRoutes = append(swapRoutes, types.SwapAmountInRoute{
+			PoolId:        route.PoolId,
+			TokenOutDenom: route.Token,
+		})
 	}
 
-	return poolIDs, nil
+	return swapRoutes, nil
 }
 
 // parseRouteKey is a helper function to parse route key into a slice of Route.
@@ -429,9 +434,9 @@ func (k Keeper) getDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom 
 	return bestRoute[0], nil
 }
 
-// inputDenomToOSMO transforms an input denom and its amount to uosmo
+// inputAmountToOSMO transforms an input denom and its amount to uosmo
 // If a route is not found, returns 0 with no error.
-func (k Keeper) inputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
+func (k Keeper) inputAmountToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
 	if inputDenom == OSMO {
 		return amount, nil
 	}
@@ -467,13 +472,14 @@ func (k Keeper) inputDenomToOSMO(ctx sdk.Context, inputDenom string, amount osmo
 	}
 
 	// Convert the input denom to uosmo
+	// Rounding is fine here
 	uosmoAmount := amount.ToLegacyDec().Mul(osmoPerInputToken.Dec())
-	return uosmoAmount.TruncateInt(), nil
+	return uosmoAmount.RoundInt(), nil
 }
 
 // getPoolLiquidityOfDenom returns the liquidity of a denom in a pool.
 // This calls different methods depending on the pool type.
-func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDenom string) (osmomath.Int, error) {
+func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom string) (osmomath.Int, error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return osmomath.ZeroInt(), err
@@ -487,25 +493,25 @@ func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, outputDe
 			return osmomath.ZeroInt(), fmt.Errorf("invalid pool type")
 		}
 		totalPoolLiquidity := pool.GetTotalPoolLiquidity(ctx)
-		return totalPoolLiquidity.AmountOf(outputDenom), nil
+		return totalPoolLiquidity.AmountOf(denom), nil
 	case types.Stableswap:
 		pool, ok := pool.(gammtypes.CFMMPoolI)
 		if !ok {
 			return osmomath.ZeroInt(), fmt.Errorf("invalid pool type")
 		}
 		totalPoolLiquidity := pool.GetTotalPoolLiquidity(ctx)
-		return totalPoolLiquidity.AmountOf(outputDenom), nil
+		return totalPoolLiquidity.AmountOf(denom), nil
 	case types.Concentrated:
 		poolAddress := pool.GetAddress()
 		poolAddressBalances := k.bankKeeper.GetAllBalances(ctx, poolAddress)
-		return poolAddressBalances.AmountOf(outputDenom), nil
+		return poolAddressBalances.AmountOf(denom), nil
 	case types.CosmWasm:
 		pool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
 			return osmomath.ZeroInt(), fmt.Errorf("invalid pool type")
 		}
 		totalPoolLiquidity := pool.GetTotalPoolLiquidity(ctx)
-		return totalPoolLiquidity.AmountOf(outputDenom), nil
+		return totalPoolLiquidity.AmountOf(denom), nil
 	default:
 		return osmomath.ZeroInt(), fmt.Errorf("invalid pool type")
 	}

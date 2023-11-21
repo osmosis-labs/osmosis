@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
@@ -132,7 +133,7 @@ func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 		setup         func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension)
 		tokenIn       sdk.Coin
 		outDenom      string
-		expectedRoute []uint64
+		expectedRoute []types.SwapAmountInRoute
 		expectError   error
 	}{
 		"single hop is best": {
@@ -144,9 +145,11 @@ func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("btc", sdk.NewInt(20000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(21000000)), sdk.NewCoin("btc", sdk.NewInt(21000000))))
 			},
-			tokenIn:       sdk.NewCoin("btc", sdk.NewInt(10000000)),
-			outDenom:      "stake",
-			expectedRoute: []uint64{6},
+			tokenIn:  sdk.NewCoin("btc", sdk.NewInt(10000000)),
+			outDenom: "stake",
+			expectedRoute: []types.SwapAmountInRoute{
+				{PoolId: 6, TokenOutDenom: "stake"},
+			},
 		},
 		"double hop is best, route via eth": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
@@ -157,9 +160,12 @@ func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(21000000)), sdk.NewCoin("btc", sdk.NewInt(21000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)), sdk.NewCoin("btc", sdk.NewInt(10000000))))
 			},
-			tokenIn:       sdk.NewCoin("btc", sdk.NewInt(10000000)),
-			outDenom:      "stake",
-			expectedRoute: []uint64{5, 2},
+			tokenIn:  sdk.NewCoin("btc", sdk.NewInt(10000000)),
+			outDenom: "stake",
+			expectedRoute: []types.SwapAmountInRoute{
+				{PoolId: 5, TokenOutDenom: "eth"},
+				{PoolId: 2, TokenOutDenom: "stake"},
+			},
 		},
 		"double hop is best, route via bar": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
@@ -170,9 +176,12 @@ func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("btc", sdk.NewInt(20000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)), sdk.NewCoin("btc", sdk.NewInt(10000000))))
 			},
-			tokenIn:       sdk.NewCoin("btc", sdk.NewInt(10000000)),
-			outDenom:      "stake",
-			expectedRoute: []uint64{4, 3},
+			tokenIn:  sdk.NewCoin("btc", sdk.NewInt(10000000)),
+			outDenom: "stake",
+			expectedRoute: []types.SwapAmountInRoute{
+				{PoolId: 4, TokenOutDenom: "bar"},
+				{PoolId: 3, TokenOutDenom: "stake"},
+			},
 		},
 		"flip denoms should flip route": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
@@ -183,9 +192,12 @@ func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("btc", sdk.NewInt(20000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)), sdk.NewCoin("btc", sdk.NewInt(10000000))))
 			},
-			tokenIn:       sdk.NewCoin("stake", sdk.NewInt(10000000)),
-			outDenom:      "btc",
-			expectedRoute: []uint64{3, 4},
+			tokenIn:  sdk.NewCoin("stake", sdk.NewInt(10000000)),
+			outDenom: "btc",
+			expectedRoute: []types.SwapAmountInRoute{
+				{PoolId: 3, TokenOutDenom: "bar"},
+				{PoolId: 4, TokenOutDenom: "btc"},
+			},
 		},
 		"three route": {
 			setup: func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension) {
@@ -196,9 +208,13 @@ func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 				s.CreateFullRangePosition(btcEth, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(20000000)), sdk.NewCoin("btc", sdk.NewInt(20000000))))
 				s.CreateFullRangePosition(btcStake, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(20000000)), sdk.NewCoin("btc", sdk.NewInt(20000000))))
 			},
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(10000000)),
-			outDenom:      "stbtc",
-			expectedRoute: []uint64{8, 9, 10},
+			tokenIn:  sdk.NewCoin("eth", sdk.NewInt(10000000)),
+			outDenom: "stbtc",
+			expectedRoute: []types.SwapAmountInRoute{
+				{PoolId: 8, TokenOutDenom: "bar"},
+				{PoolId: 9, TokenOutDenom: "test"},
+				{PoolId: 10, TokenOutDenom: "stbtc"},
+			},
 		},
 	}
 
@@ -265,5 +281,151 @@ func TestParseRouteKey(t *testing.T) {
 
 	if !reflect.DeepEqual(routes, expected) {
 		t.Errorf("Expected %+v, got %+v", expected, routes)
+	}
+}
+
+func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {
+	pool1 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "bar")
+	pool2 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "bar")
+
+	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000))))
+
+	_, err := s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+
+	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+
+	route, err := s.App.PoolManagerKeeper.GetDirectOSMORouteWithMostLiquidity(s.Ctx, "bar", routeMap)
+	s.Require().NoError(err)
+	s.Require().Equal(pool1.GetId(), route)
+
+	s.CreateFullRangePosition(pool2, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000)), sdk.NewCoin("bar", sdk.NewInt(20000000))))
+
+	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+
+	routeMap, err = s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+
+	route, err = s.App.PoolManagerKeeper.GetDirectOSMORouteWithMostLiquidity(s.Ctx, "bar", routeMap)
+	s.Require().NoError(err)
+	s.Require().Equal(pool2.GetId(), route)
+}
+
+func (s *KeeperTestSuite) TestInputAmountToOSMO() {
+	pool1 := s.PrepareConcentratedPoolWithCoins("uosmo", "bar")
+
+	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000))))
+
+	// Routes not set, should return 0 with no error
+	osmoAmt, err := s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "bar", sdk.NewInt(10000000), types.RoutingGraphMap{})
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.ZeroInt(), osmoAmt)
+
+	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+
+	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+
+	// With 1:1 ratio, input amount should be equal to output amount
+	osmoAmt, err = s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "bar", sdk.NewInt(10000000), routeMap)
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewInt(10000000), osmoAmt)
+
+	pool2 := s.PrepareConcentratedPoolWithCoins("uosmo", "foo")
+
+	s.CreateFullRangePosition(pool2, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000)), sdk.NewCoin("foo", sdk.NewInt(10000000))))
+
+	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+
+	routeMap, err = s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+
+	// With 2:1 ratio, input amount should be half of the output amount
+	osmoAmt, err = s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "foo", sdk.NewInt(10000000), routeMap)
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewInt(20000000), osmoAmt)
+}
+
+func (s *KeeperTestSuite) TestGetPoolLiquidityOfDenom() {
+	poolInfo := s.PrepareAllSupportedPools()
+
+	poolLiq, err := s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.BalancerPoolID, "bar")
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewInt(5000000), poolLiq)
+
+	poolLiq, err = s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.StableSwapPoolID, "bar")
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
+
+	token := sdk.NewCoins(sdk.NewCoin("axlusdc", sdk.NewInt(10000000)))
+	s.FundAcc(s.TestAccs[0], token)
+	s.JoinTransmuterPool(s.TestAccs[0], poolInfo.CosmWasmPoolID, token)
+
+	poolLiq, err = s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.CosmWasmPoolID, "axlusdc")
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
+
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolInfo.ConcentratedPoolID)
+	s.Require().NoError(err)
+	clPoolExtension, ok := clPool.(cltypes.ConcentratedPoolExtension)
+	s.Require().True(ok)
+
+	s.CreateFullRangePosition(clPoolExtension, sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000)), sdk.NewCoin("eth", sdk.NewInt(10000000))))
+
+	poolLiq, err = s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.ConcentratedPoolID, "eth")
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
+}
+
+func TestConvertToMap(t *testing.T) {
+	// Define a RoutingGraph
+	routingGraph := &types.RoutingGraph{
+		Entries: []*types.RoutingGraphEntry{
+			{
+				Key: "token1",
+				Value: &types.Inner{
+					Entries: []*types.InnerMapEntry{
+						{
+							Key: "token2",
+							Value: &types.Routes{
+								Routes: []*types.Route{
+									{PoolId: 1, Token: "token2"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Call the function
+	result := poolmanager.ConvertToMap(routingGraph)
+
+	// Check the result
+	if len(result.Graph) != 1 {
+		t.Errorf("Expected 1 entry, got %d", len(result.Graph))
+	}
+
+	innerMap, ok := result.Graph["token1"]
+	if !ok {
+		t.Errorf("Expected to find 'token1' key")
+	}
+
+	routes, ok := innerMap.InnerMap["token2"]
+	if !ok {
+		t.Errorf("Expected to find 'token2' key")
+	}
+
+	if len(routes.Routes) != 1 {
+		t.Errorf("Expected 1 route, got %d", len(routes.Routes))
+	}
+
+	if routes.Routes[0].PoolId != 1 || routes.Routes[0].Token != "token2" {
+		t.Errorf("Unexpected route: %+v", routes.Routes[0])
 	}
 }

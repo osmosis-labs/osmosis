@@ -411,6 +411,6 @@ func (q Querier) DenomPairRoutes(ctx sdk.Context, req queryproto.DenomPairRoutes
 	}
 
 	return &queryproto.DenomPairRoutesResponse{
-		PoolRoute: routes,
+		Routes: routes,
 	}, nil
 }

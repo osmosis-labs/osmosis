@@ -384,4 +384,10 @@ message DenomPairRoutesRequest {
   string output_denom = 2;
 }
 
-message DenomPairRoutesResponse { repeated uint64 pool_route = 1; }
+message DenomPairRoutesResponse {
+  repeated SwapAmountInRoute routes = 1 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+  ;
+}
