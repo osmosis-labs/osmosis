@@ -89,12 +89,22 @@ type SignModeData struct {
 	Textual []byte `json:"sign_mode_textual"`
 }
 
+type ExplicitTxData struct {
+	ChainID       string `json:"chain_id"`
+	AccountNumber uint64 `json:"account_number"`
+	Sequence      uint64 `json:"sequence"`
+	TimeoutHeight uint64 `json:"timeout_height"`
+	Msgs          []byte `json:"msgs"`
+	AuthInfos     []byte `json:"auth_infos"`
+	Memo          string `json:"memo"`
+}
+
 type AuthenticateMsg struct {
 	Account        sdk.AccAddress `json:"account"`
 	Msg            codectypes.Any `json:"msg"`
-	SignatureData  SignatureData  `json:"signature_data"`
+	SignatureData  SignatureData  `json:"signature_data"` // TODO: simplified signatureData to not inclide the TX
 	SignModeTxData SignModeData   `json:"sign_mode_tx_data"`
-	TxData         sdk.Tx         `json:"tx_data"`
+	TxData         ExplicitTxData `json:"tx_data"`
 }
 
 type AuthenticateResult struct {
