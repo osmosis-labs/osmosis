@@ -79,30 +79,3 @@ message QueryCondition {
   ];
 }
 
-// SyntheticLock is creating virtual lockup where new denom is combination of
-// original denom and synthetic suffix. At the time of synthetic lockup creation
-// and deletion, accumulation store is also being updated and on querier side,
-// they can query as freely as native lockup.
-message SyntheticLock {
-  // Underlying Lock ID is the underlying native lock's id for this synthetic
-  // lockup. A synthetic lock MUST have an underlying lock.
-  uint64 underlying_lock_id = 1;
-  // SynthDenom is the synthetic denom that is a combination of
-  // gamm share + bonding status + validator address.
-  string synth_denom = 2;
-  // used for unbonding synthetic lockups, for active synthetic lockups, this
-  // value is set to uninitialized value
-  google.protobuf.Timestamp end_time = 3 [
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"end_time\""
-  ];
-  // Duration is the duration for a synthetic lock to mature
-  // at the point of unbonding has started.
-  google.protobuf.Duration duration = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"duration\""
-  ];
-}
