@@ -5,7 +5,6 @@ import "errors"
 // DefaultGenesis returns the default poolmanager genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params:     DefaultParams(),
 		NextPoolId: 1,
 	}
 }
@@ -15,9 +14,6 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	if gs.NextPoolId == 0 {
 		return errors.New("next pool id cannot be 0")
-	}
-	if err := gs.Params.Validate(); err != nil {
-		return err
 	}
 	return nil
 }

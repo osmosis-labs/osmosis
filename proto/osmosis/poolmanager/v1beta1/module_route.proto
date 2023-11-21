@@ -8,12 +8,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types";
 // PoolType is an enumeration of all supported pool types.
 enum PoolType {
   option (gogoproto.goproto_enum_prefix) = false;
-
   // Balancer is the standard xy=k curve. Its pool model is defined in x/gamm.
   Balancer = 0;
-  // Stableswap is the Solidly cfmm stable swap curve. Its pool model is defined
-  // in x/gamm.
-  Stableswap = 1;
 }
 
 // ModuleRouter defines a route encapsulating pool type.

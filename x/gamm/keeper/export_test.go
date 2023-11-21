@@ -17,10 +17,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) SetStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scalingFactors []uint64, sender string) error {
-	return k.setStableSwapScalingFactors(ctx, poolId, scalingFactors, sender)
-}
-
 func ConvertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	return convertToCFMMPool(pool)
 }

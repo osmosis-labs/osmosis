@@ -195,15 +195,6 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "stableswap",
-			param: param{
-				poolType:      "stableswap",
-				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
-				tokenOutDenom: "bar",
-			},
-			expectPass: true,
-		},
 	}
 
 	for _, test := range tests {
@@ -216,11 +207,6 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			var pool poolmanagertypes.PoolI
 			if test.param.poolType == "balancer" {
 				poolId := suite.PrepareBalancerPool()
-				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
-				suite.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
-			} else if test.param.poolType == "stableswap" {
-				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
 				pool = poolExt.(poolmanagertypes.PoolI)
@@ -262,15 +248,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "stableswap",
-			param: param{
-				poolType:     "stableswap",
-				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
-				tokenInDenom: "bar",
-			},
-			expectPass: true,
-		},
 	}
 
 	for _, test := range tests {
@@ -283,11 +260,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			var pool poolmanagertypes.PoolI
 			if test.param.poolType == "balancer" {
 				poolId := suite.PrepareBalancerPool()
-				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
-				suite.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
-			} else if test.param.poolType == "stableswap" {
-				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
 				pool = poolExt.(poolmanagertypes.PoolI)

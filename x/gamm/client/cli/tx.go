@@ -12,7 +12,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
@@ -32,7 +31,6 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
 	txCmd.AddCommand(
 		NewCreatePoolCmd().BuildCommandCustomFn(),
-		NewStableSwapAdjustScalingFactorsCmd(),
 	)
 	return txCmd
 }
@@ -53,15 +51,6 @@ Sample pool JSON file contents for balancer:
 	"swap-fee": "0.01",
 	"exit-fee": "0.01",
 	"future-governor": "168h"
-}
-
-For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
-{
-	"initial-deposit": "1000000uusdc,1000miliusdc",
-	"swap-fee": "0.01",
-	"exit-fee": "0.01",
-	"future-governor": "168h",
-	"scaling-factors": "1000,1"
 }
 `,
 		NumArgs:          0,
@@ -162,22 +151,6 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 	}, &types.MsgExitSwapShareAmountIn{}
 }
 
-// TODO: Change these flags to args. Required flags don't make that much sense.
-func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
-		Short:            "adjust scaling factors",
-		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
-		NumArgs:          0,
-		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
-	}.BuildCommandCustomFn()
-
-	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagScalingFactors)
-	return cmd
-}
-
 func BuildCreatePoolCmd(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	poolType, err := fs.GetString(FlagPoolType)
 	if err != nil {
@@ -191,12 +164,10 @@ func BuildCreatePoolCmd(clientCtx client.Context, args []string, fs *flag.FlagSe
 		if err != nil {
 			return nil, err
 		}
-	} else if poolType == "stableswap" {
-		msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, fs)
-		if err != nil {
-			return nil, err
-		}
 	}
+
+	//TODO: validate poolType
+
 	return msg, nil
 }
 
@@ -301,59 +272,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 	}
 
 	return msg, nil
-}
-
-// Apologies to whoever has to touch this next, this code is horrendous
-func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
-	flags, err := parseCreateStableswapPoolFlags(fs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse pool: %w", err)
-	}
-
-	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
-	if err != nil {
-		return nil, err
-	}
-
-	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
-	if err != nil {
-		return nil, err
-	}
-
-	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
-	if err != nil {
-		return nil, err
-	}
-
-	poolParams := &stableswap.PoolParams{
-		SwapFee: swapFee,
-		ExitFee: exitFee,
-	}
-
-	scalingFactors := []uint64{}
-	trimmedSfString := strings.Trim(flags.ScalingFactors, "[] {}")
-	if len(trimmedSfString) > 0 {
-		ints := strings.Split(trimmedSfString, ",")
-		for _, i := range ints {
-			u, err := strconv.ParseUint(i, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			scalingFactors = append(scalingFactors, u)
-		}
-		if len(scalingFactors) != len(deposit) {
-			return nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
-		}
-	}
-
-	return &stableswap.MsgCreateStableswapPool{
-		Sender:                  clientCtx.GetFromAddress().String(),
-		PoolParams:              poolParams,
-		InitialPoolLiquidity:    deposit,
-		ScalingFactors:          scalingFactors,
-		ScalingFactorController: flags.ScalingFactorController,
-		FuturePoolGovernor:      flags.FutureGovernor,
-	}, nil
 }
 
 func shareAmountInParser(fs *flag.FlagSet) (sdk.Int, error) {
@@ -486,37 +404,6 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *
 		TokenInMaxAmount: tokenInMaxAmount,
 		TokenOut:         tokenOut,
 	}, nil
-}
-
-func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	scalingFactorsStr, err := fs.GetString(FlagScalingFactors)
-	if err != nil {
-		return nil, err
-	}
-
-	scalingFactorsStrSlice := strings.Split(scalingFactorsStr, ",")
-
-	scalingFactors := make([]uint64, len(scalingFactorsStrSlice))
-	for i, scalingFactorStr := range scalingFactorsStrSlice {
-		scalingFactor, err := strconv.ParseUint(scalingFactorStr, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		scalingFactors[i] = scalingFactor
-	}
-
-	msg := &stableswap.MsgStableSwapAdjustScalingFactors{
-		Sender:         clientCtx.GetFromAddress().String(),
-		PoolID:         poolID,
-		ScalingFactors: scalingFactors,
-	}
-
-	return msg, nil
 }
 
 // ParseCoinsNoSort parses coins from coinsStr but does not sort them.

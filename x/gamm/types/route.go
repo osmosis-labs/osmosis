@@ -23,30 +23,6 @@ func (routes SwapAmountInRoutes) Validate() error {
 	return nil
 }
 
-func (routes SwapAmountInRoutes) IntermediateDenoms() []string {
-	if len(routes) < 2 {
-		return nil
-	}
-	intermediateDenoms := make([]string, 0, len(routes)-1)
-	for _, route := range routes[:len(routes)-1] {
-		intermediateDenoms = append(intermediateDenoms, route.TokenOutDenom)
-	}
-
-	return intermediateDenoms
-}
-
-func (routes SwapAmountInRoutes) PoolIds() []uint64 {
-	poolIds := make([]uint64, 0, len(routes))
-	for _, route := range routes {
-		poolIds = append(poolIds, route.PoolId)
-	}
-	return poolIds
-}
-
-func (routes SwapAmountInRoutes) Length() int {
-	return len(routes)
-}
-
 type SwapAmountOutRoutes []poolmanagertypes.SwapAmountOutRoute
 
 func (routes SwapAmountOutRoutes) Validate() error {
@@ -62,34 +38,4 @@ func (routes SwapAmountOutRoutes) Validate() error {
 	}
 
 	return nil
-}
-
-func (routes SwapAmountOutRoutes) IntermediateDenoms() []string {
-	if len(routes) < 2 {
-		return nil
-	}
-	intermediateDenoms := make([]string, 0, len(routes)-1)
-	for _, route := range routes[1:] {
-		intermediateDenoms = append(intermediateDenoms, route.TokenInDenom)
-	}
-
-	return intermediateDenoms
-}
-
-func (routes SwapAmountOutRoutes) PoolIds() []uint64 {
-	poolIds := make([]uint64, 0, len(routes))
-	for _, route := range routes {
-		poolIds = append(poolIds, route.PoolId)
-	}
-	return poolIds
-}
-
-func (routes SwapAmountOutRoutes) Length() int {
-	return len(routes)
-}
-
-type MultihopRoute interface {
-	Length() int
-	PoolIds() []uint64
-	IntermediateDenoms() []string
 }

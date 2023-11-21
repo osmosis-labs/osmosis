@@ -6,7 +6,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -36,18 +35,6 @@ var DefaultPoolAssets = []balancer.PoolAsset{
 		Token:  sdk.NewCoin("udym", sdk.NewInt(5000000)),
 	},
 }
-
-var DefaultStableswapLiquidity = sdk.NewCoins(
-	sdk.NewCoin("foo", sdk.NewInt(10000000)),
-	sdk.NewCoin("bar", sdk.NewInt(10000000)),
-	sdk.NewCoin("baz", sdk.NewInt(10000000)),
-)
-
-var ImbalancedStableswapLiquidity = sdk.NewCoins(
-	sdk.NewCoin("foo", sdk.NewInt(10_000_000_000)),
-	sdk.NewCoin("bar", sdk.NewInt(20_000_000_000)),
-	sdk.NewCoin("baz", sdk.NewInt(30_000_000_000)),
-)
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
 // consisted of given coins with equal weight.
@@ -109,36 +96,6 @@ func (s *KeeperTestHelper) PrepareMultipleBalancerPools(poolsToCreate uint16) []
 	}
 
 	return poolIds
-}
-
-func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
-	// Mint some assets to the account.
-	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
-
-	params := stableswap.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
-	}
-
-	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
-	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
-	s.NoError(err)
-	return poolId
-}
-
-func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
-	// Mint some assets to the account.
-	s.FundAcc(s.TestAccs[0], ImbalancedStableswapLiquidity)
-
-	params := stableswap.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
-	}
-
-	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")
-	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
-	s.NoError(err)
-	return poolId
 }
 
 // PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.

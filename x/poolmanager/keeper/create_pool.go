@@ -46,12 +46,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// Send pool creation fee to community pool
-	params := k.GetParams(ctx)
 	sender := msg.PoolCreator()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
-		return 0, err
-	}
 
 	// Get the next pool ID and increment the pool ID counter
 	// Create the pool with the given pool ID

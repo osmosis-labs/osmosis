@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,6 +14,39 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
+
+// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
+// The pool creation fee is used to fund the community pool.
+// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+func (k Keeper) CreatePool(goCtx context.Context, msg poolmanagertypes.CreatePoolMsg) (poolId uint64, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Send pool creation fee to community pool
+	params := k.GetParams(ctx)
+	sender := msg.PoolCreator()
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
+		return 0, err
+	}
+
+	poolId, err = k.poolManager.CreatePool(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
+		),
+	})
+
+	return poolId, nil
+}
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
 // using the specified pool.

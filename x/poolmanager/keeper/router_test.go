@@ -42,28 +42,12 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			poolId:            1,
 			expectedModule:    gammKeeperType,
 		},
-		"valid stableswap pool": {
-			preCreatePoolType: types.Stableswap,
-			poolId:            1,
-			expectedModule:    gammKeeperType,
-		},
 		"non-existent pool": {
 			preCreatePoolType: types.Balancer,
 			poolId:            2,
 			expectedModule:    gammKeeperType,
-
-			expectError: types.FailedToFindRouteError{PoolId: 2},
+			expectError:       types.FailedToFindRouteError{PoolId: 2},
 		},
-		"undefined route": {
-			preCreatePoolType: types.Balancer,
-			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
-				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
-			},
-
-			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
-		},
-		// TODO: valid concentrated liquidity test case.
 	}
 
 	for name, tc := range tests {
@@ -73,10 +57,6 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			suite.createPoolFromType(tc.preCreatePoolType)
-
-			if len(tc.routesOverwrite) > 0 {
-				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
-			}
 
 			swapModule, err := poolmanagerKeeper.GetPoolModule(suite.Ctx, tc.poolId)
 
@@ -95,12 +75,12 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 	}
 }
 
-// TestMultihopSwapExactAmountIn tests that the swaps are routed correctly.
+// TestRouteExactAmountIn tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
 // - fee reduction is applied correctly
-func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestRouteExactAmountIn() {
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
@@ -147,50 +127,6 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenIn:            sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:  sdk.NewInt(1),
 		},
-		// {
-		// 	name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, both pools 1 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
-		// 		sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
-		// 	},
-		// 	poolFee: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
-		// 	routes: []types.SwapAmountInRoute{
-		// 		{
-		// 			PoolId:        1,
-		// 			TokenOutDenom: uosmo,
-		// 		},
-		// 		{
-		// 			PoolId:        2,
-		// 			TokenOutDenom: baz,
-		// 		},
-		// 	},
-		// 	incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-		// 	tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
-		// 	tokenOutMinAmount:       sdk.NewInt(1),
-		// 	expectReducedFeeApplied: true,
-		// },
-		// {
-		// 	name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, (pool 1) 1 percent fee, (pool 2) 10 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
-		// 		sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
-		// 	},
-		// 	poolFee: []sdk.Dec{defaultPoolSwapFee, sdk.NewDecWithPrec(1, 1)},
-		// 	routes: []types.SwapAmountInRoute{
-		// 		{
-		// 			PoolId:        1,
-		// 			TokenOutDenom: uosmo,
-		// 		},
-		// 		{
-		// 			PoolId:        2,
-		// 			TokenOutDenom: baz,
-		// 		},
-		// 	},
-		// 	incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-		// 	tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
-		// 	tokenOutMinAmount:       sdk.NewInt(1),
-		// 	expectReducedFeeApplied: true,
-		// },
 		{
 			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
@@ -242,30 +178,6 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: false,
 		},
-		// {
-		// 	name: "Two routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), with a half fee applied, both pools 1 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount),
-		// 			sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
-		// 		sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount),
-		// 			sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
-		// 	},
-		// 	poolFee: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
-		// 	routes: []types.SwapAmountInRoute{
-		// 		{
-		// 			PoolId:        1,
-		// 			TokenOutDenom: uosmo,
-		// 		},
-		// 		{
-		// 			PoolId:        2,
-		// 			TokenOutDenom: baz,
-		// 		},
-		// 	},
-		// 	incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-		// 	tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
-		// 	tokenOutMinAmount:       sdk.NewInt(1),
-		// 	expectReducedFeeApplied: true,
-		// },
 		{
 			name: "Three routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
@@ -313,11 +225,6 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 
 			suite.createBalancerPoolsFromCoinsWithSwapFee(tc.poolCoins, tc.poolFee)
 
-			// if test specifies incentivized gauges, set them here
-			// if len(tc.incentivizedGauges) > 0 {
-			// 	suite.makeGaugesIncentivized(tc.incentivizedGauges)
-			// }
-
 			if tc.expectError {
 				// execute the swap
 				_, err := poolmanagerKeeper.RouteExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
@@ -335,12 +242,12 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	}
 }
 
-// TestMultihopSwapExactAmountOut tests that the swaps are routed correctly.
+// TestRouteExactAmountOut tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
 // - fee reduction is applied correctly
-func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestRouteExactAmountOut() {
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
@@ -576,9 +483,9 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 	}
 }
 
-// TestEstimateMultihopSwapExactAmountIn tests that the estimation done via `EstimateSwapExactAmountIn`
+// TestMultihopEstimateOutGivenExactAmountIn tests that the estimation done via `EstimateSwapExactAmountIn`
 // results in the same amount of token out as the actual swap.
-func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestMultihopEstimateOutGivenExactAmountIn() {
 	type param struct {
 		routes            []types.SwapAmountInRoute
 		estimateRoutes    []types.SwapAmountInRoute
@@ -648,64 +555,6 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "Proper swap (stableswap pool) - foo -> bar(pool 1) - bar(pool 2) -> baz",
-			param: param{
-				routes: []types.SwapAmountInRoute{
-					{
-						PoolId:        1,
-						TokenOutDenom: bar,
-					},
-					{
-						PoolId:        2,
-						TokenOutDenom: baz,
-					},
-				},
-				estimateRoutes: []types.SwapAmountInRoute{
-					{
-						PoolId:        3,
-						TokenOutDenom: bar,
-					},
-					{
-						PoolId:        4,
-						TokenOutDenom: baz,
-					},
-				},
-				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
-				tokenOutMinAmount: sdk.NewInt(1),
-			},
-			expectPass: true,
-			poolType:   types.Stableswap,
-		},
-		{
-			name: "Asserts panic catching in MultihopEstimateOutGivenExactAmountIn works: tokenOut more than pool reserves",
-			param: param{
-				routes: []types.SwapAmountInRoute{
-					{
-						PoolId:        1,
-						TokenOutDenom: bar,
-					},
-					{
-						PoolId:        2,
-						TokenOutDenom: baz,
-					},
-				},
-				estimateRoutes: []types.SwapAmountInRoute{
-					{
-						PoolId:        3,
-						TokenOutDenom: bar,
-					},
-					{
-						PoolId:        4,
-						TokenOutDenom: baz,
-					},
-				},
-				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(9000000000000000000)),
-				tokenOutMinAmount: sdk.NewInt(1),
-			},
-			expectPass: false,
-			poolType:   types.Stableswap,
-		},
 	}
 
 	for _, test := range tests {
@@ -756,9 +605,9 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 	}
 }
 
-// TestEstimateMultihopSwapExactAmountOut tests that the estimation done via `EstimateSwapExactAmountOut`
+// TestMultihopEstimateInGivenExactAmountOut tests that the estimation done via `EstimateSwapExactAmountOut`
 // results in the same amount of token in as the actual swap.
-func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestMultihopEstimateInGivenExactAmountOut() {
 	type param struct {
 		routes           []types.SwapAmountOutRoute
 		estimateRoutes   []types.SwapAmountOutRoute
@@ -829,64 +678,6 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			},
 			expectPass:        true,
 			reducedFeeApplied: true,
-		},
-		{
-			name: "Proper swap, stableswap pool: foo -> bar (pool 1), bar -> baz (pool 2)",
-			param: param{
-				routes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       1,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       2,
-						TokenInDenom: bar,
-					},
-				},
-				estimateRoutes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       3,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       4,
-						TokenInDenom: bar,
-					},
-				},
-				tokenInMaxAmount: sdk.NewInt(90000000),
-				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
-			},
-			expectPass: true,
-			poolType:   types.Stableswap,
-		},
-		{
-			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
-			param: param{
-				routes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       1,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       2,
-						TokenInDenom: bar,
-					},
-				},
-				estimateRoutes: []types.SwapAmountOutRoute{
-					{
-						PoolId:       3,
-						TokenInDenom: foo,
-					},
-					{
-						PoolId:       4,
-						TokenInDenom: bar,
-					},
-				},
-				tokenInMaxAmount: sdk.NewInt(90000000),
-				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(9000000000000000000)),
-			},
-			expectPass: false,
-			poolType:   types.Stableswap,
 		},
 	}
 
@@ -999,128 +790,28 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, r
 	}
 }
 
-func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
-	tests := []struct {
-		name                   string
-		poolId                 uint64
-		poolCoins              sdk.Coins
-		poolFee                sdk.Dec
-		tokenIn                sdk.Coin
-		tokenOutDenom          string
-		tokenOutMinAmount      sdk.Int
-		expectedTokenOutAmount sdk.Int
-		expectError            bool
-	}{
-		// We have:
-		//  - foo: 1000000000000
-		//  - bar: 1000000000000
-		//  - swapFee: 1%
-		//  - foo in: 100000
-		//  - bar amount out will be calculated according to the formula
-		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.99%29%2810%5E12+-+x%29+%3D+10%5E24
-		// We round down the token amount out, get the result is 98999
-		{
-			name:                   "Swap - [foo -> bar], 1 percent fee",
-			poolId:                 1,
-			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:                defaultPoolSwapFee,
-			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount:      sdk.NewInt(1),
-			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(98999),
-		},
-		{
-			name:              "Wrong pool id",
-			poolId:            2,
-			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:           defaultPoolSwapFee,
-			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom:     bar,
-			expectError:       true,
-		},
-		{
-			name:              "In denom not exist",
-			poolId:            1,
-			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:           defaultPoolSwapFee,
-			tokenIn:           sdk.NewCoin(baz, sdk.NewInt(100000)),
-			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom:     bar,
-			expectError:       true,
-		},
-		{
-			name:              "Out denom not exist",
-			poolId:            1,
-			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:           defaultPoolSwapFee,
-			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom:     baz,
-			expectError:       true,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-			poolmanagerKeeper := suite.App.PoolManagerKeeper
-
-			suite.FundAcc(suite.TestAccs[0], tc.poolCoins)
-			suite.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
-				SwapFee: tc.poolFee,
-				ExitFee: sdk.ZeroDec(),
-			})
-
-			// execute the swap
-			multihopTokenOutAmount, err := poolmanagerKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
-			if tc.expectError {
-				suite.Require().Error(err)
-			} else {
-				// compare the expected tokenOut to the actual tokenOut
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
-			}
-		})
-	}
-}
-
 // setupPools creates pools of desired type and returns their IDs
 func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
-	switch poolType {
-	case types.Stableswap:
-		// Prepare 4 pools,
-		// Two pools for calculating `MultihopSwapExactAmountOut`
-		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
-		suite.PrepareBasicStableswapPool()
-		suite.PrepareBasicStableswapPool()
+	// Prepare 4 pools,
+	// Two pools for calculating `MultihopSwapExactAmountOut`
+	// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
+	suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+		SwapFee: poolDefaultSwapFee, // 1%
+		ExitFee: sdk.NewDec(0),
+	})
+	suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+		SwapFee: poolDefaultSwapFee,
+		ExitFee: sdk.NewDec(0),
+	})
 
-		firstEstimatePoolId = suite.PrepareBasicStableswapPool()
+	firstEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+		SwapFee: poolDefaultSwapFee, // 1%
+		ExitFee: sdk.NewDec(0),
+	})
 
-		secondEstimatePoolId = suite.PrepareBasicStableswapPool()
-		return
-	default:
-		// Prepare 4 pools,
-		// Two pools for calculating `MultihopSwapExactAmountOut`
-		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
-		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-			SwapFee: poolDefaultSwapFee, // 1%
-			ExitFee: sdk.NewDec(0),
-		})
-		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-			SwapFee: poolDefaultSwapFee,
-			ExitFee: sdk.NewDec(0),
-		})
-
-		firstEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-			SwapFee: poolDefaultSwapFee, // 1%
-			ExitFee: sdk.NewDec(0),
-		})
-
-		secondEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-			SwapFee: poolDefaultSwapFee,
-			ExitFee: sdk.NewDec(0),
-		})
-		return
-	}
+	secondEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+		SwapFee: poolDefaultSwapFee,
+		ExitFee: sdk.NewDec(0),
+	})
+	return
 }
