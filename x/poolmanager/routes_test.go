@@ -113,16 +113,30 @@ func TestFindThreeHopRoute(t *testing.T) {
 	}
 }
 
-func (s *KeeperTestSuite) TestSetDenomPairRoutes() {
+func (s *KeeperTestSuite) TestGetSetDenomPairRoutes() {
+	// Set routes in state
 	routingGraph, err := s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Empty(routingGraph)
 
+	// Get routes from state and compare to expected
+	routingMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+	expectedRoutingMap := poolmanager.ConvertToMap(&routingGraph)
+	s.Require().Equal(expectedRoutingMap, routingMap)
+
 	s.PrepareAllSupportedPools()
 
+	// Set routes in state
 	routingGraph, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(routingGraph)
+
+	// Get routes from state and compare to expected
+	routingMap, err = s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+	expectedRoutingMap = poolmanager.ConvertToMap(&routingGraph)
+	s.Require().Equal(expectedRoutingMap, routingMap)
 
 	// 4 pools, 2 routes per pool
 	s.Require().Equal(8, len(routingGraph.Entries))
@@ -285,37 +299,42 @@ func TestParseRouteKey(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {
+	// Create two identical pools
 	pool1 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "bar")
 	pool2 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "bar")
 
+	// Pool 1 now has more liquidity
 	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000))))
 
+	// Set routes and get it from state
 	_, err := s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
-
 	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
 	s.Require().NoError(err)
 
+	// Pool 1 should be the route with most liquidity
 	route, err := s.App.PoolManagerKeeper.GetDirectOSMORouteWithMostLiquidity(s.Ctx, "bar", routeMap)
 	s.Require().NoError(err)
 	s.Require().Equal(pool1.GetId(), route)
 
+	// Pool 2 now has more liquidity
 	s.CreateFullRangePosition(pool2, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000)), sdk.NewCoin("bar", sdk.NewInt(20000000))))
 
+	// Set routes and get it from state
 	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
-
 	routeMap, err = s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
 	s.Require().NoError(err)
 
+	// Pool 2 should be the route with most liquidity
 	route, err = s.App.PoolManagerKeeper.GetDirectOSMORouteWithMostLiquidity(s.Ctx, "bar", routeMap)
 	s.Require().NoError(err)
 	s.Require().Equal(pool2.GetId(), route)
 }
 
 func (s *KeeperTestSuite) TestInputAmountToOSMO() {
+	// Set up a pool paired with uosmo at 1:1 ratio
 	pool1 := s.PrepareConcentratedPoolWithCoins("uosmo", "bar")
-
 	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000))))
 
 	// Routes not set, should return 0 with no error
@@ -323,9 +342,9 @@ func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.ZeroInt(), osmoAmt)
 
+	// Set routes and get it from state
 	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
-
 	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
 	s.Require().NoError(err)
 
@@ -334,13 +353,13 @@ func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), osmoAmt)
 
+	// Set up a pool paired with uosmo at 2:1 ratio
 	pool2 := s.PrepareConcentratedPoolWithCoins("uosmo", "foo")
-
 	s.CreateFullRangePosition(pool2, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000)), sdk.NewCoin("foo", sdk.NewInt(10000000))))
 
+	// Set routes and get it from state
 	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
-
 	routeMap, err = s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
 	s.Require().NoError(err)
 
@@ -353,29 +372,30 @@ func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 func (s *KeeperTestSuite) TestGetPoolLiquidityOfDenom() {
 	poolInfo := s.PrepareAllSupportedPools()
 
+	// Balancer
 	poolLiq, err := s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.BalancerPoolID, "bar")
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(5000000), poolLiq)
 
+	// StableSwap
 	poolLiq, err = s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.StableSwapPoolID, "bar")
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
 
+	// Cosmwasm
 	token := sdk.NewCoins(sdk.NewCoin("axlusdc", sdk.NewInt(10000000)))
 	s.FundAcc(s.TestAccs[0], token)
 	s.JoinTransmuterPool(s.TestAccs[0], poolInfo.CosmWasmPoolID, token)
-
 	poolLiq, err = s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.CosmWasmPoolID, "axlusdc")
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
 
+	// Concentrated
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolInfo.ConcentratedPoolID)
 	s.Require().NoError(err)
 	clPoolExtension, ok := clPool.(cltypes.ConcentratedPoolExtension)
 	s.Require().True(ok)
-
 	s.CreateFullRangePosition(clPoolExtension, sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000)), sdk.NewCoin("eth", sdk.NewInt(10000000))))
-
 	poolLiq, err = s.App.PoolManagerKeeper.GetPoolLiquidityOfDenom(s.Ctx, poolInfo.ConcentratedPoolID, "eth")
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
