@@ -96,3 +96,5 @@ queries:
   ListPoolsByDenom:
     proto_wrapper:
       query_func: "k.ListPoolsByDenom"
+    cli:
+      cmd: "ListPoolsByDenom"
