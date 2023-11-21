@@ -88,7 +88,8 @@ jobs:
     needs: compare_versions
     runs-on: self-hosted
     steps:
-      -name: Checkout branch
+      - 
+        name: Checkout branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -116,7 +117,8 @@ jobs:
 
           # Copy genesis to config folder
           cp /mnt/data/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
-      -name: ⏬ Download last pre-epoch snapshot
+      -
+        name: ⏬ Download last pre-epoch snapshot
         run: |
           REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | sed 's/\.x//')
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
