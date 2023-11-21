@@ -64,3 +64,21 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})
 	suite.Require().True(isArb)
 }
+
+// Tests that the arb filter is disabled on non affiliate swap msgs.
+func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_NonAffiliateSwapMsg() {
+	jsonData := `{
+		"arbitrary": {
+			"key": {}
+		}
+	}`
+	executeMsg := &wasmtypes.MsgExecuteContract{
+		Contract: "osmo1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
+		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
+		Msg:      []byte(jsonData),
+	}
+
+	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})
+	suite.Require().False(isArb)
+}
