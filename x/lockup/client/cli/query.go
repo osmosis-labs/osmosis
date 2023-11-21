@@ -42,7 +42,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
 		GetCmdOutputLocksJson(),
-		GetCmdSyntheticLockupsByLockupID(),
 		GetCmdAccountLockedDuration(),
 		GetCmdNextLockID(),
 		osmocli.GetParams[*types.QueryParamsRequest](
@@ -191,14 +190,6 @@ func GetCmdNextLockID() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.NextLockIDRequest](
 		"next-lock-id",
 		"Query next lock id to be created",
-		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
-}
-
-// GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
-func GetCmdSyntheticLockupsByLockupID() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.SyntheticLockupsByLockupIDRequest](
-		"synthetic-lockups-by-lock-id <id>",
-		"Query synthetic lockups by lockup id",
 		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
