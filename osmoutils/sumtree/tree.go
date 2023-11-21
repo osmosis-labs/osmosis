@@ -228,7 +228,7 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 		case 1:
 			right = leaf.Leaf.Accumulation
 		}
-		return
+		return left, exact, right
 	}
 
 	node := ptr.node()

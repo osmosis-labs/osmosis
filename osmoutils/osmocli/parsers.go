@@ -246,9 +246,11 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		}
 		fVal.Set(reflect.ValueOf(v))
 		return nil
+	default:
+		fmt.Println(fType.Type.Kind().String())
+		return fmt.Errorf("field type not recognized. Got type %v", fType)
 	}
-	fmt.Println(fType.Type.Kind().String())
-	return fmt.Errorf("field type not recognized. Got type %v", fType)
+	return nil
 }
 
 func ParseUint(arg string, fieldName string) (uint64, error) {

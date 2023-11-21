@@ -314,7 +314,7 @@ func (p *Pool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	// and amount is > 0
 	err := coins.Validate()
 	if err != nil {
-		return fmt.Errorf("provided coins are invalid, %v", err)
+		return fmt.Errorf("provided coins are invalid, %w", err)
 	}
 
 	for _, coin := range coins {
