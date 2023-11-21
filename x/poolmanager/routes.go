@@ -340,7 +340,6 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 		if err != nil {
 			continue
 		}
-		fmt.Println("amtOut", amtOut)
 
 		// Update maxAmtOut and maxKey if the current amtOut is greater
 		if amtOut.GT(maxAmtOut) {
