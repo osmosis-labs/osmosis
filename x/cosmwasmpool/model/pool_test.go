@@ -57,3 +57,10 @@ func (s *CosmWasmPoolSuite) TestSpotPrice() {
 
 	s.Require().Equal(expectedSpotPrice, actualSpotPrice)
 }
+
+// TestGetPoolDenoms validates that pool denoms are returned correctly.
+func (s *CosmWasmPoolSuite) TestGetPoolDenoms() {
+	cwPool := s.PrepareCosmWasmPool()
+	poolDenoms := cwPool.GetPoolDenoms(s.Ctx)
+	s.Require().Equal([]string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}, poolDenoms)
+}
