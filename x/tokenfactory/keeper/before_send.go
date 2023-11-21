@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 )
 
 func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress string) error {
@@ -45,21 +45,6 @@ func (k Keeper) GetBeforeSendHook(ctx sdk.Context, denom string) string {
 	}
 
 	return string(bz)
-}
-
-func CWCoinsFromSDKCoins(in sdk.Coins) wasmvmtypes.Coins {
-	var cwCoins wasmvmtypes.Coins
-	for _, coin := range in {
-		cwCoins = append(cwCoins, CWCoinFromSDKCoin(coin))
-	}
-	return cwCoins
-}
-
-func CWCoinFromSDKCoin(in sdk.Coin) wasmvmtypes.Coin {
-	return wasmvmtypes.Coin{
-		Denom:  in.GetDenom(),
-		Amount: in.Amount.String(),
-	}
 }
 
 // Hooks wrapper struct for bank keeper
@@ -114,7 +99,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 					BlockBeforeSend: types.BlockBeforeSendMsg{
 						From:   from.String(),
 						To:     to.String(),
-						Amount: CWCoinFromSDKCoin(coin),
+						Amount: osmoutils.CWCoinFromSDKCoin(coin),
 					},
 				}
 				msgBz, err = json.Marshal(msg)
@@ -123,7 +108,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 					TrackBeforeSend: types.TrackBeforeSendMsg{
 						From:   from.String(),
 						To:     to.String(),
-						Amount: CWCoinFromSDKCoin(coin),
+						Amount: osmoutils.CWCoinFromSDKCoin(coin),
 					},
 				}
 				msgBz, err = json.Marshal(msg)

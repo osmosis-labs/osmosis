@@ -167,6 +167,12 @@ func CreateUpgradeHandler(
 		// Set CL param:
 		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, concentratedliquiditytypes.KeyHookGasLimit, concentratedliquiditytypes.DefaultContractHookGasLimit)
 
+		// Add protorev to the taker fee exclusion list:
+		protorevModuleAccount := keepers.AccountKeeper.GetModuleAccount(ctx, protorevtypes.ModuleName)
+		poolManagerParams := keepers.PoolManagerKeeper.GetParams(ctx)
+		poolManagerParams.TakerFeeParams.ReducedFeeWhitelist = append(poolManagerParams.TakerFeeParams.ReducedFeeWhitelist, protorevModuleAccount.GetAddress().String())
+		keepers.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
+
 		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
 		// that generates protocol rev.
 		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
