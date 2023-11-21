@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,19 +50,4 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
 	}
 	return sum
-}
-
-// quick fix for getting native denom from synthetic denom.
-func NativeDenom(denom string) string {
-	if strings.Contains(denom, "/superbonding") {
-		return strings.Split(denom, "/superbonding")[0]
-	}
-	if strings.Contains(denom, "/superunbonding") {
-		return strings.Split(denom, "/superunbonding")[0]
-	}
-	return denom
-}
-
-func IsSyntheticDenom(denom string) bool {
-	return NativeDenom(denom) != denom
 }

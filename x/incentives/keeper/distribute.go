@@ -83,7 +83,7 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
-		denom := lockuptypes.NativeDenom(distrTo.Denom)
+		denom := distrTo.Denom
 		if distrTo.Duration > minDuration {
 			return k.lk.GetLocksLongerThanDurationDenom(ctx, denom, minDuration)
 		}
@@ -226,45 +226,6 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 	return nil
 }
 
-// distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
-// the distrInfo struct. It also updates the gauge for the distribution.
-// locks is expected to be the correct set of lock recipients for this gauge.
-func (k Keeper) distributeSyntheticInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
-) (sdk.Coins, error) {
-	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
-
-	// map from lockID to present index in resultant list
-	// to be state compatible with what we had before, we iterate over locks, to get qualified locks
-	// to be in the same order as what is present in locks.
-	// in a future release, we can just use qualified locks directly.
-	type lockIndexPair struct {
-		lock  lockuptypes.PeriodLock
-		index int
-	}
-	qualifiedLocksMap := make(map[uint64]lockIndexPair, len(qualifiedLocks))
-	for _, lock := range qualifiedLocks {
-		qualifiedLocksMap[lock.ID] = lockIndexPair{lock, -1}
-	}
-	curIndex := 0
-	for _, lock := range locks {
-		if v, ok := qualifiedLocksMap[lock.ID]; ok {
-			qualifiedLocksMap[lock.ID] = lockIndexPair{v.lock, curIndex}
-			curIndex += 1
-		}
-	}
-
-	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
-	for _, v := range qualifiedLocksMap {
-		if v.index < 0 {
-			continue
-		}
-		sortedAndTrimmedQualifiedLocks[v.index] = v.lock
-	}
-
-	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
-}
-
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // Locks is expected to be the correct set of lock recipients for this gauge.
@@ -272,7 +233,7 @@ func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+	denom := gauge.DistributeTo.Denom
 	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
 	if lockSum.IsZero() {
@@ -332,9 +293,8 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	if gauge.Coins.Empty() {
 		return []lockuptypes.PeriodLock{}
 	}
-	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 	// All gauges have a precondition of being ByDuration.
-	distributeBaseDenom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+	distributeBaseDenom := gauge.DistributeTo.Denom
 	if _, ok := cache[distributeBaseDenom]; !ok {
 		cache[distributeBaseDenom] = k.getLocksToDistributionWithMaxDuration(
 			ctx, gauge.DistributeTo, time.Millisecond)
@@ -353,14 +313,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
 		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
-		// send based on synthetic lockup coins if it's distributing to synthetic lockups
-		var gaugeDistributedCoins sdk.Coins
-		var err error
-		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
-			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
-		} else {
-			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
-		}
+		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		if err != nil {
 			return nil, err
 		}

@@ -22,11 +22,6 @@ type BankI interface {
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 }
 
-// CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
-type CommunityPoolI interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
 // TODO: godoc
 type SwapI interface {
 	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error

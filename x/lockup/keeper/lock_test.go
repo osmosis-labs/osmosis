@@ -44,70 +44,6 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
-func (suite *KeeperTestSuite) TestBeginForceUnlock() {
-	// coins to lock
-	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-
-	testCases := []struct {
-		name             string
-		coins            sdk.Coins
-		unlockCoins      sdk.Coins
-		expectSameLockID bool
-	}{
-		{
-			name:             "new lock id is returned if the lock was split",
-			coins:            coins,
-			unlockCoins:      sdk.NewCoins(sdk.NewInt64Coin("stake", 1)),
-			expectSameLockID: false,
-		},
-		{
-			name:             "same lock id is returned if the lock was not split",
-			coins:            coins,
-			unlockCoins:      sdk.Coins{},
-			expectSameLockID: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-
-			// initial check
-			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Len(locks, 0)
-
-			// lock coins
-			addr1 := sdk.AccAddress([]byte("addr1---------------"))
-			suite.LockTokens(addr1, tc.coins, time.Second)
-
-			// check locks
-			locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().True(len(locks) > 0)
-
-			for _, lock := range locks {
-				suite.Require().Equal(lock.EndTime, time.Time{})
-				suite.Require().Equal(lock.IsUnlocking(), false)
-
-				lockID, err := suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, tc.unlockCoins)
-				suite.Require().NoError(err)
-
-				if tc.expectSameLockID {
-					suite.Require().Equal(lockID, lock.ID)
-				} else {
-					suite.Require().Equal(lockID, lock.ID+1)
-				}
-
-				// new or updated lock
-				newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
-				suite.Require().NoError(err)
-				suite.Require().True(newLock.IsUnlocking())
-			}
-		})
-	}
-}
-
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.SetupTest()
 
@@ -742,46 +678,6 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 		Duration: time.Second * 4,
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
-}
-
-func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
-	suite.SetupTest()
-
-	// initial check
-	locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-
-	// lock coins
-	addr := sdk.AccAddress([]byte("addr1---------------"))
-
-	// 1 * time.Second: 10
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr, coins, time.Second)
-
-	// check accumulations
-	acc := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-		Denom:    "stake",
-		Duration: time.Second,
-	})
-	suite.Require().Equal(int64(10), acc.Int64())
-
-	suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 1)})
-	acc = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-		Denom:    "stake",
-		Duration: time.Second,
-	})
-	suite.Require().Equal(int64(9), acc.Int64())
-
-	lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, 1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(lock.Coins.String(), "9stake")
-
-	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 11)})
-	suite.Require().Error(err)
-
-	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake1", 1)})
-	suite.Require().Error(err)
 }
 
 func (suite *KeeperTestSuite) TestEditLockup() {

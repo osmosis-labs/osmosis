@@ -13,20 +13,19 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	gammKeeper          types.SwapI
-	bankKeeper          types.BankI
-	accountKeeper       types.AccountI
-	communityPoolKeeper types.CommunityPoolI
+	gammKeeper    types.SwapI
+	bankKeeper    types.BankI
+	accountKeeper types.AccountI
 
 	routes map[types.PoolType]types.SwapI
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, gammKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, gammKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI) *Keeper {
 	routes := map[types.PoolType]types.SwapI{
 		types.Balancer: gammKeeper,
 	}
 
-	return &Keeper{storeKey: storeKey, gammKeeper: gammKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}
+	return &Keeper{storeKey: storeKey, gammKeeper: gammKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, routes: routes}
 }
 
 // InitGenesis initializes the poolmanager module's state from a provided genesis

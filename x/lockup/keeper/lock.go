@@ -156,10 +156,7 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 }
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
-// Returns an error if the lock has a synthetic lock.
 func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
-	// prohibit BeginUnlock if synthetic locks are referring to this
-	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return 0, err
@@ -167,24 +164,6 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (ui
 
 	unlockingLock, err := k.beginUnlock(ctx, *lock, coins)
 	return unlockingLock, err
-}
-
-// BeginForceUnlock begins force unlock of the given lock.
-// This method should be called by the superfluid module ONLY, as it does not check whether
-// the lock has a synthetic lock or not before unlocking.
-// Returns lock id, new lock id if the lock was split, else same lock id.
-func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
-	lock, err := k.GetLockByID(ctx, lockID)
-	if err != nil {
-		return 0, err
-	}
-
-	lockID, err = k.beginUnlock(ctx, *lock, coins)
-	if err != nil {
-		return 0, err
-	}
-
-	return lockID, nil
 }
 
 // beginUnlock unlocks specified tokens from the given lock. Existing lock refs
@@ -510,54 +489,8 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	return nil
 }
 
-// SlashTokensFromLockByID sends slashed tokens directly from the lock to the community pool.
-// Called by the superfluid module ONLY.
-func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
-	lock, err := k.GetLockByID(ctx, lockID)
-	if err != nil {
-		return nil, err
-	}
-
-	modAddr := k.ak.GetModuleAddress(types.ModuleName)
-	err = k.ck.FundCommunityPool(ctx, coins, modAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.removeTokensFromLock(ctx, lock, coins)
-	if err != nil {
-		return nil, err
-	}
-
-	if k.hooks == nil {
-		return lock, nil
-	}
-
-	k.hooks.OnTokenSlashed(ctx, lock.ID, coins)
-	return lock, nil
-}
-
 func (k Keeper) accumulationStore(ctx sdk.Context, denom string) sumtree.Tree {
 	return sumtree.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
-}
-
-// removeTokensFromLock is called by lockup slash function.
-// Called by the superfluid module ONLY.
-func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
-	lock.Coins = lock.Coins.Sub(coins...)
-
-	err := k.setLock(ctx, *lock)
-	if err != nil {
-		return err
-	}
-
-	// modifications to accumulation store
-	for _, coin := range coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	}
-
-	return nil
 }
 
 // setLock is a utility to store lock object into the store.
