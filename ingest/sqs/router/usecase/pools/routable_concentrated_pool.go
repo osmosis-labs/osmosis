@@ -148,9 +148,6 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 		amountRemainingIn = amountRemainingIn.SubMut(amountInConsumed).SubMut(spreadRewardChargeTotal)
 		amountOutTotal = amountOutTotal.AddMut(amountOutComputed)
 
-		// Logs
-		r.emitSwapDebugLogs(currentSqrtPrice, sqrtPriceNext, currentBucket.LiquidityAmount, amountInConsumed, amountOutComputed, spreadRewardChargeTotal)
-
 		// Update current sqrt price
 		currentSqrtPrice = sqrtPriceNext
 	}
@@ -179,14 +176,4 @@ func (r *routableConcentratedPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (
 // SetTokenOutDenom implements domain.RoutablePool.
 func (r *routableConcentratedPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 	r.TokenOutDenom = tokenOutDenom
-}
-
-// TODO: switch to proper logging
-func (r *routableConcentratedPoolImpl) emitSwapDebugLogs(currentSqrtPrice, reachedPrice osmomath.BigDec, liquidity osmomath.Dec, amountIn, amountOut, spreadCharge osmomath.Dec) {
-	fmt.Println("start sqrt price", currentSqrtPrice)
-	fmt.Println("reached sqrt price", reachedPrice)
-	fmt.Println("liquidity", liquidity)
-	fmt.Println("amountIn", amountIn)
-	fmt.Println("amountOut", amountOut)
-	fmt.Println("spreadRewardChargeTotal", spreadCharge)
 }

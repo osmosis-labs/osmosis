@@ -18,6 +18,16 @@ type RouterTestSuite struct {
 	routertesting.RouterTestHelper
 }
 
+var defaultRouterConfig = domain.RouterConfig{
+	PreferredPoolIDs:          []uint64{},
+	MaxRoutes:                 4,
+	MaxPoolsPerRoute:          4,
+	MaxSplitIterations:        10,
+	MinOSMOLiquidity:          20000,
+	RouteUpdateHeightInterval: 0,
+	RouteCacheEnabled:         false,
+}
+
 func TestRouterTestSuite(t *testing.T) {
 	suite.Run(t, new(RouterTestSuite))
 }
@@ -26,9 +36,6 @@ const dummyTotalValueLockedErrorStr = "total value locked error string"
 
 var (
 	// Concentrated liquidity constants
-	ETH    = routertesting.ETH
-	USDC   = routertesting.USDC
-	USDT   = "usdt"
 	Denom0 = ETH
 	Denom1 = USDC
 
@@ -228,13 +235,7 @@ func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
 	return routertesting.WithRoutePools(r, pools)
 }
 
-func (s *RouterTestSuite) setupMainnetRouter() *usecase.Router {
-	pools, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
-	s.Require().NoError(err)
-
-	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
-	s.Require().NoError(err)
-
+func (s *RouterTestSuite) setupDefaultMainnetRouter() *usecase.Router {
 	routerConfig := domain.RouterConfig{
 		PreferredPoolIDs:          []uint64{},
 		MaxRoutes:                 4,
@@ -245,9 +246,19 @@ func (s *RouterTestSuite) setupMainnetRouter() *usecase.Router {
 		RouteCacheEnabled:         false,
 	}
 
+	return s.setupMainnetRouter(routerConfig)
+}
+
+func (s *RouterTestSuite) setupMainnetRouter(config domain.RouterConfig) *usecase.Router {
+	pools, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
+	s.Require().NoError(err)
+
+	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
+	s.Require().NoError(err)
+
 	logger, err := log.NewLogger(false, "", "info")
 	s.Require().NoError(err)
-	router := usecase.NewRouter(routerConfig.PreferredPoolIDs, takerFeeMap, routerConfig.MaxPoolsPerRoute, routerConfig.MaxRoutes, routerConfig.MaxSplitIterations, routerConfig.MinOSMOLiquidity, logger)
+	router := usecase.NewRouter(config.PreferredPoolIDs, takerFeeMap, config.MaxPoolsPerRoute, config.MaxRoutes, config.MaxSplitIterations, config.MinOSMOLiquidity, logger)
 	router = routerusecase.WithSortedPools(router, pools)
 
 	return router
