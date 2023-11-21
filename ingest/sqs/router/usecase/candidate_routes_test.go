@@ -12,7 +12,7 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_OSMOATOM() {
 
 	router := s.setupMainnetRouter(config)
 
-	routes, err := router.GetCandidateRoutesBFS(UOSMO, ATOM)
+	routes, err := router.GetCandidateRoutes(UOSMO, ATOM)
 	s.Require().NoError(err)
 
 	s.Require().Equal(10, len(routes))
@@ -34,11 +34,11 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_OSMOstOSMO() {
 
 	router := s.setupMainnetRouter(config)
 
-	routesUOSMOIn, err := router.GetCandidateRoutesBFS(UOSMO, stOSMO)
+	routesUOSMOIn, err := router.GetCandidateRoutes(UOSMO, stOSMO)
 	s.Require().NoError(err)
 
 	// Invert
-	routesstOSMOIn, err := router.GetCandidateRoutesBFS(stOSMO, UOSMO)
+	routesstOSMOIn, err := router.GetCandidateRoutes(stOSMO, UOSMO)
 	s.Require().NoError(err)
 
 	s.Require().Equal(len(routesUOSMOIn), len(routesstOSMOIn))
@@ -83,11 +83,11 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_Top10VolumePairs() {
 			tokenI := top10ByVolumeDenoms[i]
 			tokenJ := top10ByVolumeDenoms[j]
 
-			routes, err := router.GetCandidateRoutesBFS(tokenI, tokenJ)
+			routes, err := router.GetCandidateRoutes(tokenI, tokenJ)
 			s.Require().NoError(err)
 			s.Require().Greater(len(routes), 0, "tokenI: %s, tokenJ: %s", tokenI, tokenJ)
 
-			routes, err = router.GetCandidateRoutesBFS(tokenJ, tokenI)
+			routes, err = router.GetCandidateRoutes(tokenJ, tokenI)
 			s.Require().NoError(err)
 			s.Require().Greater(len(routes), 0, "tokenJ: %s, tokenI: %s", tokenJ, tokenI)
 		}
