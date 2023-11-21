@@ -185,7 +185,7 @@ func isAffiliateSwapMsg(msg []byte) bool {
 		return false
 	}
 
-	if routes, ok := swap["routes"].([]map[string]interface{}); !ok || len(routes) == 0 {
+	if routes, ok := swap["routes"].([]interface{}); !ok || len(routes) == 0 {
 		return false
 	}
 
