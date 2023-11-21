@@ -406,7 +406,7 @@ func (m *RoutingGraphMap) GetGraph() map[string]*InnerMap {
 }
 
 // The following are used to serialize and deserialize the routing graph into
-// KVStore. If this is not used, the store will not be deterministic.
+// KVStore.
 type InnerMapEntry struct {
 	Key   string  `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value *Routes `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`

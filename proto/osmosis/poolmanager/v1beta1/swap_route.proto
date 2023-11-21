@@ -56,7 +56,7 @@ message InnerMap { map<string, Routes> inner_map = 1; }
 message RoutingGraphMap { map<string, InnerMap> graph = 1; }
 
 // The following are used to serialize and deserialize the routing graph into
-// KVStore. If this is not used, the store will not be deterministic.
+// KVStore.
 message InnerMapEntry {
   string key = 1;
   Routes value = 2;

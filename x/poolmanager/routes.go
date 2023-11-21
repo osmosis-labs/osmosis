@@ -129,8 +129,18 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 }
 
 // GetDenomPairRoute returns the route with the lowest slippage between an input denom and an output denom
+// The method starts by finding all direct routes, two hop, and three hop routes.
+// It then calculates the liquidity of each route and selects the route with the highest liquidity for each hop count.
+// In other words, at a max, there will be one direct route, one two hop route, and one three hop route.
+// The method then simulates a swap against each route and selects the route with the highest swap amount out.
 func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDenom string) ([]types.SwapAmountInRoute, error) {
 	inputDenom := inputCoin.Denom
+
+	// Ensure the caches are restored when the function exits
+	defer func() {
+		directRouteCache = make(map[string]uint64)
+		spotPriceCache = make(map[string]osmomath.BigDec)
+	}()
 
 	// Retrieve the route map from state
 	routeMap, err := k.GetRouteMap(ctx)

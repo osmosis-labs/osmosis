@@ -219,7 +219,7 @@ func GetCmdDenomPairRoutes() (
 ) {
 	return &osmocli.QueryDescriptor{
 		Use:   "denom-pair-routes",
-		Short: "Query a basic route to get from denom A to denom B",
+		Short: "Query a basic route to get from the token in amount to the output denom",
 		Long: `{{.Short}}
 		{{.CommandPrefix}} denom-pair-routes 100uosmo uion`,
 		QueryFnName: "DenomPairRoutes",
