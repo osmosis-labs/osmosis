@@ -101,7 +101,7 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 		result = append(result, &route.RouteImpl{Pools: currentRoute})
 	}
 
-	return result, nil
+	return r.validateAndFilterRoutes(result, tokenInDenom)
 }
 
 // Pool represents a pool in the decentralized exchange.

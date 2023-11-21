@@ -15,7 +15,7 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_OSMOATOM() {
 	routes, err := router.GetCandidateRoutes(UOSMO, ATOM)
 	s.Require().NoError(err)
 
-	s.Require().Equal(10, len(routes))
+	s.Require().Equal(8, len(routes))
 
 	// https://app.osmosis.zone/pool/1135
 	s.validateExpectedPoolIDOneHopRoute(routes[0], 1135)

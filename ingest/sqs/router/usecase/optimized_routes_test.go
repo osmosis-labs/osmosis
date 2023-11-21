@@ -29,6 +29,7 @@ const (
 	WBTC          = "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F"
 	ETH           = "ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5"
 	AKT           = "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4"
+	UMEE          = "ibc/67795E528DF67C5606FC20F824EA39A6EF55BA133F4DC79C90A8C47A0901E17C"
 )
 
 // TODO: copy exists in candidate_routes_test.go - share & reuse
@@ -423,4 +424,32 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			s.Require().Equal(len(tc.routes), len(filteredRoutes))
 		})
 	}
+}
+
+// Validates that USDT for UMEE quote does not cause an error.
+// This pair originally caused an error due to the lack of filtering that was
+// added later.
+func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE() {
+	config := defaultRouterConfig
+	config.MaxPoolsPerRoute = 5
+	config.MaxRoutes = 10
+
+	var (
+		amountIn = osmomath.NewInt(1000000000)
+	)
+
+	router := s.setupMainnetRouter(config)
+
+	routes, err := router.GetCandidateRoutes(USDT, UMEE)
+	s.Require().NoError(err)
+
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), UMEE, routes)
+
+	// We only validate that error does not occur without actually validating the quote.
+	s.Require().NoError(err)
+
+	// Expecting 2 routes based on the mainnet state
+	// 1: 1205
+	// 2: 1110 -> 1077
+	s.Require().Len(quote.GetRoute(), 2)
 }
