@@ -18,7 +18,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 
 		// If blocktime < initial epoch start time, return
 		if ctx.BlockTime().Before(epochInfo.StartTime) {
-			return
+			return false
 		}
 		// if epoch counting hasn't started, signal we need to start.
 		shouldInitialEpochStart := !epochInfo.EpochCountingStarted

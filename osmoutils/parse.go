@@ -10,9 +10,9 @@ import (
 )
 
 type Proposal struct {
-	Title       string
-	Description string
-	Deposit     string
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Deposit     string `json:"deposit"`
 }
 
 var ProposalFlags = []string{
