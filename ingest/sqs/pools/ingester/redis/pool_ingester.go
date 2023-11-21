@@ -210,7 +210,7 @@ func (pi *poolIngester) updateRoutes(ctx context.Context, tx domain.Tx, pools []
 		router = routerusecase.WithSortedPools(router, pools)
 
 		go func(denomPair domain.DenomPair) {
-			candidateRoutes, err := router.GetCandidateRoutesBFS(denomPair.Denom0, denomPair.Denom1)
+			candidateRoutes, err := router.GetCandidateRoutes(denomPair.Denom0, denomPair.Denom1)
 			if err != nil {
 				pi.logger.Error("error getting routes", zap.Error(err))
 				return

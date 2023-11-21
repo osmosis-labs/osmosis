@@ -136,7 +136,7 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 		// TODO: swithch to debug
 		r.logger.Info("calculating routes")
 
-		routes, err = router.GetCandidateRoutesBFS(tokenInDenom, tokenOutDenom)
+		routes, err = router.GetCandidateRoutes(tokenInDenom, tokenOutDenom)
 		if err != nil {
 			return nil, err
 		}

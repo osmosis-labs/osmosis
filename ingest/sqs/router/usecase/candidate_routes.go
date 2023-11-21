@@ -6,8 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
-// GetCandidateRoutesBFS returns candidate routes from tokenInDenom to tokenOutDenom using BFS.
-func (r Router) GetCandidateRoutesBFS(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
+// GetCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using BFS.
+func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
 	var routes [][]domain.RoutablePool
 	var visited = make(map[uint64]bool)
 
