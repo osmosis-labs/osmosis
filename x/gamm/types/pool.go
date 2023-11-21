@@ -108,7 +108,6 @@ type WeightedPoolExtension interface {
 	GetTokenWeight(denom string) (sdk.Int, error)
 }
 
-// TODO: move to poolmanager
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
 	return address.Module(ModuleName, key)

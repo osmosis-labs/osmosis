@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,21 +34,6 @@ func (k Keeper) SetLastLockID(ctx sdk.Context, ID uint64) {
 // lockStoreKey returns action store key from ID.
 func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
-}
-
-// syntheticLockStoreKey returns synthetic store key from ID and synth denom.
-func syntheticLockStoreKey(lockID uint64, synthDenom string) []byte {
-	return combineKeys(combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)), []byte(synthDenom))
-}
-
-// syntheticLockTimeStoreKey returns synthetic store key from ID, synth denom and time.
-func syntheticLockTimeStoreKey(lockID uint64, synthDenom string, endTime time.Time) []byte {
-	return combineKeys(
-		combineKeys(
-			combineKeys(types.KeyPrefixSyntheticLockTimestamp, getTimeKey(endTime)),
-			sdk.Uint64ToBigEndian(lockID),
-		),
-		[]byte(synthDenom))
 }
 
 // getLockRefs get lock IDs specified on the prefix and timestamp key.

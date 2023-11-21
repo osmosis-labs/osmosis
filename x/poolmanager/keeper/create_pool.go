@@ -14,7 +14,6 @@ import (
 )
 
 func (k Keeper) validateCreatedPool(
-	ctx sdk.Context,
 	poolId uint64,
 	pool types.PoolI,
 ) error {
@@ -58,7 +57,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
-	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
+	if err := k.validateCreatedPool(poolId, pool); err != nil {
 		return 0, err
 	}
 
