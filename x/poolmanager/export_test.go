@@ -52,3 +52,19 @@ func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }
+
+func FindDirectRoute(g types.RoutingGraphMap, start, end string) []*types.Route {
+	return findDirectRoute(g, start, end)
+}
+
+func FindTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
+	return findTwoHopRoute(g, start, end)
+}
+
+func FindThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
+	return findThreeHopRoute(g, start, end)
+}
+
+func ParseRouteKey(routeKey string) ([]types.Route, error) {
+	return parseRouteKey(routeKey)
+}

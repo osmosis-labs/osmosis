@@ -1,6 +1,7 @@
 package poolmanager_test
 
 import (
+	"reflect"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -121,11 +122,12 @@ func (s *KeeperTestSuite) TestSetDenomPairRoutes() {
 	routingGraph, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(routingGraph)
+
+	// 4 pools, 2 routes per pool
+	s.Require().Equal(8, len(routingGraph.Entries))
 }
 
-// TestGetPoolModule tests that the correct pool module is returned for a given pool id.
-// Additionally, validates that the expected errors are produced when expected.
-func (s *KeeperTestSuite) TestDenomPairRoute() {
+func (s *KeeperTestSuite) TestGetDenomPairRoute() {
 	tests := map[string]struct {
 		setup         func(ethStake, barStake, btcBar, btcEth, btcStake cltypes.ConcentratedPoolExtension)
 		tokenIn       sdk.Coin
@@ -245,5 +247,23 @@ func (s *KeeperTestSuite) TestDenomPairRoute() {
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedRoute, route)
 		})
+	}
+}
+
+func TestParseRouteKey(t *testing.T) {
+	routeKey := `[pool_id:1 token:"uion" pool_id:2 token:"ibc/123ABC" pool_id:3 token:"uosmo"]`
+	expected := []types.Route{
+		{PoolId: 1, Token: "uion"},
+		{PoolId: 2, Token: "ibc/123ABC"},
+		{PoolId: 3, Token: "uosmo"},
+	}
+
+	routes, err := poolmanager.ParseRouteKey(routeKey)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(routes, expected) {
+		t.Errorf("Expected %+v, got %+v", expected, routes)
 	}
 }
