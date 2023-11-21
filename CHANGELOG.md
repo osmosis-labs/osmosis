@@ -40,6 +40,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v20.4.0
+
+### Bug Fixes
+
+* [#6906](https://github.com/osmosis-labs/osmosis/pull/6906) Fix issue with the affiliate swap contract mempool check.
+
+### Misc Improvements
+
+* [#6863](https://github.com/osmosis-labs/osmosis/pull/6863) GetPoolDenoms method on PoolI interface in poolmanager
+* [#6900](https://github.com/osmosis-labs/osmosis/pull/6900) Update EIP-1559 constants to smoothen resets.
+
+## v20.3.0
+
+### Configuration Changes
+
+* [#6897](https://github.com/osmosis-labs/osmosis/pull/6897) Enable 1559 mempool by default.
+
 ## v20.2.2
 
 ### Features
@@ -48,13 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
-* [#6898](https://github.com/osmosis-labs/osmosis/pull/6898) Enable 1559 mempool by default.
 
 ### API Breaks
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
 * [#6863](https://github.com/osmosis-labs/osmosis/pull/6863) GetPoolDenoms method on PoolI interface in poolmanager
-
 
 ## v20.0.0
 
