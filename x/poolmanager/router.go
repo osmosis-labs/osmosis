@@ -18,8 +18,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
-// 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
-var intMaxValue = osmomath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+var (
+	// 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
+	intMaxValue = osmomath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+	// lessPoolIFunc is used for sorting pools by poolID
+	lessPoolIFunc = func(i, j types.PoolI) bool {
+		return i.GetId() < j.GetId()
+	}
+)
 
 // RouteExactAmountIn processes a swap along the given route using the swap function
 // corresponding to poolID's pool type. It takes in the input denom and amount for
@@ -526,10 +532,6 @@ func (k Keeper) GetPool(
 func (k Keeper) AllPools(
 	ctx sdk.Context,
 ) ([]types.PoolI, error) {
-	less := func(i, j types.PoolI) bool {
-		return i.GetId() < j.GetId()
-	}
-
 	//	Allocate the slice with the exact capacity to avoid reallocations.
 	poolCount := k.GetNextPoolId(ctx)
 	sortedPools := make([]types.PoolI, 0, poolCount)
@@ -539,9 +541,38 @@ func (k Keeper) AllPools(
 			return nil, err
 		}
 
-		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, less)
+		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, lessPoolIFunc)
 	}
 
+	return sortedPools, nil
+}
+
+// ListPoolsByDenom returns all pools by denom sorted by their ids
+// from every pool module registered in the
+// pool manager keeper.
+func (k Keeper) ListPoolsByDenom(
+	ctx sdk.Context,
+	denom string,
+) ([]types.PoolI, error) {
+	var sortedPools []types.PoolI
+	for _, poolModule := range k.poolModules {
+		currentModulePools, err := poolModule.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		var poolsByDenom []types.PoolI
+		for _, pool := range currentModulePools {
+			poolDenoms, err := poolModule.GetPoolDenoms(ctx, pool.GetId())
+			if err != nil {
+				return nil, err
+			}
+			if osmoutils.Contains(poolDenoms, denom) {
+				poolsByDenom = append(poolsByDenom, pool)
+			}
+		}
+		sortedPools = osmoutils.MergeSlices(sortedPools, poolsByDenom, lessPoolIFunc)
+	}
 	return sortedPools, nil
 }
 

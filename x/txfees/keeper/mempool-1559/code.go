@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,13 +22,13 @@ import (
    Additionally:
    - Periodically evaluating CheckTx and RecheckTx for compliance with these parameters.
 
-   Note: The reset interval is set to 1000 blocks, which is approximately 2 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
+   Note: The reset interval is set to 2000 blocks, which is approximately 4 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
 
    Challenges:
    - Transactions falling under their gas bounds are currently discarded by nodes. This behavior can be modified for CheckTx, rather than RecheckTx.
 
    Global variables stored in memory:
-   - DefaultBaseFee: Default base fee, initialized to 0.0025.
+   - DefaultBaseFee: Default base fee, initialized to 0.01.
    - MinBaseFee: Minimum base fee, initialized to 0.0025.
    - MaxBaseFee: Maximum base fee, initialized to 10.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
@@ -40,7 +41,7 @@ import (
 */
 
 var (
-	DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
+	DefaultBaseFee = sdk.MustNewDecFromStr("0.01")
 	MinBaseFee     = sdk.MustNewDecFromStr("0.0025")
 	MaxBaseFee     = sdk.MustNewDecFromStr("10")
 
@@ -48,10 +49,10 @@ var (
 	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(10))
 	TargetGas          = int64(70_000_000)
 	// In face of continuous spam, will take ~21 blocks from base fee > spam cost, to mempool eviction
-	// ceil(log_{15/14}(RecheckFeeConstant))
+	// ceil(log_{15/14}(RecheckFee mnConstant))
 	// So potentially 2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
 	RecheckFeeConstant = int64(4)
-	ResetInterval      = int64(1000)
+	ResetInterval      = int64(2000)
 )
 
 const (
@@ -77,7 +78,7 @@ var CurEipState = EipState{
 	CurBaseFee:              sdk.NewDec(0),
 }
 
-// startBlock is executed at the start of each block and is responsible for reseting the state
+// startBlock is executed at the start of each block and is responsible for resetting the state
 // of the CurBaseFee when the node reaches the reset interval
 func (e *EipState) startBlock(height int64) {
 	e.lastBlockHeight = height
@@ -93,6 +94,11 @@ func (e *EipState) startBlock(height int64) {
 	if height%ResetInterval == 0 {
 		e.CurBaseFee = DefaultBaseFee.Clone()
 	}
+}
+
+func (e EipState) Clone() EipState {
+	e.CurBaseFee = e.CurBaseFee.Clone()
+	return e
 }
 
 // deliverTxCode runs on every transaction in the feedecorator ante handler and sums the gas of each transaction
@@ -133,7 +139,7 @@ func (e *EipState) updateBaseFee(height int64) {
 		e.CurBaseFee = MaxBaseFee.Clone()
 	}
 
-	go e.tryPersist()
+	go e.Clone().tryPersist()
 }
 
 // GetCurBaseFee returns a clone of the CurBaseFee to avoid overwriting the initial value in
@@ -148,14 +154,18 @@ func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
 }
 
+var rwMtx = sync.Mutex{}
+
 // tryPersist persists the eip1559 state to disk in the form of a json file
 // we do this in case a node stops and it can continue functioning as normal
-func (e *EipState) tryPersist() {
+func (e EipState) tryPersist() {
 	bz, err := json.Marshal(e)
 	if err != nil {
 		fmt.Println("Error marshalling eip1559 state", err)
 		return
 	}
+	rwMtx.Lock()
+	defer rwMtx.Unlock()
 
 	err = os.WriteFile(e.BackupFilePath, bz, 0644)
 	if err != nil {
@@ -167,6 +177,8 @@ func (e *EipState) tryPersist() {
 // tryLoad reads eip1559 state from disk and initializes the CurEipState to
 // the previous state when a node is restarted
 func (e *EipState) tryLoad() osmomath.Dec {
+	rwMtx.Lock()
+	defer rwMtx.Unlock()
 	bz, err := os.ReadFile(e.BackupFilePath)
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)

@@ -61,11 +61,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
 * [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
+* [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist
+* [#6884](https://github.com/osmosis-labs/osmosis/pull/6884) Improve ListPoolsByDenom function filter denom logic
+* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
 
 ### API Breaks
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
 * [#6530](https://github.com/osmosis-labs/osmosis/pull/6530) Improve error message when CL LP fails due to slippage bound hit.
+
 
 ### Bug Fixes
 
@@ -73,10 +77,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
 * [#6841](https://github.com/osmosis-labs/osmosis/pull/6841) fix: fix receive_ack response field and imporove error message of InvalidCrosschainSwapsContract and NoDenomTrace
 
+## v20.4.0
+
+### Bug Fixes
+
+* [#6906](https://github.com/osmosis-labs/osmosis/pull/6906) Fix issue with the affiliate swap contract mempool check.
+
+### Misc Improvements
+
+* [#6863](https://github.com/osmosis-labs/osmosis/pull/6863) GetPoolDenoms method on PoolI interface in poolmanager
+
+## v20.3.0
+
+### Configuration Changes
+
+* [#6897](https://github.com/osmosis-labs/osmosis/pull/6897) Enable 1559 mempool by default.
+
+## v20.2.2
+
+### Features
+* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
+
+### Misc Improvements
+
+* [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
+
+### API Breaks
+
+* [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
+* [#6863](https://github.com/osmosis-labs/osmosis/pull/6863) GetPoolDenoms method on PoolI interface in poolmanager
+
 ## v20.0.0
 
 ### Features
 
+* [#6766](https://github.com/osmosis-labs/osmosis/pull/6766) CLI: Query pool by coin denom
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
 * [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
 * [#6623](https://github.com/osmosis-labs/osmosis/pull/6420) feat: transfer cl positions to new owner

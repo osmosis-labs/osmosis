@@ -17,10 +17,39 @@ created denom. Once a denom is created, the original creator is given
   account, or even setting it to `""`, meaning no account has admin privileges
   of the asset.
 
-## Bank hooks
-Token factory supports better integration with contracts using bank hooks.
+## Bank hooks (`TrackBeforeSend`, `BlockBeforeSend`)
+In our fork of [cosmos-sdk](https://github.com/osmosis-labs/cosmos-sdk), we have added two hooks: TrackBeforeSend and BlockBeforeSend.
 
-Token factory is integrated with Before Send bank hooks, `TrackBeforeSend` and `BlockBeforeSend`. Both hooks gets called whenever a bank send takes place, the difference between two hooks is that `TrackBeforeSend` would not error and `BlockBeforeSend` errors. Due to this difference `TrackBeforeSend` is useful for cases when a contract needs to track specific send actions of the token factory denom, whilst `BlockBeforeSend` would be more useful for situations when we want to block specific sends using contracts.
+The APIs for TrackBeforeSend and BlockBeforeSend are as follows:
+
+```go
+TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) 
+BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error 
+```
+
+Note that both hooks take the same arguments, but BlockBeforeSend returns and triggers an error, while TrackBeforeSend does not. That is, any error triggered by the BlockBeforeSend hook implementation would cancel the state transition and, consequently, the send itself, while any error omitted from TrackBeforeSend would be gracefully silenced.
+
+TrackBeforeSend and BlockBeforeSend are both triggered before any send action occurs, specifically before we call sendCoins, the internal API for transferring coins.
+
+```go
+func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	// BlockBeforeSend hook should always be called before the TrackBeforeSend hook.
+	err := k.BlockBeforeSend(ctx, fromAddr, toAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	return k.sendCoins(ctx, fromAddr, toAddr, amt)
+}
+
+```
+Note that for Module to Module send, the BlockBeforeSend hooks are not triggered, as we do not want to block module-to-module sends in any case.
+
+Please see [PR421](https://github.com/osmosis-labs/cosmos-sdk/pull/421) for more implementation details.
+
+
+### Token factory integration with Bank Hooks
+Due to the difference two hooks mentioned above, `TrackBeforeSend` is useful for cases when a contract needs to track specific send actions of the token factory denom, whilst `BlockBeforeSend` would be more useful for situations when we want to block specific sends using contracts.
 
 Each Token Factory denom allows the registration of one contract address. This contract is sudo-called every time the aforementioned bank hooks are activated. 
 
