@@ -9,7 +9,7 @@ services:
       - ./:/mnt/locust
     # 167.172.160.95 Local set up
     # 174.138.102.174:80 stage set up
-    command: -f /mnt/locust/locustfile.py --master -H http://167.172.160.95:9092
+    command: -f /mnt/locust/locustfile.py --master -H http://174.138.102.174:80
   
   worker:
     image: locustio/locust
