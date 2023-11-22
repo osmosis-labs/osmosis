@@ -83,12 +83,12 @@ func (a *RouterHandler) GetBestSingleRouteQuote(c echo.Context) error {
 func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
+	tokenOutDenom, tokenIn, err := getValidTokenInTokenOutStr(c)
 	if err != nil {
 		return err
 	}
 
-	routes, err := a.RUsecase.GetCandidateRoutes(ctx, tokenIn.Denom, tokenOutDenom)
+	routes, err := a.RUsecase.GetCandidateRoutes(ctx, tokenIn, tokenOutDenom)
 	if err != nil {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
@@ -131,15 +131,9 @@ func getStatusCode(err error) int {
 
 // getValidRoutingParameters returns the tokenIn and tokenOutDenom from server context if they are valid.
 func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
-	tokenInStr := c.QueryParam("tokenIn")
-	tokenOutDenom := c.QueryParam("tokenOutDenom")
-
-	if len(tokenInStr) == 0 {
-		return "", sdk.Coin{}, errors.New("tokenIn is required")
-	}
-
-	if len(tokenOutDenom) == 0 {
-		return "", sdk.Coin{}, errors.New("tokenOutDenom is required")
+	tokenInStr, tokenOutStr, err := getValidTokenInTokenOutStr(c)
+	if err != nil {
+		return "", sdk.Coin{}, err
 	}
 
 	matches := coinPattern.FindStringSubmatch(tokenInStr)
@@ -155,5 +149,20 @@ func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
 	if err := tokenIn.Validate(); err != nil {
 		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: err.Error()})
 	}
-	return tokenOutDenom, tokenIn, nil
+	return tokenOutStr, tokenIn, nil
+}
+
+func getValidTokenInTokenOutStr(c echo.Context) (tokenInStr, tokenOutStr string, err error) {
+	tokenInStr = c.QueryParam("tokenIn")
+	tokenOutStr = c.QueryParam("tokenOutDenom")
+
+	if len(tokenInStr) == 0 {
+		return "", "", errors.New("tokenIn is required")
+	}
+
+	if len(tokenOutStr) == 0 {
+		return "", "", errors.New("tokenOutDenom is required")
+	}
+
+	return tokenInStr, tokenOutStr, nil
 }

@@ -66,6 +66,15 @@ class SQS(HttpUser):
     def quoteUSDCTUMEE_3000IN(self):
         self.client.get(f"/quote?tokenIn=3000000000{USDT}&tokenOutDenom={UMEE}")
 
+    @task
+    def routesUOSMOUSDC(self):
+        self.client.get(f"/routes?tokenIn={UOSMO}&tokenOutDenom={USDC}")
+
+    
+    @task
+    def routesUSDCUOSMO(self):
+        self.client.get(f"/routes?tokenIn={USDC}&tokenOutDenom={UOSMO}")
+
     # TODO:
     # Add tests for routes search
 
