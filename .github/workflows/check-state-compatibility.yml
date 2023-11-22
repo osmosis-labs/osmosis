@@ -142,9 +142,7 @@ jobs:
         name: 🧪 Configure Osmosis Node
         run: |
           CONFIG_FOLDER=$HOME/.osmosisd/config
-
-          # Find last epoch block comparing repo version to current chain version
-          REPO_MAJOR_VERSION=19
+          REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | tr -dc '0-9')
 
           if [ $REPO_MAJOR_VERSION == $MAINNET_MAJOR_VERSION ]; then
             # I'm in the latest major, fetch the epoch info from the lcd endpoint
