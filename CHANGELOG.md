@@ -61,6 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
 * [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
 * [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist
+* [#6884](https://github.com/osmosis-labs/osmosis/pull/6884) Improve ListPoolsByDenom function filter denom logic
+* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
+
 ### API Breaks
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
