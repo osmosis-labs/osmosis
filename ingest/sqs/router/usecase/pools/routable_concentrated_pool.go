@@ -112,7 +112,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 
 	// Compute swap over all buckets.
 	for amountRemainingIn.GT(osmomath.ZeroDec()) {
-		if currentBucketIndex >= int64(len(tickModel.Ticks)) {
+		if currentBucketIndex >= int64(len(tickModel.Ticks)) || currentBucketIndex < 0 {
 			// This happens when there is not enough liquidity in the pool to complete the swap
 			// for a given amount of token in.
 			return sdk.Coin{}, domain.ConcentratedNotEnoughLiquidityToCompleteSwapError{

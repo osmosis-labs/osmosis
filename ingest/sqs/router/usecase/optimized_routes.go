@@ -291,7 +291,8 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []dom
 
 		currentTokenOut, err := currentRoute.CalculateTokenOutByTokenIn(sdk.NewCoin(remainingTokenIn.Denom, currentAmountIn))
 		if err != nil {
-			return Split{}, err
+			r.logger.Debug("skipping split due to error in estimate", zap.Error(err))
+			continue
 		}
 
 		r.logger.Debug("split", zap.Stringer("remaining_token_in", remainingTokenIn), zap.Stringer("fraction", fraction), zap.Stringer("current_token_in", currentAmountIn), zap.Stringer("current_token_out", currentTokenOut), zap.Stringer("currentRoute", currentRoute))
