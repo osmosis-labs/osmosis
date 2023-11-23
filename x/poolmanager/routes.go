@@ -45,24 +45,34 @@ func findDirectRoute(g types.RoutingGraphMap, start, end string) []*types.Route 
 func findTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
 	var routeRoutes [][]*types.Route
 
-	if startRoutes, exists := g.Graph[start]; exists {
-		for token, routes := range startRoutes.InnerMap {
-			if tokenRoutes, exists := g.Graph[token]; exists {
-				if endRoutes, exists := tokenRoutes.InnerMap[end]; exists {
-					for _, startRoute := range routes.Routes {
-						startRoute.Token = token
-						for _, endRoute := range endRoutes.Routes {
-							endRoute.Token = end
-							routeRoutes = append(routeRoutes, []*types.Route{startRoute, endRoute})
-						}
-					}
-				}
+	startRoutes, startExists := g.Graph[start]
+	if !startExists {
+		return routeRoutes
+	}
+
+	for token, routes := range startRoutes.InnerMap {
+		tokenRoutes, tokenExists := g.Graph[token]
+		if !tokenExists {
+			continue
+		}
+
+		endRoutes, endExists := tokenRoutes.InnerMap[end]
+		if !endExists {
+			continue
+		}
+
+		for _, startRoute := range routes.Routes {
+			startRoute.Token = token
+			for _, endRoute := range endRoutes.Routes {
+				endRoute.Token = end
+				routeRoutes = append(routeRoutes, []*types.Route{startRoute, endRoute})
 			}
 		}
 	}
 
 	return routeRoutes
 }
+
 
 // findThreeHopRoute finds all three-hop routes between two tokens
 func findThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
