@@ -9,7 +9,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	types1 "github.com/tendermint/tendermint/abci/types"
+	types1 "github.com/cometbft/cometbft/abci/types"
 	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

@@ -7,7 +7,8 @@ import (
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
@@ -241,7 +242,7 @@ func TestMsgSubmitQueryResultValidate(t *testing.T) {
 								},
 							}},
 							Value:         []byte{10},
-							StoragePrefix: host.StoreKey,
+							StoragePrefix: host.KeyConnectionPrefix,
 						}},
 						Block:    nil,
 						Height:   100,
@@ -298,7 +299,7 @@ func TestMsgSubmitQueryResultValidate(t *testing.T) {
 								},
 							}},
 							Value:         []byte{10},
-							StoragePrefix: host.StoreKey,
+							StoragePrefix: ibcexported.StoreKey,
 						}},
 						Block:    nil,
 						Height:   100,
@@ -326,7 +327,7 @@ func TestMsgSubmitQueryResultValidate(t *testing.T) {
 								},
 							}},
 							Value:         []byte{10},
-							StoragePrefix: host.StoreKey,
+							StoragePrefix: ibcexported.StoreKey,
 						}},
 						Block:    nil,
 						Height:   100,
@@ -354,7 +355,7 @@ func TestMsgSubmitQueryResultValidate(t *testing.T) {
 								},
 							}},
 							Value:         []byte{10},
-							StoragePrefix: host.StoreKey,
+							StoragePrefix: ibcexported.StoreKey,
 						}},
 						Block:    nil,
 						Height:   100,
@@ -663,7 +664,7 @@ func TestMsgSubmitQueryResultGetSigners(t *testing.T) {
 								},
 							}},
 							Value:         []byte{10},
-							StoragePrefix: host.StoreKey,
+							StoragePrefix: ibcexported.StoreKey,
 						}},
 						Block:    nil,
 						Height:   100,

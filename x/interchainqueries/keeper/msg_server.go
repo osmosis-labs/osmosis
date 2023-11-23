@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ibcclienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
-	ibccommitmenttypes "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
+	ibccommitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
 
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 )

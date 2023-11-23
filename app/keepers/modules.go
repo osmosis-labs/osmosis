@@ -2,11 +2,12 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
-	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
+	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+
 	"github.com/osmosis-labs/osmosis/v20/x/contractmanager"
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries"
 
@@ -18,18 +19,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client"
@@ -63,7 +68,7 @@ import (
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
 var AppModuleBasics = []module.AppModuleBasic{
 	auth.AppModuleBasic{},
-	genutil.AppModuleBasic{},
+	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 	bank.AppModuleBasic{},
 	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
@@ -71,12 +76,10 @@ var AppModuleBasics = []module.AppModuleBasic{
 	downtimemodule.AppModuleBasic{},
 	distr.AppModuleBasic{},
 	gov.NewAppModuleBasic(
-		append(
-			wasmclient.ProposalHandlers,
+		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
+			upgradeclient.LegacyProposalHandler,
+			upgradeclient.LegacyCancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
 			poolincentivesclient.ReplacePoolIncentivesHandler,
 			ibcclientclient.UpdateClientProposalHandler,
@@ -95,12 +98,13 @@ var AppModuleBasics = []module.AppModuleBasic{
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 			poolmanagerclient.DenomPairTakerFeeProposalHandler,
 			incentivesclient.HandleCreateGroupsProposal,
-		)...,
+		},
 	),
 	params.AppModuleBasic{},
 	crisis.AppModuleBasic{},
 	slashing.AppModuleBasic{},
 	authzmodule.AppModuleBasic{},
+	consensus.AppModuleBasic{},
 	ibc.AppModuleBasic{},
 	upgrade.AppModuleBasic{},
 	evidence.AppModuleBasic{},
@@ -124,8 +128,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
-	router.AppModuleBasic{},
+	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	contractmanager.AppModuleBasic{},
 	interchainqueries.AppModuleBasic{},
+	tendermint.AppModuleBasic{},
 }

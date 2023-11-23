@@ -11,9 +11,9 @@ set -ux
 
 # uncomment the three lines below to build osmosis
 
-go mod edit -replace github.com/tendermint/tm-db=github.com/baabeetaa/tm-db@pebble
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/baabeetaa/tm-db@pebble
 go mod tidy
-go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb -X github.com/tendermint/tm-db.ForceSync=1' -tags pebbledb ./...
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb -X github.com/cometbft/cometbft-db.ForceSync=1' -tags pebbledb ./...
 
 
 # MAKE HOME FOLDER AND GET GENESIS

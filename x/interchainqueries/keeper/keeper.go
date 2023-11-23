@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	tendermintLightClientTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	tendermintLightClient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
@@ -344,13 +344,13 @@ func (k Keeper) checkRegisteredQueryExists(ctx sdk.Context, id uint64) bool {
 	return store.Has(types.GetRegisteredQueryByIDKey(id))
 }
 
-func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (*tendermintLightClientTypes.ClientState, error) {
+func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (*tendermintLightClient.ClientState, error) {
 	clientStateResponse, ok := k.ibcKeeper.ClientKeeper.GetClientState(ctx, clientID)
 	if !ok {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidClientID, "could not find a ClientState with client id: %s", clientID)
 	}
 
-	clientState, ok := clientStateResponse.(*tendermintLightClientTypes.ClientState)
+	clientState, ok := clientStateResponse.(*tendermintLightClient.ClientState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(ibcclienttypes.ErrInvalidClientType, "cannot cast ClientState interface into ClientState type")
 	}

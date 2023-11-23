@@ -5,16 +5,16 @@ import (
 	"encoding/hex"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	clientkeeper "github.com/cosmos/ibc-go/v4/modules/core/02-client/keeper"
+	clientkeeper "github.com/cosmos/ibc-go/v7/modules/core/02-client/keeper"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ibcclienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	"github.com/cosmos/ibc-go/v4/modules/core/exported"
-	tendermintLightClientTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	tendermintLightClient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/tendermint/tendermint/crypto/merkle"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 )
@@ -31,7 +31,7 @@ func deterministicResponseDeliverTx(response *abci.ResponseDeliverTx) *abci.Resp
 }
 
 // checkHeadersOrder do some basic checks to verify that nextHeader is really next for the header
-func checkHeadersOrder(header, nextHeader *tendermintLightClientTypes.Header) error {
+func checkHeadersOrder(header, nextHeader *tendermintLightClient.Header) error {
 	if nextHeader.Header.Height != header.Header.Height+1 {
 		return sdkerrors.Wrapf(types.ErrInvalidHeader, "nextHeader.Height (%d) is not actually next for a header with height %d", nextHeader.Header.Height, header.Header.Height)
 	}
@@ -165,8 +165,8 @@ type TransactionVerifier struct{}
 // * transaction's responseDeliveryTx is legitimate - nextHeaderLastResultsDataHash merkle root contains
 // deterministicResponseDeliverTx(ResponseDeliveryTx).Bytes()
 func (v TransactionVerifier) VerifyTransaction(
-	header *tendermintLightClientTypes.Header,
-	nextHeader *tendermintLightClientTypes.Header,
+	header *tendermintLightClient.Header,
+	nextHeader *tendermintLightClient.Header,
 	tx *types.TxValue,
 ) error {
 	// verify inclusion proof

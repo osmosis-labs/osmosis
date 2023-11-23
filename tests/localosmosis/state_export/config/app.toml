@@ -1,0 +1,58 @@
+halt-height = 0
+halt-time = 0
+iavl-cache-size = 781250
+index-events = []
+inter-block-cache = true
+min-retain-blocks = 0
+minimum-gas-prices = "0uosmo"
+pruning = "default"
+pruning-interval = "0"
+pruning-keep-recent = "0"
+
+[api]
+  address = "tcp://0.0.0.0:1317"
+  enable = true
+  enabled-unsafe-cors = true
+  max-open-connections = 1000
+  rpc-max-body-bytes = 1000000
+  rpc-read-timeout = 10
+  rpc-write-timeout = 0
+  swagger = true
+
+[grpc]
+  address = "0.0.0.0:9090"
+  concurrency = false
+  enable = true
+  max-recv-msg-size = "10485760"
+  max-send-msg-size = "2147483647"
+
+[grpc-web]
+  address = "0.0.0.0:9091"
+  enable = true
+  enable-unsafe-cors = false
+
+[osmosis-mempool]
+  arbitrage-min-gas-fee = ".005"
+  max-gas-wanted-per-tx = "25000000"
+  min-gas-price-for-high-gas-tx = ".0025"
+
+[rosetta]
+  address = ":8080"
+  blockchain = "app"
+  enable = false
+  network = "network"
+  offline = false
+  retries = 3
+
+[state-sync]
+  snapshot-interval = 0
+  snapshot-keep-recent = 1
+
+[telemetry]
+  enable-hostname = false
+  enable-hostname-label = false
+  enable-service-label = false
+  enabled = false
+  global-labels = []
+  prometheus-retention-time = 0
+  service-name = ""

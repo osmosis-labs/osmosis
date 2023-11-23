@@ -37,6 +37,8 @@ func CreateUpgradeHandler(
 		// here when migrating (is it is not customized).
 		params := keepers.WasmKeeper.GetParams(ctx)
 		params.CodeUploadAccess = wasmtypes.AllowNobody
+
+		//nolint:errcheck
 		keepers.WasmKeeper.SetParams(ctx, params)
 
 		// Merge similar duration lockups

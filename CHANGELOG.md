@@ -42,9 +42,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
+
+### Fix Localosmosis docker-compose with state.
+
+* Updated the docker-compose for localosmosis with state to be inline with Operations updated process.
+
 ### State Breaks
 
 * [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
+* [#6836](https://github.com/osmosis-labs/osmosis/pull/6836) Add DenomsMetadata to stargate whitelist and fixs the DenomMetadata response type
+* [#6814](https://github.com/osmosis-labs/osmosis/pull/6814) Add EstimateTradeBasedOnPriceImpact to stargate whitelist
+* [#6859](https://github.com/osmosis-labs/osmosis/pull/6859) Add hooks to core CL operations (position creation/withdrawal and swaps)
+
+### Misc Improvements
+
+* [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
+* [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
+* [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist
+* [#6884](https://github.com/osmosis-labs/osmosis/pull/6884) Improve ListPoolsByDenom function filter denom logic
+* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
+
+### API Breaks
+
+* [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
+* [#6530](https://github.com/osmosis-labs/osmosis/pull/6530) Improve error message when CL LP fails due to slippage bound hit.
+
+
+### Bug Fixes
+
+* [#6840](https://github.com/osmosis-labs/osmosis/pull/6840) fix: change TypeMsgUnbondConvertAndStake value to "unbond_convert_and_stake" and improve error message when epoch currentEpochStartHeight less than zero
+* [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
+* [#6841](https://github.com/osmosis-labs/osmosis/pull/6841) fix: fix receive_ack response field and imporove error message of InvalidCrosschainSwapsContract and NoDenomTrace
+
+## v20.4.0
+
+### Bug Fixes
+
+* [#6906](https://github.com/osmosis-labs/osmosis/pull/6906) Fix issue with the affiliate swap contract mempool check.
+
+### Misc Improvements
+
+* [#6863](https://github.com/osmosis-labs/osmosis/pull/6863) GetPoolDenoms method on PoolI interface in poolmanager
+
+## v20.3.0
+
+### Configuration Changes
+
+* [#6897](https://github.com/osmosis-labs/osmosis/pull/6897) Enable 1559 mempool by default.
+
+## v20.2.2
+
+### Features
+* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
 
 ### Misc Improvements
 
@@ -53,11 +105,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API Breaks
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
+* [#6863](https://github.com/osmosis-labs/osmosis/pull/6863) GetPoolDenoms method on PoolI interface in poolmanager
 
 ## v20.0.0
 
 ### Features
 
+* [#6766](https://github.com/osmosis-labs/osmosis/pull/6766) CLI: Query pool by coin denom
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
 * [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
 * [#6623](https://github.com/osmosis-labs/osmosis/pull/6420) feat: transfer cl positions to new owner
@@ -66,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#6413](https://github.com/osmosis-labs/osmosis/pull/6413) feat: update sdk to v0.47x
 * [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
 * [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
 * [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
@@ -83,7 +138,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6666](https://github.com/osmosis-labs/osmosis/pull/6666) fix: cosmwasmpool state export bug
 * [#6674](https://github.com/osmosis-labs/osmosis/pull/6674) fix: remove dragonberry replace directive
 * [#6692](https://github.com/osmosis-labs/osmosis/pull/6692) chore: add cur sqrt price to LiquidityNetInDirection return value
+* [#6757](https://github.com/osmosis-labs/osmosis/pull/6757) fix: add gas metering to block before send for token factory bank hook
 * [#6710](https://github.com/osmosis-labs/osmosis/pull/6710) fix: `{overflow}` bug when querying cosmwasmpool spot price
+* [#6734](https://github.com/osmosis-labs/osmosis/pull/6734) fix: PFM serialization error
+* [#6767](https://github.com/osmosis-labs/osmosis/pull/6767) fix: typo in ibc lifecycle message in crosschain swap contract
 
 ## v19.2.0
 

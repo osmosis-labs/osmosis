@@ -3,7 +3,7 @@ package cli
 import (
 	"strconv"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -32,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdListPoolsByDenom)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -46,7 +47,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *queryproto.Es
 		Use:   "estimate-swap-exact-amount-in",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-in 1  1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+{{.CommandPrefix}} estimate-swap-exact-amount-in 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
 		ParseQuery:          EstimateSwapExactAmountInParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountIn",
@@ -60,7 +61,7 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *queryproto.E
 		Use:   "estimate-swap-exact-amount-out",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-out 1 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+{{.CommandPrefix}} estimate-swap-exact-amount-out 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
 		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountOut",
@@ -104,6 +105,15 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 `,
 	}, &queryproto.SpotPriceRequest{}
+}
+func GetCmdListPoolsByDenom() (*osmocli.QueryDescriptor, *queryproto.ListPoolsByDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "list-pools-by-denom",
+		Short: "Query list-pools-by-denom",
+		Long: `Query list-pools-by-denom
+{{.CommandPrefix}} list-pools-by-denom uosmo 
+`,
+	}, &queryproto.ListPoolsByDenomRequest{}
 }
 
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {

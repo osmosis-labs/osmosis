@@ -2,7 +2,7 @@
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
-// SOURCE AT `proto/osmosis/valset-pref/v1beta1/query.yml`
+// SOURCE AT `proto/osmosis/valsetpref/v1beta1/query.yml`
 
 import (
 	context "context"

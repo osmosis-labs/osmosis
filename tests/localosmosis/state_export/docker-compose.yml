@@ -1,24 +1,17 @@
-version: "3"
+version: "4"
 
 services:
   osmosisd:
-    image: local:osmosis
     build:
       context: ../../../
-      dockerfile: Dockerfile
+      dockerfile: tests/localosmosis/state_export/Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.17
         GO_VERSION: "1.20"
+        GIT_COMMIT: ${GIT_COMMIT}
+    container_name: localosmosis
     volumes:
-      - ./scripts/start.sh:/osmosis/start.sh
-      - ./scripts/testnetify.py:/osmosis/testnetify.py
-      - ./state_export.json:/osmosis/state_export.json
       - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
-    entrypoint:
-      - /osmosis/start.sh
-    environment:
-      - MONIKER=val
-      - CHAIN_ID=localosmosis
     ports:
       - 26657:26657
       - 1317:1317

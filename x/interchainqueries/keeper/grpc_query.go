@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
-	contypes "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
-	tndtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
+	contypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
+	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -96,7 +96,7 @@ func (k Keeper) LastRemoteHeight(goCtx context.Context, request *types.QueryLast
 	}
 	clientState := r.GetIdentifiedClientState().GetClientState()
 
-	m := new(tndtypes.ClientState)
+	m := new(tendermint.ClientState)
 	err = proto.Unmarshal(clientState.Value, m)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrProtoUnmarshal, "can't unmarshal client state")

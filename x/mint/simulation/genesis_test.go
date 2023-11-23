@@ -34,7 +34,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
+		InitialStake: sdk.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 
@@ -53,8 +53,9 @@ func TestRandomizedGenState(t *testing.T) {
 		expectedReductionStartedEpoch = int64(6009281777831789783)
 
 		expectedNextEpochProvisionsStr = "3956524194470336578"
-		expectedDenom                  = sdk.DefaultBondDenom
 	)
+
+	var expectedDenom = sdk.DefaultBondDenom
 
 	// Epoch provisions from Minter.
 	epochProvisionsDec, err := osmomath.NewDecFromStr(expectedEpochProvisionsStr)

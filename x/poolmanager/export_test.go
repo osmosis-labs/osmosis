@@ -45,14 +45,6 @@ func (k Keeper) CreateMultihopExpectedSwapOuts(
 	return k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
 }
 
-func (k Keeper) CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
-	return k.calcTakerFeeExactIn(tokenIn, takerFee)
-}
-
-func (k Keeper) CalcTakerFeeExactOut(tokenOut sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
-	return k.calcTakerFeeExactOut(tokenOut, takerFee)
-}
-
 func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	k.trackVolume(ctx, poolId, volumeGenerated)
 }

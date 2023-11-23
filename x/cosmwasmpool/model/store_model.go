@@ -96,3 +96,8 @@ func (p CosmWasmPool) GetStoreModel() poolmanagertypes.PoolI {
 func (p CosmWasmPool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	panic("CosmWasmPool.SetWasmKeeeper not implemented")
 }
+
+// GetPoolDenoms implements types.PoolI.
+func (p *CosmWasmPool) GetPoolDenoms(ctx sdk.Context) []string {
+	panic("CosmWasmPool.GetPoolDenoms not implemented")
+}
