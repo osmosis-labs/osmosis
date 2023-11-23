@@ -51,15 +51,6 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 				Amount:        defaultAmount.String(),
 			},
 		},
-		"error: invalid pool type": {
-			tokenIn:       sdk.NewCoin(USDC, defaultAmount.Add(osmomath.OneInt())),
-			tokenOutDenom: ETH,
-			balances:      defaultBalances,
-
-			isInvalidPoolType: true,
-
-			expectError: domain.InvalidPoolTypeError{PoolType: int32(poolmanagertypes.Concentrated)},
-		},
 	}
 
 	for name, tc := range tests {
@@ -70,7 +61,7 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Transmuter() {
 
 			poolType := cosmwasmPool.GetType()
 
-			mock := &mocks.MockRoutablePool{ChainPoolModel: cosmwasmPool, Balances: tc.balances, PoolType: poolType}
+			mock := &mocks.MockRoutablePool{ChainPoolModel: cosmwasmPool.AsSerializablePool(), Balances: tc.balances, PoolType: poolType}
 			routablePool := pools.NewRoutablePool(mock, tc.tokenOutDenom, noTakerFee)
 
 			// Overwrite pool type for edge case testing

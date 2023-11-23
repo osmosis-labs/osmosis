@@ -35,7 +35,7 @@ func (q *quoteImpl) PrepareResult() ([]domain.SplitRoute, osmomath.Dec) {
 
 		// Calculate the spread factor across pools in the route
 		for _, pool := range route.GetPools() {
-			poolSpreadFactor := pool.GetSQSPoolModel().SpreadFactor
+			poolSpreadFactor := pool.GetSpreadFactor()
 			poolTakerFee := pool.GetTakerFee()
 
 			totalPoolFee := poolSpreadFactor.Add(poolTakerFee)

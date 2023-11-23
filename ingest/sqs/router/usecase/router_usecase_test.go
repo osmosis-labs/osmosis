@@ -6,10 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 )
 
 // Tests the call to handleRoutes by mocking the router repository and pools use case
@@ -20,15 +22,30 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 
 		tokenInDenom  = "uosmo"
 		tokenOutDenom = "uion"
+
+		minOsmoLiquidity = 10000 * usecase.OsmoPrecisionMultiplier
 	)
 
 	// Create test balancer pool
-	balancerPoolID := s.PrepareBalancerPoolWithCoins(
+
+	balancerCoins := sdk.NewCoins(
 		sdk.NewCoin(tokenInDenom, sdk.NewInt(1000000000000000000)),
 		sdk.NewCoin(tokenOutDenom, sdk.NewInt(1000000000000000000)),
 	)
+
+	balancerPoolID := s.PrepareBalancerPoolWithCoins(balancerCoins...)
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
 	s.Require().NoError(err)
+
+	defaultPool := &domain.PoolWrapper{
+		ChainModel: balancerPool,
+		SQSModel: domain.SQSPool{
+			TotalValueLockedUSDC: osmomath.NewInt(int64(minOsmoLiquidity + 1)),
+			PoolDenoms:           []string{tokenInDenom, tokenOutDenom},
+			Balances:             balancerCoins,
+			SpreadFactor:         DefaultSpreadFactor,
+		},
+	}
 
 	var (
 		defaultTakerFeeMap = domain.TakerFeeMap{
@@ -38,22 +55,9 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 		defaultRoute = WithRoutePools(
 			EmptyRoute,
 			[]domain.RoutablePool{
-				mocks.WithDenoms(
-					mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultPool, tokenOutDenom), balancerPool),
-					[]string{tokenInDenom, tokenOutDenom},
-				),
+				pools.NewRoutablePool(defaultPool, tokenOutDenom, DefaultTakerFee),
 			},
 		)
-
-		defaultPool = mocks.WithTokenOutDenom(
-			mocks.WithTakerFee(
-				mocks.WithDenoms(
-					mocks.WithChainPoolModel(
-						DefaultPool, balancerPool),
-					[]string{tokenInDenom, tokenOutDenom}),
-				DefaultTakerFee,
-			),
-			tokenOutDenom)
 
 		defaultSinglePools = []domain.PoolI{defaultPool}
 
@@ -72,7 +76,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 			// These configs are not relevant for this test.
 			PreferredPoolIDs:          []uint64{},
 			MaxSplitIterations:        10,
-			MinOSMOLiquidity:          10000,
+			MinOSMOLiquidity:          minOsmoLiquidity,
 			RouteUpdateHeightInterval: 10,
 		}
 	)
@@ -191,7 +195,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 			// Pre-set routes should be returned.
 			s.Require().Equal(len(tc.expectedRoutes), len(actualRoutes))
 			for i, route := range actualRoutes {
-				s.Require().Equal(tc.expectedRoutes[i].String(), route.String())
+				s.Require().Equal(tc.expectedRoutes[i], route)
 			}
 
 			// For the case where the cache is disabled, the expected routes in cache

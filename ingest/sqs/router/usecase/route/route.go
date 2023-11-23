@@ -32,16 +32,11 @@ type RouteImpl struct {
 // Returns the resulting pools.
 func (r *RouteImpl) PrepareResultPools() []domain.RoutablePool {
 	for i, pool := range r.Pools {
-		sqsModel := pool.GetSQSPoolModel()
 
 		r.Pools[i] = pools.NewRoutableResultPool(
 			pool.GetId(),
 			pool.GetType(),
-			sqsModel.Balances,
-			// Note that we cannot get the SpreadFactor method on
-			// the CosmWasm pool models as it does not implement it.
-			// As a result, we propagate it via SQS model.
-			sqsModel.SpreadFactor,
+			pool.GetSpreadFactor(),
 			pool.GetTokenOutDenom(),
 			pool.GetTakerFee(),
 		)
@@ -52,22 +47,6 @@ func (r *RouteImpl) PrepareResultPools() []domain.RoutablePool {
 // GetPools implements Route.
 func (r *RouteImpl) GetPools() []domain.RoutablePool {
 	return r.Pools
-}
-
-// DeepCopy implements Route.
-func (r RouteImpl) DeepCopy() domain.Route {
-	poolsCopy := make([]domain.RoutablePool, len(r.Pools))
-
-	for i, pool := range r.Pools {
-		tokenOutDenom := pool.GetTokenOutDenom()
-		takerFee := pool.GetTakerFee()
-		// TODO: pool is actually not deep copied but this should be fine temporarily
-		poolsCopy[i] = pools.NewRoutablePool(pool, tokenOutDenom, takerFee)
-	}
-
-	return &RouteImpl{
-		Pools: poolsCopy,
-	}
 }
 
 func (r *RouteImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee osmomath.Dec) {

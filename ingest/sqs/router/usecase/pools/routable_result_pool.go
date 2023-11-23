@@ -31,11 +31,10 @@ type routableResultPoolImpl struct {
 }
 
 // NewRoutableResultPool returns the new routable result pool with the given parameters.
-func NewRoutableResultPool(ID uint64, poolType poolmanagertypes.PoolType, balances sdk.Coins, spreadFactor osmomath.Dec, tokenOutDenom string, takerFee osmomath.Dec) domain.RoutablePool {
+func NewRoutableResultPool(ID uint64, poolType poolmanagertypes.PoolType, spreadFactor osmomath.Dec, tokenOutDenom string, takerFee osmomath.Dec) domain.RoutablePool {
 	return &routableResultPoolImpl{
 		ID:            ID,
 		Type:          poolType,
-		Balances:      balances,
 		SpreadFactor:  spreadFactor,
 		TokenOutDenom: tokenOutDenom,
 		TakerFee:      takerFee,
@@ -126,4 +125,9 @@ func (r *routableResultPoolImpl) GetBalances() sdk.Coins {
 // SetTokenOutDenom implements domain.RoutablePool.
 func (r *routableResultPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 	r.TokenOutDenom = tokenOutDenom
+}
+
+// GetSpreadFactor implements domain.RoutablePool.
+func (r *routableResultPoolImpl) GetSpreadFactor() math.LegacyDec {
+	return r.SpreadFactor
 }

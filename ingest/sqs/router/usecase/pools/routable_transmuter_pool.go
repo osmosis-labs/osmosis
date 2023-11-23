@@ -7,16 +7,40 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	cwpoolmodel "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ domain.RoutablePool = &routableTransmuterPoolImpl{}
 
 type routableTransmuterPoolImpl struct {
-	domain.PoolI
-	TokenOutDenom string       "json:\"token_out_denom\""
-	TakerFee      osmomath.Dec "json:\"taker_fee\""
+	ChainPool     *cwpoolmodel.CosmWasmPool "json:\"pool\""
+	Balances      sdk.Coins                 "json:\"balances\""
+	TokenOutDenom string                    "json:\"token_out_denom\""
+	TakerFee      osmomath.Dec              "json:\"taker_fee\""
+	SpreadFactor  osmomath.Dec              "json:\"spread_factor\""
+}
+
+// GetId implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) GetId() uint64 {
+	return r.ChainPool.PoolId
+}
+
+// GetPoolDenoms implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) GetPoolDenoms() []string {
+	return osmoutils.CoinsDenoms(r.Balances)
+}
+
+// GetType implements domain.RoutablePool.
+func (*routableTransmuterPoolImpl) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.CosmWasm
+}
+
+// GetSpreadFactor implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) GetSpreadFactor() math.LegacyDec {
+	return r.SpreadFactor
 }
 
 // CalculateTokenOutByTokenIn implements domain.RoutablePool.
@@ -34,7 +58,7 @@ func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin
 		return sdk.Coin{}, domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 	}
 
-	balances := r.PoolI.GetSQSPoolModel().Balances
+	balances := r.Balances
 
 	// Validate token in balance
 	if err := validateBalance(tokenIn.Amount, balances, tokenIn.Denom); err != nil {
@@ -58,7 +82,7 @@ func (r *routableTransmuterPoolImpl) GetTokenOutDenom() string {
 
 // String implements domain.RoutablePool.
 func (r *routableTransmuterPoolImpl) String() string {
-	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms(), r.TokenOutDenom)
+	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", r.ChainPool.PoolId, poolmanagertypes.CosmWasm, r.GetPoolDenoms(), r.TokenOutDenom)
 }
 
 // ChargeTakerFeeExactIn implements domain.RoutablePool.

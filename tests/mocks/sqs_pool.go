@@ -173,6 +173,20 @@ func (m *MockPoolsRepository) EXPECT() *MockPoolsRepositoryMockRecorder {
 	return m.recorder
 }
 
+// ClearAllPools mocks base method.
+func (m *MockPoolsRepository) ClearAllPools(ctx context.Context, tx domain.Tx) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearAllPools", ctx, tx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearAllPools indicates an expected call of ClearAllPools.
+func (mr *MockPoolsRepositoryMockRecorder) ClearAllPools(ctx, tx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearAllPools", reflect.TypeOf((*MockPoolsRepository)(nil).ClearAllPools), ctx, tx)
+}
+
 // GetAllCFMM mocks base method.
 func (m *MockPoolsRepository) GetAllCFMM(arg0 context.Context) ([]domain.PoolI, error) {
 	m.ctrl.T.Helper()

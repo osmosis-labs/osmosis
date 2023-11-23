@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 )
 
 func deepCopyTickModel(tickModel *domain.TickModel) *domain.TickModel {
@@ -87,9 +87,6 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Succ
 			}
 			routablePool := pools.NewRoutablePool(poolWrapper, tc.TokenOutDenom, noTakerFee)
 
-			err = routablePool.Validate(osmomath.NewInt(100))
-			s.Require().NoError(err)
-
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.TokenIn)
 
 			s.Require().NoError(err)
@@ -104,20 +101,10 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Erro
 		defaultCurrentTick = int64(0)
 	)
 
-	var (
-		defaultSQSModel = domain.SQSPool{
-			TotalValueLockedUSDC:  osmomath.NewInt(100),
-			TotalValueLockedError: "",
-			Balances:              sdk.Coins{},
-			PoolDenoms:            []string{Denom0, Denom1},
-		}
-	)
-
 	tests := map[string]struct {
 		tokenIn       sdk.Coin
 		tokenOutDenom string
 
-		isWrongChainModel           bool
 		tickModelOverwrite          *domain.TickModel
 		isTickModelNil              bool
 		shouldCreateDefaultPosition bool
@@ -235,56 +222,48 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Erro
 			s.SetupTest()
 
 			var (
-				chainModel poolmanagertypes.PoolI
-				tickModel  *domain.TickModel
-				err        error
+				tickModel *domain.TickModel
+				err       error
 			)
 
-			if tc.isWrongChainModel {
-				balancerPoolID := s.PrepareBalancerPool()
-				balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
-				s.Require().NoError(err)
+			pool := s.PrepareConcentratedPool()
+			concentratedPool, ok := pool.(*concentratedmodel.Pool)
+			s.Require().True(ok)
 
-				chainModel = balancerPool
+			if tc.shouldCreateDefaultPosition {
+				s.SetupDefaultPosition(concentratedPool.Id)
+			}
+
+			// refetch the pool
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, concentratedPool.Id)
+			s.Require().NoError(err)
+			concentratedPool, ok = pool.(*concentratedmodel.Pool)
+			s.Require().True(ok)
+
+			if tc.tickModelOverwrite != nil {
+				tickModel = tc.tickModelOverwrite
+
+			} else if tc.isTickModelNil {
+				// For clarity:
+				tickModel = nil
 			} else {
-				chainModel = s.PrepareConcentratedPool()
-
-				if tc.shouldCreateDefaultPosition {
-					s.SetupDefaultPosition(chainModel.GetId())
-				}
-
-				// refetch the pool
-				chainModel, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, chainModel.GetId())
+				// Get liquidity for full range
+				ticks, currentTickIndex, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, concentratedPool.Id)
 				s.Require().NoError(err)
 
-				if tc.tickModelOverwrite != nil {
-					tickModel = tc.tickModelOverwrite
-
-				} else if tc.isTickModelNil {
-					// For clarity:
-					tickModel = nil
-				} else {
-					// Get liquidity for full range
-					ticks, currentTickIndex, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, chainModel.GetId())
-					s.Require().NoError(err)
-
-					tickModel = &domain.TickModel{
-						Ticks:            ticks,
-						CurrentTickIndex: currentTickIndex,
-						HasNoLiquidity:   false,
-					}
+				tickModel = &domain.TickModel{
+					Ticks:            ticks,
+					CurrentTickIndex: currentTickIndex,
+					HasNoLiquidity:   false,
 				}
 			}
 
-			routablePool := pools.NewRoutablePool(
-				&domain.PoolWrapper{
-					ChainModel: chainModel,
-					TickModel:  tickModel,
-					SQSModel:   defaultSQSModel,
-				},
-				tc.tokenOutDenom,
-				osmomath.ZeroDec(),
-			)
+			routablePool := pools.RoutableConcentratedPoolImpl{
+				ChainPool:     concentratedPool,
+				TickModel:     tickModel,
+				TokenOutDenom: tc.tokenOutDenom,
+				TakerFee:      osmomath.ZeroDec(),
+			}
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
 

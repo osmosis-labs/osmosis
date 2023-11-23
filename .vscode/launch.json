@@ -318,7 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestGetCandidateRoutesBFS_OSMOstOSMO",
+                "TestRouterTestSuite/TestHandleRoutes/no_routes_in_cache_but",
                 "-test.v"
             ],
         },

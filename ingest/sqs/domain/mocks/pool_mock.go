@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -23,6 +24,11 @@ type MockRoutablePool struct {
 	SpreadFactor         osmomath.Dec
 }
 
+// GetSpreadFactor implements domain.RoutablePool.
+func (mp *MockRoutablePool) GetSpreadFactor() math.LegacyDec {
+	return mp.SpreadFactor
+}
+
 // SetTokenOutDenom implements domain.RoutablePool.
 func (*MockRoutablePool) SetTokenOutDenom(tokenOutDenom string) {
 	panic("unimplemented")
@@ -31,7 +37,6 @@ func (*MockRoutablePool) SetTokenOutDenom(tokenOutDenom string) {
 var DefaultSpreadFactor = osmomath.MustNewDecFromStr("0.005")
 
 var (
-	_ domain.PoolI        = &MockRoutablePool{}
 	_ domain.RoutablePool = &MockRoutablePool{}
 )
 
@@ -51,8 +56,15 @@ func (mp *MockRoutablePool) GetSQSPoolModel() domain.SQSPool {
 }
 
 // CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
-func (*MockRoutablePool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
-	panic("unimplemented")
+func (r *MockRoutablePool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+
+	// Cast to balancer
+	balancerPool, ok := r.ChainPoolModel.(*balancer.Pool)
+	if !ok {
+		panic("not a balancer pool")
+	}
+
+	return balancerPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), r.TokenOutDenom, r.SpreadFactor)
 }
 
 // String implements domain.RoutablePool.

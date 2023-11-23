@@ -18,9 +18,30 @@ import (
 var _ domain.RoutablePool = &routableConcentratedPoolImpl{}
 
 type routableConcentratedPoolImpl struct {
-	domain.PoolI
-	TokenOutDenom string       "json:\"token_out_denom\""
-	TakerFee      osmomath.Dec "json:\"taker_fee\""
+	ChainPool     *concentratedmodel.Pool "json:\"cl_pool\""
+	TickModel     *domain.TickModel       "json:\"tick_model\""
+	TokenOutDenom string                  "json:\"token_out_denom\""
+	TakerFee      osmomath.Dec            "json:\"taker_fee\""
+}
+
+// GetPoolDenoms implements domain.RoutablePool.
+func (r *routableConcentratedPoolImpl) GetPoolDenoms() []string {
+	return r.ChainPool.GetPoolDenoms(sdk.Context{})
+}
+
+// GetType implements domain.RoutablePool.
+func (r *routableConcentratedPoolImpl) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Concentrated
+}
+
+// GetId implements domain.RoutablePool.
+func (r *routableConcentratedPoolImpl) GetId() uint64 {
+	return r.ChainPool.Id
+}
+
+// GetSpreadFactor implements domain.RoutablePool.
+func (r *routableConcentratedPoolImpl) GetSpreadFactor() math.LegacyDec {
+	return r.ChainPool.SpreadFactor
 }
 
 // GetTakerFee implements domain.RoutablePool.
@@ -38,29 +59,20 @@ func (r *routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
 // - the current sqrt price is zero
 // - rans out of ticks during swap (token in is too high for liquidity in the pool)
 func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
-	poolType := r.GetType()
 
-	// Esnure that the pool is concentrated
-	if poolType != poolmanagertypes.Concentrated {
-		return sdk.Coin{}, domain.InvalidPoolTypeError{PoolType: int32(poolType)}
-	}
+	concentratedPool := r.ChainPool
+	tickModel := r.TickModel
 
-	chainPool := r.GetUnderlyingPool()
-	// Defense in depth casting check to confirm that the pool is concentrated
-	concentratedPool, ok := chainPool.(*concentratedmodel.Pool)
-	if !ok {
-		return sdk.Coin{}, fmt.Errorf("failed to cast pool (%d) to concentrated pool", r.GetId())
-	}
-
-	tickModel, err := r.GetTickModel()
-	if err != nil {
-		return sdk.Coin{}, err
+	if tickModel == nil {
+		return sdk.Coin{}, domain.ConcentratedPoolNoTickModelError{
+			PoolId: r.ChainPool.Id,
+		}
 	}
 
 	// Ensure pool has liquidity.
 	if tickModel.HasNoLiquidity {
 		return sdk.Coin{}, domain.ConcentratedNoLiquidityError{
-			PoolId: r.GetId(),
+			PoolId: concentratedPool.Id,
 		}
 	}
 
@@ -69,7 +81,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 
 	if currentBucketIndex < 0 || currentBucketIndex >= int64(len(tickModel.Ticks)) {
 		return sdk.Coin{}, domain.ConcentratedCurrentTickNotWithinBucketError{
-			PoolId:             r.GetId(),
+			PoolId:             concentratedPool.Id,
 			CurrentBucketIndex: currentBucketIndex,
 			TotalBuckets:       int64(len(tickModel.Ticks)),
 		}
@@ -106,7 +118,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 
 	if currentSqrtPrice.IsZero() {
 		return sdk.Coin{}, domain.ConcentratedZeroCurrentSqrtPriceError{
-			PoolId: r.GetId(),
+			PoolId: concentratedPool.Id,
 		}
 	}
 
@@ -116,7 +128,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 			// This happens when there is not enough liquidity in the pool to complete the swap
 			// for a given amount of token in.
 			return sdk.Coin{}, domain.ConcentratedNotEnoughLiquidityToCompleteSwapError{
-				PoolId:   r.GetId(),
+				PoolId:   concentratedPool.Id,
 				AmountIn: sdk.NewCoins(tokenIn).String(),
 			}
 		}
@@ -163,7 +175,8 @@ func (r *routableConcentratedPoolImpl) GetTokenOutDenom() string {
 
 // String implements domain.RoutablePool.
 func (r *routableConcentratedPoolImpl) String() string {
-	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms(), r.TokenOutDenom)
+	concentratedPool := r.ChainPool
+	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v), token out (%s)", concentratedPool.Id, poolmanagertypes.Concentrated, concentratedPool.GetPoolDenoms(sdk.Context{}), r.TokenOutDenom)
 }
 
 // ChargeTakerFee implements domain.RoutablePool.

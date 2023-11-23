@@ -1,8 +1,8 @@
 package pools
 
 type (
-	RoutableCFMMPoolImpl         = routableCFMMPoolImpl
+	RoutableCFMMPoolImpl         = routableBalancerPoolImpl
 	RoutableConcentratedPoolImpl = routableConcentratedPoolImpl
 	RoutableTransmuterPoolImpl   = routableTransmuterPoolImpl
-	RoutableResultPoolImpl = routableResultPoolImpl
+	RoutableResultPoolImpl       = routableResultPoolImpl
 )

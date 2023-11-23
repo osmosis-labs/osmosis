@@ -84,7 +84,7 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_CFMM() {
 			pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			mock := &mocks.MockRoutablePool{ChainPoolModel: pool}
+			mock := &mocks.MockRoutablePool{ChainPoolModel: pool, PoolType: tc.poolType}
 			routablePool := pools.NewRoutablePool(mock, tc.tokenOutDenom, noTakerFee)
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)

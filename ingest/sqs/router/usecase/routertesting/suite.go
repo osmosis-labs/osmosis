@@ -77,12 +77,15 @@ func denomNum(i int) string {
 	return fmt.Sprintf("denom%d", i)
 }
 
+// Note that it does not deep copy pools
 func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
-	newRoute := r.DeepCopy()
-	for _, pool := range pools {
-		newRoute.AddPool(pool, pool.GetTokenOutDenom(), pool.GetTakerFee())
+	newRoute := route.RouteImpl{
+		Pools: make([]domain.RoutablePool, 0, len(pools)),
 	}
-	return newRoute
+	for _, pool := range pools {
+		newRoute.Pools = append(newRoute.Pools, pool)
+	}
+	return &newRoute
 }
 
 // ValidateRoutePools validates that the expected pools are equal to the actual pools.
@@ -109,7 +112,7 @@ func (s *RouterTestHelper) ValidateRoutePools(expectedPools []domain.RoutablePoo
 		s.Require().Equal(expectedResultPool.GetId(), actualResultPool.GetId())
 		s.Require().Equal(expectedResultPool.GetType(), actualResultPool.GetType())
 		s.Require().Equal(expectedResultPool.GetBalances().String(), actualResultPool.GetBalances().String())
-		s.Require().Equal(expectedResultPool.GetSQSPoolModel().SpreadFactor.String(), actualResultPool.GetSQSPoolModel().SpreadFactor.String())
+		s.Require().Equal(expectedResultPool.GetSpreadFactor().String(), actualResultPool.GetSpreadFactor().String())
 		s.Require().Equal(expectedResultPool.GetTokenOutDenom(), actualResultPool.GetTokenOutDenom())
 		s.Require().Equal(expectedResultPool.GetTakerFee().String(), actualResultPool.GetTakerFee().String())
 	}

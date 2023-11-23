@@ -11,10 +11,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type RoutablePool interface {
-	PoolI
+	GetId() uint64
+
+	GetType() poolmanagertypes.PoolType
+
+	GetPoolDenoms() []string
+
 	GetTokenOutDenom() string
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
 	ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin)
@@ -23,6 +29,8 @@ type RoutablePool interface {
 	SetTokenOutDenom(tokenOutDenom string)
 
 	GetTakerFee() osmomath.Dec
+
+	GetSpreadFactor() osmomath.Dec
 
 	String() string
 }
@@ -34,8 +42,7 @@ type RoutableResultPool interface {
 
 type Route interface {
 	GetPools() []RoutablePool
-	// DeepCopy deep copies the route and returns the copy.
-	DeepCopy() Route
+	// AddPool adds pool to route.
 	AddPool(pool PoolI, tokenOut string, takerFee osmomath.Dec)
 	// CalculateTokenOutByTokenIn calculates the token out amount given the token in amount.
 	// Returns error if the calculation fails.

@@ -166,7 +166,6 @@ func (s *RouterTestSuite) TestPrepareResult() {
 					pools.NewRoutableResultPool(
 						poolIDOne,
 						poolmanagertypes.Balancer,
-						poolOneBalances,
 						poolOne.GetSpreadFactor(sdk.Context{}),
 						USDT,
 						takerFeeOne,
@@ -174,7 +173,6 @@ func (s *RouterTestSuite) TestPrepareResult() {
 					pools.NewRoutableResultPool(
 						poolIDTwo,
 						poolmanagertypes.Balancer,
-						poolTwoBalances,
 						poolTwo.GetSpreadFactor(sdk.Context{}),
 						USDC,
 						takerFeeTwo,
@@ -193,7 +191,6 @@ func (s *RouterTestSuite) TestPrepareResult() {
 					pools.NewRoutableResultPool(
 						poolIDThree,
 						poolmanagertypes.Balancer,
-						poolThreeBalances,
 						poolThree.GetSpreadFactor(sdk.Context{}),
 						USDC,
 						takerFeeThree,
