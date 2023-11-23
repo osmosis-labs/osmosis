@@ -189,17 +189,3 @@ func sortPools(pools []domain.PoolI, totalTVL osmomath.Int, preferredPoolIDsMap 
 	}
 	return pools
 }
-
-// FilterSlice filters a slice of integers based on a provided predicate function.
-// TODO: move to osmoutils
-func FilterSlice(slice []int, predicate func(int) bool) []int {
-	result := slice[:0] // Reuse the original slice's storage
-
-	for _, item := range slice {
-		if predicate(item) {
-			result = append(result, item)
-		}
-	}
-
-	return result
-}
