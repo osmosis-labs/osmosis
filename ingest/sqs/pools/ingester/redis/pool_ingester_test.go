@@ -495,25 +495,23 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
 	s.Require().NoError(err)
 
-	// Validate concentrated pools
-	actualConcentratedPools, err := redisRepoMock.GetAllConcentrated(sdk.WrapSDKContext(s.Ctx))
+	allPools, err := redisRepoMock.GetAllPools(sdk.WrapSDKContext(s.Ctx))
 	s.Require().NoError(err)
-	s.Require().Equal(2, len(actualConcentratedPools))
-	s.Require().Equal(poolsData.ConcentratedPoolID, actualConcentratedPools[0].GetId())
-	s.Require().Equal(customTakerFeeConcentratedPool.GetId(), actualConcentratedPools[1].GetId())
 
-	// Validate CFMM pools
-	actualCFMMPools, err := redisRepoMock.GetAllCFMM(sdk.WrapSDKContext(s.Ctx))
-	s.Require().NoError(err)
-	s.Require().Equal(2, len(actualCFMMPools))
-	s.Require().Equal(poolsData.BalancerPoolID, actualCFMMPools[0].GetId())
-	s.Require().Equal(poolsData.StableSwapPoolID, actualCFMMPools[1].GetId())
+	s.Require().Len(allPools, 2+2+1)
 
-	// Validate CosmWasm pools
-	actualCosmWasmPools, err := redisRepoMock.GetAllCosmWasm(sdk.WrapSDKContext(s.Ctx))
-	s.Require().NoError(err)
-	s.Require().Equal(1, len(actualCosmWasmPools))
-	s.Require().Equal(poolsData.CosmWasmPoolID, actualCosmWasmPools[0].GetId())
+	// Order of pooks is by order of writes:
+	// 1. CFMM
+	// 2. Concentrated
+	// 3. Cosmwasm
+
+	s.Require().Equal(poolsData.BalancerPoolID, allPools[0].GetId())
+	s.Require().Equal(poolsData.StableSwapPoolID, allPools[1].GetId())
+
+	s.Require().Equal(poolsData.ConcentratedPoolID, allPools[2].GetId())
+	s.Require().Equal(customTakerFeeConcentratedPool.GetId(), allPools[3].GetId())
+
+	s.Require().Equal(poolsData.CosmWasmPoolID, allPools[4].GetId())
 
 	// Validate taker fee for the custom pool
 	actualTakerFee, err := redisRouterMock.GetTakerFee(sdk.WrapSDKContext(s.Ctx), customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1())

@@ -107,25 +107,13 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 	// Create a map from denom to routable pool ID.
 	denomToRoutablePoolIDMap := make(map[string]denomRoutingInfo)
 
+	// Get all pools by type.
+
 	// CFMM pools
 
 	cfmmPools, err := pi.gammKeeper.GetPools(ctx)
 	if err != nil {
 		return err
-	}
-
-	denomPairToTakerFeeMap := make(map[domain.DenomPair]osmomath.Dec, 0)
-
-	// Parse CFMM pool to the standard SQS types.
-	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
-	for _, pool := range cfmmPools {
-		// Parse CFMM pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
-		if err != nil {
-			return err
-		}
-
-		cfmmPoolsParsed = append(cfmmPoolsParsed, pool)
 	}
 
 	// Concentrated pools
@@ -135,17 +123,6 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 		return err
 	}
 
-	concentratedPoolsParsed := make([]domain.PoolI, 0, len(concentratedPools))
-	for _, pool := range concentratedPools {
-		// Parse concentrated pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
-		if err != nil {
-			return err
-		}
-
-		concentratedPoolsParsed = append(concentratedPoolsParsed, pool)
-	}
-
 	// CosmWasm pools
 
 	cosmWasmPools, err := pi.cosmWasmKeeper.GetPoolsWithWasmKeeper(ctx)
@@ -153,7 +130,31 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 		return err
 	}
 
-	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
+	denomPairToTakerFeeMap := make(map[domain.DenomPair]osmomath.Dec, 0)
+
+	allPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
+
+	// Parse CFMM pool to the standard SQS types.
+	for _, pool := range cfmmPools {
+		// Parse CFMM pool to the standard SQS types.
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+		if err != nil {
+			return err
+		}
+
+		allPoolsParsed = append(allPoolsParsed, pool)
+	}
+
+	for _, pool := range concentratedPools {
+		// Parse concentrated pool to the standard SQS types.
+		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+		if err != nil {
+			return err
+		}
+
+		allPoolsParsed = append(allPoolsParsed, pool)
+	}
+
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
@@ -161,12 +162,12 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 			return err
 		}
 
-		cosmWasmPoolsParsed = append(cosmWasmPoolsParsed, pool)
+		allPoolsParsed = append(allPoolsParsed, pool)
 	}
 
 	pi.logger.Info("ingesting pools to Redis", zap.Int64("height", ctx.BlockHeight()), zap.Int("num_cfmm", len(cfmmPools)), zap.Int("num_concentrated", len(concentratedPools)), zap.Int("num_cosmwasm", len(cosmWasmPools)))
 
-	err = pi.poolsRepository.StorePools(goCtx, tx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
+	err = pi.poolsRepository.StorePools(goCtx, tx, allPoolsParsed)
 	if err != nil {
 		return err
 	}
@@ -179,10 +180,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 
 	// Update routes every RouteUpdateHeightInterval blocks unless RouteUpdateHeightInterval is 0.
 	if pi.routerConfig.RouteUpdateHeightInterval > routeIngestDisablePlaceholder && ctx.BlockHeight()%pi.routerConfig.RouteUpdateHeightInterval == 0 {
-		allPools := make([]domain.PoolI, 0, len(cfmmPoolsParsed)+len(concentratedPoolsParsed)+len(cosmWasmPoolsParsed))
-		allPools = append(allPools, cfmmPoolsParsed...)
-		allPools = append(allPools, concentratedPoolsParsed...)
-		allPools = append(allPools, cosmWasmPoolsParsed...)
+		allPools := make([]domain.PoolI, 0, len(allPoolsParsed))
 
 		pi.logger.Info("getting routes for pools", zap.Int64("height", ctx.BlockHeight()))
 

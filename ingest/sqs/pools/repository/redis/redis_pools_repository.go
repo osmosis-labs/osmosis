@@ -12,6 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type redisPoolsRepo struct {
@@ -24,9 +25,7 @@ var (
 )
 
 const (
-	cfmmPoolKey         = "cfmmPool"
-	concentratedPoolKey = "concentratedPool"
-	cosmWasmPoolKey     = "cosmWasmPool"
+	poolsKey = "pools"
 )
 
 // NewRedisPoolsRepo will create an implementation of pools.Repository
@@ -37,89 +36,22 @@ func NewRedisPoolsRepo(appCodec codec.Codec, repositoryManager mvc.TxManager) mv
 	}
 }
 
-// GetAllCFMM implements mvc.PoolsRepository.
-// Returns balancer and stableswap pools sorted by ID.
-func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error) {
-	tx := r.repositoryManager.StartTx()
-
-	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, cfmmPoolKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := tx.Exec(ctx); err != nil {
-		return nil, err
-	}
-
-	sqsPoolMapByID := sqsPoolMapByIDCmd.Val()
-	chainPoolMapByID := chainPoolMapByIDCmd.Val()
-
-	return r.getPools(sqsPoolMapByID, chainPoolMapByID, nil)
-}
-
-// GetAllConcentrated implements mvc.PoolsRepository.
-// Returns concentrated pools sorted by ID.
-// Note that this does not retrieve ticks by default.
-func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI, error) {
-	tx := r.repositoryManager.StartTx()
-
-	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, concentratedPoolKey)
-	if err != nil {
-		return nil, err
-	}
-
-	ticksMapByIDCmd, err := getTicksMapByIdCmd(ctx, tx)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := tx.Exec(ctx); err != nil {
-		return nil, err
-	}
-
-	sqsPoolMapByID := sqsPoolMapByIDCmd.Val()
-	chainPoolMapByID := chainPoolMapByIDCmd.Val()
-	ticksMapByID := ticksMapByIDCmd.Val()
-
-	return r.getPools(sqsPoolMapByID, chainPoolMapByID, ticksMapByID)
-}
-
-// GetAllCosmWasm implements mvc.PoolsRepository.
-// Returns cosmwasm pools sorted by ID.
-func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, error) {
-	tx := r.repositoryManager.StartTx()
-
-	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, cosmWasmPoolKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := tx.Exec(ctx); err != nil {
-		return nil, err
-	}
-
-	sqsPoolMapByID := sqsPoolMapByIDCmd.Val()
-	chainPoolMapByID := chainPoolMapByIDCmd.Val()
-
-	return r.getPools(sqsPoolMapByID, chainPoolMapByID, nil)
-}
-
 // GetAllPools implements mvc.PoolsRepository.
 // Atomically reads all pools from Redis.
 func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error) {
 	tx := r.repositoryManager.StartTx()
 
-	sqsPoolMapByIDCmdCFMM, chainPoolMapByIDCmdCFMM, err := r.requestPoolsAtomically(ctx, tx, cfmmPoolKey)
+	sqsPoolMapByIDCmdCFMM, chainPoolMapByIDCmdCFMM, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
 	if err != nil {
 		return nil, err
 	}
 
-	sqsPoolMapByIDCmdConcentrated, chainPoolMapByIDCmdConcentrated, err := r.requestPoolsAtomically(ctx, tx, concentratedPoolKey)
+	sqsPoolMapByIDCmdConcentrated, chainPoolMapByIDCmdConcentrated, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
 	if err != nil {
 		return nil, err
 	}
 
-	sqsPoolMapByIDCmdCosmwasm, chainPoolMapByIDCmdCosmwasm, err := r.requestPoolsAtomically(ctx, tx, cosmWasmPoolKey)
+	sqsPoolMapByIDCmdCosmwasm, chainPoolMapByIDCmdCosmwasm, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
 	if err != nil {
 		return nil, err
 	}
@@ -162,16 +94,8 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 	return allPools, nil
 }
 
-func (r *redisPoolsRepo) StorePools(ctx context.Context, tx mvc.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
-	if err := r.addCFMMPoolsTx(ctx, tx, cfmmPools); err != nil {
-		return err
-	}
-
-	if err := r.addConcentratedPoolsTx(ctx, tx, concentratedPools); err != nil {
-		return err
-	}
-
-	if err := r.addCosmwasmPoolsTx(ctx, tx, cosmwasmPools); err != nil {
+func (r *redisPoolsRepo) StorePools(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
+	if err := r.addPoolsTx(ctx, tx, poolsKey, pools); err != nil {
 		return err
 	}
 
@@ -180,41 +104,20 @@ func (r *redisPoolsRepo) StorePools(ctx context.Context, tx mvc.Tx, cfmmPools []
 
 func (r *redisPoolsRepo) ClearAllPools(ctx context.Context, tx mvc.Tx) error {
 	// CFMM pools
-	if err := r.deletePoolsTx(ctx, tx, cfmmPoolKey); err != nil {
+	if err := r.deletePoolsTx(ctx, tx, poolsKey); err != nil {
 		return err
 	}
 
 	// Concentrated pools
-	if err := r.deletePoolsTx(ctx, tx, concentratedPoolKey); err != nil {
+	if err := r.deletePoolsTx(ctx, tx, poolsKey); err != nil {
 		return err
 	}
 
 	// Cosmwasm pools
-	if err := r.deletePoolsTx(ctx, tx, cosmWasmPoolKey); err != nil {
+	if err := r.deletePoolsTx(ctx, tx, poolsKey); err != nil {
 		return err
 	}
 	return nil
-}
-
-// addCFMMPoolsTx pipelines the given CFMM pools at the given storeKey to be executed atomically in a transaction.
-// CONTRACT: all pools are CFMM.
-// This method does not perform any validation.
-func (r *redisPoolsRepo) addCFMMPoolsTx(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) (err error) {
-	return r.addPoolsTx(ctx, tx, cfmmPoolKey, pools)
-}
-
-// addConcentratedPoolsTx pipelines the given concentrated pools at the given storeKey to be executed atomically in a transaction.
-// CONTRACT: all pools are concentrated.
-// This method does not perform any validation.
-func (r *redisPoolsRepo) addConcentratedPoolsTx(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
-	return r.addPoolsTx(ctx, tx, concentratedPoolKey, pools)
-}
-
-// addCosmWasmPoolsTx pipelines the given cosmwasm pools at the given storeKey to be executed atomically in a transaction.
-// CONTRACT: all pools are cosmwasm.
-// This method does not perform any validation.
-func (r *redisPoolsRepo) addCosmwasmPoolsTx(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
-	return r.addPoolsTx(ctx, tx, cosmWasmPoolKey, pools)
 }
 
 func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx mvc.Tx, storeKey string) (sqsPoolMapByID *redis.MapStringStringCmd, chainPoolMapByID *redis.MapStringStringCmd, err error) {
@@ -309,11 +212,6 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx mvc.Tx, storeKey str
 		return err
 	}
 
-	// TODO: refactor this in a more general way to avoid having to do this check
-	// Generally, for other pool types we should be able to serialize nil
-	// tick model to empty bytes and deserialize it back to nil
-	isConcentrated := storeKey == concentratedPoolKey
-
 	for _, pool := range pools {
 		serializedSQSPoolModel, err := json.Marshal(pool.GetSQSPoolModel())
 		if err != nil {
@@ -335,6 +233,8 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx mvc.Tx, storeKey str
 		if err != nil {
 			return err
 		}
+
+		isConcentrated := pool.GetType() == poolmanagertypes.Concentrated
 
 		// Write concentrated tick model
 		if isConcentrated {
@@ -369,11 +269,6 @@ func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx mvc.Tx, storeKey 
 		return err
 	}
 
-	// TODO: refactor this in a more general way to avoid having to do this check
-	// Generally, for other pool types we should be able to serialize nil
-	// tick model to empty bytes and deserialize it back to nil
-	isConcentrated := storeKey == concentratedPoolKey
-
 	// Note that we have 2x write and read amplification due to storage layout. We can optimize this later.
 	_, err = pipeliner.HDel(ctx, sqsPoolModelKey(storeKey)).Result()
 	if err != nil {
@@ -385,12 +280,9 @@ func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx mvc.Tx, storeKey 
 		return err
 	}
 
-	// Write concentrated tick model
-	if isConcentrated {
-		_, err = pipeliner.HDel(ctx, concentratedTicksModelKey(storeKey)).Result()
-		if err != nil {
-			return err
-		}
+	_, err = pipeliner.HDel(ctx, concentratedTicksModelKey(storeKey)).Result()
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -410,7 +302,7 @@ func getTicksMapByIdCmd(ctx context.Context, tx mvc.Tx) (*redis.MapStringStringC
 		return nil, err
 	}
 
-	ticksMapByIDCmd := pipeliner.HGetAll(ctx, concentratedTicksModelKey(concentratedPoolKey))
+	ticksMapByIDCmd := pipeliner.HGetAll(ctx, concentratedTicksModelKey(poolsKey))
 	return ticksMapByIDCmd, nil
 }
 
