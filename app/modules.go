@@ -9,9 +9,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 
-	auction "github.com/skip-mev/block-sdk/x/auction"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
-
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
@@ -129,7 +126,6 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
-	auctiontypes.ModuleName:                       nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -159,7 +155,6 @@ func appModules(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasm.ModuleName)),
-		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -265,7 +260,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		consensusparamtypes.ModuleName,
-		auctiontypes.ModuleName,
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,

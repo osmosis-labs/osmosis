@@ -7,13 +7,14 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 var (
 	validCosmwasmAddress   = "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
 	invalidCosmwasmAddress = "osmo1{}{}4hj2tfpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
-	validActionPrefix      = "beforeSwap"
+	validActionPrefix      = "beforeSwapExactAmountIn"
 	counterContractPath    = "./testcontracts/compiled-wasm/counter.wasm"
 )
 
@@ -53,6 +54,13 @@ func (s *KeeperTestSuite) TestSetAndGetPoolHookContract() {
 		"error: incorrectly constructed address": {
 			cosmwasmAddress: invalidCosmwasmAddress,
 			actionPrefix:    validActionPrefix,
+			poolId:          validPoolId,
+
+			expectErrOnSet: true,
+		},
+		"error: invalid hook action": {
+			cosmwasmAddress: invalidCosmwasmAddress,
+			actionPrefix:    "invalidActionPrefix",
 			poolId:          validPoolId,
 
 			expectErrOnSet: true,
@@ -152,7 +160,7 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 			// --- Setup ---
 
 			// Upload and instantiate wasm code
-			cosmwasmAddressBech32 := s.uploadAndInstantiateContract(tc.wasmFile)
+			_, cosmwasmAddressBech32 := s.uploadAndInstantiateContract(tc.wasmFile)
 
 			// Set pool hook contract to the newly instantiated contract
 			err := s.Clk.SetPoolHookContract(s.Ctx, validPoolId, validActionPrefix, cosmwasmAddressBech32)
@@ -178,9 +186,131 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 	}
 }
 
+// Pool hook tests
+// General testing strategy:
+//  1. Build a pre-defined contract that defines the following behavior for all hooks:
+//     if triggered, transfer 1 token with denom corresponding to the action prefix
+//     e.g. if action prefix is "beforeSwap", transfer 1 token with denom "beforeSwap"
+//  2. Set this contract for all hooks defined by the test case (each case should have a list
+//     of action prefixes it wants to "activate")
+//  3. Run a series of actions that would trigger all the hooks (create, withdraw from, swap against a position),
+//     and ensure that the correct denoms are in the account balance after each action/at the end.
+//
+// NOTE: we assume that set contracts have valid implementations for all hooks and that this is validated
+// at the contract setting stage at a higher level of abstraction. Thus, this class of errors is not covered
+// by these tests.
+func (s *KeeperTestSuite) TestPoolHooks() {
+	hookContractFilePath := "./testcontracts/compiled-wasm/hooks.wasm"
+
+	allBeforeHooks := []string{
+		before(types.CreatePositionPrefix),
+		before(types.WithdrawPositionPrefix),
+		before(types.SwapExactAmountInPrefix),
+		before(types.SwapExactAmountOutPrefix),
+	}
+
+	allAfterHooks := []string{
+		after(types.CreatePositionPrefix),
+		after(types.WithdrawPositionPrefix),
+		after(types.SwapExactAmountInPrefix),
+		after(types.SwapExactAmountOutPrefix),
+	}
+
+	allHooks := append(allBeforeHooks, allAfterHooks...)
+
+	testCases := map[string]struct {
+		actionPrefixes []string
+	}{
+		"single hook: before create position": {
+			actionPrefixes: []string{before(types.CreatePositionPrefix)},
+		},
+		"all before hooks": {
+			actionPrefixes: allBeforeHooks,
+		},
+		"all after hooks": {
+			actionPrefixes: allAfterHooks,
+		},
+		"all hooks": {
+			actionPrefixes: allHooks,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			clPool := s.PrepareConcentratedPool()
+
+			// Upload and instantiate wasm code
+			rawCosmwasmAddress, cosmwasmAddressBech32 := s.uploadAndInstantiateContract(hookContractFilePath)
+
+			// Fund the contract with tokens for all action prefixes using a helper
+			for _, actionPrefix := range tc.actionPrefixes {
+				s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(actionPrefix, sdk.NewInt(10))))
+			}
+
+			// Set the contract for all hooks as defined by tc.actionPrefixes
+			for _, actionPrefix := range tc.actionPrefixes {
+				// We use the bech32 address here since the set function expects it for security reasons
+				err := s.Clk.SetPoolHookContract(s.Ctx, validPoolId, actionPrefix, cosmwasmAddressBech32)
+				s.Require().NoError(err)
+			}
+
+			// --- Execute a series of actions that trigger all supported hooks if set ---
+
+			// Create position
+			_, positionId := s.SetupPosition(clPool.GetId(), s.TestAccs[0], DefaultCoins, types.MinInitializedTick, types.MaxTick, true)
+
+			// Withdraw from position
+			_, _, err := s.Clk.WithdrawPosition(s.Ctx, s.TestAccs[0], positionId, sdk.NewDec(100))
+			s.Require().NoError(err)
+
+			// Execute swap (SwapExactAmountIn)
+			s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(types.SwapExactAmountInPrefix, sdk.NewInt(10))))
+			_, err = s.Clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], clPool, sdk.NewCoin(ETH, sdk.NewInt(1)), USDC, sdk.ZeroInt(), DefaultZeroSpreadFactor)
+			s.Require().NoError(err)
+
+			// Execute swap (SwapExactAmountOut)
+			s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(types.SwapExactAmountOutPrefix, sdk.NewInt(10))))
+			_, err = s.Clk.SwapExactAmountOut(s.Ctx, s.TestAccs[0], clPool, ETH, sdk.NewInt(100), sdk.NewCoin(USDC, sdk.NewInt(10)), DefaultZeroSpreadFactor)
+			s.Require().NoError(err)
+
+			// Check that each set hook was successfully triggered.
+			// These assertions lean on the test construction defined in the comments for these tests.
+			// In short, each hook trigger is expected to transfer 1 token with denom corresponding to the
+			// action that triggered it.
+			expectedTriggers := sdk.NewCoins()
+			for _, actionPrefix := range tc.actionPrefixes {
+				expectedTriggers = expectedTriggers.Add(sdk.NewCoin(actionPrefix, sdk.NewInt(1)))
+			}
+
+			// Ensure that correct hooks were triggered
+			balances := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			s.Require().True(expectedTriggers.DenomsSubsetOf(balances), "expected balance to include: %s, actual balances: %s", expectedTriggers, balances)
+
+			// Derive actions that should not have been triggered
+			notTriggeredActions := osmoutils.Filter[string](func(s string) bool { return osmoutils.Contains(tc.actionPrefixes, s) }, allHooks)
+
+			// Ensure that hooks that weren't set weren't triggered
+			for _, action := range notTriggeredActions {
+				s.Require().False(osmoutils.Contains(balances, sdk.NewCoin(action, sdk.NewInt(1))), "expected balance to not include: %s, actual balances: %s", action, balances)
+			}
+		})
+	}
+}
+
+// Adds "before" prefix to action (helper for test readability)
+func before(action string) string {
+	return types.BeforeActionPrefix(action)
+}
+
+// Adds "after" prefix to action (helper for test readability)
+func after(action string) string {
+	return types.AfterActionPrefix(action)
+}
+
 // uploadAndInstantiateContract is a helper function to upload and instantiate a contract from a given file path.
 // It calls an empty Instantiate message on the created contract and returns the bech32 address after instantiation.
-func (s *KeeperTestSuite) uploadAndInstantiateContract(filePath string) (cosmwasmAddressBech32 string) {
+func (s *KeeperTestSuite) uploadAndInstantiateContract(filePath string) (rawCWAddr sdk.AccAddress, bech32CWAddr string) {
 	// We use a gov permissioned contract keeper to avoid having to manually set permissions
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
 
@@ -189,10 +319,10 @@ func (s *KeeperTestSuite) uploadAndInstantiateContract(filePath string) (cosmwas
 	s.Require().NoError(err)
 	codeID, _, err := contractKeeper.Create(s.Ctx, s.TestAccs[0], wasmCode, nil)
 	s.Require().NoError(err)
-	cosmwasmAddress, _, err := contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
+	rawCWAddr, _, err = contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
 	s.Require().NoError(err)
-	cosmwasmAddressBech32, err = sdk.Bech32ifyAddressBytes("osmo", cosmwasmAddress)
+	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("osmo", rawCWAddr)
 	s.Require().NoError(err)
 
-	return cosmwasmAddressBech32
+	return rawCWAddr, bech32CWAddr
 }
