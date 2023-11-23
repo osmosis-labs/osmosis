@@ -195,6 +195,7 @@ func (g *RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
 		}
 	}
 
+    // if we did not have any endEntry, initialize end entry  
 	if endEntry == nil {
 		endEntry = &Routes{Routes: make([]*Route, 0)}
 		startEntry.Entries = append(startEntry.Entries, &InnerMapEntry{Key: end, Value: endEntry})
