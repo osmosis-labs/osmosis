@@ -78,25 +78,44 @@ func findTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Rout
 func findThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
 	var routeRoutes [][]*types.Route
 
-	if startRoutes, ok := g.Graph[start]; ok {
-		for token1, routes1 := range startRoutes.InnerMap {
-			if token1 == start || token1 == end {
+	startRoutes, startExists := g.Graph[start]
+	if !startExists {
+		return routeRoutes
+	}
+
+	for token1, routes1 := range startRoutes.InnerMap {
+		if token1 == start || token1 == end {
+			continue
+		}
+
+		token1Routes, token1Exists := g.Graph[token1]
+		if !token1Exists {
+			continue
+		}
+
+		for token2, routes2 := range token1Routes.InnerMap {
+			if token2 == start || token2 == end {
 				continue
 			}
-			for token2, routes2 := range g.Graph[token1].InnerMap {
-				if token2 == start || token2 == end {
-					continue
-				}
-				if endRoutes, ok := g.Graph[token2].InnerMap[end]; ok {
-					for _, startRoute := range routes1.Routes {
-						startRoute.Token = token1
-						for _, middleRoute := range routes2.Routes {
-							middleRoute.Token = token2
-							for _, endRoute := range endRoutes.Routes {
-								endRoute.Token = end
-								routeRoutes = append(routeRoutes, []*types.Route{startRoute, middleRoute, endRoute})
-							}
-						}
+
+			endRoutes, endExists := g.Graph[token2].InnerMap[end]
+			if !endExists {
+				continue
+			}
+
+			for _, startRoute := range routes1.Routes {
+				clonedStartRoute := *startRoute
+				clonedStartRoute.Token = token1
+
+				for _, middleRoute := range routes2.Routes {
+					clonedMiddleRoute := *middleRoute
+					clonedMiddleRoute.Token = token2
+
+					for _, endRoute := range endRoutes.Routes {
+						clonedEndRoute := *endRoute
+						clonedEndRoute.Token = end
+
+						routeRoutes = append(routeRoutes, []*types.Route{&clonedStartRoute, &clonedMiddleRoute, &clonedEndRoute})
 					}
 				}
 			}
@@ -105,6 +124,7 @@ func findThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Ro
 
 	return routeRoutes
 }
+
 
 // SetDenomPairRoutes sets the route map to be used for route calculations
 func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) {
