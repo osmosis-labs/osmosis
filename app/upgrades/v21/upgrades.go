@@ -1,9 +1,7 @@
 package v21
 
 import (
-	"cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,11 +97,6 @@ func CreateUpgradeHandler(
 			case wasmtypes.ModuleName:
 				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
 
-			// POB
-			case auctiontypes.ModuleName:
-				// already SDK v47
-				continue
-
 			// osmosis modules
 			case protorevtypes.ModuleName:
 				keyTable = protorevtypes.ParamKeyTable() //nolint:staticcheck
@@ -150,12 +143,6 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Set POB Params:
-		err = setAuctionParams(ctx, keepers)
-		if err != nil {
-			return nil, err
-		}
-
 		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
 		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)))
@@ -186,18 +173,4 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
-}
-
-func setAuctionParams(ctx sdk.Context, keepers *keepers.AppKeepers) error {
-	pobAddr := keepers.AccountKeeper.GetModuleAddress(auctiontypes.ModuleName)
-
-	auctionParams := auctiontypes.Params{
-		MaxBundleSize:          2,
-		EscrowAccountAddress:   pobAddr,
-		ReserveFee:             sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1_000_000)},
-		MinBidIncrement:        sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1_000_000)},
-		FrontRunningProtection: true,
-		ProposerFee:            math.LegacyNewDecWithPrec(25, 2),
-	}
-	return keepers.AuctionKeeper.SetParams(ctx, auctionParams)
 }

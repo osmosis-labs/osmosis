@@ -64,3 +64,18 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})
 	suite.Require().True(isArb)
 }
+
+func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_OtherMsg() {
+	otherMsg := []byte(`{"update_feed": {}}`)
+
+	// https://celatone.osmosis.zone/osmosis-1/txs/315EB6284778EBB5BAC0F94CC740F5D7E35DDA5BBE4EC9EC79F012548589C6E5
+	executeMsg := &wasmtypes.MsgExecuteContract{
+		Contract: "osmo1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
+		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
+		Msg:      otherMsg,
+	}
+
+	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})
+	suite.Require().False(isArb)
+}
