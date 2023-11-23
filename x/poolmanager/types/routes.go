@@ -168,6 +168,8 @@ func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) erro
 	return nil
 }
 
+// AddEdge adds the given pool id and token as a route in the end entry.
+// Creates start entry or end entry if they do not exist
 func (g *RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
 	if g.Entries == nil {
 		g.Entries = make([]*RoutingGraphEntry, 0)
