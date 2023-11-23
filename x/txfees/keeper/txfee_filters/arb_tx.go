@@ -43,6 +43,9 @@ func (m AffiliateSwapMsg) TokenInDenom() string {
 
 // TokenOutDenom implements types.SwapMsgRoute.
 func (m AffiliateSwapMsg) TokenOutDenom() string {
+	if len(m.Routes) == 0 {
+		return "no-token-out"
+	}
 	lastPoolInRoute := m.Routes[len(m.Routes)-1]
 	return lastPoolInRoute.TokenOutDenom
 }
@@ -102,6 +105,12 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 
 		// Get the contract message and attempt to unmarshal it into the affiliate swap message
 		contractMessage := msgExecuteContract.GetMsg()
+
+		// Check that the contract message is an affiliate swap message
+		if ok := isAffiliateSwapMsg(contractMessage); !ok {
+			return swapInDenom, false
+		}
+
 		var affiliateSwapMsg AffiliateSwapMsg
 		if err := json.Unmarshal(contractMessage, &affiliateSwapMsg); err != nil {
 			// If we can't unmarshal it, it's not an affiliate swap message
@@ -159,4 +168,30 @@ func isArbTxLooseSwapMsg(swapMsg poolmanagertypes.SwapMsgRoute, swapInDenom stri
 	}
 	swapInDenom = swapMsg.TokenInDenom()
 	return swapInDenom, false
+}
+
+// TODO: Make this generic by using isJsonSuperset from https://github.com/osmosis-labs/osmosis/blob/d56de7365428f0282eeab05c1cc75787370ef997/x/authenticator/authenticator/message_filter.go#L173C6-L173C12
+func isAffiliateSwapMsg(msg []byte) bool {
+	// Check that the contract message is a valid JSON object
+	jsonObject := make(map[string]interface{})
+	err := json.Unmarshal(msg, &jsonObject)
+	if err != nil {
+		return false
+	}
+
+	// check the main key is "swap"
+	swap, ok := jsonObject["swap"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	if routes, ok := swap["routes"].([]interface{}); !ok || len(routes) == 0 {
+		return false
+	}
+
+	if tokenOutMinAmount, ok := swap["token_out_min_amount"].(map[string]interface{}); !ok || len(tokenOutMinAmount) == 0 {
+		return false
+	}
+
+	return true
 }
