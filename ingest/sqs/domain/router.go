@@ -54,11 +54,6 @@ type Route interface {
 	// Returns the resulting pools.
 	PrepareResultPools() []RoutablePool
 
-	// Reverse reverses the route, making it so the given denom is the token out denom.
-	// Errors if token out denom is not found in the first pool in the route.
-	// Errors if fails to cons
-	Reverse(desiredTokenOutDenom string) error
-
 	String() string
 }
 
