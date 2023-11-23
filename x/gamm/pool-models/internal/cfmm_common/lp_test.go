@@ -8,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
@@ -30,10 +29,10 @@ func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
 func TestCalcExitPool(t *testing.T) {
 	emptyContext := sdk.Context{}
 
-	twoStablePoolAssets := sdk.NewCoins(
-		sdk.NewInt64Coin("foo", 1000000000),
-		sdk.NewInt64Coin("bar", 1000000000),
-	)
+	twoStablePoolAssets := []balancer.PoolAsset{
+		{Token: sdk.NewInt64Coin("foo", 1000000000), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 1000000000), Weight: sdk.NewIntFromUint64(5)},
+	}
 
 	threeBalancerPoolAssets := []balancer.PoolAsset{
 		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
@@ -42,13 +41,12 @@ func TestCalcExitPool(t *testing.T) {
 	}
 
 	// create these pools used for testing
-	twoAssetPool, err := stableswap.NewStableswapPool(
+	twoAssetPool, err := balancer.NewBalancerPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
 		twoStablePoolAssets,
-		[]uint64{1, 1},
 		"",
-		"",
+		time.Now(),
 	)
 	require.NoError(t, err)
 
@@ -61,13 +59,12 @@ func TestCalcExitPool(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
+	twoAssetPoolWithExitFee, err := balancer.NewBalancerPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
-		[]uint64{1, 1},
 		"",
-		"",
+		time.Now(),
 	)
 	require.NoError(t, err)
 

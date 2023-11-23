@@ -95,10 +95,6 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return nil, err
 	}
 
-	for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-		k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount)
-	}
-
 	if k.hooks == nil {
 		return lock, nil
 	}
@@ -160,38 +156,14 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 }
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
-// Returns an error if the lock has a synthetic lock.
 func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
-	// prohibit BeginUnlock if synthetic locks are referring to this
-	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return 0, err
-	}
-	if k.HasAnySyntheticLockups(ctx, lock.ID) {
-		return 0, fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
 	unlockingLock, err := k.beginUnlock(ctx, *lock, coins)
 	return unlockingLock, err
-}
-
-// BeginForceUnlock begins force unlock of the given lock.
-// This method should be called by the superfluid module ONLY, as it does not check whether
-// the lock has a synthetic lock or not before unlocking.
-// Returns lock id, new lock id if the lock was split, else same lock id.
-func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
-	lock, err := k.GetLockByID(ctx, lockID)
-	if err != nil {
-		return 0, err
-	}
-
-	lockID, err = k.beginUnlock(ctx, *lock, coins)
-	if err != nil {
-		return 0, err
-	}
-
-	return lockID, nil
 }
 
 // beginUnlock unlocks specified tokens from the given lock. Existing lock refs
@@ -345,15 +317,9 @@ func (k Keeper) PartialForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins
 // ForceUnlock ignores unlock duration and immediately unlocks the lock and refunds tokens to lock owner.
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// Steps:
-	// 1) Break associated synthetic locks. (Superfluid data)
+
 	// 2) If lock is bonded, move it to unlocking
 	// 3) Run logic to delete unlocking metadata, and send tokens to owner.
-
-	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
-	err := k.DeleteAllSyntheticLocks(ctx, lock, synthLocks)
-	if err != nil {
-		return err
-	}
 
 	if !lock.IsUnlocking() {
 		_, err := k.BeginUnlock(ctx, lock.ID, nil)
@@ -417,11 +383,6 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 	if lock.IsUnlocking() {
 		return fmt.Errorf("cannot edit unlocking lockup for lock %d", lock.ID)
-	}
-
-	// check synthetic lockup exists
-	if k.HasAnySyntheticLockups(ctx, lock.ID) {
-		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
 	}
 
 	// completely delete existing lock refs
@@ -528,129 +489,8 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	return nil
 }
 
-func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.SyntheticLock) error {
-	// index by coin.Denom, them duration -> amt
-	// We accumulate the accumulation store entries separately,
-	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
-	// We then save these once to the accumulation store at the end.
-	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
-	denoms := []string{}
-	for i, synthLock := range syntheticLocks {
-		if i%25000 == 0 {
-			msg := fmt.Sprintf("Reset %d synthetic lock refs", i)
-			ctx.Logger().Info(msg)
-		}
-
-		// Add to the accumlation store cache
-		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockId)
-		if err != nil {
-			return err
-		}
-
-		err = k.setSyntheticLockAndResetRefs(ctx, *lock, synthLock)
-		if err != nil {
-			return err
-		}
-
-		coin, err := lock.SingleCoin()
-		if err != nil {
-			return err
-		}
-
-		var curDurationMap map[time.Duration]sdk.Int
-		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
-			curDurationMap = durationMap
-			newAmt := coin.Amount
-			if curAmt, ok := durationMap[synthLock.Duration]; ok {
-				newAmt = newAmt.Add(curAmt)
-			}
-			curDurationMap[synthLock.Duration] = newAmt
-		} else {
-			denoms = append(denoms, synthLock.SynthDenom)
-			curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
-		}
-		accumulationStoreEntries[synthLock.SynthDenom] = curDurationMap
-	}
-
-	// deterministically iterate over durationMap cache.
-	sort.Strings(denoms)
-	for _, denom := range denoms {
-		curDurationMap := accumulationStoreEntries[denom]
-		durations := make([]time.Duration, 0, len(curDurationMap))
-		for duration := range curDurationMap {
-			durations = append(durations, duration)
-		}
-		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
-		// now that we have a sorted list of durations for this denom,
-		// add them all to accumulation store
-		msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
-			denom, len(durations))
-		ctx.Logger().Info(msg)
-		for _, d := range durations {
-			amt := curDurationMap[d]
-			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
-		}
-	}
-
-	return nil
-}
-
-// SlashTokensFromLockByID sends slashed tokens directly from the lock to the community pool.
-// Called by the superfluid module ONLY.
-func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
-	lock, err := k.GetLockByID(ctx, lockID)
-	if err != nil {
-		return nil, err
-	}
-
-	modAddr := k.ak.GetModuleAddress(types.ModuleName)
-	err = k.ck.FundCommunityPool(ctx, coins, modAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.removeTokensFromLock(ctx, lock, coins)
-	if err != nil {
-		return nil, err
-	}
-
-	if k.hooks == nil {
-		return lock, nil
-	}
-
-	k.hooks.OnTokenSlashed(ctx, lock.ID, coins)
-	return lock, nil
-}
-
 func (k Keeper) accumulationStore(ctx sdk.Context, denom string) sumtree.Tree {
 	return sumtree.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
-}
-
-// removeTokensFromLock is called by lockup slash function.
-// Called by the superfluid module ONLY.
-func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
-	lock.Coins = lock.Coins.Sub(coins...)
-
-	err := k.setLock(ctx, *lock)
-	if err != nil {
-		return err
-	}
-
-	// modifications to accumulation store
-	for _, coin := range coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	}
-
-	// increase synthetic lockup's accumulation store
-	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
-
-	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
-	// all the synthetic lockups' accumulation should be decreased
-	for _, synthlock := range synthLocks {
-		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), coins[0].Amount)
-	}
-	return nil
 }
 
 // setLock is a utility to store lock object into the store.
@@ -673,17 +513,6 @@ func (k Keeper) setLockAndAddLockRefs(ctx sdk.Context, lock types.PeriodLock) er
 	}
 
 	return k.addLockRefs(ctx, lock)
-}
-
-// setSyntheticLockAndResetRefs sets the synthetic lock object, and resets all of its lock references
-func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
-	err := k.setSyntheticLockupObject(ctx, &synthLock)
-	if err != nil {
-		return err
-	}
-
-	// store synth lock refs
-	return k.addSyntheticLockRefs(ctx, lock, synthLock)
 }
 
 // deleteLock removes the lock object from the state.

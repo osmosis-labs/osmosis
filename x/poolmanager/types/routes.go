@@ -22,11 +22,6 @@ type BankI interface {
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 }
 
-// CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
-type CommunityPoolI interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
 // TODO: godoc
 type SwapI interface {
 	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error
@@ -72,16 +67,6 @@ type SwapI interface {
 	) (tokenIn sdk.Coin, err error)
 }
 
-type PoolIncentivesKeeperI interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
-}
-
-type MultihopRoute interface {
-	Length() int
-	PoolIds() []uint64
-	IntermediateDenoms() []string
-}
-
 type SwapAmountInRoutes []SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) Validate() error {
@@ -99,30 +84,6 @@ func (routes SwapAmountInRoutes) Validate() error {
 	return nil
 }
 
-func (routes SwapAmountInRoutes) IntermediateDenoms() []string {
-	if len(routes) < 2 {
-		return nil
-	}
-	intermediateDenoms := make([]string, 0, len(routes)-1)
-	for _, route := range routes[:len(routes)-1] {
-		intermediateDenoms = append(intermediateDenoms, route.TokenOutDenom)
-	}
-
-	return intermediateDenoms
-}
-
-func (routes SwapAmountInRoutes) PoolIds() []uint64 {
-	poolIds := make([]uint64, 0, len(routes))
-	for _, route := range routes {
-		poolIds = append(poolIds, route.PoolId)
-	}
-	return poolIds
-}
-
-func (routes SwapAmountInRoutes) Length() int {
-	return len(routes)
-}
-
 type SwapAmountOutRoutes []SwapAmountOutRoute
 
 func (routes SwapAmountOutRoutes) Validate() error {
@@ -138,28 +99,4 @@ func (routes SwapAmountOutRoutes) Validate() error {
 	}
 
 	return nil
-}
-
-func (routes SwapAmountOutRoutes) IntermediateDenoms() []string {
-	if len(routes) < 2 {
-		return nil
-	}
-	intermediateDenoms := make([]string, 0, len(routes)-1)
-	for _, route := range routes[1:] {
-		intermediateDenoms = append(intermediateDenoms, route.TokenInDenom)
-	}
-
-	return intermediateDenoms
-}
-
-func (routes SwapAmountOutRoutes) PoolIds() []uint64 {
-	poolIds := make([]uint64, 0, len(routes))
-	for _, route := range routes {
-		poolIds = append(poolIds, route.PoolId)
-	}
-	return poolIds
-}
-
-func (routes SwapAmountOutRoutes) Length() int {
-	return len(routes)
 }

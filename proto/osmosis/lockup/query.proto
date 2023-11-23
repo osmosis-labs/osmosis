@@ -88,13 +88,6 @@ service Query {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/next_lock_id";
   }
 
-  // Returns synthetic lockups by native lockup id
-  rpc SyntheticLockupsByLockupID(SyntheticLockupsByLockupIDRequest)
-      returns (SyntheticLockupsByLockupIDResponse) {
-    option (google.api.http).get =
-        "/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}";
-  }
-
   // Returns account locked records with longer duration
   rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest)
       returns (AccountLockedLongerDurationResponse) {
@@ -246,11 +239,6 @@ message LockedResponse { PeriodLock lock = 1; };
 
 message NextLockIDRequest {};
 message NextLockIDResponse { uint64 lock_id = 1; };
-
-message SyntheticLockupsByLockupIDRequest { uint64 lock_id = 1; }
-message SyntheticLockupsByLockupIDResponse {
-  repeated SyntheticLock synthetic_locks = 1 [ (gogoproto.nullable) = false ];
-}
 
 message AccountLockedLongerDurationRequest {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];

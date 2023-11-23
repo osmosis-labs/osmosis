@@ -129,24 +129,6 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	}, nil
 }
 
-func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) (*types.QueryPoolTypeResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
-
-	poolTypeStr, ok := poolmanagertypes.PoolType_name[int32(poolType)]
-	if !ok {
-		return nil, status.Errorf(codes.Internal, "invalid pool type: %d", poolType)
-	}
-
-	return &types.QueryPoolTypeResponse{
-		PoolType: poolTypeStr,
-	}, err
-}
-
 // CalcJoinPoolShares queries the amount of shares you get by providing specific amount of tokens
 func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoinPoolSharesRequest) (*types.QueryCalcJoinPoolSharesResponse, error) {
 	if req == nil {

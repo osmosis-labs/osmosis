@@ -2,8 +2,6 @@ package keeper
 
 import (
 	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,17 +31,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		// distribute due to epoch event
 		gauges = k.GetActiveGauges(ctx)
-		// only distribute to active gauges that are for native denoms
-		// or non-perpetual and for synthetic denoms.
-		// We distribute to perpetual synthetic denoms elsewhere in superfluid.
-		distrGauges := []types.Gauge{}
-		for _, gauge := range gauges {
-			isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
-			if !(isSynthetic && gauge.IsPerpetual) {
-				distrGauges = append(distrGauges, gauge)
-			}
-		}
-		_, err := k.Distribute(ctx, distrGauges)
+		_, err := k.Distribute(ctx, gauges)
 		if err != nil {
 			return err
 		}

@@ -35,7 +35,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryTotalLiquidity(),
 		GetCmdTotalPoolLiquidity(),
 		GetCmdQueryPoolsWithFilter(),
-		GetCmdPoolType(),
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 	)
@@ -328,17 +327,4 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-// GetCmdPoolType returns pool type given pool id.
-func GetCmdPoolType() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryPoolTypeRequest](
-		"pool-type <pool_id>",
-		"Query pool type",
-		`Query pool type
-Example:
-{{.CommandPrefix}} pool-type <pool_id>
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
 }

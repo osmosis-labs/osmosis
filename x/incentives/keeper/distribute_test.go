@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"strings"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -88,90 +87,6 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		for i, addr := range addrs {
 			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
 			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "test %v, person %d", tc.name, i)
-		}
-	}
-}
-
-// TestSyntheticDistribute tests that when the distribute command is executed on a provided gauge
-// the correct amount of rewards is sent to the correct synthetic lock owners.
-func (suite *KeeperTestSuite) TestSyntheticDistribute() {
-	defaultGauge := perpGaugeDesc{
-		lockDenom:    defaultLPSyntheticDenom,
-		lockDuration: defaultLockDuration,
-		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
-	}
-	doubleLengthGauge := perpGaugeDesc{
-		lockDenom:    defaultLPSyntheticDenom,
-		lockDuration: 2 * defaultLockDuration,
-		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
-	}
-	noRewardGauge := perpGaugeDesc{
-		lockDenom:    defaultLPSyntheticDenom,
-		lockDuration: defaultLockDuration,
-		rewardAmount: sdk.Coins{},
-	}
-	noRewardCoins := sdk.Coins{}
-	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
-	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
-	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
-	tests := []struct {
-		name            string
-		users           []userLocks
-		gauges          []perpGaugeDesc
-		expectedRewards []sdk.Coins
-	}{
-		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
-		// 1k should go to oneLockupUser and 2k to twoLockupUser.
-		{
-			name:            "One user with one synthetic lockup, another user with two synthetic lockups, both with default gauge",
-			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
-			gauges:          []perpGaugeDesc{defaultGauge},
-			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
-		},
-		// gauge 1 gives 3k coins. three locks, all eligible.
-		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
-		// 1k should to oneLockupUser and 5k to twoLockupUser.
-		{
-			name:            "One user with one synthetic lockup (default gauge), another user with two synthetic lockups (double length gauge)",
-			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
-			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
-			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
-		},
-		// gauge 1 gives zero rewards.
-		// both oneLockupUser and twoLockupUser should get no rewards.
-		{
-			name:            "One user with one synthetic lockup, another user with two synthetic lockups, both with no rewards gauge",
-			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
-			gauges:          []perpGaugeDesc{noRewardGauge},
-			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
-		},
-		// gauge 1 gives no rewards.
-		// gauge 2 gives 3k coins. three locks, all eligible. 1k coins per lock.
-		// 1k should to oneLockupUser and 2k to twoLockupUser.
-		{
-			name:            "One user with one synthetic lockup (no rewards gauge), another user with two synthetic lockups (default gauge)",
-			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
-			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
-			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
-		},
-	}
-	for _, tc := range tests {
-		suite.SetupTest()
-		// setup gauges and the synthetic locks defined in the above tests, then distribute to them
-		gauges := suite.SetupGauges(tc.gauges, defaultLPSyntheticDenom)
-		addrs := suite.SetupUserSyntheticLocks(tc.users)
-		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
-		suite.Require().NoError(err)
-		// check expected rewards against actual rewards received
-		for i, addr := range addrs {
-			var rewards string
-			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
-			// extract the superbonding tokens from the rewards distribution
-			// TODO: figure out a less hacky way of doing this
-			if strings.Contains(bal.String(), "lptoken/superbonding,") {
-				rewards = strings.Split(bal.String(), "lptoken/superbonding,")[1]
-			}
-			suite.Require().Equal(tc.expectedRewards[i].String(), rewards, "test %v, person %d", tc.name, i)
 		}
 	}
 }

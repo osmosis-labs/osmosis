@@ -12,14 +12,6 @@ var (
 	ErrTooManyPoolAssets = errors.New("pool has too many assets (currently capped at 8 assets per pool)")
 )
 
-type nonPositiveAmountError struct {
-	Amount string
-}
-
-func (e nonPositiveAmountError) Error() string {
-	return fmt.Sprintf("min out amount or max in amount should be positive, was (%s)", e.Amount)
-}
-
 type FailedToFindRouteError struct {
 	PoolId uint64
 }

@@ -104,7 +104,6 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 	type param struct {
 		coinsToLock         sdk.Coins
-		isSyntheticLockup   bool
 		coinsToUnlock       sdk.Coins
 		lockOwner           sdk.AccAddress
 		duration            time.Duration
@@ -120,8 +119,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 		{
 			name: "unlock full amount of tokens via begin unlock",
 			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup:   false,
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
 				coinsToUnlock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
 				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:            time.Second,
@@ -132,8 +130,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 		{
 			name: "unlock partial amount of tokens via begin unlock",
 			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup:   false,
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
 				coinsToUnlock:       sdk.Coins{sdk.NewInt64Coin("stake", 5)},        // setup wallet
 				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:            time.Second,
@@ -145,27 +142,13 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 		{
 			name: "unlock zero amount of tokens via begin unlock",
 			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup:   false,
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
 				coinsToUnlock:       sdk.Coins{},                                    // setup wallet
 				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
 			expectPass: true,
-		},
-		{
-			name: "unlock partial amount of tokens via begin unlock for lockup with synthetic versions",
-			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup:   true,
-				coinsToUnlock:       sdk.Coins{sdk.NewInt64Coin("stake", 5)},        // setup wallet
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Second,
-				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
-			},
-			expectPass: false,
-			isPartial:  true,
 		},
 	}
 
@@ -178,11 +161,6 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 		goCtx := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := msgServer.LockTokens(goCtx, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
-
-		if test.param.isSyntheticLockup {
-			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
-			suite.Require().NoError(err)
-		}
 
 		unlockingResponse, err := msgServer.BeginUnlocking(goCtx, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
 
@@ -205,7 +183,6 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	type param struct {
 		coinsToLock         sdk.Coins
-		isSyntheticLockup   bool
 		lockOwner           sdk.AccAddress
 		duration            time.Duration
 		coinsInOwnerAddress sdk.Coins
@@ -219,24 +196,12 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 		{
 			name: "unlock all lockups",
 			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup:   false,
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
 				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
 			expectPass: true,
-		},
-		{
-			name: "unlock all when synthetic versions exists",
-			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup:   true,
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Second,
-				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
-			},
-			expectPass: false,
 		},
 	}
 
@@ -247,13 +212,8 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
-		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
-
-		if test.param.isSyntheticLockup {
-			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
-			suite.Require().NoError(err)
-		}
 
 		_, err = msgServer.BeginUnlockingAll(c, types.NewMsgBeginUnlockingAll(test.param.lockOwner))
 
@@ -301,17 +261,6 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 			},
 			expectPass: false,
 		},
-		{
-			name: "disallow edit when synthetic lockup exists",
-			param: param{
-				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
-				isSyntheticLockup: true,
-				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:          time.Second,
-				newDuration:       time.Second * 2,
-			},
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
@@ -324,11 +273,6 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
-
-		if test.param.isSyntheticLockup {
-			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
-			suite.Require().NoError(err)
-		}
 
 		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
 

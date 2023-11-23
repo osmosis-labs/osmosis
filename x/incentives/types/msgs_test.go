@@ -17,8 +17,8 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-// TestMsgCreatePool tests if valid/invalid create pool messages are properly validated/invalidated
-func TestMsgCreatePool(t *testing.T) {
+// TestMsgCreateGauge tests if valid/invalid create gauge messages are properly validated/invalidated
+func TestMsgCreateGauge(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())

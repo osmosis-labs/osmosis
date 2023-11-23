@@ -14,7 +14,6 @@ import (
 )
 
 func (k Keeper) validateCreatedPool(
-	ctx sdk.Context,
 	poolId uint64,
 	pool types.PoolI,
 ) error {
@@ -46,12 +45,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// Send pool creation fee to community pool
-	params := k.GetParams(ctx)
 	sender := msg.PoolCreator()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
-		return 0, err
-	}
 
 	// Get the next pool ID and increment the pool ID counter
 	// Create the pool with the given pool ID
@@ -63,7 +57,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
-	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
+	if err := k.validateCreatedPool(poolId, pool); err != nil {
 		return 0, err
 	}
 
