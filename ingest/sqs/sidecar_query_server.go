@@ -3,6 +3,7 @@ package sqs
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,6 +27,8 @@ import (
 
 	routerHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
 	routerUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+
+	systemhttpdelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/system/delivery/http"
 )
 
 // SideCarQueryServer defines an interface for sidecar query server (SQS).
@@ -133,6 +136,9 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, routerRepository, poolsUseCase, routerConfig, logger)
 	routerHttpDelivery.NewRouterHandler(e, routerUsecase)
 
+	// Initialize system handler
+	systemhttpdelivery.NewSystemHandler(e)
+
 	// Initialized tokens usecase
 	tokensUseCase := tokensUseCase.NewTokensUsecase(timeoutContext)
 
@@ -140,6 +146,14 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	go func() {
 		logger.Info("Starting sidecar query server", zap.String("address", sideCarQueryServerAddress))
 		err = e.Start(sideCarQueryServerAddress)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	go func() {
+		logger.Info("Starting profiling server")
+		err = http.ListenAndServe("localhost:6061", nil)
 		if err != nil {
 			panic(err)
 		}

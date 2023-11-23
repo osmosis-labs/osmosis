@@ -7,7 +7,7 @@ services:
      - "8089:8089"
     volumes:
       - ./:/mnt/locust
-    # 167.172.160.95 Roman's personal set up
+    # 167.172.160.95:9092 Roman's personal set up
     # 174.138.102.174:80 stage set up
     command: -f /mnt/locust/locustfile.py --master -H http://174.138.102.174:80
   

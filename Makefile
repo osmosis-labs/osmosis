@@ -643,7 +643,8 @@ sqs-start:
 sqs-load-test-ui:
 	docker compose -f ingest/sqs/locust/docker-compose.yml up --scale worker=4
 
-
+sqs-profile:
+	go tool pprof -http=:8080 http://localhost:9092/debug/pprof/profile?seconds=15
 
 ###############################################################################
 ###                                Release                                  ###
