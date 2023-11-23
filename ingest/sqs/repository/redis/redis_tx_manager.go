@@ -3,7 +3,7 @@ package redis
 import (
 	"github.com/redis/go-redis/v9"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
 // RedisTxManager is a structure encapsulating creation of atomic transactions.
@@ -12,17 +12,17 @@ type RedisTxManager struct {
 }
 
 var (
-	_ domain.TxManager = &RedisTxManager{}
+	_ mvc.TxManager = &RedisTxManager{}
 )
 
 // NewTxManager creates a new TxManager.
-func NewTxManager(redisClient *redis.Client) domain.TxManager {
+func NewTxManager(redisClient *redis.Client) mvc.TxManager {
 	return &RedisTxManager{
 		client: redisClient,
 	}
 }
 
-// StartTx implements domain.AtomicRepositoryManager.
-func (rm *RedisTxManager) StartTx() domain.Tx {
-	return domain.NewRedisTx(rm.client.TxPipeline())
+// StartTx implements mvc.AtomicRepositoryManager.
+func (rm *RedisTxManager) StartTx() mvc.Tx {
+	return mvc.NewRedisTx(rm.client.TxPipeline())
 }

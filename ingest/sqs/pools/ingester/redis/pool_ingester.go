@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
 
@@ -33,10 +34,10 @@ import (
 // - If error in TVL calculation, TVL is set to the value that could be computed and the pool struct
 // has a flag to indicate that there was an error in TVL calculation.
 type poolIngester struct {
-	poolsRepository    domain.PoolsRepository
-	routerRepository   domain.RouterRepository
+	poolsRepository    mvc.PoolsRepository
+	routerRepository   mvc.RouterRepository
 	tokensUseCase      domain.TokensUsecase
-	repositoryManager  domain.TxManager
+	repositoryManager  mvc.TxManager
 	gammKeeper         common.PoolKeeper
 	concentratedKeeper common.ConcentratedKeeper
 	cosmWasmKeeper     common.CosmWasmPoolKeeper
@@ -70,7 +71,7 @@ const (
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository domain.RouterRepository, tokensUseCase domain.TokensUsecase, repositoryManager domain.TxManager, routerConfig domain.RouterConfig, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
+func NewPoolIngester(poolsRepository mvc.PoolsRepository, routerRepository mvc.RouterRepository, tokensUseCase domain.TokensUsecase, repositoryManager mvc.TxManager, routerConfig domain.RouterConfig, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		routerRepository:   routerRepository,
@@ -87,14 +88,14 @@ func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository do
 }
 
 // ProcessBlock implements ingest.Ingester.
-func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx domain.Tx) error {
+func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx mvc.Tx) error {
 	return pi.processPoolState(ctx, tx)
 }
 
 var _ ingest.AtomicIngester = &poolIngester{}
 
 // processPoolState processes the pool state. an
-func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
+func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// TODO: can be cached
@@ -194,7 +195,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 // updateRoutes updates the routes for all denom pairs in the taker fee map. The taker fee map value is unused.
 // It returns a channel that is closed when all routes are updated.
 // TODO: test
-func (pi *poolIngester) updateRoutes(ctx context.Context, tx domain.Tx, pools []domain.PoolI, denomPairToTakerFeeMap map[domain.DenomPair]osmomath.Dec) chan domain.DenomPair {
+func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []domain.PoolI, denomPairToTakerFeeMap map[domain.DenomPair]osmomath.Dec) chan domain.DenomPair {
 	// Initialize a channel that will be closed when all routes are updated.
 	completionChan := make(chan domain.DenomPair, len(denomPairToTakerFeeMap))
 
@@ -375,7 +376,7 @@ func (pi *poolIngester) convertPool(
 }
 
 // persistTakerFees persists all taker fees to the router repository.
-func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx domain.Tx, takerFeeMap domain.TakerFeeMap) error {
+func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx mvc.Tx, takerFeeMap domain.TakerFeeMap) error {
 	for denomPair, takerFee := range takerFeeMap {
 		err := pi.routerRepository.SetTakerFee(sdk.WrapSDKContext(ctx), tx, denomPair.Denom0, denomPair.Denom1, takerFee)
 		if err != nil {

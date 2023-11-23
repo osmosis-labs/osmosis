@@ -50,7 +50,7 @@ var (
 		TakerFee:             DefaultTakerFee,
 		SpreadFactor:         DefaultSpreadFactor,
 	}
-	EmptyRoute = &route.RouteImpl{}
+	EmptyRoute = route.RouteImpl{}
 
 	// Test denoms
 	DenomOne   = routertesting.DenomOne
@@ -106,7 +106,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 	tests := map[string]struct {
 		maxSplitIterations int
 
-		routes      []domain.Route
+		routes      []route.RouteImpl
 		tokenIn     sdk.Coin
 		expectError error
 
@@ -117,8 +117,8 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 		expectedProportionInOrder []int
 	}{
 		"valid single route": {
-			routes: []domain.Route{
-				WithRoutePools(&route.RouteImpl{}, []domain.RoutablePool{
+			routes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
 					mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), defaultBalancerPool),
 				})},
 			tokenIn: sdk.NewCoin(DenomTwo, sdk.NewInt(100)),
@@ -128,14 +128,14 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			expectedProportionInOrder: []int{0},
 		},
 		"valid two route single hop": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				// Route 1
-				WithRoutePools(&route.RouteImpl{}, []domain.RoutablePool{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
 					mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), defaultBalancerPool),
 				}),
 
 				// Route 2
-				WithRoutePools(&route.RouteImpl{}, []domain.RoutablePool{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
 					mocks.WithPoolID(mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), secondBalancerPoolSameDenoms), 2),
 				}),
 			},
@@ -150,19 +150,19 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			expectedProportionInOrder: []int{0, 1},
 		},
 		"valid three route single hop": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				// Route 1
-				WithRoutePools(&route.RouteImpl{}, []domain.RoutablePool{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
 					mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), defaultBalancerPool),
 				}),
 
 				// Route 2
-				WithRoutePools(&route.RouteImpl{}, []domain.RoutablePool{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
 					mocks.WithPoolID(mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), thirdBalancerPoolSameDenoms), 3),
 				}),
 
 				// Route 3
-				WithRoutePools(&route.RouteImpl{}, []domain.RoutablePool{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
 					mocks.WithPoolID(mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), secondBalancerPoolSameDenoms), 2),
 				}),
 			},
@@ -256,14 +256,14 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 // See individual test cases for details.
 func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 	tests := map[string]struct {
-		routes                    []domain.Route
+		routes                    []route.RouteImpl
 		tokenInDenom              string
 		expectError               error
 		expectFiltered            bool
 		expectFilteredRouteLength int
 	}{
 		"valid single route single hop": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				WithRoutePools(EmptyRoute, []domain.RoutablePool{
 					mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomOne, DenomThree}), DenomThree),
 					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomTwo, DenomThree}), DenomTwo), defaultPoolID+1),
@@ -273,7 +273,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			tokenInDenom: DenomOne,
 		},
 		"valid single route multi-hop": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				WithRoutePools(EmptyRoute, []domain.RoutablePool{
 					mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomOne, DenomThree}), DenomThree),
 					mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomTwo, DenomThree}), DenomTwo), defaultPoolID+1),
@@ -283,7 +283,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			tokenInDenom: DenomOne,
 		},
 		"valid multi route": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				WithRoutePools(EmptyRoute, []domain.RoutablePool{
 					mocks.WithTokenOutDenom(DefaultMockPool, DenomTwo),
 				}),
@@ -299,7 +299,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 		// errors
 
 		"error: no pools in route": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				WithRoutePools(EmptyRoute, []domain.RoutablePool{}),
 			},
 
@@ -308,7 +308,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectError: usecase.NoPoolsInRouteError{RouteIndex: 0},
 		},
 		"error: token out mismatch between multiple routes": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(DefaultMockPool, DenomTwo),
 			}),
 				WithRoutePools(EmptyRoute, []domain.RoutablePool{
@@ -321,7 +321,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectError: usecase.TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: DenomTwo, TokenOutDenomRouteB: DenomOne},
 		},
 		"error: token in matches token out": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(DefaultMockPool, DenomOne),
 			}),
 			},
@@ -330,7 +330,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectError: usecase.TokenOutDenomMatchesTokenInDenomError{Denom: DenomOne},
 		},
 		"error: token in does not match pool denoms": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(DefaultMockPool, DenomOne),
 			}),
 			},
@@ -339,7 +339,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectError: usecase.PreviousTokenOutDenomNotInPoolError{RouteIndex: 0, PoolId: DefaultMockPool.GetId(), PreviousTokenOutDenom: DenomThree},
 		},
 		"error: token out does not match pool denoms": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(DefaultMockPool, DenomThree),
 			}),
 			},
@@ -350,7 +350,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 
 		// Routes filtered
 		"filtered: token in is in the route": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomOne, DenomThree}), DenomThree),
 				mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomTwo, DenomThree}), DenomTwo), defaultPoolID+1),
 				mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomTwo, DenomOne}), DenomOne), defaultPoolID+2),
@@ -362,7 +362,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectFiltered: true,
 		},
 		"filtered: token out is in the route": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomOne, DenomTwo}), DenomTwo),
 				mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomTwo, DenomFour}), DenomFour), defaultPoolID+1),
 				mocks.WithPoolID(mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomFour, DenomThree}), DenomThree), defaultPoolID+2),
@@ -374,7 +374,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectFiltered: true,
 		},
 		"filtered: same pool id within only route": {
-			routes: []domain.Route{WithRoutePools(EmptyRoute, []domain.RoutablePool{
+			routes: []route.RouteImpl{WithRoutePools(EmptyRoute, []domain.RoutablePool{
 				mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomOne, DenomTwo}), DenomTwo),
 				mocks.WithTokenOutDenom(mocks.WithDenoms(DefaultMockPool, []string{DenomTwo, DenomFour}), DenomFour),
 			}),
@@ -384,7 +384,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 			expectFiltered: true,
 		},
 		"filtered: same pool id between routes - second removed": {
-			routes: []domain.Route{
+			routes: []route.RouteImpl{
 				WithRoutePools(EmptyRoute, []domain.RoutablePool{
 					mocks.WithTokenOutDenom(DefaultMockPool, DenomTwo), // ID 1
 				}),

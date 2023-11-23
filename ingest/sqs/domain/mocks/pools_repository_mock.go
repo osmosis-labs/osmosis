@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
 type RedisPoolsRepositoryMock struct {
@@ -13,11 +14,11 @@ type RedisPoolsRepositoryMock struct {
 }
 
 // ClearAllPools implements domain.PoolsRepository.
-func (*RedisPoolsRepositoryMock) ClearAllPools(ctx context.Context, tx domain.Tx) error {
+func (*RedisPoolsRepositoryMock) ClearAllPools(ctx context.Context, tx mvc.Tx) error {
 	panic("unimplemented")
 }
 
-var _ domain.PoolsRepository = &RedisPoolsRepositoryMock{}
+var _ mvc.PoolsRepository = &RedisPoolsRepositoryMock{}
 
 // GetAllCFMM implements domain.PoolsRepository.
 func (r *RedisPoolsRepositoryMock) GetAllCFMM(context.Context) ([]domain.PoolI, error) {
@@ -44,7 +45,7 @@ func (r *RedisPoolsRepositoryMock) GetAllPools(context.Context) ([]domain.PoolI,
 }
 
 // StorePools implements domain.PoolsRepository.
-func (r *RedisPoolsRepositoryMock) StorePools(ctx context.Context, tx domain.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
+func (r *RedisPoolsRepositoryMock) StorePools(ctx context.Context, tx mvc.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
 	r.cfmmPools = cfmmPools
 	r.concentratedPools = concentratedPools
 	r.cosmwasmPools = cosmwasmPools

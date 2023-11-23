@@ -6,11 +6,13 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
 type RedisRouterRepositoryMock struct {
 	TakerFees domain.TakerFeeMap
-	Routes    map[domain.DenomPair][]domain.Route
+	Routes    map[domain.DenomPair][]route.RouteImpl
 }
 
 // GetAllTakerFees implements domain.RouterRepository.
@@ -19,7 +21,7 @@ func (r *RedisRouterRepositoryMock) GetAllTakerFees(ctx context.Context) (domain
 }
 
 // GetRoutes implements domain.RouterRepository.
-func (r *RedisRouterRepositoryMock) GetRoutes(ctx context.Context, denom0 string, denom1 string) ([]domain.Route, error) {
+func (r *RedisRouterRepositoryMock) GetRoutes(ctx context.Context, denom0 string, denom1 string) ([]route.RouteImpl, error) {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -40,7 +42,7 @@ func (r *RedisRouterRepositoryMock) GetTakerFee(ctx context.Context, denom0 stri
 }
 
 // SetRoutes implements domain.RouterRepository.
-func (r *RedisRouterRepositoryMock) SetRoutes(ctx context.Context, denom0 string, denom1 string, routes []domain.Route) error {
+func (r *RedisRouterRepositoryMock) SetRoutes(ctx context.Context, denom0 string, denom1 string, routes []route.RouteImpl) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -51,7 +53,7 @@ func (r *RedisRouterRepositoryMock) SetRoutes(ctx context.Context, denom0 string
 }
 
 // SetRoutesTx implements domain.RouterRepository.
-func (r *RedisRouterRepositoryMock) SetRoutesTx(ctx context.Context, tx domain.Tx, denom0 string, denom1 string, routes []domain.Route) error {
+func (r *RedisRouterRepositoryMock) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0 string, denom1 string, routes []route.RouteImpl) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -62,7 +64,7 @@ func (r *RedisRouterRepositoryMock) SetRoutesTx(ctx context.Context, tx domain.T
 }
 
 // SetTakerFee implements domain.RouterRepository.
-func (r *RedisRouterRepositoryMock) SetTakerFee(ctx context.Context, tx domain.Tx, denom0 string, denom1 string, takerFee math.LegacyDec) error {
+func (r *RedisRouterRepositoryMock) SetTakerFee(ctx context.Context, tx mvc.Tx, denom0 string, denom1 string, takerFee math.LegacyDec) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -72,4 +74,4 @@ func (r *RedisRouterRepositoryMock) SetTakerFee(ctx context.Context, tx domain.T
 	return nil
 }
 
-var _ domain.RouterRepository = &RedisRouterRepositoryMock{}
+var _ mvc.RouterRepository = &RedisRouterRepositoryMock{}

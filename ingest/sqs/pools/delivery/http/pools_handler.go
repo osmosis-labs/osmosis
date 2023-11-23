@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
 // ResponseError represent the response error struct
@@ -16,11 +17,11 @@ type ResponseError struct {
 
 // PoolsHandler  represent the httphandler for pools
 type PoolsHandler struct {
-	PUsecase domain.PoolsUsecase
+	PUsecase mvc.PoolsUsecase
 }
 
 // NewPoolsHandler will initialize the pools/ resources endpoint
-func NewPoolsHandler(e *echo.Echo, us domain.PoolsUsecase) {
+func NewPoolsHandler(e *echo.Echo, us mvc.PoolsUsecase) {
 	handler := &PoolsHandler{
 		PUsecase: us,
 	}

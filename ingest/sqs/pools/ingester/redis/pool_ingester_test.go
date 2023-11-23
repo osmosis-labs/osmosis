@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 	redisingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
@@ -475,7 +476,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		// Note: this is a dummy tx that is not initialized correctly.
 		// We do note expect it to be called or used by the system under test
 		// due to using the mock repository.
-		redisTx = domain.NewRedisTx(nil)
+		redisTx = mvc.NewRedisTx(nil)
 	)
 
 	// Set the default taker fee

@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/middleware"
 	poolsHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/delivery/http"
@@ -31,17 +32,17 @@ import (
 // It encapsulates all logic for ingesting chain data into the server
 // and exposes endpoints for querying formatter and processed data from frontend.
 type SideCarQueryServer interface {
-	GetTxManager() domain.TxManager
-	GetPoolsRepository() domain.PoolsRepository
-	GetRouterRepository() domain.RouterRepository
+	GetTxManager() mvc.TxManager
+	GetPoolsRepository() mvc.PoolsRepository
+	GetRouterRepository() mvc.RouterRepository
 	GetTokensUseCase() domain.TokensUsecase
 	GetLogger() log.Logger
 }
 
 type sideCarQueryServer struct {
-	txManager        domain.TxManager
-	poolsRepository  domain.PoolsRepository
-	routerRepository domain.RouterRepository
+	txManager        mvc.TxManager
+	poolsRepository  mvc.PoolsRepository
+	routerRepository mvc.RouterRepository
 	tokensUseCase    domain.TokensUsecase
 	logger           log.Logger
 }
@@ -52,17 +53,17 @@ func (sqs *sideCarQueryServer) GetTokensUseCase() domain.TokensUsecase {
 }
 
 // GetPoolsRepository implements SideCarQueryServer.
-func (sqs *sideCarQueryServer) GetPoolsRepository() domain.PoolsRepository {
+func (sqs *sideCarQueryServer) GetPoolsRepository() mvc.PoolsRepository {
 	return sqs.poolsRepository
 }
 
 // GetRouterRepository implements SideCarQueryServer.
-func (sqs *sideCarQueryServer) GetRouterRepository() domain.RouterRepository {
+func (sqs *sideCarQueryServer) GetRouterRepository() mvc.RouterRepository {
 	return sqs.routerRepository
 }
 
 // GetTxManager implements SideCarQueryServer.
-func (sqs *sideCarQueryServer) GetTxManager() domain.TxManager {
+func (sqs *sideCarQueryServer) GetTxManager() mvc.TxManager {
 	return sqs.txManager
 }
 

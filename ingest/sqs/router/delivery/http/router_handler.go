@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
 // ResponseError represent the response error struct
@@ -20,7 +21,7 @@ type ResponseError struct {
 
 // RouterHandler  represent the httphandler for the router
 type RouterHandler struct {
-	RUsecase domain.RouterUsecase
+	RUsecase mvc.RouterUsecase
 }
 
 // Define a regular expression pattern to match sdk.Coin where the first part is the amount and second is the denom name
@@ -30,7 +31,7 @@ type RouterHandler struct {
 var coinPattern = regexp.MustCompile(`([0-9]+)(([a-z]+)(\/([A-Z0-9]+))*)`)
 
 // NewRouterHandler will initialize the pools/ resources endpoint
-func NewRouterHandler(e *echo.Echo, us domain.RouterUsecase) {
+func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase) {
 	handler := &RouterHandler{
 		RUsecase: us,
 	}

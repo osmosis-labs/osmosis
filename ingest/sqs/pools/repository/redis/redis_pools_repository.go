@@ -11,15 +11,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
 type redisPoolsRepo struct {
 	appCodec          codec.Codec
-	repositoryManager domain.TxManager
+	repositoryManager mvc.TxManager
 }
 
 var (
-	_ domain.PoolsRepository = &redisPoolsRepo{}
+	_ mvc.PoolsRepository = &redisPoolsRepo{}
 )
 
 const (
@@ -29,14 +30,14 @@ const (
 )
 
 // NewRedisPoolsRepo will create an implementation of pools.Repository
-func NewRedisPoolsRepo(appCodec codec.Codec, repositoryManager domain.TxManager) domain.PoolsRepository {
+func NewRedisPoolsRepo(appCodec codec.Codec, repositoryManager mvc.TxManager) mvc.PoolsRepository {
 	return &redisPoolsRepo{
 		appCodec:          appCodec,
 		repositoryManager: repositoryManager,
 	}
 }
 
-// GetAllCFMM implements domain.PoolsRepository.
+// GetAllCFMM implements mvc.PoolsRepository.
 // Returns balancer and stableswap pools sorted by ID.
 func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error) {
 	tx := r.repositoryManager.StartTx()
@@ -56,7 +57,7 @@ func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error)
 	return r.getPools(sqsPoolMapByID, chainPoolMapByID, nil)
 }
 
-// GetAllConcentrated implements domain.PoolsRepository.
+// GetAllConcentrated implements mvc.PoolsRepository.
 // Returns concentrated pools sorted by ID.
 // Note that this does not retrieve ticks by default.
 func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI, error) {
@@ -83,7 +84,7 @@ func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI
 	return r.getPools(sqsPoolMapByID, chainPoolMapByID, ticksMapByID)
 }
 
-// GetAllCosmWasm implements domain.PoolsRepository.
+// GetAllCosmWasm implements mvc.PoolsRepository.
 // Returns cosmwasm pools sorted by ID.
 func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, error) {
 	tx := r.repositoryManager.StartTx()
@@ -103,7 +104,7 @@ func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, er
 	return r.getPools(sqsPoolMapByID, chainPoolMapByID, nil)
 }
 
-// GetAllPools implements domain.PoolsRepository.
+// GetAllPools implements mvc.PoolsRepository.
 // Atomically reads all pools from Redis.
 func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error) {
 	tx := r.repositoryManager.StartTx()
@@ -161,7 +162,7 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 	return allPools, nil
 }
 
-func (r *redisPoolsRepo) StorePools(ctx context.Context, tx domain.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
+func (r *redisPoolsRepo) StorePools(ctx context.Context, tx mvc.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
 	if err := r.addCFMMPoolsTx(ctx, tx, cfmmPools); err != nil {
 		return err
 	}
@@ -177,7 +178,7 @@ func (r *redisPoolsRepo) StorePools(ctx context.Context, tx domain.Tx, cfmmPools
 	return nil
 }
 
-func (r *redisPoolsRepo) ClearAllPools(ctx context.Context, tx domain.Tx) error {
+func (r *redisPoolsRepo) ClearAllPools(ctx context.Context, tx mvc.Tx) error {
 	// CFMM pools
 	if err := r.deletePoolsTx(ctx, tx, cfmmPoolKey); err != nil {
 		return err
@@ -198,25 +199,25 @@ func (r *redisPoolsRepo) ClearAllPools(ctx context.Context, tx domain.Tx) error 
 // addCFMMPoolsTx pipelines the given CFMM pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are CFMM.
 // This method does not perform any validation.
-func (r *redisPoolsRepo) addCFMMPoolsTx(ctx context.Context, tx domain.Tx, pools []domain.PoolI) (err error) {
+func (r *redisPoolsRepo) addCFMMPoolsTx(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) (err error) {
 	return r.addPoolsTx(ctx, tx, cfmmPoolKey, pools)
 }
 
 // addConcentratedPoolsTx pipelines the given concentrated pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are concentrated.
 // This method does not perform any validation.
-func (r *redisPoolsRepo) addConcentratedPoolsTx(ctx context.Context, tx domain.Tx, pools []domain.PoolI) error {
+func (r *redisPoolsRepo) addConcentratedPoolsTx(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
 	return r.addPoolsTx(ctx, tx, concentratedPoolKey, pools)
 }
 
 // addCosmWasmPoolsTx pipelines the given cosmwasm pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are cosmwasm.
 // This method does not perform any validation.
-func (r *redisPoolsRepo) addCosmwasmPoolsTx(ctx context.Context, tx domain.Tx, pools []domain.PoolI) error {
+func (r *redisPoolsRepo) addCosmwasmPoolsTx(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
 	return r.addPoolsTx(ctx, tx, cosmWasmPoolKey, pools)
 }
 
-func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx domain.Tx, storeKey string) (sqsPoolMapByID *redis.MapStringStringCmd, chainPoolMapByID *redis.MapStringStringCmd, err error) {
+func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx mvc.Tx, storeKey string) (sqsPoolMapByID *redis.MapStringStringCmd, chainPoolMapByID *redis.MapStringStringCmd, err error) {
 	if !tx.IsActive() {
 		return nil, nil, fmt.Errorf("tx is inactive")
 	}
@@ -298,7 +299,7 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map
 }
 
 // addPoolsTx pipelines the given pools at the given storeKey to be executed atomically in a transaction.
-func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey string, pools []domain.PoolI) error {
+func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx mvc.Tx, storeKey string, pools []domain.PoolI) error {
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
@@ -358,7 +359,7 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey 
 }
 
 // deletePoolsTx pipelines the deletion of the pools at a given storeKey to be executed atomically in a transaction.
-func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx domain.Tx, storeKey string) error {
+func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx mvc.Tx, storeKey string) error {
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
@@ -396,7 +397,7 @@ func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx domain.Tx, storeK
 
 // getTicksMapByIdCmd returns a map of tick models by pool ID.
 // Uses transaction to ensure atomicity.
-func getTicksMapByIdCmd(ctx context.Context, tx domain.Tx) (*redis.MapStringStringCmd, error) {
+func getTicksMapByIdCmd(ctx context.Context, tx mvc.Tx) (*redis.MapStringStringCmd, error) {
 	if !tx.IsActive() {
 		return nil, fmt.Errorf("tx is inactive")
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
 // Tests the call to handleRoutes by mocking the router repository and pools use case
@@ -61,11 +62,11 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 
 		defaultSinglePools = []domain.PoolI{defaultPool}
 
-		singleDefaultRoutes = []domain.Route{defaultRoute}
+		singleDefaultRoutes = []route.RouteImpl{defaultRoute}
 
 		emptyPools = []domain.PoolI{}
 
-		emptyRoutes = []domain.Route{}
+		emptyRoutes = []route.RouteImpl{}
 
 		defaultRouterConfig = domain.RouterConfig{
 			// Only these config values are relevant for this test
@@ -84,12 +85,12 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 	testCases := []struct {
 		name string
 
-		repositoryRoutes []domain.Route
+		repositoryRoutes []route.RouteImpl
 		repositoryPools  []domain.PoolI
 		takerFeeMap      domain.TakerFeeMap
 		isCacheDisabled  bool
 
-		expectedRoutes []domain.Route
+		expectedRoutes []route.RouteImpl
 
 		expectedError error
 	}{
@@ -155,7 +156,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 		s.Run(tc.name, func() {
 
 			routerRepositoryMock := &mocks.RedisRouterRepositoryMock{
-				Routes: map[domain.DenomPair][]domain.Route{
+				Routes: map[domain.DenomPair][]route.RouteImpl{
 					// These are the routes that are stored in cache and returned by the call to GetRoutes.
 					{Denom0: tokenOutDenom, Denom1: tokenInDenom}: tc.repositoryRoutes,
 				},

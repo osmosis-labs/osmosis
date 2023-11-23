@@ -5,16 +5,17 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
 type poolsUseCase struct {
 	contextTimeout         time.Duration
-	poolsRepository        domain.PoolsRepository
-	redisRepositoryManager domain.TxManager
+	poolsRepository        mvc.PoolsRepository
+	redisRepositoryManager mvc.TxManager
 }
 
 // NewPoolsUsecase will create a new pools use case object
-func NewPoolsUsecase(timeout time.Duration, poolsRepository domain.PoolsRepository, redisRepositoryManager domain.TxManager) domain.PoolsUsecase {
+func NewPoolsUsecase(timeout time.Duration, poolsRepository mvc.PoolsRepository, redisRepositoryManager mvc.TxManager) mvc.PoolsUsecase {
 	return &poolsUseCase{
 		contextTimeout:         timeout,
 		poolsRepository:        poolsRepository,

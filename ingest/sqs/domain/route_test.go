@@ -1,4 +1,4 @@
-package route_test
+package domain_test
 
 import (
 	"testing"

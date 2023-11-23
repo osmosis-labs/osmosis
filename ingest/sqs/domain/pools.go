@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"context"
 	"fmt"
 	"sort"
 
@@ -169,25 +168,4 @@ func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
 	}
 
 	return nil
-}
-
-// PoolsRepository represent the pool's repository contract
-type PoolsRepository interface {
-	// GetAllPools atomically reads and returns all on-chain pools sorted by ID.
-	GetAllPools(context.Context) ([]PoolI, error)
-	// GetAllConcentrated atomically reads and returns concentrated pools sorted by ID.
-	GetAllConcentrated(context.Context) ([]PoolI, error)
-	// GetAllCFMM atomically reads and  returns CFMM pools sorted by ID.
-	GetAllCFMM(context.Context) ([]PoolI, error)
-	// GetAllCosmWasm atomically reads and returns CosmWasm pools sorted by ID.
-	GetAllCosmWasm(context.Context) ([]PoolI, error)
-	// StorePools atomically stores the given pools.
-	StorePools(ctx context.Context, tx Tx, cfmmPools []PoolI, concentratedPools []PoolI, cosmwasmPools []PoolI) error
-	// ClearAllPools atomically clears all pools.
-	ClearAllPools(ctx context.Context, tx Tx) error
-}
-
-// PoolsUsecase represent the pool's usecases
-type PoolsUsecase interface {
-	GetAllPools(ctx context.Context) ([]PoolI, error)
 }

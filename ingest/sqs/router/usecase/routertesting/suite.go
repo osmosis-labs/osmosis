@@ -62,7 +62,7 @@ var (
 		TakerFee:             DefaultTakerFee,
 		SpreadFactor:         DefaultSpreadFactor,
 	}
-	EmptyRoute = &route.RouteImpl{}
+	EmptyRoute = route.RouteImpl{}
 
 	// Test denoms
 	DenomOne   = denomNum(1)
@@ -78,14 +78,14 @@ func denomNum(i int) string {
 }
 
 // Note that it does not deep copy pools
-func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
+func WithRoutePools(r route.RouteImpl, pools []domain.RoutablePool) route.RouteImpl {
 	newRoute := route.RouteImpl{
 		Pools: make([]domain.RoutablePool, 0, len(pools)),
 	}
 	for _, pool := range pools {
 		newRoute.Pools = append(newRoute.Pools, pool)
 	}
-	return &newRoute
+	return newRoute
 }
 
 // ValidateRoutePools validates that the expected pools are equal to the actual pools.

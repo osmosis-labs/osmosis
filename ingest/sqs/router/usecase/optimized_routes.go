@@ -10,13 +10,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
 // Considers all routes and splits.
-func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []domain.Route) (domain.Quote, error) {
+func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
 	for _, route := range routes {
-		r.logger.Info("route", zap.Stringer("route", route))
+		r.logger.Info("route", zap.Any("route", route))
 	}
 
 	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
@@ -53,7 +54,7 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 }
 
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
-func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []domain.Route) (quote domain.Quote, err error) {
+func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (quote domain.Quote, err error) {
 	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 	return bestSingleRouteQuote, nil
 }
 
-func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 0 {
 		return nil, errors.New("no routes were provided")
 	}
@@ -81,7 +82,7 @@ func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk
 
 		if !directRouteTokenOut.IsNil() && (bestRoute.OutAmount.IsNil() || directRouteTokenOut.Amount.LT(bestRoute.OutAmount)) {
 			bestRoute = RouteWithOutAmount{
-				Route:     route,
+				RouteImpl: route,
 				InAmount:  tokenIn.Amount,
 				OutAmount: directRouteTokenOut.Amount,
 			}
@@ -95,14 +96,14 @@ func (r *Router) estimateBestSingleRouteQuote(routes []domain.Route, tokenIn sdk
 	finalQuote := &quoteImpl{
 		AmountIn:  tokenIn,
 		AmountOut: bestRoute.OutAmount,
-		Route:     []domain.SplitRoute{bestRoute},
+		Route:     []domain.SplitRoute{&bestRoute},
 	}
 
 	return finalQuote, nil
 }
 
 // CONTRACT: all routes are valid. Must be validated by the caller with validateRoutes method.
-func (r *Router) estimateBestSplitRouteQuote(routes []domain.Route, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 1 {
 		return r.estimateBestSingleRouteQuote(routes, tokenIn)
 	}
@@ -135,10 +136,10 @@ func (r *Router) estimateBestSplitRouteQuote(routes []domain.Route, tokenIn sdk.
 // - the previous pool token out denom is in the current pool.
 // - the current pool token out denom is in the current pool.
 // Returns error if not. Nil otherwise.
-func (r *Router) validateAndFilterRoutes(routes []domain.Route, tokenInDenom string) ([]domain.Route, error) {
+func (r *Router) validateAndFilterRoutes(routes []route.RouteImpl, tokenInDenom string) ([]route.RouteImpl, error) {
 	var (
 		tokenOutDenom  string
-		filteredRoutes []domain.Route
+		filteredRoutes []route.RouteImpl
 	)
 
 	uniquePoolIDs := make(map[uint64]struct{})
@@ -228,12 +229,12 @@ ROUTE_LOOP:
 }
 
 type RouteWithOutAmount struct {
-	domain.Route
+	route.RouteImpl
 	OutAmount osmomath.Int "json:\"out_amount\""
 	InAmount  osmomath.Int "json:\"in_amount\""
 }
 
-var _ domain.Route = &RouteWithOutAmount{}
+var _ domain.SplitRoute = &RouteWithOutAmount{}
 
 // GetAmountIn implements domain.SplitRoute.
 func (r RouteWithOutAmount) GetAmountIn() osmomath.Int {
@@ -254,7 +255,7 @@ type Split struct {
 // It does not perform single route quote estimate (100% single route split) as we assume that those were already calculated prior to this method.
 // Returns the best split and error if any.
 // Returs error if the maxSplitIterations is less than 1.
-func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []domain.Route, currentSplit Split) (bestSplit Split, err error) {
+func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []route.RouteImpl, currentSplit Split) (bestSplit Split, err error) {
 	r.logger.Debug("splitRecursive START", zap.Stringer("remainingTokenIn", remainingTokenIn))
 
 	// Base case, we have no more routes to split and we have a valid split
@@ -271,7 +272,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []dom
 
 	currentRoute := remainingRoutes[0]
 
-	r.logger.Debug("currentRoute ", zap.Stringer("currentRoute", currentRoute))
+	r.logger.Debug("currentRoute ", zap.Any("currentRoute", currentRoute))
 
 	for i := 1; i < r.maxSplitIterations; i++ {
 		// TODO: this can be precomputed in constructor
@@ -295,7 +296,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []dom
 			continue
 		}
 
-		r.logger.Debug("split", zap.Stringer("remaining_token_in", remainingTokenIn), zap.Stringer("fraction", fraction), zap.Stringer("current_token_in", currentAmountIn), zap.Stringer("current_token_out", currentTokenOut), zap.Stringer("currentRoute", currentRoute))
+		r.logger.Debug("split", zap.Stringer("remaining_token_in", remainingTokenIn), zap.Stringer("fraction", fraction), zap.Stringer("current_token_in", currentAmountIn), zap.Stringer("current_token_out", currentTokenOut), zap.Any("currentRoute", currentRoute))
 
 		currentSplitCopy := Split{
 			Routes:          make([]domain.SplitRoute, len(currentSplit.Routes)),
@@ -303,8 +304,8 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []dom
 		}
 		copy(currentSplitCopy.Routes, currentSplit.Routes)
 
-		currentSplitCopy.Routes = append(currentSplitCopy.Routes, RouteWithOutAmount{
-			Route:     currentRoute,
+		currentSplitCopy.Routes = append(currentSplitCopy.Routes, &RouteWithOutAmount{
+			RouteImpl: currentRoute,
 			OutAmount: currentTokenOut.Amount,
 			InAmount:  currentAmountIn,
 		})

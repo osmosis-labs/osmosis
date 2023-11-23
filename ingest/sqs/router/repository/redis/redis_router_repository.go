@@ -11,11 +11,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
 type redisRouterRepo struct {
-	repositoryManager domain.TxManager
+	repositoryManager mvc.TxManager
 }
 
 const (
@@ -27,17 +28,17 @@ const (
 )
 
 var (
-	_ domain.RouterRepository = &redisRouterRepo{}
+	_ mvc.RouterRepository = &redisRouterRepo{}
 )
 
 // NewRedisRouterRepo will create an implementation of pools.Repository
-func NewRedisRouterRepo(repositoryManager domain.TxManager) domain.RouterRepository {
+func NewRedisRouterRepo(repositoryManager mvc.TxManager) mvc.RouterRepository {
 	return &redisRouterRepo{
 		repositoryManager: repositoryManager,
 	}
 }
 
-// GetAllTakerFees implements domain.RouterRepository.
+// GetAllTakerFees implements mvc.RouterRepository.
 func (r *redisRouterRepo) GetAllTakerFees(ctx context.Context) (domain.TakerFeeMap, error) {
 	tx := r.repositoryManager.StartTx()
 
@@ -90,7 +91,7 @@ func (r *redisRouterRepo) GetAllTakerFees(ctx context.Context) (domain.TakerFeeM
 	return takerFeeMap, nil
 }
 
-// GetTakerFee implements domain.RouterRepository.
+// GetTakerFee implements mvc.RouterRepository.
 func (r *redisRouterRepo) GetTakerFee(ctx context.Context, denom0 string, denom1 string) (osmomath.Dec, error) {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
@@ -125,7 +126,7 @@ func (r *redisRouterRepo) GetTakerFee(ctx context.Context, denom0 string, denom1
 }
 
 // SetTakerFee sets taker fee for a denom pair.
-func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx domain.Tx, denom0, denom1 string, takerFee osmomath.Dec) error {
+func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx mvc.Tx, denom0, denom1 string, takerFee osmomath.Dec) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -148,8 +149,8 @@ func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx domain.Tx, denom0,
 	return nil
 }
 
-// SetRoutesTx implements domain.RouterRepository.
-func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx domain.Tx, denom0, denom1 string, routes []domain.Route) error {
+// SetRoutesTx implements mvc.RouterRepository.
+func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, denom1 string, routes []route.RouteImpl) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -177,8 +178,8 @@ func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx domain.Tx, denom0,
 	return nil
 }
 
-// SetRoutes implements domain.RouterRepository.
-func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, routes []domain.Route) error {
+// SetRoutes implements mvc.RouterRepository.
+func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, routes []route.RouteImpl) error {
 	// Create transaction
 	tx := r.repositoryManager.StartTx()
 
@@ -195,8 +196,8 @@ func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, 
 	return nil
 }
 
-// GetRoutes implements domain.RouterRepository.
-func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) ([]domain.Route, error) {
+// GetRoutes implements mvc.RouterRepository.
+func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) ([]route.RouteImpl, error) {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -242,12 +243,5 @@ func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) 
 		return nil, err
 	}
 
-	// TODO: figure out proper serialization to avoid this
-	// Currently, we cannot deserialize the interface type, so we need to deserialize conrete type and then convert back.
-	routesResult := make([]domain.Route, 0, len(routes))
-	for _, route := range routes {
-		routesResult = append(routesResult, &route)
-	}
-
-	return routesResult, nil
+	return routes, nil
 }

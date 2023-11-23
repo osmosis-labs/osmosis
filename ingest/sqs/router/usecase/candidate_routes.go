@@ -7,12 +7,12 @@ import (
 )
 
 // GetCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using BFS.
-func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
-	var routes [][]domain.RoutablePool
+func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error) {
+	var routes []route.RouteImpl
 	var visited = make(map[uint64]bool)
 
-	queue := make([]Route, 0)
-	queue = append(queue, Route{Path: []domain.RoutablePool{}})
+	queue := make([]route.RouteImpl, 0)
+	queue = append(queue, route.RouteImpl{Pools: []domain.RoutablePool{}})
 
 	for len(queue) > 0 && len(routes) < r.maxRoutes {
 		currentRoute := queue[0]
@@ -20,8 +20,8 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 
 		lastPoolID := uint64(0)
 		currenTokenInDenom := tokenInDenom
-		if len(currentRoute.Path) > 0 {
-			lastPool := currentRoute.Path[len(currentRoute.Path)-1]
+		if len(currentRoute.Pools) > 0 {
+			lastPool := currentRoute.Pools[len(currentRoute.Pools)-1]
 			lastPoolID = lastPool.GetId()
 			currenTokenInDenom = lastPool.GetTokenOutDenom()
 		}
@@ -46,7 +46,7 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 				}
 
 				// Avoid going through pools that has the initial token in denom twice.
-				if len(currentRoute.Path) > 0 && denom == tokenInDenom {
+				if len(currentRoute.Pools) > 0 && denom == tokenInDenom {
 					shouldSkipPool = true
 					break
 				}
@@ -70,38 +70,36 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 				}
 
 				if lastPoolID == uint64(0) || lastPoolID != currentPoolID {
-					newPath := append([]domain.RoutablePool{}, currentRoute.Path...)
+					newPath := route.RouteImpl{
+						Pools: make([]domain.RoutablePool, len(currentRoute.Pools), len(currentRoute.Pools)+1),
+					}
+					copy(newPath.Pools, currentRoute.Pools)
 
 					takerFee, err := r.takerFeeMap.GetTakerFee(currenTokenInDenom, denom)
 					if err != nil {
 						return nil, err
 					}
 
-					newPath = append(newPath, pools.NewRoutablePool(pool, denom, takerFee))
+					newPath.Pools = append(newPath.Pools, pools.NewRoutablePool(pool, denom, takerFee))
 
-					if len(newPath) <= r.maxHops {
+					if len(newPath.Pools) <= r.maxHops {
 						if hasTokenOut {
 							routes = append(routes, newPath)
 							break
 						} else {
-							queue = append(queue, Route{Path: newPath})
+							queue = append(queue, newPath)
 						}
 					}
 				}
 			}
 		}
 
-		for _, pool := range currentRoute.Path {
+		for _, pool := range currentRoute.Pools {
 			visited[pool.GetId()] = true
 		}
 	}
 
-	result := make([]domain.Route, 0, len(routes))
-	for _, currentRoute := range routes {
-		result = append(result, &route.RouteImpl{Pools: currentRoute})
-	}
-
-	return r.validateAndFilterRoutes(result, tokenInDenom)
+	return r.validateAndFilterRoutes(routes, tokenInDenom)
 }
 
 // Pool represents a pool in the decentralized exchange.
@@ -109,9 +107,4 @@ type Pool struct {
 	ID       int
 	TokenIn  string
 	TokenOut string
-}
-
-// Route represents a route between token-in and token-out denominations.
-type Route struct {
-	Path []domain.RoutablePool // IDs of pools in the route
 }

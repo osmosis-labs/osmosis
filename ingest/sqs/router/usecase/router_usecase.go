@@ -8,22 +8,24 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 )
 
-var _ domain.RouterUsecase = &routerUseCaseImpl{}
+var _ mvc.RouterUsecase = &routerUseCaseImpl{}
 
 type routerUseCaseImpl struct {
 	contextTimeout   time.Duration
-	routerRepository domain.RouterRepository
-	poolsUsecase     domain.PoolsUsecase
+	routerRepository mvc.RouterRepository
+	poolsUsecase     mvc.PoolsUsecase
 	config           domain.RouterConfig
 	logger           log.Logger
 }
 
 // NewRouterUsecase will create a new pools use case object
-func NewRouterUsecase(timeout time.Duration, routerRepository domain.RouterRepository, poolsUsecase domain.PoolsUsecase, config domain.RouterConfig, logger log.Logger) domain.RouterUsecase {
+func NewRouterUsecase(timeout time.Duration, routerRepository mvc.RouterRepository, poolsUsecase mvc.PoolsUsecase, config domain.RouterConfig, logger log.Logger) mvc.RouterUsecase {
 	return &routerUseCaseImpl{
 		contextTimeout:   timeout,
 		routerRepository: routerRepository,
@@ -66,7 +68,7 @@ func (r *routerUseCaseImpl) GetBestSingleRouteQuote(ctx context.Context, tokenIn
 }
 
 // GetCandidateRoutes implements domain.RouterUsecase.
-func (r *routerUseCaseImpl) GetCandidateRoutes(ctx context.Context, tokenInDenom string, tokenOutDenom string) ([]domain.Route, error) {
+func (r *routerUseCaseImpl) GetCandidateRoutes(ctx context.Context, tokenInDenom string, tokenOutDenom string) ([]route.RouteImpl, error) {
 	router, err := r.initializeRouter(ctx)
 	if err != nil {
 		return nil, err
@@ -117,7 +119,7 @@ func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, erro
 // - there is an error retrieving routes from cache
 // - there are no routes cached and there is an error computing them
 // - fails to persist the computed routes in cache
-func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (routes []domain.Route, err error) {
+func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (routes []route.RouteImpl, err error) {
 	r.logger.Info("getting routes")
 
 	// Check cache for routes if enabled

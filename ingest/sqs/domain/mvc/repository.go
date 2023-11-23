@@ -1,4 +1,4 @@
-package domain
+package mvc
 
 import (
 	"context"

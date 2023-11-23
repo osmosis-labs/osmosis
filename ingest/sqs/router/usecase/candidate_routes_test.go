@@ -1,7 +1,7 @@
 package usecase_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
 // Validates that the router returns the correct routes for the given token pair.
@@ -94,7 +94,7 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_Top10VolumePairs() {
 	}
 }
 
-func (s *RouterTestSuite) validateExpectedPoolIDOneHopRoute(route domain.Route, expectedPoolID uint64) {
+func (s *RouterTestSuite) validateExpectedPoolIDOneHopRoute(route route.RouteImpl, expectedPoolID uint64) {
 	routePools := route.GetPools()
 	s.Require().Equal(1, len(routePools))
 	s.Require().Equal(expectedPoolID, routePools[0].GetId())

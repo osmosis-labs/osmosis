@@ -119,7 +119,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 			// Route 1
 			&usecase.RouteWithOutAmount{
-				Route: &route.RouteImpl{
+				RouteImpl: route.RouteImpl{
 					Pools: []domain.RoutablePool{
 						pools.NewRoutablePool(
 							domain.NewPool(poolOne, poolOne.GetSpreadFactor(sdk.Context{}), poolOneBalances),
@@ -140,7 +140,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 			// Route 2
 			&usecase.RouteWithOutAmount{
-				Route: &route.RouteImpl{
+				RouteImpl: route.RouteImpl{
 					Pools: []domain.RoutablePool{
 						pools.NewRoutablePool(
 							domain.NewPool(poolThree, poolThree.GetSpreadFactor(sdk.Context{}), poolThreeBalances),
@@ -161,7 +161,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 		// Route 1
 		&usecase.RouteWithOutAmount{
-			Route: &route.RouteImpl{
+			RouteImpl: route.RouteImpl{
 				Pools: []domain.RoutablePool{
 					pools.NewRoutableResultPool(
 						poolIDOne,
@@ -186,7 +186,7 @@ func (s *RouterTestSuite) TestPrepareResult() {
 
 		// Route 2
 		&usecase.RouteWithOutAmount{
-			Route: &route.RouteImpl{
+			RouteImpl: route.RouteImpl{
 				Pools: []domain.RoutablePool{
 					pools.NewRoutableResultPool(
 						poolIDThree,

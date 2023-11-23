@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 )
@@ -237,7 +238,7 @@ func (s *RouterTestSuite) getTakerFeeMapForAllPoolTokenPairs(pools []domain.Pool
 	return pairs
 }
 
-func WithRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
+func WithRoutePools(r route.RouteImpl, pools []domain.RoutablePool) route.RouteImpl {
 	return routertesting.WithRoutePools(r, pools)
 }
 
