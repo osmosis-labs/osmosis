@@ -73,7 +73,6 @@ func findTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Rout
 	return routeRoutes
 }
 
-
 // findThreeHopRoute finds all three-hop routes between two tokens
 func findThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
 	var routeRoutes [][]*types.Route
@@ -124,7 +123,6 @@ func findThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Ro
 
 	return routeRoutes
 }
-
 
 // SetDenomPairRoutes sets the route map to be used for route calculations
 func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) {
