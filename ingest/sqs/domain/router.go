@@ -83,6 +83,7 @@ type RouterConfig struct {
 	PreferredPoolIDs   []uint64
 	MaxPoolsPerRoute   int
 	MaxRoutes          int
+	MaxSplitRoutes     int
 	MaxSplitIterations int
 	// Denominated in OSMO (not uosmo)
 	MinOSMOLiquidity          int

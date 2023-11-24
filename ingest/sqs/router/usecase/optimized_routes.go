@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +30,22 @@ func (r *Router) getOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOut
 		r.logger.Info("route", zap.Any("route", route))
 	}
 
-	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+	bestSingleRouteQuote, routesSortedByAmtOut, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
 	if err != nil {
 		return nil, err
+	}
+
+	if r.maxSplitRoutes == 0 {
+		return bestSingleRouteQuote, nil
+	}
+
+	if len(routesSortedByAmtOut) > r.maxSplitRoutes {
+		// Keep only top routes for splits
+		routes = routes[:r.maxSplitRoutes]
+		for i := 0; i < r.maxSplitRoutes; i++ {
+			// Update routes with the top routes
+			routes[i] = routesSortedByAmtOut[i].RouteImpl
+		}
 	}
 
 	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
@@ -77,7 +91,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 		return nil, ErrNilPoolsRepository
 	}
 
-	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+	bestSingleRouteQuote, _, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -87,16 +101,16 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 	return bestSingleRouteQuote, nil
 }
 
+// Returns best quote as well as all routes sorted by amount out and error if any.
 // CONTRACT: router repository must be set on the router.
 // CONTRACT: pools reporitory must be set on the router
-func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
 	if len(routes) == 0 {
-		return nil, errors.New("no routes were provided")
+		return nil, nil, errors.New("no routes were provided")
 	}
 
-	var (
-		bestRoute RouteWithOutAmount
-	)
+	routesWithAmountOut := make([]RouteWithOutAmount, 0, len(routes))
+
 	for _, route := range routes {
 		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn, tickModelMap)
 		if err != nil {
@@ -104,18 +118,23 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickMode
 			continue
 		}
 
-		if !directRouteTokenOut.IsNil() && (bestRoute.OutAmount.IsNil() || directRouteTokenOut.Amount.GT(bestRoute.OutAmount)) {
-			bestRoute = RouteWithOutAmount{
-				RouteImpl: route,
-				InAmount:  tokenIn.Amount,
-				OutAmount: directRouteTokenOut.Amount,
-			}
+		if directRouteTokenOut.Amount.IsNil() {
+			directRouteTokenOut.Amount = osmomath.ZeroInt()
 		}
+
+		routesWithAmountOut = append(routesWithAmountOut, RouteWithOutAmount{
+			RouteImpl: route,
+			InAmount:  tokenIn.Amount,
+			OutAmount: directRouteTokenOut.Amount,
+		})
 	}
 
-	if bestRoute.OutAmount.IsNil() {
-		return nil, errors.New("did not find a working direct route")
-	}
+	// Sort by amount out in descending order
+	sort.Slice(routesWithAmountOut, func(i, j int) bool {
+		return routesWithAmountOut[i].OutAmount.GT(routesWithAmountOut[j].OutAmount)
+	})
+
+	bestRoute := routesWithAmountOut[0]
 
 	finalQuote := &quoteImpl{
 		AmountIn:  tokenIn,
@@ -123,7 +142,7 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickMode
 		Route:     []domain.SplitRoute{&bestRoute},
 	}
 
-	return finalQuote, nil
+	return finalQuote, routesWithAmountOut, nil
 }
 
 // CONTRACT: all routes are valid. Must be validated by the caller with validateRoutes method.
@@ -131,7 +150,8 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickMode
 // CONTRACT: pools reporitory must be set on the router
 func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 1 {
-		return r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+		quote, _, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+		return quote, err
 	}
 
 	r.logger.Debug("estimateBestSplitRoutesQuote", zap.Int("routes_count", len(routes)), zap.Stringer("token_in", tokenIn))

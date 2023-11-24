@@ -178,7 +178,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 			s.Require().True(ok)
 
 			// Initialize router
-			router := usecase.NewRouter(defaultRouterConfig.PreferredPoolIDs, tc.takerFeeMap, defaultRouterConfig.MaxPoolsPerRoute, defaultRouterConfig.MaxRoutes, defaultRouterConfig.MaxSplitIterations, defaultRouterConfig.MaxSplitIterations, &log.NoOpLogger{})
+			router := usecase.NewRouter(defaultRouterConfig.PreferredPoolIDs, tc.takerFeeMap, defaultRouterConfig.MaxPoolsPerRoute, defaultRouterConfig.MaxRoutes, defaultRouterConfig.MaxSplitRoutes, defaultRouterConfig.MaxSplitIterations, defaultRouterConfig.MaxSplitIterations, &log.NoOpLogger{})
 			router = usecase.WithSortedPools(router, poolsUseCaseMock.Pools)
 
 			// System under test

@@ -137,7 +137,7 @@ func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, erro
 		return nil, err
 	}
 
-	router := NewRouter([]uint64{}, takerFees, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
+	router := NewRouter([]uint64{}, takerFees, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
 	router = WithSortedPools(router, allPools)
 	router = WithRouterRepository(router, r.routerRepository)
 	router = WithPoolsUsecase(router, r.poolsUsecase)

@@ -191,7 +191,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			logger, err := log.NewLogger(false, "", "")
 			s.Require().NoError(err)
 
-			r := routerusecase.NewRouter([]uint64{}, domain.TakerFeeMap{}, 0, 0, tc.maxSplitIterations, 0, logger)
+			r := routerusecase.NewRouter([]uint64{}, domain.TakerFeeMap{}, 0, 0, 0, tc.maxSplitIterations, 0, logger)
 
 			// TODO: make proper map
 			tickMap := map[uint64]domain.TickModel{}
@@ -409,7 +409,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 		tc := tc
 		s.Run(name, func() {
 
-			router := routerusecase.NewRouter([]uint64{}, domain.TakerFeeMap{}, 0, 0, 0, 0, &log.NoOpLogger{})
+			router := routerusecase.NewRouter([]uint64{}, domain.TakerFeeMap{}, 0, 0, 0, 0, 0, &log.NoOpLogger{})
 
 			filteredRoutes, err := router.ValidateAndFilterRoutes(tc.routes, tc.tokenInDenom)
 

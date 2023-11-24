@@ -294,6 +294,7 @@ func NewOsmosisApp(
 			PreferredPoolIDs:          []uint64{},
 			MaxPoolsPerRoute:          4,
 			MaxRoutes:                 5,
+			MaxSplitRoutes:            3,
 			MaxSplitIterations:        10,
 			MinOSMOLiquidity:          10000, // 10_000 OSMO
 			RouteUpdateHeightInterval: 0,
