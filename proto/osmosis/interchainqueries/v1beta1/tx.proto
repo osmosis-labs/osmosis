@@ -1,0 +1,121 @@
+syntax = "proto3";
+package osmosis.interchainqueries.v1beta1;
+
+import "cometbft/crypto/proof.proto";
+import "tendermint/abci/types.proto";
+import "google/protobuf/any.proto";
+import "osmosis/interchainqueries/v1beta1/genesis.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc RegisterInterchainQuery(MsgRegisterInterchainQuery)
+      returns (MsgRegisterInterchainQueryResponse);
+  rpc SubmitQueryResult(MsgSubmitQueryResult)
+      returns (MsgSubmitQueryResultResponse);
+  rpc RemoveInterchainQuery(MsgRemoveInterchainQueryRequest)
+      returns (MsgRemoveInterchainQueryResponse);
+  rpc UpdateInterchainQuery(MsgUpdateInterchainQueryRequest)
+      returns (MsgUpdateInterchainQueryResponse);
+}
+
+message MsgRegisterInterchainQuery {
+  // defines a query type: `kv` or `tx` now
+  string query_type = 1;
+
+  // is used to define KV-storage keys for which we want to get values from
+  // remote chain
+  repeated KVKey keys = 2;
+
+  // is used to define a filter for transaction search ICQ
+  string transactions_filter = 3;
+
+  // is IBC connection ID for getting ConsensusState to verify proofs
+  string connection_id = 4;
+
+  // is used to specify how often (in neutron blocks) the query must be updated
+  uint64 update_period = 5;
+
+  // is the signer of the message
+  string sender = 6;
+}
+
+message MsgRegisterInterchainQueryResponse { uint64 id = 1; }
+
+message MsgSubmitQueryResult {
+  uint64 query_id = 1;
+  string sender = 2;
+
+  // is the IBC client ID for an IBC connection between Neutron chain and target
+  // chain (where the result was obtained from)
+  string client_id = 3;
+  QueryResult result = 4;
+}
+
+message QueryResult {
+  repeated StorageValue kv_results = 1;
+  Block block = 2;
+  uint64 height = 3;
+  uint64 revision = 4;
+  bool allow_kv_callbacks = 5;
+}
+
+message StorageValue {
+  // is the substore name (acc, staking, etc.)
+  string storage_prefix = 1;
+
+  // is the key in IAVL store
+  bytes key = 2;
+
+  // is the value in IAVL store
+  bytes value = 3;
+
+  // is the Merkle Proof which proves existence of key-value pair in IAVL
+  // storage
+  tendermint.crypto.ProofOps Proof = 4;
+}
+
+message Block {
+  // We need to know block X+1 to verify response of transaction for block X
+  // since LastResultsHash is root hash of all results from the txs from the
+  // previous block
+  google.protobuf.Any next_block_header = 1;
+
+  // We need to know block X to verify inclusion of transaction for block X
+  google.protobuf.Any header = 2;
+
+  TxValue tx = 3;
+}
+
+message TxValue {
+  tendermint.abci.ResponseDeliverTx response = 1;
+
+  // is the Merkle Proof which proves existence of response in block with height
+  // next_block_header.Height
+  tendermint.crypto.Proof delivery_proof = 2;
+
+  // is the Merkle Proof which proves existence of data in block with height
+  // header.Height
+  tendermint.crypto.Proof inclusion_proof = 3;
+
+  // is body of the transaction
+  bytes data = 4;
+}
+
+message MsgSubmitQueryResultResponse {}
+
+message MsgRemoveInterchainQueryRequest {
+  uint64 query_id = 1;
+  string sender = 2; // is the signer of the message
+}
+message MsgRemoveInterchainQueryResponse {}
+
+message MsgUpdateInterchainQueryRequest {
+  uint64 query_id = 1;
+  repeated KVKey new_keys = 2;
+  uint64 new_update_period = 3;
+  string new_transactions_filter = 4;
+  string sender = 5; // is the signer of the message
+}
+message MsgUpdateInterchainQueryResponse {}

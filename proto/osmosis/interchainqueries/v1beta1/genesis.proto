@@ -1,0 +1,64 @@
+syntax = "proto3";
+package osmosis.interchainqueries.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/interchainqueries/v1beta1/params.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "ibc/core/client/v1/client.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types";
+
+message RegisteredQuery {
+  // The unique id of the registered query.
+  uint64 id = 1;
+
+  // The address that registered the query.
+  string owner = 2;
+
+  // The query type identifier: `kv` or `tx` now
+  string query_type = 3;
+
+  // The KV-storage keys for which we want to get values from remote chain
+  repeated KVKey keys = 4;
+
+  // The filter for transaction search ICQ
+  string transactions_filter = 5;
+
+  // The IBC connection ID for getting ConsensusState to verify proofs
+  string connection_id = 6;
+
+  // Parameter that defines how often the query must be updated.
+  uint64 update_period = 7;
+
+  // The local chain last block height when the query result was updated.
+  uint64 last_submitted_result_local_height = 8;
+
+  // The remote chain last block height when the query result was updated.
+  ibc.core.client.v1.Height last_submitted_result_remote_height = 9;
+
+  // Amount of coins deposited for the query.
+  repeated cosmos.base.v1beta1.Coin deposit = 10 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+
+  // Timeout before query becomes available for everybody to remove.
+  uint64 submit_timeout = 11;
+
+  // The local chain height when the query was registered.
+  uint64 registered_at_height = 12;
+}
+
+message KVKey {
+  // Path (storage prefix) to the storage where you want to read value by key
+  // (usually name of cosmos-sdk module: 'staking', 'bank', etc.)
+  string path = 1;
+  // Key you want to read from the storage
+  bytes key = 2;
+}
+
+// GenesisState defines the interchainqueries module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated RegisteredQuery registered_queries = 2;
+}

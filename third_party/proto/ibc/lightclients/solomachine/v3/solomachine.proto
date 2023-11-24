@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package ibc.lightclients.solomachine.v3;
+
+option go_package = "github.com/cosmos/ibc-go/v7/modules/light-clients/06-solomachine;solomachine";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+// ClientState defines a solo machine client that tracks the current consensus
+// state and if the client is frozen.
+message ClientState {
+  option (gogoproto.goproto_getters) = false;
+  // latest sequence of the client state
+  uint64 sequence = 1;
+  // frozen sequence of the solo machine
+  bool           is_frozen       = 2 [(gogoproto.moretags) = "yaml:\"is_frozen\""];
+  ConsensusState consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+}
+
+// ConsensusState defines a solo machine consensus state. The sequence of a
+// consensus state is contained in the "height" key used in storing the
+// consensus state.
+message ConsensusState {
+  option (gogoproto.goproto_getters) = false;
+  // public key of the solo machine
+  google.protobuf.Any public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  // diversifier allows the same public key to be re-used across different solo
+  // machine clients (potentially on different chains) without being considered
+  // misbehaviour.
+  string diversifier = 2;
+  uint64 timestamp   = 3;
+}
+
+// Header defines a solo machine consensus header
+message Header {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64              timestamp       = 1;
+  bytes               signature       = 2;
+  google.protobuf.Any new_public_key  = 3 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
+  string              new_diversifier = 4 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
+}
+
+// Misbehaviour defines misbehaviour for a solo machine which consists
+// of a sequence and two signatures over different messages at that sequence.
+message Misbehaviour {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64           sequence      = 1;
+  SignatureAndData signature_one = 2 [(gogoproto.moretags) = "yaml:\"signature_one\""];
+  SignatureAndData signature_two = 3 [(gogoproto.moretags) = "yaml:\"signature_two\""];
+}
+
+// SignatureAndData contains a signature and the data signed over to create that
+// signature.
+message SignatureAndData {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes  signature = 1;
+  bytes  path      = 2;
+  bytes  data      = 3;
+  uint64 timestamp = 4;
+}
+
+// TimestampedSignatureData contains the signature data and the timestamp of the
+// signature.
+message TimestampedSignatureData {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes  signature_data = 1 [(gogoproto.moretags) = "yaml:\"signature_data\""];
+  uint64 timestamp      = 2;
+}
+
+// SignBytes defines the signed bytes used for signature verification.
+message SignBytes {
+  option (gogoproto.goproto_getters) = false;
+
+  // the sequence number
+  uint64 sequence = 1;
+  // the proof timestamp
+  uint64 timestamp = 2;
+  // the public key diversifier
+  string diversifier = 3;
+  // the standardised path bytes
+  bytes path = 4;
+  // the marshaled data bytes
+  bytes data = 5;
+}
+
+// HeaderData returns the SignBytes data for update verification.
+message HeaderData {
+  option (gogoproto.goproto_getters) = false;
+
+  // header public key
+  google.protobuf.Any new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  // header diversifier
+  string new_diversifier = 2 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
+}

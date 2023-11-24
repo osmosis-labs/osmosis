@@ -1,0 +1,26 @@
+syntax = "proto3";
+package osmosis.interchainqueries.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  // Defines amount of blocks required before query becomes available for
+  // removal by anybody
+  uint64 query_submit_timeout = 1;
+
+  // Amount of coins deposited for the query.
+  repeated cosmos.base.v1beta1.Coin query_deposit = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+
+  // Amount of tx hashes to be removed during a single EndBlock. Can vary to
+  // balance between network cleaning speed and EndBlock duration. A zero value
+  // means no limit.
+  uint64 tx_query_removal_limit = 3;
+}

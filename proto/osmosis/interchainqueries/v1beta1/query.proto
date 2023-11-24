@@ -1,0 +1,82 @@
+syntax = "proto3";
+package osmosis.interchainqueries.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "osmosis/interchainqueries/v1beta1/params.proto";
+import "osmosis/interchainqueries/v1beta1/genesis.proto";
+import "osmosis/interchainqueries/v1beta1/tx.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/neutron/interchainqueries/params";
+  }
+
+  rpc RegisteredQueries(QueryRegisteredQueriesRequest)
+      returns (QueryRegisteredQueriesResponse) {
+    option (google.api.http).get =
+        "/neutron/interchainqueries/registered_queries";
+  }
+
+  rpc RegisteredQuery(QueryRegisteredQueryRequest)
+      returns (QueryRegisteredQueryResponse) {
+    option (google.api.http).get =
+        "/neutron/interchainqueries/registered_query";
+  }
+
+  rpc QueryResult(QueryRegisteredQueryResultRequest)
+      returns (QueryRegisteredQueryResultResponse) {
+    option (google.api.http).get = "/neutron/interchainqueries/query_result";
+  }
+
+  rpc LastRemoteHeight(QueryLastRemoteHeight)
+      returns (QueryLastRemoteHeightResponse) {
+    option (google.api.http).get = "/neutron/interchainqueries/remote_height";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryRegisteredQueriesRequest {
+  repeated string owners = 1;
+  string connection_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryRegisteredQueriesResponse {
+  repeated RegisteredQuery registered_queries = 1
+      [ (gogoproto.nullable) = false ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRegisteredQueryRequest { uint64 query_id = 1; }
+
+message QueryRegisteredQueryResponse { RegisteredQuery registered_query = 1; }
+
+message QueryRegisteredQueryResultRequest { uint64 query_id = 1; }
+
+message QueryRegisteredQueryResultResponse { QueryResult result = 1; }
+
+message Transaction {
+  uint64 id = 1;
+  uint64 height = 2;
+  bytes data = 3;
+}
+
+message QueryLastRemoteHeight { string connection_id = 1; }
+
+message QueryLastRemoteHeightResponse { uint64 height = 1; }
