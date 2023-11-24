@@ -52,16 +52,11 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 		return nil, err
 	}
 
-	ticksMapByIDCmd, err := getTicksMapByIdCmd(ctx, tx)
-	if err != nil {
-		return nil, err
-	}
-
 	if err := tx.Exec(ctx); err != nil {
 		return nil, err
 	}
 
-	allPools, err := r.getPools(sqsPoolMapByIDCmd.Val(), chainPoolMapByIDCmd.Val(), ticksMapByIDCmd.Val())
+	allPools, err := r.getPools(sqsPoolMapByIDCmd.Val(), chainPoolMapByIDCmd.Val())
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +116,7 @@ func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx mvc.Tx, 
 }
 
 // getPools returns pools from Redis by storeKey.
-func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map[string]string) ([]domain.PoolI, error) {
+func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID map[string]string) ([]domain.PoolI, error) {
 	if len(sqsPoolMapByID) != len(chainPoolMapByID) {
 		return nil, fmt.Errorf("pools count mismatch: sqsPoolMapByID: %d, chainPoolMapByID: %d", len(sqsPoolMapByID), len(chainPoolMapByID))
 	}
@@ -145,24 +140,6 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map
 		err = r.appCodec.UnmarshalInterfaceJSON([]byte(chainPoolModelBytes), &pool.ChainModel)
 		if err != nil {
 			return nil, err
-		}
-
-		tickMapLength := len(ticksMap)
-		isConcentrated := pool.GetType() == poolmanagertypes.Concentrated
-		shouldUnmarshalTicks := tickMapLength > 0 && isConcentrated
-
-		if shouldUnmarshalTicks {
-			pool.TickModel = &domain.TickModel{}
-
-			tickData, ok := ticksMap[poolIDKeyStr]
-			if !ok {
-				return nil, fmt.Errorf("pool ID %s not found in ticksMap", poolIDKeyStr)
-			}
-
-			err := json.Unmarshal([]byte(tickData), pool.TickModel)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		pools = append(pools, pool)
