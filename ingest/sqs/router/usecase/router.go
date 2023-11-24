@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -24,6 +25,10 @@ type Router struct {
 	takerFeeMap domain.TakerFeeMap
 
 	minOSMOTVL int
+
+	routerRepository mvc.RouterRepository
+
+	poolsUsecase mvc.PoolsUsecase
 
 	// The logger.
 	logger log.Logger
@@ -115,6 +120,18 @@ func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {
 	// sort pools so that the appropriate pools are at the top
 	router.sortedPools = sortPools(router.sortedPools, totalTVL, preferredPoolIDsMap, router.logger)
 
+	return router
+}
+
+// WithRouterRepository instruments router by setting a router repository on it and returns the router.
+func WithRouterRepository(router *Router, routerRepository mvc.RouterRepository) *Router {
+	router.routerRepository = routerRepository
+	return router
+}
+
+// WithPoolsUsecase instruments router by setting a pools usecase on it and returns the router.
+func WithPoolsUsecase(router *Router, poolsUsecase mvc.PoolsUsecase) *Router {
+	router.poolsUsecase = poolsUsecase
 	return router
 }
 

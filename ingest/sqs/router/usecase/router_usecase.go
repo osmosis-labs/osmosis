@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ mvc.RouterUsecase = &routerUseCaseImpl{}
@@ -49,7 +50,25 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 		return nil, err
 	}
 
-	return router.getOptimalQuote(tokenIn, tokenOutDenom, routes)
+	// TODO: abstract this
+	concentratedPoolIDs := []uint64{}
+	for _, route := range routes {
+		r.logger.Info("route", zap.Any("route", route))
+
+		// Query tick model
+		for _, pool := range route.Pools {
+			if pool.GetType() == poolmanagertypes.Concentrated {
+				concentratedPoolIDs = append(concentratedPoolIDs, pool.GetId())
+			}
+		}
+	}
+
+	tickModelMap, err := r.poolsUsecase.GetTickModelMap(ctx, concentratedPoolIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return router.getOptimalQuote(ctx, tokenIn, tokenOutDenom, routes, tickModelMap)
 }
 
 // GetBestSingleRouteQuote returns the best single route quote to be done directly without a split.
@@ -64,7 +83,24 @@ func (r *routerUseCaseImpl) GetBestSingleRouteQuote(ctx context.Context, tokenIn
 		return nil, err
 	}
 
-	return router.getBestSingleRouteQuote(tokenIn, tokenOutDenom, routes)
+	concentratedPoolIDs := []uint64{}
+	for _, route := range routes {
+		r.logger.Info("route", zap.Any("route", route))
+
+		// Query tick model
+		for _, pool := range route.Pools {
+			if pool.GetType() == poolmanagertypes.Concentrated {
+				concentratedPoolIDs = append(concentratedPoolIDs, pool.GetId())
+			}
+		}
+	}
+
+	tickModelMap, err := r.poolsUsecase.GetTickModelMap(ctx, concentratedPoolIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return router.getBestSingleRouteQuote(tokenIn, tokenOutDenom, routes, tickModelMap)
 }
 
 // GetCandidateRoutes implements domain.RouterUsecase.
@@ -103,6 +139,8 @@ func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, erro
 
 	router := NewRouter([]uint64{}, takerFees, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
 	router = WithSortedPools(router, allPools)
+	router = WithRouterRepository(router, r.routerRepository)
+	router = WithPoolsUsecase(router, r.poolsUsecase)
 
 	r.logger.Info("sorted pools")
 	for _, pool := range router.sortedPools {

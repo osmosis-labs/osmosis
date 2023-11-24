@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -15,24 +16,34 @@ import (
 
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
 // Considers all routes and splits.
-func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
+// Returns error if router repository is not set on the router.
+func (r *Router) getOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel) (domain.Quote, error) {
+	if r.routerRepository == nil {
+		return nil, ErrNilRouterRepository
+	}
+	if r.poolsUsecase == nil {
+		return nil, ErrNilPoolsRepository
+	}
+
 	for _, route := range routes {
 		r.logger.Info("route", zap.Any("route", route))
 	}
 
-	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
+	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
 	if err != nil {
 		return nil, err
 	}
 
 	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
 
-	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tokenIn)
+	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tickModelMap, tokenIn)
 	if err != nil {
 		return nil, err
 	}
 
 	r.logger.Info("bestSplitRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
+
+	finalQuote := bestSingleRouteQuote
 
 	// If the split route quote is better than the single route quote, return the split route quote
 	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
@@ -43,19 +54,30 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 			r.logger.Debug("route", zap.Stringer("route", route))
 		}
 
-		return bestSplitRouteQuote, nil
+		finalQuote = bestSplitRouteQuote
 	}
 
 	r.logger.Debug("single route is selected")
 	r.logger.Debug("route", zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
 
-	// Otherwise return the single route quote
-	return bestSingleRouteQuote, nil
+	if finalQuote.GetAmountOut().IsZero() {
+		return nil, errors.New("best we can do is no tokens out")
+	}
+
+	return finalQuote, nil
 }
 
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
-func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (quote domain.Quote, err error) {
-	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
+// Returns error if router repository is not set on the router.
+func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel) (quote domain.Quote, err error) {
+	if r.routerRepository == nil {
+		return nil, ErrNilRouterRepository
+	}
+	if r.poolsUsecase == nil {
+		return nil, ErrNilPoolsRepository
+	}
+
+	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +87,9 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 	return bestSingleRouteQuote, nil
 }
 
-func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+// CONTRACT: router repository must be set on the router.
+// CONTRACT: pools reporitory must be set on the router
+func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 0 {
 		return nil, errors.New("no routes were provided")
 	}
@@ -74,13 +98,13 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn 
 		bestRoute RouteWithOutAmount
 	)
 	for _, route := range routes {
-		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn)
+		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn, tickModelMap)
 		if err != nil {
 			r.logger.Debug("skipping single route due to error in estimate", zap.Error(err))
 			continue
 		}
 
-		if !directRouteTokenOut.IsNil() && (bestRoute.OutAmount.IsNil() || directRouteTokenOut.Amount.LT(bestRoute.OutAmount)) {
+		if !directRouteTokenOut.IsNil() && (bestRoute.OutAmount.IsNil() || directRouteTokenOut.Amount.GT(bestRoute.OutAmount)) {
 			bestRoute = RouteWithOutAmount{
 				RouteImpl: route,
 				InAmount:  tokenIn.Amount,
@@ -103,16 +127,20 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn 
 }
 
 // CONTRACT: all routes are valid. Must be validated by the caller with validateRoutes method.
-func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+// CONTRACT: router repository must be set on the router.
+// CONTRACT: pools reporitory must be set on the router
+func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 1 {
-		return r.estimateBestSingleRouteQuote(routes, tokenIn)
+		return r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
 	}
 
 	r.logger.Debug("estimateBestSplitRoutesQuote", zap.Int("routes_count", len(routes)), zap.Stringer("token_in", tokenIn))
-	bestSplit, err := r.splitRecursive(tokenIn, routes, Split{
-		Routes:          []domain.SplitRoute{},
-		CurrentTotalOut: osmomath.ZeroInt(),
-	})
+	bestSplit, err := r.splitRecursive(
+		tokenIn,
+		routes, Split{
+			Routes:          []domain.SplitRoute{},
+			CurrentTotalOut: osmomath.ZeroInt(),
+		}, tickModelMap)
 	if err != nil {
 		return nil, err
 	}
@@ -123,6 +151,12 @@ func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn s
 		AmountIn:  tokenIn,
 		AmountOut: bestSplit.CurrentTotalOut,
 		Route:     bestSplit.Routes,
+	}
+
+	// In some cases, when there is not enough liqudity, it makes it nil
+	// We set it to zero here for simplicity of handling in the client side.
+	if finalQuote.AmountOut.IsNil() {
+		finalQuote.AmountOut = osmomath.ZeroInt()
 	}
 
 	return finalQuote, nil
@@ -255,7 +289,7 @@ type Split struct {
 // It does not perform single route quote estimate (100% single route split) as we assume that those were already calculated prior to this method.
 // Returns the best split and error if any.
 // Returs error if the maxSplitIterations is less than 1.
-func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []route.RouteImpl, currentSplit Split) (bestSplit Split, err error) {
+func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []route.RouteImpl, currentSplit Split, tickModelMap map[uint64]domain.TickModel) (bestSplit Split, err error) {
 	r.logger.Debug("splitRecursive START", zap.Stringer("remainingTokenIn", remainingTokenIn))
 
 	// Base case, we have no more routes to split and we have a valid split
@@ -274,7 +308,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 
 	r.logger.Debug("currentRoute ", zap.Any("currentRoute", currentRoute))
 
-	for i := 1; i < r.maxSplitIterations; i++ {
+	for i := 0; i <= r.maxSplitIterations; i++ {
 		// TODO: this can be precomputed in constructor
 		fraction := osmomath.NewDec(int64(i)).Quo(maxSplitIterationsDec)
 
@@ -290,7 +324,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 
 		currentAmountIn := remainingTokenIn.Amount.ToLegacyDec().Mul(fraction).TruncateInt()
 
-		currentTokenOut, err := currentRoute.CalculateTokenOutByTokenIn(sdk.NewCoin(remainingTokenIn.Denom, currentAmountIn))
+		currentTokenOut, err := currentRoute.CalculateTokenOutByTokenIn(sdk.NewCoin(remainingTokenIn.Denom, currentAmountIn), tickModelMap)
 		if err != nil {
 			r.logger.Debug("skipping split due to error in estimate", zap.Error(err))
 			continue
@@ -312,12 +346,12 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 
 		remainingTokenInCopy := sdk.NewCoin(remainingTokenIn.Denom, remainingTokenIn.Amount.Sub(currentAmountIn))
 
-		currentBestSplit, err := r.splitRecursive(remainingTokenInCopy, remainingRoutes[1:], currentSplitCopy)
+		currentBestSplit, err := r.splitRecursive(remainingTokenInCopy, remainingRoutes[1:], currentSplitCopy, tickModelMap)
 		if err != nil {
 			return Split{}, err
 		}
 
-		if bestSplit.CurrentTotalOut.IsNil() || currentBestSplit.CurrentTotalOut.GT(bestSplit.CurrentTotalOut) {
+		if !currentBestSplit.CurrentTotalOut.IsNil() && (bestSplit.CurrentTotalOut.IsNil() || currentBestSplit.CurrentTotalOut.GT(bestSplit.CurrentTotalOut)) {
 			bestSplit = currentBestSplit
 			r.logger.Debug("selected as best split")
 		}

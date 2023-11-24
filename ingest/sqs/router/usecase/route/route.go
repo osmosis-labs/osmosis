@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ domain.Route = &RouteImpl{}
@@ -53,7 +54,7 @@ func (r *RouteImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee os
 }
 
 // CalculateTokenOutByTokenIn implements Route.
-func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.Coin, err error) {
+func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin, tickModelMap map[uint64]domain.TickModel) (tokenOut sdk.Coin, err error) {
 	defer func() {
 		// TODO: cover this by test
 		if r := recover(); r != nil {
@@ -63,6 +64,22 @@ func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.C
 	}()
 
 	for _, pool := range r.Pools {
+		// TODO: clean up this mess
+		tickModel, ok := tickModelMap[pool.GetId()]
+		isConcetrated := pool.GetType() == poolmanagertypes.Concentrated
+
+		if !ok && isConcetrated {
+			return sdk.Coin{}, domain.ConcentratedTickModelNotSet{
+				PoolId: pool.GetId(),
+			}
+		}
+
+		if ok && isConcetrated {
+			if err := pool.SetTickModelIfConcentrated(tickModel); err != nil {
+				return sdk.Coin{}, err
+			}
+		}
+
 		tokenOut, err = pool.CalculateTokenOutByTokenIn(tokenIn)
 		if err != nil {
 			return sdk.Coin{}, err

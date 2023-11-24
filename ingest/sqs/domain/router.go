@@ -19,6 +19,9 @@ type RoutablePool interface {
 	GetPoolDenoms() []string
 
 	GetTokenOutDenom() string
+
+	SetTickModelIfConcentrated(TickModel) error
+
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
 	ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin)
 
@@ -43,7 +46,7 @@ type Route interface {
 	AddPool(pool PoolI, tokenOut string, takerFee osmomath.Dec)
 	// CalculateTokenOutByTokenIn calculates the token out amount given the token in amount.
 	// Returns error if the calculation fails.
-	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
+	CalculateTokenOutByTokenIn(tokenIn sdk.Coin, tickModelMap map[uint64]TickModel) (sdk.Coin, error)
 
 	GetTokenOutDenom() string
 

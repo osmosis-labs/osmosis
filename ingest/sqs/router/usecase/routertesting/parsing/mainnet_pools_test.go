@@ -17,7 +17,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
-const testFileName = "pools_test.json"
+const testFileName = "pools.json"
 
 var (
 	zeroMinOSMOTVL                 = osmomath.ZeroInt()
@@ -56,7 +56,7 @@ var (
 func TestReadPoolsFileFromState(t *testing.T) {
 	t.Skip("This test is not meant to be run in CI. Use for debugging only")
 
-	pools, err := parsing.ReadPools(testFileName)
+	pools, _, err := parsing.ReadPools(testFileName)
 	require.NoError(t, err)
 
 	require.NotEmpty(t, pools)
@@ -86,7 +86,7 @@ func TestStoreFilesAndReadBack(t *testing.T) {
 	err = parsing.StorePools([]domain.PoolI{testPoolToMarshal}, testFileName)
 	require.NoError(t, err)
 
-	pools, err := parsing.ReadPools(testFileName)
+	pools, _, err := parsing.ReadPools(testFileName)
 	require.NoError(t, err)
 
 	require.Equal(t, 1, len(pools))

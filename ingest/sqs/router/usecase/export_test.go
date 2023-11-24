@@ -20,8 +20,8 @@ const (
 	NoTotalValueLockedError = noTotalValueLockedError
 )
 
-func (r Router) GetBestSplitRoutesQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
-	return r.estimateBestSplitRouteQuote(routes, tokenIn)
+func (r Router) GetBestSplitRoutesQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+	return r.estimateBestSplitRouteQuote(routes, tickModelMap, tokenIn)
 }
 
 func (r *Router) ValidateAndFilterRoutes(routes []route.RouteImpl, tokenInDenom string) ([]route.RouteImpl, error) {
@@ -36,8 +36,8 @@ func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, to
 	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
 
-func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
-	return r.getOptimalQuote(tokenIn, tokenOutDenom, routes)
+func (r *Router) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel) (domain.Quote, error) {
+	return r.getOptimalQuote(ctx, tokenIn, tokenOutDenom, routes, tickModelMap)
 }
 
 // GetSortedPoolIDs returns the sorted pool IDs.

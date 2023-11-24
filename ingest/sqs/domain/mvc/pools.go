@@ -10,6 +10,9 @@ import (
 type PoolsRepository interface {
 	// GetAllPools atomically reads and returns all on-chain pools sorted by ID.
 	GetAllPools(context.Context) ([]domain.PoolI, error)
+
+	GetTickModelForPools(ctx context.Context, pools []uint64) (map[uint64]domain.TickModel, error)
+
 	// StorePools atomically stores the given pools.
 	StorePools(ctx context.Context, tx Tx, pools []domain.PoolI) error
 	// ClearAllPools atomically clears all pools.
@@ -19,4 +22,6 @@ type PoolsRepository interface {
 // PoolsUsecase represent the pool's usecases
 type PoolsUsecase interface {
 	GetAllPools(ctx context.Context) ([]domain.PoolI, error)
+
+	GetTickModelMap(ctx context.Context, poolIDs []uint64) (map[uint64]domain.TickModel, error)
 }

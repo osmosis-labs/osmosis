@@ -131,3 +131,8 @@ func (r *routableResultPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 func (r *routableResultPoolImpl) GetSpreadFactor() math.LegacyDec {
 	return r.SpreadFactor
 }
+
+// SetTickModelIfConcentrated implements domain.RoutablePool.
+func (r *routableResultPoolImpl) SetTickModelIfConcentrated(domain.TickModel) error {
+	return fmt.Errorf("attempted to set tick model on a result pool (%d)", r.GetId())
+}

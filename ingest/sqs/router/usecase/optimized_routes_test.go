@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +31,7 @@ const (
 	ETH           = "ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5"
 	AKT           = "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4"
 	UMEE          = "ibc/67795E528DF67C5606FC20F824EA39A6EF55BA133F4DC79C90A8C47A0901E17C"
+	UION          = "uion"
 )
 
 // TODO: copy exists in candidate_routes_test.go - share & reuse
@@ -99,7 +101,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 	secondBalancerPoolSameDenoms, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, secondBalancerPoolIDSameDenoms)
 	s.Require().NoError(err)
 
-	// Get the thirdBalancerPool from the store
+	// // Get the thirdBalancerPool from the store
 	thirdBalancerPoolSameDenoms, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, thirdBalancerPoolIDSameDenoms)
 	s.Require().NoError(err)
 
@@ -191,7 +193,10 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 
 			r := routerusecase.NewRouter([]uint64{}, domain.TakerFeeMap{}, 0, 0, tc.maxSplitIterations, 0, logger)
 
-			quote, err := r.GetBestSplitRoutesQuote(tc.routes, tc.tokenIn)
+			// TODO: make proper map
+			tickMap := map[uint64]domain.TickModel{}
+
+			quote, err := r.GetBestSplitRoutesQuote(tc.routes, tickMap, tc.tokenIn)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -438,12 +443,20 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE() {
 		amountIn = osmomath.NewInt(1000000000)
 	)
 
-	router := s.setupMainnetRouter(config)
+	router, tickMap := s.setupMainnetRouter(config)
+
+	// Setup router repository mock
+	routerRepositoryMock := mocks.RedisRouterRepositoryMock{}
+	routerusecase.WithRouterRepository(router, &routerRepositoryMock)
+
+	// Setup pools usecase mock.
+	poolsUsecaseMock := mocks.PoolsUsecaseMock{}
+	routerusecase.WithPoolsUsecase(router, &poolsUsecaseMock)
 
 	routes, err := router.GetCandidateRoutes(USDT, UMEE)
 	s.Require().NoError(err)
 
-	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), UMEE, routes)
+	quote, err := router.GetOptimalQuote(context.Background(), sdk.NewCoin(USDT, amountIn), UMEE, routes, tickMap)
 
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)
@@ -451,5 +464,44 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE() {
 	// Expecting 2 routes based on the mainnet state
 	// 1: 1205
 	// 2: 1110 -> 1077
-	s.Require().Len(quote.GetRoute(), 2)
+	quoteRoutes := quote.GetRoute()
+	s.Require().Len(quoteRoutes, 2)
+}
+
+func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_UOSMOUION() {
+	config := defaultRouterConfig
+	config.MaxPoolsPerRoute = 5
+	config.MaxRoutes = 10
+
+	var (
+		amountIn = osmomath.NewInt(5000000)
+	)
+
+	router, tickMap := s.setupMainnetRouter(config)
+
+	// Setup router repository mock
+	routerRepositoryMock := mocks.RedisRouterRepositoryMock{}
+	routerusecase.WithRouterRepository(router, &routerRepositoryMock)
+
+	// Setup pools usecase mock.
+	poolsUsecaseMock := mocks.PoolsUsecaseMock{}
+	routerusecase.WithPoolsUsecase(router, &poolsUsecaseMock)
+
+	routes, err := router.GetCandidateRoutes(UOSMO, UION)
+	s.Require().NoError(err)
+
+	quote, err := router.GetOptimalQuote(context.Background(), sdk.NewCoin(UOSMO, amountIn), UION, routes, tickMap)
+
+	// We only validate that error does not occur without actually validating the quote.
+	s.Require().NoError(err)
+
+	// Expecting 1 route based on mainnet state
+	s.Require().Len(quote.GetRoute(), 1)
+
+	// Should be pool 2 based on state at the time of writing.
+	// If new state is added, review the quote against mainnet.
+	s.Require().Len(quote.GetRoute()[0].GetPools(), 1)
+
+	// Validate that the pool is pool 2
+	s.Require().Equal(uint64(2), quote.GetRoute()[0].GetPools()[0].GetId())
 }

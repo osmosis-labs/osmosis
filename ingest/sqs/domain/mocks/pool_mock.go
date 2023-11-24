@@ -24,6 +24,12 @@ type MockRoutablePool struct {
 	SpreadFactor         osmomath.Dec
 }
 
+// SetTickModelIfConcentrated implements domain.RoutablePool.
+func (mp *MockRoutablePool) SetTickModelIfConcentrated(tickModel domain.TickModel) error {
+	mp.TickModel = &tickModel
+	return nil
+}
+
 // GetSpreadFactor implements domain.RoutablePool.
 func (mp *MockRoutablePool) GetSpreadFactor() math.LegacyDec {
 	return mp.SpreadFactor
