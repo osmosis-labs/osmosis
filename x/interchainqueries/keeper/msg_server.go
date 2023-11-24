@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"time"
 
-	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	ibccommitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	ics23 "github.com/cosmos/ics23/go"
 
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 )
@@ -182,24 +182,6 @@ func (k msgServer) SubmitQueryResult(goCtx context.Context, msg *types.MsgSubmit
 			return nil, sdkerrors.Wrapf(types.ErrInvalidSubmittedResult, "KV keys length from result is not equal to registered query keys length: %v != %v", len(msg.Result.KvResults), len(query.Keys))
 		}
 
-		resp, err := k.ibcKeeper.ConnectionConsensusState(goCtx, &ibcconnectiontypes.QueryConnectionConsensusStateRequest{
-			ConnectionId:   query.ConnectionId,
-			RevisionNumber: msg.Result.Revision,
-			RevisionHeight: msg.Result.Height + 1,
-		})
-		if err != nil {
-			ctx.Logger().Debug("SubmitQueryResult: failed to get ConnectionConsensusState",
-				"error", err, "query", query, "message", msg)
-			return nil, sdkerrors.Wrapf(ibcclienttypes.ErrConsensusStateNotFound, "failed to get consensus state: %v", err)
-		}
-
-		consensusState, err := ibcclienttypes.UnpackConsensusState(resp.ConsensusState)
-		if err != nil {
-			ctx.Logger().Error("SubmitQueryResult: failed to UnpackConsensusState",
-				"error", err, "query", query, "message", msg)
-			return nil, sdkerrors.Wrapf(types.ErrProtoUnmarshal, "failed to unpack consesus state: %v", err)
-		}
-
 		clientState, err := k.GetClientState(ctx, msg.ClientId)
 		if err != nil {
 			return nil, err
@@ -222,20 +204,30 @@ func (k msgServer) SubmitQueryResult(goCtx context.Context, msg *types.MsgSubmit
 			}
 
 			path := ibccommitmenttypes.NewMerklePath(result.StoragePrefix, url.PathEscape(string(result.Key)))
+			key, err := path.GetKey(uint64(len(path.KeyPath) - 1))
+			if err != nil {
+				return nil, sdkerrors.Wrapf(ibccommitmenttypes.ErrInvalidProof, "could not retrieve key bytes for key: %s", path.KeyPath[len(path.KeyPath)-1])
+			}
+
+			subroot, err := proof.Proofs[0].Calculate()
 
 			// identify what kind proofs (non-existence proof always has *ics23.CommitmentProof_Nonexist as the first item) we got
 			// and call corresponding method to verify it
-			switch proof.GetProofs()[0].GetProof().(type) {
+			switch proof.GetProofs()[0].Proof.(type) {
 			// we can get non-existence proof if someone queried some key which is not exists in the storage on remote chain
 			case *ics23.CommitmentProof_Nonexist:
-				if err := proof.VerifyNonMembership(clientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
+
+				if err != nil {
+					return nil, sdkerrors.Wrapf(ibccommitmenttypes.ErrInvalidProof, "could not calculate root for proof index 0, merkle tree is likely empty. %v", err)
+				}
+				if ok := ics23.VerifyNonMembership(clientState.ProofSpecs[0], subroot, proof.Proofs[0], key); !ok {
 					ctx.Logger().Debug("SubmitQueryResult: failed to VerifyNonMembership",
 						"error", err, "query", query, "message", msg, "path", path)
 					return nil, sdkerrors.Wrapf(types.ErrInvalidProof, "failed to verify proof: %v", err)
 				}
 				result.Value = nil
 			case *ics23.CommitmentProof_Exist:
-				if err := proof.VerifyMembership(clientState.ProofSpecs, consensusState.GetRoot(), path, result.Value); err != nil {
+				if ok := ics23.VerifyNonMembership(clientState.ProofSpecs[0], subroot, proof.Proofs[0], key); !ok {
 					ctx.Logger().Debug("SubmitQueryResult: failed to VerifyMembership",
 						"error", err, "query", query, "message", msg, "path", path)
 					return nil, sdkerrors.Wrapf(types.ErrInvalidProof, "failed to verify proof: %v", err)

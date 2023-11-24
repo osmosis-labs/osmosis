@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v20/x/contractmanager/types"
 )

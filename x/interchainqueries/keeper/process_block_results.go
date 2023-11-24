@@ -8,13 +8,13 @@ import (
 	clientkeeper "github.com/cosmos/ibc-go/v7/modules/core/02-client/keeper"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/merkle"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tendermintLightClient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 )
@@ -60,7 +60,7 @@ type Verifier struct{}
 
 // VerifyHeaders verify that headers are valid tendermint headers, checks them on validity by trying call ibcClient.UpdateClient(header)
 // to update light client's consensus state and checks that they are sequential (tl;dr header.Height + 1 == nextHeader.Height)
-func (v Verifier) VerifyHeaders(ctx sdk.Context, clientKeeper clientkeeper.Keeper, clientID string, header, nextHeader exported.Header) error {
+func (v Verifier) VerifyHeaders(ctx sdk.Context, clientKeeper clientkeeper.Keeper, clientID string, header, nextHeader exported.ClientMessage) error {
 	// this IBC handler updates the consensus state and the state root from a provided header.
 	// But more importantly in the current situation, it checks that header is valid.
 	// Honestly we need only to verify headers, but since the check functions are private, and we don't want to duplicate the code,
@@ -72,12 +72,12 @@ func (v Verifier) VerifyHeaders(ctx sdk.Context, clientKeeper clientkeeper.Keepe
 		return sdkerrors.Wrapf(err, "failed to update client: %v", err)
 	}
 
-	tmHeader, ok := header.(*tendermintLightClientTypes.Header)
+	tmHeader, ok := header.(*tendermintLightClient.Header)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrInvalidType, "failed to cast header to tendermint Header")
 	}
 
-	tmNextHeader, ok := nextHeader.(*tendermintLightClientTypes.Header)
+	tmNextHeader, ok := nextHeader.(*tendermintLightClient.Header)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrInvalidType, "failed to cast header to tendermint Header")
 	}
@@ -90,8 +90,8 @@ func (v Verifier) VerifyHeaders(ctx sdk.Context, clientKeeper clientkeeper.Keepe
 	return nil
 }
 
-func (v Verifier) UnpackHeader(any *codectypes.Any) (exported.Header, error) {
-	return ibcclienttypes.UnpackHeader(any)
+func (v Verifier) UnpackHeader(any *codectypes.Any) (exported.ClientMessage, error) {
+	return ibcclienttypes.UnpackClientMessage(any)
 }
 
 // ProcessBlock verifies headers and transaction in the block, and then passes the tx query result to
@@ -114,13 +114,13 @@ func (k Keeper) ProcessBlock(ctx sdk.Context, queryOwner sdk.AccAddress, queryID
 		return sdkerrors.Wrapf(types.ErrInvalidHeader, "failed to verify headers: %v", err)
 	}
 
-	tmHeader, ok := header.(*tendermintLightClientTypes.Header)
+	tmHeader, ok := header.(*tendermintLightClient.Header)
 	if !ok {
 		ctx.Logger().Debug("ProcessBlock: failed to cast current header to tendermint Header", "query_id", queryID)
 		return sdkerrors.Wrap(types.ErrInvalidType, "failed to cast current header to tendermint Header")
 	}
 
-	tmNextHeader, ok := nextHeader.(*tendermintLightClientTypes.Header)
+	tmNextHeader, ok := nextHeader.(*tendermintLightClient.Header)
 	if !ok {
 		ctx.Logger().Debug("ProcessBlock: failed to cast next header to tendermint Header", "query_id", queryID)
 		return sdkerrors.Wrap(types.ErrInvalidType, "failed to cast next header to tendermint header")

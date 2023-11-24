@@ -123,7 +123,7 @@ func (msg MsgRegisterInterchainQuery) GetSigners() []sdk.AccAddress {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgSubmitQueryResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var header exported.Header
+	var header exported.ClientMessage
 	if err := unpacker.UnpackAny(msg.Result.GetBlock().GetHeader(), &header); err != nil {
 		return err
 	}

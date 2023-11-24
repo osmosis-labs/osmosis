@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	iqtypes "github.com/osmosis-labs/osmosis/v20/x/interchainqueries/types"
 )
