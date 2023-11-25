@@ -81,79 +81,52 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 }
 
 func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtypes.LiquidityChangeType]bool) (string, bool) {
-	if authzMsg, ok := msg.(*authztypes.MsgExec); ok {
-		msgs, _ := authzMsg.GetMessages()
-		for _, m := range msgs {
-			swapInDenom, isAuthz := isArbTxLooseAuthz(m, swapInDenom, lpTypesSeen)
+	switch m := msg.(type) {
+	case *authztypes.MsgExec:
+		msgs, _ := m.GetMessages()
+		for _, mes := range msgs {
+			swapInDenom, isAuthz := isArbTxLooseAuthz(mes, swapInDenom, lpTypesSeen)
 			if isAuthz {
 				return swapInDenom, true
 			}
 		}
-		return swapInDenom, false
-	}
-
-	// Detects the affiliate swap message from the CosmWasm contract
-	// See an example here:
-	// // https://celatone.osmosis.zone/osmosis-1/txs/315EB6284778EBB5BAC0F94CC740F5D7E35DDA5BBE4EC9EC79F012548589C6E5
-	if msgExecuteContract, ok := msg.(*wasmtypes.MsgExecuteContract); ok {
-		// Grab token in from the funds sent to the contract
-		tokensIn := msgExecuteContract.GetFunds()
-		if len(tokensIn) != 1 {
-			return swapInDenom, false
-		}
-		tokenIn := tokensIn[0]
-
-		// Get the contract message and attempt to unmarshal it into the affiliate swap message
-		contractMessage := msgExecuteContract.GetMsg()
-
-		// Check that the contract message is an affiliate swap message
+	case *wasmtypes.MsgExecuteContract:
+		// Detects the affiliate swap message from the CosmWasm contract
+		// See an example here:
+		// https://celatone.osmosis.zone/osmosis-1/txs/315EB6284778EBB5BAC0F94CC740F5D7E35DDA5BBE4EC9EC79F012548589C6E5
+		contractMessage := m.GetMsg()
 		if ok := isAffiliateSwapMsg(contractMessage); !ok {
 			return swapInDenom, false
 		}
-
 		var affiliateSwapMsg AffiliateSwapMsg
 		if err := json.Unmarshal(contractMessage, &affiliateSwapMsg); err != nil {
 			// If we can't unmarshal it, it's not an affiliate swap message
 			return swapInDenom, false
 		}
-
-		// Otherwise, we have an affiliate swap message, so we check if it's an arb
-		affiliateSwapMsg.TokenIn = tokenIn.Denom
-		swapInDenom, isArb := isArbTxLooseSwapMsg(affiliateSwapMsg, swapInDenom)
-		if isArb {
-			return swapInDenom, true
+		tokensIn := m.GetFunds()
+		if len(tokensIn) == 1 {
+			// Otherwise, we have an affiliate swap message, so we check if it's an arb
+			affiliateSwapMsg.TokenIn = tokensIn[0].Denom
+			return isArbTxLooseSwapMsg(affiliateSwapMsg, swapInDenom)
 		}
-
-		return swapInDenom, false
-	}
-
-	// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
-	lpMsg, isLpMsg := msg.(gammtypes.LiquidityChangeMsg)
-	if isLpMsg {
-		lpTypesSeen[lpMsg.LiquidityChangeType()] = true
+	case gammtypes.LiquidityChangeMsg:
+		// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
+		lpTypesSeen[m.LiquidityChangeType()] = true
 		if len(lpTypesSeen) > 1 {
 			return swapInDenom, true
 		}
-	}
-
-	multiSwapMsg, isMultiSwapMsg := msg.(poolmanagertypes.MultiSwapMsgRoute)
-	if isMultiSwapMsg {
-		for _, swapMsg := range multiSwapMsg.GetSwapMsgs() {
+	case poolmanagertypes.MultiSwapMsgRoute:
+		for _, swapMsg := range m.GetSwapMsgs() {
 			// TODO: Fix this later
 			swapInDenom, isArb := isArbTxLooseSwapMsg(swapMsg, swapInDenom)
 			if isArb {
 				return swapInDenom, true
 			}
 		}
-		return swapInDenom, false
+	case poolmanagertypes.SwapMsgRoute:
+		return isArbTxLooseSwapMsg(m, swapInDenom)
 	}
-
-	swapMsg, isSwapMsg := msg.(poolmanagertypes.SwapMsgRoute)
-	if !isSwapMsg {
-		return swapInDenom, false
-	}
-
-	return isArbTxLooseSwapMsg(swapMsg, swapInDenom)
+	return swapInDenom, false
 }
 
 func isArbTxLooseSwapMsg(swapMsg poolmanagertypes.SwapMsgRoute, swapInDenom string) (string, bool) {
