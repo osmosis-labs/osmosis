@@ -30,7 +30,7 @@ import (
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
 	chainA, chainANode := s.getChainACfgs()
 
-	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode, true)
+	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode, false)
 	s.NoError(err)
 	fmt.Println("poolId", poolId)
 

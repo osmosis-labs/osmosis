@@ -366,7 +366,7 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, isLegacy bool) int {
 }
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(isExpedited, isLegacy bool) int {
-	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--summary=\"create concentrated pool\"", "--from=val", "--gas=400000", "--fees=5000uosmo"}
+	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool\"", "--from=val", "--gas=700000", "--fees=5000uosmo"}
 	return n.SubmitProposal(cmd, isExpedited, "create concentrated liquidity pool", isLegacy)
 }
 
