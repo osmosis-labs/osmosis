@@ -14,13 +14,10 @@ import (
 func (suite *KeeperTestSuite) TestDYMIsBurned_ExactIn() {
 	tokenInAmt := int64(100000)
 	testcases := map[string]struct {
-		routes                []poolmanagertypes.SwapAmountInRoute
-		tokenIn               sdk.Coin
-		tokenOutMinAmount     sdk.Int
-		expectError           bool
-		expectedBurnEvents    bool
-		expectedSwapEvents    int
-		expectedMessageEvents int
+		routes            []poolmanagertypes.SwapAmountInRoute
+		tokenIn           sdk.Coin
+		tokenOutMinAmount sdk.Int
+		expectError       bool
 	}{
 		"zero hops": {
 			routes:            []poolmanagertypes.SwapAmountInRoute{},

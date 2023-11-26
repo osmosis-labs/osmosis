@@ -33,33 +33,7 @@ func (k Keeper) chargeTakerFeeSwapAmountOut(ctx sdk.Context, takerFeeCoin sdk.Co
 		firstPool.TokenOutDenom = denomOut
 	}
 
-	if firstPool.TokenOutDenom == defaultTakerFeeDenom {
-		return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{firstPool}, takerFeeCoin)
-	}
-
-	params := k.GetParams(ctx)
-	isBaseDenom, _ := params.PoolCreationFee.Find(takerFeeCoin.Denom)
-	if isBaseDenom {
-		route, err := k.findPoolWithDYM(ctx, takerFeeCoin.Denom)
-		if err != nil {
-			ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
-			return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
-		}
-		return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{route}, takerFeeCoin)
-	}
-
-	//If swap needed, add the first pool to the route (to swap for base denom)
-	route, err := k.findPoolWithDYM(ctx, firstPool.TokenOutDenom)
-	if err != nil {
-		ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
-		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
-	}
-	routeForTakerFee := []poolmanagertypes.SwapAmountInRoute{firstPool, route}
-	err = k.swapAndBurn(ctx, sender, routeForTakerFee, takerFeeCoin)
-	if err != nil {
-		return err
-	}
-	return nil
+	return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{firstPool}, takerFeeCoin)
 }
 
 // possibilites for takerFeeCoin:
@@ -72,56 +46,57 @@ func (k Keeper) chargeTakerFeeSwapAmountIn(ctx sdk.Context, takerFeeCoin sdk.Coi
 		return k.swapAndBurn(ctx, sender, nil, takerFeeCoin)
 	}
 
-	if routes[0].TokenOutDenom == defaultTakerFeeDenom {
-		return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{routes[0]}, takerFeeCoin)
-	}
+	return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{routes[0]}, takerFeeCoin)
 
-	params := k.GetParams(ctx)
-	isBaseDenom, _ := params.PoolCreationFee.Find(takerFeeCoin.Denom)
-	if isBaseDenom {
-		route, err := k.findPoolWithDYM(ctx, takerFeeCoin.Denom)
-		if err != nil {
-			ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
-			return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
-		}
-		return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{route}, takerFeeCoin)
-	}
-
-	//If swap needed, add the first pool to the route (to swap for base denom)
-	route, err := k.findPoolWithDYM(ctx, routes[0].TokenOutDenom)
-	if err != nil {
-		ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
-		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(takerFeeCoin), sender)
-	}
-	routeForTakerFee := []poolmanagertypes.SwapAmountInRoute{routes[0], route}
-	err = k.swapAndBurn(ctx, sender, routeForTakerFee, takerFeeCoin)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (k Keeper) swapAndBurn(ctx sdk.Context, sender sdk.AccAddress, routes []poolmanagertypes.SwapAmountInRoute, tokenIn sdk.Coin) error {
-	burnTokens := tokenIn
-	// Do the swap of this fee token denom to base denom.
-	if len(routes) > 0 {
-		minAmountOut := sdk.ZeroInt()
-		out, err := k.poolManager.RouteExactAmountIn(ctx, sender, routes, tokenIn, minAmountOut)
-		if err != nil {
-			return err
-		}
+	if len(routes) == 0 {
+		return k.burnTakerFee(ctx, tokenIn, sender)
+	}
 
-		burnTokens.Amount = out
-		burnTokens.Denom = routes[len(routes)-1].TokenOutDenom
+	var routeForTakerFee []poolmanagertypes.SwapAmountInRoute
+	firstPool := routes[0]
+
+	// Do the swap of this fee token denom to base denom.
+	if firstPool.TokenOutDenom == defaultTakerFeeDenom {
+		routeForTakerFee = []poolmanagertypes.SwapAmountInRoute{firstPool}
 	} else {
-		burnTokens = tokenIn
+		params := k.GetParams(ctx)
+		//if tokenIn is base denom, we need to find the pool with DYM
+		isBaseDenom, _ := params.PoolCreationFee.Find(tokenIn.Denom)
+		if isBaseDenom {
+			route, err := k.findPoolWithDYM(ctx, tokenIn.Denom)
+			if err != nil {
+				ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
+				return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(tokenIn), sender)
+			}
+			routeForTakerFee = []poolmanagertypes.SwapAmountInRoute{route}
+		} else {
+			//If swap needed, add the first pool to the route (to swap for base denom)
+			route, err := k.findPoolWithDYM(ctx, firstPool.TokenOutDenom)
+			if err != nil {
+				ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
+				return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(tokenIn), sender)
+			}
+			routeForTakerFee = []poolmanagertypes.SwapAmountInRoute{firstPool, route}
+		}
 	}
 
 	//double check the denom before burning
-	if burnTokens.Denom != defaultTakerFeeDenom {
-		ctx.Logger().Error("wrong route to burn Taker Fee", "tokenIn", tokenIn, "burnTokens", burnTokens)
-		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(burnTokens), sender)
+	if routeForTakerFee[len(routeForTakerFee)-1].TokenOutDenom != defaultTakerFeeDenom {
+		ctx.Logger().Error("wrong route to burn Taker Fee", "tokenIn", tokenIn, "routes", routeForTakerFee)
+		return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(tokenIn), sender)
 	}
+
+	minAmountOut := sdk.ZeroInt()
+	burnTokens := sdk.Coin{}
+	out, err := k.poolManager.RouteExactAmountIn(ctx, sender, routeForTakerFee, tokenIn, minAmountOut)
+	if err != nil {
+		return err
+	}
+	burnTokens.Amount = out
+	burnTokens.Denom = defaultTakerFeeDenom
 
 	return k.burnTakerFee(ctx, burnTokens, sender)
 }
