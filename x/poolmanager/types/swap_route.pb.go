@@ -218,6 +218,8 @@ func (m *SwapAmountOutSplitRoute) GetPools() []SwapAmountOutRoute {
 	return nil
 }
 
+// Route message types to be used between both stateful and non-stateful
+// structures.
 type Route struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	Token  string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
@@ -314,9 +316,7 @@ func (m *Routes) GetRoutes() []*Route {
 	return nil
 }
 
-// The following are used to make printing parts of the structure as strings and
-// not as memory addresses. This is important in creating keys that are used to
-// determine best routes. This should NOT be used in anything stateful.
+// Non stateful, map message types.
 type InnerMap struct {
 	InnerMap map[string]*Routes `protobuf:"bytes,1,rep,name=inner_map,json=innerMap,proto3" json:"inner_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
@@ -405,8 +405,7 @@ func (m *RoutingGraphMap) GetGraph() map[string]*InnerMap {
 	return nil
 }
 
-// The following are used to serialize and deserialize the routing graph into
-// KVStore.
+// Stateful, repeated message types.
 type InnerMapEntry struct {
 	Key   string  `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value *Routes `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
