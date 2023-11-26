@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,14 +16,31 @@ import (
 
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
 // Considers all routes and splits.
+// Returns error if router repository is not set on the router.
 func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
-	for _, route := range routes {
-		r.logger.Info("route", zap.Any("route", route))
+	if r.routerRepository == nil {
+		return nil, ErrNilRouterRepository
+	}
+	if r.poolsUsecase == nil {
+		return nil, ErrNilPoolsRepository
 	}
 
-	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
+	bestSingleRouteQuote, routesSortedByAmtOut, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
+	}
+
+	if r.maxSplitRoutes == 0 {
+		return bestSingleRouteQuote, nil
+	}
+
+	if len(routesSortedByAmtOut) > r.maxSplitRoutes {
+		// Keep only top routes for splits
+		routes = routes[:r.maxSplitRoutes]
+		for i := 0; i < r.maxSplitRoutes; i++ {
+			// Update routes with the top routes
+			routes[i] = routesSortedByAmtOut[i].RouteImpl
+		}
 	}
 
 	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
@@ -34,6 +52,8 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 
 	r.logger.Info("bestSplitRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
 
+	finalQuote := bestSingleRouteQuote
+
 	// If the split route quote is better than the single route quote, return the split route quote
 	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
 		routes := bestSplitRouteQuote.GetRoute()
@@ -43,19 +63,30 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 			r.logger.Debug("route", zap.Stringer("route", route))
 		}
 
-		return bestSplitRouteQuote, nil
+		finalQuote = bestSplitRouteQuote
 	}
 
 	r.logger.Debug("single route is selected")
 	r.logger.Debug("route", zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
 
-	// Otherwise return the single route quote
-	return bestSingleRouteQuote, nil
+	if finalQuote.GetAmountOut().IsZero() {
+		return nil, errors.New("best we can do is no tokens out")
+	}
+
+	return finalQuote, nil
 }
 
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
+// Returns error if router repository is not set on the router.
 func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (quote domain.Quote, err error) {
-	bestSingleRouteQuote, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
+	if r.routerRepository == nil {
+		return nil, ErrNilRouterRepository
+	}
+	if r.poolsUsecase == nil {
+		return nil, ErrNilPoolsRepository
+	}
+
+	bestSingleRouteQuote, _, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +96,16 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 	return bestSingleRouteQuote, nil
 }
 
-func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+// Returns best quote as well as all routes sorted by amount out and error if any.
+// CONTRACT: router repository must be set on the router.
+// CONTRACT: pools reporitory must be set on the router
+func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
 	if len(routes) == 0 {
-		return nil, errors.New("no routes were provided")
+		return nil, nil, errors.New("no routes were provided")
 	}
 
-	var (
-		bestRoute RouteWithOutAmount
-	)
+	routesWithAmountOut := make([]RouteWithOutAmount, 0, len(routes))
+
 	for _, route := range routes {
 		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn)
 		if err != nil {
@@ -80,18 +113,23 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn 
 			continue
 		}
 
-		if !directRouteTokenOut.IsNil() && (bestRoute.OutAmount.IsNil() || directRouteTokenOut.Amount.LT(bestRoute.OutAmount)) {
-			bestRoute = RouteWithOutAmount{
-				RouteImpl: route,
-				InAmount:  tokenIn.Amount,
-				OutAmount: directRouteTokenOut.Amount,
-			}
+		if directRouteTokenOut.Amount.IsNil() {
+			directRouteTokenOut.Amount = osmomath.ZeroInt()
 		}
+
+		routesWithAmountOut = append(routesWithAmountOut, RouteWithOutAmount{
+			RouteImpl: route,
+			InAmount:  tokenIn.Amount,
+			OutAmount: directRouteTokenOut.Amount,
+		})
 	}
 
-	if bestRoute.OutAmount.IsNil() {
-		return nil, errors.New("did not find a working direct route")
-	}
+	// Sort by amount out in descending order
+	sort.Slice(routesWithAmountOut, func(i, j int) bool {
+		return routesWithAmountOut[i].OutAmount.GT(routesWithAmountOut[j].OutAmount)
+	})
+
+	bestRoute := routesWithAmountOut[0]
 
 	finalQuote := &quoteImpl{
 		AmountIn:  tokenIn,
@@ -99,20 +137,25 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn 
 		Route:     []domain.SplitRoute{&bestRoute},
 	}
 
-	return finalQuote, nil
+	return finalQuote, routesWithAmountOut, nil
 }
 
 // CONTRACT: all routes are valid. Must be validated by the caller with validateRoutes method.
+// CONTRACT: router repository must be set on the router.
+// CONTRACT: pools reporitory must be set on the router
 func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 1 {
-		return r.estimateBestSingleRouteQuote(routes, tokenIn)
+		quote, _, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
+		return quote, err
 	}
 
 	r.logger.Debug("estimateBestSplitRoutesQuote", zap.Int("routes_count", len(routes)), zap.Stringer("token_in", tokenIn))
-	bestSplit, err := r.splitRecursive(tokenIn, routes, Split{
-		Routes:          []domain.SplitRoute{},
-		CurrentTotalOut: osmomath.ZeroInt(),
-	})
+	bestSplit, err := r.splitRecursive(
+		tokenIn,
+		routes, Split{
+			Routes:          []domain.SplitRoute{},
+			CurrentTotalOut: osmomath.ZeroInt(),
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -123,6 +166,12 @@ func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn s
 		AmountIn:  tokenIn,
 		AmountOut: bestSplit.CurrentTotalOut,
 		Route:     bestSplit.Routes,
+	}
+
+	// In some cases, when there is not enough liqudity, it makes it nil
+	// We set it to zero here for simplicity of handling in the client side.
+	if finalQuote.AmountOut.IsNil() {
+		finalQuote.AmountOut = osmomath.ZeroInt()
 	}
 
 	return finalQuote, nil
@@ -136,36 +185,35 @@ func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn s
 // - the previous pool token out denom is in the current pool.
 // - the current pool token out denom is in the current pool.
 // Returns error if not. Nil otherwise.
-func (r *Router) validateAndFilterRoutes(routes []route.RouteImpl, tokenInDenom string) ([]route.RouteImpl, error) {
+func (r *Router) validateAndFilterRoutes(candidateRoutes [][]candidatePoolWrapper, tokenInDenom string) (route.CandidateRoutes, error) {
 	var (
 		tokenOutDenom  string
-		filteredRoutes []route.RouteImpl
+		filteredRoutes []route.CandidateRoute
 	)
 
 	uniquePoolIDs := make(map[uint64]struct{})
 
 ROUTE_LOOP:
-	for i, route := range routes {
-		currentRoutePools := route.GetPools()
-		if len(currentRoutePools) == 0 {
-			return nil, NoPoolsInRouteError{RouteIndex: i}
+	for i, candidateRoute := range candidateRoutes {
+		if len(candidateRoute) == 0 {
+			return route.CandidateRoutes{}, NoPoolsInRouteError{RouteIndex: i}
 		}
 
-		lastPool := route.GetPools()[len(route.GetPools())-1]
-		currentRouteTokenOutDenom := lastPool.GetTokenOutDenom()
+		lastPool := candidateRoute[len(candidateRoute)-1]
+		currentRouteTokenOutDenom := lastPool.TokenOutDenom
 
 		// Validate that route pools do not have the token in denom or token out denom
 		previousTokenOut := tokenInDenom
-		for j, currentPool := range currentRoutePools {
+		for j, currentPool := range candidateRoute {
 			// Skip routes for which we have already seen the pool ID
-			if _, ok := uniquePoolIDs[currentPool.GetId()]; ok {
+			if _, ok := uniquePoolIDs[currentPool.ID]; ok {
 				continue ROUTE_LOOP
 			} else {
-				uniquePoolIDs[currentPool.GetId()] = struct{}{}
+				uniquePoolIDs[currentPool.ID] = struct{}{}
 			}
 
-			currentPoolDenoms := currentRoutePools[j].GetPoolDenoms()
-			currentPoolTokenOutDenom := currentPool.GetTokenOutDenom()
+			currentPoolDenoms := candidateRoute[j].PoolDenoms
+			currentPoolTokenOutDenom := currentPool.TokenOutDenom
 
 			// Check that token in denom and token out denom are in the pool
 			// Also check that previous token out is in the pool
@@ -181,7 +229,7 @@ ROUTE_LOOP:
 				}
 
 				// Validate that intermediary pools do not contain the token in denom or token out denom
-				if j > 0 && j < len(currentRoutePools)-1 {
+				if j > 0 && j < len(candidateRoute)-1 {
 					if denom == tokenInDenom {
 						r.logger.Warn("route skipped - found token in intermediary pool", zap.Error(RoutePoolWithTokenInDenomError{RouteIndex: i, TokenInDenom: tokenInDenom}))
 						continue ROUTE_LOOP
@@ -196,12 +244,12 @@ ROUTE_LOOP:
 
 			// Ensure that the previous pool token out denom is in the current pool.
 			if !foundPreviousTokenOut {
-				return nil, PreviousTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), PreviousTokenOutDenom: previousTokenOut}
+				return route.CandidateRoutes{}, PreviousTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.ID, PreviousTokenOutDenom: previousTokenOut}
 			}
 
 			// Ensure that the current pool token out denom is in the current pool.
 			if !foundCurrentTokenOut {
-				return nil, CurrentTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), CurrentTokenOutDenom: currentPoolTokenOutDenom}
+				return route.CandidateRoutes{}, CurrentTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.ID, CurrentTokenOutDenom: currentPoolTokenOutDenom}
 			}
 
 			// Update previous token out denom
@@ -211,21 +259,36 @@ ROUTE_LOOP:
 		if i > 0 {
 			// Ensure that all routes have the same final token out denom
 			if currentRouteTokenOutDenom != tokenOutDenom {
-				return nil, TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: tokenOutDenom, TokenOutDenomRouteB: currentRouteTokenOutDenom}
+				return route.CandidateRoutes{}, TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: tokenOutDenom, TokenOutDenomRouteB: currentRouteTokenOutDenom}
 			}
 		}
 
 		tokenOutDenom = currentRouteTokenOutDenom
 
 		// Update filtered routes if this route passed all checks
-		filteredRoutes = append(filteredRoutes, route)
+		filteredRoute := route.CandidateRoute{
+			Pools: make([]route.CandidatePool, 0, len(candidateRoute)),
+		}
+
+		// Convert route to the final output format
+		for _, pool := range candidateRoute {
+			filteredRoute.Pools = append(filteredRoute.Pools, route.CandidatePool{
+				ID:            pool.ID,
+				TokenOutDenom: pool.TokenOutDenom,
+			})
+		}
+
+		filteredRoutes = append(filteredRoutes, filteredRoute)
 	}
 
 	if tokenOutDenom == tokenInDenom {
-		return nil, TokenOutDenomMatchesTokenInDenomError{Denom: tokenOutDenom}
+		return route.CandidateRoutes{}, TokenOutDenomMatchesTokenInDenomError{Denom: tokenOutDenom}
 	}
 
-	return filteredRoutes, nil
+	return route.CandidateRoutes{
+		Routes:        filteredRoutes,
+		UniquePoolIDs: uniquePoolIDs,
+	}, nil
 }
 
 type RouteWithOutAmount struct {
@@ -274,7 +337,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 
 	r.logger.Debug("currentRoute ", zap.Any("currentRoute", currentRoute))
 
-	for i := 1; i < r.maxSplitIterations; i++ {
+	for i := 0; i <= r.maxSplitIterations; i++ {
 		// TODO: this can be precomputed in constructor
 		fraction := osmomath.NewDec(int64(i)).Quo(maxSplitIterationsDec)
 
@@ -317,7 +380,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 			return Split{}, err
 		}
 
-		if bestSplit.CurrentTotalOut.IsNil() || currentBestSplit.CurrentTotalOut.GT(bestSplit.CurrentTotalOut) {
+		if !currentBestSplit.CurrentTotalOut.IsNil() && (bestSplit.CurrentTotalOut.IsNil() || currentBestSplit.CurrentTotalOut.GT(bestSplit.CurrentTotalOut)) {
 			bestSplit = currentBestSplit
 			r.logger.Debug("selected as best split")
 		}

@@ -11,7 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
@@ -49,24 +48,28 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 	}
 
 	var (
-		defaultTakerFeeMap = domain.TakerFeeMap{
-			{Denom0: tokenOutDenom, Denom1: tokenInDenom}: DefaultTakerFee,
-		}
-
-		defaultRoute = WithRoutePools(
-			EmptyRoute,
-			[]domain.RoutablePool{
-				pools.NewRoutablePool(defaultPool, tokenOutDenom, DefaultTakerFee),
+		defaultRoute = WithCandidateRoutePools(
+			EmptyCandidateRoute,
+			[]route.CandidatePool{
+				{
+					ID:            defaultPool.GetId(),
+					TokenOutDenom: tokenOutDenom,
+				},
 			},
 		)
 
 		defaultSinglePools = []domain.PoolI{defaultPool}
 
-		singleDefaultRoutes = []route.RouteImpl{defaultRoute}
+		singleDefaultRoutes = route.CandidateRoutes{
+			Routes: []route.CandidateRoute{defaultRoute},
+			UniquePoolIDs: map[uint64]struct{}{
+				defaultPool.GetId(): {},
+			},
+		}
 
 		emptyPools = []domain.PoolI{}
 
-		emptyRoutes = []route.RouteImpl{}
+		emptyRoutes = route.CandidateRoutes{}
 
 		defaultRouterConfig = domain.RouterConfig{
 			// Only these config values are relevant for this test
@@ -85,12 +88,12 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 	testCases := []struct {
 		name string
 
-		repositoryRoutes []route.RouteImpl
+		repositoryRoutes route.CandidateRoutes
 		repositoryPools  []domain.PoolI
 		takerFeeMap      domain.TakerFeeMap
 		isCacheDisabled  bool
 
-		expectedRoutes []route.RouteImpl
+		expectedCandidateRoutes route.CandidateRoutes
 
 		expectedError error
 	}{
@@ -99,48 +102,33 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 
 			repositoryRoutes: singleDefaultRoutes,
 			repositoryPools:  emptyPools,
-			takerFeeMap:      defaultTakerFeeMap,
 
-			expectedRoutes: singleDefaultRoutes,
+			expectedCandidateRoutes: singleDefaultRoutes,
 		},
 		{
 			name: "cache is disabled in config -> recomputes routes despite having available in cache",
 
 			repositoryRoutes: singleDefaultRoutes,
 			repositoryPools:  emptyPools,
-			takerFeeMap:      defaultTakerFeeMap,
 			isCacheDisabled:  true,
 
-			expectedRoutes: emptyRoutes,
+			expectedCandidateRoutes: emptyRoutes,
 		},
 		{
 			name: "no routes in cache but relevant pools in store -> recomputes routes",
 
 			repositoryRoutes: emptyRoutes,
 			repositoryPools:  defaultSinglePools,
-			takerFeeMap:      defaultTakerFeeMap,
 
-			expectedRoutes: singleDefaultRoutes,
+			expectedCandidateRoutes: singleDefaultRoutes,
 		},
 		{
 			name: "no routes in cache and no relevant pools in store -> returns no routes",
 
 			repositoryRoutes: emptyRoutes,
 			repositoryPools:  emptyPools,
-			takerFeeMap:      defaultTakerFeeMap,
 
-			expectedRoutes: emptyRoutes,
-		},
-		{
-			name: "errro: no taker fees set",
-
-			repositoryRoutes: emptyRoutes,
-			repositoryPools:  defaultSinglePools,
-			takerFeeMap:      domain.TakerFeeMap{},
-
-			expectedRoutes: emptyRoutes,
-
-			expectedError: domain.TakerFeeNotFoundForDenomPairError{Denom0: tokenOutDenom, Denom1: tokenInDenom},
+			expectedCandidateRoutes: emptyRoutes,
 		},
 
 		// TODO:
@@ -156,7 +144,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 		s.Run(tc.name, func() {
 
 			routerRepositoryMock := &mocks.RedisRouterRepositoryMock{
-				Routes: map[domain.DenomPair][]route.RouteImpl{
+				Routes: map[domain.DenomPair]route.CandidateRoutes{
 					// These are the routes that are stored in cache and returned by the call to GetRoutes.
 					{Denom0: tokenOutDenom, Denom1: tokenInDenom}: tc.repositoryRoutes,
 				},
@@ -178,35 +166,36 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 			s.Require().True(ok)
 
 			// Initialize router
-			router := usecase.NewRouter(defaultRouterConfig.PreferredPoolIDs, tc.takerFeeMap, defaultRouterConfig.MaxPoolsPerRoute, defaultRouterConfig.MaxRoutes, defaultRouterConfig.MaxSplitIterations, defaultRouterConfig.MaxSplitIterations, &log.NoOpLogger{})
+			router := usecase.NewRouter(defaultRouterConfig.PreferredPoolIDs, defaultRouterConfig.MaxPoolsPerRoute, defaultRouterConfig.MaxRoutes, defaultRouterConfig.MaxSplitRoutes, defaultRouterConfig.MaxSplitIterations, defaultRouterConfig.MaxSplitIterations, &log.NoOpLogger{})
 			router = usecase.WithSortedPools(router, poolsUseCaseMock.Pools)
 
 			// System under test
 			ctx := context.Background()
-			actualRoutes, err := routerUseCaseImpl.HandleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
+			actualCandidateRoutes, err := routerUseCaseImpl.HandleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 
 			if tc.expectedError != nil {
 				s.Require().EqualError(err, tc.expectedError.Error())
-				s.Require().Len(actualRoutes, 0)
+				s.Require().Len(actualCandidateRoutes, 0)
 				return
 			}
 
 			s.Require().NoError(err)
 
 			// Pre-set routes should be returned.
-			s.Require().Equal(len(tc.expectedRoutes), len(actualRoutes))
-			for i, route := range actualRoutes {
-				s.Require().Equal(tc.expectedRoutes[i], route)
+
+			s.Require().Equal(len(tc.expectedCandidateRoutes.Routes), len(actualCandidateRoutes.Routes))
+			for i, route := range actualCandidateRoutes.Routes {
+				s.Require().Equal(tc.expectedCandidateRoutes.Routes[i], route)
 			}
 
 			// For the case where the cache is disabled, the expected routes in cache
 			// will be the same as the original routes in the repository.
 			if tc.isCacheDisabled {
-				tc.expectedRoutes = tc.repositoryRoutes
+				tc.expectedCandidateRoutes = tc.repositoryRoutes
 			}
 
 			// Check that router repository was updated
-			s.Require().Equal(tc.expectedRoutes, routerRepositoryMock.Routes[domain.DenomPair{Denom0: tokenOutDenom, Denom1: tokenInDenom}])
+			s.Require().Equal(tc.expectedCandidateRoutes, routerRepositoryMock.Routes[domain.DenomPair{Denom0: tokenOutDenom, Denom1: tokenInDenom}])
 		})
 	}
 }

@@ -77,6 +77,12 @@ func (mp *MockRoutablePool) GetTickModel() (*domain.TickModel, error) {
 	return mp.TickModel, nil
 }
 
+// SetTickModel implements domain.PoolI.
+func (mp *MockRoutablePool) SetTickModel(tickModel *domain.TickModel) error {
+	mp.TickModel = tickModel
+	return nil
+}
+
 // Validate implements domain.PoolI.
 func (*MockRoutablePool) Validate(minUOSMOTVL math.Int) error {
 	// Note: always valid for tests.

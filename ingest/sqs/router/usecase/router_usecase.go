@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ mvc.RouterUsecase = &routerUseCaseImpl{}
@@ -43,10 +44,38 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 		return nil, err
 	}
 
-	routes, err := r.handleRoutes(ctx, router, tokenIn.Denom, tokenOutDenom)
+	candidateRoutes, err := r.handleRoutes(ctx, router, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		r.logger.Error("error handling routes", zap.Error(err))
 		return nil, err
+	}
+
+	for _, route := range candidateRoutes.Routes {
+		r.logger.Info("filtered_candidate_route", zap.Any("route", route))
+	}
+
+	// Note that retrieving pools and taker fees is done in separate transactions.
+	// This is fine because taker fees don't change often.
+	takerFees, err := r.routerRepository.GetAllTakerFees(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	routes, err := r.poolsUsecase.GetRoutesFromCandidates(ctx, candidateRoutes, takerFees, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	concentratedPoolIDs := []uint64{}
+	for _, route := range routes {
+		r.logger.Info("route", zap.Any("route", route))
+
+		// Query tick model
+		for _, pool := range route.Pools {
+			if pool.GetType() == poolmanagertypes.Concentrated {
+				concentratedPoolIDs = append(concentratedPoolIDs, pool.GetId())
+			}
+		}
 	}
 
 	return router.getOptimalQuote(tokenIn, tokenOutDenom, routes)
@@ -59,7 +88,18 @@ func (r *routerUseCaseImpl) GetBestSingleRouteQuote(ctx context.Context, tokenIn
 		return nil, err
 	}
 
-	routes, err := r.handleRoutes(ctx, router, tokenIn.Denom, tokenOutDenom)
+	candidateRoutes, err := r.handleRoutes(ctx, router, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: abstract this
+
+	takerFees, err := r.routerRepository.GetAllTakerFees(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	routes, err := r.poolsUsecase.GetRoutesFromCandidates(ctx, candidateRoutes, takerFees, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return nil, err
 	}
@@ -68,45 +108,34 @@ func (r *routerUseCaseImpl) GetBestSingleRouteQuote(ctx context.Context, tokenIn
 }
 
 // GetCandidateRoutes implements domain.RouterUsecase.
-func (r *routerUseCaseImpl) GetCandidateRoutes(ctx context.Context, tokenInDenom string, tokenOutDenom string) ([]route.RouteImpl, error) {
+func (r *routerUseCaseImpl) GetCandidateRoutes(ctx context.Context, tokenInDenom string, tokenOutDenom string) (route.CandidateRoutes, error) {
 	router, err := r.initializeRouter(ctx)
 	if err != nil {
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	routes, err := r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 	if err != nil {
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	return routes, nil
 }
 
 // initializeRouter initializes the router per configuration defined on the use case
-// Retrieves pools and taker fees from the store. Sorts pools and returns the final initialized router.
 // Returns error if:
 // - there is an error retrieving pools from the store
 // - there is an error retrieving taker fees from the store
 // TODO: test
 func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, error) {
-	allPools, err := r.poolsUsecase.GetAllPools(ctx)
-	if err != nil {
-		return nil, err
-	}
 
-	// Note that retrieving pools and taker fees is done in separate transactions.
-	// This is fine because taker fees don't change often.
-	takerFees, err := r.routerRepository.GetAllTakerFees(ctx)
-	if err != nil {
-		return nil, err
-	}
+	router := NewRouter([]uint64{}, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
+	router = WithRouterRepository(router, r.routerRepository)
+	router = WithPoolsUsecase(router, r.poolsUsecase)
 
-	router := NewRouter([]uint64{}, takerFees, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
-	router = WithSortedPools(router, allPools)
-
-	r.logger.Info("sorted pools")
+	r.logger.Info("sorted pools", zap.Int("num_pools", len(router.sortedPools)))
 	for _, pool := range router.sortedPools {
-		r.logger.Info("sorted pool", zap.Uint64("pool_id", pool.GetId()), zap.Stringer("tvl", pool.GetTotalValueLockedUOSMO()))
+		r.logger.Debug("sorted pool", zap.Uint64("pool_id", pool.GetId()), zap.Stringer("tvl", pool.GetTotalValueLockedUOSMO()))
 	}
 
 	return router, nil
@@ -119,42 +148,49 @@ func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, erro
 // - there is an error retrieving routes from cache
 // - there are no routes cached and there is an error computing them
 // - fails to persist the computed routes in cache
-func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (routes []route.RouteImpl, err error) {
+func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (candidateRoutes route.CandidateRoutes, err error) {
 	r.logger.Info("getting routes")
 
 	// Check cache for routes if enabled
 	if r.config.RouteCacheEnabled {
-		routes, err = r.routerRepository.GetRoutes(ctx, tokenInDenom, tokenOutDenom)
+		candidateRoutes, err = r.routerRepository.GetRoutes(ctx, tokenInDenom, tokenOutDenom)
 		if err != nil {
-			return nil, err
+			return route.CandidateRoutes{}, err
 		}
 	}
 
 	// TODO: swithch to debug
-	r.logger.Info("cached routes", zap.Int("num_routes", len(routes)))
+	r.logger.Info("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
 	// If no routes are cached, find them
-	if len(routes) == 0 {
-		// TODO: swithch to debug
+	if len(candidateRoutes.Routes) == 0 {
 		r.logger.Info("calculating routes")
 
-		routes, err = router.GetCandidateRoutes(tokenInDenom, tokenOutDenom)
+		r.logger.Info("retrieving pools")
+		allPools, err := r.poolsUsecase.GetAllPools(ctx)
 		if err != nil {
-			return nil, err
+			return route.CandidateRoutes{}, err
+		}
+		r.logger.Info("retrieved pools", zap.Int("num_pools", len(allPools)))
+		router = WithSortedPools(router, allPools)
+
+		candidateRoutes, err = router.GetCandidateRoutes(tokenInDenom, tokenOutDenom)
+		if err != nil {
+			return route.CandidateRoutes{}, err
 		}
 
 		// Persist routes
-		if len(routes) > 0 && r.config.RouteCacheEnabled {
+		if len(candidateRoutes.Routes) > 0 && r.config.RouteCacheEnabled {
 
-			r.logger.Info("persisting routes", zap.Int("num_routes", len(routes)))
+			r.logger.Info("persisting routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
-			if err := r.routerRepository.SetRoutes(ctx, tokenInDenom, tokenOutDenom, routes); err != nil {
-				return nil, err
+			if err := r.routerRepository.SetRoutes(ctx, tokenInDenom, tokenOutDenom, candidateRoutes); err != nil {
+				return route.CandidateRoutes{}, err
 			}
 		}
 	}
 
-	return routes, nil
+	return candidateRoutes, nil
 }
 
 // StoreRouterStateFiles implements domain.RouterUsecase.

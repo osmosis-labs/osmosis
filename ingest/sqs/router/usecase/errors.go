@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	ErrNilCurrentRoute = errors.New("currentRoute cannot be nil")
+	ErrNilCurrentRoute     = errors.New("currentRoute cannot be nil")
+	ErrNilRouterRepository = errors.New("router repository is not set")
+	ErrNilPoolsRepository  = errors.New("pools repository is not set")
 )
 
 type SortedPoolsAndPoolsUsedLengthMismatchError struct {

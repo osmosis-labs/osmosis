@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 
 	"github.com/redis/go-redis/v9"
 
@@ -18,6 +19,11 @@ import (
 type redisPoolsRepo struct {
 	appCodec          codec.Codec
 	repositoryManager mvc.TxManager
+}
+
+type poolTicks struct {
+	poolID uint64
+	Cmd    *redis.StringCmd
 }
 
 var (
@@ -41,22 +47,7 @@ func NewRedisPoolsRepo(appCodec codec.Codec, repositoryManager mvc.TxManager) mv
 func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error) {
 	tx := r.repositoryManager.StartTx()
 
-	sqsPoolMapByIDCmdCFMM, chainPoolMapByIDCmdCFMM, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
-	if err != nil {
-		return nil, err
-	}
-
-	sqsPoolMapByIDCmdConcentrated, chainPoolMapByIDCmdConcentrated, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
-	if err != nil {
-		return nil, err
-	}
-
-	sqsPoolMapByIDCmdCosmwasm, chainPoolMapByIDCmdCosmwasm, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
-	if err != nil {
-		return nil, err
-	}
-
-	ticksMapByIDCmd, err := getTicksMapByIdCmd(ctx, tx)
+	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, poolsKey)
 	if err != nil {
 		return nil, err
 	}
@@ -65,26 +56,10 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 		return nil, err
 	}
 
-	cfmmPools, err := r.getPools(sqsPoolMapByIDCmdCFMM.Val(), chainPoolMapByIDCmdCFMM.Val(), nil)
+	allPools, err := r.getPools(sqsPoolMapByIDCmd.Val(), chainPoolMapByIDCmd.Val())
 	if err != nil {
 		return nil, err
 	}
-
-	concentratedPools, err := r.getPools(sqsPoolMapByIDCmdConcentrated.Val(), chainPoolMapByIDCmdConcentrated.Val(), ticksMapByIDCmd.Val())
-	if err != nil {
-		return nil, err
-	}
-
-	cosmwasmPools, err := r.getPools(sqsPoolMapByIDCmdCosmwasm.Val(), chainPoolMapByIDCmdCosmwasm.Val(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	allPools := make([]domain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmwasmPools))
-
-	allPools = append(allPools, cfmmPools...)
-	allPools = append(allPools, concentratedPools...)
-	allPools = append(allPools, cosmwasmPools...)
 
 	// Sort by ID
 	sort.Slice(allPools, func(i, j int) bool {
@@ -92,6 +67,63 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 	})
 
 	return allPools, nil
+}
+
+// GetPools implements mvc.PoolsRepository.
+func (r *redisPoolsRepo) GetPools(ctx context.Context, poolIDs map[uint64]struct{}) (map[uint64]domain.PoolI, error) {
+	tx := r.repositoryManager.StartTx()
+
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return nil, err
+	}
+
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	type poolCmdsWrapper struct {
+		sqsPoolCmd   *redis.StringCmd
+		chainPoolCmd *redis.StringCmd
+	}
+
+	poolCmds := make([]poolCmdsWrapper, 0, len(poolIDs))
+
+	for poolID := range poolIDs {
+		sqsPoolModelCmd := pipeliner.HGet(ctx, sqsPoolModelKey(poolsKey), strconv.FormatUint(poolID, 10))
+		chainPoolModelCmd := pipeliner.HGet(ctx, chainPoolModelKey(poolsKey), strconv.FormatUint(poolID, 10))
+
+		poolCmds = append(poolCmds, poolCmdsWrapper{
+			sqsPoolCmd:   sqsPoolModelCmd,
+			chainPoolCmd: chainPoolModelCmd,
+		})
+	}
+
+	if err := tx.Exec(ctx); err != nil {
+		return nil, err
+	}
+
+	pools := make(map[uint64]domain.PoolI, len(poolCmds))
+	for _, poolCmd := range poolCmds {
+		pool := &domain.PoolWrapper{
+			SQSModel: domain.SQSPool{},
+		}
+
+		err := json.Unmarshal([]byte(poolCmd.sqsPoolCmd.Val()), &pool.SQSModel)
+		if err != nil {
+			return nil, err
+		}
+
+		err = r.appCodec.UnmarshalInterfaceJSON([]byte(poolCmd.chainPoolCmd.Val()), &pool.ChainModel)
+		if err != nil {
+			return nil, err
+		}
+
+		pools[pool.GetId()] = pool
+	}
+
+	return pools, nil
 }
 
 func (r *redisPoolsRepo) StorePools(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
@@ -141,18 +173,9 @@ func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx mvc.Tx, 
 }
 
 // getPools returns pools from Redis by storeKey.
-func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map[string]string) ([]domain.PoolI, error) {
+func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID map[string]string) ([]domain.PoolI, error) {
 	if len(sqsPoolMapByID) != len(chainPoolMapByID) {
 		return nil, fmt.Errorf("pools count mismatch: sqsPoolMapByID: %d, chainPoolMapByID: %d", len(sqsPoolMapByID), len(chainPoolMapByID))
-	}
-
-	tickMapLength := len(ticksMap)
-	shouldUnmarshalTicks := tickMapLength > 0
-
-	// Tick map is zero for non-concentrated pools.
-	// For concentrated, must be equal to sqsPoolMapByID and chainPoolMapByID.
-	if shouldUnmarshalTicks && tickMapLength != len(sqsPoolMapByID) {
-		return nil, fmt.Errorf("pools count mismatch: sqsPoolMapByID: %d, ticksMap: %d", len(sqsPoolMapByID), tickMapLength)
 	}
 
 	pools := make([]domain.PoolI, 0, len(sqsPoolMapByID))
@@ -174,20 +197,6 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map
 		err = r.appCodec.UnmarshalInterfaceJSON([]byte(chainPoolModelBytes), &pool.ChainModel)
 		if err != nil {
 			return nil, err
-		}
-
-		if shouldUnmarshalTicks {
-			pool.TickModel = &domain.TickModel{}
-
-			tickData, ok := ticksMap[poolIDKeyStr]
-			if !ok {
-				return nil, fmt.Errorf("pool ID %s not found in ticksMap", poolIDKeyStr)
-			}
-
-			err := json.Unmarshal([]byte(tickData), pool.TickModel)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		pools = append(pools, pool)
@@ -285,6 +294,48 @@ func (r *redisPoolsRepo) deletePoolsTx(ctx context.Context, tx mvc.Tx, storeKey 
 		return err
 	}
 	return nil
+}
+
+// GetTickModelForPools implements mvc.PoolsRepository.
+// CONTRACT: pools must be concentrated
+func (r *redisPoolsRepo) GetTickModelForPools(ctx context.Context, pools []uint64) (map[uint64]domain.TickModel, error) {
+	tx := r.repositoryManager.StartTx()
+
+	redixTx, err := tx.AsRedisTx()
+	if err != nil {
+		return nil, err
+	}
+
+	pipeliner, err := redixTx.GetPipeliner(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	poolTickData := make([]poolTicks, 0, len(pools))
+	for _, poolID := range pools {
+		stringCmd := pipeliner.HGet(ctx, concentratedTicksModelKey(poolsKey), strconv.FormatUint(poolID, 10))
+		poolTickData = append(poolTickData, poolTicks{
+			poolID: poolID,
+			Cmd:    stringCmd,
+		})
+	}
+
+	if err := tx.Exec(ctx); err != nil {
+		return nil, err
+	}
+
+	result := make(map[uint64]domain.TickModel, len(poolTickData))
+
+	for _, tickCmdData := range poolTickData {
+		var tickData domain.TickModel
+		err = json.Unmarshal([]byte(tickCmdData.Cmd.Val()), &tickData)
+		if err != nil {
+			return nil, err
+		}
+		result[tickCmdData.poolID] = tickData
+	}
+
+	return result, nil
 }
 
 // getTicksMapByIdCmd returns a map of tick models by pool ID.

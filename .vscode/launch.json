@@ -318,7 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestHandleRoutes/no_routes_in_cache_but",
+                "TestRouterTestSuite/TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE",
                 "-test.v"
             ],
         },
@@ -332,7 +332,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestIngesterTestSuite/TestConvertPool_NonOsmoPrecision",
+                "TestIngesterTestSuite/TestProcessBlock",
                 "-test.v"
             ],
         },

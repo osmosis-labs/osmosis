@@ -83,30 +83,37 @@ func StoreTakerFees(takerFeesFile string, takerFeesMap domain.TakerFeeMap) error
 }
 
 // ReadPools reads the pools from a file and returns them
-func ReadPools(poolsFile string) ([]domain.PoolI, error) {
+func ReadPools(poolsFile string) ([]domain.PoolI, map[uint64]domain.TickModel, error) {
 	poolBytes, err := os.ReadFile(poolsFile)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var serializedPools []SerializedPool
 	err = json.Unmarshal(poolBytes, &serializedPools)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	actualPools := make([]domain.PoolI, 0, len(serializedPools))
+
+	tickMap := make(map[uint64]domain.TickModel)
+
 	for _, pool := range serializedPools {
 
 		poolWrapper, err := UnmarshalPool(pool)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
+		}
+
+		if poolWrapper.GetType() == poolmanagertypes.Concentrated {
+			tickMap[poolWrapper.GetId()] = *pool.TickModel
 		}
 
 		actualPools = append(actualPools, poolWrapper)
 	}
 
-	return actualPools, nil
+	return actualPools, tickMap, nil
 }
 
 // ReadTakerFees reads the taker fees from a file and returns them

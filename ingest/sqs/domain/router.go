@@ -19,6 +19,7 @@ type RoutablePool interface {
 	GetPoolDenoms() []string
 
 	GetTokenOutDenom() string
+
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
 	ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin)
 
@@ -80,6 +81,7 @@ type RouterConfig struct {
 	PreferredPoolIDs   []uint64
 	MaxPoolsPerRoute   int
 	MaxRoutes          int
+	MaxSplitRoutes     int
 	MaxSplitIterations int
 	// Denominated in OSMO (not uosmo)
 	MinOSMOLiquidity          int

@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -18,12 +19,19 @@ type Router struct {
 	maxHops int
 	// The maximum number of routes to return.
 	maxRoutes int
+
+	// The maximum number of routes to split across
+	// Must be smaller than or equal to maxRoutes.
+	maxSplitRoutes int
+
 	// The maximum number of split iterations to perform
 	maxSplitIterations int
-	// taker fee map
-	takerFeeMap domain.TakerFeeMap
 
 	minOSMOTVL int
+
+	routerRepository mvc.RouterRepository
+
+	poolsUsecase mvc.PoolsUsecase
 
 	// The logger.
 	logger log.Logger
@@ -49,17 +57,17 @@ const (
 // Each pool has a flag indicating whether there was an error in estimating its on-chain TVL.
 // If that is the case, the pool is to be sorted towards the end. However, the preferredPoolIDs overwrites this rule
 // and prioritizes the preferred pools.
-func NewRouter(preferredPoolIDs []uint64, takerFeeMap domain.TakerFeeMap, maxHops int, maxRoutes int, maxSplitIterations int, minOSMOTVL int, logger log.Logger) *Router {
+func NewRouter(preferredPoolIDs []uint64, maxHops, maxRoutes, maxSplitRoutes, maxSplitIterations int, minOSMOTVL int, logger log.Logger) *Router {
 	if logger == nil {
 		logger = &log.NoOpLogger{}
 	}
 
 	return &Router{
-		takerFeeMap:        takerFeeMap,
 		maxHops:            maxHops,
 		maxRoutes:          maxRoutes,
 		logger:             logger,
 		maxSplitIterations: maxSplitIterations,
+		maxSplitRoutes:     maxSplitRoutes,
 		minOSMOTVL:         minOSMOTVL,
 	}
 }
@@ -84,8 +92,8 @@ func (r Router) GetLogger() log.Logger {
 	return r.logger
 }
 
-func (r Router) GetTakerFeeMap() domain.TakerFeeMap {
-	return r.takerFeeMap
+func (r Router) GetSortedPools() []domain.PoolI {
+	return r.sortedPools
 }
 
 func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {
@@ -115,6 +123,18 @@ func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {
 	// sort pools so that the appropriate pools are at the top
 	router.sortedPools = sortPools(router.sortedPools, totalTVL, preferredPoolIDsMap, router.logger)
 
+	return router
+}
+
+// WithRouterRepository instruments router by setting a router repository on it and returns the router.
+func WithRouterRepository(router *Router, routerRepository mvc.RouterRepository) *Router {
+	router.routerRepository = routerRepository
+	return router
+}
+
+// WithPoolsUsecase instruments router by setting a pools usecase on it and returns the router.
+func WithPoolsUsecase(router *Router, poolsUsecase mvc.PoolsUsecase) *Router {
+	router.poolsUsecase = poolsUsecase
 	return router
 }
 
@@ -188,18 +208,4 @@ func sortPools(pools []domain.PoolI, totalTVL osmomath.Int, preferredPoolIDsMap 
 		pools[i] = ratedPool.pool
 	}
 	return pools
-}
-
-// FilterSlice filters a slice of integers based on a provided predicate function.
-// TODO: move to osmoutils
-func FilterSlice(slice []int, predicate func(int) bool) []int {
-	result := slice[:0] // Reuse the original slice's storage
-
-	for _, item := range slice {
-		if predicate(item) {
-			result = append(result, item)
-		}
-	}
-
-	return result
 }

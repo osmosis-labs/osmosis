@@ -29,6 +29,7 @@ var defaultRouterConfig = domain.RouterConfig{
 	PreferredPoolIDs:          []uint64{},
 	MaxRoutes:                 4,
 	MaxPoolsPerRoute:          4,
+	MaxSplitRoutes:            4,
 	MaxSplitIterations:        10,
 	MinOSMOLiquidity:          20000,
 	RouteUpdateHeightInterval: 0,
@@ -115,6 +116,7 @@ func (s *RouterTestSuite) TestNewRouter() {
 		preferredPoolIDs   = []uint64{allPool.BalancerPoolID, allPool.StableSwapPoolID, secondBalancerPoolPoolID}
 		maxHops            = 3
 		maxRoutes          = 5
+		maxSplitRoutes     = 5
 		maxSplitIterations = 10
 		minOsmoLiquidity   = 2
 		logger, _          = log.NewLogger(false, "", "")
@@ -197,10 +199,8 @@ func (s *RouterTestSuite) TestNewRouter() {
 		}
 	)
 
-	takerFees := s.getTakerFeeMapForAllPoolTokenPairs(defaultAllPools)
-
 	// System under test
-	router := routerusecase.NewRouter(preferredPoolIDs, takerFees, maxHops, maxRoutes, maxSplitIterations, minOsmoLiquidity, logger)
+	router := routerusecase.NewRouter(preferredPoolIDs, maxHops, maxRoutes, maxSplitRoutes, maxSplitIterations, minOsmoLiquidity, logger)
 	router = routerusecase.WithSortedPools(router, defaultAllPools)
 
 	// Assert
@@ -209,7 +209,6 @@ func (s *RouterTestSuite) TestNewRouter() {
 	s.Require().Equal(maxSplitIterations, router.GetMaxSplitIterations())
 	s.Require().Equal(logger, router.GetLogger())
 	s.Require().Equal(expectedSortedPoolIDs, router.GetSortedPoolIDs())
-	s.Require().Equal(takerFees, router.GetTakerFeeMap())
 }
 
 // getTakerFeeMapForAllPoolTokenPairs returns a map of all pool token pairs to their taker fees.
@@ -242,7 +241,11 @@ func WithRoutePools(r route.RouteImpl, pools []domain.RoutablePool) route.RouteI
 	return routertesting.WithRoutePools(r, pools)
 }
 
-func (s *RouterTestSuite) setupDefaultMainnetRouter() *usecase.Router {
+func WithCandidateRoutePools(r route.CandidateRoute, pools []route.CandidatePool) route.CandidateRoute {
+	return routertesting.WithCandidateRoutePools(r, pools)
+}
+
+func (s *RouterTestSuite) setupDefaultMainnetRouter() (*usecase.Router, map[uint64]domain.TickModel, domain.TakerFeeMap) {
 	routerConfig := domain.RouterConfig{
 		PreferredPoolIDs:          []uint64{},
 		MaxRoutes:                 4,
@@ -256,8 +259,8 @@ func (s *RouterTestSuite) setupDefaultMainnetRouter() *usecase.Router {
 	return s.setupMainnetRouter(routerConfig)
 }
 
-func (s *RouterTestSuite) setupMainnetRouter(config domain.RouterConfig) *usecase.Router {
-	pools, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
+func (s *RouterTestSuite) setupMainnetRouter(config domain.RouterConfig) (*routerusecase.Router, map[uint64]domain.TickModel, domain.TakerFeeMap) {
+	pools, tickMap, err := parsing.ReadPools(relativePathMainnetFiles + poolsFileName)
 	s.Require().NoError(err)
 
 	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
@@ -265,8 +268,8 @@ func (s *RouterTestSuite) setupMainnetRouter(config domain.RouterConfig) *usecas
 
 	logger, err := log.NewLogger(false, "", "info")
 	s.Require().NoError(err)
-	router := usecase.NewRouter(config.PreferredPoolIDs, takerFeeMap, config.MaxPoolsPerRoute, config.MaxRoutes, config.MaxSplitIterations, config.MinOSMOLiquidity, logger)
+	router := routerusecase.NewRouter(config.PreferredPoolIDs, config.MaxPoolsPerRoute, config.MaxRoutes, config.MaxSplitRoutes, config.MaxSplitIterations, config.MinOSMOLiquidity, logger)
 	router = routerusecase.WithSortedPools(router, pools)
 
-	return router
+	return router, tickMap, takerFeeMap
 }

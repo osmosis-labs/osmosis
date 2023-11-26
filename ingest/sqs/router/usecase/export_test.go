@@ -13,6 +13,8 @@ type (
 	RouterUseCaseImpl = routerUseCaseImpl
 
 	QuoteImpl = quoteImpl
+
+	CandidatePoolWrapper = candidatePoolWrapper
 )
 
 const (
@@ -24,15 +26,15 @@ func (r Router) GetBestSplitRoutesQuote(routes []route.RouteImpl, tokenIn sdk.Co
 	return r.estimateBestSplitRouteQuote(routes, tokenIn)
 }
 
-func (r *Router) ValidateAndFilterRoutes(routes []route.RouteImpl, tokenInDenom string) ([]route.RouteImpl, error) {
-	return r.validateAndFilterRoutes(routes, tokenInDenom)
+func (r *Router) ValidateAndFilterRoutes(candidateRoutes [][]candidatePoolWrapper, tokenInDenom string) (route.CandidateRoutes, error) {
+	return r.validateAndFilterRoutes(candidateRoutes, tokenInDenom)
 }
 
 func (r *routerUseCaseImpl) InitializeRouter(ctx context.Context) (*Router, error) {
 	return r.initializeRouter(ctx)
 }
 
-func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error) {
+func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (candidateRoutes route.CandidateRoutes, err error) {
 	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
 

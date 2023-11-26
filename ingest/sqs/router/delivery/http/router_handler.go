@@ -3,7 +3,6 @@ package http
 import (
 	"errors"
 	"net/http"
-	"net/http/pprof"
 	"regexp"
 
 	"github.com/labstack/echo"
@@ -31,40 +30,14 @@ type RouterHandler struct {
 // 100uion
 var coinPattern = regexp.MustCompile(`([0-9]+)(([a-z]+)(\/([A-Z0-9]+))*)`)
 
-// func main() {
-// 	e := echo.New()
-
-// 	// Enable profiling middleware for a specific route
-// 	e.GET("/debug/pprof/*", pprofHandler())
-
-// 	// Your other routes and configurations go here
-
-// 	// Start the server
-// 	e.Start(":8080")
-// }
-
-// func pprofHandler() echo.HandlerFunc {
-// 	return func(c echo.Context) error {
-// 		req := c.Request()
-// 		res := c.Response()
-
-// 		http.DefaultServeMux.ServeHTTP(res, req)
-// 		return nil
-// 	}
-// }
-
 // NewRouterHandler will initialize the pools/ resources endpoint
 func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase) {
 	handler := &RouterHandler{
 		RUsecase: us,
 	}
-	e.GET("/quote", handler.GetOptimalQuote, echo.WrapMiddleware(func(h http.Handler) http.Handler {
-		return http.HandlerFunc(pprof.Index)
-	}))
+	e.GET("/quote", handler.GetOptimalQuote)
 	e.GET("/single-quote", handler.GetBestSingleRouteQuote)
-	e.GET("/routes", handler.GetCandidateRoutes, echo.WrapMiddleware(func(h http.Handler) http.Handler {
-		return http.HandlerFunc(pprof.Index)
-	}))
+	e.GET("/routes", handler.GetCandidateRoutes)
 	e.POST("/store-state", handler.StoreRouterStateInFiles)
 }
 
@@ -119,10 +92,6 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 	routes, err := a.RUsecase.GetCandidateRoutes(ctx, tokenIn, tokenOutDenom)
 	if err != nil {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
-	}
-
-	for i := range routes {
-		routes[i].PrepareResultPools()
 	}
 
 	return c.JSON(http.StatusOK, routes)

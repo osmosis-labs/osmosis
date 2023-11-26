@@ -25,6 +25,14 @@ func (e InvalidPoolTypeError) Error() string {
 	return "invalid pool type: " + string(e.PoolType)
 }
 
+type PoolNotFoundError struct {
+	PoolID uint64
+}
+
+func (e PoolNotFoundError) Error() string {
+	return fmt.Sprintf("pool with ID (%d) is not found", e.PoolID)
+}
+
 type ConcentratedPoolNoTickModelError struct {
 	PoolId uint64
 }
