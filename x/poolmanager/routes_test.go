@@ -56,7 +56,7 @@ var graph = types.RoutingGraphMap{
 }
 
 func TestFindDirectRoute(t *testing.T) {
-	routes := poolmanager.FindDirectRoute(graph, "token1", "token2")
+	routes := poolmanager.FindRoutes(graph, "token1", "token2", 1)[0]
 
 	if len(routes) != 1 {
 		t.Errorf("Expected 1 route, got %d", len(routes))
@@ -68,7 +68,7 @@ func TestFindDirectRoute(t *testing.T) {
 }
 
 func TestFindTwoHopRoute(t *testing.T) {
-	routes := poolmanager.FindTwoHopRoute(graph, "token1", "token3")
+	routes := poolmanager.FindRoutes(graph, "token1", "token3", 2)
 
 	totalRoutes := 0
 	for _, subRoutes := range routes {
@@ -89,7 +89,7 @@ func TestFindTwoHopRoute(t *testing.T) {
 }
 
 func TestFindThreeHopRoute(t *testing.T) {
-	routes := poolmanager.FindThreeHopRoute(graph, "token1", "token4")
+	routes := poolmanager.FindRoutes(graph, "token1", "token4", 3)
 
 	totalRoutes := 0
 	for _, subRoutes := range routes {

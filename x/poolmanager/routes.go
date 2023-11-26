@@ -28,21 +28,12 @@ func init() {
 	spotPriceCache = make(map[string]osmomath.BigDec)
 }
 
-// findDirectRoute finds all direct routes between two tokens
-func findDirectRoute(g types.RoutingGraphMap, start, end string) []*types.Route {
-	if innerMap, exists := g.Graph[start]; exists {
-		if routes, exists := innerMap.InnerMap[end]; exists {
-			for i := range routes.Routes {
-				routes.Routes[i].Token = end
-			}
-			return routes.Routes
-		}
+// findRoutes finds all routes between two tokens that match the given hop count
+func findRoutes(g types.RoutingGraphMap, start, end string, hops int) [][]*types.Route {
+	if hops < 1 {
+		return nil
 	}
-	return nil
-}
 
-// findTwoHopRoute finds all two-hop routes between two tokens
-func findTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
 	var routeRoutes [][]*types.Route
 
 	startRoutes, startExists := g.Graph[start]
@@ -51,71 +42,20 @@ func findTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Rout
 	}
 
 	for token, routes := range startRoutes.InnerMap {
-		tokenRoutes, tokenExists := g.Graph[token]
-		if !tokenExists {
-			continue
-		}
-
-		endRoutes, endExists := tokenRoutes.InnerMap[end]
-		if !endExists {
-			continue
-		}
-
-		for _, startRoute := range routes.Routes {
-			startRoute.Token = token
-			for _, endRoute := range endRoutes.Routes {
-				endRoute.Token = end
-				routeRoutes = append(routeRoutes, []*types.Route{startRoute, endRoute})
+		if hops == 1 {
+			if token == end {
+				for _, route := range routes.Routes {
+					route.Token = end
+					routeRoutes = append(routeRoutes, []*types.Route{route})
+				}
 			}
-		}
-	}
-
-	return routeRoutes
-}
-
-// findThreeHopRoute finds all three-hop routes between two tokens
-func findThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
-	var routeRoutes [][]*types.Route
-
-	startRoutes, startExists := g.Graph[start]
-	if !startExists {
-		return routeRoutes
-	}
-
-	for token1, routes1 := range startRoutes.InnerMap {
-		if token1 == start || token1 == end {
-			continue
-		}
-
-		token1Routes, token1Exists := g.Graph[token1]
-		if !token1Exists {
-			continue
-		}
-
-		for token2, routes2 := range token1Routes.InnerMap {
-			if token2 == start || token2 == end {
-				continue
-			}
-
-			endRoutes, endExists := g.Graph[token2].InnerMap[end]
-			if !endExists {
-				continue
-			}
-
-			for _, startRoute := range routes1.Routes {
-				clonedStartRoute := *startRoute
-				clonedStartRoute.Token = token1
-
-				for _, middleRoute := range routes2.Routes {
-					clonedMiddleRoute := *middleRoute
-					clonedMiddleRoute.Token = token2
-
-					for _, endRoute := range endRoutes.Routes {
-						clonedEndRoute := *endRoute
-						clonedEndRoute.Token = end
-
-						routeRoutes = append(routeRoutes, []*types.Route{&clonedStartRoute, &clonedMiddleRoute, &clonedEndRoute})
-					}
+		} else {
+			subRoutes := findRoutes(g, token, end, hops-1)
+			for _, subRoute := range subRoutes {
+				for _, route := range routes.Routes {
+					route.Token = token
+					fullRoute := append([]*types.Route{route}, subRoute...)
+					routeRoutes = append(routeRoutes, fullRoute)
 				}
 			}
 		}
@@ -177,16 +117,16 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 	}
 
 	// Get all direct routes, two hop, and three hop routes
-	directPoolIDs := findDirectRoute(routeMap, inputDenom, outputDenom)
+	directPoolIDs := findRoutes(routeMap, inputDenom, outputDenom, 1)
 
 	var twoHopPoolIDs [][]*types.Route
 	if inputDenom != OSMO && outputDenom != OSMO {
-		twoHopPoolIDs = findTwoHopRoute(routeMap, inputDenom, outputDenom)
+		twoHopPoolIDs = findRoutes(routeMap, inputDenom, outputDenom, 2)
 	}
 
 	var threeHopPoolIDs [][]*types.Route
 	if inputDenom != OSMO && outputDenom != OSMO {
-		threeHopPoolIDs = findThreeHopRoute(routeMap, inputDenom, outputDenom)
+		threeHopPoolIDs = findRoutes(routeMap, inputDenom, outputDenom, 3)
 	}
 
 	// Map the total liquidity of each route (using the route string as the key)
@@ -194,14 +134,14 @@ func (k Keeper) GetDenomPairRoute(ctx sdk.Context, inputCoin sdk.Coin, outputDen
 
 	// Check liquidity for all direct routes
 	for _, route := range directPoolIDs {
-		pool, err := k.GetPool(ctx, route.PoolId)
+		pool, err := k.GetPool(ctx, route[0].PoolId)
 		if err != nil {
 			return nil, err
 		}
 		poolDenoms := pool.GetPoolDenoms(ctx)
 		liqInOsmo := osmomath.ZeroInt()
 		for _, denom := range poolDenoms {
-			liquidity, err := k.getPoolLiquidityOfDenom(ctx, route.PoolId, denom)
+			liquidity, err := k.getPoolLiquidityOfDenom(ctx, route[0].PoolId, denom)
 			if err != nil {
 				return nil, err
 			}
@@ -417,16 +357,16 @@ func parseRouteKey(routeKey string) ([]types.Route, error) {
 // getDirectOSMORouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
 func (k Keeper) getDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string, routeMap types.RoutingGraphMap) (uint64, error) {
 	// Get all direct routes from the input denom to uosmo
-	directRoutes := findDirectRoute(routeMap, inputDenom, OSMO)
+	directRoutes := findRoutes(routeMap, inputDenom, OSMO, 1)
 
 	// Store liquidity for all direct routes found
 	routeLiquidity := make(map[string]osmomath.Int)
 	for _, route := range directRoutes {
-		liquidity, err := k.getPoolLiquidityOfDenom(ctx, route.PoolId, OSMO)
+		liquidity, err := k.getPoolLiquidityOfDenom(ctx, route[0].PoolId, OSMO)
 		if err != nil {
 			return 0, err
 		}
-		routeKey := fmt.Sprintf("%v", route.PoolId)
+		routeKey := fmt.Sprintf("%v", route[0].PoolId)
 		routeLiquidity[routeKey] = liquidity
 	}
 

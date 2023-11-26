@@ -53,16 +53,8 @@ func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }
 
-func FindDirectRoute(g types.RoutingGraphMap, start, end string) []*types.Route {
-	return findDirectRoute(g, start, end)
-}
-
-func FindTwoHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
-	return findTwoHopRoute(g, start, end)
-}
-
-func FindThreeHopRoute(g types.RoutingGraphMap, start, end string) [][]*types.Route {
-	return findThreeHopRoute(g, start, end)
+func FindRoutes(g types.RoutingGraphMap, start, end string, hops int) [][]*types.Route {
+	return findRoutes(g, start, end, hops)
 }
 
 func ParseRouteKey(routeKey string) ([]types.Route, error) {
