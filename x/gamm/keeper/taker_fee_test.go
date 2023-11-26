@@ -1,228 +1,293 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func TestRouteToBaseDenomFromOutRoutes(t *testing.T) {
-	tests := []struct {
-		name     string
-		routes   poolmanagertypes.SwapAmountOutRoutes
-		outDenom string
-		expected poolmanagertypes.SwapAmountInRoutes
+/* ----------------------------- Testing ExactIn ---------------------------- */
+func (suite *KeeperTestSuite) TestDYMIsBurned_ExactIn() {
+	tokenInAmt := int64(100000)
+	testcases := map[string]struct {
+		routes                []poolmanagertypes.SwapAmountInRoute
+		tokenIn               sdk.Coin
+		tokenOutMinAmount     sdk.Int
+		expectError           bool
+		expectedBurnEvents    bool
+		expectedSwapEvents    int
+		expectedMessageEvents int
 	}{
-		{
-			name: "(bar->foo)(foo->udym)(udym->baz)",
-			routes: poolmanagertypes.SwapAmountOutRoutes{
-				{
-					PoolId:       1,
-					TokenInDenom: "bar",
-				},
-				{
-					PoolId:       2,
-					TokenInDenom: "foo",
-				},
-				{
-					PoolId:       3,
-					TokenInDenom: "udym",
-				},
-			},
-			outDenom: "baz",
-			expected: poolmanagertypes.SwapAmountInRoutes{
+		"zero hops": {
+			routes:            []poolmanagertypes.SwapAmountInRoute{},
+			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       true,
+		},
+		"udym as tokenIn": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "foo",
 				},
-				{
-					PoolId:        2,
-					TokenOutDenom: "udym",
-				},
 			},
+			tokenIn:           sdk.NewCoin("udym", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       false,
 		},
-		{
-			name: "(bar->udym)",
-			routes: poolmanagertypes.SwapAmountOutRoutes{
-				{
-					PoolId:       1,
-					TokenInDenom: "bar",
-				},
-			},
-			outDenom: "udym",
-			expected: poolmanagertypes.SwapAmountInRoutes{
+		"udym swapped in first pool": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "udym",
 				},
 			},
+			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       false,
 		},
-		{
-			name: "(bar->foo)(foo->baz)",
-			routes: poolmanagertypes.SwapAmountOutRoutes{
+		"usdc swapped in first pool": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
-					PoolId:       1,
-					TokenInDenom: "bar",
-				},
-				{
-					PoolId:       2,
-					TokenInDenom: "foo",
+					PoolId:        2,
+					TokenOutDenom: "bar",
 				},
 			},
-			outDenom: "baz",
-			//error here as no udym in routes
-			expected: poolmanagertypes.SwapAmountInRoutes{},
+			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       false,
 		},
-		{
-			name: "(udym->foo)",
-			routes: poolmanagertypes.SwapAmountOutRoutes{
+		"usdc as token in": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        2,
+					TokenOutDenom: "foo",
+				},
+			},
+			tokenIn:           sdk.NewCoin("bar", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       false,
+		},
+		"usdc as token in - no route to dym": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        4,
+					TokenOutDenom: "baz",
+				},
+			},
+			tokenIn:           sdk.NewCoin("bar", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       false,
+		},
+		"usdc swap with dym": {
+			routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        3,
+					TokenOutDenom: "udym",
+				},
+			},
+			tokenIn:           sdk.NewCoin("bar", sdk.NewInt(tokenInAmt)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			expectError:       false,
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.SetupTest()
+		suite.FundAcc(suite.TestAccs[0], apptesting.DefaultAcctFunds)
+		params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
+		params.PoolCreationFee = sdk.NewCoins(
+			sdk.NewCoin("udym", sdk.NewInt(100000)),
+			sdk.NewCoin("bar", sdk.NewInt(100000)))
+		suite.App.GAMMKeeper.SetParams(suite.Ctx, params)
+
+		ctx := suite.Ctx
+		msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+
+		pool1coins := []sdk.Coin{sdk.NewCoin("udym", sdk.NewInt(100000)), sdk.NewCoin("foo", sdk.NewInt(100000))}
+		suite.PrepareBalancerPoolWithCoins(pool1coins...)
+
+		//"bar" is treated as baseDenom (e.g. USDC)
+		pool2coins := []sdk.Coin{sdk.NewCoin("bar", sdk.NewInt(100000)), sdk.NewCoin("foo", sdk.NewInt(100000))}
+		suite.PrepareBalancerPoolWithCoins(pool2coins...)
+
+		pool3coins := []sdk.Coin{sdk.NewCoin("bar", sdk.NewInt(100000)), sdk.NewCoin("udym", sdk.NewInt(100000))}
+		suite.PrepareBalancerPoolWithCoins(pool3coins...)
+
+		pool4coins := []sdk.Coin{sdk.NewCoin("bar", sdk.NewInt(100000)), sdk.NewCoin("baz", sdk.NewInt(100000))}
+		suite.PrepareBalancerPoolWithCoins(pool4coins...)
+
+		//check total supply before swap
+		suppliesBefore := make(map[string]sdk.Int)
+		suppliesBefore["udym"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "udym").Amount
+		suppliesBefore["foo"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "foo").Amount
+		suppliesBefore["bar"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "bar").Amount
+
+		// check taker fee is not 0
+		suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
+
+		// make swap
+		_, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
+			Sender:            suite.TestAccs[0].String(),
+			Routes:            tc.routes,
+			TokenIn:           tc.tokenIn,
+			TokenOutMinAmount: tc.tokenOutMinAmount,
+		})
+		if tc.expectError {
+			suite.Require().Error(err, name)
+			continue
+		}
+		suite.Require().NoError(err, name)
+
+		// check total supply after swap
+		suppliesAfter := make(map[string]sdk.Int)
+		suppliesAfter["udym"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "udym").Amount
+		suppliesAfter["foo"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "foo").Amount
+		suppliesAfter["bar"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "bar").Amount
+
+		//validate total supply is reduced by taker fee
+		suite.Require().True(suppliesAfter["udym"].LT(suppliesBefore["udym"]), name)
+		suite.Require().True(suppliesAfter["foo"].Equal(suppliesBefore["foo"]), name)
+		suite.Require().True(suppliesAfter["bar"].Equal(suppliesBefore["bar"]), name)
+	}
+}
+
+func (suite *KeeperTestSuite) TestDYMIsBurned_ExactOut() {
+	tokenInAmt := int64(100000)
+	testcases := map[string]struct {
+		routes      []poolmanagertypes.SwapAmountOutRoute
+		tokenOut    sdk.Coin
+		expectError bool
+	}{
+		"zero hops": {
+			routes:      []poolmanagertypes.SwapAmountOutRoute{},
+			tokenOut:    sdk.NewCoin("foo", sdk.NewInt(tokenInAmt)),
+			expectError: true,
+		},
+		"udym as tokenIn": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "udym",
 				},
 			},
-			outDenom: "foo",
-			//error here as tokenInDenom is udym
-			expected: poolmanagertypes.SwapAmountInRoutes{},
+			tokenOut:    sdk.NewCoin("foo", sdk.NewInt(tokenInAmt)),
+			expectError: false,
+		},
+		"udym swapped in first pool": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: "foo",
+				},
+			},
+			tokenOut:    sdk.NewCoin("udym", sdk.NewInt(tokenInAmt)),
+			expectError: false,
+		},
+		"usdc swapped in first pool": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
+				{
+					PoolId:       2,
+					TokenInDenom: "foo",
+				},
+			},
+			tokenOut:    sdk.NewCoin("bar", sdk.NewInt(tokenInAmt)),
+			expectError: false,
+		},
+		"usdc as token in": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
+				{
+					PoolId:       2,
+					TokenInDenom: "bar",
+				},
+			},
+			tokenOut:    sdk.NewCoin("foo", sdk.NewInt(tokenInAmt)),
+			expectError: false,
+		},
+		"usdc as token in - no route to dym": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
+				{
+					PoolId:       4,
+					TokenInDenom: "bar",
+				},
+			},
+			tokenOut:    sdk.NewCoin("baz", sdk.NewInt(tokenInAmt)),
+			expectError: false,
+		},
+		"usdc swap with dym": {
+			routes: []poolmanagertypes.SwapAmountOutRoute{
+				{
+					PoolId:       3,
+					TokenInDenom: "bar",
+				},
+			},
+			tokenOut:    sdk.NewCoin("udym", sdk.NewInt(tokenInAmt)),
+			expectError: false,
 		},
 	}
 
-	for _, test := range tests {
-		routes := keeper.RouteToBaseDenomFromOutRoutes(test.routes, test.outDenom)
-		require.Equal(t, len(test.expected), len(routes), "test: %v", test.name)
-		if len(routes) > 0 {
-			require.Equal(t, test.expected, poolmanagertypes.SwapAmountInRoutes(routes), "test: %v", test.name)
-			require.True(t, routes[len(routes)-1].TokenOutDenom == "udym")
+	for name, tc := range testcases {
+		suite.SetupTest()
+		suite.FundAcc(suite.TestAccs[0], apptesting.DefaultAcctFunds)
+		params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
+		params.PoolCreationFee = sdk.NewCoins(
+			sdk.NewCoin("udym", sdk.NewInt(1000)),
+			sdk.NewCoin("bar", sdk.NewInt(1000)))
+		suite.App.GAMMKeeper.SetParams(suite.Ctx, params)
+
+		ctx := suite.Ctx
+		msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+
+		pool1coins := []sdk.Coin{sdk.NewCoin("udym", sdk.NewInt(100000000)), sdk.NewCoin("foo", sdk.NewInt(100000000))}
+		suite.PrepareBalancerPoolWithCoins(pool1coins...)
+
+		//"bar" is treated as baseDenom (e.g. USDC)
+		pool2coins := []sdk.Coin{sdk.NewCoin("bar", sdk.NewInt(100000000)), sdk.NewCoin("foo", sdk.NewInt(100000000))}
+		suite.PrepareBalancerPoolWithCoins(pool2coins...)
+
+		pool3coins := []sdk.Coin{sdk.NewCoin("bar", sdk.NewInt(100000000)), sdk.NewCoin("udym", sdk.NewInt(100000000))}
+		suite.PrepareBalancerPoolWithCoins(pool3coins...)
+
+		pool4coins := []sdk.Coin{sdk.NewCoin("bar", sdk.NewInt(100000000)), sdk.NewCoin("baz", sdk.NewInt(100000000))}
+		suite.PrepareBalancerPoolWithCoins(pool4coins...)
+
+		//check total supply before swap
+		suppliesBefore := make(map[string]sdk.Int)
+		suppliesBefore["udym"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "udym").Amount
+		suppliesBefore["foo"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "foo").Amount
+		suppliesBefore["bar"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "bar").Amount
+
+		// check taker fee is not 0
+		suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
+
+		// make swap
+		_, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountOut{
+			Sender:           suite.TestAccs[0].String(),
+			Routes:           tc.routes,
+			TokenOut:         tc.tokenOut,
+			TokenInMaxAmount: sdk.NewInt(1000000000000000000),
+		})
+		if tc.expectError {
+			suite.Require().Error(err, name)
+			continue
 		}
+		suite.Require().NoError(err, name)
+
+		// check total supply after swap
+		suppliesAfter := make(map[string]sdk.Int)
+		suppliesAfter["udym"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "udym").Amount
+		suppliesAfter["foo"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "foo").Amount
+		suppliesAfter["bar"] = suite.App.BankKeeper.GetSupply(suite.Ctx, "bar").Amount
+
+		//validate total supply is reduced by taker fee
+		suite.Require().True(suppliesAfter["udym"].LT(suppliesBefore["udym"]), name)
+		suite.Require().True(suppliesAfter["foo"].Equal(suppliesBefore["foo"]), name)
+		suite.Require().True(suppliesAfter["bar"].Equal(suppliesBefore["bar"]), name)
 	}
-}
-
-func (suite *KeeperTestSuite) TestDYMIsBurned_ExactIn() {
-	suite.SetupTest()
-	ctx := suite.Ctx
-	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
-	suite.PrepareBalancerPool()
-
-	//check total supply before swap
-	totalSupplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
-
-	// check taker fee is not 0
-	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
-
-	routes :=
-		[]poolmanagertypes.SwapAmountInRoute{
-			{
-				PoolId:        1,
-				TokenOutDenom: "bar",
-			},
-		}
-
-	// make swap
-	_, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
-		Sender:            suite.TestAccs[0].String(),
-		Routes:            routes,
-		TokenIn:           sdk.NewCoin("udym", sdk.NewInt(100000)),
-		TokenOutMinAmount: sdk.NewInt(100),
-	})
-	suite.Require().NoError(err)
-
-	// check total supply after swap
-	totalSupplyAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
-
-	//validate total supply is reduced by taker fee
-	takerFeeAmount := suite.App.GAMMKeeper.GetParams(ctx).TakerFee.MulInt(sdk.NewInt(100000)).TruncateInt()
-	suite.Require().True(totalSupplyAfter.Amount.LT(totalSupplyBefore.Amount))
-	suite.Require().True(totalSupplyBefore.Amount.Sub(totalSupplyAfter.Amount).Equal(takerFeeAmount))
-}
-
-func (suite *KeeperTestSuite) TestDYMIsBurned_ExactOut() {
-	suite.SetupTest()
-	ctx := suite.Ctx
-	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
-	suite.PrepareBalancerPool()
-
-	//check total supply before swap
-	totalSupplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
-
-	// check taker fee is not 0
-	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
-
-	routes :=
-		[]poolmanagertypes.SwapAmountOutRoute{
-			{
-				PoolId:       1,
-				TokenInDenom: "udym",
-			},
-		}
-
-	// make swap
-	resp, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountOut{
-		Sender:           suite.TestAccs[0].String(),
-		Routes:           routes,
-		TokenOut:         sdk.NewCoin("bar", sdk.NewInt(1000)),
-		TokenInMaxAmount: sdk.NewInt(100000000),
-	})
-	suite.Require().NoError(err)
-	tokenInCoin := sdk.NewCoin("udym", resp.TokenInAmount)
-
-	// check total supply after swap
-	totalSupplyAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
-
-	//validate total supply is reduced by taker fee
-
-	_, takerFeeCoin := suite.App.GAMMKeeper.SubTakerFee(tokenInCoin, suite.App.GAMMKeeper.GetParams(ctx).TakerFee)
-
-	suite.Require().True(totalSupplyAfter.Amount.LT(totalSupplyBefore.Amount))
-	suite.Require().Equal(takerFeeCoin.Amount, totalSupplyBefore.Amount.Sub(totalSupplyAfter.Amount))
-}
-
-func (suite *KeeperTestSuite) TestNonDYMIsSentToCommunity() {
-	suite.SetupTest()
-	ctx := suite.Ctx
-	suite.PrepareBalancerPool()
-	msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
-
-	//check total supply before swap
-	totalSupplyFooBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "foo")
-	totalSupplyDYMBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
-
-	// check taker fee is not 0
-	suite.Require().True(suite.App.GAMMKeeper.GetParams(ctx).TakerFee.GT(sdk.ZeroDec()))
-
-	routes :=
-		[]poolmanagertypes.SwapAmountInRoute{
-			{
-				PoolId:        1,
-				TokenOutDenom: "udym",
-			},
-		}
-
-	// make swap
-	_, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
-		Sender:            suite.TestAccs[0].String(),
-		Routes:            routes,
-		TokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
-		TokenOutMinAmount: sdk.NewInt(1),
-	})
-	suite.Require().NoError(err)
-
-	// check total supply after swap
-	totalSupplyFooAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "foo")
-	totalSupplyDYMAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, "udym")
-
-	//validate total supply is NOT reduced by taker fee
-	suite.Require().True(totalSupplyFooAfter.Amount.Equal(totalSupplyFooBefore.Amount))
-	suite.Require().True(totalSupplyDYMAfter.Amount.Equal(totalSupplyDYMBefore.Amount))
-
-	takerFeeAmount := suite.App.GAMMKeeper.GetParams(ctx).TakerFee.MulInt(sdk.NewInt(100000))
-
-	communityAfter := suite.App.DistrKeeper.GetFeePoolCommunityCoins(ctx)
-	suite.Require().True(communityAfter.AmountOf("foo").Equal(takerFeeAmount))
 }
 
 //TODO: test estimation when taker fee is 0
