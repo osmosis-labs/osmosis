@@ -10,18 +10,20 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_OSMOATOM() {
 	config.MaxPoolsPerRoute = 5
 	config.MaxRoutes = 10
 
-	router, _ := s.setupMainnetRouter(config)
+	router, _, _ := s.setupMainnetRouter(config)
 
-	routes, err := router.GetCandidateRoutes(UOSMO, ATOM)
+	candidateRoutes, err := router.GetCandidateRoutes(UOSMO, ATOM)
 	s.Require().NoError(err)
 
-	s.Require().Equal(8, len(routes))
+	actualRoutes := candidateRoutes.Routes
+
+	s.Require().Equal(8, len(actualRoutes))
 
 	// https://app.osmosis.zone/pool/1135
-	s.validateExpectedPoolIDOneHopRoute(routes[0], 1135)
+	s.validateExpectedPoolIDOneHopRoute(actualRoutes[0], 1135)
 
 	// https://app.osmosis.zone/pool/1
-	s.validateExpectedPoolIDOneHopRoute(routes[1], 1)
+	s.validateExpectedPoolIDOneHopRoute(actualRoutes[1], 1)
 }
 
 // Validates that the router returns the correct routes for the given token pair.
@@ -32,28 +34,32 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_OSMOstOSMO() {
 	config.MaxRoutes = 10
 	config.MinOSMOLiquidity = 1000
 
-	router, _ := s.setupMainnetRouter(config)
+	router, _, _ := s.setupMainnetRouter(config)
 
-	routesUOSMOIn, err := router.GetCandidateRoutes(UOSMO, stOSMO)
+	candidateRoutesUOSMOIn, err := router.GetCandidateRoutes(UOSMO, stOSMO)
 	s.Require().NoError(err)
+
+	actualRoutesUOSMOIn := candidateRoutesUOSMOIn.Routes
 
 	// Invert
-	routesstOSMOIn, err := router.GetCandidateRoutes(stOSMO, UOSMO)
+	candidateRoutesstOSMOIn, err := router.GetCandidateRoutes(stOSMO, UOSMO)
 	s.Require().NoError(err)
 
-	s.Require().Equal(len(routesUOSMOIn), len(routesstOSMOIn))
+	actualRoutesStOSMOIn := candidateRoutesstOSMOIn.Routes
+
+	s.Require().Equal(len(actualRoutesUOSMOIn), len(actualRoutesStOSMOIn))
 
 	// https://info.osmosis.zone/token/stOSMO
 	// Pools 833 and 1252 at the time of test creation.
-	s.Require().Equal(2, len(routesstOSMOIn))
-	s.validateExpectedPoolIDOneHopRoute(routesstOSMOIn[1], 833)
-	s.validateExpectedPoolIDOneHopRoute(routesstOSMOIn[0], 1252)
+	s.Require().Equal(2, len(actualRoutesUOSMOIn))
+	s.validateExpectedPoolIDOneHopRoute(actualRoutesUOSMOIn[1], 833)
+	s.validateExpectedPoolIDOneHopRoute(actualRoutesUOSMOIn[0], 1252)
 
 	// https://info.osmosis.zone/token/stOSMO
 	// Pools 833 and 1252 at the time of test creation.
-	s.Require().Equal(2, len(routesstOSMOIn))
-	s.validateExpectedPoolIDOneHopRoute(routesstOSMOIn[1], 833)
-	s.validateExpectedPoolIDOneHopRoute(routesstOSMOIn[0], 1252)
+	s.Require().Equal(2, len(actualRoutesStOSMOIn))
+	s.validateExpectedPoolIDOneHopRoute(actualRoutesStOSMOIn[1], 833)
+	s.validateExpectedPoolIDOneHopRoute(actualRoutesStOSMOIn[0], 1252)
 }
 
 // Validate that can find at least 1 route with no error for top 10
@@ -62,7 +68,7 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_Top10VolumePairs() {
 	config := defaultRouterConfig
 	config.MaxPoolsPerRoute = 3
 	config.MaxRoutes = 10
-	router, _ := s.setupMainnetRouter(config)
+	router, _, _ := s.setupMainnetRouter(config)
 
 	// Manually taken from https://info.osmosis.zone/ in Nov 2023.
 	top10ByVolumeDenoms := []string{
@@ -83,19 +89,19 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_Top10VolumePairs() {
 			tokenI := top10ByVolumeDenoms[i]
 			tokenJ := top10ByVolumeDenoms[j]
 
-			routes, err := router.GetCandidateRoutes(tokenI, tokenJ)
+			candidateRoutes, err := router.GetCandidateRoutes(tokenI, tokenJ)
 			s.Require().NoError(err)
-			s.Require().Greater(len(routes), 0, "tokenI: %s, tokenJ: %s", tokenI, tokenJ)
+			s.Require().Greater(len(candidateRoutes.Routes), 0, "tokenI: %s, tokenJ: %s", tokenI, tokenJ)
 
-			routes, err = router.GetCandidateRoutes(tokenJ, tokenI)
+			candidateRoutes, err = router.GetCandidateRoutes(tokenJ, tokenI)
 			s.Require().NoError(err)
-			s.Require().Greater(len(routes), 0, "tokenJ: %s, tokenI: %s", tokenJ, tokenI)
+			s.Require().Greater(len(candidateRoutes.Routes), 0, "tokenJ: %s, tokenI: %s", tokenJ, tokenI)
 		}
 	}
 }
 
-func (s *RouterTestSuite) validateExpectedPoolIDOneHopRoute(route route.RouteImpl, expectedPoolID uint64) {
-	routePools := route.GetPools()
+func (s *RouterTestSuite) validateExpectedPoolIDOneHopRoute(route route.CandidateRoute, expectedPoolID uint64) {
+	routePools := route.Pools
 	s.Require().Equal(1, len(routePools))
-	s.Require().Equal(expectedPoolID, routePools[0].GetId())
+	s.Require().Equal(expectedPoolID, routePools[0].ID)
 }

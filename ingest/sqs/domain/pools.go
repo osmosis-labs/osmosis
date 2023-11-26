@@ -32,6 +32,10 @@ type PoolI interface {
 	// the tick model is not set
 	GetTickModel() (*TickModel, error)
 
+	// SetTickModel sets the tick model for the pool
+	// If this is not a concentrated pool, errors
+	SetTickModel(*TickModel) error
+
 	// Validate validates the pool
 	// Returns nil if the pool is valid
 	// Returns error if the pool is invalid
@@ -118,9 +122,18 @@ func (p *PoolWrapper) GetTickModel() (*TickModel, error) {
 	return p.TickModel, nil
 }
 
-func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
-	poolType := p.GetType()
+// SetTickModel implements PoolI.
+func (p *PoolWrapper) SetTickModel(tickModel *TickModel) error {
+	if p.GetType() != poolmanagertypes.Concentrated {
+		return fmt.Errorf("pool (%d) is not a concentrated pool, type (%d)", p.GetId(), p.GetType())
+	}
 
+	p.TickModel = tickModel
+
+	return nil
+}
+
+func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
 	sqsModel := p.GetSQSPoolModel()
 	poolDenoms := p.GetPoolDenoms()
 
@@ -136,6 +149,7 @@ func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
 	}
 
 	// Validate CL pools specifically
+	poolType := p.GetType()
 	if poolType == poolmanagertypes.Concentrated {
 		tickModel, err := p.GetTickModel()
 

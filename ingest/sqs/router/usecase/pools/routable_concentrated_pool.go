@@ -24,12 +24,6 @@ type routableConcentratedPoolImpl struct {
 	TakerFee      osmomath.Dec            "json:\"taker_fee\""
 }
 
-// SetTickModelIfConcentrated implements domain.RoutablePool.
-func (r *routableConcentratedPoolImpl) SetTickModelIfConcentrated(tickModel domain.TickModel) error {
-	r.TickModel = &tickModel
-	return nil
-}
-
 // GetPoolDenoms implements domain.RoutablePool.
 func (r *routableConcentratedPoolImpl) GetPoolDenoms() []string {
 	return r.ChainPool.GetPoolDenoms(sdk.Context{})

@@ -23,11 +23,6 @@ type routableBalancerPoolImpl struct {
 	TakerFee      osmomath.Dec   "json:\"taker_fee\""
 }
 
-// SetTickModelIfConcentrated implements domain.RoutablePool.
-func (r *routableBalancerPoolImpl) SetTickModelIfConcentrated(domain.TickModel) error {
-	return fmt.Errorf("attempted to set tick model on a balancer pool (%d)", r.GetId())
-}
-
 // CalculateTokenOutByTokenIn implements RoutablePool.
 func (r *routableBalancerPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	tokenOut, err := r.ChainPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), r.TokenOutDenom, r.GetSpreadFactor())

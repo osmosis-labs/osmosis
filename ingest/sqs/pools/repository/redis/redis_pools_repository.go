@@ -69,6 +69,63 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 	return allPools, nil
 }
 
+// GetPools implements mvc.PoolsRepository.
+func (r *redisPoolsRepo) GetPools(ctx context.Context, poolIDs map[uint64]struct{}) (map[uint64]domain.PoolI, error) {
+	tx := r.repositoryManager.StartTx()
+
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return nil, err
+	}
+
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	type poolCmdsWrapper struct {
+		sqsPoolCmd   *redis.StringCmd
+		chainPoolCmd *redis.StringCmd
+	}
+
+	poolCmds := make([]poolCmdsWrapper, 0, len(poolIDs))
+
+	for poolID := range poolIDs {
+		sqsPoolModelCmd := pipeliner.HGet(ctx, sqsPoolModelKey(poolsKey), strconv.FormatUint(poolID, 10))
+		chainPoolModelCmd := pipeliner.HGet(ctx, chainPoolModelKey(poolsKey), strconv.FormatUint(poolID, 10))
+
+		poolCmds = append(poolCmds, poolCmdsWrapper{
+			sqsPoolCmd:   sqsPoolModelCmd,
+			chainPoolCmd: chainPoolModelCmd,
+		})
+	}
+
+	if err := tx.Exec(ctx); err != nil {
+		return nil, err
+	}
+
+	pools := make(map[uint64]domain.PoolI, len(poolCmds))
+	for _, poolCmd := range poolCmds {
+		pool := &domain.PoolWrapper{
+			SQSModel: domain.SQSPool{},
+		}
+
+		err := json.Unmarshal([]byte(poolCmd.sqsPoolCmd.Val()), &pool.SQSModel)
+		if err != nil {
+			return nil, err
+		}
+
+		err = r.appCodec.UnmarshalInterfaceJSON([]byte(poolCmd.chainPoolCmd.Val()), &pool.ChainModel)
+		if err != nil {
+			return nil, err
+		}
+
+		pools[pool.GetId()] = pool
+	}
+
+	return pools, nil
+}
+
 func (r *redisPoolsRepo) StorePools(ctx context.Context, tx mvc.Tx, pools []domain.PoolI) error {
 	if err := r.addPoolsTx(ctx, tx, poolsKey, pools); err != nil {
 		return err

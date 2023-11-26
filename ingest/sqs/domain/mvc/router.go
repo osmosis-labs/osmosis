@@ -18,16 +18,16 @@ type RouterRepository interface {
 	// SetRoutesTx sets the routes for the given denoms in the given transaction.
 	// Sorts denom0 and denom1 lexicographically before setting the routes.
 	// Returns error if the transaction fails.
-	SetRoutesTx(ctx context.Context, tx Tx, denom0, denom1 string, routes []route.RouteImpl) error
+	SetRoutesTx(ctx context.Context, tx Tx, denom0, denom1 string, routes route.CandidateRoutes) error
 	// SetRoutes sets the routes for the given denoms. Creates a new transaction and executes it.
 	// Sorts denom0 and denom1 lexicographically before setting the routes.
 	// Returns error if the transaction fails.
-	SetRoutes(ctx context.Context, denom0, denom1 string, routes []route.RouteImpl) error
+	SetRoutes(ctx context.Context, denom0, denom1 string, routes route.CandidateRoutes) error
 	// GetRoutes returns the routes for the given denoms.
 	// Sorts denom0 and denom1 lexicographically before setting the routes.
 	// Returns empty slice and no error if no routes are present.
 	// Returns error if the routes are not found.
-	GetRoutes(ctx context.Context, denom0, denom1 string) ([]route.RouteImpl, error)
+	GetRoutes(ctx context.Context, denom0, denom1 string) (route.CandidateRoutes, error)
 }
 
 // RouterUsecase represent the router's usecases
@@ -37,7 +37,7 @@ type RouterUsecase interface {
 	// GetBestSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
 	GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error)
 	// GetCandidateRoutes returns the candidate routes for the given tokenIn and tokenOutDenom.
-	GetCandidateRoutes(ctx context.Context, tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error)
+	GetCandidateRoutes(ctx context.Context, tokenInDenom, tokenOutDenom string) (route.CandidateRoutes, error)
 	// StoreRoutes stores all router state in the files locally. Used for debugging.
 	StoreRouterStateFiles(ctx context.Context) error
 }

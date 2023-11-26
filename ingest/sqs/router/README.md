@@ -46,7 +46,9 @@ osmosisd tx wasm execute osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw
 
 ### Plan:
 
-1. Let's make sure that tick model can be retrieved from storage for CL pools independently.
-2. Let's not retrieve tick model with pools.
-3. Let's cache CL pools IDs together with routes. That way, we know what pool IDs need to query ticks
+1. Let's make sure that tick model can be retrieved from storage for CL pools independently. (complete)
+2. Let's not retrieve tick model with pools. (complete)
+3. Let's cache CL pools IDs together with routes. That way, we know what pool IDs need to query ticks (complete)
+4. Only get all pools and taker fees if fail to get routes from Redis
+5. Only get ticks for pools in the route, do not pre-load all ticks.
 

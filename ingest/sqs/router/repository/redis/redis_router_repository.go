@@ -150,7 +150,7 @@ func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx mvc.Tx, denom0, de
 }
 
 // SetRoutesTx implements mvc.RouterRepository.
-func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, denom1 string, routes []route.RouteImpl) error {
+func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, denom1 string, routes route.CandidateRoutes) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -179,7 +179,7 @@ func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, de
 }
 
 // SetRoutes implements mvc.RouterRepository.
-func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, routes []route.RouteImpl) error {
+func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, routes route.CandidateRoutes) error {
 	// Create transaction
 	tx := r.repositoryManager.StartTx()
 
@@ -197,7 +197,7 @@ func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, 
 }
 
 // GetRoutes implements mvc.RouterRepository.
-func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) ([]route.RouteImpl, error) {
+func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) (route.CandidateRoutes, error) {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -208,12 +208,12 @@ func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) 
 
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	pipeliner, err := redisTx.GetPipeliner(ctx)
 	if err != nil {
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	// Create command to retrieve results.
@@ -222,25 +222,25 @@ func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) 
 	_, err = pipeliner.Exec(ctx)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return nil, nil
+			return route.CandidateRoutes{}, nil
 		}
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	// Retrieve results
 	resultStr, err := getCmd.Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return nil, nil
+			return route.CandidateRoutes{}, nil
 		}
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	// Parse routes
-	var routes []route.RouteImpl
+	var routes route.CandidateRoutes
 	err = json.Unmarshal([]byte(resultStr), &routes)
 	if err != nil {
-		return nil, err
+		return route.CandidateRoutes{}, err
 	}
 
 	return routes, nil

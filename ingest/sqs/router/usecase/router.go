@@ -26,8 +26,6 @@ type Router struct {
 
 	// The maximum number of split iterations to perform
 	maxSplitIterations int
-	// taker fee map
-	takerFeeMap domain.TakerFeeMap
 
 	minOSMOTVL int
 
@@ -59,13 +57,12 @@ const (
 // Each pool has a flag indicating whether there was an error in estimating its on-chain TVL.
 // If that is the case, the pool is to be sorted towards the end. However, the preferredPoolIDs overwrites this rule
 // and prioritizes the preferred pools.
-func NewRouter(preferredPoolIDs []uint64, takerFeeMap domain.TakerFeeMap, maxHops, maxRoutes, maxSplitRoutes, maxSplitIterations int, minOSMOTVL int, logger log.Logger) *Router {
+func NewRouter(preferredPoolIDs []uint64, maxHops, maxRoutes, maxSplitRoutes, maxSplitIterations int, minOSMOTVL int, logger log.Logger) *Router {
 	if logger == nil {
 		logger = &log.NoOpLogger{}
 	}
 
 	return &Router{
-		takerFeeMap:        takerFeeMap,
 		maxHops:            maxHops,
 		maxRoutes:          maxRoutes,
 		logger:             logger,
@@ -95,8 +92,8 @@ func (r Router) GetLogger() log.Logger {
 	return r.logger
 }
 
-func (r Router) GetTakerFeeMap() domain.TakerFeeMap {
-	return r.takerFeeMap
+func (r Router) GetSortedPools() []domain.PoolI {
+	return r.sortedPools
 }
 
 func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {

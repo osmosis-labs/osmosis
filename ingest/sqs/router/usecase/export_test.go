@@ -13,6 +13,8 @@ type (
 	RouterUseCaseImpl = routerUseCaseImpl
 
 	QuoteImpl = quoteImpl
+
+	CandidatePoolWrapper = candidatePoolWrapper
 )
 
 const (
@@ -20,24 +22,24 @@ const (
 	NoTotalValueLockedError = noTotalValueLockedError
 )
 
-func (r Router) GetBestSplitRoutesQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
-	return r.estimateBestSplitRouteQuote(routes, tickModelMap, tokenIn)
+func (r Router) GetBestSplitRoutesQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+	return r.estimateBestSplitRouteQuote(routes, tokenIn)
 }
 
-func (r *Router) ValidateAndFilterRoutes(routes []route.RouteImpl, tokenInDenom string) ([]route.RouteImpl, error) {
-	return r.validateAndFilterRoutes(routes, tokenInDenom)
+func (r *Router) ValidateAndFilterRoutes(candidateRoutes [][]candidatePoolWrapper, tokenInDenom string) (route.CandidateRoutes, error) {
+	return r.validateAndFilterRoutes(candidateRoutes, tokenInDenom)
 }
 
 func (r *routerUseCaseImpl) InitializeRouter(ctx context.Context) (*Router, error) {
 	return r.initializeRouter(ctx)
 }
 
-func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error) {
+func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (candidateRoutes route.CandidateRoutes, err error) {
 	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
 
-func (r *Router) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel) (domain.Quote, error) {
-	return r.getOptimalQuote(ctx, tokenIn, tokenOutDenom, routes, tickModelMap)
+func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
+	return r.getOptimalQuote(tokenIn, tokenOutDenom, routes)
 }
 
 // GetSortedPoolIDs returns the sorted pool IDs.

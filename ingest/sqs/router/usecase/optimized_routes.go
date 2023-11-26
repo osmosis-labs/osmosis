@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -18,7 +17,7 @@ import (
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
 // Considers all routes and splits.
 // Returns error if router repository is not set on the router.
-func (r *Router) getOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel) (domain.Quote, error) {
+func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
 	if r.routerRepository == nil {
 		return nil, ErrNilRouterRepository
 	}
@@ -26,11 +25,7 @@ func (r *Router) getOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOut
 		return nil, ErrNilPoolsRepository
 	}
 
-	for _, route := range routes {
-		r.logger.Info("route", zap.Any("route", route))
-	}
-
-	bestSingleRouteQuote, routesSortedByAmtOut, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+	bestSingleRouteQuote, routesSortedByAmtOut, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +45,7 @@ func (r *Router) getOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOut
 
 	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
 
-	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tickModelMap, tokenIn)
+	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +78,7 @@ func (r *Router) getOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOut
 
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
 // Returns error if router repository is not set on the router.
-func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel) (quote domain.Quote, err error) {
+func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (quote domain.Quote, err error) {
 	if r.routerRepository == nil {
 		return nil, ErrNilRouterRepository
 	}
@@ -91,7 +86,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 		return nil, ErrNilPoolsRepository
 	}
 
-	bestSingleRouteQuote, _, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+	bestSingleRouteQuote, _, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +99,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string,
 // Returns best quote as well as all routes sorted by amount out and error if any.
 // CONTRACT: router repository must be set on the router.
 // CONTRACT: pools reporitory must be set on the router
-func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
+func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
 	if len(routes) == 0 {
 		return nil, nil, errors.New("no routes were provided")
 	}
@@ -112,7 +107,7 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickMode
 	routesWithAmountOut := make([]RouteWithOutAmount, 0, len(routes))
 
 	for _, route := range routes {
-		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn, tickModelMap)
+		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn)
 		if err != nil {
 			r.logger.Debug("skipping single route due to error in estimate", zap.Error(err))
 			continue
@@ -148,9 +143,9 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tickMode
 // CONTRACT: all routes are valid. Must be validated by the caller with validateRoutes method.
 // CONTRACT: router repository must be set on the router.
 // CONTRACT: pools reporitory must be set on the router
-func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tickModelMap map[uint64]domain.TickModel, tokenIn sdk.Coin) (quote domain.Quote, err error) {
+func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
 	if len(routes) == 1 {
-		quote, _, err := r.estimateBestSingleRouteQuote(routes, tickModelMap, tokenIn)
+		quote, _, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
 		return quote, err
 	}
 
@@ -160,7 +155,7 @@ func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tickModel
 		routes, Split{
 			Routes:          []domain.SplitRoute{},
 			CurrentTotalOut: osmomath.ZeroInt(),
-		}, tickModelMap)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -190,36 +185,35 @@ func (r *Router) estimateBestSplitRouteQuote(routes []route.RouteImpl, tickModel
 // - the previous pool token out denom is in the current pool.
 // - the current pool token out denom is in the current pool.
 // Returns error if not. Nil otherwise.
-func (r *Router) validateAndFilterRoutes(routes []route.RouteImpl, tokenInDenom string) ([]route.RouteImpl, error) {
+func (r *Router) validateAndFilterRoutes(candidateRoutes [][]candidatePoolWrapper, tokenInDenom string) (route.CandidateRoutes, error) {
 	var (
 		tokenOutDenom  string
-		filteredRoutes []route.RouteImpl
+		filteredRoutes []route.CandidateRoute
 	)
 
 	uniquePoolIDs := make(map[uint64]struct{})
 
 ROUTE_LOOP:
-	for i, route := range routes {
-		currentRoutePools := route.GetPools()
-		if len(currentRoutePools) == 0 {
-			return nil, NoPoolsInRouteError{RouteIndex: i}
+	for i, candidateRoute := range candidateRoutes {
+		if len(candidateRoute) == 0 {
+			return route.CandidateRoutes{}, NoPoolsInRouteError{RouteIndex: i}
 		}
 
-		lastPool := route.GetPools()[len(route.GetPools())-1]
-		currentRouteTokenOutDenom := lastPool.GetTokenOutDenom()
+		lastPool := candidateRoute[len(candidateRoute)-1]
+		currentRouteTokenOutDenom := lastPool.TokenOutDenom
 
 		// Validate that route pools do not have the token in denom or token out denom
 		previousTokenOut := tokenInDenom
-		for j, currentPool := range currentRoutePools {
+		for j, currentPool := range candidateRoute {
 			// Skip routes for which we have already seen the pool ID
-			if _, ok := uniquePoolIDs[currentPool.GetId()]; ok {
+			if _, ok := uniquePoolIDs[currentPool.ID]; ok {
 				continue ROUTE_LOOP
 			} else {
-				uniquePoolIDs[currentPool.GetId()] = struct{}{}
+				uniquePoolIDs[currentPool.ID] = struct{}{}
 			}
 
-			currentPoolDenoms := currentRoutePools[j].GetPoolDenoms()
-			currentPoolTokenOutDenom := currentPool.GetTokenOutDenom()
+			currentPoolDenoms := candidateRoute[j].PoolDenoms
+			currentPoolTokenOutDenom := currentPool.TokenOutDenom
 
 			// Check that token in denom and token out denom are in the pool
 			// Also check that previous token out is in the pool
@@ -235,7 +229,7 @@ ROUTE_LOOP:
 				}
 
 				// Validate that intermediary pools do not contain the token in denom or token out denom
-				if j > 0 && j < len(currentRoutePools)-1 {
+				if j > 0 && j < len(candidateRoute)-1 {
 					if denom == tokenInDenom {
 						r.logger.Warn("route skipped - found token in intermediary pool", zap.Error(RoutePoolWithTokenInDenomError{RouteIndex: i, TokenInDenom: tokenInDenom}))
 						continue ROUTE_LOOP
@@ -250,12 +244,12 @@ ROUTE_LOOP:
 
 			// Ensure that the previous pool token out denom is in the current pool.
 			if !foundPreviousTokenOut {
-				return nil, PreviousTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), PreviousTokenOutDenom: previousTokenOut}
+				return route.CandidateRoutes{}, PreviousTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.ID, PreviousTokenOutDenom: previousTokenOut}
 			}
 
 			// Ensure that the current pool token out denom is in the current pool.
 			if !foundCurrentTokenOut {
-				return nil, CurrentTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), CurrentTokenOutDenom: currentPoolTokenOutDenom}
+				return route.CandidateRoutes{}, CurrentTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.ID, CurrentTokenOutDenom: currentPoolTokenOutDenom}
 			}
 
 			// Update previous token out denom
@@ -265,21 +259,36 @@ ROUTE_LOOP:
 		if i > 0 {
 			// Ensure that all routes have the same final token out denom
 			if currentRouteTokenOutDenom != tokenOutDenom {
-				return nil, TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: tokenOutDenom, TokenOutDenomRouteB: currentRouteTokenOutDenom}
+				return route.CandidateRoutes{}, TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: tokenOutDenom, TokenOutDenomRouteB: currentRouteTokenOutDenom}
 			}
 		}
 
 		tokenOutDenom = currentRouteTokenOutDenom
 
 		// Update filtered routes if this route passed all checks
-		filteredRoutes = append(filteredRoutes, route)
+		filteredRoute := route.CandidateRoute{
+			Pools: make([]route.CandidatePool, 0, len(candidateRoute)),
+		}
+
+		// Convert route to the final output format
+		for _, pool := range candidateRoute {
+			filteredRoute.Pools = append(filteredRoute.Pools, route.CandidatePool{
+				ID:            pool.ID,
+				TokenOutDenom: pool.TokenOutDenom,
+			})
+		}
+
+		filteredRoutes = append(filteredRoutes, filteredRoute)
 	}
 
 	if tokenOutDenom == tokenInDenom {
-		return nil, TokenOutDenomMatchesTokenInDenomError{Denom: tokenOutDenom}
+		return route.CandidateRoutes{}, TokenOutDenomMatchesTokenInDenomError{Denom: tokenOutDenom}
 	}
 
-	return filteredRoutes, nil
+	return route.CandidateRoutes{
+		Routes:        filteredRoutes,
+		UniquePoolIDs: uniquePoolIDs,
+	}, nil
 }
 
 type RouteWithOutAmount struct {
@@ -309,7 +318,7 @@ type Split struct {
 // It does not perform single route quote estimate (100% single route split) as we assume that those were already calculated prior to this method.
 // Returns the best split and error if any.
 // Returs error if the maxSplitIterations is less than 1.
-func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []route.RouteImpl, currentSplit Split, tickModelMap map[uint64]domain.TickModel) (bestSplit Split, err error) {
+func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []route.RouteImpl, currentSplit Split) (bestSplit Split, err error) {
 	r.logger.Debug("splitRecursive START", zap.Stringer("remainingTokenIn", remainingTokenIn))
 
 	// Base case, we have no more routes to split and we have a valid split
@@ -344,7 +353,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 
 		currentAmountIn := remainingTokenIn.Amount.ToLegacyDec().Mul(fraction).TruncateInt()
 
-		currentTokenOut, err := currentRoute.CalculateTokenOutByTokenIn(sdk.NewCoin(remainingTokenIn.Denom, currentAmountIn), tickModelMap)
+		currentTokenOut, err := currentRoute.CalculateTokenOutByTokenIn(sdk.NewCoin(remainingTokenIn.Denom, currentAmountIn))
 		if err != nil {
 			r.logger.Debug("skipping split due to error in estimate", zap.Error(err))
 			continue
@@ -366,7 +375,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []rou
 
 		remainingTokenInCopy := sdk.NewCoin(remainingTokenIn.Denom, remainingTokenIn.Amount.Sub(currentAmountIn))
 
-		currentBestSplit, err := r.splitRecursive(remainingTokenInCopy, remainingRoutes[1:], currentSplitCopy, tickModelMap)
+		currentBestSplit, err := r.splitRecursive(remainingTokenInCopy, remainingRoutes[1:], currentSplitCopy)
 		if err != nil {
 			return Split{}, err
 		}

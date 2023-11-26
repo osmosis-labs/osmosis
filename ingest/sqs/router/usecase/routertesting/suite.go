@@ -88,6 +88,17 @@ func WithRoutePools(r route.RouteImpl, pools []domain.RoutablePool) route.RouteI
 	return newRoute
 }
 
+// Note that it does not deep copy pools
+func WithCandidateRoutePools(r route.CandidateRoute, pools []route.CandidatePool) route.CandidateRoute {
+	newRoute := route.CandidateRoute{
+		Pools: make([]route.CandidatePool, 0, len(pools)),
+	}
+	for _, pool := range pools {
+		newRoute.Pools = append(newRoute.Pools, pool)
+	}
+	return newRoute
+}
+
 // ValidateRoutePools validates that the expected pools are equal to the actual pools.
 // Specifically, validates the following fields:
 // - ID

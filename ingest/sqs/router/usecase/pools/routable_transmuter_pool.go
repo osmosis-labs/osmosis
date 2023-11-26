@@ -115,8 +115,3 @@ func (r *routableTransmuterPoolImpl) GetTakerFee() math.LegacyDec {
 func (r *routableTransmuterPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 	r.TokenOutDenom = tokenOutDenom
 }
-
-// SetTickModelIfConcentrated implements domain.RoutablePool.
-func (r *routableTransmuterPoolImpl) SetTickModelIfConcentrated(domain.TickModel) error {
-	return fmt.Errorf("attempted to set tick model on a transmuter pool (%d)", r.GetId())
-}

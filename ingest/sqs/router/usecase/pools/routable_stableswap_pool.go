@@ -79,8 +79,3 @@ func (r *routableStableswapPoolImpl) GetPoolDenoms() []string {
 func (*routableStableswapPoolImpl) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Balancer
 }
-
-// SetTickModelIfConcentrated implements domain.RoutablePool.
-func (r *routableStableswapPoolImpl) SetTickModelIfConcentrated(domain.TickModel) error {
-	return fmt.Errorf("attempted to set tick model on a stableswap pool (%d)", r.GetId())
-}

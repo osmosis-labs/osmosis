@@ -6,6 +6,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type poolsUseCase struct {
@@ -13,6 +16,8 @@ type poolsUseCase struct {
 	poolsRepository        mvc.PoolsRepository
 	redisRepositoryManager mvc.TxManager
 }
+
+var _ mvc.PoolsUsecase = &poolsUseCase{}
 
 // NewPoolsUsecase will create a new pools use case object
 func NewPoolsUsecase(timeout time.Duration, poolsRepository mvc.PoolsRepository, redisRepositoryManager mvc.TxManager) mvc.PoolsUsecase {
@@ -34,6 +39,73 @@ func (p *poolsUseCase) GetAllPools(ctx context.Context) ([]domain.PoolI, error) 
 	}
 
 	return pools, nil
+}
+
+// GetRoutesFromCandidates implements mvc.PoolsUsecase.
+func (p *poolsUseCase) GetRoutesFromCandidates(ctx context.Context, candidateRoutes route.CandidateRoutes, takerFeeMap domain.TakerFeeMap, tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error) {
+	// Get all pools
+	poolsData, err := p.poolsRepository.GetPools(ctx, candidateRoutes.UniquePoolIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: refactor get these directl from the pools repository.
+	// Get conentrated pools and separately get tick model for them
+	concentratedPoolIDs := make([]uint64, 0)
+	for _, candidatePool := range poolsData {
+		if candidatePool.GetType() == poolmanagertypes.Concentrated {
+			concentratedPoolIDs = append(concentratedPoolIDs, candidatePool.GetId())
+		}
+	}
+
+	// Get tick model for concentrated pools
+	tickModelMap, err := p.GetTickModelMap(ctx, concentratedPoolIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert each candidate route into the actual route with all pool data
+	routes := make([]route.RouteImpl, 0, len(candidateRoutes.Routes))
+	for _, candidateRoute := range candidateRoutes.Routes {
+		previousTokenOutDenom := tokenInDenom
+		routablePools := make([]domain.RoutablePool, 0, len(candidateRoute.Pools))
+		for _, candidatePool := range candidateRoute.Pools {
+			// Get the pool data for routing
+			pool, ok := poolsData[candidatePool.ID]
+			if !ok {
+				return nil, domain.PoolNotFoundError{PoolID: candidatePool.ID}
+			}
+
+			// Get taker fee
+			takerFee, err := takerFeeMap.GetTakerFee(previousTokenOutDenom, candidatePool.TokenOutDenom)
+			if err != nil {
+				return nil, err
+			}
+
+			if pool.GetType() == poolmanagertypes.Concentrated {
+				// Get tick model for concentrated pool
+				tickModel, ok := tickModelMap[pool.GetId()]
+				if !ok {
+					return nil, domain.ConcentratedTickModelNotSet{
+						PoolId: pool.GetId(),
+					}
+				}
+
+				if err := pool.SetTickModel(&tickModel); err != nil {
+					return nil, err
+				}
+			}
+
+			// Create routable pool
+			routablePools = append(routablePools, pools.NewRoutablePool(pool, candidatePool.TokenOutDenom, takerFee))
+		}
+
+		routes = append(routes, route.RouteImpl{
+			Pools: routablePools,
+		})
+	}
+
+	return routes, nil
 }
 
 // GetTickModelMap implements mvc.PoolsUsecase.

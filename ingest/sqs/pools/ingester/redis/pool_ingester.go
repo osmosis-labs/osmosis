@@ -205,7 +205,7 @@ func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []dom
 	for denomPair := range denomPairToTakerFeeMap {
 		denomPair := denomPair
 		// router
-		router := routerusecase.NewRouter([]uint64{}, denomPairToTakerFeeMap, pi.routerConfig.MaxPoolsPerRoute, pi.routerConfig.MaxRoutes, pi.routerConfig.MaxSplitRoutes, pi.routerConfig.MaxSplitIterations, pi.routerConfig.MinOSMOLiquidity, pi.logger)
+		router := routerusecase.NewRouter([]uint64{}, pi.routerConfig.MaxPoolsPerRoute, pi.routerConfig.MaxRoutes, pi.routerConfig.MaxSplitRoutes, pi.routerConfig.MaxSplitIterations, pi.routerConfig.MinOSMOLiquidity, pi.logger)
 		router = routerusecase.WithSortedPools(router, pools)
 
 		go func(denomPair domain.DenomPair) {

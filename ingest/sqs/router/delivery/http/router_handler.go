@@ -94,10 +94,6 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
 
-	for i := range routes {
-		routes[i].PrepareResultPools()
-	}
-
 	return c.JSON(http.StatusOK, routes)
 }
 

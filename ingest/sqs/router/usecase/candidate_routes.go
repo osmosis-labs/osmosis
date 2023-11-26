@@ -1,18 +1,29 @@
 package usecase
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
+// candidatePoolWrapper is an intermediary internal data
+// structure for constructing all candidate routes related data.
+// It contains pool denoms for validation after the initial route selection.
+// Additionally, it contains the pool type for contructing eventually constructing
+// a unque list of concentrated pools for knowing which pools require
+// a tick model.
+type candidatePoolWrapper struct {
+	route.CandidatePool
+	PoolDenoms []string
+	PoolType   poolmanagertypes.PoolType
+}
+
 // GetCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using BFS.
-func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error) {
-	var routes []route.RouteImpl
+func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) (route.CandidateRoutes, error) {
+	var routes [][]candidatePoolWrapper
 	var visited = make(map[uint64]bool)
 
-	queue := make([]route.RouteImpl, 0)
-	queue = append(queue, route.RouteImpl{Pools: []domain.RoutablePool{}})
+	queue := make([][]candidatePoolWrapper, 0)
+	queue = append(queue, []candidatePoolWrapper{})
 
 	for len(queue) > 0 && len(routes) < r.maxRoutes {
 		currentRoute := queue[0]
@@ -20,10 +31,10 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]route.
 
 		lastPoolID := uint64(0)
 		currenTokenInDenom := tokenInDenom
-		if len(currentRoute.Pools) > 0 {
-			lastPool := currentRoute.Pools[len(currentRoute.Pools)-1]
-			lastPoolID = lastPool.GetId()
-			currenTokenInDenom = lastPool.GetTokenOutDenom()
+		if len(currentRoute) > 0 {
+			lastPool := currentRoute[len(currentRoute)-1]
+			lastPoolID = lastPool.ID
+			currenTokenInDenom = lastPool.TokenOutDenom
 		}
 
 		for i := 0; i < len(r.sortedPools) && len(routes) < r.maxRoutes; i++ {
@@ -46,7 +57,7 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]route.
 				}
 
 				// Avoid going through pools that has the initial token in denom twice.
-				if len(currentRoute.Pools) > 0 && denom == tokenInDenom {
+				if len(currentRoute) > 0 && denom == tokenInDenom {
 					shouldSkipPool = true
 					break
 				}
@@ -70,19 +81,20 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]route.
 				}
 
 				if lastPoolID == uint64(0) || lastPoolID != currentPoolID {
-					newPath := route.RouteImpl{
-						Pools: make([]domain.RoutablePool, len(currentRoute.Pools), len(currentRoute.Pools)+1),
-					}
-					copy(newPath.Pools, currentRoute.Pools)
+					newPath := make([]candidatePoolWrapper, len(currentRoute), len(currentRoute)+1)
 
-					takerFee, err := r.takerFeeMap.GetTakerFee(currenTokenInDenom, denom)
-					if err != nil {
-						return nil, err
-					}
+					copy(newPath, currentRoute)
 
-					newPath.Pools = append(newPath.Pools, pools.NewRoutablePool(pool, denom, takerFee))
+					newPath = append(newPath, candidatePoolWrapper{
+						CandidatePool: route.CandidatePool{
+							ID:            pool.GetId(),
+							TokenOutDenom: denom,
+						},
+						PoolDenoms: poolDenoms,
+						PoolType:   pool.GetType(),
+					})
 
-					if len(newPath.Pools) <= r.maxHops {
+					if len(newPath) <= r.maxHops {
 						if hasTokenOut {
 							routes = append(routes, newPath)
 							break
@@ -94,8 +106,8 @@ func (r Router) GetCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]route.
 			}
 		}
 
-		for _, pool := range currentRoute.Pools {
-			visited[pool.GetId()] = true
+		for _, pool := range currentRoute {
+			visited[pool.ID] = true
 		}
 	}
 
