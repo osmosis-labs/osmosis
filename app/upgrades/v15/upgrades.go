@@ -41,6 +41,7 @@ func CreateUpgradeHandler(
 		poolmanagerParams.PoolCreationFee = keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
+		//nolint:errcheck
 		keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
 		setICQParams(ctx, keepers.ICQKeeper)
 
