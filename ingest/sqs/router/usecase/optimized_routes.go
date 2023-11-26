@@ -34,13 +34,19 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 		return bestSingleRouteQuote, nil
 	}
 
+	numRoutes := len(routesSortedByAmtOut)
+
+	// If there are more routes than the max split routes, keep only the top routes
 	if len(routesSortedByAmtOut) > r.maxSplitRoutes {
 		// Keep only top routes for splits
 		routes = routes[:r.maxSplitRoutes]
-		for i := 0; i < r.maxSplitRoutes; i++ {
-			// Update routes with the top routes
-			routes[i] = routesSortedByAmtOut[i].RouteImpl
-		}
+		numRoutes = r.maxSplitRoutes
+	}
+
+	// Convert routes sorted by amount out to routes
+	for i := 0; i < numRoutes; i++ {
+		// Update routes with the top routes
+		routes[i] = routesSortedByAmtOut[i].RouteImpl
 	}
 
 	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))

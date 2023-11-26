@@ -57,6 +57,10 @@ class SQS(HttpUser):
     def quoteUOSMOUSDC_1000000In(self):
         self.client.get(f"/quote?tokenIn=1000000000000{UOSMO}&tokenOutDenom={USDC}")
 
+    @task
+    def singleQuoteUOSMOUSDC_1000000In(self):
+        self.client.get(f"/single-quote?tokenIn=1000000000000{UOSMO}&tokenOutDenom={USDC}")
+
     # Quote the same pair of UOSMO and USDC (USDC in).
     @task
     def quoteUSDCUOSMO_1000000In(self):

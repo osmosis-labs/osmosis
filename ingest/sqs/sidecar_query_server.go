@@ -134,7 +134,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	// Initialize router repository, usecase and HTTP handler
 	routerRepository := routerRedisRepository.NewRedisRouterRepo(redisTxManager)
 	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, routerRepository, poolsUseCase, routerConfig, logger)
-	routerHttpDelivery.NewRouterHandler(e, routerUsecase)
+	routerHttpDelivery.NewRouterHandler(e, routerUsecase, logger)
 
 	// Initialize system handler
 	systemhttpdelivery.NewSystemHandler(e)

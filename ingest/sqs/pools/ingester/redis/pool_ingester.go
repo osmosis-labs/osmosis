@@ -209,6 +209,9 @@ func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []dom
 		router = routerusecase.WithSortedPools(router, pools)
 
 		go func(denomPair domain.DenomPair) {
+
+			// TODO: abstract this better
+
 			candidateRoutes, err := router.GetCandidateRoutes(denomPair.Denom0, denomPair.Denom1)
 			if err != nil {
 				pi.logger.Error("error getting routes", zap.Error(err))
@@ -216,6 +219,20 @@ func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []dom
 			}
 
 			err = pi.routerRepository.SetRoutesTx(ctx, tx, denomPair.Denom0, denomPair.Denom1, candidateRoutes)
+			if err != nil {
+				pi.logger.Error("error setting routes", zap.Error(err))
+				return
+			}
+
+			// In the other direction. This can be optimized later.
+
+			candidateRoutes, err = router.GetCandidateRoutes(denomPair.Denom1, denomPair.Denom0)
+			if err != nil {
+				pi.logger.Error("error getting routes", zap.Error(err))
+				return
+			}
+
+			err = pi.routerRepository.SetRoutesTx(ctx, tx, denomPair.Denom1, denomPair.Denom0, candidateRoutes)
 			if err != nil {
 				pi.logger.Error("error setting routes", zap.Error(err))
 				return

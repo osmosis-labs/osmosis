@@ -4,14 +4,17 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 )
 
 // ResponseError represent the response error struct
@@ -22,6 +25,7 @@ type ResponseError struct {
 // RouterHandler  represent the httphandler for the router
 type RouterHandler struct {
 	RUsecase mvc.RouterUsecase
+	logger   log.Logger
 }
 
 // Define a regular expression pattern to match sdk.Coin where the first part is the amount and second is the denom name
@@ -31,9 +35,10 @@ type RouterHandler struct {
 var coinPattern = regexp.MustCompile(`([0-9]+)(([a-z]+)(\/([A-Z0-9]+))*)`)
 
 // NewRouterHandler will initialize the pools/ resources endpoint
-func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase) {
+func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase, logger log.Logger) {
 	handler := &RouterHandler{
 		RUsecase: us,
+		logger:   logger,
 	}
 	e.GET("/quote", handler.GetOptimalQuote)
 	e.GET("/single-quote", handler.GetBestSingleRouteQuote)
@@ -44,6 +49,8 @@ func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase) {
 // GetOptimalQuote will determine the optimal quote for a given tokenIn and tokenOutDenom
 // Return the optimal quote.
 func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
+	start := time.Now()
+
 	ctx := c.Request().Context()
 
 	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
@@ -58,7 +65,14 @@ func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
 
 	quote.PrepareResult()
 
-	return c.JSON(http.StatusOK, quote)
+	err = c.JSON(http.StatusOK, quote)
+	if err != nil {
+		return err
+	}
+
+	a.logger.Info("GetOptimalQuote", zap.Duration("duration", time.Since(start)))
+
+	return nil
 }
 
 // GetBestSingleRouteQuote returns the best single route quote to be done directly without a split.
@@ -82,6 +96,8 @@ func (a *RouterHandler) GetBestSingleRouteQuote(c echo.Context) error {
 
 // GetCandidateRoutes returns the candidate routes for a given tokenIn and tokenOutDenom
 func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
+	start := time.Now()
+
 	ctx := c.Request().Context()
 
 	tokenOutDenom, tokenIn, err := getValidTokenInTokenOutStr(c)
@@ -94,7 +110,12 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, routes)
+	if err := c.JSON(http.StatusOK, routes); err != nil {
+		return err
+	}
+
+	a.logger.Info("GetCandidateRoutes", zap.Duration("duration", time.Since(start)))
+	return nil
 }
 
 // TODO: authentication for the endpoint and enable only in dev mode.
@@ -128,7 +149,7 @@ func getStatusCode(err error) int {
 
 // getValidRoutingParameters returns the tokenIn and tokenOutDenom from server context if they are valid.
 func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
-	tokenInStr, tokenOutStr, err := getValidTokenInTokenOutStr(c)
+	tokenOutStr, tokenInStr, err := getValidTokenInTokenOutStr(c)
 	if err != nil {
 		return "", sdk.Coin{}, err
 	}
@@ -149,7 +170,7 @@ func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
 	return tokenOutStr, tokenIn, nil
 }
 
-func getValidTokenInTokenOutStr(c echo.Context) (tokenInStr, tokenOutStr string, err error) {
+func getValidTokenInTokenOutStr(c echo.Context) (tokenOutStr, tokenInStr string, err error) {
 	tokenInStr = c.QueryParam("tokenIn")
 	tokenOutStr = c.QueryParam("tokenOutDenom")
 
@@ -161,5 +182,5 @@ func getValidTokenInTokenOutStr(c echo.Context) (tokenInStr, tokenOutStr string,
 		return "", "", errors.New("tokenOutDenom is required")
 	}
 
-	return tokenInStr, tokenOutStr, nil
+	return tokenOutStr, tokenInStr, nil
 }

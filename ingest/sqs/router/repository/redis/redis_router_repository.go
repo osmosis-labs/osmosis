@@ -151,11 +151,6 @@ func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx mvc.Tx, denom0, de
 
 // SetRoutesTx implements mvc.RouterRepository.
 func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, denom1 string, routes route.CandidateRoutes) error {
-	// Ensure increasing lexicographic order.
-	if denom1 < denom0 {
-		denom0, denom1 = denom1, denom0
-	}
-
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
@@ -198,11 +193,6 @@ func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, 
 
 // GetRoutes implements mvc.RouterRepository.
 func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) (route.CandidateRoutes, error) {
-	// Ensure increasing lexicographic order.
-	if denom1 < denom0 {
-		denom0, denom1 = denom1, denom0
-	}
-
 	// Create transaction
 	tx := r.repositoryManager.StartTx()
 
