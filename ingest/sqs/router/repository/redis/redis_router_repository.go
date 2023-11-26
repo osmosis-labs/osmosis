@@ -227,18 +227,9 @@ func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) 
 		return route.CandidateRoutes{}, err
 	}
 
-	// Retrieve results
-	resultStr, err := getCmd.Result()
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return route.CandidateRoutes{}, nil
-		}
-		return route.CandidateRoutes{}, err
-	}
-
 	// Parse routes
 	var routes route.CandidateRoutes
-	err = json.Unmarshal([]byte(resultStr), &routes)
+	err = json.Unmarshal([]byte(getCmd.Val()), &routes)
 	if err != nil {
 		return route.CandidateRoutes{}, err
 	}
