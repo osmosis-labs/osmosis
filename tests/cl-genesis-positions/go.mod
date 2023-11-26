@@ -55,6 +55,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0 // indirect
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.0.0 // indirect
 	github.com/cosmos/ibc-go/v7 v7.3.1 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
@@ -110,6 +111,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
