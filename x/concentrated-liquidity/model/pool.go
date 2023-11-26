@@ -316,3 +316,11 @@ func (p *Pool) ApplySwap(newLiquidity osmomath.Dec, newCurrentTick int64, newCur
 func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 	return p
 }
+
+// GetPoolDenoms implements types.ConcentratedPoolExtension.
+func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
+	return []string{
+		p.GetToken0(),
+		p.GetToken1(),
+	}
+}

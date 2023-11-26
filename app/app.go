@@ -93,23 +93,6 @@ import (
 	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v20/x/mint"
-
-	// skipabci "github.com/skip-mev/block-sdk/abci"
-	// signer_extraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
-	// "github.com/skip-mev/block-sdk/block"
-	// "github.com/skip-mev/block-sdk/block/base"
-	// defaultlane "github.com/skip-mev/block-sdk/lanes/base"
-	// "github.com/skip-mev/block-sdk/lanes/free"
-	// "github.com/skip-mev/block-sdk/lanes/mev"
-
-	// Block-sdk imports
-	blocksdkabci "github.com/skip-mev/block-sdk/abci"
-	signer_extraction_adapter "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
-	blocksdk "github.com/skip-mev/block-sdk/block"
-	blocksdkbase "github.com/skip-mev/block-sdk/block/base"
-	base_lane "github.com/skip-mev/block-sdk/lanes/base"
-	mev_lane "github.com/skip-mev/block-sdk/lanes/mev"
-	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 )
 
 const appName = "OsmosisApp"
@@ -189,12 +172,6 @@ type OsmosisApp struct {
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
-
-	// custom checkTx handler
-	checkTxHandler mev_lane.CheckTx
-
-	// lanes
-	MEVLane auctionante.MEVLane
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -374,37 +351,6 @@ func NewOsmosisApp(
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
-	// initialize block-sdk Mempool
-	maxTxs := 0 // no limit
-	cfg := blocksdkbase.LaneConfig{
-		Logger:          app.Logger(),
-		TxDecoder:       app.GetTxConfig().TxDecoder(),
-		TxEncoder:       app.GetTxConfig().TxEncoder(),
-		SignerExtractor: signer_extraction_adapter.NewDefaultAdapter(),
-		MaxBlockSpace:   sdk.ZeroDec(),
-		MaxTxs:          maxTxs,
-	}
-
-	baseLane := base_lane.NewDefaultLane(cfg)
-
-	mevLane := mev_lane.NewMEVLane(
-		cfg,
-		mev_lane.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder(), signer_extraction_adapter.NewDefaultAdapter()),
-	)
-	app.MEVLane = mevLane
-	// initialize mempool
-	mempool := blocksdk.NewLanedMempool(
-		app.Logger(),
-		true,
-		[]blocksdk.Lane{
-			mevLane,  // mev-lane is first to prioritize bids being placed at the TOB
-			baseLane, // finally, all the rest of txs...
-		}...,
-	)
-
-	// set the mempool first
-	app.SetMempool(mempool)
-
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
@@ -416,37 +362,14 @@ func NewOsmosisApp(
 		ante.DefaultSigVerificationGasConsumer,
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
-		app.AuctionKeeper,
-		app.GetTxConfig().TxEncoder(),
-		mevLane,
 	)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
-	mevLane.SetAnteHandler(anteHandler)
-	baseLane.SetAnteHandler(anteHandler)
 	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
-
-	handler := blocksdkabci.NewProposalHandler(
-		app.Logger(),
-		app.GetTxConfig().TxDecoder(),
-		app.GetTxConfig().TxEncoder(),
-		mempool,
-	)
-	app.SetPrepareProposal(handler.PrepareProposalHandler())
-	app.SetProcessProposal(handler.ProcessProposalHandler())
-
-	checkTxHandler := mev_lane.NewCheckTxHandler(
-		app.BaseApp,
-		encodingConfig.TxConfig.TxDecoder(),
-		mevLane,
-		anteHandler,
-		app.ChainID(),
-	)
-	app.SetCheckTx(checkTxHandler.CheckTx())
 
 	// Register snapshot extensions to enable state-sync for wasm.
 	if manager := app.SnapshotManager(); manager != nil {
@@ -482,19 +405,6 @@ func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 
 func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
-}
-
-// CheckTx will check the transaction with the provided checkTxHandler. We override the default
-// handler so that we can verify bid transactions before they are inserted into the mempool.
-// With the POB CheckTx, we can verify the bid transaction and all of the bundled transactions
-// before inserting the bid transaction into the mempool.
-func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	return app.checkTxHandler(req)
-}
-
-// SetCheckTx sets the checkTxHandler for the app.
-func (app *OsmosisApp) SetCheckTx(handler mev_lane.CheckTx) {
-	app.checkTxHandler = handler
 }
 
 // Name returns the name of the App.
