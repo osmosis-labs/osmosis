@@ -75,17 +75,16 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		return types.RoutingGraph{}, err
 	}
 
-	// Utilize the previous route map if it exists
-	// to determine which pools we can leave out of the route map
-	// due to insufficient liquidity
+	// Utilize the previous route map if it exists to determine which pools we can leave out of the route map
+	// due to insufficient liquidity. If it doesn't exist, we will utilize all pools, and the next time this function
+	// is called, we will have a previous route map to utilize.
 	var previousRouteGraph types.RoutingGraph
 	previousRouteMapFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &previousRouteGraph)
 	if err != nil {
 		return types.RoutingGraph{}, err
 	}
 
-	// In the unlikely event that the previous route map is empty,
-	// set previousRouteMapFound to false and utilize all pools since
+	// In the unlikely event that the previous route map is exists but is empty, set previousRouteMapFound to false and utilize all pools since
 	// we don't have any information about routes to reason about liquidity
 	previousRouteMap := convertToMap(&previousRouteGraph)
 	if len(previousRouteMap.Graph) == 0 {
