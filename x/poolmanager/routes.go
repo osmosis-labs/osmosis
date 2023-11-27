@@ -88,7 +88,7 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		// If we were able to find a previous route map,
 		// check if each pool meets the minimum liquidity threshold
 		// If not, skip the pool
-		if previousRouteMapFound {
+		if previousRouteMapFound && len(previousRouteMap.Graph) > 0 {
 			poolLiquidity := k.poolLiquidityToOSMO(ctx, pool, previousRouteMap)
 			if poolLiquidity.LT(minOsmoLiquidity) {
 				continue
