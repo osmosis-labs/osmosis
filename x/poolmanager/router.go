@@ -547,27 +547,6 @@ func (k Keeper) AllPools(
 	return sortedPools, nil
 }
 
-// AllPoolsWithMinOSMOValue returns all pools sorted by their ids
-// from every pool module registered in the
-// pool manager keeper that have a minimum OSMO value.
-func (k Keeper) AllPoolsWithMinOSMOValue(
-	ctx sdk.Context, minOSMOValue osmomath.Int,
-) ([]types.PoolI, error) {
-	//	Allocate the slice with the exact capacity to avoid reallocations.
-	poolCount := k.GetNextPoolId(ctx)
-	sortedPools := make([]types.PoolI, 0, poolCount)
-	for _, poolModule := range k.poolModules {
-		currentModulePools, err := poolModule.GetPools(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, lessPoolIFunc)
-	}
-
-	return sortedPools, nil
-}
-
 // ListPoolsByDenom returns all pools by denom sorted by their ids
 // from every pool module registered in the
 // pool manager keeper.

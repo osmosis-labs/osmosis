@@ -271,6 +271,7 @@ func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom st
 	}
 }
 
+// poolLiquidityToOSMO returns the total liquidity of a pool in terms of uosmo
 func (k Keeper) poolLiquidityToOSMO(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap) osmomath.Int {
 	poolDenoms := pool.GetPoolDenoms(ctx)
 	totalLiquidity := sdk.ZeroInt()
