@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {
 func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 	// Set up a pool paired with uosmo at 1:1 ratio
 	pool1 := s.PrepareConcentratedPoolWithCoins("uosmo", "bar")
-	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000))))
+	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("bar", sdk.NewInt(10000000000))))
 
 	// Routes not set, should return 0 with no error
 	osmoAmt, err := s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "bar", sdk.NewInt(10000000), types.RoutingGraphMap{})
@@ -198,7 +198,7 @@ func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 
 	// Set up a pool paired with uosmo at 2:1 ratio
 	pool2 := s.PrepareConcentratedPoolWithCoins("uosmo", "foo")
-	s.CreateFullRangePosition(pool2, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000)), sdk.NewCoin("foo", sdk.NewInt(10000000))))
+	s.CreateFullRangePosition(pool2, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000000)), sdk.NewCoin("foo", sdk.NewInt(10000000000))))
 
 	// Set routes and get it from state
 	_, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
