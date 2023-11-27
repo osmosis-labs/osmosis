@@ -53,6 +53,22 @@ func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }
 
+func FindRoutes(g types.RoutingGraphMap, start, end string, hops int) [][]*types.Route {
+	return findRoutes(g, start, end, hops)
+}
+
+func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string, routeMap types.RoutingGraphMap) (uint64, error) {
+	return k.getDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
+}
+
+func (k Keeper) InputAmountToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
+	return k.inputAmountToOSMO(ctx, inputDenom, amount, routeMap)
+}
+
+func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom string) (osmomath.Int, error) {
+	return k.getPoolLiquidityOfDenom(ctx, poolId, denom)
+}
+
 func ConvertToMap(routingGraph *types.RoutingGraph) types.RoutingGraphMap {
 	return convertToMap(routingGraph)
 }
