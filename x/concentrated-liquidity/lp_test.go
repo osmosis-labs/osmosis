@@ -11,7 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	// "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
@@ -406,7 +405,7 @@ func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint6
 	} else if ls == unlocked {
 		fullRangePositionData, _, err = s.Clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
 	} else {
-		positionData, err = s.clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		positionData, err = s.Clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 		return positionData.ID, positionData.Liquidity
 	}
