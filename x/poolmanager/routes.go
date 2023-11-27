@@ -21,6 +21,7 @@ var (
 	// If a new query is made, the cache will be reset.
 	directRouteCache map[string]uint64
 	spotPriceCache   map[string]osmomath.BigDec
+	shouldCache      = false
 )
 
 func init() {
@@ -67,9 +68,14 @@ func findRoutes(g types.RoutingGraphMap, start, end string, hops int) [][]*types
 // SetDenomPairRoutes sets the route map to be used for route calculations.
 func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) {
 	// Reset cache at the end of this function
+	// We only ever want to use cache in the helper functions if it is being called via this function,
+	// since this function is called at upgrade and epoch at determinstic times. If we used cache outside of this function,
+	// it's possible the cache will mess with the determinism of the route map.
+	shouldCache = true
 	defer func() {
 		directRouteCache = make(map[string]uint64)
 		spotPriceCache = make(map[string]osmomath.BigDec)
+		shouldCache = false
 	}()
 
 	// Get all the pools
@@ -207,6 +213,8 @@ func (k Keeper) getDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, out
 
 // inputAmountToOSMO transforms an input denom and its amount to uosmo
 // If a route is not found, returns 0 with no error.
+// Note, this method only utilizes cache in the getter and setter of denom pair routes.
+// TODO: When implementing getter, ensure we turn cache on for more optimal performance.
 func (k Keeper) inputAmountToTargetDenom(ctx sdk.Context, inputDenom, targetDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
 	if inputDenom == targetDenom {
 		return amount, nil
@@ -215,31 +223,45 @@ func (k Keeper) inputAmountToTargetDenom(ctx sdk.Context, inputDenom, targetDeno
 	var route uint64
 	var err error
 
-	// Check if the route is cached
-	if cachedRoute, ok := directRouteCache[inputDenom]; ok {
-		route = cachedRoute
+	if shouldCache {
+		// Check if the route is cached
+		if cachedRoute, ok := directRouteCache[inputDenom]; ok {
+			route = cachedRoute
+		} else {
+			// If not, get the route and cache it
+			route, err = k.getDirectRouteWithMostLiquidity(ctx, inputDenom, targetDenom, routeMap)
+			if err != nil {
+				return osmomath.ZeroInt(), nil
+			}
+			directRouteCache[inputDenom] = route
+		}
 	} else {
-		// If not, get the route and cache it
 		route, err = k.getDirectRouteWithMostLiquidity(ctx, inputDenom, targetDenom, routeMap)
 		if err != nil {
 			return osmomath.ZeroInt(), nil
 		}
-		directRouteCache[inputDenom] = route
 	}
 
 	var taretDenomPerInputToken osmomath.BigDec
 
-	// Check if the spot price is cached
-	spotPriceKey := fmt.Sprintf("%d:%s", route, inputDenom)
-	if cachedSpotPrice, ok := spotPriceCache[spotPriceKey]; ok {
-		taretDenomPerInputToken = cachedSpotPrice
+	if shouldCache {
+		// Check if the spot price is cached
+		spotPriceKey := fmt.Sprintf("%d:%s", route, inputDenom)
+		if cachedSpotPrice, ok := spotPriceCache[spotPriceKey]; ok {
+			taretDenomPerInputToken = cachedSpotPrice
+		} else {
+			// If not, calculate the spot price and cache it
+			taretDenomPerInputToken, err = k.RouteCalculateSpotPrice(ctx, route, targetDenom, inputDenom)
+			if err != nil {
+				return osmomath.ZeroInt(), err
+			}
+			spotPriceCache[spotPriceKey] = taretDenomPerInputToken
+		}
 	} else {
-		// If not, calculate the spot price and cache it
 		taretDenomPerInputToken, err = k.RouteCalculateSpotPrice(ctx, route, targetDenom, inputDenom)
 		if err != nil {
 			return osmomath.ZeroInt(), err
 		}
-		spotPriceCache[spotPriceKey] = taretDenomPerInputToken
 	}
 
 	// Convert the input denom to target denom
