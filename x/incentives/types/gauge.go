@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math/big"
 	time "time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -9,10 +10,13 @@ import (
 )
 
 var (
+	// 1 DYM
+	DYM = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+
 	// CreateGaugeFee is the fee required to create a new gauge.
-	CreateGaugeFee = sdk.NewInt(50 * 1_000_000)
+	CreateGaugeFee = DYM.Mul(sdk.NewInt(50))
 	// AddToGagugeFee is the fee required to add to gauge.
-	AddToGaugeFee = sdk.NewInt(25 * 1_000_000)
+	AddToGaugeFee = DYM.Mul(sdk.NewInt(25))
 )
 
 // NewGauge creates a new gauge struct given the required gauge parameters.
