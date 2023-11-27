@@ -124,9 +124,17 @@ func (s *KeeperTestSuite) TestGetSetDenomPairRoutes() {
 	expectedRoutingMap := poolmanager.ConvertToMap(&routingGraph)
 	s.Require().Equal(expectedRoutingMap, routingMap)
 
+	// Prepare pools
 	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("bar", sdk.NewInt(10000000000)))
 	s.PrepareConcentratedPoolWithCoins("uosmo", "foo")
 	s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"uosmo", "uion"})
+
+	// Create a pool that determines what the value of uosmo is in terms of USDC
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.MinValueForRoute.Denom = "usdc"
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	osmoUsdPool := s.PrepareConcentratedPoolWithCoins("uosmo", s.App.PoolManagerKeeper.GetParams(s.Ctx).MinValueForRoute.Denom)
+	s.CreateFullRangePosition(osmoUsdPool, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("usdc", sdk.NewInt(10000000000))))
 
 	// Set routes in state
 	// Because the previous routes are empty, we will use all pools in our routing graph
@@ -140,8 +148,8 @@ func (s *KeeperTestSuite) TestGetSetDenomPairRoutes() {
 	expectedRoutingMap = poolmanager.ConvertToMap(&routingGraph)
 	s.Require().Equal(expectedRoutingMap, routingMap)
 
-	// 4 entries for each denom (uosmo, uion, bar, foo)
-	s.Require().Equal(4, len(routingGraph.Entries))
+	// 5 entries for each denom (uosmo, uion, bar, foo, usdc)
+	s.Require().Equal(5, len(routingGraph.Entries))
 
 	// Set routes in state again
 	// Because the previous routes were not empty, we will now consider pools that meet the minimum liquidity threshold
@@ -155,14 +163,21 @@ func (s *KeeperTestSuite) TestGetSetDenomPairRoutes() {
 	expectedRoutingMap = poolmanager.ConvertToMap(&routingGraph)
 	s.Require().Equal(expectedRoutingMap, routingMap)
 
-	// 2 entries for uosmo and uion, since the balancer pool is the only pool that meets the minimum liquidity threshold
-	s.Require().Equal(2, len(routingGraph.Entries))
+	// 3 entries for uosmo, uion adn usdc, since the balancer pool and usdc pool are the only pools that meets the minimum liquidity threshold
+	s.Require().Equal(3, len(routingGraph.Entries))
 }
 
-func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {
+func (s *KeeperTestSuite) TestGetDirectRouteWithMostLiquidity() {
 	// Create two identical pools
 	pool1 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "bar")
 	pool2 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "bar")
+
+	// Create a pool to denominate uosmo in terms of usdc
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.MinValueForRoute.Denom = "usdc"
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	osmoUsdPool := s.PrepareConcentratedPoolWithCoins("uosmo", s.App.PoolManagerKeeper.GetParams(s.Ctx).MinValueForRoute.Denom)
+	s.CreateFullRangePosition(osmoUsdPool, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("usdc", sdk.NewInt(10000000000))))
 
 	// Pool 1 now has more liquidity
 	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000))))
@@ -174,7 +189,7 @@ func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {
 	s.Require().NoError(err)
 
 	// Pool 1 should be the route with most liquidity
-	route, err := s.App.PoolManagerKeeper.GetDirectOSMORouteWithMostLiquidity(s.Ctx, "bar", routeMap)
+	route, err := s.App.PoolManagerKeeper.GetDirectRouteWithMostLiquidity(s.Ctx, "bar", "uosmo", routeMap)
 	s.Require().NoError(err)
 	s.Require().Equal(pool1.GetId(), route)
 
@@ -188,18 +203,25 @@ func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {
 	s.Require().NoError(err)
 
 	// Pool 2 should be the route with most liquidity
-	route, err = s.App.PoolManagerKeeper.GetDirectOSMORouteWithMostLiquidity(s.Ctx, "bar", routeMap)
+	route, err = s.App.PoolManagerKeeper.GetDirectRouteWithMostLiquidity(s.Ctx, "bar", "uosmo", routeMap)
 	s.Require().NoError(err)
 	s.Require().Equal(pool2.GetId(), route)
 }
 
-func (s *KeeperTestSuite) TestInputAmountToOSMO() {
+func (s *KeeperTestSuite) TestInputAmountToTargetDenom() {
 	// Set up a pool paired with uosmo at 1:1 ratio
 	pool1 := s.PrepareConcentratedPoolWithCoins("uosmo", "bar")
 	s.CreateFullRangePosition(pool1, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("bar", sdk.NewInt(10000000000))))
 
+	// Set a usdc pool to denominate uosmo in terms of usdc
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.MinValueForRoute.Denom = "usdc"
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	osmoUsdPool := s.PrepareConcentratedPoolWithCoins("uosmo", s.App.PoolManagerKeeper.GetParams(s.Ctx).MinValueForRoute.Denom)
+	s.CreateFullRangePosition(osmoUsdPool, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("usdc", sdk.NewInt(10000000000))))
+
 	// Routes not set, should return 0 with no error
-	osmoAmt, err := s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "bar", sdk.NewInt(10000000), types.RoutingGraphMap{})
+	osmoAmt, err := s.App.PoolManagerKeeper.InputAmountToTargetDenom(s.Ctx, "bar", "uosmo", sdk.NewInt(10000000), types.RoutingGraphMap{})
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.ZeroInt(), osmoAmt)
 
@@ -210,7 +232,7 @@ func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 	s.Require().NoError(err)
 
 	// With 1:1 ratio, input amount should be equal to output amount
-	osmoAmt, err = s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "bar", sdk.NewInt(10000000), routeMap)
+	osmoAmt, err = s.App.PoolManagerKeeper.InputAmountToTargetDenom(s.Ctx, "bar", "uosmo", sdk.NewInt(10000000), routeMap)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), osmoAmt)
 
@@ -225,7 +247,7 @@ func (s *KeeperTestSuite) TestInputAmountToOSMO() {
 	s.Require().NoError(err)
 
 	// With 2:1 ratio, input amount should be half of the output amount
-	osmoAmt, err = s.App.PoolManagerKeeper.InputAmountToOSMO(s.Ctx, "foo", sdk.NewInt(10000000), routeMap)
+	osmoAmt, err = s.App.PoolManagerKeeper.InputAmountToTargetDenom(s.Ctx, "foo", "uosmo", sdk.NewInt(10000000), routeMap)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(20000000), osmoAmt)
 }

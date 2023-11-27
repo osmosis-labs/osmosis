@@ -57,12 +57,12 @@ func FindRoutes(g types.RoutingGraphMap, start, end string, hops int) [][]*types
 	return findRoutes(g, start, end, hops)
 }
 
-func (k Keeper) GetDirectOSMORouteWithMostLiquidity(ctx sdk.Context, inputDenom string, routeMap types.RoutingGraphMap) (uint64, error) {
-	return k.getDirectOSMORouteWithMostLiquidity(ctx, inputDenom, routeMap)
+func (k Keeper) GetDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, outputDenom string, routeMap types.RoutingGraphMap) (uint64, error) {
+	return k.getDirectRouteWithMostLiquidity(ctx, inputDenom, outputDenom, routeMap)
 }
 
-func (k Keeper) InputAmountToOSMO(ctx sdk.Context, inputDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
-	return k.inputAmountToOSMO(ctx, inputDenom, amount, routeMap)
+func (k Keeper) InputAmountToTargetDenom(ctx sdk.Context, inputDenom, targetDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
+	return k.inputAmountToTargetDenom(ctx, inputDenom, targetDenom, amount, routeMap)
 }
 
 func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom string) (osmomath.Int, error) {

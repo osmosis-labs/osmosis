@@ -32,14 +32,12 @@ message Params {
   // about.
   repeated string authorized_quote_denoms = 3
       [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
-  // min_osmo_value_for_routes declares what the minimum value a pool must
-  // be worth in OSMO in order to be considered for inclusion in the in-state
+  // min_value_for_route declares what the minimum value a pool must
+  // be worth in order to be considered for inclusion in the in-state
   // pool router.
-  string min_osmo_value_for_routes = 4 [
-
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.moretags) = "yaml:\"min_osmo_value_for_routes\"",
-    (gogoproto.nullable) = false
+  cosmos.base.v1beta1.Coin min_value_for_route = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
 
