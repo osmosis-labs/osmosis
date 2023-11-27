@@ -21,6 +21,7 @@ var (
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
+	KeyMinOsmoValueForRoutes                          = []byte("MinOsmoValueForRoutes")
 )
 
 // ParamTable for gamm module.
@@ -32,7 +33,8 @@ func NewParams(poolCreationFee sdk.Coins,
 	defaultTakerFee osmomath.Dec,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
-	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
+	communityPoolDenomToSwapNonWhitelistedAssetsTo string,
+	minOsmoValueForRoutes osmomath.Int) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
@@ -43,6 +45,7 @@ func NewParams(poolCreationFee sdk.Coins,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
 		AuthorizedQuoteDenoms: authorizedQuoteDenoms,
+		MinOsmoValueForRoutes: minOsmoValueForRoutes,
 	}
 }
 
@@ -70,6 +73,7 @@ func DefaultParams() Params {
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
+		MinOsmoValueForRoutes: osmomath.NewInt(5000000000), // 5,000 OSMO
 	}
 }
 
@@ -99,6 +103,9 @@ func (p Params) Validate() error {
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
 		return err
 	}
+	if err := validateMinOsmoValueForRoutes(p.MinOsmoValueForRoutes); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -114,6 +121,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
+		paramtypes.NewParamSetPair(KeyMinOsmoValueForRoutes, &p.MinOsmoValueForRoutes, validateMinOsmoValueForRoutes),
 	}
 }
 
@@ -247,5 +255,19 @@ func validateDenomPairTakerFees(pairs []DenomPairTakerFee) error {
 			return fmt.Errorf("taker fee must be between 0 and 1: %s", takerFee.String())
 		}
 	}
+	return nil
+}
+
+func validateMinOsmoValueForRoutes(i interface{}) error {
+	minOsmoValueForRoutes, ok := i.(osmomath.Int)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if minOsmoValueForRoutes.IsNegative() {
+		return fmt.Errorf("min osmo value for routes cannot be negative")
+	}
+
 	return nil
 }

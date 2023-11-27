@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	minOsmoLiquidity = sdk.NewInt(5000000000) // 5000 OSMO
 	directRouteCache map[string]uint64
 	spotPriceCache   map[string]osmomath.BigDec
 )
@@ -92,6 +91,9 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 	if len(previousRouteMap.Graph) == 0 {
 		previousRouteMapFound = false
 	}
+
+	// Retrieve minimum liquidity threshold from params
+	minOsmoLiquidity := k.GetParams(ctx).MinOsmoValueForRoutes
 
 	// Create a routingGraph to represent possible routes between tokens
 	var routingGraph types.RoutingGraph

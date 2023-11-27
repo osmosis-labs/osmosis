@@ -35,13 +35,17 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.SetupWithCustomChainId(v21.TestingChainId)
 	s.PrepareAllSupportedPools()
+
+	// The route map should be empty before the upgrade
 	_, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
 	s.Require().Error(err)
+
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
+	// The route map should be populated after the upgrade
 	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().NotNil(routeMap)
