@@ -11,6 +11,8 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
@@ -137,6 +139,11 @@ func CreateUpgradeHandler(
 		// Migrate Tendermint consensus parameters from x/params module to a deprecated x/consensus module.
 		// The old params module is required to still be imported in your app.go in order to handle this migration.
 		baseapp.MigrateParams(ctx, baseAppLegacySS, &keepers.ConsensusParamsKeeper)
+
+		err := keepers.ICQKeeper.SetParams(ctx, icqtypes.DefaultParams())
+		if err != nil {
+			return nil, err
+		}
 
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
