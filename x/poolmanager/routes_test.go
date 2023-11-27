@@ -124,9 +124,12 @@ func (s *KeeperTestSuite) TestGetSetDenomPairRoutes() {
 	expectedRoutingMap := poolmanager.ConvertToMap(&routingGraph)
 	s.Require().Equal(expectedRoutingMap, routingMap)
 
-	s.PrepareAllSupportedPools()
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("bar", sdk.NewInt(10000000000)))
+	s.PrepareConcentratedPoolWithCoins("uosmo", "foo")
+	s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"uosmo", "uion"})
 
 	// Set routes in state
+	// Because the previous routes are empty, we will use all pools in our routing graph
 	routingGraph, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(routingGraph)
@@ -137,8 +140,23 @@ func (s *KeeperTestSuite) TestGetSetDenomPairRoutes() {
 	expectedRoutingMap = poolmanager.ConvertToMap(&routingGraph)
 	s.Require().Equal(expectedRoutingMap, routingMap)
 
-	// 4 pools, 2 routes per pool
-	s.Require().Equal(8, len(routingGraph.Entries))
+	// 4 entries for each denom (uosmo, uion, bar, foo)
+	s.Require().Equal(4, len(routingGraph.Entries))
+
+	// Set routes in state again
+	// Because the previous routes were not empty, we will now consider pools that meet the minimum liquidity threshold
+	routingGraph, err = s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(routingGraph)
+
+	// Get routes from state and compare to expected
+	routingMap, err = s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+	expectedRoutingMap = poolmanager.ConvertToMap(&routingGraph)
+	s.Require().Equal(expectedRoutingMap, routingMap)
+
+	// 2 entries for uosmo and uion, since the balancer pool is the only pool that meets the minimum liquidity threshold
+	s.Require().Equal(2, len(routingGraph.Entries))
 }
 
 func (s *KeeperTestSuite) TestGetDirectOSMORouteWithMostLiquidity() {

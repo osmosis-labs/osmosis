@@ -64,6 +64,12 @@ func findRoutes(g types.RoutingGraphMap, start, end string, hops int) [][]*types
 
 // SetDenomPairRoutes sets the route map to be used for route calculations
 func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) {
+	// Reset cache at the end of this function
+	defer func() {
+		directRouteCache = make(map[string]uint64)
+		spotPriceCache = make(map[string]osmomath.BigDec)
+	}()
+
 	// Get all the pools
 	pools, err := k.AllPools(ctx)
 	if err != nil {
@@ -78,7 +84,14 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 	if err != nil {
 		return types.RoutingGraph{}, err
 	}
+
+	// In the unlikely event that the previous route map is empty,
+	// set previousRouteMapFound to false and utilize all pools since
+	// we don't have any information about routes to reason about liquidity
 	previousRouteMap := convertToMap(&previousRouteGraph)
+	if len(previousRouteMap.Graph) == 0 {
+		previousRouteMapFound = false
+	}
 
 	// Create a routingGraph to represent possible routes between tokens
 	var routingGraph types.RoutingGraph
@@ -88,7 +101,7 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		// If we were able to find a previous route map,
 		// check if each pool meets the minimum liquidity threshold
 		// If not, skip the pool
-		if previousRouteMapFound && len(previousRouteMap.Graph) > 0 {
+		if previousRouteMapFound {
 			poolLiquidity := k.poolLiquidityToOSMO(ctx, pool, previousRouteMap)
 			if poolLiquidity.LT(minOsmoLiquidity) {
 				continue
@@ -195,6 +208,12 @@ func (k Keeper) inputAmountToOSMO(ctx sdk.Context, inputDenom string, amount osm
 		return amount, nil
 	}
 
+	// TODO: Remove this when we implement the actual route query
+	defer func() {
+		directRouteCache = make(map[string]uint64)
+		spotPriceCache = make(map[string]osmomath.BigDec)
+	}()
+
 	var route uint64
 	var err error
 
@@ -282,7 +301,8 @@ func (k Keeper) poolLiquidityToOSMO(ctx sdk.Context, pool types.PoolI, routeMap 
 		}
 		uosmoAmount, err := k.inputAmountToOSMO(ctx, denom, liquidity, routeMap)
 		if err != nil {
-			panic(err)
+			// no direct route found, so skip this denom
+			continue
 		}
 		totalLiquidity = totalLiquidity.Add(uosmoAmount)
 	}
