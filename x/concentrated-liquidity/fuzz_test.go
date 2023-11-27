@@ -1,3 +1,5 @@
+//go:build !norace
+
 package concentrated_liquidity_test
 
 import (
@@ -31,12 +33,6 @@ type swapAmountsMismatchErr struct {
 
 func (e swapAmountsMismatchErr) Error() string {
 	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
-}
-
-type positionAndLiquidity struct {
-	positionId   uint64
-	liquidity    osmomath.Dec
-	accountIndex int
 }
 
 func TestFuzz_Many(t *testing.T) {
@@ -203,6 +199,15 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 	} else {
 		targetTick += 1
 	}
+	// TODO: remove this limit upon completion of the refactor in:
+	// https://github.com/osmosis-labs/osmosis/issues/5726
+	// Due to an intermediary refactor step where we have
+	// full range positions created in the extended full range it
+	// sometimes tries to swap to the V2 MinInitializedTick that
+	// is not supported yet by the rest of the system.
+	if targetTick < types.MinInitializedTick {
+		return false, false
+	}
 	return s.swapNearTickBoundary(r, pool, targetTick, zfo)
 }
 
@@ -227,16 +232,6 @@ func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool typ
 }
 
 func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, targetTick int64, zfo bool) (didSwap bool, fatalErr bool) {
-	// TODO: remove this limit upon completion of the refactor in:
-	// https://github.com/osmosis-labs/osmosis/issues/5726
-	// Due to an intermediary refactor step where we have
-	// full range positions created in the extended full range it
-	// sometimes tries to swap to the V2 MinInitializedTick that
-	// is not supported yet by the rest of the system.
-	if targetTick < types.MinInitializedTick {
-		return false, false
-	}
-
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	// TODO: Confirm accuracy of this method.
 	amountInRequired, curLiquidity, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zfo, false)
