@@ -209,12 +209,6 @@ func (k Keeper) inputAmountToOSMO(ctx sdk.Context, inputDenom string, amount osm
 		return amount, nil
 	}
 
-	// TODO: Remove this when we implement the actual route query
-	defer func() {
-		directRouteCache = make(map[string]uint64)
-		spotPriceCache = make(map[string]osmomath.BigDec)
-	}()
-
 	var route uint64
 	var err error
 

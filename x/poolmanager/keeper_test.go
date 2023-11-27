@@ -32,6 +32,7 @@ var (
 	testAdminAddresses                                 = []string{"osmo106x8q2nv7xsg7qrec2zgdf3vvq0t3gn49zvaha", "osmo105l5r3rjtynn7lg362r2m9hkpfvmgmjtkglsn9"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
 	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
+	testMinOsmoValueForRoutes                          = sdk.NewInt(6000000000)
 
 	testPoolRoute = []types.ModuleRoute{
 		{
@@ -106,6 +107,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
+			MinOsmoValueForRoutes: testMinOsmoValueForRoutes,
 		},
 		NextPoolId:       testExpectedPoolId,
 		PoolRoutes:       testPoolRoute,
@@ -121,6 +123,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testAdminAddresses, params.TakerFeeParams.AdminAddresses)
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
+	s.Require().Equal(testMinOsmoValueForRoutes, params.MinOsmoValueForRoutes)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
 	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
 	s.Require().Equal(testTakerFeesTracker.TakerFeesToCommunityPool, s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx))
@@ -139,6 +142,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
+			MinOsmoValueForRoutes: testMinOsmoValueForRoutes,
 		},
 		NextPoolId:       testExpectedPoolId,
 		PoolRoutes:       testPoolRoute,
@@ -154,6 +158,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testAdminAddresses, genesis.Params.TakerFeeParams.AdminAddresses)
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
+	s.Require().Equal(testMinOsmoValueForRoutes, genesis.Params.MinOsmoValueForRoutes)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, genesis.TakerFeesTracker.TakerFeesToStakers)
 	s.Require().Equal(testTakerFeesTracker.TakerFeesToCommunityPool, genesis.TakerFeesTracker.TakerFeesToCommunityPool)
