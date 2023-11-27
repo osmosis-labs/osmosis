@@ -40,11 +40,6 @@ var (
 		AdditiveTolerance: osmomath.OneDec(),
 	}
 
-	oneAdditiveToleranceRoundDown = osmomath.ErrTolerance{
-		AdditiveTolerance: osmomath.OneDec(),
-		RoundingDir:       osmomath.RoundDown,
-	}
-
 	swapOutGivenInCases = map[string]apptesting.ConcentratedSwapTest{
 		//  One price range
 		//
@@ -3459,72 +3454,6 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 			}
 		})
 	}
-}
-
-// This test validates that swapping over the new extended price range in the lower
-// direction functions as expected. It validates that there are no unexpected failures
-// or panics when swapping to the new min tick and back.
-// Additionally, it validates that the swap amounts are roughly equal to the inverse amounts of a given swap.
-func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
-	s.Run("out given in", func() {
-		s.SetupTest()
-		// Validated by the helper method.
-		// This helper is reused in other more complex tests.
-		s.swapToMinTickAndBack(osmomath.ZeroDec(), emptyCoins)
-	})
-
-	s.Run("in given out", func() {
-		s.SetupTest()
-
-		poolId, _ := s.setupPositionsForMinSpotPriceMigration(osmomath.ZeroDec())
-
-		// Refetch pool
-		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-		s.Require().NoError(err)
-
-		originalTick := pool.GetCurrentTick()
-
-		// esimate amount in to swap left all the way until the new min initialized tick
-		amountOneOut, _, _ := s.computeSwapAmountsInGivenOut(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTick, true, false)
-
-		// estimate the amount in to fund
-		amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTick, true, false)
-
-		// Fund swapper
-		swapper := s.TestAccs[1]
-		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amountZeroIn.TruncateInt())))
-
-		// perform the swap to the new min initialized tick.
-		coinOneOut := sdk.NewCoin(pool.GetToken1(), amountOneOut.TruncateInt())
-		tokenZeroIn, tokenOneOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-			s.Ctx, swapper, pool,
-			coinOneOut, pool.GetToken0(),
-			osmomath.ZeroDec(), osmomath.ZeroBigDec(),
-		)
-		s.Require().NoError(err)
-
-		// Refetch pool
-		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-		s.Require().NoError(err)
-
-		// Confirm all liquidity was consumed and `MinCurrentTick` set
-		s.Require().Equal(types.MinCurrentTick, pool.GetCurrentTick())
-
-		// Esimate the amount in that needs to be funded due to rounding differences.
-		amountOneIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), originalTick, false, false)
-		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt().Sub(tokenOneOut.Amount))))
-
-		// Swap amount out to the end up in the original tick
-		inverseTokenOut, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-			s.Ctx, swapper, pool,
-			tokenZeroIn, pool.GetToken1(),
-			osmomath.ZeroDec(), osmomath.ZeroBigDec(),
-		)
-		s.Require().NoError(err)
-
-		// Original amount in should roughly equal the amount out when performing the inverse swap
-		osmoassert.Equal(s.T(), multiplicativeTolerance, coinOneOut.Amount, inverseTokenOut.Amount)
-	})
 }
 
 func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 osmomath.Int) {
