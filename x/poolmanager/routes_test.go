@@ -332,3 +332,106 @@ func TestConvertToMap(t *testing.T) {
 		t.Errorf("Unexpected route: %+v", routes.Routes[0])
 	}
 }
+
+func (s *KeeperTestSuite) TestPoolLiquidityToTargetDenom() {
+	poolInfo := s.PrepareAllSupportedPools()
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("bar", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("baz", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("foo", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("axlusdc", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("gravusdc", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000000)), sdk.NewCoin("eth", sdk.NewInt(10000000000)))
+
+	// Set routes
+	s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+
+	// Balancer
+	// 5000000 bar, 5000000 baz, 5000000 foo, 5000000 uosmo = 20000000 usdc
+	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.BalancerPoolID)
+	s.Require().NoError(err)
+	poolLiq := s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, balancerPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(20000000), poolLiq)
+
+	// StableSwap
+	// 10000000 bar, 10000000 baz, 10000000 foo = 30000000 usdc
+	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.StableSwapPoolID)
+	s.Require().NoError(err)
+	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, stableSwapPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(30000000), poolLiq)
+
+	// Cosmwasm
+	// 10000000 axlusdc, 10000000 gravusdc = 20000000 usdc
+	token := sdk.NewCoins(sdk.NewCoin("axlusdc", sdk.NewInt(10000000)), sdk.NewCoin("gravusdc", sdk.NewInt(10000000)))
+	s.FundAcc(s.TestAccs[0], token)
+	s.JoinTransmuterPool(s.TestAccs[0], poolInfo.CosmWasmPoolID, token)
+	cosmWasmPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.CosmWasmPoolID)
+	s.Require().NoError(err)
+	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, cosmWasmPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(20000000), poolLiq)
+
+	// Concentrated
+	// 10000000 eth, 9999991 usdc = 19999991 usdc
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolInfo.ConcentratedPoolID)
+	s.Require().NoError(err)
+	clPoolExtension, ok := clPool.(cltypes.ConcentratedPoolExtension)
+	s.Require().True(ok)
+	s.CreateFullRangePosition(clPoolExtension, sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000)), sdk.NewCoin("eth", sdk.NewInt(10000000))))
+	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, clPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(19999991), poolLiq)
+}
+
+func (s *KeeperTestSuite) TestPoolLiquidityFromOSMOToTargetDenom() {
+	poolInfo := s.PrepareAllSupportedPools()
+
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("bar", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("baz", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("foo", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("axlusdc", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("gravusdc", sdk.NewInt(10000000000)))
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("eth", sdk.NewInt(10000000000)))
+
+	// 0.5 spot price
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoin("usdc", sdk.NewInt(20000000000)), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+
+	// Set routes
+	s.App.PoolManagerKeeper.SetDenomPairRoutes(s.Ctx)
+	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
+	s.Require().NoError(err)
+
+	// Balancer
+	// 5000000 bar, 5000000 baz, 5000000 foo, 5000000 uosmo = 20000000 usdc * 0.5 spot price = 10000000 uosmo
+	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.BalancerPoolID)
+	s.Require().NoError(err)
+	poolLiq := s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, balancerPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
+
+	// StableSwap
+	// 10000000 bar, 10000000 baz, 10000000 foo = 30000000 usdc * 0.5 spot price = 15000000 uosmo
+	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.StableSwapPoolID)
+	s.Require().NoError(err)
+	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, stableSwapPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(15000000), poolLiq)
+
+	// Cosmwasm
+	// 10000000 axlusdc, 10000000 gravusdc = 20000000 usdc * 0.5 spot price = 10000000 uosmo
+	token := sdk.NewCoins(sdk.NewCoin("axlusdc", sdk.NewInt(10000000)), sdk.NewCoin("gravusdc", sdk.NewInt(10000000)))
+	s.FundAcc(s.TestAccs[0], token)
+	s.JoinTransmuterPool(s.TestAccs[0], poolInfo.CosmWasmPoolID, token)
+	cosmWasmPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.CosmWasmPoolID)
+	s.Require().NoError(err)
+	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, cosmWasmPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
+
+	// Concentrated
+	// 10000000 eth, 4999996 usdc = 14999996 usdc * 0.5 spot price = 7499998 uosmo
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolInfo.ConcentratedPoolID)
+	s.Require().NoError(err)
+	clPoolExtension, ok := clPool.(cltypes.ConcentratedPoolExtension)
+	s.Require().True(ok)
+	s.CreateFullRangePosition(clPoolExtension, sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000)), sdk.NewCoin("eth", sdk.NewInt(10000000))))
+	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, clPool, routeMap, "usdc")
+	s.Require().Equal(osmomath.NewInt(7499998), poolLiq)
+}

@@ -72,3 +72,11 @@ func (k Keeper) GetPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom st
 func ConvertToMap(routingGraph *types.RoutingGraph) types.RoutingGraphMap {
 	return convertToMap(routingGraph)
 }
+
+func (k Keeper) PoolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) osmomath.Int {
+	return k.poolLiquidityToTargetDenom(ctx, pool, routeMap, targetDenom)
+}
+
+func (k Keeper) PoolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) osmomath.Int {
+	return k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, routeMap, targetDenom)
+}
