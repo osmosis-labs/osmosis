@@ -37,7 +37,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
@@ -106,7 +105,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 )
 
 const (
@@ -133,7 +131,6 @@ type AppKeepers struct {
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   bankkeeper.BaseKeeper
 	AuthzKeeper                  *authzkeeper.Keeper
-	AuctionKeeper                *auctionkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
 	DowntimeKeeper               *downtimedetector.Keeper
@@ -297,12 +294,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	icqKeeper := icqkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[icqtypes.StoreKey],
-		appKeepers.GetSubspace(icqtypes.ModuleName),
 		appKeepers.IBCKeeper.ChannelKeeper, // may be replaced with middleware
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedICQKeeper,
 		bApp.GRPCQueryRouter(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.ICQKeeper = &icqKeeper
 
@@ -461,18 +458,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
-	// Create the Skip Auction Keeper
-	auctionKeeper := auctionkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[auctiontypes.StoreKey],
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper,
-		stakingKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	appKeepers.AuctionKeeper = &auctionKeeper
-
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],
 		appKeepers.GetSubspace(valsetpreftypes.ModuleName),
@@ -625,13 +610,13 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appKeepers.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[packetforwardtypes.StoreKey],
-		appKeepers.GetSubspace(packetforwardtypes.ModuleName),
 		appKeepers.TransferKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
 		// The ICS4Wrapper is replaced by the HooksICS4Wrapper instead of the channel so that sending can be overridden by the middleware
 		appKeepers.HooksICS4Wrapper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	packetForwardMiddleware := packetforward.NewIBCMiddleware(
 		transfer.NewIBCModule(*appKeepers.TransferKeeper),
@@ -718,7 +703,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
-	paramsKeeper.Subspace(auctiontypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
@@ -847,6 +831,5 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		auctiontypes.StoreKey,
 	}
 }
