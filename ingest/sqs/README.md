@@ -11,6 +11,32 @@ The use case for this is performing certain data and computationally intensive t
 the chain node or the clients. For example, routing falls under this category because it requires
 all pool data for performing the complex routing algorithm.
 
+## Development Setup
+
+### Mainnet
+
+To setup a development environment against mainnet, sync the node in the default
+home directory and then run the following commands:
+
+```bash
+# Starts a detached redis container, to stop: 'make redis-stop'
+make redis-start
+
+# Rebuild the binary and start the node with sqs enabled in-process
+make sqs-start
+```
+
+### Localosmosis
+
+It is also possible to run the sidecar query server against a localosmosis node.
+
+```bash
+# Starts localosmosis with all services enabled and a few pools pre-created
+# make localnset-start for empty state
+# See localosmosis docs for more details
+make localnet-start-with-state
+```
+
 ## Data
 
 ### Pools
