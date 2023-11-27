@@ -90,6 +90,12 @@ type FuzzTestSuite struct {
 	collectedErrors []error
 }
 
+type positionAndLiquidity struct {
+	positionId   uint64
+	liquidity    osmomath.Dec
+	accountIndex int
+}
+
 type KeeperTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 	clk *concentrated_liquidity.Keeper

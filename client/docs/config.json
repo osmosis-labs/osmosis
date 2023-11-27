@@ -7,7 +7,7 @@
   },
   "apis": [
     {
-      "url": "../../tmp-swagger-gen/osmosis/epochs/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/epochs/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "EpochsParams"
@@ -15,7 +15,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "GAMMParams"
@@ -23,7 +23,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/incentives/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/incentives/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IncentivesParams"
@@ -31,7 +31,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/lockup/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/lockup/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "LockupParams"
@@ -39,7 +39,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/mint/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "MintParams"
@@ -47,7 +47,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/pool-incentives/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/poolincentives/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "LockableDurations": "PoolLockableDurations",
@@ -56,7 +56,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/superfluid/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/superfluid/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "SuperfluidParams"
@@ -64,7 +64,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/tokenfactory/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/tokenfactory/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "TokenfactoryParams"
@@ -72,7 +72,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/txfees/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/osmosis/txfees/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "TxFeesParams",
@@ -81,7 +81,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "AuthParams"
@@ -89,7 +89,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/authz/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/authz/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "AuthzParams"
@@ -97,7 +97,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/bank/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/bank/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "BankParams"
@@ -105,7 +105,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "BaseParams"
@@ -113,7 +113,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/distribution/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/distribution/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "DistributionParams"
@@ -121,7 +121,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/evidence/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/evidence/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "EvidenceParams"
@@ -129,7 +129,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/feegrant/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/feegrant/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "FeegrantParams"
@@ -137,7 +137,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/gov/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/gov/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "GovParams"
@@ -145,7 +145,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "CosmosMintParams"
@@ -153,7 +153,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/params/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/params/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "Params"
@@ -161,7 +161,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/slashing/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/slashing/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "SlashingParams"
@@ -169,7 +169,7 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/staking/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/staking/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "StakingParams",
@@ -179,13 +179,13 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/tx/v1beta1/service.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/tx/v1beta1/service.swagger.json",
       "dereference": {
         "circular": "ignore"
       }
     },
     {
-      "url": "../../tmp-swagger-gen/cosmos/upgrade/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/upgrade/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "UpgradeParams"
