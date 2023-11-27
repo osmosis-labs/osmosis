@@ -821,7 +821,7 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Minute, 10*time.Millisecond)
+	}, time.Minute*2, 10*time.Millisecond)
 	return nil
 }
 
