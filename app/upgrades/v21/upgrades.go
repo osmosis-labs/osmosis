@@ -60,6 +60,9 @@ func CreateUpgradeHandler(
 		}
 		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 
+		// Set the minimum pool value to 5,000 USDC in order to be included in the on-chain router.
+		keepers.PoolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyMinValueForRoute, poolmanagertypes.DefaultParams().MinValueForRoute)
+
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
 		// Set param key table for params module migration
 		for _, subspace := range keepers.ParamsKeeper.GetSubspaces() {
