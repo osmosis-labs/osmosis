@@ -38,17 +38,18 @@ var (
 		Denoms:               []string{routertesting.Denom0, routertesting.Denom1},
 		SpreadFactor:         routertesting.DefaultSpreadFactor,
 		PoolType:             poolmanagertypes.Concentrated,
-		TickModel: &domain.TickModel{
-			Ticks: []domain.LiquidityDepthsWithRange{
-				{
-					LiquidityAmount: osmomath.OneDec(),
-					LowerTick:       1,
-					UpperTick:       2,
-				},
+	}
+
+	defaultTickModel = domain.TickModel{
+		Ticks: []domain.LiquidityDepthsWithRange{
+			{
+				LiquidityAmount: osmomath.OneDec(),
+				LowerTick:       1,
+				UpperTick:       2,
 			},
-			CurrentTickIndex: 0,
-			HasNoLiquidity:   false,
 		},
+		CurrentTickIndex: 0,
+		HasNoLiquidity:   false,
 	}
 )
 
@@ -83,7 +84,9 @@ func TestStoreFilesAndReadBack(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	err = parsing.StorePools([]domain.PoolI{testPoolToMarshal}, testFileName)
+	err = parsing.StorePools([]domain.PoolI{testPoolToMarshal}, map[uint64]domain.TickModel{
+		testPoolToMarshal.GetId(): defaultTickModel,
+	}, testFileName)
 	require.NoError(t, err)
 
 	pools, _, err := parsing.ReadPools(testFileName)

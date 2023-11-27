@@ -196,13 +196,26 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 // StoreRouterStateFiles implements domain.RouterUsecase.
 // TODO: clean up
 func (r *routerUseCaseImpl) StoreRouterStateFiles(ctx context.Context) error {
+	// These pools do not contain tick model
 	pools, err := r.poolsUsecase.GetAllPools(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	if err := parsing.StorePools(pools, "pools.json"); err != nil {
+	concentratedpoolIDs := make([]uint64, 0, len(pools))
+	for _, pool := range pools {
+		if pool.GetType() == poolmanagertypes.Concentrated {
+			concentratedpoolIDs = append(concentratedpoolIDs, pool.GetId())
+		}
+	}
+
+	tickModelMap, err := r.poolsUsecase.GetTickModelMap(ctx, concentratedpoolIDs)
+	if err != nil {
+		return err
+	}
+
+	if err := parsing.StorePools(pools, tickModelMap, "pools.json"); err != nil {
 		return err
 	}
 

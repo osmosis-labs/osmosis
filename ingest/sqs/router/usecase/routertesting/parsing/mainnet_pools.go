@@ -2,6 +2,7 @@ package parsing
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
@@ -21,7 +22,7 @@ type SerializedPool struct {
 }
 
 // StorePools stores the pools to a file.
-func StorePools(actualPools []domain.PoolI, poolsFile string) error {
+func StorePools(actualPools []domain.PoolI, tickModelMap map[uint64]domain.TickModel, poolsFile string) error {
 	_, err := os.Stat(poolsFile)
 	if os.IsNotExist(err) {
 		file, err := os.Create(poolsFile)
@@ -33,6 +34,18 @@ func StorePools(actualPools []domain.PoolI, poolsFile string) error {
 		pools := make([]json.RawMessage, 0, len(actualPools))
 
 		for _, pool := range actualPools {
+			if pool.GetType() == poolmanagertypes.Concentrated {
+				tickModel, ok := tickModelMap[pool.GetId()]
+				if !ok {
+					return fmt.Errorf("no tick model in map %s", domain.ConcentratedTickModelNotSet{
+						PoolId: pool.GetId(),
+					})
+				}
+				if err := pool.SetTickModel(&tickModel); err != nil {
+					return err
+				}
+			}
+
 			poolData, err := MarshalPool(pool)
 			if err != nil {
 				return err

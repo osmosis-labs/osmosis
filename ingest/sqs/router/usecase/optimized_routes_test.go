@@ -507,7 +507,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 
 			expectFiltered: true,
 		},
-		"filtered: same pool id between routes - second removed": {
+		"not filtered: same pool id between routes": {
 			routes: [][]usecase.CandidatePoolWrapper{
 				{
 					defaultDenomOneTwoOutTwoPool,
@@ -517,9 +517,6 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 				},
 			},
 			tokenInDenom: DenomOne,
-
-			expectFiltered:            true,
-			expectFilteredRouteLength: 1,
 		},
 	}
 
@@ -604,6 +601,39 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_UOSMOUION() {
 
 	// Validate that the pool is pool 2
 	s.Require().Equal(uint64(2), quote.GetRoute()[0].GetPools()[0].GetId())
+}
+
+func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
+	config := defaultRouterConfig
+	config.MaxPoolsPerRoute = 4
+	config.MaxRoutes = 10
+	config.MaxSplitRoutes = 3
+
+	var (
+		amountIn = osmomath.NewInt(100_000_000)
+	)
+
+	router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
+
+	routes := s.constructRoutesFromMainnetPools(router, AKT, UMEE, tickMap, takerFeeMap)
+
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(AKT, amountIn), UMEE, routes)
+
+	// We only validate that error does not occur without actually validating the quote.
+	s.Require().NoError(err)
+
+	// Expecting 1 route based on mainnet state
+	s.Require().Len(quote.GetRoute(), 1)
+
+	route := quote.GetRoute()[0]
+	// Expecting 2 pools in the route
+	s.Require().Len(route.GetPools(), 2)
+
+	// Validate that the pool is pool 3
+	s.Require().Equal(uint64(3), route.GetPools()[0].GetId())
+
+	// Validate that the pool is pool 1110
+	s.Require().Equal(uint64(1110), route.GetPools()[1].GetId())
 }
 
 // Generates routes from mainnet state by:

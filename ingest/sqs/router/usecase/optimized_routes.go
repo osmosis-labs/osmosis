@@ -210,12 +210,20 @@ ROUTE_LOOP:
 
 		// Validate that route pools do not have the token in denom or token out denom
 		previousTokenOut := tokenInDenom
+
+		uniquePoolIDsIntraRoute := make(map[uint64]struct{}, len(candidateRoute))
+
 		for j, currentPool := range candidateRoute {
-			// Skip routes for which we have already seen the pool ID
-			if _, ok := uniquePoolIDs[currentPool.ID]; ok {
+
+			if _, ok := uniquePoolIDs[currentPool.ID]; !ok {
+				uniquePoolIDs[currentPool.ID] = struct{}{}
+			}
+
+			// Skip routes for which we have already seen the pool ID within that route.
+			if _, ok := uniquePoolIDsIntraRoute[currentPool.ID]; ok {
 				continue ROUTE_LOOP
 			} else {
-				uniquePoolIDs[currentPool.ID] = struct{}{}
+				uniquePoolIDsIntraRoute[currentPool.ID] = struct{}{}
 			}
 
 			currentPoolDenoms := candidateRoute[j].PoolDenoms

@@ -179,3 +179,5 @@ func (tfm TakerFeeMap) SetTakerFee(denom0, denom1 string, takerFee osmomath.Dec)
 
 	tfm[DenomPair{Denom0: denom0, Denom1: denom1}] = takerFee
 }
+
+var DefaultTakerFee = osmomath.MustNewDecFromStr("0.001000000000000000")

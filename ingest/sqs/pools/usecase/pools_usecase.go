@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
@@ -79,7 +80,22 @@ func (p *poolsUseCase) GetRoutesFromCandidates(ctx context.Context, candidateRou
 			// Get taker fee
 			takerFee, err := takerFeeMap.GetTakerFee(previousTokenOutDenom, candidatePool.TokenOutDenom)
 			if err != nil {
-				return nil, err
+				denom0 := previousTokenOutDenom
+				denom1 := candidatePool.TokenOutDenom
+				if denom1 < denom0 {
+					denom0, denom1 = denom1, denom0
+				}
+
+				// If taker fee is not found, set default
+				if errors.Is(err, domain.TakerFeeNotFoundForDenomPairError{
+					Denom0: denom0,
+					Denom1: denom1,
+				}) {
+					// TODO: make this more dynamic instead of hardcoding
+					takerFee = domain.DefaultTakerFee
+				} else {
+					return nil, err
+				}
 			}
 
 			if pool.GetType() == poolmanagertypes.Concentrated {
