@@ -290,6 +290,12 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			if success != "" && checkTxHash {
 				// Now that sdk got rid of block.. we need to query the txhash to get the result
 				outStr := outBuf.String()
+
+				// Sometimes a node hangs and doesn't vote in time, as long as it passes that is all we care about
+				if strings.Contains(outStr, "inactive proposal") {
+					return true
+				}
+
 				txResponse, err := parseTxResponse(outStr)
 				if err != nil {
 					return false

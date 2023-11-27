@@ -396,18 +396,16 @@ func (n *NodeConfig) VoteYesProposal(from string, proposalNumber int) {
 	n.LogActionF("voting yes on proposal: %d", proposalNumber)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "yes", fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	fmt.Println(err)
-	// require.NoError(n.t, err)
-	// n.LogActionF("successfully voted yes on proposal %d", proposalNumber)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully voted yes on proposal %d", proposalNumber)
 }
 
 func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("voting no on proposal: %d", proposalNumber)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "no", fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	fmt.Println(err)
-	// require.NoError(n.t, err)
-	// n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
 func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int {
