@@ -352,14 +352,16 @@ func (s *KeeperTestSuite) TestPoolLiquidityToTargetDenom() {
 	// 5000000 bar, 5000000 baz, 5000000 foo, 5000000 uosmo = 20000000 usdc
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.BalancerPoolID)
 	s.Require().NoError(err)
-	poolLiq := s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, balancerPool, routeMap, "usdc")
+	poolLiq, err := s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, balancerPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(20000000), poolLiq)
 
 	// StableSwap
 	// 10000000 bar, 10000000 baz, 10000000 foo = 30000000 usdc
 	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.StableSwapPoolID)
 	s.Require().NoError(err)
-	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, stableSwapPool, routeMap, "usdc")
+	poolLiq, err = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, stableSwapPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(30000000), poolLiq)
 
 	// Cosmwasm
@@ -369,7 +371,8 @@ func (s *KeeperTestSuite) TestPoolLiquidityToTargetDenom() {
 	s.JoinTransmuterPool(s.TestAccs[0], poolInfo.CosmWasmPoolID, token)
 	cosmWasmPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.CosmWasmPoolID)
 	s.Require().NoError(err)
-	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, cosmWasmPool, routeMap, "usdc")
+	poolLiq, err = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, cosmWasmPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(20000000), poolLiq)
 
 	// Concentrated
@@ -379,7 +382,8 @@ func (s *KeeperTestSuite) TestPoolLiquidityToTargetDenom() {
 	clPoolExtension, ok := clPool.(cltypes.ConcentratedPoolExtension)
 	s.Require().True(ok)
 	s.CreateFullRangePosition(clPoolExtension, sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000)), sdk.NewCoin("eth", sdk.NewInt(10000000))))
-	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, clPool, routeMap, "usdc")
+	poolLiq, err = s.App.PoolManagerKeeper.PoolLiquidityToTargetDenom(s.Ctx, clPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(19999991), poolLiq)
 }
 
@@ -405,14 +409,16 @@ func (s *KeeperTestSuite) TestPoolLiquidityFromOSMOToTargetDenom() {
 	// 5000000 bar, 5000000 baz, 5000000 foo, 5000000 uosmo = 20000000 usdc * 0.5 spot price = 10000000 uosmo
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.BalancerPoolID)
 	s.Require().NoError(err)
-	poolLiq := s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, balancerPool, routeMap, "usdc")
+	poolLiq, err := s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, balancerPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
 
 	// StableSwap
 	// 10000000 bar, 10000000 baz, 10000000 foo = 30000000 usdc * 0.5 spot price = 15000000 uosmo
 	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.StableSwapPoolID)
 	s.Require().NoError(err)
-	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, stableSwapPool, routeMap, "usdc")
+	poolLiq, err = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, stableSwapPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(15000000), poolLiq)
 
 	// Cosmwasm
@@ -422,7 +428,8 @@ func (s *KeeperTestSuite) TestPoolLiquidityFromOSMOToTargetDenom() {
 	s.JoinTransmuterPool(s.TestAccs[0], poolInfo.CosmWasmPoolID, token)
 	cosmWasmPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfo.CosmWasmPoolID)
 	s.Require().NoError(err)
-	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, cosmWasmPool, routeMap, "usdc")
+	poolLiq, err = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, cosmWasmPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000000), poolLiq)
 
 	// Concentrated
@@ -432,6 +439,7 @@ func (s *KeeperTestSuite) TestPoolLiquidityFromOSMOToTargetDenom() {
 	clPoolExtension, ok := clPool.(cltypes.ConcentratedPoolExtension)
 	s.Require().True(ok)
 	s.CreateFullRangePosition(clPoolExtension, sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(10000000)), sdk.NewCoin("eth", sdk.NewInt(10000000))))
-	poolLiq = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, clPool, routeMap, "usdc")
+	poolLiq, err = s.App.PoolManagerKeeper.PoolLiquidityFromOSMOToTargetDenom(s.Ctx, clPool, routeMap, "usdc")
+	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(7499998), poolLiq)
 }

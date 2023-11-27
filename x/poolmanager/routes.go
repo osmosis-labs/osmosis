@@ -112,7 +112,10 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		// check if each pool meets the minimum liquidity threshold
 		// If not, skip the pool
 		if previousRouteMapFound {
-			poolLiquidityInTargetDenom := k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, previousRouteMap, minValueForRoute.Denom)
+			poolLiquidityInTargetDenom, err := k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, previousRouteMap, minValueForRoute.Denom)
+			if err != nil {
+				return types.RoutingGraph{}, err
+			}
 			if poolLiquidityInTargetDenom.LT(minValueForRoute.Amount) {
 				continue
 			}
@@ -154,7 +157,7 @@ func (k Keeper) GetRouteMap(ctx sdk.Context) (types.RoutingGraphMap, error) {
 	return routeMap, nil
 }
 
-// getDirectRouteWithMostLiquidity returns the route with the highest liquidity between an input denom and uosmo
+// getDirectRouteWithMostLiquidity returns the single hop route with the highest liquidity between an input denom and output denom.
 func (k Keeper) getDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, outputDenom string, routeMap types.RoutingGraphMap) (uint64, error) {
 	// Get all direct routes from the input denom to uosmo
 	directRoutes := findRoutes(routeMap, inputDenom, outputDenom, 1)
@@ -178,7 +181,7 @@ func (k Keeper) getDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, out
 	}
 	sort.Strings(keys)
 
-	// Find the route (single or double hop) with the highest liquidity
+	// Find the single hop route with the highest liquidity
 	var bestRouteKey string
 	maxLiquidity := osmomath.ZeroInt()
 	for _, routeKey := range keys {
@@ -191,7 +194,7 @@ func (k Keeper) getDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, out
 		}
 	}
 	if bestRouteKey == "" {
-		return 0, fmt.Errorf("no route found with sufficient liquidity, likely no direct pairing with osmo")
+		return 0, fmt.Errorf("no route found with sufficient liquidity, likely no direct pairing with outputDenom")
 	}
 
 	// Convert the best route key back to []uint64
@@ -214,7 +217,7 @@ func (k Keeper) getDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, out
 // inputAmountToOSMO transforms an input denom and its amount to uosmo
 // If a route is not found, returns 0 with no error.
 // Note, this method only utilizes cache in the getter and setter of denom pair routes.
-// TODO: When implementing getter, ensure we turn cache on for more optimal performance.
+// TODO: When implementing getter in follow on PR, ensure we turn cache on for more optimal performance.
 func (k Keeper) inputAmountToTargetDenom(ctx sdk.Context, inputDenom, targetDenom string, amount osmomath.Int, routeMap types.RoutingGraphMap) (osmomath.Int, error) {
 	if inputDenom == targetDenom {
 		return amount, nil
@@ -311,13 +314,13 @@ func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom st
 }
 
 // poolLiquidityToTargetDenom returns the total liquidity of a pool in terms of the target denom.
-func (k Keeper) poolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) osmomath.Int {
+func (k Keeper) poolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
 	poolDenoms := pool.GetPoolDenoms(ctx)
 	totalLiquidity := sdk.ZeroInt()
 	for _, denom := range poolDenoms {
 		liquidity, err := k.getPoolLiquidityOfDenom(ctx, pool.GetId(), denom)
 		if err != nil {
-			panic(err)
+			return osmomath.ZeroInt(), err
 		}
 		targetDenomAmount, err := k.inputAmountToTargetDenom(ctx, denom, targetDenom, liquidity, routeMap)
 		if err != nil {
@@ -326,7 +329,7 @@ func (k Keeper) poolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, ro
 		}
 		totalLiquidity = totalLiquidity.Add(targetDenomAmount)
 	}
-	return totalLiquidity
+	return totalLiquidity, nil
 }
 
 // convertToMap converts a RoutingGraph to a RoutingGraphMap
@@ -356,24 +359,27 @@ func convertToMap(routingGraph *types.RoutingGraph) types.RoutingGraphMap {
 // poolLiquidityFromOSMOToTargetDenom starts by calculating the total liquidity of a pool in terms of uosmo.
 // It then calculates the spot price of uosmo to the target denom as defined via the params.
 // This two step process is done because most pools are denominated in uosmo, so it is easier to find a direct route if the liquidity is in uosmo.
-func (k Keeper) poolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) osmomath.Int {
-	totalLiquidityInOSMO := k.poolLiquidityToTargetDenom(ctx, pool, routeMap, k.stakingKeeper.BondDenom(ctx))
+func (k Keeper) poolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
+	totalLiquidityInOSMO, err := k.poolLiquidityToTargetDenom(ctx, pool, routeMap, k.stakingKeeper.BondDenom(ctx))
+	if err != nil {
+		return osmomath.ZeroInt(), err
+	}
 
 	osmoUsdPoolId, err := k.getDirectRouteWithMostLiquidity(ctx, k.stakingKeeper.BondDenom(ctx), targetDenom, routeMap)
 	if err != nil {
-		return osmomath.ZeroInt()
+		return osmomath.ZeroInt(), err
 	}
 
 	osmoUsdcPool, err := k.GetPool(ctx, osmoUsdPoolId)
 	if err != nil {
-		return osmomath.ZeroInt()
+		return osmomath.ZeroInt(), err
 	}
 
 	spotPrice, err := osmoUsdcPool.SpotPrice(ctx, k.stakingKeeper.BondDenom(ctx), targetDenom)
 	if err != nil {
-		return osmomath.ZeroInt()
+		return osmomath.ZeroInt(), err
 	}
 
 	totalLiquidityInUSD := spotPrice.Mul(osmomath.NewBigDec(totalLiquidityInOSMO.Int64())).Dec().TruncateInt()
-	return totalLiquidityInUSD
+	return totalLiquidityInUSD, nil
 }

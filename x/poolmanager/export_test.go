@@ -73,10 +73,10 @@ func ConvertToMap(routingGraph *types.RoutingGraph) types.RoutingGraphMap {
 	return convertToMap(routingGraph)
 }
 
-func (k Keeper) PoolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) osmomath.Int {
+func (k Keeper) PoolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
 	return k.poolLiquidityToTargetDenom(ctx, pool, routeMap, targetDenom)
 }
 
-func (k Keeper) PoolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) osmomath.Int {
+func (k Keeper) PoolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
 	return k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, routeMap, targetDenom)
 }
