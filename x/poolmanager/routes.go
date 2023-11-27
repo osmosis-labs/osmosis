@@ -16,6 +16,9 @@ import (
 )
 
 var (
+	// We cache direct routes and spot prices to avoid recalculating them.
+	// It is important to note, these cache values are only used within the same query.
+	// If a new query is made, the cache will be reset.
 	directRouteCache map[string]uint64
 	spotPriceCache   map[string]osmomath.BigDec
 )
