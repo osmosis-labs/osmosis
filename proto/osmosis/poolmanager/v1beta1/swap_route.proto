@@ -38,3 +38,34 @@ message SwapAmountOutSplitRoute {
     (gogoproto.nullable) = false
   ];
 }
+
+// There are two Route types defined here: one involving maps and one involving
+// repeated fields. Because maps are non deterministic when serialized, we
+// cannot use them in stateful structures. However, they are useful for
+// retriving routes quickly and efficiently. Therefore, we use the repeated
+// message types for stateful structures and the map message types for
+// non-stateful structures to be used in retrieving routes.
+
+// Route message types to be used between both stateful and non-stateful
+// structures.
+message Route {
+  uint64 pool_id = 1;
+  string token = 2;
+}
+message Routes { repeated Route routes = 1; }
+
+// Non stateful, map message types.
+message InnerMap { map<string, Routes> inner_map = 1; }
+message RoutingGraphMap { map<string, InnerMap> graph = 1; }
+
+// Stateful, repeated message types.
+message InnerMapEntry {
+  string key = 1;
+  Routes value = 2;
+}
+message Inner { repeated InnerMapEntry entries = 1; }
+message RoutingGraphEntry {
+  string key = 1;
+  Inner value = 2;
+}
+message RoutingGraph { repeated RoutingGraphEntry entries = 1; }

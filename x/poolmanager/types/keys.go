@@ -37,6 +37,8 @@ var (
 
 	// KeyTakerFeeProtoRevAccountingHeight defines key to store the accounting height for the above taker fee trackers.
 	KeyTakerFeeProtoRevAccountingHeight = []byte{0x07}
+
+	KeyRouteMap = []byte{0x08}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.

@@ -350,3 +350,78 @@ func TestIntermediateDenoms(t *testing.T) {
 		})
 	}
 }
+
+func TestAddEdge(t *testing.T) {
+	tests := []struct {
+		name   string
+		start  string
+		end    string
+		token  string
+		poolID uint64
+		setup  func(g *RoutingGraph)
+	}{
+		{
+			name:   "happy path 1",
+			start:  "start1",
+			end:    "end1",
+			token:  "token1",
+			poolID: uint64(1),
+		},
+		{
+			name:   "happy path 2",
+			start:  "start2",
+			end:    "end2",
+			token:  "token2",
+			poolID: uint64(2),
+		},
+		{
+			name:   "start entry already exists, end entry does not",
+			start:  "start1",
+			end:    "end3",
+			token:  "token3",
+			poolID: uint64(3),
+			setup: func(g *RoutingGraph) {
+				g.AddEdge("start1", "end1", "token1", uint64(1))
+			},
+		},
+		{
+			name:   "start entry and end entry already exists",
+			start:  "start1",
+			end:    "end1",
+			token:  "token4",
+			poolID: uint64(4),
+			setup: func(g *RoutingGraph) {
+				g.AddEdge("start1", "end1", "token1", uint64(1))
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := &RoutingGraph{}
+			if tt.setup != nil {
+				tt.setup(g)
+			}
+			g.AddEdge(tt.start, tt.end, tt.token, tt.poolID)
+
+			startEntry := g.Entries[len(g.Entries)-1]
+			if startEntry.Key != tt.start {
+				t.Errorf("Expected key to be %s, got %s", tt.start, startEntry.Key)
+			}
+
+			endEntry := startEntry.Value.Entries[len(startEntry.Value.Entries)-1]
+			if endEntry.Key != tt.end {
+				t.Errorf("Expected key to be %s, got %s", tt.end, endEntry.Key)
+			}
+
+			route := endEntry.Value.Routes[len(endEntry.Value.Routes)-1]
+			if route.PoolId != tt.poolID {
+				t.Errorf("Expected poolID to be %d, got %d", tt.poolID, route.PoolId)
+			}
+
+			if route.Token != tt.token {
+				t.Errorf("Expected token to be %s, got %s", tt.token, route.Token)
+			}
+		})
+	}
+}

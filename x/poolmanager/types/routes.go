@@ -167,3 +167,41 @@ func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) erro
 
 	return nil
 }
+
+// AddEdge adds the given pool id and token as a route in the end entry.
+// Creates start entry or end entry if they do not exist
+func (g *RoutingGraph) AddEdge(start, end, token string, poolID uint64) {
+	if g.Entries == nil {
+		g.Entries = make([]*RoutingGraphEntry, 0)
+	}
+
+	var startEntry *Inner
+	for _, entry := range g.Entries {
+		if entry.Key == start {
+			startEntry = entry.Value
+			break
+		}
+	}
+
+	// if we did not have any startEntry, initialize start entry
+	if startEntry == nil {
+		startEntry = &Inner{Entries: make([]*InnerMapEntry, 0)}
+		g.Entries = append(g.Entries, &RoutingGraphEntry{Key: start, Value: startEntry})
+	}
+
+	var endEntry *Routes
+	for _, entry := range startEntry.Entries {
+		if entry.Key == end {
+			endEntry = entry.Value
+			break
+		}
+	}
+
+	// if we did not have any endEntry, initialize end entry
+	if endEntry == nil {
+		endEntry = &Routes{Routes: make([]*Route, 0)}
+		startEntry.Entries = append(startEntry.Entries, &InnerMapEntry{Key: end, Value: endEntry})
+	}
+
+	endEntry.Routes = append(endEntry.Routes, &Route{PoolId: poolID, Token: token})
+}
