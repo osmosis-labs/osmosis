@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/CosmWasm/wasmd v0.45.0
+	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -28,8 +28,8 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231124190325-d75e9ade352e
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128165326-c443727c3a9a
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231128165326-c443727c3a9a
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
