@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -11,6 +12,7 @@ import (
 func (app *OsmosisApp) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
+		fmt.Println("acc: ", acc)
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
 	}
 

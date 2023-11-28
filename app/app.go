@@ -70,6 +70,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
+	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 	v10 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v10"
@@ -110,7 +112,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{}
+	allowedReceivingModAcc = map[string]bool{authtypes.NewModuleAddress(protorevtypes.ModuleName).String(): true}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
