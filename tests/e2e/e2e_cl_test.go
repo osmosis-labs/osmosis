@@ -182,7 +182,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 	}()
 
-	runFuncsInParallelAndBlock([]func(){enablePermissionlessCl, changeProtorevAdminAndMaxPoolPoints})
+	enablePermissionlessCl()
+	changeProtorevAdminAndMaxPoolPoints()
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
 	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
