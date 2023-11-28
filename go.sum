@@ -766,8 +766,8 @@ github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoK
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
 github.com/cosmos/iavl v0.20.1 h1:rM1kqeG3/HBT85vsZdoSNsehciqUQPWrR4BYmqE2+zg=
 github.com/cosmos/iavl v0.20.1/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.2 h1:6zjj+yIpMbCTRI2eJ2fXuflElENs3mrUSLH/TSWL8fk=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.2/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 h1:PqIK9vTr6zxCdQmrDZwxwL4KMAqg/GRGsiMEiaMP4wA=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 h1:02RCbih5lQ8aGdDMSvxhTnk5JDLEDitn17ytEE1Qhko=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1/go.mod h1:LvVkEXTORVgd87W2Yu7ZY3acKKeTMq/txdTworn8EZI=
 github.com/cosmos/ibc-go/v7 v7.3.1 h1:bil1IjnHdyWDASFYKfwdRiNtFP6WK3osW7QFEAgU4I8=
@@ -1460,10 +1460,10 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e h1
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e/go.mod h1:NwGU1m9ng4/VV5P8wXJOhUaos/jlnOjGw7wIxL/7bu8=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e h1:jcA2Auzr7IAf/Fijs/xiWPze4Mg57Sp07DrZ8GR2CvM=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e/go.mod h1:n8rptkq57PiAPBWT89gD6YDK+KLraPcT0B8m2huBzD0=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128165326-c443727c3a9a h1:Q/1y3MY4a3ExYFoeJeulGyTTFKVGnPLaGLnMuQK5mlQ=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128165326-c443727c3a9a/go.mod h1:jnbcvhY6nqL8tsdPfe7HR8KJlajx3S7m0cbD5uZelAg=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231128165326-c443727c3a9a h1:fX1rNyBczPV41NkfrXO9nS8xWutlA0cW9ClfT1tzqVg=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231128165326-c443727c3a9a/go.mod h1:Hrm1YJOxYaKfcvo0Hvn4PuPCJdYhBMNqlumAtCVfizI=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128160617-9a7cef4bff58 h1:DykYyH/LhDzWyAfX1H/EAJXfBr1JIrBmic1zGf36WEE=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128160617-9a7cef4bff58/go.mod h1:pkrWxPSZ8K2ZssmokdEJqY5xKfvOqWKtJTipuMlBcIQ=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e h1:pn41/rRo9rzsot1c+2C/4ekcf66yjTSUEn8Y/OwVML4=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e/go.mod h1:9jIiuB+lzPskcaLhaZYpdpbLiREupcMMtSszw38qqJ8=
 github.com/osmosis-labs/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3 h1:9/nE16UH+KdX36k58kfTzzJ80JT6tu4uMMDA7LMsMbU=
 github.com/osmosis-labs/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
