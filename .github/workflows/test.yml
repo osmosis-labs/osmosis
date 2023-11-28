@@ -37,9 +37,12 @@ jobs:
             .github/workflows/test.yml
       - name: Set output
         id: vars
-        run: echo "::set-output name=git_diff::$GIT_DIFF"
+        run: echo "$GIT_DIFF" > git_diff.txt
+      - name: Get output
+        id: get_output
+        run: echo "::set-output name=git_diff::$(cat git_diff.txt)"
     outputs:
-      git_diff: ${{ steps.vars.outputs.git_diff }}
+      git_diff: ${{ steps.get_output.outputs.git_diff }}
 
   go-split-test-files:
     needs: get_diff
