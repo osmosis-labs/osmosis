@@ -137,7 +137,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	routerHttpDelivery.NewRouterHandler(e, routerUsecase, logger)
 
 	// Initialize system handler
-	systemhttpdelivery.NewSystemHandler(e)
+	systemhttpdelivery.NewSystemHandler(e, logger)
 
 	// Initialized tokens usecase
 	tokensUseCase := tokensUseCase.NewTokensUsecase(timeoutContext)
