@@ -129,7 +129,7 @@ service Query {
   rpc TradingPairTakerFee(TradingPairTakerFeeRequest)
       returns (TradingPairTakerFeeResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/pools/trading_pair_takerfee";
+        "/osmosis/poolmanager/v1beta1/trading_pair_takerfee";
   }
 
   // EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
