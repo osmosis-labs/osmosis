@@ -42,5 +42,5 @@ func (q Querier) ContractInfoByPoolId(ctx sdk.Context,
 		return nil, err
 	}
 
-	return &queryproto.ContractInfoByPoolIdResponse{ContractAddress: pool.GetContractAddress()}, nil
+	return &queryproto.ContractInfoByPoolIdResponse{ContractAddress: pool.GetContractAddress(), CodeId: pool.GetCodeId()}, nil
 }
