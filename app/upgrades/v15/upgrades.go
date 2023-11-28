@@ -1,7 +1,7 @@
 package v15
 
 import (
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
@@ -12,8 +12,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
 	"github.com/osmosis-labs/osmosis/v20/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit"
@@ -41,6 +41,7 @@ func CreateUpgradeHandler(
 		poolmanagerParams.PoolCreationFee = keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
+		//nolint:errcheck
 		keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
 		setICQParams(ctx, keepers.ICQKeeper)
 
@@ -77,6 +78,7 @@ func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	icqparams.AllowQueries = wasmbinding.GetStargateWhitelistedPaths()
 	// Adding SmartContractState query to allowlist
 	icqparams.AllowQueries = append(icqparams.AllowQueries, "/cosmwasm.wasm.v1.Query/SmartContractState")
+	//nolint:errcheck
 	icqKeeper.SetParams(ctx, icqparams)
 }
 

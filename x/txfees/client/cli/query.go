@@ -17,6 +17,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdBaseDenom(),
 	)
 
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdQueryBaseFee)
+
 	return cmd
 }
 
@@ -51,4 +53,14 @@ func GetCmdBaseDenom() *cobra.Command {
 `,
 		types.ModuleName, types.NewQueryClient,
 	)
+}
+
+func GetCmdQueryBaseFee() (*osmocli.QueryDescriptor, *types.QueryEipBaseFeeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "base-fee",
+		Short: "Query the eip base fee.",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} base-fee`,
+		QueryFnName: "GetEipBaseFee",
+	}, &types.QueryEipBaseFeeRequest{}
 }

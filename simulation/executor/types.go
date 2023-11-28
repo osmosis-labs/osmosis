@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	legacysim "github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
 )

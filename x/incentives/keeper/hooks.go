@@ -42,9 +42,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 		}
 
-		if len(gauges) > 10 {
-			ctx.EventManager().IncreaseCapacity(2e6)
-		}
+		// UNFORKINGTODO OQ: do we upstream this method?
+		// if len(gauges) > 10 {
+		// 	ctx.EventManager().IncreaseCapacity(2e6)
+		// }
 
 		// distribute due to epoch event
 		gauges = k.GetActiveGauges(ctx)
