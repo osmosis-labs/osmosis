@@ -78,6 +78,7 @@ func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	icqparams.AllowQueries = wasmbinding.GetStargateWhitelistedPaths()
 	// Adding SmartContractState query to allowlist
 	icqparams.AllowQueries = append(icqparams.AllowQueries, "/cosmwasm.wasm.v1.Query/SmartContractState")
+	//nolint:errcheck
 	icqKeeper.SetParams(ctx, icqparams)
 }
 

@@ -11,6 +11,8 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
@@ -92,6 +94,8 @@ func CreateUpgradeHandler(
 				keyTable = icahosttypes.ParamKeyTable() //nolint:staticcheck
 			case icacontrollertypes.SubModuleName:
 				keyTable = icacontrollertypes.ParamKeyTable() //nolint:staticcheck
+			case icqtypes.ModuleName:
+				keyTable = icqtypes.ParamKeyTable() //nolint:staticcheck
 
 			// wasm
 			case wasmtypes.ModuleName:
