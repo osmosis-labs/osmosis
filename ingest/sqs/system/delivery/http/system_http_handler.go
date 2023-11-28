@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -68,17 +68,6 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		defer resp.Body.Close()
 	}
 
-	// Check Redis status
-	redisStatus := "running"
-	rdb := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%s", h.redisHost, h.redisPort),
-	})
-
-	if _, err := rdb.Ping().Result(); err != nil {
-		redisStatus = "down"
-		h.logger.Error("Error connecting to Redis", zap.Error(err))
-	}
-
 	// Check the latest height from chain info use case
 	latestHeight, err := h.CIUsecase.GetLatestHeight(ctx)
 	if err != nil {
@@ -95,7 +84,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	if resp != nil {
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read response body")
 		}
@@ -110,6 +99,17 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	nodeStatus := "synced"
 	if statusResponse.Result.SyncInfo.LatestBlockHeight != fmt.Sprint(latestHeight) {
 		nodeStatus = "not_synced"
+	}
+
+	// Check Redis status
+	redisStatus := "running"
+	rdb := redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%s", h.redisHost, h.redisPort),
+	})
+
+	if _, err := rdb.Ping().Result(); err != nil {
+		redisStatus = "down"
+		h.logger.Error("Error connecting to Redis", zap.Error(err))
 	}
 
 	// Return combined status

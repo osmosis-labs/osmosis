@@ -76,6 +76,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs"
 
+	redischaininfoingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/ingester/redis"
 	redispoolsingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 )
 
@@ -313,8 +314,11 @@ func NewOsmosisApp(
 		poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, routerConfig, app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
 		poolsIngester.SetLogger(sidecarQueryServer.GetLogger())
 
+		chainInfoingester := redischaininfoingester.NewChainInfoIngester(sidecarQueryServer.GetChainInfoRepository(), txManager)
+		chainInfoingester.SetLogger(sidecarQueryServer.GetLogger())
+
 		// Create sqs ingester that encapsulates all ingesters.
-		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, txManager)
+		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)
 
 		// Set the sidecar query server ingester to the ingest manager.
 		app.IngestManager.SetIngester(sqsIngester)
