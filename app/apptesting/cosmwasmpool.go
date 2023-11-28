@@ -95,7 +95,7 @@ func (s *KeeperTestHelper) StoreCosmWasmPoolContractCode(contractName string) ui
 
 	code := s.GetContractCode(contractName)
 
-	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: cosmwasmpoolModuleAddr.String()}
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeAnyOfAddresses, Addresses: []string{cosmwasmpoolModuleAddr.String()}}
 	codeID, _, err := s.App.ContractKeeper.Create(s.Ctx, cosmwasmpoolModuleAddr, code, &instantiateConfig)
 	s.Require().NoError(err)
 
