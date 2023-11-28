@@ -350,17 +350,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 		node.DepositProposal(propNumber, false)
 
-		var wg sync.WaitGroup
-
-		for _, node := range chainConfig.NodeConfigs {
-			wg.Add(1)
-			go func(nodeConfig *chain.NodeConfig) {
-				defer wg.Done()
-				nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-			}(node)
-		}
-
-		wg.Wait()
+		chain.AllValsVoteOnProposal(chainConfig, propNumber)
 	}
 
 	// wait till all chains halt at upgrade height
