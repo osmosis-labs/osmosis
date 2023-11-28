@@ -1,6 +1,8 @@
 package v21
 
 import (
+	"time"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -62,6 +64,12 @@ func CreateUpgradeHandler(
 
 		// Set the minimum pool value to 5,000 USDC in order to be included in the on-chain router.
 		keepers.PoolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyMinValueForRoute, poolmanagertypes.DefaultParams().MinValueForRoute)
+
+		// TEMP
+		dayEpochInfo := keepers.EpochsKeeper.GetEpochInfo(ctx, "day")
+		dayEpochInfo.Duration = time.Minute * 60
+		dayEpochInfo.CurrentEpochStartTime = ctx.BlockTime().Add(-time.Minute * 30)
+		keepers.EpochsKeeper.SetEpochInfo(ctx, dayEpochInfo)
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
 		// Set param key table for params module migration
