@@ -1460,8 +1460,8 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e h1
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e/go.mod h1:NwGU1m9ng4/VV5P8wXJOhUaos/jlnOjGw7wIxL/7bu8=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e h1:jcA2Auzr7IAf/Fijs/xiWPze4Mg57Sp07DrZ8GR2CvM=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e/go.mod h1:n8rptkq57PiAPBWT89gD6YDK+KLraPcT0B8m2huBzD0=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231124190325-d75e9ade352e h1:3QgdWIru7c+9Vy/k7Mb0iynaRDVd0qzb7POXaqdGk7U=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231124190325-d75e9ade352e/go.mod h1:pT9UfAclV3t0A6Vbm15hdCyUAU9R2qoZOa9ojcN7R5E=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128160617-9a7cef4bff58 h1:DykYyH/LhDzWyAfX1H/EAJXfBr1JIrBmic1zGf36WEE=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128160617-9a7cef4bff58/go.mod h1:pkrWxPSZ8K2ZssmokdEJqY5xKfvOqWKtJTipuMlBcIQ=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e h1:pn41/rRo9rzsot1c+2C/4ekcf66yjTSUEn8Y/OwVML4=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e/go.mod h1:9jIiuB+lzPskcaLhaZYpdpbLiREupcMMtSszw38qqJ8=
 github.com/osmosis-labs/wasmd v0.40.2-0.20231108035253-e6a55f40958c h1:GwdhwWFrkgax2Cd6s8fcLVbXYGlQodwV4CXYtYQKjGs=
