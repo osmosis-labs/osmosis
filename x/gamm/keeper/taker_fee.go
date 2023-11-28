@@ -17,8 +17,8 @@ const (
 // possibilites for takerFeeCoin:
 // 1. DYM -> taker fee is already in DYM
 // 2. any other denom -> DYM (taker fee will be swapped and burned)
-// 2. Base denom -> find pool with DYM
-// 3. any other denom -> make swap on first pool (to swap for base denom) than find pool with DYM
+// 3. Base denom -> find pool with DYM
+// 4. any other denom -> make swap on first pool (to swap for base denom) than find pool with DYM
 func (k Keeper) chargeTakerFeeSwapAmountOut(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress, outRoutes []poolmanagertypes.SwapAmountOutRoute, denomOut string) error {
 	if takerFeeCoin.Denom == defaultTakerFeeDenom {
 		return k.swapAndBurn(ctx, sender, nil, takerFeeCoin)
@@ -39,17 +39,20 @@ func (k Keeper) chargeTakerFeeSwapAmountOut(ctx sdk.Context, takerFeeCoin sdk.Co
 // possibilites for takerFeeCoin:
 // 1. DYM -> taker fee is already in DYM
 // 2. any other denom -> DYM (taker fee will be swapped and burned)
-// 2. Base denom -> find pool with DYM
-// 3. any other denom -> make swap on first pool (to swap for base denom) than find pool with DYM
+// 3. Base denom -> find pool with DYM
+// 4. any other denom -> make swap on first pool (to swap for base denom) than find pool with DYM
 func (k Keeper) chargeTakerFeeSwapAmountIn(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.AccAddress, routes []poolmanagertypes.SwapAmountInRoute) error {
 	if takerFeeCoin.Denom == defaultTakerFeeDenom {
 		return k.swapAndBurn(ctx, sender, nil, takerFeeCoin)
 	}
 
 	return k.swapAndBurn(ctx, sender, []poolmanagertypes.SwapAmountInRoute{routes[0]}, takerFeeCoin)
-
 }
 
+// swapAndBurn swaps the taker fee coin to DYM and then burns it.
+// if routes is nil, it directly burns the taker fee coin witout swaps
+// if routes is not nil, it uses the first route to swap the taker fee coin to base denom
+// if the first route's output denom is not DYM but other base denom, it finds the pool with this base denom and DYM
 func (k Keeper) swapAndBurn(ctx sdk.Context, sender sdk.AccAddress, routes []poolmanagertypes.SwapAmountInRoute, tokenIn sdk.Coin) error {
 	if len(routes) == 0 {
 		return k.burnTakerFee(ctx, tokenIn, sender)
@@ -66,7 +69,7 @@ func (k Keeper) swapAndBurn(ctx sdk.Context, sender sdk.AccAddress, routes []poo
 		//if tokenIn is base denom, we need to find the pool with DYM
 		isBaseDenom, _ := params.PoolCreationFee.Find(tokenIn.Denom)
 		if isBaseDenom {
-			route, err := k.findPoolWithDYM(ctx, tokenIn.Denom)
+			route, err := k.findPoolWithTakerFeeDenom(ctx, tokenIn.Denom)
 			if err != nil {
 				ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
 				return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(tokenIn), sender)
@@ -74,7 +77,7 @@ func (k Keeper) swapAndBurn(ctx sdk.Context, sender sdk.AccAddress, routes []poo
 			routeForTakerFee = []poolmanagertypes.SwapAmountInRoute{route}
 		} else {
 			//If swap needed, add the first pool to the route (to swap for base denom)
-			route, err := k.findPoolWithDYM(ctx, firstPool.TokenOutDenom)
+			route, err := k.findPoolWithTakerFeeDenom(ctx, firstPool.TokenOutDenom)
 			if err != nil {
 				ctx.Logger().Error("failed to find swapping route to DYM", "error", err)
 				return k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(tokenIn), sender)
@@ -135,7 +138,7 @@ func (k Keeper) burnTakerFee(ctx sdk.Context, takerFeeCoin sdk.Coin, sender sdk.
 }
 
 // find route from denom to defaultTakerFeeDenom by iterating all pools
-func (k Keeper) findPoolWithDYM(ctx sdk.Context, fromDenom string) (poolmanagertypes.SwapAmountInRoute, error) {
+func (k Keeper) findPoolWithTakerFeeDenom(ctx sdk.Context, fromDenom string) (poolmanagertypes.SwapAmountInRoute, error) {
 	route := poolmanagertypes.SwapAmountInRoute{}
 
 	iter := k.iterator(ctx, types.KeyPrefixPools)
