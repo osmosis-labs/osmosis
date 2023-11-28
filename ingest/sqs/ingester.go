@@ -12,17 +12,19 @@ var _ ingest.Ingester = &sqsIngester{}
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
-	txManager     mvc.TxManager
-	poolsIngester ingest.AtomicIngester
+	txManager         mvc.TxManager
+	poolsIngester     ingest.AtomicIngester
+	chainInfoIngester ingest.AtomicIngester
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester ingest.AtomicIngester, txManager mvc.TxManager) ingest.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester ingest.AtomicIngester, txManager mvc.TxManager) ingest.Ingester {
 	return &sqsIngester{
-		txManager:     txManager,
-		poolsIngester: poolsIngester,
+		txManager:         txManager,
+		chainInfoIngester: chainInfoIngester,
+		poolsIngester:     poolsIngester,
 	}
 }
 
@@ -40,6 +42,11 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
 
 	// Process block by reading and writing data and ingesting data into sinks
 	if err := i.poolsIngester.ProcessBlock(ctx, tx); err != nil {
+		return err
+	}
+
+	// Process block by reading and writing data and ingesting data into sinks
+	if err := i.chainInfoIngester.ProcessBlock(ctx, tx); err != nil {
 		return err
 	}
 

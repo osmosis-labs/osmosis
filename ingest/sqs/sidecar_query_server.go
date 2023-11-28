@@ -14,6 +14,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	chainInfoRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/repository/redis"
+	chainInfoUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/usecase"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
@@ -37,17 +39,19 @@ import (
 type SideCarQueryServer interface {
 	GetTxManager() mvc.TxManager
 	GetPoolsRepository() mvc.PoolsRepository
+	GetChainInfoRepository() mvc.ChainInfoRepository
 	GetRouterRepository() mvc.RouterRepository
 	GetTokensUseCase() domain.TokensUsecase
 	GetLogger() log.Logger
 }
 
 type sideCarQueryServer struct {
-	txManager        mvc.TxManager
-	poolsRepository  mvc.PoolsRepository
-	routerRepository mvc.RouterRepository
-	tokensUseCase    domain.TokensUsecase
-	logger           log.Logger
+	txManager           mvc.TxManager
+	poolsRepository     mvc.PoolsRepository
+	chainInfoRepository mvc.ChainInfoRepository
+	routerRepository    mvc.RouterRepository
+	tokensUseCase       domain.TokensUsecase
+	logger              log.Logger
 }
 
 // GetTokensUseCase implements SideCarQueryServer.
@@ -58,6 +62,10 @@ func (sqs *sideCarQueryServer) GetTokensUseCase() domain.TokensUsecase {
 // GetPoolsRepository implements SideCarQueryServer.
 func (sqs *sideCarQueryServer) GetPoolsRepository() mvc.PoolsRepository {
 	return sqs.poolsRepository
+}
+
+func (sqs *sideCarQueryServer) GetChainInfoRepository() mvc.ChainInfoRepository {
+	return sqs.chainInfoRepository
 }
 
 // GetRouterRepository implements SideCarQueryServer.
@@ -137,7 +145,9 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	routerHttpDelivery.NewRouterHandler(e, routerUsecase, logger)
 
 	// Initialize system handler
-	systemhttpdelivery.NewSystemHandler(e, logger)
+	chainInfoRepository := chainInfoRepository.NewChainInfoRepo(redisTxManager)
+	chainInfoUseCase := chainInfoUseCase.NewChainInfoUsecase(timeoutContext, chainInfoRepository, redisTxManager)
+	systemhttpdelivery.NewSystemHandler(e, logger, chainInfoUseCase)
 
 	// Initialized tokens usecase
 	tokensUseCase := tokensUseCase.NewTokensUsecase(timeoutContext)
@@ -160,10 +170,11 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	}()
 
 	return &sideCarQueryServer{
-		txManager:        redisTxManager,
-		poolsRepository:  poolsRepository,
-		routerRepository: routerRepository,
-		tokensUseCase:    tokensUseCase,
-		logger:           logger,
+		txManager:           redisTxManager,
+		poolsRepository:     poolsRepository,
+		chainInfoRepository: chainInfoRepository,
+		routerRepository:    routerRepository,
+		tokensUseCase:       tokensUseCase,
+		logger:              logger,
 	}, nil
 }

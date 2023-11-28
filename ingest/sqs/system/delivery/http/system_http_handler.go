@@ -1,7 +1,9 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/go-redis/redis"
 
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 
 	"github.com/labstack/echo"
@@ -21,10 +24,11 @@ type SystemHandler struct {
 	grpcPort  string // GRPC gateway port
 	redisHost string // Redis host
 	redisPort string // Redis port
+	CIUsecase mvc.ChainInfoUsecase
 }
 
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
-func NewSystemHandler(e *echo.Echo, logger log.Logger) {
+func NewSystemHandler(e *echo.Echo, logger log.Logger, us mvc.ChainInfoUsecase) {
 	// GRPC Gateway configuration
 	host := getEnvOrDefault("GRPC_GATEWAY_HOST", "localhost")
 	grpcPort := getEnvOrDefault("GRPC_GATEWAY_PORT", "1317")
@@ -39,6 +43,7 @@ func NewSystemHandler(e *echo.Echo, logger log.Logger) {
 		grpcPort:  grpcPort,
 		redisHost: redisHost,
 		redisPort: redisPort,
+		CIUsecase: us,
 	}
 
 	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
@@ -50,12 +55,17 @@ func NewSystemHandler(e *echo.Echo, logger log.Logger) {
 
 // GetHealthStatus handles health check requests for both GRPC gateway and Redis
 func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	// Check GRPC Gateway status
 	grpcStatus := "running"
 	url := fmt.Sprintf("http://%s:%s/status", h.host, h.grpcPort)
-	if _, err := http.Get(url); err != nil {
+	resp, err := http.Get(url)
+	if err != nil {
 		grpcStatus = "down"
 		h.logger.Error("Error checking GRPC gateway status", zap.Error(err))
+	} else {
+		defer resp.Body.Close()
 	}
 
 	// Check Redis status
@@ -69,10 +79,44 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		h.logger.Error("Error connecting to Redis", zap.Error(err))
 	}
 
+	// Check the latest height from chain info use case
+	latestHeight, err := h.CIUsecase.GetLatestHeight(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Parse the response from the GRPC Gateway status endpoint
+	var statusResponse struct {
+		Result struct {
+			SyncInfo struct {
+				LatestBlockHeight string `json:"latest_block_height"`
+			} `json:"sync_info"`
+		} `json:"result"`
+	}
+
+	if resp != nil {
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read response body")
+		}
+
+		err = json.Unmarshal(bodyBytes, &statusResponse)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
+		}
+	}
+
+	// Compare latestHeight with latest_block_height from the status endpoint
+	nodeStatus := "synced"
+	if statusResponse.Result.SyncInfo.LatestBlockHeight != fmt.Sprint(latestHeight) {
+		nodeStatus = "not_synced"
+	}
+
 	// Return combined status
 	return c.JSON(http.StatusOK, map[string]string{
 		"grpc_gateway_status": grpcStatus,
 		"redis_status":        redisStatus,
+		"node_status":         nodeStatus,
 	})
 }
 
