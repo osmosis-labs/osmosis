@@ -132,6 +132,8 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		}
 	}
 
+	fmt.Println("ADAM routingGraph length", len(routingGraph.Entries))
+
 	// Set the route map in state
 	// NOTE: This is done with the non map version of the route graph
 	// If we used maps here, the serialization would be non-deterministic
@@ -316,6 +318,8 @@ func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom st
 // poolLiquidityToTargetDenom returns the total liquidity of a pool in terms of the target denom.
 func (k Keeper) poolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
 	poolDenoms := pool.GetPoolDenoms(ctx)
+	fmt.Println("ADAM poolDenoms", poolDenoms)
+	fmt.Println("ADAM pooltype", pool.GetType())
 	totalLiquidity := sdk.ZeroInt()
 	for _, denom := range poolDenoms {
 		liquidity, err := k.getPoolLiquidityOfDenom(ctx, pool.GetId(), denom)
