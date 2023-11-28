@@ -46,43 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6939](https://github.com/osmosis-labs/osmosis/pull/6939) Fix taker fee GRPC gateway query path in poolmanager.
 
-### Features
-
-* [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
-
-### Fix Localosmosis docker-compose with state.
-
-* Updated the docker-compose for localosmosis with state to be inline with Operations updated process.
-
-### State Breaks
-
-* [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
-* [#6836](https://github.com/osmosis-labs/osmosis/pull/6836) Add DenomsMetadata to stargate whitelist and fixs the DenomMetadata response type
-* [#6814](https://github.com/osmosis-labs/osmosis/pull/6814) Add EstimateTradeBasedOnPriceImpact to stargate whitelist
-* [#6859](https://github.com/osmosis-labs/osmosis/pull/6859) Add hooks to core CL operations (position creation/withdrawal and swaps)
-
-### Misc Improvements
-
-* [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
-* [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
-* [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist
-* [#6884](https://github.com/osmosis-labs/osmosis/pull/6884) Improve ListPoolsByDenom function filter denom logic
-* [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
-* [#6884](https://github.com/osmosis-labs/osmosis/pull/6914) Update ListPoolsByDenom function by using pool.GetPoolDenoms to filter denom directly
-
-### API Breaks
-
-* [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
-* [#6530](https://github.com/osmosis-labs/osmosis/pull/6530) Improve error message when CL LP fails due to slippage bound hit.
-
-
-### Bug Fixes
-
-* [#6840](https://github.com/osmosis-labs/osmosis/pull/6840) fix: change TypeMsgUnbondConvertAndStake value to "unbond_convert_and_stake" and improve error message when epoch currentEpochStartHeight less than zero
-* [#6769](https://github.com/osmosis-labs/osmosis/pull/6769) fix: improve dust handling in EstimateTradeBasedOnPriceImpact
-* [#6841](https://github.com/osmosis-labs/osmosis/pull/6841) fix: fix receive_ack response field and imporove error message of InvalidCrosschainSwapsContract and NoDenomTrace
-
->>>>>>> 5fc1353f (fix: taker fee query via grpc gateway (#6939))
 ## v20.4.0
 
 ### Bug Fixes
