@@ -153,7 +153,7 @@ type AppKeepers struct {
 	TxFeesKeeper                 *txfeeskeeper.Keeper
 	SuperfluidKeeper             *superfluidkeeper.Keeper
 	GovKeeper                    *govkeeper.Keeper
-	WasmKeeper                   *wasm.Keeper
+	WasmKeeper                   *wasmkeeper.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
@@ -184,8 +184,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	maccPerms map[string][]string,
 	dataDir string,
 	wasmDir string,
-	wasmConfig wasm.Config,
-	wasmOpts []wasm.Option,
+	wasmConfig wasmtypes.WasmConfig,
+	wasmOpts []wasmkeeper.Option,
 	blockedAddress map[string]bool,
 ) {
 	legacyAmino := encodingConfig.Amino
@@ -515,7 +515,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
 	// wire up x/wasm to IBC
-	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
+	ibcRouter.AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
 
 	// Seal the router
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
@@ -653,7 +653,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	appKeepers.ScopedICAHostKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	appKeepers.ScopedICQKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
 
@@ -697,7 +697,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
-	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
@@ -818,7 +818,7 @@ func KVStoreKeys() []string {
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
-		wasm.StoreKey,
+		wasmtypes.StoreKey,
 		tokenfactorytypes.StoreKey,
 		valsetpreftypes.StoreKey,
 		protorevtypes.StoreKey,

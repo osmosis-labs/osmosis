@@ -125,7 +125,7 @@ var (
 	EnableSpecificWasmProposals = ""
 
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
-	EmptyWasmOpts []wasm.Option
+	EmptyWasmOpts []wasmkeeper.Option
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
@@ -189,7 +189,7 @@ func NewOsmosisApp(
 	homePath string,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
+	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
@@ -328,7 +328,7 @@ func NewOsmosisApp(
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
-		app.GetKey(wasm.StoreKey),
+		app.GetKey(wasmtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.TxFeesKeeper,
