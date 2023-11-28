@@ -141,7 +141,10 @@ func (p *Pool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 // GetPoolDenoms implements types.PoolI.
 func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
-	return osmoutils.CoinsDenoms(poolLiquidity)
+	fmt.Println("poolLiquidity", poolLiquidity)
+	coinsDenoms := osmoutils.CoinsDenoms(poolLiquidity)
+	fmt.Println("coinsDenoms", coinsDenoms)
+	return coinsDenoms
 }
 
 func (p Pool) AsSerializablePool() poolmanagertypes.PoolI {

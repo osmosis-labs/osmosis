@@ -618,6 +618,8 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			// Get pool defined in test case
 			actual, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
 
+			fmt.Println("ADAM", actual)
+
 			if tc.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedErr)
