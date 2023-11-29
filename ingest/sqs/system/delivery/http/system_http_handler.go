@@ -7,6 +7,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -14,8 +15,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
-
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/labstack/echo"
 )
@@ -79,11 +78,15 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	// Parse the response from the GRPC Gateway status endpoint
-	type tempResponse struct {
-		Result coretypes.ResultStatus `json:"result"`
+	type JsonResponse struct {
+		Result struct {
+			SyncInfo struct {
+				LatestBlockHeight string `json:"latest_block_height"`
+			} `json:"sync_info"`
+		} `json:"result"`
 	}
 
-	var statusResponse tempResponse
+	var statusResponse JsonResponse
 
 	if resp != nil {
 		bodyBytes, err := io.ReadAll(resp.Body)
@@ -99,7 +102,13 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
-	h.logger.Info("status resp: ", zap.Int("height", int(statusResponse.Result.SyncInfo.LatestBlockHeight)))
+
+	latestBlockHeight, err := strconv.Atoi(statusResponse.Result.SyncInfo.LatestBlockHeight)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
+	}
+
+	h.logger.Info("status resp: ", zap.Int("height", latestBlockHeight))
 	h.logger.Info("latest height: ", zap.Int("latest", int(latestHeight)))
 
 	b, err := json.MarshalIndent(statusResponse, "", "  ")
@@ -109,7 +118,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	fmt.Println(b)
 
 	// allow 10 blocks of difference before claiming node is not synced
-	if int64(latestHeight)+10 < statusResponse.Result.SyncInfo.LatestBlockHeight {
+	if fmt.Sprint(int64(latestHeight)+10) < statusResponse.Result.SyncInfo.LatestBlockHeight {
 		nodeStatus = "not_synced"
 	}
 
