@@ -148,38 +148,5 @@ func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
 		return fmt.Errorf("pool (%d) has less than minimum tvl, pool tvl (%s), minimum tvl (%s)", p.GetId(), sqsModel.TotalValueLockedUSDC, minUOSMOTVL)
 	}
 
-	// Validate CL pools specifically
-	poolType := p.GetType()
-	if poolType == poolmanagertypes.Concentrated {
-		tickModel, err := p.GetTickModel()
-
-		if err != nil {
-			return err
-		}
-
-		if tickModel.HasNoLiquidity {
-			return fmt.Errorf("concentrated pool (%d) has no liquidity", p.GetId())
-		}
-
-		if tickModel.CurrentTickIndex < 0 {
-			return fmt.Errorf("concentrated pool (%d) has invalid tick index (%d)", p.GetId(), tickModel.CurrentTickIndex)
-		}
-
-		if tickModel.CurrentTickIndex >= int64(len(tickModel.Ticks)) {
-			return fmt.Errorf("concentrated pool (%d) has invalid tick index (%d) for ticks length (%d)", p.GetId(), tickModel.CurrentTickIndex, len(tickModel.Ticks))
-		}
-
-		if len(tickModel.Ticks) == 0 {
-			return fmt.Errorf("concentrated pool (%d) has no ticks", p.GetId())
-		}
-
-		return nil
-	} else {
-		// Validate all pools other than concentrated
-		if p.TickModel != nil {
-			return fmt.Errorf("pool (%d) has tick model set but is not a concentrated pool, (%d)", p.GetId(), p.GetType())
-		}
-	}
-
 	return nil
 }
