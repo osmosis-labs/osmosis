@@ -57,6 +57,7 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 
 // GetHealthStatus handles health check requests for both GRPC gateway and Redis
 func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
+	h.logger.Info("START=======")
 	ctx := c.Request().Context()
 
 	// Check GRPC Gateway status
@@ -93,8 +94,8 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
-	h.logger.Debug("status resp: ", zap.Int("height", int(statusResponse.SyncInfo.LatestBlockHeight)))
-	h.logger.Debug("latest height: ", zap.Int("latest_height", int(statusResponse.SyncInfo.LatestBlockHeight)))
+	h.logger.Info("status resp: ", zap.Int("height", int(statusResponse.SyncInfo.LatestBlockHeight)))
+	h.logger.Info("latest height: ", zap.Int("latest_height", int(statusResponse.SyncInfo.LatestBlockHeight)))
 	if statusResponse.SyncInfo.LatestBlockHeight != int64(latestHeight) {
 		nodeStatus = "not_synced"
 	}
