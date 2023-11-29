@@ -68,7 +68,7 @@ func CreateUpgradeHandler(
 		// TEMP
 		dayEpochInfo := keepers.EpochsKeeper.GetEpochInfo(ctx, "day")
 		dayEpochInfo.Duration = time.Minute * 60
-		dayEpochInfo.CurrentEpochStartTime = ctx.BlockTime().Add(-time.Minute * 30)
+		dayEpochInfo.CurrentEpochStartTime = ctx.BlockTime().Add(-dayEpochInfo.Duration).Add(time.Minute * 3)
 		keepers.EpochsKeeper.SetEpochInfo(ctx, dayEpochInfo)
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
