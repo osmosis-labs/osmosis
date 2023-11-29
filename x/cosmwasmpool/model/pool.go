@@ -108,6 +108,7 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 	request := msg.GetTotalPoolLiquidityQueryMsg{}
 	response := cosmwasmutils.MustQuery[msg.GetTotalPoolLiquidityQueryMsg, msg.GetTotalPoolLiquidityQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	fmt.Println("ADAM response", response)
 	return response.TotalPoolLiquidity
 }
 

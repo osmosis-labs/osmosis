@@ -100,6 +100,8 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		previousRouteMapFound = false
 	}
 
+	fmt.Println("ADAM previousRouteMapFound", previousRouteMapFound)
+
 	// Retrieve minimum liquidity threshold from params
 	minValueForRoute := k.GetParams(ctx).MinValueForRoute
 
