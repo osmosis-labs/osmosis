@@ -19,9 +19,10 @@ var (
 	// We cache direct routes and spot prices to avoid recalculating them.
 	// It is important to note, these cache values are only used within the same query.
 	// If a new query is made, the cache will be reset.
-	directRouteCache map[string]uint64
-	spotPriceCache   map[string]osmomath.BigDec
-	shouldCache      = false
+	directRouteCache       map[string]uint64
+	spotPriceCache         map[string]osmomath.BigDec
+	shouldCache            = false
+	malformedCosmwasmPools = []uint64{1175, 1176}
 )
 
 func init() {
@@ -109,7 +110,16 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 	var routingGraph types.RoutingGraph
 
 	// Iterate through the pools
+PoolLoop:
 	for _, pool := range pools {
+		// Some of the first cw pools have a malformed response and are no longer in use. Remove these pools to prevent issues.
+		tokens := pool.GetPoolDenoms(ctx)
+		for _, token := range tokens {
+			if strings.Contains(token, "{pool_asset_denoms:[") {
+				continue PoolLoop
+			}
+		}
+
 		// If we were able to find a previous route map,
 		// check if each pool meets the minimum liquidity threshold
 		// If not, skip the pool
@@ -122,7 +132,6 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 				continue
 			}
 		}
-		tokens := pool.GetPoolDenoms(ctx)
 		poolID := pool.GetId()
 		// Create edges for all possible combinations of tokens
 		for i := 0; i < len(tokens); i++ {
