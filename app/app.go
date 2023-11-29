@@ -76,6 +76,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs"
 
+	redischaininfoingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/ingester/redis"
 	redispoolsingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 )
 
@@ -92,6 +93,7 @@ const (
 	ENV_NAME_INGEST_SQS_LOGGER_FILENAME              = "INGEST_SQS_LOGGER_FILENAME"
 	ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION         = "INGEST_SQS_LOGGER_IS_PRODUCTION"
 	ENV_NAME_INGEST_SQS_LOGGER_LEVEL                 = "INGEST_SQS_LOGGER_LEVEL"
+	ENV_NAME_GRPC_GATEWAY_ENDPOINT                   = "ENV_NAME_GRPC_GATEWAY_ENDPOINT"
 	ENV_VALUE_INGESTER_SQS                           = "sqs"
 )
 
@@ -270,6 +272,11 @@ func NewOsmosisApp(
 	if isIngestManagerEnabled {
 		dbHost := os.Getenv(ENV_NAME_INGEST_SQS_DBHOST)
 		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
+		grpcAddress := os.Getenv(ENV_NAME_GRPC_GATEWAY_ENDPOINT)
+		if grpcAddress == "" {
+			grpcAddress = "http://localhost:26657"
+		}
+
 		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
 		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
 		if err != nil {
@@ -302,7 +309,7 @@ func NewOsmosisApp(
 		}
 
 		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, routerConfig, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, logger)
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, routerConfig, dbHost, dbPort, sidecarQueryServerAddress, grpcAddress, sidecarQueryServerTimeoutDuration, logger)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
 		}
@@ -313,8 +320,11 @@ func NewOsmosisApp(
 		poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, routerConfig, app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
 		poolsIngester.SetLogger(sidecarQueryServer.GetLogger())
 
+		chainInfoingester := redischaininfoingester.NewChainInfoIngester(sidecarQueryServer.GetChainInfoRepository(), txManager)
+		chainInfoingester.SetLogger(sidecarQueryServer.GetLogger())
+
 		// Create sqs ingester that encapsulates all ingesters.
-		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, txManager)
+		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)
 
 		// Set the sidecar query server ingester to the ingest manager.
 		app.IngestManager.SetIngester(sqsIngester)
