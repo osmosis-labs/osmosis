@@ -96,7 +96,9 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	nodeStatus := "synced"
 	h.logger.Info("status resp: ", zap.Int("height", int(statusResponse.SyncInfo.LatestBlockHeight)))
 	h.logger.Info("latest height: ", zap.Int("latest_height", int(statusResponse.SyncInfo.LatestBlockHeight)))
-	if statusResponse.SyncInfo.LatestBlockHeight != int64(latestHeight) {
+
+	// allow 10 blocks of difference before claiming node is not synced
+	if int64(latestHeight)+10 < statusResponse.SyncInfo.LatestBlockHeight {
 		nodeStatus = "not_synced"
 	}
 
