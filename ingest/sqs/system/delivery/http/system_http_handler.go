@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"strconv"
 
 	"go.uber.org/zap"
@@ -20,32 +19,22 @@ import (
 )
 
 type SystemHandler struct {
-	logger    log.Logger
-	host      string // Host for the GRPC gateway
-	grpcPort  string // GRPC gateway port
-	redisHost string // Redis host
-	redisPort string // Redis port
-	CIUsecase mvc.ChainInfoUsecase
+	logger       log.Logger
+	redisAddress string
+	grpcAddress  string
+	CIUsecase    mvc.ChainInfoUsecase
 }
 
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
 func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log.Logger, us mvc.ChainInfoUsecase) {
 	// GRPC Gateway configuration
-	host := getEnvOrDefault("GRPC_GATEWAY_HOST", "localhost")
-	grpcPort := getEnvOrDefault("GRPC_GATEWAY_PORT", "1317")
-
-	// Redis configuration
-	redisHost := getEnvOrDefault("REDIS_HOST", "localhost")
-	redisPort := getEnvOrDefault("REDIS_PORT", "6379")
 
 	logger.Info("new sys handler")
 	handler := &SystemHandler{
-		logger:    logger,
-		host:      host,
-		grpcPort:  grpcPort,
-		redisHost: redisHost,
-		redisPort: redisPort,
-		CIUsecase: us,
+		logger:       logger,
+		redisAddress: redisAddress,
+		grpcAddress:  grpcAddress,
+		CIUsecase:    us,
 	}
 
 	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
@@ -62,8 +51,8 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Check GRPC Gateway status
 	grpcStatus := "running"
-	// url := fmt.Sprintf("http://%s:%s/status", h.host, h.grpcPort)
-	url := "https://rpc-cosmoshub.blockapsis.com/status"
+	url := h.grpcAddress + "/status"
+	fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		grpcStatus = "down"
@@ -127,7 +116,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	// Check Redis status
 	redisStatus := "running"
 	rdb := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%s", h.redisHost, h.redisPort),
+		Addr: h.redisAddress,
 	})
 
 	if _, err := rdb.Ping().Result(); err != nil {
@@ -141,13 +130,4 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		"redis_status":        redisStatus,
 		"node_status":         nodeStatus,
 	})
-}
-
-// getEnvOrDefault gets an environment variable or returns a default value
-func getEnvOrDefault(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
 }

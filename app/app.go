@@ -273,6 +273,10 @@ func NewOsmosisApp(
 		dbHost := os.Getenv(ENV_NAME_INGEST_SQS_DBHOST)
 		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
 		grpcAddress := os.Getenv(ENV_NAME_GRPC_GATEWAY_ENDPOINT)
+		if grpcAddress == "" {
+			grpcAddress = "http://localhost:26657"
+		}
+
 		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
 		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
 		if err != nil {

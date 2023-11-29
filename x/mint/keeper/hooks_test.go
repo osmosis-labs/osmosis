@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -426,29 +424,6 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 			}
 		})
 	}
-}
-
-// TestAfterEpochEnd tests that the after epoch end hook correctly
-// distributes the rewards depending on what epoch it is in.
-func (s *KeeperTestSuite) TestA() {
-	// Parse the response from the GRPC Gateway status endpoint
-
-	// Parse the response from the GRPC Gateway status endpoint
-	type JsonResponse struct {
-		Result struct {
-			SyncInfo struct {
-				LatestBlockHeight string `json:"latest_block_height"`
-			} `json:"sync_info"`
-		} `json:"result"`
-	}
-	var statusResponse JsonResponse
-
-	jsonData := `{"jsonrpc":"2.0","id":-1,"result":{"node_info":{"protocol_version":{"p2p":"8","block":"11","app":"0"},"id":"5e14e87cf797b622a227d6b09bd393fd415c5a91","listen_addr":"159.89.3.35:31581","network":"cosmoshub-4","version":"0.34.29","channels":"40202122233038606100","moniker":"cosmoshub-ba-public-statefulset-0","other":{"tx_index":"on","rpc_address":"tcp://0.0.0.0:26657"}},"sync_info":{"latest_block_hash":"B40E32B83F0F68D17244BD5F705FED134C97891EC85451C6EE510801F7498B58","latest_app_hash":"AEA738C12FE3866AF40229DA9FF7989F0C0E782E35F5FA2B705B353A287090F4","latest_block_height":"18062301","latest_block_time":"2023-11-29T11:50:58.244063897Z","earliest_block_hash":"1C68BFD6035F4FF179BE4625B5C081C801C0F31A224BD6CE622FC4E12D04B0DD","earliest_app_hash":"C7D5E842154AADF210ABB22815E99671B9136BA15D6AB2247C980C1BF98A181D","earliest_block_height":"17847213","earliest_block_time":"2023-11-14T07:58:50.776009038Z","catching_up":false},"validator_info":{"address":"EC9732FAA6E9EE5EAFC0B1487DA4077805FBA8AF","pub_key":{"type":"tendermint/PubKeyEd25519","value":"GmHGUGFg6qDu1VWN8dT8FQkddQ4jWsyKAxZgEA4MJ78="},"voting_power":"0"}}}`
-
-	err := json.Unmarshal([]byte(jsonData), &statusResponse)
-	s.Require().NoError(err)
-
-	fmt.Println(statusResponse.Result.SyncInfo.LatestBlockHeight)
 }
 
 // TODO: Remove after rounding errors are addressed and resolved.
