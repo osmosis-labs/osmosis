@@ -27,6 +27,7 @@ func NewChainInfoRepo(repositoryManager mvc.TxManager) *chainInfoRepo {
 // StoreLatestHeight stores the latest blockchain height into Redis
 func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx mvc.Tx, height uint64) error {
 	fmt.Println("Starting store latest height")
+
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
@@ -38,6 +39,7 @@ func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx mvc.Tx, height
 	}
 
 	heightStr := strconv.FormatUint(height, 10)
+	fmt.Println(heightStr)
 	// Use HSet for storing the latest height
 	cmd := pipeliner.HSet(ctx, latestHeightKey, latestHeightField, heightStr)
 	if err := cmd.Err(); err != nil {

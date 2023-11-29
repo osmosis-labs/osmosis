@@ -97,7 +97,14 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
 	h.logger.Info("status resp: ", zap.Int("height", int(statusResponse.SyncInfo.LatestBlockHeight)))
-	h.logger.Info("latest height: ", zap.Int("latest_height", int(statusResponse.SyncInfo.LatestBlockHeight)))
+	h.logger.Info("latest height: ", zap.Int("latest", int(latestHeight)))
+
+	b, err := json.MarshalIndent(statusResponse, "", "  ")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
+	}
+
+	h.logger.Info(string(b))
 
 	// allow 10 blocks of difference before claiming node is not synced
 	if int64(latestHeight)+10 < statusResponse.SyncInfo.LatestBlockHeight {
