@@ -13,11 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-<<<<<<< HEAD
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-=======
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
->>>>>>> 3ac77873 (chore: CL apptesting helpers for SQS (#6822))
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
@@ -433,9 +428,9 @@ func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions i
 	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
 
 	// Set test authorized uptime params.
-	params := s.clk.GetParams(s.Ctx)
+	params := s.Clk.GetParams(s.Ctx)
 	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, fullChargeDuration}
-	s.clk.SetParams(s.Ctx, params)
+	s.Clk.SetParams(s.Ctx, params)
 
 	// Fund account
 	s.FundAcc(address, requiredBalances)
@@ -444,13 +439,13 @@ func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions i
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, poolSpreadFactor)
 
 	// Set incentives for pool to ensure accumulators work correctly
-	err := s.clk.SetMultipleIncentiveRecords(s.Ctx, incentiveRecords)
+	err := s.Clk.SetMultipleIncentiveRecords(s.Ctx, incentiveRecords)
 	s.Require().NoError(err)
 
 	// Set up fully charged positions
 	totalLiquidity := osmomath.ZeroDec()
 	for i := 0; i < numPositions; i++ {
-		positionData, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		positionData, err := s.Clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 		totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
 	}
