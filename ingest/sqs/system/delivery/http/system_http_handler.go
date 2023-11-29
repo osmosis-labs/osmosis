@@ -39,6 +39,7 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 	redisHost := getEnvOrDefault("REDIS_HOST", "localhost")
 	redisPort := getEnvOrDefault("REDIS_PORT", "6379")
 
+	logger.Info("new sys handler")
 	handler := &SystemHandler{
 		logger:    logger,
 		host:      host,
@@ -58,6 +59,7 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 // GetHealthStatus handles health check requests for both GRPC gateway and Redis
 func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	h.logger.Info("START=======")
+	fmt.Println("=====Start")
 	ctx := c.Request().Context()
 
 	// Check GRPC Gateway status
