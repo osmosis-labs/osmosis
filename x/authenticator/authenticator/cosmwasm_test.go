@@ -1,6 +1,7 @@
 package authenticator_test
 
 import (
+	"encoding/json"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -67,18 +68,15 @@ func (s *CosmwasmAuthenticatorTest) TestInitialize() {
 	}
 }
 
+type InstantiateMsg struct {
+	PubKey []byte `json:"pubkey"`
+}
+
 func (s *CosmwasmAuthenticatorTest) TestGeneral() {
-	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo-aarch64.wasm")
-	addr := s.InstantiateContract("{}", 1)
-
-	auth, err := s.CosmwasmAuth.Initialize([]byte(
-		fmt.Sprintf(`{"contract": "%s"}`, addr)))
-	s.Require().NoError(err, "Should succeed")
-
 	accounts := apptesting.CreateRandomAccounts(2)
 	for _, acc := range accounts {
 		someCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-		err = s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, someCoins)
+		err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, someCoins)
 		s.Require().NoError(err)
 		err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, someCoins)
 		s.Require().NoError(err)
@@ -107,6 +105,18 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	// Define encoding config if not already defined
 	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
+
+	// Set up the contract
+	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo-aarch64.wasm")
+	instantiateMsg := InstantiateMsg{PubKey: priv.PubKey().Bytes()}
+	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	pubKeyHex := fmt.Sprintf("%X", priv.PubKey().Bytes())
+	fmt.Println(pubKeyHex)
+	addr := s.InstantiateContract(string(instantiateMsgBz), 1)
+
+	auth, err := s.CosmwasmAuth.Initialize([]byte(
+		fmt.Sprintf(`{"contract": "%s"}`, addr)))
+	s.Require().NoError(err, "Should succeed")
 
 	tx, _ := GenTx(
 		encodingConfig.TxConfig,

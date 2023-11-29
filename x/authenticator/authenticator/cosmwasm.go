@@ -1,6 +1,7 @@
 package authenticator
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -86,7 +87,7 @@ func (cwa CosmwasmAuthenticator) GetAuthenticationData(
 
 type SignModeData struct {
 	Direct  []byte `json:"sign_mode_direct"`
-	Textual []byte `json:"sign_mode_textual"`
+	Textual string `json:"sign_mode_textual"`
 }
 
 type LocalAny struct {
@@ -227,6 +228,15 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	if err != nil {
 		return iface.Rejected("failed to marshall AuthenticateMsg", err)
 	}
+
+	// sha256 of signbytes
+	hash := sha256.New()
+	hash.Write(signBytes)
+	hashBz := hash.Sum(nil)
+
+	fmt.Println("msg hash", hashBz)
+	signatureHex := fmt.Sprintf("%x", msgSignature)
+	fmt.Println("signature", signatureHex)
 
 	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
 	if err != nil {
