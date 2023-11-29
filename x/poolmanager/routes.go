@@ -202,7 +202,7 @@ func (k Keeper) getDirectRouteWithMostLiquidity(ctx sdk.Context, inputDenom, out
 		}
 	}
 	if bestRouteKey == "" {
-		return 0, fmt.Errorf("no route found with sufficient liquidity, likely no direct pairing with outputDenom")
+		return 0, nil
 	}
 
 	// Convert the best route key back to []uint64
@@ -244,11 +244,17 @@ func (k Keeper) inputAmountToTargetDenom(ctx sdk.Context, inputDenom, targetDeno
 			if err != nil {
 				return osmomath.ZeroInt(), nil
 			}
+			if route == 0 {
+				return osmomath.ZeroInt(), nil
+			}
 			directRouteCache[inputDenom] = route
 		}
 	} else {
 		route, err = k.getDirectRouteWithMostLiquidity(ctx, inputDenom, targetDenom, routeMap)
 		if err != nil {
+			return osmomath.ZeroInt(), nil
+		}
+		if route == 0 {
 			return osmomath.ZeroInt(), nil
 		}
 	}
@@ -372,10 +378,16 @@ func (k Keeper) poolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.P
 	if err != nil {
 		return osmomath.ZeroInt(), err
 	}
+	if totalLiquidityInOSMO.IsZero() {
+		return osmomath.ZeroInt(), nil
+	}
 
 	osmoUsdPoolId, err := k.getDirectRouteWithMostLiquidity(ctx, k.stakingKeeper.BondDenom(ctx), targetDenom, routeMap)
 	if err != nil {
 		return osmomath.ZeroInt(), err
+	}
+	if osmoUsdPoolId == 0 {
+		return osmomath.ZeroInt(), nil
 	}
 
 	osmoUsdcPool, err := k.GetPool(ctx, osmoUsdPoolId)
