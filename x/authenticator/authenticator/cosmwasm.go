@@ -89,15 +89,19 @@ type SignModeData struct {
 	Textual []byte `json:"sign_mode_textual"`
 }
 
+type LocalAny struct {
+	TypeURL string `json:"type_url"`
+	Value   []byte `json:"value"`
+}
+
 type ExplicitTxData struct {
-	ChainID       string    `json:"chain_id"`
-	AccountNumber uint64    `json:"account_number"`
-	Sequence      uint64    `json:"sequence"`
-	TimeoutHeight uint64    `json:"timeout_height"`
-	Msgs          []sdk.Msg `json:"msgs"`
-	Memo          string    `json:"memo"`
-	Simulate      bool      `json:"simulate"`
-	// TODO: do we want to explicityly include AuthInfos?
+	ChainID       string     `json:"chain_id"`
+	AccountNumber uint64     `json:"account_number"`
+	Sequence      uint64     `json:"sequence"`
+	TimeoutHeight uint64     `json:"timeout_height"`
+	Msgs          []LocalAny `json:"msgs"`
+	Memo          string     `json:"memo"`
+	Simulate      bool       `json:"simulate"`
 }
 
 type simplifiedSignatureData struct {
@@ -111,14 +115,14 @@ type AuthenticateSudoMsg struct {
 
 type AuthenticateMsg struct {
 	Account        sdk.AccAddress          `json:"account"`
-	Msg            codectypes.Any          `json:"msg"`
+	Msg            LocalAny                `json:"msg"`
 	Signature      []byte                  `json:"signature"` // Only allowing messages with a single signer
 	SignModeTxData SignModeData            `json:"sign_mode_tx_data"`
 	TxData         ExplicitTxData          `json:"tx_data"`
 	SignatureData  simplifiedSignatureData `json:"signature_data"`
 }
 
-type AuthenticateResult struct {
+type AuthenticationResult struct {
 }
 
 // TODO: decide if we want to reject or just not authenticate
@@ -154,7 +158,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return nil
+		return iface.Rejected("failed to encode msg", err)
 	}
 
 	timeoutTx, ok := signatureData.Tx.(sdk.TxWithTimeoutHeight)
@@ -165,12 +169,25 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	if !ok {
 		return iface.Rejected("failed to cast tx to TxWithMemo", sdkerrors.ErrInvalidType)
 	}
+
+	msgs := make([]LocalAny, len(signatureData.Tx.GetMsgs()))
+	for i, msg := range signatureData.Tx.GetMsgs() {
+		encodedMsg, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return iface.Rejected("failed to encode msg", err)
+		}
+		msgs[i] = LocalAny{
+			TypeURL: encodedMsg.TypeUrl,
+			Value:   encodedMsg.Value,
+		}
+	}
+
 	txData := ExplicitTxData{
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      baseAccount.GetSequence(),
 		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
-		Msgs:          signatureData.Tx.GetMsgs(),
+		Msgs:          msgs,
 		Memo:          memoTx.GetMemo(),
 		Simulate:      signatureData.Simulate,
 	}
@@ -190,8 +207,11 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	}
 
 	authMsg := AuthenticateMsg{
-		Account:   account,
-		Msg:       *encodedMsg,
+		Account: account,
+		Msg: LocalAny{
+			TypeURL: encodedMsg.TypeUrl,
+			Value:   encodedMsg.Value,
+		},
 		Signature: msgSignature, // TODO: currently only allowing one signer per message.
 		TxData:    txData,
 		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
@@ -203,6 +223,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 		},
 	}
 	bz, err := json.Marshal(AuthenticateSudoMsg{authMsg})
+	fmt.Println(string(bz))
 	if err != nil {
 		return iface.Rejected("failed to marshall AuthenticateMsg", err)
 	}
@@ -249,12 +270,12 @@ func UnmarshalAuthenticationResult(data []byte) (iface.AuthenticationResult, err
 		return nil, err
 	}
 
-	switch rawType.Type {
-	case "Authenticated":
+	switch rawType.Type { // usign snake case here because that's what cosmwasm defaults to
+	case "authenticated":
 		return iface.Authenticated(), nil
-	case "NotAuthenticated":
+	case "not_authenticated":
 		return iface.NotAuthenticated(), nil
-	case "Rejected":
+	case "rejected":
 		var content struct {
 			Msg string `json:"msg"`
 		}

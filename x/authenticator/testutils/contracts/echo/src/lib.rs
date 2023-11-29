@@ -2,53 +2,32 @@ use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Response, StdError};
-use schemars::JsonSchema;
 
-// Messages
 #[cw_serde]
 pub struct InstantiateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {}
 
-// // Value does not implement JsonSchema, so we wrap it here. This can be removed
-// // if https://github.com/CosmWasm/serde-cw-value/pull/3 gets merged
-// #[derive(
-//     ::cosmwasm_schema::serde::Serialize,
-//     ::cosmwasm_schema::serde::Deserialize,
-//     ::std::clone::Clone,
-//     ::std::fmt::Debug,
-//     PartialEq,
-//     Eq,
-// )]
-// pub struct SerializableJson(pub serde_cw_value::Value);
-
-// impl JsonSchema for SerializableJson {
-//     fn schema_name() -> String {
-//         "JSON".to_string()
-//     }
-
-//     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-//         schemars::schema::Schema::from(true)
-//     }
-// }
-
 #[cw_serde]
 pub enum SudoMsg {
-    Authenticate {
-        account: Addr,
-        msg: Msg,
-        signature: String,
-        sign_mode_tx_data: SignModeTxData,
-        tx_data: TxData,
-        signature_data: SignatureData,
-    },
+    Authenticate(AuthenticationRequest),
 }
 
 #[cw_serde]
-pub struct Msg {
+pub struct Any {
     pub type_url: String,
-    pub value: String,
+    pub value: cosmwasm_std::Binary,
+}
+
+#[cw_serde]
+pub struct AuthenticationRequest {
+    pub account: Addr,
+    pub msg: Any,
+    pub signature: String,
+    pub sign_mode_tx_data: SignModeTxData,
+    pub tx_data: TxData,
+    pub signature_data: SignatureData,
 }
 
 #[cw_serde]
@@ -63,22 +42,9 @@ pub struct TxData {
     pub account_number: u64,
     pub sequence: u64,
     pub timeout_height: u64,
-    pub msgs: Vec<Message>,
+    pub msgs: Vec<Any>,
     pub memo: String,
     pub simulate: bool,
-}
-
-#[cw_serde]
-pub struct Message {
-    pub from_address: Addr,
-    pub to_address: Addr,
-    pub amount: Vec<Coin>,
-}
-
-#[cw_serde]
-pub struct Coin {
-    pub denom: String,
-    pub amount: String,
 }
 
 #[cw_serde]
@@ -87,7 +53,6 @@ pub struct SignatureData {
     pub signatures: Vec<String>,
 }
 
-// Instantiate
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     _deps: DepsMut,
@@ -98,8 +63,35 @@ pub fn instantiate(
     Ok(Response::new())
 }
 
+#[cw_serde]
+#[serde(tag = "type", content = "content")]
+enum AuthenticationResult {
+    Authenticated,
+    NotAuthenticated,
+    Rejected { msg: String },
+}
+
+impl Into<cosmwasm_std::Binary> for AuthenticationResult {
+    fn into(self) -> cosmwasm_std::Binary {
+        cosmwasm_std::Binary::from(
+            serde_json_wasm::to_string(&self)
+                .expect("Failed to serialize AuthenticationResult")
+                .as_bytes()
+                .to_vec(),
+        )
+    }
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError> {
-    deps.api.debug(&format!("sudo {:?}", msg));
-    Ok(Response::new().set_data(format!("{:?}", msg).as_bytes()))
+pub fn sudo(
+    deps: DepsMut,
+    _env: Env,
+    SudoMsg::Authenticate(auth_request): SudoMsg,
+) -> Result<Response, StdError> {
+    let send: osmosis_std::types::cosmos::bank::v1beta1::MsgSend =
+        auth_request.msg.value.try_into()?;
+
+    deps.api.debug(&format!("send {:?}", send));
+
+    Ok(Response::new().set_data(AuthenticationResult::Authenticated {}))
 }

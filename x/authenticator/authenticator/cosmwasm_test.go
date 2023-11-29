@@ -38,7 +38,7 @@ func TestCosmwasmAuthenticatorTest(t *testing.T) {
 func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
 	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
