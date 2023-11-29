@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/go-redis/redis"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
@@ -35,6 +36,7 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 
 	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
 	e.GET("/healthcheck", handler.GetHealthStatus)
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	// // Register pprof handlers on "/debug/pprof"
 	// e.GET("/debug/pprof/*", echo.WrapHandler(http.HandlerFunc(pprof.Index)))

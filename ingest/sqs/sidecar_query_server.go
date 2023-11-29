@@ -100,6 +100,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	e := echo.New()
 	middleware := middleware.InitMiddleware()
 	e.Use(middleware.CORS)
+	e.Use(middleware.InstrumentMiddleware)
 
 	// Use context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
