@@ -62,7 +62,8 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Check GRPC Gateway status
 	grpcStatus := "running"
-	url := fmt.Sprintf("http://%s:%s/status", h.host, h.grpcPort)
+	// url := fmt.Sprintf("http://%s:%s/status", h.host, h.grpcPort)
+	url := "https://rpc-cosmoshub.blockapsis.com/status"
 	resp, err := http.Get(url)
 	if err != nil {
 		grpcStatus = "down"
