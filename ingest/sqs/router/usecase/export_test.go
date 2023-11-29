@@ -22,10 +22,6 @@ const (
 	NoTotalValueLockedError = noTotalValueLockedError
 )
 
-func (r Router) GetBestSplitRoutesQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, err error) {
-	return r.estimateBestSplitRouteQuote(routes, tokenIn)
-}
-
 func (r *Router) ValidateAndFilterRoutes(candidateRoutes [][]candidatePoolWrapper, tokenInDenom string) (route.CandidateRoutes, error) {
 	return r.validateAndFilterRoutes(candidateRoutes, tokenInDenom)
 }
