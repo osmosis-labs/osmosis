@@ -54,7 +54,7 @@ func (im *ingestManagerImpl) ProcessBlock(ctx sdk.Context) {
 		}
 	}()
 
-	// Ingester must be set in the app. If not, we do nothing.
+	// Ingesters must be set in the app. If not, we do nothing.
 	for _, ingester := range im.ingesters {
 		if err := ingester.ProcessBlock(ctx); err != nil {
 			// The error is silently logged and ignored.
