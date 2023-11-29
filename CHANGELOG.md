@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### API
 
+* [#6944](https://github.com/osmosis-labs/osmosis/pull/6944) Fix: total liquidity poolmanager grpc gateway query
 * [#6939](https://github.com/osmosis-labs/osmosis/pull/6939) Fix taker fee GRPC gateway query path in poolmanager.
 
 ### Features
