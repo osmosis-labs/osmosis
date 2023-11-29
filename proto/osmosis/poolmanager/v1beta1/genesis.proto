@@ -42,6 +42,13 @@ message GenesisState {
   Params params = 2 [ (gogoproto.nullable) = false ];
   // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+<<<<<<< HEAD
+=======
+
+  // KVStore state
+  TakerFeesTracker taker_fees_tracker = 4;
+  repeated PoolVolume pool_volumes = 5;
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 }
 
 // TakerFeeParams consolidates the taker fee parameters for the poolmanager.
@@ -117,3 +124,31 @@ message TakerFeeDistributionPercentage {
     (gogoproto.nullable) = false
   ];
 }
+<<<<<<< HEAD
+=======
+
+message TakerFeesTracker {
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  int64 height_accounting_starts_from = 3
+      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
+}
+
+// PoolVolume stores the KVStore entries for each pool's volume, which
+// is used in export/import genesis.
+message PoolVolume {
+  // pool_id is the id of the pool.
+  uint64 pool_id = 1;
+  // pool_volume is the cumulative volume of the pool.
+  repeated cosmos.base.v1beta1.Coin pool_volume = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))

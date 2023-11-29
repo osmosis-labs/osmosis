@@ -43,6 +43,26 @@ var (
 			PoolType: types.Stableswap,
 		},
 	}
+<<<<<<< HEAD
+=======
+
+	testTakerFeesTracker = types.TakerFeesTracker{
+		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(1000))},
+		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", sdk.NewInt(1000))},
+		HeightAccountingStartsFrom: 100,
+	}
+
+	testPoolVolumes = []*types.PoolVolume{
+		{
+			PoolId:     1,
+			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000))),
+		},
+		{
+			PoolId:     2,
+			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000))),
+		},
+	}
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 )
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -101,8 +121,15 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
+<<<<<<< HEAD
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
+=======
+		NextPoolId:       testExpectedPoolId,
+		PoolRoutes:       testPoolRoute,
+		TakerFeesTracker: &testTakerFeesTracker,
+		PoolVolumes:      testPoolVolumes,
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 	})
 
 	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
@@ -115,9 +142,21 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
+<<<<<<< HEAD
+=======
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToCommunityPool, s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx))
+	s.Require().Equal(testTakerFeesTracker.HeightAccountingStartsFrom, s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
+	s.Require().Equal(testPoolVolumes[0].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[0].PoolId))
+	s.Require().Equal(testPoolVolumes[1].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[1].PoolId))
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
+	// Need to create two pools to properly export pool volumes.
+	s.PrepareBalancerPool()
+	s.PrepareConcentratedPool()
+
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
@@ -130,8 +169,15 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
+<<<<<<< HEAD
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
+=======
+		NextPoolId:       testExpectedPoolId,
+		PoolRoutes:       testPoolRoute,
+		TakerFeesTracker: &testTakerFeesTracker,
+		PoolVolumes:      testPoolVolumes,
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 	})
 
 	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
@@ -144,4 +190,12 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
+<<<<<<< HEAD
+=======
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, genesis.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToCommunityPool, genesis.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(testTakerFeesTracker.HeightAccountingStartsFrom, genesis.TakerFeesTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(testPoolVolumes[0].PoolVolume, genesis.PoolVolumes[0].PoolVolume)
+	s.Require().Equal(testPoolVolumes[1].PoolVolume, genesis.PoolVolumes[1].PoolVolume)
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 }

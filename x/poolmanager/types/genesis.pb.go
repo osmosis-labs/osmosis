@@ -107,6 +107,12 @@ type GenesisState struct {
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 	// pool_routes is the container of the mappings from pool id to pool type.
 	PoolRoutes []ModuleRoute `protobuf:"bytes,3,rep,name=pool_routes,json=poolRoutes,proto3" json:"pool_routes"`
+<<<<<<< HEAD
+=======
+	// KVStore state
+	TakerFeesTracker *TakerFeesTracker `protobuf:"bytes,4,opt,name=taker_fees_tracker,json=takerFeesTracker,proto3" json:"taker_fees_tracker,omitempty"`
+	PoolVolumes      []*PoolVolume     `protobuf:"bytes,5,rep,name=pool_volumes,json=poolVolumes,proto3" json:"pool_volumes,omitempty"`
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -163,6 +169,23 @@ func (m *GenesisState) GetPoolRoutes() []ModuleRoute {
 	return nil
 }
 
+<<<<<<< HEAD
+=======
+func (m *GenesisState) GetTakerFeesTracker() *TakerFeesTracker {
+	if m != nil {
+		return m.TakerFeesTracker
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPoolVolumes() []*PoolVolume {
+	if m != nil {
+		return m.PoolVolumes
+	}
+	return nil
+}
+
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 // TakerFeeParams consolidates the taker fee parameters for the poolmanager.
 type TakerFeeParams struct {
 	// default_taker_fee is the fee used when creating a new pool that doesn't
@@ -312,11 +335,135 @@ func (m *TakerFeeDistributionPercentage) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TakerFeeDistributionPercentage proto.InternalMessageInfo
 
+<<<<<<< HEAD
+=======
+type TakerFeesTracker struct {
+	TakerFeesToStakers         github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=taker_fees_to_stakers,json=takerFeesToStakers,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"taker_fees_to_stakers"`
+	TakerFeesToCommunityPool   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=taker_fees_to_community_pool,json=takerFeesToCommunityPool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"taker_fees_to_community_pool"`
+	HeightAccountingStartsFrom int64                                    `protobuf:"varint,3,opt,name=height_accounting_starts_from,json=heightAccountingStartsFrom,proto3" json:"height_accounting_starts_from,omitempty" yaml:"height_accounting_starts_from"`
+}
+
+func (m *TakerFeesTracker) Reset()         { *m = TakerFeesTracker{} }
+func (m *TakerFeesTracker) String() string { return proto.CompactTextString(m) }
+func (*TakerFeesTracker) ProtoMessage()    {}
+func (*TakerFeesTracker) Descriptor() ([]byte, []int) {
+	return fileDescriptor_aa099d9fbdf68b35, []int{4}
+}
+func (m *TakerFeesTracker) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeesTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeesTracker.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeesTracker) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeesTracker.Merge(m, src)
+}
+func (m *TakerFeesTracker) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeesTracker) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeesTracker.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeesTracker proto.InternalMessageInfo
+
+func (m *TakerFeesTracker) GetTakerFeesToStakers() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.TakerFeesToStakers
+	}
+	return nil
+}
+
+func (m *TakerFeesTracker) GetTakerFeesToCommunityPool() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.TakerFeesToCommunityPool
+	}
+	return nil
+}
+
+func (m *TakerFeesTracker) GetHeightAccountingStartsFrom() int64 {
+	if m != nil {
+		return m.HeightAccountingStartsFrom
+	}
+	return 0
+}
+
+// PoolVolume stores the KVStore entries for each pool's volume, which
+// is used in export/import genesis.
+type PoolVolume struct {
+	// pool_id is the id of the pool.
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	// pool_volume is the cumulative volume of the pool.
+	PoolVolume github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=pool_volume,json=poolVolume,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"pool_volume"`
+}
+
+func (m *PoolVolume) Reset()         { *m = PoolVolume{} }
+func (m *PoolVolume) String() string { return proto.CompactTextString(m) }
+func (*PoolVolume) ProtoMessage()    {}
+func (*PoolVolume) Descriptor() ([]byte, []int) {
+	return fileDescriptor_aa099d9fbdf68b35, []int{5}
+}
+func (m *PoolVolume) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolVolume) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolVolume.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolVolume) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolVolume.Merge(m, src)
+}
+func (m *PoolVolume) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolVolume) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolVolume.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolVolume proto.InternalMessageInfo
+
+func (m *PoolVolume) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *PoolVolume) GetPoolVolume() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.PoolVolume
+	}
+	return nil
+}
+
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 func init() {
 	proto.RegisterType((*Params)(nil), "osmosis.poolmanager.v1beta1.Params")
 	proto.RegisterType((*GenesisState)(nil), "osmosis.poolmanager.v1beta1.GenesisState")
 	proto.RegisterType((*TakerFeeParams)(nil), "osmosis.poolmanager.v1beta1.TakerFeeParams")
 	proto.RegisterType((*TakerFeeDistributionPercentage)(nil), "osmosis.poolmanager.v1beta1.TakerFeeDistributionPercentage")
+<<<<<<< HEAD
+=======
+	proto.RegisterType((*TakerFeesTracker)(nil), "osmosis.poolmanager.v1beta1.TakerFeesTracker")
+	proto.RegisterType((*PoolVolume)(nil), "osmosis.poolmanager.v1beta1.PoolVolume")
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 }
 
 func init() {
@@ -324,6 +471,7 @@ func init() {
 }
 
 var fileDescriptor_aa099d9fbdf68b35 = []byte{
+<<<<<<< HEAD
 	// 855 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x4f, 0x6f, 0xdc, 0x44,
 	0x14, 0x8f, 0x9b, 0xb0, 0x52, 0x26, 0x65, 0x97, 0x1a, 0x42, 0xdd, 0x04, 0xd9, 0x2b, 0xf7, 0xb2,
@@ -379,6 +527,75 @@ var fileDescriptor_aa099d9fbdf68b35 = []byte{
 	0xed, 0xcd, 0x84, 0x3f, 0x18, 0xb2, 0x81, 0x98, 0x1d, 0xc2, 0x93, 0xad, 0x8f, 0xc3, 0x57, 0x8d,
 	0x17, 0x4a, 0x3d, 0x01, 0x83, 0x96, 0x7a, 0x93, 0x3e, 0xf9, 0x27, 0x00, 0x00, 0xff, 0xff, 0x7d,
 	0x1e, 0x36, 0xaf, 0x99, 0x07, 0x00, 0x00,
+=======
+	// 1044 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x6f, 0xdc, 0x44,
+	0x14, 0x8f, 0xb3, 0xe9, 0xa2, 0x4c, 0x42, 0x92, 0x0e, 0x84, 0xb8, 0x49, 0x59, 0xaf, 0x5c, 0x24,
+	0x16, 0xa1, 0xd8, 0x6d, 0x90, 0x8a, 0x04, 0xf4, 0x90, 0x4d, 0x14, 0x04, 0x2a, 0x6d, 0xea, 0x44,
+	0x20, 0x95, 0xc3, 0x68, 0xd6, 0x7e, 0xf1, 0x5a, 0x6b, 0x7b, 0x16, 0xcf, 0x38, 0xe9, 0x72, 0xe0,
+	0x0b, 0x54, 0x48, 0x48, 0xbd, 0x72, 0xe6, 0xc0, 0x8d, 0x6f, 0xd1, 0x63, 0x8f, 0x88, 0x83, 0x41,
+	0x9b, 0x73, 0x2f, 0xfb, 0x09, 0x90, 0x67, 0xbc, 0x7f, 0xbc, 0x4d, 0x96, 0xf0, 0xef, 0xb4, 0x3b,
+	0xef, 0xbd, 0xdf, 0x6f, 0x7e, 0xef, 0xbd, 0x99, 0x37, 0x46, 0xef, 0x31, 0x1e, 0x31, 0x1e, 0x70,
+	0xbb, 0xcb, 0x58, 0x18, 0xd1, 0x98, 0xfa, 0x90, 0xd8, 0xa7, 0x77, 0x5a, 0x20, 0xe8, 0x1d, 0xdb,
+	0x87, 0x18, 0x78, 0xc0, 0xad, 0x6e, 0xc2, 0x04, 0xc3, 0x5b, 0x45, 0xa8, 0x35, 0x11, 0x6a, 0x15,
+	0xa1, 0x9b, 0x6f, 0xfa, 0xcc, 0x67, 0x32, 0xce, 0xce, 0xff, 0x29, 0xc8, 0xe6, 0x0d, 0x9f, 0x31,
+	0x3f, 0x04, 0x5b, 0xae, 0x5a, 0xe9, 0x89, 0x4d, 0xe3, 0xde, 0xd0, 0xe5, 0x4a, 0x3a, 0xa2, 0x30,
+	0x6a, 0x51, 0xb8, 0x6a, 0xd3, 0x28, 0x2f, 0x4d, 0xa8, 0x08, 0x58, 0x3c, 0xf4, 0xab, 0x68, 0xbb,
+	0x45, 0x39, 0x8c, 0xb4, 0xba, 0x2c, 0x18, 0xfa, 0xad, 0x59, 0x39, 0x45, 0xcc, 0x4b, 0x43, 0x20,
+	0x09, 0x4b, 0x05, 0xa8, 0x78, 0x73, 0x30, 0x8f, 0xaa, 0x87, 0x34, 0xa1, 0x11, 0xc7, 0xcf, 0x34,
+	0x74, 0x3d, 0x47, 0x11, 0x37, 0x01, 0xb9, 0x25, 0x39, 0x01, 0xd0, 0xb5, 0x7a, 0xa5, 0xb1, 0xb4,
+	0x73, 0xc3, 0x2a, 0x54, 0xe6, 0xfb, 0x0e, 0x13, 0xb7, 0xf6, 0x58, 0x10, 0x37, 0xef, 0x3f, 0xcf,
+	0x8c, 0xb9, 0x41, 0x66, 0xe8, 0x3d, 0x1a, 0x85, 0x1f, 0x99, 0xaf, 0x30, 0x98, 0x3f, 0xff, 0x6e,
+	0x34, 0xfc, 0x40, 0xb4, 0xd3, 0x96, 0xe5, 0xb2, 0xa8, 0x48, 0xb7, 0xf8, 0xd9, 0xe6, 0x5e, 0xc7,
+	0x16, 0xbd, 0x2e, 0x70, 0x49, 0xc6, 0x9d, 0xd5, 0x1c, 0xbf, 0x57, 0xc0, 0x0f, 0x00, 0xf0, 0x29,
+	0x5a, 0x13, 0xb4, 0x03, 0x49, 0x4e, 0x45, 0xba, 0x52, 0xa9, 0x3e, 0x5f, 0xd7, 0x1a, 0x4b, 0x3b,
+	0xef, 0x5b, 0x33, 0x9a, 0x62, 0x1d, 0xe7, 0xa0, 0x03, 0x00, 0x95, 0x5c, 0xd3, 0x28, 0x54, 0x6e,
+	0x28, 0x95, 0xd3, 0x94, 0xa6, 0xb3, 0x22, 0x4a, 0x00, 0xfc, 0x18, 0x6d, 0xd0, 0x54, 0xb4, 0x59,
+	0x12, 0x7c, 0x0b, 0x1e, 0xf9, 0x26, 0x65, 0x02, 0x88, 0x07, 0x31, 0x8b, 0xb8, 0x5e, 0xa9, 0x57,
+	0x1a, 0x8b, 0x4d, 0x73, 0x90, 0x19, 0x35, 0xc5, 0x76, 0x49, 0xa0, 0xe9, 0xac, 0x8f, 0x3d, 0x8f,
+	0x72, 0xc7, 0xbe, 0xb2, 0xbf, 0x9c, 0x47, 0xcb, 0x9f, 0xaa, 0xf3, 0x75, 0x24, 0xa8, 0x00, 0x5c,
+	0x47, 0xcb, 0x31, 0x3c, 0x11, 0x44, 0x16, 0x2f, 0xf0, 0x74, 0xad, 0xae, 0x35, 0x16, 0x1c, 0x94,
+	0xdb, 0x0e, 0x19, 0x0b, 0x3f, 0xf3, 0xf0, 0x2e, 0xaa, 0x96, 0x92, 0xbf, 0x35, 0x33, 0xf9, 0x22,
+	0xe9, 0x85, 0x3c, 0x69, 0xa7, 0x00, 0xe2, 0x87, 0x68, 0x49, 0xf2, 0xcb, 0xf6, 0xab, 0x2c, 0x96,
+	0x76, 0x1a, 0x33, 0x79, 0xbe, 0x90, 0x07, 0xc6, 0xc9, 0x01, 0x05, 0x19, 0xca, 0xc3, 0xa4, 0x81,
+	0xe3, 0xaf, 0x11, 0x1e, 0xd5, 0x91, 0x13, 0x91, 0x50, 0xb7, 0x03, 0x89, 0xbe, 0x20, 0xf5, 0x6d,
+	0x5f, 0xa9, 0x39, 0xfc, 0x58, 0x81, 0x9c, 0x35, 0x31, 0x65, 0xc1, 0x9f, 0xa3, 0x65, 0xa9, 0xf6,
+	0x94, 0x85, 0x69, 0x04, 0x5c, 0xbf, 0x26, 0xe5, 0xbe, 0x3b, 0x3b, 0x6d, 0xc6, 0xc2, 0x2f, 0x65,
+	0xbc, 0x23, 0x53, 0x55, 0xff, 0xb9, 0xf9, 0xb4, 0x8a, 0x56, 0xca, 0xe7, 0x01, 0xb7, 0xd0, 0x75,
+	0x0f, 0x4e, 0x68, 0x1a, 0x0a, 0x32, 0xca, 0x41, 0x96, 0x7d, 0xb1, 0x79, 0x37, 0x4f, 0xf4, 0xb7,
+	0xcc, 0xd8, 0x52, 0x47, 0x94, 0x7b, 0x1d, 0x2b, 0x60, 0x76, 0x44, 0x45, 0xdb, 0xba, 0x0f, 0x3e,
+	0x75, 0x7b, 0xfb, 0xe0, 0xf6, 0x33, 0x63, 0x75, 0x5f, 0xe1, 0x87, 0xc4, 0xce, 0xaa, 0x57, 0x36,
+	0xe0, 0x1f, 0x35, 0x24, 0xe7, 0xc6, 0x78, 0x07, 0xe2, 0x05, 0x5c, 0x24, 0x41, 0x2b, 0xcd, 0x4f,
+	0x77, 0xd1, 0xc9, 0x8f, 0xaf, 0x54, 0xa9, 0xfd, 0x09, 0xe0, 0x21, 0x24, 0x2e, 0xc4, 0x82, 0xfa,
+	0xd0, 0xac, 0xe7, 0x5a, 0xfb, 0x99, 0xa1, 0x3f, 0xe4, 0x11, 0xbb, 0x28, 0xd6, 0xd1, 0xd9, 0x25,
+	0x1e, 0xfc, 0x93, 0x86, 0x8c, 0x98, 0xc5, 0x64, 0x96, 0xc4, 0xca, 0xbf, 0x97, 0x78, 0xab, 0x90,
+	0xb8, 0xf5, 0x80, 0xc5, 0x97, 0xaa, 0xdc, 0x8a, 0x2f, 0x77, 0xe2, 0x3d, 0xb4, 0x4a, 0xbd, 0x28,
+	0x88, 0x09, 0xf5, 0xbc, 0x04, 0x38, 0x07, 0xae, 0x2f, 0xc8, 0x2b, 0xb8, 0x39, 0xc8, 0x8c, 0xb7,
+	0x8a, 0x2b, 0x58, 0x0e, 0x30, 0x9d, 0x15, 0x69, 0xd9, 0x1d, 0x1a, 0xf0, 0x2f, 0x1a, 0xba, 0xeb,
+	0xb2, 0x28, 0x4a, 0xe3, 0x40, 0xf4, 0xd4, 0x45, 0x93, 0xb7, 0x94, 0x08, 0x46, 0xf8, 0x19, 0xed,
+	0x92, 0xbc, 0x14, 0x67, 0xed, 0x40, 0x40, 0x18, 0x70, 0x01, 0x1e, 0xa1, 0x9c, 0x83, 0xe0, 0x44,
+	0x30, 0xfd, 0x9a, 0x3c, 0x16, 0xbb, 0x83, 0xcc, 0xb8, 0xa7, 0x36, 0xfb, 0x67, 0x3c, 0xa6, 0x63,
+	0x8d, 0x80, 0xf9, 0x49, 0x95, 0xc3, 0xe0, 0x98, 0x1d, 0x9d, 0xd1, 0xee, 0x03, 0x16, 0x7f, 0x35,
+	0x86, 0xec, 0x4a, 0xc4, 0x31, 0xc3, 0xc7, 0x68, 0x3d, 0x01, 0x2f, 0x75, 0xc1, 0x93, 0x9d, 0x19,
+	0xb1, 0xea, 0x55, 0x99, 0x7e, 0x7d, 0x90, 0x19, 0x37, 0x95, 0xa2, 0x0b, 0xc3, 0x4c, 0xe7, 0x8d,
+	0xc2, 0x7e, 0x00, 0x30, 0xe2, 0x37, 0x5f, 0x6a, 0xa8, 0x36, 0xbb, 0x67, 0xf8, 0x04, 0xad, 0x72,
+	0x41, 0x3b, 0x41, 0xec, 0x93, 0x04, 0xce, 0x68, 0xe2, 0xf1, 0xe2, 0x6e, 0xdc, 0xbb, 0xc2, 0xdd,
+	0x18, 0x37, 0x65, 0x8a, 0xc3, 0x74, 0x56, 0x0a, 0x8b, 0xa3, 0x0c, 0xd8, 0x45, 0x2b, 0xe5, 0x5a,
+	0xca, 0x3b, 0xb1, 0xd8, 0xfc, 0xe4, 0x6a, 0xdb, 0xac, 0x5f, 0xd4, 0x0e, 0xd3, 0x79, 0xbd, 0x54,
+	0x66, 0xf3, 0xfb, 0x0a, 0x5a, 0x9b, 0x1e, 0x38, 0xf8, 0x3b, 0xb4, 0x3e, 0x39, 0xbb, 0x18, 0xe1,
+	0x72, 0xc9, 0xff, 0xfa, 0xbd, 0xbb, 0x9d, 0x6b, 0xfb, 0x5b, 0x6f, 0x1a, 0x1e, 0x0f, 0x37, 0x76,
+	0xa4, 0xb6, 0xc1, 0x4f, 0x35, 0x74, 0xb3, 0x2c, 0xe0, 0x95, 0x42, 0xfc, 0xe7, 0x3a, 0xf4, 0x09,
+	0x1d, 0x7b, 0x93, 0x25, 0xc2, 0x1d, 0xf4, 0x76, 0x1b, 0x02, 0xbf, 0x2d, 0x08, 0x75, 0x5d, 0x96,
+	0xc6, 0x22, 0xef, 0x1a, 0x17, 0x34, 0x11, 0x9c, 0x9c, 0x24, 0x2c, 0x92, 0x73, 0xa0, 0xd2, 0x6c,
+	0x0c, 0x32, 0xe3, 0x1d, 0x55, 0xf3, 0x99, 0xe1, 0xa6, 0xb3, 0xa9, 0xfc, 0xbb, 0x23, 0xf7, 0x91,
+	0xf4, 0x1e, 0xe4, 0xce, 0x67, 0x1a, 0x42, 0xe3, 0x49, 0x8d, 0x37, 0xd0, 0x6b, 0xe5, 0x67, 0xaf,
+	0xda, 0x55, 0x4f, 0x5e, 0x58, 0xbc, 0x57, 0xea, 0x05, 0xf8, 0x3f, 0x0a, 0x82, 0xc6, 0x8f, 0x44,
+	0xf3, 0xd1, 0xf3, 0x7e, 0x4d, 0x7b, 0xd1, 0xaf, 0x69, 0x7f, 0xf4, 0x6b, 0xda, 0x0f, 0xe7, 0xb5,
+	0xb9, 0x17, 0xe7, 0xb5, 0xb9, 0x5f, 0xcf, 0x6b, 0x73, 0x8f, 0x3f, 0x9c, 0xe0, 0x2b, 0xe6, 0xe0,
+	0x76, 0x48, 0x5b, 0x7c, 0xb8, 0xb0, 0x4f, 0x77, 0x6e, 0xdb, 0x4f, 0x4a, 0x1f, 0x5c, 0x72, 0x93,
+	0x56, 0x55, 0x7e, 0x62, 0x7d, 0xf0, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0xbd, 0xb3, 0xf3, 0x41,
+	0x68, 0x0a, 0x00, 0x00,
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -457,6 +674,35 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+<<<<<<< HEAD
+=======
+	if len(m.PoolVolumes) > 0 {
+		for iNdEx := len(m.PoolVolumes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PoolVolumes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.TakerFeesTracker != nil {
+		{
+			size, err := m.TakerFeesTracker.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 	if len(m.PoolRoutes) > 0 {
 		for iNdEx := len(m.PoolRoutes) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -610,6 +856,107 @@ func (m *TakerFeeDistributionPercentage) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+<<<<<<< HEAD
+=======
+func (m *TakerFeesTracker) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeesTracker) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeesTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.HeightAccountingStartsFrom != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.HeightAccountingStartsFrom))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.TakerFeesToCommunityPool) > 0 {
+		for iNdEx := len(m.TakerFeesToCommunityPool) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TakerFeesToCommunityPool[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.TakerFeesToStakers) > 0 {
+		for iNdEx := len(m.TakerFeesToStakers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TakerFeesToStakers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PoolVolume) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolVolume) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolVolume) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PoolVolume) > 0 {
+		for iNdEx := len(m.PoolVolume) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PoolVolume[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -661,6 +1008,19 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+<<<<<<< HEAD
+=======
+	if m.TakerFeesTracker != nil {
+		l = m.TakerFeesTracker.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if len(m.PoolVolumes) > 0 {
+		for _, e := range m.PoolVolumes {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 	return n
 }
 
@@ -708,6 +1068,51 @@ func (m *TakerFeeDistributionPercentage) Size() (n int) {
 	return n
 }
 
+<<<<<<< HEAD
+=======
+func (m *TakerFeesTracker) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.TakerFeesToStakers) > 0 {
+		for _, e := range m.TakerFeesToStakers {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.TakerFeesToCommunityPool) > 0 {
+		for _, e := range m.TakerFeesToCommunityPool {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if m.HeightAccountingStartsFrom != 0 {
+		n += 1 + sovGenesis(uint64(m.HeightAccountingStartsFrom))
+	}
+	return n
+}
+
+func (m *PoolVolume) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovGenesis(uint64(m.PoolId))
+	}
+	if len(m.PoolVolume) > 0 {
+		for _, e := range m.PoolVolume {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 func sovGenesis(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -978,6 +1383,79 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+<<<<<<< HEAD
+=======
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeesTracker", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TakerFeesTracker == nil {
+				m.TakerFeesTracker = &TakerFeesTracker{}
+			}
+			if err := m.TakerFeesTracker.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolVolumes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PoolVolumes = append(m.PoolVolumes, &PoolVolume{})
+			if err := m.PoolVolumes[len(m.PoolVolumes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])
@@ -1363,6 +1841,249 @@ func (m *TakerFeeDistributionPercentage) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+<<<<<<< HEAD
+=======
+func (m *TakerFeesTracker) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeesTracker: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeesTracker: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeesToStakers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TakerFeesToStakers = append(m.TakerFeesToStakers, types.Coin{})
+			if err := m.TakerFeesToStakers[len(m.TakerFeesToStakers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeesToCommunityPool", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TakerFeesToCommunityPool = append(m.TakerFeesToCommunityPool, types.Coin{})
+			if err := m.TakerFeesToCommunityPool[len(m.TakerFeesToCommunityPool)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeightAccountingStartsFrom", wireType)
+			}
+			m.HeightAccountingStartsFrom = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HeightAccountingStartsFrom |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolVolume) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolVolume: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolVolume: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolVolume", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PoolVolume = append(m.PoolVolume, types.Coin{})
+			if err := m.PoolVolume[len(m.PoolVolume)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+>>>>>>> c49e1178 (fix(poolmodule): export total volume kvstore (#6947))
 func skipGenesis(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
