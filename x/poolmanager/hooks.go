@@ -3,6 +3,7 @@ package poolmanager
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -12,10 +13,12 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 // At the end of each epoch, set the denom pair routes.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	_, err := k.SetDenomPairRoutes(ctx)
-	return err
+	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		_, err := k.SetDenomPairRoutes(cacheCtx)
+		return err
+	})
 
-	// return nil
+	return nil
 }
 
 // Hooks wrapper struct for poolmanager keeper
