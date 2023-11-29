@@ -1,0 +1,13 @@
+syntax = "proto3";
+package osmosis.txfees.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/txfees/v1beta1/feetoken.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/txfees/types";
+
+// GenesisState defines the txfees module's genesis state.
+message GenesisState {
+  string basedenom = 1;
+  repeated FeeToken feetokens = 2 [ (gogoproto.nullable) = false ];
+}
