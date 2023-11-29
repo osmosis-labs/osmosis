@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.2
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
 	github.com/cosmos/ibc-go/v7 v7.3.1
 	github.com/golang/mock v1.6.0
@@ -28,7 +28,7 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231124190325-d75e9ade352e
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128160617-9a7cef4bff58
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
