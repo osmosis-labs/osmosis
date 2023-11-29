@@ -130,7 +130,6 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.NoError(err)
 
 	codeId := node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId++
 	node.InstantiateWasmContract(
 		strconv.Itoa(codeId),
 		`{"count": 0}`,
