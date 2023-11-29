@@ -60,6 +60,19 @@ var (
 			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000))),
 		},
 	}
+
+	testDenomPairTakerFees = []types.DenomPairTakerFee{
+		{
+			Denom0:   "uion",
+			Denom1:   "uosmo",
+			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
+		},
+		{
+			Denom0:   "uatom",
+			Denom1:   "uosmo",
+			TakerFee: osmomath.MustNewDecFromStr("0.002"),
+		},
+	}
 )
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -118,10 +131,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
-		NextPoolId:       testExpectedPoolId,
-		PoolRoutes:       testPoolRoute,
-		TakerFeesTracker: &testTakerFeesTracker,
-		PoolVolumes:      testPoolVolumes,
+		NextPoolId:             testExpectedPoolId,
+		PoolRoutes:             testPoolRoute,
+		TakerFeesTracker:       &testTakerFeesTracker,
+		PoolVolumes:            testPoolVolumes,
+		DenomPairTakerFeeStore: testDenomPairTakerFees,
 	})
 
 	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
@@ -139,6 +153,13 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testTakerFeesTracker.HeightAccountingStartsFrom, s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
 	s.Require().Equal(testPoolVolumes[0].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[0].PoolId))
 	s.Require().Equal(testPoolVolumes[1].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[1].PoolId))
+
+	takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[0].Denom0, testDenomPairTakerFees[0].Denom1)
+	s.Require().NoError(err)
+	s.Require().Equal(testDenomPairTakerFees[0].TakerFee, takerFee)
+	takerFee, err = s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[1].Denom0, testDenomPairTakerFees[1].Denom1)
+	s.Require().NoError(err)
+	s.Require().Equal(testDenomPairTakerFees[1].TakerFee, takerFee)
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
@@ -158,10 +179,11 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
-		NextPoolId:       testExpectedPoolId,
-		PoolRoutes:       testPoolRoute,
-		TakerFeesTracker: &testTakerFeesTracker,
-		PoolVolumes:      testPoolVolumes,
+		NextPoolId:             testExpectedPoolId,
+		PoolRoutes:             testPoolRoute,
+		TakerFeesTracker:       &testTakerFeesTracker,
+		PoolVolumes:            testPoolVolumes,
+		DenomPairTakerFeeStore: testDenomPairTakerFees,
 	})
 
 	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
@@ -179,4 +201,5 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testTakerFeesTracker.HeightAccountingStartsFrom, genesis.TakerFeesTracker.HeightAccountingStartsFrom)
 	s.Require().Equal(testPoolVolumes[0].PoolVolume, genesis.PoolVolumes[0].PoolVolume)
 	s.Require().Equal(testPoolVolumes[1].PoolVolume, genesis.PoolVolumes[1].PoolVolume)
+	s.Require().Equal(testDenomPairTakerFees, genesis.DenomPairTakerFeeStore)
 }

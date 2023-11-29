@@ -7,6 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
+import "osmosis/poolmanager/v1beta1/tx.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types";
 
@@ -46,6 +47,8 @@ message GenesisState {
   // KVStore state
   TakerFeesTracker taker_fees_tracker = 4;
   repeated PoolVolume pool_volumes = 5;
+  repeated DenomPairTakerFee denom_pair_taker_fee_store = 6
+      [ (gogoproto.nullable) = false ];
 }
 
 // TakerFeeParams consolidates the taker fee parameters for the poolmanager.
