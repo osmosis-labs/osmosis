@@ -144,6 +144,7 @@ PoolLoop:
 	}
 
 	fmt.Println("ADAM routingGraph length", len(routingGraph.Entries))
+	fmt.Println("ADAM routingGraph", routingGraph)
 
 	// Set the route map in state
 	// NOTE: This is done with the non map version of the route graph
