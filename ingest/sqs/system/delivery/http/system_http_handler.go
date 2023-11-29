@@ -103,6 +103,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
 
+	fmt.Println(statusResponse)
 	latestBlockHeight, err := strconv.Atoi(statusResponse.Result.SyncInfo.LatestBlockHeight)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
