@@ -113,8 +113,12 @@ PoolLoop:
 	for _, pool := range pools {
 		// Some of the first cw pools have a malformed response and are no longer in use. Remove these pools to prevent issues.
 		tokens := pool.GetPoolDenoms(ctx)
+		if pool.GetType() == types.CosmWasm {
+			fmt.Println("ADAM tokens", tokens)
+			fmt.Println("ADAM id", pool.GetId())
+		}
 		for _, token := range tokens {
-			if strings.Contains(token, "{pool_asset_denoms:[") {
+			if strings.Contains(token, "pool_asset_denoms") {
 				continue PoolLoop
 			}
 		}
@@ -143,7 +147,6 @@ PoolLoop:
 	}
 
 	fmt.Println("ADAM routingGraph length", len(routingGraph.Entries))
-	fmt.Println("ADAM routingGraph", routingGraph)
 
 	// Set the route map in state
 	// NOTE: This is done with the non map version of the route graph
@@ -329,8 +332,6 @@ func (k Keeper) getPoolLiquidityOfDenom(ctx sdk.Context, poolId uint64, denom st
 // poolLiquidityToTargetDenom returns the total liquidity of a pool in terms of the target denom.
 func (k Keeper) poolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
 	poolDenoms := pool.GetPoolDenoms(ctx)
-	fmt.Println("ADAM poolDenoms", poolDenoms)
-	fmt.Println("ADAM pooltype", pool.GetType())
 	totalLiquidity := sdk.ZeroInt()
 	for _, denom := range poolDenoms {
 		liquidity, err := k.getPoolLiquidityOfDenom(ctx, pool.GetId(), denom)
