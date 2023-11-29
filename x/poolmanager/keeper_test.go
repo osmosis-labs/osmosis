@@ -43,6 +43,39 @@ var (
 			PoolType: types.Stableswap,
 		},
 	}
+<<<<<<< HEAD
+=======
+
+	testTakerFeesTracker = types.TakerFeesTracker{
+		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(1000))},
+		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", sdk.NewInt(1000))},
+		HeightAccountingStartsFrom: 100,
+	}
+
+	testPoolVolumes = []*types.PoolVolume{
+		{
+			PoolId:     1,
+			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000))),
+		},
+		{
+			PoolId:     2,
+			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000))),
+		},
+	}
+
+	testDenomPairTakerFees = []types.DenomPairTakerFee{
+		{
+			Denom0:   "uion",
+			Denom1:   "uosmo",
+			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
+		},
+		{
+			Denom0:   "uatom",
+			Denom1:   "uosmo",
+			TakerFee: osmomath.MustNewDecFromStr("0.002"),
+		},
+	}
+>>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 )
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -101,8 +134,16 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
+<<<<<<< HEAD
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
+=======
+		NextPoolId:             testExpectedPoolId,
+		PoolRoutes:             testPoolRoute,
+		TakerFeesTracker:       &testTakerFeesTracker,
+		PoolVolumes:            testPoolVolumes,
+		DenomPairTakerFeeStore: testDenomPairTakerFees,
+>>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 	})
 
 	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
@@ -115,6 +156,21 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
+<<<<<<< HEAD
+=======
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToCommunityPool, s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx))
+	s.Require().Equal(testTakerFeesTracker.HeightAccountingStartsFrom, s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
+	s.Require().Equal(testPoolVolumes[0].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[0].PoolId))
+	s.Require().Equal(testPoolVolumes[1].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[1].PoolId))
+
+	takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[0].Denom0, testDenomPairTakerFees[0].Denom1)
+	s.Require().NoError(err)
+	s.Require().Equal(testDenomPairTakerFees[0].TakerFee, takerFee)
+	takerFee, err = s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[1].Denom0, testDenomPairTakerFees[1].Denom1)
+	s.Require().NoError(err)
+	s.Require().Equal(testDenomPairTakerFees[1].TakerFee, takerFee)
+>>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
@@ -130,8 +186,16 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
+<<<<<<< HEAD
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
+=======
+		NextPoolId:             testExpectedPoolId,
+		PoolRoutes:             testPoolRoute,
+		TakerFeesTracker:       &testTakerFeesTracker,
+		PoolVolumes:            testPoolVolumes,
+		DenomPairTakerFeeStore: testDenomPairTakerFees,
+>>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 	})
 
 	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
@@ -144,4 +208,13 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
+<<<<<<< HEAD
+=======
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, genesis.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(testTakerFeesTracker.TakerFeesToCommunityPool, genesis.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(testTakerFeesTracker.HeightAccountingStartsFrom, genesis.TakerFeesTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(testPoolVolumes[0].PoolVolume, genesis.PoolVolumes[0].PoolVolume)
+	s.Require().Equal(testPoolVolumes[1].PoolVolume, genesis.PoolVolumes[1].PoolVolume)
+	s.Require().Equal(testDenomPairTakerFees, genesis.DenomPairTakerFeeStore)
+>>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 }
