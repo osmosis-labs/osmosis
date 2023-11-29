@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,4 +34,33 @@ func TestFormatDenomTradePairKey(t *testing.T) {
 			require.Equal(t, tc.expectedKey, stringFormatDenomTradePairKeyString)
 		})
 	}
+}
+
+func TestParseDenomTradePairKey(t *testing.T) {
+	// Define a valid DenomTradePairKey
+	key := fmt.Sprintf("%s%s%s%s%s", types.DenomTradePairPrefix, types.KeySeparator, "denom0", types.KeySeparator, "denom1")
+
+	// Call the function with the valid key
+	denom0, denom1 := types.ParseDenomTradePairKey([]byte(key))
+
+	// Check the results
+	if denom0 != "denom0" {
+		t.Errorf("Expected denom0, got %s", denom0)
+	}
+
+	if denom1 != "denom1" {
+		t.Errorf("Expected denom1, got %s", denom1)
+	}
+
+	// Define an invalid DenomTradePairKey
+	invalidKey := fmt.Sprintf("%s%s%s%s%s", types.DenomTradePairPrefix, types.KeySeparator, "denom0!_", types.KeySeparator, "denom1!_")
+
+	// Call the function with the invalid key and check if it panics
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+
+	types.ParseDenomTradePairKey([]byte(invalidKey))
 }
