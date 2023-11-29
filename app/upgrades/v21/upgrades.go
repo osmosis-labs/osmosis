@@ -67,11 +67,6 @@ func CreateUpgradeHandler(
 		keepers.PoolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyMinValueForRoute, poolmanagertypes.DefaultParams().MinValueForRoute)
 
 		// TEMP
-		dayEpochInfo := keepers.EpochsKeeper.GetEpochInfo(ctx, "day")
-		dayEpochInfo.Duration = time.Minute * 60
-		dayEpochInfo.CurrentEpochStartTime = ctx.BlockTime().Add(-dayEpochInfo.Duration).Add(time.Minute * 3)
-		keepers.EpochsKeeper.SetEpochInfo(ctx, dayEpochInfo)
-
 		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
 		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
