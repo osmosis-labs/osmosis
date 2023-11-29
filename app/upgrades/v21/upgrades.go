@@ -27,6 +27,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	// SDK v47 modules
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -70,6 +71,18 @@ func CreateUpgradeHandler(
 		dayEpochInfo.Duration = time.Minute * 60
 		dayEpochInfo.CurrentEpochStartTime = ctx.BlockTime().Add(-dayEpochInfo.Duration).Add(time.Minute * 3)
 		keepers.EpochsKeeper.SetEpochInfo(ctx, dayEpochInfo)
+
+		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
+		desiredEpochInfo := epochtypes.EpochInfo{}
+		for _, epoch := range epochs {
+			if epoch.Identifier == "day" {
+				epoch.Duration = time.Minute * 60
+				epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(time.Minute * 45)
+				desiredEpochInfo = epoch
+				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+			}
+		}
+		keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
 		// Set param key table for params module migration
