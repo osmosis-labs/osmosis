@@ -58,7 +58,6 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 
 // GetHealthStatus handles health check requests for both GRPC gateway and Redis
 func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
-	h.logger.Info("START=======")
 	fmt.Println("=====Start")
 	ctx := c.Request().Context()
 
@@ -80,7 +79,11 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	// Parse the response from the GRPC Gateway status endpoint
-	var statusResponse coretypes.ResultStatus
+	type tempResponse struct {
+		Result coretypes.ResultStatus `json:"result"`
+	}
+
+	var statusResponse tempResponse
 
 	if resp != nil {
 		bodyBytes, err := io.ReadAll(resp.Body)
@@ -96,18 +99,17 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
-	h.logger.Info("status resp: ", zap.Int("height", int(statusResponse.SyncInfo.LatestBlockHeight)))
+	h.logger.Info("status resp: ", zap.Int("height", int(statusResponse.Result.SyncInfo.LatestBlockHeight)))
 	h.logger.Info("latest height: ", zap.Int("latest", int(latestHeight)))
 
 	b, err := json.MarshalIndent(statusResponse, "", "  ")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
 	}
-
-	h.logger.Info(string(b))
+	fmt.Println(b)
 
 	// allow 10 blocks of difference before claiming node is not synced
-	if int64(latestHeight)+10 < statusResponse.SyncInfo.LatestBlockHeight {
+	if int64(latestHeight)+10 < statusResponse.Result.SyncInfo.LatestBlockHeight {
 		nodeStatus = "not_synced"
 	}
 
