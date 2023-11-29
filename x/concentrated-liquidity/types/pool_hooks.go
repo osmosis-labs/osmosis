@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -10,12 +12,36 @@ import (
 
 // Action prefixes for pool actions
 const (
-	CreatePositionPrefix     = "createPosition"
-	AddToPositionPrefix      = "addToPosition"
-	WithdrawPositionPrefix   = "withdrawPosition"
-	SwapExactAmountInPrefix  = "swapExactAmountIn"
-	SwapExactAmountOutPrefix = "swapExactAmountOut"
+	CreatePositionPrefix     = "CreatePosition"
+	WithdrawPositionPrefix   = "WithdrawPosition"
+	SwapExactAmountInPrefix  = "SwapExactAmountIn"
+	SwapExactAmountOutPrefix = "SwapExactAmountOut"
 )
+
+// Helper function to generate before action prefix
+func BeforeActionPrefix(action string) string {
+	return fmt.Sprintf("before%s", action)
+}
+
+// Helper function to generate after action prefix
+func AfterActionPrefix(action string) string {
+	return fmt.Sprintf("after%s", action)
+}
+
+// GetAllActionPrefixes returns all the action prefixes corresponding to valid hooks
+func GetAllActionPrefixes() []string {
+	result := []string{}
+	for _, prefix := range []string{
+		CreatePositionPrefix,
+		WithdrawPositionPrefix,
+		SwapExactAmountInPrefix,
+		SwapExactAmountOutPrefix,
+	} {
+		result = append(result, BeforeActionPrefix(prefix), AfterActionPrefix(prefix))
+	}
+
+	return result
+}
 
 // --- Sudo Message Wrappers ---
 
@@ -25,14 +51,6 @@ type BeforeCreatePositionSudoMsg struct {
 
 type AfterCreatePositionSudoMsg struct {
 	AfterCreatePosition AfterCreatePositionMsg `json:"after_create_position"`
-}
-
-type BeforeAddToPositionSudoMsg struct {
-	BeforeAddToPosition BeforeAddToPositionMsg `json:"before_add_to_position"`
-}
-
-type AfterAddToPositionSudoMsg struct {
-	AfterAddToPosition AfterAddToPositionMsg `json:"after_add_to_position"`
 }
 
 type BeforeWithdrawPositionSudoMsg struct {
@@ -79,26 +97,6 @@ type AfterCreatePositionMsg struct {
 	Amount1Min     osmomath.Int      `json:"amount_1_min"`
 	LowerTick      int64             `json:"lower_tick"`
 	UpperTick      int64             `json:"upper_tick"`
-}
-
-type BeforeAddToPositionMsg struct {
-	PoolId       uint64         `json:"pool_id"`
-	Owner        sdk.AccAddress `json:"owner"`
-	PositionId   uint64         `json:"position_id"`
-	Amount0Added osmomath.Int   `json:"amount_0_added"`
-	Amount1Added osmomath.Int   `json:"amount_1_added"`
-	Amount0Min   osmomath.Int   `json:"amount_0_min"`
-	Amount1Min   osmomath.Int   `json:"amount_1_min"`
-}
-
-type AfterAddToPositionMsg struct {
-	PoolId       uint64         `json:"pool_id"`
-	Owner        sdk.AccAddress `json:"owner"`
-	PositionId   uint64         `json:"position_id"`
-	Amount0Added osmomath.Int   `json:"amount_0_added"`
-	Amount1Added osmomath.Int   `json:"amount_1_added"`
-	Amount0Min   osmomath.Int   `json:"amount_0_min"`
-	Amount1Min   osmomath.Int   `json:"amount_1_min"`
 }
 
 type BeforeWithdrawPositionMsg struct {

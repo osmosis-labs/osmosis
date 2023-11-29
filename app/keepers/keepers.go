@@ -3,6 +3,7 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
@@ -106,7 +106,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 )
 
 const (
@@ -133,7 +132,6 @@ type AppKeepers struct {
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   bankkeeper.BaseKeeper
 	AuthzKeeper                  *authzkeeper.Keeper
-	AuctionKeeper                *auctionkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
 	DowntimeKeeper               *downtimedetector.Keeper
@@ -155,7 +153,7 @@ type AppKeepers struct {
 	TxFeesKeeper                 *txfeeskeeper.Keeper
 	SuperfluidKeeper             *superfluidkeeper.Keeper
 	GovKeeper                    *govkeeper.Keeper
-	WasmKeeper                   *wasm.Keeper
+	WasmKeeper                   *wasmkeeper.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
@@ -186,9 +184,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	maccPerms map[string][]string,
 	dataDir string,
 	wasmDir string,
-	wasmConfig wasm.Config,
-	wasmEnabledProposals []wasm.ProposalType,
-	wasmOpts []wasm.Option,
+	wasmConfig wasmtypes.WasmConfig,
+	wasmOpts []wasmkeeper.Option,
 	blockedAddress map[string]bool,
 ) {
 	legacyAmino := encodingConfig.Amino
@@ -297,12 +294,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	icqKeeper := icqkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[icqtypes.StoreKey],
-		appKeepers.GetSubspace(icqtypes.ModuleName),
 		appKeepers.IBCKeeper.ChannelKeeper, // may be replaced with middleware
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedICQKeeper,
 		bApp.GRPCQueryRouter(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.ICQKeeper = &icqKeeper
 
@@ -461,18 +458,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
-	// Create the Skip Auction Keeper
-	auctionKeeper := auctionkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[auctiontypes.StoreKey],
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper,
-		stakingKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	appKeepers.AuctionKeeper = &auctionKeeper
-
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],
 		appKeepers.GetSubspace(valsetpreftypes.ModuleName),
@@ -490,14 +475,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2"
+	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(&appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
 
-	wasmKeeper := wasm.NewKeeper(
+	wasmKeeper := wasmkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[wasm.StoreKey],
+		appKeepers.keys[wasmtypes.StoreKey],
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		*appKeepers.StakingKeeper,
@@ -530,7 +515,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
 	// wire up x/wasm to IBC
-	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
+	ibcRouter.AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
 
 	// Seal the router
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
@@ -551,11 +536,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(cosmwasmpooltypes.RouterKey, cosmwasmpool.NewCosmWasmPoolProposalHandler(*appKeepers.CosmwasmPoolKeeper)).
 		AddRoute(poolmanagertypes.RouterKey, poolmanager.NewPoolManagerProposalHandler(*appKeepers.PoolManagerKeeper)).
 		AddRoute(incentivestypes.RouterKey, incentiveskeeper.NewIncentivesProposalHandler(*appKeepers.IncentivesKeeper))
-
-	// The gov proposal types can be individually enabled
-	if len(wasmEnabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
-	}
 
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
@@ -625,13 +605,13 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appKeepers.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[packetforwardtypes.StoreKey],
-		appKeepers.GetSubspace(packetforwardtypes.ModuleName),
 		appKeepers.TransferKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
 		// The ICS4Wrapper is replaced by the HooksICS4Wrapper instead of the channel so that sending can be overridden by the middleware
 		appKeepers.HooksICS4Wrapper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	packetForwardMiddleware := packetforward.NewIBCMiddleware(
 		transfer.NewIBCModule(*appKeepers.TransferKeeper),
@@ -673,7 +653,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	appKeepers.ScopedICAHostKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	appKeepers.ScopedICQKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
 
@@ -717,8 +697,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
-	paramsKeeper.Subspace(wasm.ModuleName)
-	paramsKeeper.Subspace(auctiontypes.ModuleName)
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
@@ -839,7 +818,7 @@ func KVStoreKeys() []string {
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
-		wasm.StoreKey,
+		wasmtypes.StoreKey,
 		tokenfactorytypes.StoreKey,
 		valsetpreftypes.StoreKey,
 		protorevtypes.StoreKey,
@@ -847,6 +826,5 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		auctiontypes.StoreKey,
 	}
 }

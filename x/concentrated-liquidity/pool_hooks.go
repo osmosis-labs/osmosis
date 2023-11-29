@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,16 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
-
-// Helper function to generate before action prefix
-func beforeActionPrefix(action string) string {
-	return fmt.Sprintf("before%s", action)
-}
-
-// Helper function to generate after action prefix
-func afterActionPrefix(action string) string {
-	return fmt.Sprintf("after%s", action)
-}
 
 // --- Pool Hooks ---
 
@@ -32,7 +21,7 @@ func (k Keeper) BeforeCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.A
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.CreatePositionPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.CreatePositionPrefix))
 }
 
 // AfterCreatePosition is a hook that is called after a position is created.
@@ -43,29 +32,7 @@ func (k Keeper) AfterCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.Ac
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.CreatePositionPrefix))
-}
-
-// BeforeAddToPosition is a hook that is called before liquidity is added to a position.
-func (k Keeper) BeforeAddToPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amount0Added osmomath.Int, amount1Added osmomath.Int, amount0Min osmomath.Int, amount1Min osmomath.Int) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.BeforeAddToPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, Amount0Added: amount0Added, Amount1Added: amount1Added, Amount0Min: amount0Min, Amount1Min: amount1Min}
-	msgBz, err := json.Marshal(types.BeforeAddToPositionSudoMsg{BeforeAddToPosition: msg})
-	if err != nil {
-		return err
-	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.AddToPositionPrefix))
-}
-
-// AfterAddToPosition is a hook that is called after liquidity is added to a position.
-func (k Keeper) AfterAddToPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amount0Added osmomath.Int, amount1Added osmomath.Int, amount0Min osmomath.Int, amount1Min osmomath.Int) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.AfterAddToPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, Amount0Added: amount0Added, Amount1Added: amount1Added, Amount0Min: amount0Min, Amount1Min: amount1Min}
-	msgBz, err := json.Marshal(types.AfterAddToPositionSudoMsg{AfterAddToPosition: msg})
-	if err != nil {
-		return err
-	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.AddToPositionPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.CreatePositionPrefix))
 }
 
 // BeforeWithdrawPosition is a hook that is called before liquidity is withdrawn from a position.
@@ -76,7 +43,7 @@ func (k Keeper) BeforeWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.WithdrawPositionPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.WithdrawPositionPrefix))
 }
 
 // AfterWithdrawPosition is a hook that is called after liquidity is withdrawn from a position.
@@ -87,7 +54,7 @@ func (k Keeper) AfterWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.WithdrawPositionPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.WithdrawPositionPrefix))
 }
 
 // BeforeSwapExactAmountIn is a hook that is called before a swap is executed (exact amount in).
@@ -98,7 +65,7 @@ func (k Keeper) BeforeSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender s
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.SwapExactAmountInPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.SwapExactAmountInPrefix))
 }
 
 // AfterSwapExactAmountIn is a hook that is called after a swap is executed (exact amount in).
@@ -109,7 +76,7 @@ func (k Keeper) AfterSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sd
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.SwapExactAmountInPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.SwapExactAmountInPrefix))
 }
 
 // BeforeSwapExactAmountOut is a hook that is called before a swap is executed (exact amount out).
@@ -120,7 +87,7 @@ func (k Keeper) BeforeSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender 
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, beforeActionPrefix(types.SwapExactAmountOutPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.SwapExactAmountOutPrefix))
 }
 
 // AfterSwapExactAmountOut is a hook that is called after a swap is executed (exact amount out).
@@ -131,7 +98,7 @@ func (k Keeper) AfterSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender s
 	if err != nil {
 		return err
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, afterActionPrefix(types.SwapExactAmountOutPrefix))
+	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.SwapExactAmountOutPrefix))
 }
 
 // callPoolActionListener processes and dispatches the passed in message to the contract corresponding to the hook
@@ -209,6 +176,11 @@ func (k Keeper) getPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix
 // Attempting to delete a non-existent contract in state will simply be a no-op.
 func (k Keeper) setPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix string, cosmwasmAddress string) error {
 	store := k.getPoolHookPrefixStore(ctx, poolID)
+
+	validActionPrefixes := types.GetAllActionPrefixes()
+	if !osmoutils.Contains(validActionPrefixes, actionPrefix) {
+		return types.InvalidActionPrefixError{ActionPrefix: actionPrefix, ValidActions: validActionPrefixes}
+	}
 
 	// If cosmwasm address is nil, treat this as a delete operation for the stored address.
 	if cosmwasmAddress == "" {

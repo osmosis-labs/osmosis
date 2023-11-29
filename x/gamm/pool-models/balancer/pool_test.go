@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -1362,4 +1362,22 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Test that the right denoms are returned.
+func (s *KeeperTestSuite) TestGetPoolDenoms() {
+	const (
+		expectedDenom1 = "bar"
+		expectedDenom2 = "foo"
+	)
+
+	poolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(expectedDenom1, osmomath.NewInt(100)), sdk.NewCoin(expectedDenom2, osmomath.NewInt(100)))
+
+	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	denoms := pool.GetPoolDenoms(s.Ctx)
+	s.Require().Equal(2, len(denoms))
+	s.Require().Equal(expectedDenom1, denoms[0])
+	s.Require().Equal(expectedDenom2, denoms[1])
 }

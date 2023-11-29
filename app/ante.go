@@ -1,8 +1,8 @@
 package app
 
 import (
-	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
@@ -18,16 +18,13 @@ import (
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
-
-	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
-	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 )
 
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
-	wasmConfig wasm.Config,
+	wasmConfig wasmtypes.WasmConfig,
 	txCounterStoreKey storetypes.StoreKey,
 	ak ante.AccountKeeper,
 	bankKeeper txfeestypes.BankKeeper,
@@ -36,9 +33,6 @@ func NewAnteHandler(
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper *ibckeeper.Keeper,
-	auctionKeeper *auctionkeeper.Keeper,
-	txEncoder sdk.TxEncoder,
-	mevLane auctionante.MEVLane,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -66,6 +60,5 @@ func NewAnteHandler(
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
-		auctionante.NewAuctionDecorator(*auctionKeeper, txEncoder, mevLane),
 	)
 }

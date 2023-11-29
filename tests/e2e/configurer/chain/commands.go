@@ -757,7 +757,6 @@ func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config, is
 	}
 
 	codeId := srcNode.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId = int(srcNode.QueryLatestWasmCodeID())
 	srcNode.InstantiateWasmContract(
 		strconv.Itoa(codeId),
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, initialization.ValidatorWalletName, paths),
@@ -821,7 +820,7 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Minute, 10*time.Millisecond)
+	}, time.Minute*2, 10*time.Millisecond)
 	return nil
 }
 

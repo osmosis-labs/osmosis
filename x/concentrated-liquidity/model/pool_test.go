@@ -857,3 +857,20 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 		})
 	}
 }
+
+// Test that the right denoms are returned.
+func (s *ConcentratedPoolTestSuite) TestGetPoolDenoms() {
+	s.Setup()
+
+	const (
+		expectedDenom1 = "bar"
+		expectedDenom2 = "foo"
+	)
+
+	pool := s.PrepareConcentratedPoolWithCoins(expectedDenom1, expectedDenom2)
+
+	denoms := pool.GetPoolDenoms(s.Ctx)
+	s.Require().Equal(2, len(denoms))
+	s.Require().Equal(expectedDenom1, denoms[0])
+	s.Require().Equal(expectedDenom2, denoms[1])
+}

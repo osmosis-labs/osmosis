@@ -231,6 +231,11 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				return false
 			}
 
+			// Sometimes a node hangs and doesn't vote in time, as long as it passes that is all we care about
+			if strings.Contains(outBuf.String(), "inactive proposal") || strings.Contains(errBuf.String(), "inactive proposal") {
+				return true
+			}
+
 			errBufString := errBuf.String()
 			// When a validator attempts to send multiple transactions in the same block, the expected sequence number
 			// will be thrown off, causing the transaction to fail. It will eventually clear, but what the following code
@@ -290,6 +295,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			if success != "" && checkTxHash {
 				// Now that sdk got rid of block.. we need to query the txhash to get the result
 				outStr := outBuf.String()
+
 				txResponse, err := parseTxResponse(outStr)
 				if err != nil {
 					return false

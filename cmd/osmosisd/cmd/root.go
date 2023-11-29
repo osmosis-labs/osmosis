@@ -21,7 +21,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/app/params"
 
-	tmcmds "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
@@ -397,10 +396,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig)
 
-	rootCmd.AddCommand(
-		rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler),
-	)
-
 	return rootCmd, encodingConfig
 }
 
@@ -465,7 +460,7 @@ arbitrage-min-gas-fee = ".005"
 min-gas-price-for-high-gas-tx = ".0025"
 
 # This parameter enables EIP-1559 like fee market logic in the mempool
-adaptive-fee-enabled = "false"
+adaptive-fee-enabled = "true"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg
@@ -499,7 +494,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
-		tmcmds.RollbackStateCmd,
 		debugCmd,
 		ConfigCmd(),
 		ChangeEnvironmentCmd(),
@@ -622,7 +616,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		chainID = appGenesis.ChainID
 	}
 
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
