@@ -15,6 +15,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+
 	"github.com/labstack/echo"
 )
 
@@ -75,13 +77,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	// Parse the response from the GRPC Gateway status endpoint
-	var statusResponse struct {
-		Result struct {
-			SyncInfo struct {
-				LatestBlockHeight string `json:"latest_block_height"`
-			} `json:"sync_info"`
-		} `json:"result"`
-	}
+	var statusResponse coretypes.ResultStatus
 
 	if resp != nil {
 		bodyBytes, err := io.ReadAll(resp.Body)
@@ -97,7 +93,9 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
-	if statusResponse.Result.SyncInfo.LatestBlockHeight != fmt.Sprint(latestHeight) {
+	h.logger.Debug("status resp: ", zap.Int("height", int(statusResponse.SyncInfo.LatestBlockHeight)))
+	h.logger.Debug("latest height: ", zap.Int("latest_height", int(statusResponse.SyncInfo.LatestBlockHeight)))
+	if statusResponse.SyncInfo.LatestBlockHeight != int64(latestHeight) {
 		nodeStatus = "not_synced"
 	}
 
