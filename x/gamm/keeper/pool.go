@@ -104,12 +104,6 @@ func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return nil
 }
 
-// OverwritePoolV15MigrationUnsafe is a temporary method for calling from the v15 upgrade handler
-// for balancer to stableswap pool migration. Do not use for other purposes.
-func (k Keeper) OverwritePoolV15MigrationUnsafe(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
-	return k.setPool(ctx, pool)
-}
-
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
@@ -120,98 +114,6 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store.Delete(poolKey)
 	return nil
 }
-
-// CleanupBalancerPool destructs a pool and refund all the assets according to
-// the shares held by the accounts. CleanupBalancerPool should not be called during
-// the chain execution time, as it iterates the entire account balances.
-// TODO: once SDK v0.46.0, use https://github.com/cosmos/cosmos-sdk/pull/9611
-//
-// All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
-// on remaining locks before calling this function.
-// func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
-// 	pools := make(map[string]types.CFMMPoolI)
-// 	totalShares := make(map[string]sdk.Int)
-// 	for _, poolId := range poolIds {
-// 		pool, err := k.GetPool(ctx, poolId)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		shareDenom := pool.GetTotalShares().Denom
-// 		pools[shareDenom] = pool
-// 		totalShares[shareDenom] = pool.GetTotalShares().Amount
-// 	}
-
-// 	moduleAccounts := make(map[string]string)
-// 	for _, module := range excludedModules {
-// 		moduleAccounts[string(authtypes.NewModuleAddress(module))] = module
-// 	}
-
-// 	// first iterate through the share holders and burn them
-// 	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
-// 		if coin.Amount.IsZero() {
-// 			return
-// 		}
-
-// 		pool, ok := pools[coin.Denom]
-// 		if !ok {
-// 			return
-// 		}
-
-// 		// track the iterated shares
-// 		pool.SubTotalShares(coin.Amount)
-// 		pools[coin.Denom] = pool
-
-// 		// check if the shareholder is a module
-// 		if _, ok = moduleAccounts[coin.Denom]; ok {
-// 			return
-// 		}
-
-// 		// Burn the share tokens
-// 		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
-// 		if err != nil {
-// 			return true
-// 		}
-
-// 		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{coin})
-// 		if err != nil {
-// 			return true
-// 		}
-
-// 		// Refund assets
-// 		for _, asset := range pool.GetAllPoolAssets() {
-// 			// lpShareEquivalentTokens = (amount in pool) * (your shares) / (total shares)
-// 			lpShareEquivalentTokens := asset.Token.Amount.Mul(coin.Amount).Quo(totalShares[coin.Denom])
-// 			if lpShareEquivalentTokens.IsZero() {
-// 				continue
-// 			}
-// 			err = k.bankKeeper.SendCoins(
-// 				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, lpShareEquivalentTokens}})
-// 			if err != nil {
-// 				return true
-// 			}
-// 		}
-
-// 		return false
-// 	})
-
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for _, pool := range pools {
-// 		// sanity check
-// 		if !pool.GetTotalShares().IsZero() {
-// 			panic("pool total share should be zero after cleanup")
-// 		}
-
-// 		err = k.DeletePool(ctx, pool.GetId())
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
 
 // GetPoolDenom retrieves the pool based on PoolId and
 // returns the coin denoms that it holds.
@@ -271,7 +173,6 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.Po
 // convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
-// nolint: unused
 func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {
