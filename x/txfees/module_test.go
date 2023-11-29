@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v20/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v21/app"
 
-	simapp "github.com/osmosis-labs/osmosis/v20/app"
+	simapp "github.com/osmosis-labs/osmosis/v21/app"
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {

@@ -24,10 +24,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
-	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/keeper"
+	mempool1559 "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 var (
