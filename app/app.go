@@ -396,6 +396,8 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+
+	// Process the block and ingest data into various sinks.
 	app.IngestManager.ProcessBlock(ctx)
 
 	return app.mm.EndBlock(ctx, req)
