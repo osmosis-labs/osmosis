@@ -78,26 +78,11 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 		shouldCache = false
 	}()
 
-	// Get all the pools
-	pools, err := k.AllPools(ctx)
+	// We generate all denom pair routes here, and use them to filter out pools that do not meet the minimum liquidity threshold.
+	// While generating routes twice is not ideal, we are optimizing to reduce writes to state.
+	pools, routeMap, err := k.generateAllDenomPairRoutes(ctx)
 	if err != nil {
 		return types.RoutingGraph{}, err
-	}
-
-	// Utilize the previous route map if it exists to determine which pools we can leave out of the route map
-	// due to insufficient liquidity. If it doesn't exist, we will utilize all pools, and the next time this function
-	// is called, we will have a previous route map to utilize.
-	var previousRouteGraph types.RoutingGraph
-	previousRouteMapFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyRouteMap, &previousRouteGraph)
-	if err != nil {
-		return types.RoutingGraph{}, err
-	}
-
-	// In the unlikely event that the previous route map exists but is empty, set previousRouteMapFound to false and utilize all pools since
-	// we don't have any information about routes to reason about liquidity
-	previousRouteMap := convertToMap(&previousRouteGraph)
-	if len(previousRouteMap.Graph) == 0 {
-		previousRouteMapFound = false
 	}
 
 	// Retrieve minimum liquidity threshold from params
@@ -117,18 +102,14 @@ PoolLoop:
 			}
 		}
 
-		// If we were able to find a previous route map,
-		// check if each pool meets the minimum liquidity threshold
-		// If not, skip the pool
-		if previousRouteMapFound {
-			poolLiquidityInTargetDenom, err := k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, previousRouteMap, minValueForRoute.Denom)
-			if err != nil {
-				return types.RoutingGraph{}, err
-			}
-			if poolLiquidityInTargetDenom.LT(minValueForRoute.Amount) {
-				continue
-			}
+		poolLiquidityInTargetDenom, err := k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, routeMap, minValueForRoute.Denom)
+		if err != nil {
+			return types.RoutingGraph{}, err
 		}
+		if poolLiquidityInTargetDenom.LT(minValueForRoute.Amount) {
+			continue
+		}
+
 		poolID := pool.GetId()
 		// Create edges for all possible combinations of tokens
 		for i := 0; i < len(tokens); i++ {
@@ -145,6 +126,46 @@ PoolLoop:
 	// If we used maps here, the serialization would be non-deterministic
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyRouteMap, &routingGraph)
 	return routingGraph, nil
+}
+
+// generateAllDenomPairRoutes generates all possible routes between tokens, without filtering out pools based on liquidity.
+// This returns the pools and route map for use in other functions and does not set the route graph in state.
+func (k Keeper) generateAllDenomPairRoutes(ctx sdk.Context) ([]types.PoolI, types.RoutingGraphMap, error) {
+	// Get all the pools
+	pools, err := k.AllPools(ctx)
+	if err != nil {
+		return []types.PoolI{}, types.RoutingGraphMap{}, err
+	}
+
+	// Create a routingGraph to represent possible routes between tokens
+	var routingGraph types.RoutingGraph
+
+PoolLoop:
+	// Iterate through the pools
+	for _, pool := range pools {
+		// Some of the first cw pools created have a malformed response and are no longer in use. Remove these pools to prevent issues.
+		tokens := pool.GetPoolDenoms(ctx)
+		for _, token := range tokens {
+			if strings.Contains(token, "pool_asset_denoms") {
+				continue PoolLoop
+			}
+		}
+
+		poolID := pool.GetId()
+		// Create edges for all possible combinations of tokens
+		for i := 0; i < len(tokens); i++ {
+			for j := i + 1; j < len(tokens); j++ {
+				// Add edges with the associated token
+				routingGraph.AddEdge(tokens[i], tokens[j], tokens[i], poolID)
+				routingGraph.AddEdge(tokens[j], tokens[i], tokens[j], poolID)
+			}
+		}
+	}
+
+	// Convert the route graph to a map for easier access
+	routeMap := convertToMap(&routingGraph)
+
+	return pools, routeMap, nil
 }
 
 // GetRouteMap returns the route map that is stored in state.

@@ -80,3 +80,7 @@ func (k Keeper) PoolLiquidityToTargetDenom(ctx sdk.Context, pool types.PoolI, ro
 func (k Keeper) PoolLiquidityFromOSMOToTargetDenom(ctx sdk.Context, pool types.PoolI, routeMap types.RoutingGraphMap, targetDenom string) (osmomath.Int, error) {
 	return k.poolLiquidityFromOSMOToTargetDenom(ctx, pool, routeMap, targetDenom)
 }
+
+func (k Keeper) GenerateAllDenomPairRoutes(ctx sdk.Context) ([]types.PoolI, types.RoutingGraphMap, error) {
+	return k.generateAllDenomPairRoutes(ctx)
+}
