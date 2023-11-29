@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
 )
 
@@ -60,6 +61,26 @@ func (s *RouterTestSuite) TestGetCandidateRoutesBFS_OSMOstOSMO() {
 	s.Require().Equal(2, len(actualRoutesStOSMOIn))
 	s.validateExpectedPoolIDOneHopRoute(actualRoutesStOSMOIn[1], 833)
 	s.validateExpectedPoolIDOneHopRoute(actualRoutesStOSMOIn[0], 1252)
+}
+
+func (s *RouterTestSuite) TestGetCandidateRoutesBFS_ATOMUSDT() {
+	config := domain.RouterConfig{
+		PreferredPoolIDs:          []uint64{},
+		MaxPoolsPerRoute:          4,
+		MaxRoutes:                 5,
+		MaxSplitRoutes:            3,
+		MaxSplitIterations:        10,
+		MinOSMOLiquidity:          10000, // 10_000 OSMO
+		RouteUpdateHeightInterval: 0,
+		RouteCacheEnabled:         false,
+	}
+
+	router, _, _ := s.setupMainnetRouter(config)
+
+	candidateRoutesUOSMOIn, err := router.GetCandidateRoutes(ATOM, USDT)
+	s.Require().NoError(err)
+
+	s.Require().Greater(len(candidateRoutesUOSMOIn.Routes), 0)
 }
 
 // Validate that can find at least 1 route with no error for top 10
