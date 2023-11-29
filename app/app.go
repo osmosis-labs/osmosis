@@ -93,6 +93,7 @@ const (
 	ENV_NAME_INGEST_SQS_LOGGER_FILENAME              = "INGEST_SQS_LOGGER_FILENAME"
 	ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION         = "INGEST_SQS_LOGGER_IS_PRODUCTION"
 	ENV_NAME_INGEST_SQS_LOGGER_LEVEL                 = "INGEST_SQS_LOGGER_LEVEL"
+	ENV_NAME_GRPC_GATEWAY_ENDPOINT                   = "ENV_NAME_GRPC_GATEWAY_ENDPOINT"
 	ENV_VALUE_INGESTER_SQS                           = "sqs"
 )
 
@@ -271,6 +272,7 @@ func NewOsmosisApp(
 	if isIngestManagerEnabled {
 		dbHost := os.Getenv(ENV_NAME_INGEST_SQS_DBHOST)
 		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
+		grpcAddress := os.Getenv(ENV_NAME_GRPC_GATEWAY_ENDPOINT)
 		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
 		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
 		if err != nil {
@@ -303,7 +305,7 @@ func NewOsmosisApp(
 		}
 
 		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, routerConfig, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration, logger)
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, routerConfig, dbHost, dbPort, sidecarQueryServerAddress, grpcAddress, sidecarQueryServerTimeoutDuration, logger)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
 		}

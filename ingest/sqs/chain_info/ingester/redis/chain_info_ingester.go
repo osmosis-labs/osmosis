@@ -1,8 +1,6 @@
 package redis
 
 import (
-	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/zap"
 
@@ -35,7 +33,7 @@ func (ci *chainInfoIngester) ProcessBlock(ctx sdk.Context, tx mvc.Tx) error {
 
 	ci.logger.Info("ingesting latest blockchain height", zap.Int64("height", height))
 
-	err := ci.chainInfoRepo.StoreLatestHeight(context.Background(), uint64(height))
+	err := ci.chainInfoRepo.StoreLatestHeight(sdk.WrapSDKContext(ctx), tx, uint64(height))
 	if err != nil {
 		ci.logger.Error("failed to ingest latest blockchain height", zap.Error(err))
 		return err

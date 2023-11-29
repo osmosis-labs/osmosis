@@ -84,7 +84,7 @@ func (sqs *sideCarQueryServer) GetLogger() log.Logger {
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
-func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfig, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int, logger log.Logger) (SideCarQueryServer, error) {
+func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfig, dbHost, dbPort, sideCarQueryServerAddress, grpcAddress string, useCaseTimeoutDuration int, logger log.Logger) (SideCarQueryServer, error) {
 	// Handle SIGINT and SIGTERM signals to initiate shutdown
 	exitChan := make(chan os.Signal, 1)
 	signal.Notify(exitChan, os.Interrupt, syscall.SIGTERM)
@@ -147,7 +147,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 	// Initialize system handler
 	chainInfoRepository := chainInfoRepository.NewChainInfoRepo(redisTxManager)
 	chainInfoUseCase := chainInfoUseCase.NewChainInfoUsecase(timeoutContext, chainInfoRepository, redisTxManager)
-	systemhttpdelivery.NewSystemHandler(e, logger, chainInfoUseCase)
+	systemhttpdelivery.NewSystemHandler(e, redisAddress, grpcAddress, logger, chainInfoUseCase)
 
 	// Initialized tokens usecase
 	tokensUseCase := tokensUseCase.NewTokensUsecase(timeoutContext)

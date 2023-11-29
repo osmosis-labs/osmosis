@@ -28,7 +28,7 @@ type SystemHandler struct {
 }
 
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
-func NewSystemHandler(e *echo.Echo, logger log.Logger, us mvc.ChainInfoUsecase) {
+func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log.Logger, us mvc.ChainInfoUsecase) {
 	// GRPC Gateway configuration
 	host := getEnvOrDefault("GRPC_GATEWAY_HOST", "localhost")
 	grpcPort := getEnvOrDefault("GRPC_GATEWAY_PORT", "1317")
@@ -47,7 +47,7 @@ func NewSystemHandler(e *echo.Echo, logger log.Logger, us mvc.ChainInfoUsecase) 
 	}
 
 	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
-	e.GET("/health", handler.GetHealthStatus)
+	e.GET("/healthcheck", handler.GetHealthStatus)
 
 	// // Register pprof handlers on "/debug/pprof"
 	// e.GET("/debug/pprof/*", echo.WrapHandler(http.HandlerFunc(pprof.Index)))

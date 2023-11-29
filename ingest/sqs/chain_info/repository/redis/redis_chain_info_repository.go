@@ -25,8 +25,7 @@ func NewChainInfoRepo(repositoryManager mvc.TxManager) *chainInfoRepo {
 }
 
 // StoreLatestHeight stores the latest blockchain height into Redis
-func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, height uint64) error {
-	tx := r.repositoryManager.StartTx()
+func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx mvc.Tx, height uint64) error {
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
