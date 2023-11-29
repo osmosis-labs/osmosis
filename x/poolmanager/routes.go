@@ -106,8 +106,17 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 	// Create a routingGraph to represent possible routes between tokens
 	var routingGraph types.RoutingGraph
 
+PoolLoop:
 	// Iterate through the pools
 	for _, pool := range pools {
+		// Some of the first cw pools created have a malformed response and are no longer in use. Remove these pools to prevent issues.
+		tokens := pool.GetPoolDenoms(ctx)
+		for _, token := range tokens {
+			if strings.Contains(token, "pool_asset_denoms") {
+				continue PoolLoop
+			}
+		}
+
 		// If we were able to find a previous route map,
 		// check if each pool meets the minimum liquidity threshold
 		// If not, skip the pool
@@ -120,7 +129,6 @@ func (k Keeper) SetDenomPairRoutes(ctx sdk.Context) (types.RoutingGraph, error) 
 				continue
 			}
 		}
-		tokens := pool.GetPoolDenoms(ctx)
 		poolID := pool.GetId()
 		// Create edges for all possible combinations of tokens
 		for i := 0; i < len(tokens); i++ {
