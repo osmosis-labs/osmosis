@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -126,35 +125,13 @@ var (
 	EnableSpecificWasmProposals = ""
 
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
-	EmptyWasmOpts []wasm.Option
+	EmptyWasmOpts []wasmkeeper.Option
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
-
-// GetWasmEnabledProposals parses the WasmProposalsEnabled and
-// EnableSpecificWasmProposals values to produce a list of enabled proposals to
-// pass into the application.
-func GetWasmEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificWasmProposals == "" {
-		if WasmProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-
-		return wasm.DisableAllProposals
-	}
-
-	chunks := strings.Split(EnableSpecificWasmProposals, ",")
-
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-
-	return proposals
-}
 
 // OsmosisApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
@@ -212,7 +189,7 @@ func NewOsmosisApp(
 	homePath string,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
+	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
@@ -222,8 +199,6 @@ func NewOsmosisApp(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
-
-	wasmEnabledProposals := GetWasmEnabledProposals()
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -266,7 +241,6 @@ func NewOsmosisApp(
 		dataDir,
 		wasmDir,
 		wasmConfig,
-		wasmEnabledProposals,
 		wasmOpts,
 		app.BlockedAddrs(),
 	)
@@ -354,7 +328,7 @@ func NewOsmosisApp(
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
-		app.GetKey(wasm.StoreKey),
+		app.GetKey(wasmtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.TxFeesKeeper,
