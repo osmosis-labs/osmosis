@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
@@ -196,7 +197,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 
 			r := routerusecase.NewRouter([]uint64{}, 0, 0, 0, tc.maxSplitIterations, 0, logger)
 
-			quote, err := r.GetBestSplitRoutesQuote(tc.routes, tc.tokenIn)
+			quote, err := r.GetSplitQuote(tc.routes, tc.tokenIn)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -218,7 +219,11 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 				actualTotalFromSplits = actualTotalFromSplits.Add(splitRoute.GetAmountIn())
 			}
 
-			s.Require().Equal(tc.tokenIn.Amount.String(), actualTotalFromSplits.String())
+			// Error tolerance of 1 to account for the rounding differences
+			errTolerance := osmomath.ErrTolerance{
+				AdditiveTolerance: osmomath.OneDec(),
+			}
+			osmoassert.Equal(s.T(), errTolerance, tc.tokenIn.Amount, actualTotalFromSplits)
 
 			// Route must not be nil
 			actualRoutes := quote.GetRoute()
@@ -555,7 +560,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE() {
 	config.MaxRoutes = 10
 
 	var (
-		amountIn = osmomath.NewInt(1000000000)
+		amountIn = osmomath.NewInt(1000_000_000)
 	)
 
 	router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
@@ -571,7 +576,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE() {
 	// 1: 1205
 	// 2: 1110 -> 1077
 	quoteRoutes := quote.GetRoute()
-	s.Require().Len(quoteRoutes, 2)
+	s.Require().Len(quoteRoutes, 3)
 }
 
 func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_UOSMOUION() {
@@ -603,6 +608,31 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_UOSMOUION() {
 	s.Require().Equal(uint64(2), quote.GetRoute()[0].GetPools()[0].GetId())
 }
 
+func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTATOM() {
+	config := defaultRouterConfig
+	config.MaxPoolsPerRoute = 4
+	config.MaxRoutes = 5
+	config.MaxSplitRoutes = 3
+	config.MaxSplitIterations = 10
+
+	var (
+		amountIn = osmomath.NewInt(1000000)
+	)
+
+	router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
+
+	routes := s.constructRoutesFromMainnetPools(router, USDT, ATOM, tickMap, takerFeeMap)
+
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), ATOM, routes)
+
+	// We only validate that error does not occur without actually validating the quote.
+	s.Require().NoError(err)
+
+	s.Require().NotNil(quote)
+
+	s.Require().Greater(len(quote.GetRoute()), 0)
+}
+
 func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
 	config := defaultRouterConfig
 	config.MaxPoolsPerRoute = 4
@@ -622,8 +652,10 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)
 
-	// Expecting 1 route based on mainnet state
-	s.Require().Len(quote.GetRoute(), 1)
+	// Expecting 2 routes based on mainnet state
+	s.Require().Len(quote.GetRoute(), 2)
+
+	// TODO: need to compare this quote against mainnet state
 
 	route := quote.GetRoute()[0]
 	// Expecting 2 pools in the route

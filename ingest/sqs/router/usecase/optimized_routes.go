@@ -51,7 +51,7 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 
 	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
 
-	bestSplitRouteQuote, err := r.estimateBestSplitRouteQuote(routes, tokenIn)
+	bestSplitRouteQuote, err := r.GetSplitQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}

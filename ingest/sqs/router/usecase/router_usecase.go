@@ -179,6 +179,8 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 			return route.CandidateRoutes{}, err
 		}
 
+		r.logger.Info("calculated routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
+
 		// Persist routes
 		if len(candidateRoutes.Routes) > 0 && r.config.RouteCacheEnabled {
 
