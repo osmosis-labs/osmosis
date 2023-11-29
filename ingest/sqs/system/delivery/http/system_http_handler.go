@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof"
-	"strconv"
 
 	"go.uber.org/zap"
 
@@ -27,9 +26,6 @@ type SystemHandler struct {
 
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
 func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log.Logger, us mvc.ChainInfoUsecase) {
-	// GRPC Gateway configuration
-
-	logger.Info("new sys handler")
 	handler := &SystemHandler{
 		logger:       logger,
 		redisAddress: redisAddress,
@@ -46,13 +42,11 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 
 // GetHealthStatus handles health check requests for both GRPC gateway and Redis
 func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
-	fmt.Println("=====Start")
 	ctx := c.Request().Context()
 
 	// Check GRPC Gateway status
 	grpcStatus := "running"
 	url := h.grpcAddress + "/status"
-	fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		grpcStatus = "down"
@@ -92,21 +86,6 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// Compare latestHeight with latest_block_height from the status endpoint
 	nodeStatus := "synced"
-
-	fmt.Println(statusResponse)
-	latestBlockHeight, err := strconv.Atoi(statusResponse.Result.SyncInfo.LatestBlockHeight)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
-	}
-
-	h.logger.Info("status resp: ", zap.Int("height", latestBlockHeight))
-	h.logger.Info("latest height: ", zap.Int("latest", int(latestHeight)))
-
-	b, err := json.MarshalIndent(statusResponse, "", "  ")
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
-	}
-	fmt.Println(b)
 
 	// allow 10 blocks of difference before claiming node is not synced
 	if fmt.Sprint(int64(latestHeight)+10) < statusResponse.Result.SyncInfo.LatestBlockHeight {
