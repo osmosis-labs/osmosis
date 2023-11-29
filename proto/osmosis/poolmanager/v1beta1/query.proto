@@ -115,7 +115,7 @@ service Query {
   // TotalLiquidity returns the total liquidity across all pools.
   rpc TotalLiquidity(TotalLiquidityRequest) returns (TotalLiquidityResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/pools/total_liquidity";
+        "/osmosis/poolmanager/v1beta1/total_liquidity";
   }
 
   // TotalVolumeForPool returns the total volume of the specified pool.
