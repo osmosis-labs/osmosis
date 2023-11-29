@@ -71,22 +71,22 @@ func KeyPoolVolume(poolId uint64) []byte {
 }
 
 // ParseDenomTradePairKey parses the raw bytes of the DenomTradePairKey into a denom trade pair.
-func ParseDenomTradePairKey(key []byte) (denom0, denom1 string) {
+func ParseDenomTradePairKey(key []byte) (denom0, denom1 string, err error) {
 	keyStr := string(key)
 	parts := strings.Split(keyStr, KeySeparator)
 
 	denom0 = parts[1]
 	denom1 = parts[2]
 
-	err := sdk.ValidateDenom(denom0)
+	err = sdk.ValidateDenom(denom0)
 	if err != nil {
-		panic(err)
+		return "", "", err
 	}
 
 	err = sdk.ValidateDenom(denom1)
 	if err != nil {
-		panic(err)
+		return "", "", err
 	}
 
-	return denom0, denom1
+	return denom0, denom1, nil
 }

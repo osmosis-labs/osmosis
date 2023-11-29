@@ -87,8 +87,10 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 	for ; iterator.Valid(); iterator.Next() {
 		takerFee := &sdk.DecProto{}
 		osmoutils.MustGet(store, iterator.Key(), takerFee)
-		denom0, denom1 := types.ParseDenomTradePairKey(iterator.Key())
-		fmt.Println(denom0, denom1)
+		denom0, denom1, err := types.ParseDenomTradePairKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
 		takerFees = append(takerFees, types.DenomPairTakerFee{
 			Denom0:   denom0,
 			Denom1:   denom1,
