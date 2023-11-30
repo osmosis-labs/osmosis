@@ -11,20 +11,22 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
 
 	// SDK v47 modules
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -95,6 +97,8 @@ func CreateUpgradeHandler(
 				keyTable = icahosttypes.ParamKeyTable() //nolint:staticcheck
 			case icacontrollertypes.SubModuleName:
 				keyTable = icacontrollertypes.ParamKeyTable() //nolint:staticcheck
+			case icqtypes.ModuleName:
+				keyTable = icqtypes.ParamKeyTable() //nolint:staticcheck
 
 			// wasm
 			case wasmtypes.ModuleName:

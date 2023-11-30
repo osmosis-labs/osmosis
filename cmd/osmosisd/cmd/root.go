@@ -19,7 +19,7 @@ import (
 	cometbftdb "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/params"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -59,7 +59,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/config"
 
-	osmosis "github.com/osmosis-labs/osmosis/v20/app"
+	osmosis "github.com/osmosis-labs/osmosis/v21/app"
 )
 
 type AssetList struct {
@@ -616,7 +616,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		chainID = appGenesis.ChainID
 	}
 
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}

@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -29,8 +29,6 @@ type Config struct {
 
 	NodeConfigs     []*NodeConfig
 	NodeTempConfigs []*NodeConfig
-
-	LatestCodeId int
 
 	t                *testing.T
 	containerManager *containers.Manager

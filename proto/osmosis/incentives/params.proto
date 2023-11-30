@@ -4,7 +4,7 @@ package osmosis.incentives;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/incentives/types";
 
 // Params holds parameters for the incentives module
 message Params {

@@ -5,7 +5,7 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // IncreaseTakerFeeTrackerForStakers gets the current value of the taker fee tracker for stakers, adds the given amount to it, and sets the new value.

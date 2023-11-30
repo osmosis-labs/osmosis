@@ -13,9 +13,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {
@@ -36,7 +36,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 type SudoAuthorizationPolicy struct{}
 
-func (p SudoAuthorizationPolicy) CanCreateCode(chainAccesscoConfig wasmkeeper.ChainAccessConfigs, actor sdk.AccAddress, config wasmtypes.AccessConfig) bool {
+func (p SudoAuthorizationPolicy) CanCreateCode(chainAccesscoConfig wasmtypes.ChainAccessConfigs, actor sdk.AccAddress, config wasmtypes.AccessConfig) bool {
 	return true
 }
 
