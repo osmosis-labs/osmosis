@@ -1,8 +1,6 @@
 package wasmbinding
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,7 +23,7 @@ func RegisterCustomPlugins(
 		CustomMessageDecorator(bank, tokenFactory),
 	)
 
-	return []wasm.Option{
+	return []wasmkeeper.Option{
 		queryPluginOpt,
 		messengerDecoratorOpt,
 	}
@@ -36,7 +34,7 @@ func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter, codec codec.Co
 		Stargate: StargateQuerier(queryRouter, codec),
 	})
 
-	return []wasm.Option{
+	return []wasmkeeper.Option{
 		queryPluginOpt,
 	}
 }
