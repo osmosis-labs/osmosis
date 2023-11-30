@@ -22,13 +22,13 @@ import (
    Additionally:
    - Periodically evaluating CheckTx and RecheckTx for compliance with these parameters.
 
-   Note: The reset interval is set to 1000 blocks, which is approximately 2 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
+   Note: The reset interval is set to 2000 blocks, which is approximately 4 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
 
    Challenges:
    - Transactions falling under their gas bounds are currently discarded by nodes. This behavior can be modified for CheckTx, rather than RecheckTx.
 
    Global variables stored in memory:
-   - DefaultBaseFee: Default base fee, initialized to 0.0025.
+   - DefaultBaseFee: Default base fee, initialized to 0.01.
    - MinBaseFee: Minimum base fee, initialized to 0.0025.
    - MaxBaseFee: Maximum base fee, initialized to 10.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
@@ -41,7 +41,7 @@ import (
 */
 
 var (
-	DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
+	DefaultBaseFee = sdk.MustNewDecFromStr("0.01")
 	MinBaseFee     = sdk.MustNewDecFromStr("0.0025")
 	MaxBaseFee     = sdk.MustNewDecFromStr("10")
 
@@ -49,10 +49,10 @@ var (
 	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(10))
 	TargetGas          = int64(70_000_000)
 	// In face of continuous spam, will take ~21 blocks from base fee > spam cost, to mempool eviction
-	// ceil(log_{15/14}(RecheckFeeConstant))
+	// ceil(log_{15/14}(RecheckFee mnConstant))
 	// So potentially 2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
 	RecheckFeeConstant = int64(4)
-	ResetInterval      = int64(1000)
+	ResetInterval      = int64(2000)
 )
 
 const (
