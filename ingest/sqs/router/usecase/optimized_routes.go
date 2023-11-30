@@ -16,7 +16,7 @@ import (
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
 // Considers all routes and splits.
 // Returns error if router repository is not set on the router.
-func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
+func (r *Router) getOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (domain.Quote, error) {
 	if r.routerRepository == nil {
 		return nil, ErrNilRouterRepository
 	}
@@ -83,7 +83,7 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes 
 
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
 // Returns error if router repository is not set on the router.
-func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (quote domain.Quote, err error) {
+func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (quote domain.Quote, err error) {
 	if r.routerRepository == nil {
 		return nil, ErrNilRouterRepository
 	}

@@ -567,7 +567,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTUMEE() {
 
 	routes := s.constructRoutesFromMainnetPools(router, USDT, UMEE, tickMap, takerFeeMap)
 
-	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), UMEE, routes)
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), routes)
 
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)
@@ -592,7 +592,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_UOSMOUION() {
 
 	routes := s.constructRoutesFromMainnetPools(router, UOSMO, UION, tickMap, takerFeeMap)
 
-	quote, err := router.GetOptimalQuote(sdk.NewCoin(UOSMO, amountIn), UION, routes)
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(UOSMO, amountIn), routes)
 
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)
@@ -623,7 +623,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_USDTATOM() {
 
 	routes := s.constructRoutesFromMainnetPools(router, USDT, ATOM, tickMap, takerFeeMap)
 
-	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), ATOM, routes)
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(USDT, amountIn), routes)
 
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)
@@ -647,7 +647,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
 
 	routes := s.constructRoutesFromMainnetPools(router, AKT, UMEE, tickMap, takerFeeMap)
 
-	quote, err := router.GetOptimalQuote(sdk.NewCoin(AKT, amountIn), UMEE, routes)
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(AKT, amountIn), routes)
 
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)

@@ -105,9 +105,9 @@ var _ json.Marshaler = &TakerFeeMap{}
 var _ json.Unmarshaler = &TakerFeeMap{}
 
 // MarshalJSON implements json.Marshaler.
-func (m TakerFeeMap) MarshalJSON() ([]byte, error) {
+func (tfm TakerFeeMap) MarshalJSON() ([]byte, error) {
 	serializedMap := map[string]osmomath.Dec{}
-	for key, value := range m {
+	for key, value := range tfm {
 		// Convert DenomPair to a string representation
 		keyString := fmt.Sprintf("%s-%s", key.Denom0, key.Denom1)
 		serializedMap[keyString] = value
@@ -117,7 +117,7 @@ func (m TakerFeeMap) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (m TakerFeeMap) UnmarshalJSON(data []byte) error {
+func (tfm TakerFeeMap) UnmarshalJSON(data []byte) error {
 	var serializedMap map[string]osmomath.Dec
 	if err := json.Unmarshal(data, &serializedMap); err != nil {
 		return err
@@ -130,7 +130,7 @@ func (m TakerFeeMap) UnmarshalJSON(data []byte) error {
 			return fmt.Errorf("invalid key format: %s", keyString)
 		}
 		denomPair := DenomPair{Denom0: parts[0], Denom1: parts[1]}
-		(m)[denomPair] = value
+		(tfm)[denomPair] = value
 	}
 
 	return nil

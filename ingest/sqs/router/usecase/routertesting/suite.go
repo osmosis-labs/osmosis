@@ -82,9 +82,9 @@ func WithRoutePools(r route.RouteImpl, pools []domain.RoutablePool) route.RouteI
 	newRoute := route.RouteImpl{
 		Pools: make([]domain.RoutablePool, 0, len(pools)),
 	}
-	for _, pool := range pools {
-		newRoute.Pools = append(newRoute.Pools, pool)
-	}
+
+	newRoute.Pools = append(newRoute.Pools, pools...)
+
 	return newRoute
 }
 
@@ -93,9 +93,8 @@ func WithCandidateRoutePools(r route.CandidateRoute, pools []route.CandidatePool
 	newRoute := route.CandidateRoute{
 		Pools: make([]route.CandidatePool, 0, len(pools)),
 	}
-	for _, pool := range pools {
-		newRoute.Pools = append(newRoute.Pools, pool)
-	}
+
+	newRoute.Pools = append(newRoute.Pools, pools...)
 	return newRoute
 }
 

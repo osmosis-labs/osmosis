@@ -26,16 +26,16 @@ func (r *Router) ValidateAndFilterRoutes(candidateRoutes [][]candidatePoolWrappe
 	return r.validateAndFilterRoutes(candidateRoutes, tokenInDenom)
 }
 
-func (r *routerUseCaseImpl) InitializeRouter(ctx context.Context) (*Router, error) {
-	return r.initializeRouter(ctx)
+func (r *routerUseCaseImpl) InitializeRouter() *Router {
+	return r.initializeRouter()
 }
 
 func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (candidateRoutes route.CandidateRoutes, err error) {
 	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
 
-func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string, routes []route.RouteImpl) (domain.Quote, error) {
-	return r.getOptimalQuote(tokenIn, tokenOutDenom, routes)
+func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (domain.Quote, error) {
+	return r.getOptimalQuote(tokenIn, routes)
 }
 
 // GetSortedPoolIDs returns the sorted pool IDs.

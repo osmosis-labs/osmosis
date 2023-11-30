@@ -56,14 +56,14 @@ func (mp *MockRoutablePool) GetSQSPoolModel() domain.SQSPool {
 }
 
 // CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
-func (r *MockRoutablePool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+func (mp *MockRoutablePool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	// Cast to balancer
-	balancerPool, ok := r.ChainPoolModel.(*balancer.Pool)
+	balancerPool, ok := mp.ChainPoolModel.(*balancer.Pool)
 	if !ok {
 		panic("not a balancer pool")
 	}
 
-	return balancerPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), r.TokenOutDenom, r.SpreadFactor)
+	return balancerPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), mp.TokenOutDenom, mp.SpreadFactor)
 }
 
 // String implements domain.RoutablePool.
