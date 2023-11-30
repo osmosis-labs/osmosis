@@ -153,6 +153,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
+	// Need to create two pools to properly export pool volumes.
+	s.PrepareBalancerPool()
+	s.PrepareConcentratedPool()
+
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
