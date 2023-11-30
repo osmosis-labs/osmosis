@@ -6,11 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 type (
@@ -25,12 +25,13 @@ type (
 		epochKeeper                 types.EpochKeeper
 		poolmanagerKeeper           types.PoolManagerKeeper
 		concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
+		txfeesKeeper                types.TxFeesKeeper
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
@@ -38,6 +39,7 @@ func NewKeeper(
 	epochKeeper types.EpochKeeper,
 	poolmanagerKeeper types.PoolManagerKeeper,
 	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper,
+	txfeesKeeper types.TxFeesKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -54,9 +56,14 @@ func NewKeeper(
 		epochKeeper:                 epochKeeper,
 		poolmanagerKeeper:           poolmanagerKeeper,
 		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
+		txfeesKeeper:                txfeesKeeper,
 	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k *Keeper) SetTxFeesKeeper(txFeesKeeper types.TxFeesKeeper) {
+	k.txfeesKeeper = txFeesKeeper
 }

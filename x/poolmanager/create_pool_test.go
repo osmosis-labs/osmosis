@@ -7,13 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cwmodel "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	stableswap "github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cwmodel "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	stableswap "github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestPoolCreationFee() {
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 
 			// make sure sender's balance is updated correctly
 			senderBal := bankKeeper.GetAllBalances(s.Ctx, sender)
-			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
+			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee...).Sub(expectedPoolTokens...).Add(expectedPoolShares)
 			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased

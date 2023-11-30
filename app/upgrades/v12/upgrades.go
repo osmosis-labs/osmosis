@@ -5,18 +5,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	twaptypes "github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
 )
 
 // We set the app version to pre-upgrade because it will be incremented by one
@@ -36,9 +36,8 @@ func CreateUpgradeHandler(
 		//
 		// As a result, the upgrade handler was not executed to increment the app version.
 		// This change helps to correctly set the app version for v12.
-		if err := keepers.UpgradeKeeper.SetAppVersion(ctx, preUpgradeAppVersion); err != nil {
-			return nil, err
-		}
+		versionSetter := keepers.UpgradeKeeper.GetVersionSetter()
+		versionSetter.SetProtocolVersion(preUpgradeAppVersion)
 
 		// Specifying the whole list instead of adding and removing. Less fragile.
 		hostParams := icahosttypes.Params{
@@ -58,7 +57,7 @@ func CreateUpgradeHandler(
 				sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
 				sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
 				sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-				sdk.MsgTypeURL(&govtypes.MsgVote{}),
+				sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
 				// Change: Removed authz messages
 				sdk.MsgTypeURL(&gammtypes.MsgJoinPool{}),
 				sdk.MsgTypeURL(&gammtypes.MsgExitPool{}),

@@ -4,10 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 // TestParams tests the query for params
@@ -379,4 +379,70 @@ func (s *KeeperTestSuite) TestGetProtoRevPool() {
 	res, err = s.queryClient.GetProtoRevPool(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
 	s.Require().Equal(res.PoolId, uint64(1))
+}
+
+// TestGetAllProtocolRevenue tests the query for all protocol revenue profits
+func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.02")
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+	req := &types.QueryGetAllProtocolRevenueRequest{}
+	res, err := s.queryClient.GetAllProtocolRevenue(sdk.WrapSDKContext(s.Ctx), req)
+	s.Require().NoError(err)
+	s.Require().Empty(res.AllProtocolRevenue)
+
+	// Swap on a pool to charge taker fee
+	swapInCoin := sdk.NewCoin("Atom", osmomath.NewInt(1000))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(10000))))
+	poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(10000)), sdk.NewCoin("Akash", osmomath.NewInt(10000)))...)
+	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, swapInCoin, "Akash", sdk.ZeroInt())
+	s.Require().NoError(err)
+	expectedTakerFeeFromInput := swapInCoin.Amount.ToLegacyDec().Mul(poolManagerParams.TakerFeeParams.DefaultTakerFee)
+	expectedTakerFeeToCommunityPoolAmt := expectedTakerFeeFromInput.Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool).TruncateInt()
+	expectedTakerFeeToStakersAmt := expectedTakerFeeFromInput.Sub(expectedTakerFeeToCommunityPoolAmt.ToLegacyDec()).TruncateInt()
+	expectedTakerFeeToStakers := sdk.NewCoins(sdk.NewCoin("Atom", expectedTakerFeeToStakersAmt))
+	expectedTakerFeeToCommunityPool := sdk.NewCoins(sdk.NewCoin("Atom", expectedTakerFeeToCommunityPoolAmt))
+
+	// Charge txfee of 1000 uion
+	txFeeCharged := sdk.NewCoins(sdk.NewCoin("uion", osmomath.NewInt(1000)))
+	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin("uion", 1000000)), 0, true, false, txFeeCharged)
+
+	// Psuedo collect cyclic arb profits
+	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
+	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
+	s.Require().NoError(err)
+	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
+	s.Require().NoError(err)
+
+	// Check protocol revenue
+	res, err = s.queryClient.GetAllProtocolRevenue(sdk.WrapSDKContext(s.Ctx), req)
+	s.Require().NoError(err)
+	s.Require().Equal(cyclicArbProfits, res.AllProtocolRevenue.CyclicArbTracker.CyclicArb)
+	s.Require().Equal(txFeeCharged, res.AllProtocolRevenue.TxFeesTracker.TxFees)
+	s.Require().Equal(expectedTakerFeeToStakers, res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(expectedTakerFeeToCommunityPool, res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
+
+	// A second round of the same thing
+	// Swap on a pool to charge taker fee
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(10000))))
+	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, swapInCoin, "Akash", sdk.ZeroInt())
+	s.Require().NoError(err)
+
+	// Charge txfee of 1000 uion
+	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin("uion", 1000000)), 0, true, false, txFeeCharged)
+
+	// Psuedo collect cyclic arb profits
+	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
+	s.Require().NoError(err)
+	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
+	s.Require().NoError(err)
+
+	// Check protocol revenue
+	res, err = s.queryClient.GetAllProtocolRevenue(sdk.WrapSDKContext(s.Ctx), req)
+	s.Require().NoError(err)
+	s.Require().Equal(cyclicArbProfits.Add(cyclicArbProfits...), res.AllProtocolRevenue.CyclicArbTracker.CyclicArb)
+	s.Require().Equal(txFeeCharged.Add(txFeeCharged...), res.AllProtocolRevenue.TxFeesTracker.TxFees)
+	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
 }

@@ -11,10 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/util"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 )
 
 var defaultFeePerTx = osmomath.NewInt(1000)
@@ -130,7 +130,6 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.NoError(err)
 
 	codeId := node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId++
 	node.InstantiateWasmContract(
 		strconv.Itoa(codeId),
 		`{"count": 0}`,

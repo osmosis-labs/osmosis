@@ -7,9 +7,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 const (
@@ -18,6 +18,8 @@ const (
 )
 
 // ProposalContents defines the module weighted proposals' contents.
+//
+//nolint:staticcheck
 func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
@@ -29,6 +31,8 @@ func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedP
 }
 
 // SimulateSetSuperfluidAssetsProposal generates random superfluid asset set proposal content.
+//
+//nolint:staticcheck
 func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		pools, err := gk.GetPoolsAndPoke(ctx)
@@ -57,6 +61,8 @@ func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) s
 }
 
 // SimulateRemoveSuperfluidAssetsProposal generates random superfluid asset removal proposal content.
+//
+//nolint:staticcheck
 func SimulateRemoveSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		assets := k.GetAllSuperfluidAssets(ctx)

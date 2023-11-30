@@ -2,18 +2,22 @@ package osmosisibctesting
 
 import (
 	"encoding/json"
+	"math/rand"
 	"time"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
-	"github.com/cosmos/ibc-go/v4/testing/simapp/helpers"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v21/app"
 )
+
+const SimAppChainID = "simulation-app"
 
 type TestChain struct {
 	*ibctesting.TestChain
@@ -63,19 +67,23 @@ func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	tx, _ := helpers.GenTx(
+	tx, err := simtestutil.GenSignedMockTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
-		helpers.DefaultGenTxGas,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		accNums,
 		accSeqs,
 		priv...,
 	)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
 
-	// Simulate a sending a transaction and committing a block
-	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
+	// Simulate a sending a transaction
+	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
 	return gInfo, res, err
 }

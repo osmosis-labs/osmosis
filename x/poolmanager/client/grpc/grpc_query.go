@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
 )
 
 type Querier struct {
@@ -99,6 +99,16 @@ func (q Querier) NumPools(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.NumPools(ctx, *req)
+}
+
+func (q Querier) ListPoolsByDenom(grpcCtx context.Context,
+	req *queryproto.ListPoolsByDenomRequest,
+) (*queryproto.ListPoolsByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ListPoolsByDenom(ctx, *req)
 }
 
 func (q Querier) EstimateTradeBasedOnPriceImpact(grpcCtx context.Context,

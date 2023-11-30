@@ -6,12 +6,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v20/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v21/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries

@@ -8,7 +8,7 @@ import (
 
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -66,7 +66,11 @@ func NewSetBeforeSendHookCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			msg := types.NewMsgSetBeforeSendHook(
 				clientCtx.GetFromAddress().String(),

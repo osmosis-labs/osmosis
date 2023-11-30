@@ -7,21 +7,21 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 var (
@@ -867,7 +867,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			poolCreateAcc := delAddrs[0]
 			poolJoinAcc := delAddrs[1]
 			for _, acc := range delAddrs {
-				err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+				err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 				s.Require().NoError(err)
 			}
 
@@ -974,7 +974,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	poolCreateAcc = delAddrs[0]
 	poolJoinAcc = delAddrs[1]
 	for _, acc := range delAddrs {
-		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 		s.Require().NoError(err)
 	}
 
@@ -997,7 +997,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
 
 	// The balancer join pool amount is the difference between the account balance before and after joining the pool.
-	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
+	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin...)
 
 	// Determine the balancer pool's LP token denomination.
 	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
@@ -1099,7 +1099,6 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 	s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 		ctx,
 		valAddr,
-		ctx.BlockHeight(),
 		slashFactor)
 
 	// Retrieve the concentrated lock and gamm lock after slashing.

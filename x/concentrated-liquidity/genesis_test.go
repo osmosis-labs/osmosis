@@ -4,20 +4,20 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/stretchr/testify/assert"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v20/app"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {

@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,10 +11,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {

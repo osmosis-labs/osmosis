@@ -10,16 +10,16 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -573,7 +573,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 					Weight:  osmomath.NewDec(1),
 				},
 			},
-			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
+			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("spendable balance %s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
 		},
 		"distribute * proportion < pre-mint but distribute * proportion > developer vesting amount - error": {
 			preMintCoin: validPreMintCoin,

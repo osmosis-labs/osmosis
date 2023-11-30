@@ -7,13 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appParams "github.com/osmosis-labs/osmosis/v20/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
+	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/valset-pref/types"
 )
 
 type valSet struct {
@@ -467,14 +467,14 @@ func (k Keeper) getValTargetAndSource(ctx sdk.Context, valSource, valTarget stri
 	return validatorSource, validatorTarget, nil
 }
 
-// WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
+// WithdrawDelegationRewards withdraws all the delegation rewards from all validators the user is delegated to, disregarding the val-set.
 // If the valset does not exist, it withdraws from existing staking position.
 // Delegation reward is collected by the validator and in doing so, they can charge commission to the delegators.
 // Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
 // receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
-	// get the existingValSet if it exists, if not check existingStakingPosition and return it
-	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	// Get all validators the user is delegated to, and create a set from it.
+	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
 	}

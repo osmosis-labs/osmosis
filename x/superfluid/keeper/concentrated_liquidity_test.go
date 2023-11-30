@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	delAddrs = append(delAddrs, owner)
 	poolJoinAcc = delAddrs[1]
 	for _, acc := range delAddrs {
-		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 		s.Require().NoError(err)
 	}
 

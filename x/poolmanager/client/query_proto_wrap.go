@@ -7,10 +7,10 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
@@ -208,6 +208,30 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 	}
 
 	return &queryproto.AllPoolsResponse{
+		Pools: anyPools,
+	}, nil
+}
+
+// ListPoolsByDenom returns a list of pools filtered by denom
+func (q Querier) ListPoolsByDenom(ctx sdk.Context, req queryproto.ListPoolsByDenomRequest) (*queryproto.ListPoolsByDenomResponse, error) {
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+	pools, err := q.K.ListPoolsByDenom(ctx, req.Denom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var anyPools []*codectypes.Any
+	for _, pool := range pools {
+		any, err := codectypes.NewAnyWithValue(pool.AsSerializablePool())
+		if err != nil {
+			return nil, err
+		}
+		anyPools = append(anyPools, any)
+	}
+
+	return &queryproto.ListPoolsByDenomResponse{
 		Pools: anyPools,
 	}, nil
 }

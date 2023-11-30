@@ -1,7 +1,6 @@
 package osmosisibctesting
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"os"
 
@@ -13,34 +12,14 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
-	osmosisApp := chain.GetOsmosisApp()
-
-	govKeeper := osmosisApp.GovKeeper
-	wasmCode, err := os.ReadFile(path)
-	suite.Require().NoError(err)
-
-	addr := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
-		p.RunAs = addr.String()
-		p.WASMByteCode = wasmCode
-		checksum := sha256.Sum256(wasmCode)
-		p.CodeHash = checksum[:]
-	})
-
-	// when stored
-	storedProposal, err := govKeeper.SubmitProposal(chain.GetContext(), src, false)
-	suite.Require().NoError(err)
-
-	// and proposal execute
-	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
-	err = handler(chain.GetContext(), storedProposal.GetContent())
-	suite.Require().NoError(err)
+	chain.StoreContractCodeDirect(suite, path)
 }
 
 func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string) sdk.AccAddress {

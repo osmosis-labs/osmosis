@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/spf13/cobra"
@@ -13,12 +12,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -118,7 +118,7 @@ Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
@@ -128,34 +128,22 @@ Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			msg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
 
 	return cmd
@@ -174,56 +162,47 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
+
 			content, err := parsePoolIdToTickSpacingRecordsArgsToContent(cmd)
 			if err != nil {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
-			if err != nil {
-				return err
-			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().String(FlagPoolIdToTickSpacingRecords, "", "The pool ID to new tick spacing records array")
 
 	return cmd
 }
 
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -242,13 +221,13 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govt
 	return content, nil
 }
 
-func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}

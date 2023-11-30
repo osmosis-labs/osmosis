@@ -1,20 +1,20 @@
 package upgrades
 
 import (
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
 )
 
 // BaseAppParamManager defines an interrace that BaseApp is expected to fullfil
 // that allows upgrade handlers to modify BaseApp parameters.
 type BaseAppParamManager interface {
-	GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams
-	StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams)
+	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
+	StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams)
 }
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

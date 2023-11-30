@@ -14,10 +14,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,14 +24,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
-	simulation "github.com/osmosis-labs/osmosis/v20/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
+	simulation "github.com/osmosis-labs/osmosis/v21/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/v2types"
 )
 
 var (
@@ -71,9 +70,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // ---------------------------------------
 // Interfaces.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-}
-
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))     //nolint:errcheck
 	v2types.RegisterQueryHandlerClient(context.Background(), mux, v2types.NewQueryClient(clientCtx)) //nolint:errcheck
@@ -126,20 +122,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bk)
 }
 
-// Route returns the message routing key for the gamm module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the gamm module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// LegacyQuerierHandler returns the x/gamm module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // InitGenesis performs genesis initialization for the gamm module. It returns
 // no validator updates.

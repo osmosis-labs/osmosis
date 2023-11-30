@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -9,25 +10,26 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
+	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 var (
@@ -37,14 +39,29 @@ var (
 	govPropTimeout = time.Minute
 )
 
-// TODO: Find more scalable way to do this
-func (s *IntegrationTestSuite) TestAllE2E() {
+func (s *IntegrationTestSuite) TestPrepE2E() {
 	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
 	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
+		t.Parallel()
 		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
 		s.SetDefaultTakerFeeChainB()
 	})
 
+	s.T().Run("SetExpeditedVotingPeriodChainA", func(t *testing.T) {
+		t.Parallel()
+		s.T().Log("setting the expedited voting period to 7 seconds on chain A")
+		s.SetExpeditedVotingPeriodChainA()
+	})
+
+	s.T().Run("SetExpeditedVotingPeriodChainB", func(t *testing.T) {
+		t.Parallel()
+		s.T().Log("setting the expedited voting period to 7 seconds on chain B")
+		s.SetExpeditedVotingPeriodChainB()
+	})
+}
+
+// TODO: Find more scalable way to do this
+func (s *IntegrationTestSuite) TestStartE2E() {
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()
@@ -382,16 +399,17 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets
-	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId))
+	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId), true)
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainABNode.CreateWallet("TestSuperfluidVoting", chainAB)
 	chainABNode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), initialization.ValidatorWalletName, superfluidVotingWallet)
 	lockId := chainABNode.LockTokens(fmt.Sprintf("%v%s", osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+
 	chainABNode.SuperfluidDelegate(lockId, chainABNode.OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop and vote yes
-	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", true)
+	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", false, true)
 
 	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
@@ -464,7 +482,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	fmt.Println("Sending >1%")
 	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA)
+	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA, true)
 	s.Require().NoError(err)
 
 	s.Eventually(
@@ -493,6 +511,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 			string(ibcratelimittypes.KeyContractAddress),
 			[]byte(param),
 			chainA,
+			true,
 		)
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
@@ -655,7 +674,7 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
 	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", funder)
-	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId))
+	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId), true)
 
 	// setup wallets and send gamm tokens to these wallets on chainA
 	gammShares := fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId)
@@ -843,7 +862,30 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
-	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", true)
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+	govModuleAccount := chainABNode.QueryGovModuleAccount()
+	propMetadata := []byte{42}
+	validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+			"authority": "%s",
+			"content": {
+				"@type": "/cosmos.gov.v1beta1.TextProposal",
+				"title": "My awesome title",
+				"description": "My awesome description"
+			}
+		}
+	],
+	"title": "My awesome title",
+	"summary": "My awesome description",
+	"metadata": "%s",
+	"deposit": "%s",
+	"expedited": true
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(5000000000)))
+
+	propNumber := chainABNode.SubmitNewV1ProposalType(validProp, sender)
 
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainABNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
@@ -906,11 +948,11 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
 	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
-	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms.Unix())
+	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms)
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(2)
+	chainA.WaitUntilBlockTime(timeBeforeSwapPlus5ms.Add(time.Second * 3))
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
@@ -975,6 +1017,124 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 // As a result, we deterministically configure chain B's taker fee prior to running CL tests.
 func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
-	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
+	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB, true)
 	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
+	chainA, chainANode := s.getChainACfgs()
+
+	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
+	govModuleAccount := chainANode.QueryGovModuleAccount()
+	propMetadata := []byte{42}
+	validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.gov.v1.MsgUpdateParams",
+			"authority": "%s",
+			"params": {
+				"min_deposit": [
+					{
+					"denom": "uosmo",
+					"amount": "10000000"
+					}
+				],
+				"max_deposit_period": "172800s",
+				"voting_period": "11s",
+				"quorum": "0.334000000000000000",
+				"threshold": "0.500000000000000000",
+				"veto_threshold": "0.334000000000000000",
+				"min_initial_deposit_ratio": "0.000000000000000000",
+				"expedited_voting_period": "7s",
+				"expedited_threshold": "0.667000000000000000",
+				"expedited_min_deposit": [
+				{
+					"denom": "uosmo",
+					"amount": "50000000"
+				}
+				],
+				"burn_vote_quorum": false,
+				"burn_proposal_deposit_prevote": false,
+				"burn_vote_veto": true
+			}
+		}
+	],
+	"title": "Gov params update",
+	"summary": "Gov params update description",
+	"metadata": "%s",
+	"deposit": "%s",
+	"expedited": false
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+
+	proposalID := chainANode.SubmitNewV1ProposalType(validProp, sender)
+
+	chain.AllValsVoteOnProposal(chainA, proposalID)
+
+	s.Eventually(func() bool {
+		status, err := chainANode.QueryPropStatus(proposalID)
+		if err != nil {
+			return false
+		}
+		return status == "PROPOSAL_STATUS_PASSED"
+	}, time.Minute*2, 10*time.Millisecond)
+}
+
+func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
+	chainB, chainBNode := s.getChainBCfgs()
+
+	sender := chainBNode.GetWallet(initialization.ValidatorWalletName)
+	govModuleAccount := chainBNode.QueryGovModuleAccount()
+	propMetadata := []byte{42}
+	validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.gov.v1.MsgUpdateParams",
+			"authority": "%s",
+			"params": {
+				"min_deposit": [
+					{
+					"denom": "uosmo",
+					"amount": "10000000"
+					}
+				],
+				"max_deposit_period": "172800s",
+				"voting_period": "11s",
+				"quorum": "0.334000000000000000",
+				"threshold": "0.500000000000000000",
+				"veto_threshold": "0.334000000000000000",
+				"min_initial_deposit_ratio": "0.000000000000000000",
+				"expedited_voting_period": "7s",
+				"expedited_threshold": "0.667000000000000000",
+				"expedited_min_deposit": [
+				{
+					"denom": "uosmo",
+					"amount": "50000000"
+				}
+				],
+				"burn_vote_quorum": false,
+				"burn_proposal_deposit_prevote": false,
+				"burn_vote_veto": true
+			}
+		}
+	],
+	"title": "Gov params update",
+	"summary": "Gov params update description",
+	"metadata": "%s",
+	"deposit": "%s",
+	"expedited": false
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+
+	proposalID := chainBNode.SubmitNewV1ProposalType(validProp, sender)
+
+	chain.AllValsVoteOnProposal(chainB, proposalID)
+
+	s.Eventually(func() bool {
+		status, err := chainBNode.QueryPropStatus(proposalID)
+		if err != nil {
+			return false
+		}
+		return status == "PROPOSAL_STATUS_PASSED"
+	}, time.Minute*2, 10*time.Millisecond)
 }

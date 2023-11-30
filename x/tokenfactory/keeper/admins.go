@@ -2,9 +2,9 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 )
 
 // GetAuthorityMetadata returns the authority metadata for a specific denom

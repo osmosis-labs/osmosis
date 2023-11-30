@@ -3,10 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -15,7 +16,7 @@ import (
 
 // Keeper provides a way to manage module storage.
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	paramSpace paramtypes.Subspace
 
 	ak   authkeeper.AccountKeeper
@@ -36,7 +37,7 @@ type Keeper struct {
 var _ govtypes.StakingKeeper = (*Keeper)(nil)
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper, pmk types.PoolManagerKeeper, vspk types.ValSetPreferenceKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper, pmk types.PoolManagerKeeper, vspk types.ValSetPreferenceKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

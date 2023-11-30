@@ -17,25 +17,25 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v21/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -287,13 +287,13 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 			trace = transfertypes.ParseDenomTrace(sdk.DefaultBondDenom)
 
 			// send coin from chainA to chainB
-			transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.chainA.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0)
+			transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.chainA.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0, "")
 			_, err := suite.chainA.SendMsgs(transferMsg)
 			suite.Require().NoError(err) // message committed
 
 			tc.malleate(&status)
 
-			data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver)
+			data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver, "")
 			packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
 			ack := suite.chainB.GetOsmosisApp().TransferStack.
@@ -338,7 +338,7 @@ func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence 
 		suite.pathAB.EndpointB.ChannelID,
 		suite.pathAB.EndpointA.ChannelConfig.PortID,
 		suite.pathAB.EndpointA.ChannelID,
-		clienttypes.NewHeight(0, 100),
+		clienttypes.NewHeight(1, 100),
 		0,
 	)
 }
@@ -354,8 +354,8 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 
 	packet := suite.makeMockPacket(receiver, memo, prevSequence)
 
-	err := suite.chainB.GetOsmosisApp().HooksICS4Wrapper.SendPacket(
-		suite.chainB.GetContext(), channelCap, packet)
+	_, err := suite.chainB.GetOsmosisApp().HooksICS4Wrapper.SendPacket(
+		suite.chainB.GetContext(), channelCap, packet.SourcePort, packet.SourceChannel, packet.TimeoutHeight, packet.TimeoutTimestamp, packet.Data)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
 	// Update both clients
@@ -543,7 +543,7 @@ func NewMsgTransfer(token sdk.Coin, sender, receiver, channel, memo string) *tra
 		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
-		TimeoutHeight:    clienttypes.NewHeight(0, 500),
+		TimeoutHeight:    clienttypes.NewHeight(1, 500),
 		TimeoutTimestamp: 0,
 		Memo:             memo,
 	}
@@ -1920,7 +1920,7 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
-	for i, _ := range packetPath {
+	for i := range packetPath {
 		packet = packetStack[len(packetStack)-i-1]
 		direction := packetPath[len(packetPath)-i-1]
 		// sender Acknowledges

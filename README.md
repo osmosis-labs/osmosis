@@ -69,7 +69,7 @@ For the most up to date documentation please visit
 ## Joining the Mainnet
 
 [Please visit the official instructions on how to join the Mainnet
-here.](https://docs.osmosis.zone/networks/join-mainnet)
+here.](https://docs.osmosis.zone/overview/validate/joining-mainnet)
 
 Thank you for supporting a healthy blockchain network and community by
 running an Osmosis node!

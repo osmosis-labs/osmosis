@@ -1,15 +1,14 @@
 package client
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/client/rest"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
 var (
-	ReplaceMigrationRecordsProposalHandler    = govclient.NewProposalHandler(cli.NewCmdSubmitReplaceMigrationRecordsProposal, rest.ProposalReplaceMigrationRecordsRESTHandler)
-	UpdateMigrationRecordsProposalHandler     = govclient.NewProposalHandler(cli.NewCmdSubmitUpdateMigrationRecordsProposal, rest.ProposalUpdateMigrationRecordsRESTHandler)
-	CreateCLPoolAndLinkToCFMMProposalHandler  = govclient.NewProposalHandler(cli.NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal, rest.ProposalCreateConcentratedLiquidityPoolAndLinkToCFMMHandler)
-	SetScalingFactorControllerProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitSetScalingFactorControllerProposal, rest.ProposalSetScalingFactorController)
+	ReplaceMigrationRecordsProposalHandler    = govclient.NewProposalHandler(cli.NewCmdSubmitReplaceMigrationRecordsProposal)
+	UpdateMigrationRecordsProposalHandler     = govclient.NewProposalHandler(cli.NewCmdSubmitUpdateMigrationRecordsProposal)
+	CreateCLPoolAndLinkToCFMMProposalHandler  = govclient.NewProposalHandler(cli.NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal)
+	SetScalingFactorControllerProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitSetScalingFactorControllerProposal)
 )

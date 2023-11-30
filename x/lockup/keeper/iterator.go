@@ -3,9 +3,9 @@ package keeper
 import (
 	"time"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
 
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -7,9 +7,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
@@ -81,6 +84,46 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
 	}
 
 	return profits
+}
+
+func (k Keeper) SetCyclicArbProfitTrackerValue(ctx sdk.Context, cyclicArbProfits sdk.Coins) {
+	newCyclicArbProfits := poolmanagertypes.TrackedVolume{
+		Amount: cyclicArbProfits,
+	}
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTracker, &newCyclicArbProfits)
+}
+
+func (k Keeper) GetCyclicArbProfitTrackerValue(ctx sdk.Context) (currentCyclicArbProfits sdk.Coins) {
+	var cyclicArbProfits poolmanagertypes.TrackedVolume
+	cyclicArbProfitsFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyCyclicArbTracker, &cyclicArbProfits)
+	if err != nil {
+		// We can only encounter an error if a database or serialization errors occurs, so we panic here.
+		// Normally this would be handled by `osmoutils.MustGet`, but since we want to specifically use `osmoutils.Get`,
+		// we also have to manually panic here.
+		panic(err)
+	}
+
+	// If no volume was found, we treat the existing volume as 0.
+	// While we can technically require volume to exist, we would need to store empty coins in state for each pool (past and present),
+	// which is a high storage cost to pay for a weak guardrail.
+	currentCyclicArbProfits = sdk.NewCoins()
+	if cyclicArbProfitsFound {
+		currentCyclicArbProfits = cyclicArbProfits.Amount
+	}
+
+	return currentCyclicArbProfits
+}
+
+// GetCyclicArbProfitTrackerStartHeight gets the height from which we started accounting for cyclic arb profits.
+func (k Keeper) GetCyclicArbProfitTrackerStartHeight(ctx sdk.Context) int64 {
+	startHeight := gogotypes.Int64Value{}
+	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTrackerStartHeight, &startHeight)
+	return startHeight.Value
+}
+
+// SetCyclicArbProfitTrackerStartHeight sets the height from which we started accounting for cyclic arb profits.
+func (k Keeper) SetCyclicArbProfitTrackerStartHeight(ctx sdk.Context, startHeight int64) {
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTrackerStartHeight, &gogotypes.Int64Value{Value: startHeight})
 }
 
 // UpdateProfitsByDenom updates the profits made by the ProtoRev module for the given denom

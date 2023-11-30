@@ -3,17 +3,18 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper provides a way to manage module storage.
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	hooks types.LockupHooks
 
@@ -25,7 +26,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

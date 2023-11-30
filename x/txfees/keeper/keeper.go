@@ -3,16 +3,18 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
@@ -20,6 +22,7 @@ type Keeper struct {
 	spotPriceCalculator types.SpotPriceCalculator
 	protorevKeeper      types.ProtorevKeeper
 	distributionKeeper  types.DistributionKeeper
+	dataDir             string
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
@@ -27,11 +30,12 @@ var _ types.TxFeesKeeper = (*Keeper)(nil)
 func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	poolManager types.PoolManager,
 	spotPriceCalculator types.SpotPriceCalculator,
 	protorevKeeper types.ProtorevKeeper,
 	distributionKeeper types.DistributionKeeper,
+	dataDir string,
 ) Keeper {
 	return Keeper{
 		accountKeeper:       accountKeeper,
@@ -41,6 +45,7 @@ func NewKeeper(
 		spotPriceCalculator: spotPriceCalculator,
 		protorevKeeper:      protorevKeeper,
 		distributionKeeper:  distributionKeeper,
+		dataDir:             dataDir,
 	}
 }
 

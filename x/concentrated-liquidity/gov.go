@@ -5,11 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func (k Keeper) HandleCreateConcentratedLiquidityPoolsProposal(ctx sdk.Context, p *types.CreateConcentratedLiquidityPoolsProposal) error {
@@ -30,14 +30,13 @@ func (k Keeper) HandleTickSpacingDecreaseProposal(ctx sdk.Context, p *types.Tick
 	return k.DecreaseConcentratedPoolTickSpacing(ctx, p.PoolIdToTickSpacingRecords)
 }
 
-func NewConcentratedLiquidityProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewConcentratedLiquidityProposalHandler(k Keeper) govtypesv1.Handler {
+	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {
 		case *types.TickSpacingDecreaseProposal:
 			return k.HandleTickSpacingDecreaseProposal(ctx, c)
 		case *types.CreateConcentratedLiquidityPoolsProposal:
 			return k.HandleCreateConcentratedLiquidityPoolsProposal(ctx, c)
-
 		default:
 			return fmt.Errorf("unrecognized concentrated liquidity proposal content type: %T", c)
 		}

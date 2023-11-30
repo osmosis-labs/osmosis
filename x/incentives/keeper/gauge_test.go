@@ -9,9 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v20/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v21/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -264,7 +264,7 @@ func (s *KeeperTestSuite) TestGaugeOperations() {
 
 			// check rewards estimation
 			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
-			s.Require().Equal(sdk.Coins(nil), rewardsEst)
+			s.Require().Equal(sdk.Coins{}, rewardsEst)
 
 			// check gauge ids by denom
 			gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")

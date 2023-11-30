@@ -2,14 +2,16 @@ package keeper
 
 import (
 	"fmt"
+	"path/filepath"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	mempool1559 "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -26,6 +28,10 @@ type MempoolFeeDecorator struct {
 }
 
 func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
+	if opts.Mempool1559Enabled {
+		mempool1559.CurEipState.BackupFilePath = filepath.Join(txFeesKeeper.dataDir, mempool1559.BackupFilename)
+	}
+
 	return MempoolFeeDecorator{
 		TxFeesKeeper: txFeesKeeper,
 		Opts:         opts,
@@ -51,10 +57,23 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
+	// UNFORKINGTODO C: Added this logic so that we can create gentx's without having to pay a fee.
+	// If this is genesis height, don't check the fee.
+	// This is needed so that gentx's can be created without having to pay a fee (chicken/egg problem).
+	if ctx.BlockHeight() == 0 {
+		return next(ctx, tx, simulate)
+	}
+
 	feeCoins := feeTx.GetFee()
 
 	if len(feeCoins) > 1 {
 		return ctx, types.ErrTooManyFeeCoins
+	}
+
+	// TODO: Is there a better way to do this?
+	// I want ctx.IsDeliverTx() but that doesn't exist.
+	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		mempool1559.DeliverTxCode(ctx, feeTx)
 	}
 
 	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
@@ -105,7 +124,9 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
 	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
-	if ctx.IsGenesis() || simulate {
+	// UNFORKINGTODO OQ: look into what we should use in place of ctx.IsGenesis() here
+	// if ctx.IsGenesis() || simulate {
+	if simulate {
 		minBaseGasPrice = osmomath.ZeroDec()
 	}
 	return minBaseGasPrice
@@ -137,6 +158,8 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 }
 
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
+	var is1559enabled = mfd.Opts.Mempool1559Enabled
+
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
@@ -144,6 +167,14 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	}
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+	}
+	// Initial tx only, no recheck
+	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
+	}
+	// RecheckTx only
+	if is1559enabled && ctx.IsReCheckTx() {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
 	}
 	return cfgMinGasPrice
 }
@@ -255,6 +286,8 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
+
+	txFeesKeeper.IncreaseTxFeesTracker(ctx, fees[0])
 
 	return nil
 }

@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 func TestGenesisStateMarshalUnmarshal(t *testing.T) {

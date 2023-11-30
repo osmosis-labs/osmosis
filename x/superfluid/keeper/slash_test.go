@@ -4,11 +4,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -187,7 +187,6 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 				s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 					s.Ctx,
 					valAddrs[i],
-					s.Ctx.BlockHeight(),
 					slashFactor)
 			}
 

@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -16,6 +16,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdDenomPoolID(),
 		GetCmdBaseDenom(),
 	)
+
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdQueryBaseFee)
 
 	return cmd
 }
@@ -51,4 +53,14 @@ func GetCmdBaseDenom() *cobra.Command {
 `,
 		types.ModuleName, types.NewQueryClient,
 	)
+}
+
+func GetCmdQueryBaseFee() (*osmocli.QueryDescriptor, *types.QueryEipBaseFeeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "base-fee",
+		Short: "Query the eip base fee.",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} base-fee`,
+		QueryFnName: "GetEipBaseFee",
+	}, &types.QueryEipBaseFeeRequest{}
 }

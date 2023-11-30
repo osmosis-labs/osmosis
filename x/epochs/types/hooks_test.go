@@ -95,10 +95,10 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 		expectedCounterValues []int
 		lenEvents             int
 	}{
-		{[]dummyEpochHook{noPanicHook}, []int{1}, 1},
+		{[]dummyEpochHook{noPanicHook}, []int{1}, 2},
 		{[]dummyEpochHook{panicHook}, []int{0}, 0},
 		{[]dummyEpochHook{errorHook}, []int{0}, 0},
-		{simpleHooks, []int{0, 1, 0, 1}, 2},
+		{simpleHooks, []int{0, 1, 0, 1}, 4},
 	}
 
 	for tcIndex, tc := range tests {

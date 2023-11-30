@@ -10,15 +10,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v21/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v20/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v21/app"
 )
 
 type KeeperTestSuite struct {
@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Marshaler)
 
 	// Set default configuration for testing
 	s.balances = sdk.NewCoins(

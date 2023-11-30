@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -28,8 +29,6 @@ type Config struct {
 
 	NodeConfigs     []*NodeConfig
 	NodeTempConfigs []*NodeConfig
-
-	LatestCodeId int
 
 	t                *testing.T
 	containerManager *containers.Manager
@@ -150,6 +149,25 @@ func (c *Config) WaitUntilHeight(height int64) {
 	}
 }
 
+func (c *Config) WaitUntilBlockTime(blockTime time.Time) {
+	// Ensure the nodes are making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		curBlockTime := syncInfo.LatestBlockTime
+
+		if curBlockTime.Before(blockTime) {
+			c.t.Logf("current block time is %s, waiting to reach block time: %s", curBlockTime, blockTime)
+			return false
+		}
+
+		return !syncInfo.CatchingUp
+	}
+
+	for _, node := range c.NodeConfigs {
+		c.t.Logf("node container: %s, waiting to reach block time %s", node.Name, blockTime)
+		node.WaitUntil(doneCondition)
+	}
+}
+
 // WaitForNumHeights waits for all nodes to go through a given number of heights.
 // TODO: Remove in favor of node.WaitForNumHeights
 func (c *Config) WaitForNumHeights(heightsToWait int64) {
@@ -180,8 +198,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
 			}
 		}
-		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
-		return balance.Sub(feeRewardTokenBalance)
+		feeRewardTokenBalance := osmoutils.FilterDenoms(balance, filteredCoinDenoms)
+		return balance.Sub(feeRewardTokenBalance...)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
@@ -206,7 +224,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			require.NoError(c.t, err)
 			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
 
-			ibcCoin := balancesDstPost.Sub(balancesDstPre)
+			ibcCoin := balancesDstPost.Sub(balancesDstPre...)
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
@@ -260,8 +278,8 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
-	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(true)
+func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig, isLegacy bool) (uint64, error) {
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(false, isLegacy)
 
 	chainANode.DepositProposal(propNumber, true)
 

@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
-	poolmanagertestutil "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/testutil"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	poolmanagertestutil "github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/testutil"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -23,7 +23,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
 type IntegrationTestSuite struct {
@@ -41,9 +40,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = app.DefaultConfig()
 	s.cfg.GenesisState = poolmanagertestutil.UpdateTxFeeDenom(s.cfg.Codec, s.cfg.BondDenom)
 
-	s.network = network.New(s.T(), s.cfg)
+	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.network = net
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -262,14 +263,15 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pubkey, err := info.GetPubKey()
+	newAddr := sdk.AccAddress(pubkey.Address())
 
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
@@ -517,7 +519,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				osmoutils.DefaultFeeString(s.cfg),
 				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(400000)),
 			}

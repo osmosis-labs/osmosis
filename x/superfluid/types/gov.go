@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 const (
@@ -18,21 +18,18 @@ const (
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeSetSuperfluidAssets)
-	govtypes.RegisterProposalTypeCodec(&SetSuperfluidAssetsProposal{}, "osmosis/SetSuperfluidAssetsProposal")
-	govtypes.RegisterProposalType(ProposalTypeRemoveSuperfluidAssets)
-	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
-	govtypes.RegisterProposalType(ProposalTypeUpdateUnpoolWhitelist)
-	govtypes.RegisterProposalTypeCodec(&UpdateUnpoolWhiteListProposal{}, "osmosis/UpdateUnpoolWhiteListProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeSetSuperfluidAssets)
+	govtypesv1.RegisterProposalType(ProposalTypeRemoveSuperfluidAssets)
+	govtypesv1.RegisterProposalType(ProposalTypeUpdateUnpoolWhitelist)
 }
 
 var (
-	_ govtypes.Content = &SetSuperfluidAssetsProposal{}
-	_ govtypes.Content = &RemoveSuperfluidAssetsProposal{}
-	_ govtypes.Content = &UpdateUnpoolWhiteListProposal{}
+	_ govtypesv1.Content = &SetSuperfluidAssetsProposal{}
+	_ govtypesv1.Content = &RemoveSuperfluidAssetsProposal{}
+	_ govtypesv1.Content = &UpdateUnpoolWhiteListProposal{}
 )
 
-func NewSetSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypes.Content {
+func NewSetSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypesv1.Content {
 	return &SetSuperfluidAssetsProposal{
 		Title:       title,
 		Description: description,
@@ -51,7 +48,7 @@ func (p *SetSuperfluidAssetsProposal) ProposalType() string {
 }
 
 func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -90,7 +87,7 @@ func (p SetSuperfluidAssetsProposal) String() string {
   `, p.Title, p.Description, p.Assets)
 }
 
-func NewRemoveSuperfluidAssetsProposal(title, description string, denoms []string) govtypes.Content {
+func NewRemoveSuperfluidAssetsProposal(title, description string, denoms []string) govtypesv1.Content {
 	return &RemoveSuperfluidAssetsProposal{
 		Title:                 title,
 		Description:           description,
@@ -109,7 +106,7 @@ func (p *RemoveSuperfluidAssetsProposal) ProposalType() string {
 }
 
 func (p *RemoveSuperfluidAssetsProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -127,7 +124,7 @@ func (p RemoveSuperfluidAssetsProposal) String() string {
 	return b.String()
 }
 
-func NewUpdateUnpoolWhitelistProposal(title, description string, poolIds []uint64, isOverwrite bool) govtypes.Content {
+func NewUpdateUnpoolWhitelistProposal(title, description string, poolIds []uint64, isOverwrite bool) govtypesv1.Content {
 	return &UpdateUnpoolWhiteListProposal{
 		Title:       title,
 		Description: description,
@@ -147,7 +144,7 @@ func (p *UpdateUnpoolWhiteListProposal) ProposalType() string {
 }
 
 func (p *UpdateUnpoolWhiteListProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}

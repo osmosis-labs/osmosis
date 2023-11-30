@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 const (
@@ -273,7 +273,7 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			s.Require().Equal(tc.expectedTokenOut.Amount, actualSwapTokenOut)
 
 			// Assert that pool balance is updated correctly
-			expectedPoolBalances := originalPoolBalances.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.expectedTokenOut))
+			expectedPoolBalances := originalPoolBalances.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.expectedTokenOut)...)
 			afterSwapPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
 			s.Require().Equal(expectedPoolBalances.String(), afterSwapPoolBalances.String())
 
@@ -404,12 +404,12 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 			s.Require().Equal(tc.expectedTokenIn.Amount, actualSwapTokenIn)
 
 			// Assert that pool balance is updated correctly
-			expectedPoolBalances := originalPoolBalances.Add(tc.expectedTokenIn).Sub(sdk.NewCoins(tc.tokenOut))
+			expectedPoolBalances := originalPoolBalances.Add(tc.expectedTokenIn).Sub(sdk.NewCoins(tc.tokenOut)...)
 			afterSwapPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
 			s.Require().Equal(expectedPoolBalances.String(), afterSwapPoolBalances.String())
 
 			// Assert that swapper balance is updated correctly
-			expectedSwapperBalances := beforeSwapSwapperBalances.Sub(sdk.NewCoins(tc.expectedTokenIn)).Add(tc.tokenOut)
+			expectedSwapperBalances := beforeSwapSwapperBalances.Sub(sdk.NewCoins(tc.expectedTokenIn)...).Add(tc.tokenOut)
 			afterSwapSwapperBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, swapper)
 			s.Require().Equal(expectedSwapperBalances.String(), afterSwapSwapperBalances.String())
 		})

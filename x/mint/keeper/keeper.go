@@ -3,15 +3,16 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -19,7 +20,7 @@ import (
 
 // Keeper of the mint store.
 type Keeper struct {
-	storeKey            sdk.StoreKey
+	storeKey            storetypes.StoreKey
 	paramSpace          paramtypes.Subspace
 	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
@@ -50,7 +51,7 @@ const emptyWeightedAddressReceiver = ""
 
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
-	key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	key storetypes.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {

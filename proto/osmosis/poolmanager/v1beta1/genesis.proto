@@ -7,8 +7,9 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
+import "osmosis/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {
@@ -42,6 +43,12 @@ message GenesisState {
   Params params = 2 [ (gogoproto.nullable) = false ];
   // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+
+  // KVStore state
+  TakerFeesTracker taker_fees_tracker = 4;
+  repeated PoolVolume pool_volumes = 5;
+  repeated DenomPairTakerFee denom_pair_taker_fee_store = 6
+      [ (gogoproto.nullable) = false ];
 }
 
 // TakerFeeParams consolidates the taker fee parameters for the poolmanager.
@@ -115,5 +122,30 @@ message TakerFeeDistributionPercentage {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"community_pool\"",
     (gogoproto.nullable) = false
+  ];
+}
+
+message TakerFeesTracker {
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  int64 height_accounting_starts_from = 3
+      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
+}
+
+// PoolVolume stores the KVStore entries for each pool's volume, which
+// is used in export/import genesis.
+message PoolVolume {
+  // pool_id is the id of the pool.
+  uint64 pool_id = 1;
+  // pool_volume is the cumulative volume of the pool.
+  repeated cosmos.base.v1beta1.Coin pool_volume = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

@@ -14,12 +14,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
-	"github.com/gorilla/mux"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,9 +27,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 var (
@@ -68,10 +66,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // ---------------------------------------
 // Interfaces.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-	// noop
-}
-
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		return
@@ -112,20 +106,8 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
-// Route returns the message routing key for the pool-incentives module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
-}
-
 // QuerierRoute returns the pool-incentives module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// LegacyQuerierHandler returns the x/pool-incentives's module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // InitGenesis performs genesis initialization for the pool-incentives module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -163,13 +145,16 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
+//
+//nolint:staticcheck
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
-// RandomizedParams creates randomized pool-incentives param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+// UNFORKINGNOTE: Implement simulated gov proposal
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.

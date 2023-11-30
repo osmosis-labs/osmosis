@@ -12,13 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -67,9 +68,9 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 		Use:     "upload-code-id-and-whitelist [wasm-file-path] [flags]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "Submit an upload code id and whitelist proposal",
-		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --description \"Test\" -b=block --chain-id localosmosis --fees=100000uosmo --gas=20000000",
+		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --summary \"Test\" -b=block --chain-id localosmosis --fees=100000uosmo --gas=20000000",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
@@ -79,45 +80,36 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
-			if err != nil {
-				return err
-			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	osmocli.AddCommonProposalFlags(cmd)
 
 	return cmd
 }
 
-func parseUploadCodeIdAndWhitelistProposal(cmd *cobra.Command, fileName string) (govtypes.Content, error) {
+func parseUploadCodeIdAndWhitelistProposal(cmd *cobra.Command, fileName string) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +158,7 @@ func NewCmdMigratePoolContractsProposal() *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		Short: "Submit a migrate cw pool contracts proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
@@ -176,45 +168,36 @@ func NewCmdMigratePoolContractsProposal() *cobra.Command {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
-			if err != nil {
-				return err
-			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	osmocli.AddCommonProposalFlags(cmd)
 
 	return cmd
 }
 
-func parseMigratePoolContractsProposal(cmd *cobra.Command, args []string) (govtypes.Content, error) {
+func parseMigratePoolContractsProposal(cmd *cobra.Command, args []string) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
 	if err != nil {
 		return nil, err
 	}
