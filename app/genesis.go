@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
@@ -22,12 +21,12 @@ func NewDefaultGenesisState() GenesisState {
 	gen := ModuleBasics.DefaultGenesis(encCfg.Marshaler)
 
 	// here we override wasm config to make it permissioned by default
-	wasmGen := wasm.GenesisState{
+	wasmGen := wasmtypes.GenesisState{
 		Params: wasmtypes.Params{
 			CodeUploadAccess:             wasmtypes.AllowNobody,
 			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
 		},
 	}
-	gen[wasm.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)
+	gen[wasmtypes.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)
 	return gen
 }

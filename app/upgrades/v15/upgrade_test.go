@@ -216,7 +216,7 @@ func (s *UpgradeTestSuite) TestSetRateLimits() {
 	code, err := os.ReadFile("../v13/rate_limiter.wasm")
 	s.Require().NoError(err)
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
-	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeAnyOfAddresses, Addresses: []string{govModule.String()}}
 	codeID, _, err := contractKeeper.Create(s.Ctx, govModule, code, &instantiateConfig)
 	s.Require().NoError(err)
 	transferModule := accountKeeper.GetModuleAddress(transfertypes.ModuleName)
