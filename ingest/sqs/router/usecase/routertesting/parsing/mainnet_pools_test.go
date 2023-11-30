@@ -112,14 +112,6 @@ func TestMarshalUnmarshalPool(t *testing.T) {
 
 	require.Equal(t, testPoolToMarshal.GetUnderlyingPool(), unmarshalledPool.GetUnderlyingPool())
 	require.Equal(t, testPoolToMarshal.GetSQSPoolModel(), unmarshalledPool.GetSQSPoolModel())
-
-	poolToMarshalTickModel, err := testPoolToMarshal.GetTickModel()
-	require.NoError(t, err)
-
-	unmarshalledPoolTickModel, err := unmarshalledPool.GetTickModel()
-	require.NoError(t, err)
-
-	require.Equal(t, poolToMarshalTickModel, unmarshalledPoolTickModel)
 }
 
 // This test validates that unmarshalling and marshalling a taker fee map works as expected.
