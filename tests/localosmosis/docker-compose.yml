@@ -20,13 +20,6 @@ services:
       - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
-    environment:
-      # Configure sidecar query server ingester
-      INGEST_TYPE: "sqs"
-      INGEST_SQS_DBHOST: "redis"
-      INGEST_SQS_DBPORT: "6379"
-      INGEST_SQS_SERVER_ADDRESS: ":9092"
-      INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS: "2"
     command:
       - $STATE
     ports:
