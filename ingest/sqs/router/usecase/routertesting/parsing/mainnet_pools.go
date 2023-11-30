@@ -63,7 +63,6 @@ func StorePools(actualPools []domain.PoolI, tickModelMap map[uint64]domain.TickM
 		if err != nil {
 			return err
 		}
-
 	} else if err != nil {
 		return err
 	}
@@ -113,7 +112,6 @@ func ReadPools(poolsFile string) ([]domain.PoolI, map[uint64]domain.TickModel, e
 	tickMap := make(map[uint64]domain.TickModel)
 
 	for _, pool := range serializedPools {
-
 		poolWrapper, err := UnmarshalPool(pool)
 		if err != nil {
 			return nil, nil, err
@@ -181,7 +179,6 @@ func MarshalPool(pool domain.PoolI) (json.RawMessage, error) {
 
 // UnmarshalPool unmarshals a pool from JSON.
 func UnmarshalPool(serializedPool SerializedPool) (domain.PoolI, error) {
-
 	var (
 		chainModel poolmanagertypes.PoolI
 	)

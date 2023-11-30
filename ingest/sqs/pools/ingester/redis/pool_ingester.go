@@ -209,7 +209,6 @@ func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []dom
 		router = routerusecase.WithSortedPools(router, pools)
 
 		go func(denomPair domain.DenomPair) {
-
 			// TODO: abstract this better
 
 			candidateRoutes, err := router.GetCandidateRoutes(denomPair.Denom0, denomPair.Denom1)

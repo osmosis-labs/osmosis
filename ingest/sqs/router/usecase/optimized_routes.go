@@ -176,7 +176,6 @@ ROUTE_LOOP:
 		uniquePoolIDsIntraRoute := make(map[uint64]struct{}, len(candidateRoute))
 
 		for j, currentPool := range candidateRoute {
-
 			if _, ok := uniquePoolIDs[currentPool.ID]; !ok {
 				uniquePoolIDs[currentPool.ID] = struct{}{}
 			}

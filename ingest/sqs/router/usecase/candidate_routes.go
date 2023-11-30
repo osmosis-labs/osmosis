@@ -8,7 +8,7 @@ import (
 // candidatePoolWrapper is an intermediary internal data
 // structure for constructing all candidate routes related data.
 // It contains pool denoms for validation after the initial route selection.
-// Additionally, it contains the pool type for contructing eventually constructing
+// Additionally, it contains the pool type for contracting eventually constructing
 // a unque list of concentrated pools for knowing which pools require
 // a tick model.
 type candidatePoolWrapper struct {

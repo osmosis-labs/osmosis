@@ -31,7 +31,6 @@ type RouteImpl struct {
 // Returns the resulting pools.
 func (r *RouteImpl) PrepareResultPools() []domain.RoutablePool {
 	for i, pool := range r.Pools {
-
 		r.Pools[i] = pools.NewRoutableResultPool(
 			pool.GetId(),
 			pool.GetType(),

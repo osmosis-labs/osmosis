@@ -59,7 +59,6 @@ func (r *routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
 // - the current sqrt price is zero
 // - rans out of ticks during swap (token in is too high for liquidity in the pool)
 func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
-
 	concentratedPool := r.ChainPool
 	tickModel := r.TickModel
 

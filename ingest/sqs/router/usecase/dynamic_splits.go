@@ -125,7 +125,6 @@ func (r *Router) GetSplitQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (doma
 	}
 
 	return quote, nil
-
 }
 
 // Recurrence relation:
@@ -164,7 +163,6 @@ func (r *Router) findSplit(memo []map[uint8]osmomath.Int, routes []route.RouteIm
 
 	// TODO: start from highest and exit early
 	for currentIncrement := uint8(0); currentIncrement <= remainingIncrements; currentIncrement++ {
-
 		currentAmtOut, currentAmtIn, err := getAmountOut(currentRoute, currentRouteIndex, memo, currentIncrement, tokenInAmountDec, tokenIn.Denom)
 		if err != nil {
 			continue

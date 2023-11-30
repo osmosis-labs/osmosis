@@ -22,7 +22,6 @@ type PoolsUsecaseMock struct {
 func (r *PoolsUsecaseMock) GetRoutesFromCandidates(ctx context.Context, candidateRoutes route.CandidateRoutes, takerFeeMap domain.TakerFeeMap, tokenInDenom string, tokenOutDenom string) ([]route.RouteImpl, error) {
 	finalRoutes := make([]route.RouteImpl, 0, len(candidateRoutes.Routes))
 	for _, candidateRoute := range candidateRoutes.Routes {
-
 		routablePools := make([]domain.RoutablePool, 0, len(candidateRoute.Pools))
 		for _, candidatePool := range candidateRoute.Pools {
 			// Get the pool data for routing

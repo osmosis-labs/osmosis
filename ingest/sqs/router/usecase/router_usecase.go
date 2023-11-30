@@ -128,7 +128,6 @@ func (r *routerUseCaseImpl) GetCandidateRoutes(ctx context.Context, tokenInDenom
 // - there is an error retrieving taker fees from the store
 // TODO: test
 func (r *routerUseCaseImpl) initializeRouter(ctx context.Context) (*Router, error) {
-
 	router := NewRouter([]uint64{}, r.config.MaxPoolsPerRoute, r.config.MaxRoutes, r.config.MaxSplitRoutes, r.config.MaxSplitIterations, r.config.MinOSMOLiquidity, r.logger)
 	router = WithRouterRepository(router, r.routerRepository)
 	router = WithPoolsUsecase(router, r.poolsUsecase)
@@ -183,7 +182,6 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 
 		// Persist routes
 		if len(candidateRoutes.Routes) > 0 && r.config.RouteCacheEnabled {
-
 			r.logger.Info("persisting routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
 			if err := r.routerRepository.SetRoutes(ctx, tokenInDenom, tokenOutDenom, candidateRoutes); err != nil {
