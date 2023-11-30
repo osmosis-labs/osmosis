@@ -116,7 +116,7 @@ func (s *PoolsUsecaseTestSuite) TestGetRoutesFromCandidates() {
 			},
 		},
 		{
-			name:  "error: no taker fee",
+			name:  "no taker fee - use default",
 			pools: validPools,
 
 			candidateRoutes: validCandidateRoutes,
@@ -127,9 +127,12 @@ func (s *PoolsUsecaseTestSuite) TestGetRoutesFromCandidates() {
 			tokenInDenom:  denomOne,
 			tokenOutDenom: denomTwo,
 
-			expectedError: domain.TakerFeeNotFoundForDenomPairError{
-				Denom0: denomOne,
-				Denom1: denomTwo,
+			expectedRoutes: []route.RouteImpl{
+				{
+					Pools: []domain.RoutablePool{
+						pools.NewRoutablePool(defaultPool, denomTwo, domain.DefaultTakerFee),
+					},
+				},
 			},
 		},
 		{
