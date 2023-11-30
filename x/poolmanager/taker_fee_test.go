@@ -1,6 +1,9 @@
 package poolmanager_test
 
 import (
+	"fmt"
+
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -32,14 +35,14 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 		expectedResult sdk.Coin
 		expectError    error
+		sendCoins      bool
 	}{
 		"fee charged on token in": {
-			takerFee:      defaultTakerFee,
-			tokenIn:       sdk.NewCoin(apptesting.ETH, defaultAmount),
-			tokenOutDenom: apptesting.USDC,
-			senderIndex:   whitelistedSenderIndex,
-			exactIn:       true,
-
+			takerFee:       defaultTakerFee,
+			tokenIn:        sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:  apptesting.USDC,
+			senderIndex:    whitelistedSenderIndex,
+			exactIn:        true,
 			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
 		},
 		"fee charged on token in due to different address being whitelisted": {
@@ -49,8 +52,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			senderIndex:              nonWhitelistedSenderIndex,
 			exactIn:                  true,
 			shouldSetSenderWhitelist: true,
-
-			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
+			expectedResult:           sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
 		},
 		"fee bypassed due to sender being whitelisted": {
 			takerFee:                 defaultTakerFee,
@@ -59,13 +61,38 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			senderIndex:              whitelistedSenderIndex,
 			exactIn:                  true,
 			shouldSetSenderWhitelist: true,
-
-			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount),
+			expectedResult:           sdk.NewCoin(apptesting.ETH, defaultAmount),
 		},
-		// TODO: under more test cases
-		// https://github.com/osmosis-labs/osmosis/issues/6633
-		// - exactOut: false
-		// - sender does not have enough coins
+		"fee charged on token out": {
+			takerFee:      defaultTakerFee,
+			tokenIn:       sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom: apptesting.USDC,
+			senderIndex:   whitelistedSenderIndex,
+			exactIn:       false,
+
+			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Quo(osmomath.OneDec().Sub(defaultTakerFee)).Ceil().TruncateInt()),
+		},
+		"fee charged on token out due to different address being whitelisted": {
+			takerFee:                 defaultTakerFee,
+			tokenIn:                  sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:            apptesting.USDC,
+			senderIndex:              nonWhitelistedSenderIndex,
+			exactIn:                  false,
+			shouldSetSenderWhitelist: true,
+
+			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Quo(osmomath.OneDec().Sub(defaultTakerFee)).Ceil().TruncateInt()),
+		},
+		"sender does not have enough coins in": {
+			takerFee:                 defaultTakerFee,
+			tokenIn:                  sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:            apptesting.USDC,
+			senderIndex:              nonWhitelistedSenderIndex,
+			exactIn:                  true,
+			shouldSetSenderWhitelist: true,
+
+			sendCoins:   true,
+			expectError: fmt.Errorf("insufficient funds"),
+		},
 	}
 
 	for name, tc := range tests {
@@ -89,6 +116,11 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			// Pre-fund owner.
 			s.FundAcc(s.TestAccs[tc.senderIndex], sdk.NewCoins(tc.tokenIn))
 
+			// Send coins.
+			if tc.sendCoins {
+				s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[nonWhitelistedSenderIndex], s.TestAccs[whitelistedSenderIndex], sdk.NewCoins(tc.tokenIn))
+			}
+
 			// Check the taker fee tracker before the taker fee is charged.
 			takerFeeTrackerForStakersBefore := poolManager.GetTakerFeeTrackerForStakers(s.Ctx)
 			takerFeeTrackerForCommunityPoolBefore := poolManager.GetTakerFeeTrackerForCommunityPool(s.Ctx)
@@ -109,10 +141,23 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			s.Require().NoError(err)
 
 			params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-			expectedTotalTakerFee := defaultAmount.Sub(tc.expectedResult.Amount)
+
+			var expectedTotalTakerFee osmomath.Int
+			if tc.exactIn {
+				expectedTotalTakerFee = defaultAmount.Sub(tc.expectedResult.Amount)
+			} else {
+				expectedTotalTakerFee = tc.expectedResult.Amount.Sub(defaultAmount)
+			}
 			expectedTakerFeeToStakersAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
 			expectedTakerFeeToCommunityPoolAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
-			expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToStakersAmount.TruncateInt())
+
+			roundup := func(d sdkmath.LegacyDec) sdkmath.Int {
+				if d.Sub(sdkmath.LegacyNewDecFromInt(d.TruncateInt())).GT(sdkmath.LegacyZeroDec()) {
+					return d.TruncateInt().Add(sdkmath.NewInt(1))
+				}
+				return d.TruncateInt()
+			}
+			expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, roundup(expectedTakerFeeToStakersAmount))
 			expectedTakerFeeToCommunityPool := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())
 
 			// Validate results.
