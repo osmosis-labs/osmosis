@@ -141,6 +141,16 @@ func (q Querier) GetTotalLiquidity(grpcCtx context.Context,
 	return q.Q.GetTotalLiquidity(ctx, *req)
 }
 
+func (q Querier) GetPoolHookContract(grpcCtx context.Context,
+	req *queryproto.GetPoolHookContractRequest,
+) (*queryproto.GetPoolHookContractResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetPoolHookContract(ctx, *req)
+}
+
 func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
 	req *queryproto.ClaimableSpreadRewardsRequest,
 ) (*queryproto.ClaimableSpreadRewardsResponse, error) {
@@ -171,10 +181,3 @@ func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(grpcCtx context.Context,
 	return q.Q.CFMMPoolIdLinkFromConcentratedPoolId(ctx, *req)
 }
 
-func (q Querier) PoolHookContract(grpcCtx context.Context, req *queryproto.PoolHookContractRequest) (*queryproto.PoolHookContractResponse, error) {
-    if req == nil {
-        return nil, status.Error(codes.InvalidArgument, "empty request")
-    }
-    ctx := sdk.UnwrapSDKContext(grpcCtx)
-    return q.Q.PoolHookContract(ctx, *req)
-}
