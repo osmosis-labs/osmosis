@@ -1,6 +1,8 @@
 package v21
 
 import (
+	"time"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -12,6 +14,8 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
@@ -61,6 +65,18 @@ func CreateUpgradeHandler(
 			fromVM[govtypes.ModuleName] = 2
 		}
 		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+
+		// TEMP
+		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
+		desiredEpochInfo := epochtypes.EpochInfo{}
+		for _, epoch := range epochs {
+			if epoch.Identifier == "day" {
+				epoch.Duration = time.Hour * 2
+				desiredEpochInfo = epoch
+				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+			}
+		}
+		keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 
 		// https://github.com/cosmos/cosmos-sdk/pull/12363/files
 		// Set param key table for params module migration
