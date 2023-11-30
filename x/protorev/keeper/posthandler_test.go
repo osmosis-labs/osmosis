@@ -336,8 +336,12 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Denom:  "Atom",
 						Amount: osmomath.NewInt(15_767_231),
 					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: osmomath.NewInt(215_635_655_222),
+					},
 				},
-				expectedPoolPoints: 6,
+				expectedPoolPoints: 49,
 			},
 			expectPass: true,
 		},
