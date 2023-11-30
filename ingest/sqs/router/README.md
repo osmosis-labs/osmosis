@@ -44,7 +44,7 @@ osmosisd tx cosmwasmpool create-pool 1 "{\"pool_asset_denoms\":[\"uion\",\"uosmo
 osmosisd tx wasm execute osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 "{\"join_pool\":{}  }" --amount 1000000uosmo,2000000uion --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 8750uosmo -b=block --gas=3500000
 ```
 
-### Plan:
+### Plan
 
 1. Let's make sure that tick model can be retrieved from storage for CL pools independently. (complete)
 2. Let's not retrieve tick model with pools. (complete)
