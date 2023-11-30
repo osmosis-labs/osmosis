@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -81,8 +80,6 @@ func (s *KeeperTestSuite) TestPostHandle() {
 		expectedProfits     []sdk.Coin
 		expectedPoolPoints  uint64
 	}
-
-	s.Ctx = s.Ctx.WithLogger(log.TestingLogger())
 
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
