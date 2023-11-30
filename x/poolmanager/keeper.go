@@ -117,10 +117,41 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	} else {
 		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
+
+	// Set the pool volumes KVStore.
+	for _, poolVolume := range genState.PoolVolumes {
+		k.SetVolume(ctx, poolVolume.PoolId, poolVolume.PoolVolume)
+	}
+
+	// Set the denom pair taker fees KVStore.
+	for _, denomPairTakerFee := range genState.DenomPairTakerFeeStore {
+		k.SetDenomPairTakerFee(ctx, denomPairTakerFee.Denom0, denomPairTakerFee.Denom1, denomPairTakerFee.TakerFee)
+	}
 }
 
 // ExportGenesis returns the poolmanager module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	pools, err := k.AllPools(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// Utilize poolVolumes struct to export pool volumes from KVStore.
+	poolVolumes := make([]*types.PoolVolume, len(pools))
+	for i, pool := range pools {
+		poolVolume := k.GetTotalVolumeForPool(ctx, pool.GetId())
+		poolVolumes[i] = &types.PoolVolume{
+			PoolId:     pool.GetId(),
+			PoolVolume: poolVolume,
+		}
+	}
+
+	// Utilize denomPairTakerFee struct to export taker fees from KVStore.
+	denomPairTakerFees, err := k.GetAllTradingPairTakerFees(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	// Export KVStore values to the genesis state so they can be imported in init genesis.
 	takerFeesTracker := types.TakerFeesTracker{
 		TakerFeesToStakers:         k.GetTakerFeeTrackerForStakers(ctx),
@@ -128,10 +159,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
 	}
 	return &types.GenesisState{
-		Params:           k.GetParams(ctx),
-		NextPoolId:       k.GetNextPoolId(ctx),
-		PoolRoutes:       k.getAllPoolRoutes(ctx),
-		TakerFeesTracker: &takerFeesTracker,
+		Params:                 k.GetParams(ctx),
+		NextPoolId:             k.GetNextPoolId(ctx),
+		PoolRoutes:             k.getAllPoolRoutes(ctx),
+		TakerFeesTracker:       &takerFeesTracker,
+		PoolVolumes:            poolVolumes,
+		DenomPairTakerFeeStore: denomPairTakerFees,
 	}
 }
 
