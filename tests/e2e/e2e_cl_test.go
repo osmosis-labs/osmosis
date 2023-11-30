@@ -168,7 +168,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		}()
 
 		go func() {
-			s.T().Run("test set pool hook contract proposal", func(t *testing.T) {
+			s.T().Run("test set pool hook contract", func(t *testing.T) {
 				s.SetPoolHookContractProposalTest()
 			})
 		}()
@@ -736,6 +736,7 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
+// SetPoolHookContractProposalTest is a function that tests the set pool hook contract proposal
 func (s *IntegrationTestSuite) SetPoolHookContractProposalTest() {
 	var (
 		denom0                 = "uion"
