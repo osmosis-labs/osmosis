@@ -116,7 +116,7 @@ require (
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.5 // indirect
-	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231106011704-63e927e3b8c8 // indirect
+	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha // indirect
 	github.com/otiai10/copy v1.11.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
