@@ -39,9 +39,6 @@ var (
 	oneAdditiveTolerance = osmomath.ErrTolerance{
 		AdditiveTolerance: osmomath.OneDec(),
 	}
-<<<<<<< HEAD
-	swapOutGivenInCases = map[string]SwapTest{
-=======
 
 	oneAdditiveToleranceRoundDown = osmomath.ErrTolerance{
 		AdditiveTolerance: osmomath.OneDec(),
@@ -49,7 +46,6 @@ var (
 	}
 
 	swapOutGivenInCases = map[string]apptesting.ConcentratedSwapTest{
->>>>>>> 3ac77873 (chore: CL apptesting helpers for SQS (#6822))
 		//  One price range
 		//
 		//          5000
