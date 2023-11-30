@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/zap"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 )
@@ -19,7 +18,7 @@ type chainInfoIngester struct {
 }
 
 // NewChainInfoIngester returns a new chain information ingester.
-func NewChainInfoIngester(chainInfoRepo mvc.ChainInfoRepository, repositoryManager mvc.TxManager) ingest.AtomicIngester {
+func NewChainInfoIngester(chainInfoRepo mvc.ChainInfoRepository, repositoryManager mvc.TxManager) mvc.AtomicIngester {
 	return &chainInfoIngester{
 		chainInfoRepo:     chainInfoRepo,
 		repositoryManager: repositoryManager,
@@ -47,4 +46,4 @@ func (ci *chainInfoIngester) SetLogger(logger log.Logger) {
 	ci.logger = logger
 }
 
-var _ ingest.AtomicIngester = &chainInfoIngester{}
+var _ mvc.AtomicIngester = &chainInfoIngester{}

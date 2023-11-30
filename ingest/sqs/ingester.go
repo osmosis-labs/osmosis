@@ -7,20 +7,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 )
 
+const sqsIngesterName = "sidecar-query-server"
+
 var _ ingest.Ingester = &sqsIngester{}
 
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
 	txManager         mvc.TxManager
-	poolsIngester     ingest.AtomicIngester
-	chainInfoIngester ingest.AtomicIngester
+	poolsIngester     mvc.AtomicIngester
+	chainInfoIngester mvc.AtomicIngester
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester ingest.AtomicIngester, txManager mvc.TxManager) ingest.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester mvc.AtomicIngester, txManager mvc.TxManager) ingest.Ingester {
 	return &sqsIngester{
 		txManager:         txManager,
 		chainInfoIngester: chainInfoIngester,
@@ -52,4 +54,9 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
 
 	// Flush all writes atomically
 	return tx.Exec(goCtx)
+}
+
+// GetName implements ingest.Ingester.
+func (*sqsIngester) GetName() string {
+	return sqsIngesterName
 }

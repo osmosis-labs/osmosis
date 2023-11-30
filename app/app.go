@@ -268,6 +268,7 @@ func NewOsmosisApp(
 	)
 
 	isIngestManagerEnabled := os.Getenv(ENV_NAME_INGEST_TYPE) == ENV_VALUE_INGESTER_SQS
+	// Initialize the ingest manager for propagating data to external sinks.
 	app.IngestManager = ingest.NewIngestManager()
 	if isIngestManagerEnabled {
 		dbHost := os.Getenv(ENV_NAME_INGEST_SQS_DBHOST)
@@ -327,7 +328,7 @@ func NewOsmosisApp(
 		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)
 
 		// Set the sidecar query server ingester to the ingest manager.
-		app.IngestManager.SetIngester(sqsIngester)
+		app.IngestManager.RegisterIngester(sqsIngester)
 	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
@@ -453,8 +454,8 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	// Process the block and ingest data into various sinks.
 	app.IngestManager.ProcessBlock(ctx)
-
 	return app.mm.EndBlock(ctx, req)
 }
 

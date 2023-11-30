@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/redis/go-redis/v9"
+
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 )
 
 // Tx defines an interface for atomic transaction.
@@ -22,6 +25,18 @@ type Tx interface {
 
 	// ClearAll clears all data. Returns an error if any.
 	ClearAll(ctx context.Context) error
+}
+
+// AtomicIngester is an interface that defines the methods for the atomic ingester.
+// It processes a block by writing data into a transaction.
+// The caller must call Exec on the transaction to flush data to sink.
+type AtomicIngester interface {
+	// ProcessBlock processes the block by writing data into a transaction.
+	// Returns error if fails to process.
+	// It does not flush data to sink. The caller must call Exec on the transaction
+	ProcessBlock(ctx sdk.Context, tx Tx) error
+
+	SetLogger(log.Logger)
 }
 
 // RedisTx is a redis transaction.
