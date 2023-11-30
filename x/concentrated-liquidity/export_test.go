@@ -340,7 +340,3 @@ func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
 	return k.callPoolActionListener(ctx, msgBz, poolId, actionPrefix)
 }
-
-func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
-	return k.getPoolHookContract(ctx, poolId, actionPrefix)
-}

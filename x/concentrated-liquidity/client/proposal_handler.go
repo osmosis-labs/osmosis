@@ -9,4 +9,5 @@ import (
 var (
 	TickSpacingDecreaseProposalHandler             = govclient.NewProposalHandler(cli.NewTickSpacingDecreaseProposal)
 	CreateConcentratedLiquidityPoolProposalHandler = govclient.NewProposalHandler(cli.NewCmdCreateConcentratedLiquidityPoolsProposal)
+	SetPoolHookContractProposalHandler             = govclient.NewProposalHandler(cli.NewCmdSetPoolHookContractProposal)
 )

@@ -380,6 +380,24 @@ func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords s
 	return n.SubmitProposal(cmd, isExpedited, "tick spacing reduction proposal", isLegacy)
 }
 
+func (n *NodeConfig) SubmitSetPoolHookContractProposal(poolId uint64, hookActions []string, contractAddressBech32 string, isExpedited, isLegacy bool) int {
+	n.LogActionF("submitting SetPoolHookContractProposal")
+
+	cmd := []string{
+		"set-pool-hook-contract-proposal",
+		fmt.Sprintf("--pool-id=%d", poolId),
+		fmt.Sprintf("--hook-actions=%s", strings.Join(hookActions, ",")),
+		fmt.Sprintf("--contract-address-bech32=%s", contractAddressBech32),
+		"--title=\"Set Pool Hook Contract Proposal Title\"",
+		"--summary=\"Set Pool Hook Contract Proposal Description\"",
+		"--from=val",
+		"--gas=400000",
+		"--fees=5000uosmo",
+	}
+
+	return n.SubmitProposal(cmd, isExpedited, "Set Pool Hook Contract Proposal", isLegacy)
+}
+
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
 	deposit := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinDepositValue)).String()

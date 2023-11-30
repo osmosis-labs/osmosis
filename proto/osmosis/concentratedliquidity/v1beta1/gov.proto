@@ -36,6 +36,27 @@ message TickSpacingDecreaseProposal {
       [ (gogoproto.nullable) = false ];
 }
 
+// SetPoolHookContractProposal is a gov Content type for setting the hook
+// contract for a set of actions on given pool. The proposal will fail if the
+// given contract, pool, or action does not exist.
+//
+// For the sake of efficiency, one can create a single contract that supports
+// the appropriate hook messages for multiple actions and set it for all of them
+// at once. If one wants to roll out hook functionality such that each hook
+// logic is in a separate contract, a separate gov proposal would need to be
+// created for each of them.
+message SetPoolHookContractProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  uint64 pool_id = 3;
+  repeated string hook_actions = 4;
+  string contract_address_bech32 = 5;
+}
+
 // PoolIdToTickSpacingRecord is a struct that contains a pool id to new tick
 // spacing pair.
 message PoolIdToTickSpacingRecord {

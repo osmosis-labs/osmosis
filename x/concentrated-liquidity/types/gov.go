@@ -14,16 +14,19 @@ import (
 const (
 	ProposalTypeCreateConcentratedLiquidityPool = "CreateConcentratedLiquidityPool"
 	ProposalTypeTickSpacingDecrease             = "TickSpacingDecrease"
+	ProposalTypeSetPoolHookContract             = "SetPoolHookContract"
 )
 
 func init() {
 	govtypesv1.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPool)
 	govtypesv1.RegisterProposalType(ProposalTypeTickSpacingDecrease)
+	govtypesv1.RegisterProposalType(ProposalTypeSetPoolHookContract)
 }
 
 var (
 	_ govtypesv1.Content = &CreateConcentratedLiquidityPoolsProposal{}
 	_ govtypesv1.Content = &TickSpacingDecreaseProposal{}
+	_ govtypesv1.Content = &SetPoolHookContractProposal{}
 )
 
 // NewCreateConcentratedLiquidityPoolsProposal returns a new instance of a create concentrated liquidity pool proposal struct.
@@ -153,5 +156,61 @@ Title:       %s
 Description: %s
 Records:     %s
 `, p.Title, p.Description, recordsStr))
+	return b.String()
+}
+
+func NewSetPoolHookContractProposal(title, description string, poolId uint64, hookActions []string, contractAddressBech32 string) govtypesv1.Content {
+	return &SetPoolHookContractProposal{
+		Title:                 title,
+		Description:           description,
+		PoolId:                poolId,
+		HookActions:           hookActions,
+		ContractAddressBech32: contractAddressBech32,
+	}
+}
+
+// GetTitle gets the title of the proposal
+func (p *SetPoolHookContractProposal) GetTitle() string { return p.Title }
+
+// GetDescription gets the description of the proposal
+func (p *SetPoolHookContractProposal) GetDescription() string { return p.Description }
+
+// ProposalRoute returns the router key for the proposal
+func (p *SetPoolHookContractProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType returns the type of the proposal
+func (p *SetPoolHookContractProposal) ProposalType() string {
+	return ProposalTypeSetPoolHookContract
+}
+
+// ValidateBasic validates a governance proposal's abstract and basic contents.
+func (p *SetPoolHookContractProposal) ValidateBasic() error {
+	err := govtypesv1.ValidateAbstract(p)
+	if err != nil {
+		return err
+	}
+	if len(p.HookActions) == 0 {
+		return fmt.Errorf("empty hook actions")
+	}
+
+	if p.PoolId <= uint64(0) {
+		return fmt.Errorf("Pool id invalid")
+	}
+
+	return nil
+}
+
+// String returns a string containing the set pool hook contract proposal.
+func (p SetPoolHookContractProposal) String() string {
+	hookActionsStr := strings.Join(p.HookActions, ", ")
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Set Pool Hook Contract Proposal:
+Title:       %s
+Description: %s
+Pool ID:     %d
+Hook Actions: %s
+Contract Address: %s
+`, p.Title, p.Description, p.PoolId, hookActionsStr, p.ContractAddressBech32))
 	return b.String()
 }

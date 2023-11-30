@@ -90,6 +90,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			gammclient.SetScalingFactorControllerProposalHandler,
 			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
+			clclient.SetPoolHookContractProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 			cwpoolclient.MigratePoolContractsProposalHandler,
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,

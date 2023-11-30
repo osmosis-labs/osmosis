@@ -115,7 +115,7 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 		}
 	}()
 
-	cosmwasmAddress := k.getPoolHookContract(ctx, poolId, actionPrefix)
+	cosmwasmAddress := k.GetPoolHookContract(ctx, poolId, actionPrefix)
 	if cosmwasmAddress == "" {
 		return nil
 	}
@@ -158,7 +158,7 @@ func (k Keeper) getPoolHookPrefixStore(ctx sdk.Context, poolID uint64) sdk.KVSto
 // getPoolHookContract returns the contract address linked to the passed in action for a specific pool ID.
 // For instance, if poolId is `1` and actionPrefix is "beforeSwap", this will return the contract address
 // corresponding to the beforeSwap hook on pool 1.
-func (k Keeper) getPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
+func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
 	store := k.getPoolHookPrefixStore(ctx, poolId)
 
 	bz := store.Get([]byte(actionPrefix))

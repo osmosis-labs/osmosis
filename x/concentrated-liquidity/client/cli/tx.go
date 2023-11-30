@@ -196,6 +196,46 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	return cmd
 }
 
+func NewCmdSetPoolHookContractProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-pool-hook-contract-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a set pool hook contract proposal",
+		Long:  strings.TrimSpace(`Submit a set pool hook contract proposal.`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
+			if err != nil {
+				return err
+			}
+
+			content, err := parseSetPoolHookContractArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1.NewLegacyContent(content, authority.String())
+			if err != nil {
+				return err
+			}
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
+			if err != nil {
+				return err
+			}
+			if err = proposalMsg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
+		},
+	}
+	osmocli.AddCommonProposalFlags(cmd)
+	cmd.Flags().String(FlagPoolIdToTickSpacingRecords, "", "The pool ID to new tick spacing records array")
+	cmd.Flags().StringSlice("hook-actions", nil, "The actions for the hook")
+	cmd.Flags().String("contract-address-bech32", "", "The Bech32 address of the contract")
+
+	return cmd
+}
+
 func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
@@ -322,4 +362,39 @@ func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
 	}
 
 	return finalPoolRecords, nil
+}
+
+func parseSetPoolHookContractArgsToContent(cmd *cobra.Command) (*types.SetPoolHookContractProposal, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagSummary)
+	if err != nil {
+		return nil, err
+	}
+
+	poolId, err := cmd.Flags().GetUint64(FlagPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	hookActions, err := cmd.Flags().GetStringSlice(FlagHookActions)
+	if err != nil {
+		return nil, err
+	}
+
+	contractAddressBech32, err := cmd.Flags().GetString(FlagContractAddressBech32)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.SetPoolHookContractProposal{
+		Title:                 title,
+		Description:           description,
+		PoolId:                poolId,
+		HookActions:           hookActions,
+		ContractAddressBech32: contractAddressBech32,
+	}, nil
 }

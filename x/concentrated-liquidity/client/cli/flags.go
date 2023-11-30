@@ -8,6 +8,8 @@ const (
 	FlagPoolId                     = "pool-id"
 	FlagPoolIdToTickSpacingRecords = "pool-tick-spacing-records"
 	FlagPoolRecords                = "pool-records"
+	FlagHookActions                = "hook-actions"
+	FlagContractAddressBech32      = "contract-address-bech32"
 )
 
 func FlagSetJustPoolId() *flag.FlagSet {

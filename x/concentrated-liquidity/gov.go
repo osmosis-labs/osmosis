@@ -30,6 +30,17 @@ func (k Keeper) HandleTickSpacingDecreaseProposal(ctx sdk.Context, p *types.Tick
 	return k.DecreaseConcentratedPoolTickSpacing(ctx, p.PoolIdToTickSpacingRecords)
 }
 
+// HandleSetPoolHookContractProposal handles a set pool hook contract proposal to the corresponding keeper method.
+func (k Keeper) HandleSetPoolHookContractProposal(ctx sdk.Context, p *types.SetPoolHookContractProposal) error {
+	for _, action := range p.HookActions {
+		err := k.setPoolHookContract(ctx, p.PoolId, action, p.ContractAddressBech32)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func NewConcentratedLiquidityProposalHandler(k Keeper) govtypesv1.Handler {
 	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {

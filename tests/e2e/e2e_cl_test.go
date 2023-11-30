@@ -730,6 +730,48 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
+func (s *IntegrationTestSuite) SetPoolHookContractProposalTest() {
+	var (
+		denom0                 = "uion"
+		denom1                 = "uosmo"
+		tickSpacing     uint64 = 100
+		spreadFactor           = "0.001" // 0.1%
+		hookActions            = []string{"beforeSwap", "afterSwap"}
+		contractAddress        = "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
+	)
+
+	chainB, chainBNode := s.getChainBCfgs()
+
+	// Create a pool
+	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+
+	// Run the SetPoolHookContractProposal
+	propNumber := chainBNode.SubmitSetPoolHookContractProposal(poolID, hookActions, contractAddress, false, true)
+
+	// TODO: simplify just querying w/ timeout
+	totalTimeChan := make(chan time.Duration, 1)
+	go chainBNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+
+	chain.AllValsVoteOnProposal(chainB, propNumber)
+
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	timeoutPeriod := 2 * time.Minute
+	select {
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.Require().NoError(err)
+	case <-totalTimeChan:
+		// The goroutine finished before the timeout period, continue execution.
+	}
+
+	// Check that the contract address was set correctly for each hook action
+	for _, action := range hookActions {
+		contractAddressInState, err := chainBNode.QueryPoolHookContract(poolID, action)
+		s.Require().NoError(err)
+		s.Require().Equal(contractAddress, contractAddressInState)
+	}
+}
+
 func (s *IntegrationTestSuite) assertClSwap(clpoolStart types.ConcentratedPoolExtension, clPoolAfter types.ConcentratedPoolExtension, expectedSqrtPriceDelta osmomath.BigDec) {
 	// Update pool and track liquidity and sqrt price
 	liquidityBeforeSwap := clpoolStart.GetLiquidity()

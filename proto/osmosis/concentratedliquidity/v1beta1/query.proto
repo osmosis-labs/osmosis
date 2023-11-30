@@ -132,6 +132,14 @@ service Query {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
                                    "num_next_initialized_ticks";
   }
+
+  // PoolHookContract returns the contract address for a given poolId and action
+  // prefix
+  rpc PoolHookContract(PoolHookContractRequest)
+      returns (PoolHookContractResponse) {
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "pools/{pool_id}/hooks/{action_prefix}";
+  }
 }
 
 //=============================== UserPositions
@@ -354,3 +362,11 @@ message NumNextInitializedTicksResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+//=============================== PoolHookContract
+message PoolHookContractRequest {
+  uint64 pool_id = 1;
+  string action_prefix = 2;
+}
+
+message PoolHookContractResponse { string contract_address = 1; }

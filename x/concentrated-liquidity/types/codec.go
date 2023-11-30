@@ -23,6 +23,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	// gov proposals
 	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/create-cl-pools-proposal", nil)
 	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "osmosis/cl-tick-spacing-dec-prop", nil)
+	cdc.RegisterConcrete(&SetPoolHookContractProposal{}, "osmosis/set-cl-hook-contract-proposal", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

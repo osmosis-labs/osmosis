@@ -336,6 +336,18 @@ func (n *NodeConfig) QueryCFMMPool(poolId uint64) (gammtypes.CFMMPoolI, error) {
 	return cfmmPool, nil
 }
 
+func (n *NodeConfig) QueryPoolHookContract(poolId uint64, actionPrefix string) (string, error) {
+	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/pools/%d/hooks/%s", poolId, actionPrefix)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolHookResponse queryproto.PoolHookContractResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolHookResponse)
+	require.NoError(n.t, err)
+
+	return poolHookResponse.ContractAddress, nil
+}
+
 // QueryBalancer returns balances at the address.
 func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)
