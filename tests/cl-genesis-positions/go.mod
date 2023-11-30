@@ -8,7 +8,7 @@ require (
 	github.com/ignite/cli v0.27.1
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231104014315-0e6ea39760ab
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103234316-a43985716535
-	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231106011704-63e927e3b8c8
+	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha
 )
 
 require (
@@ -28,8 +28,8 @@ require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
-	github.com/CosmWasm/wasmd v0.40.1 // indirect
-	github.com/CosmWasm/wasmvm v1.2.4 // indirect
+	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3 // indirect
+	github.com/CosmWasm/wasmvm v1.5.0 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

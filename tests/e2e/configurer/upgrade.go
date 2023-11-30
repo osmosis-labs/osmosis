@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -190,19 +190,20 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(6)
 
+	amountToFund := "10000000000000000000"
 	// Chain A
 	go func() {
 		defer wg.Done()
 		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet[0] = chainANode.CreateWalletAndFund(config.LockupWallet[0], []string{
-			"10000000000000000000" + poolShareDenom[0],
+			amountToFund + poolShareDenom[0],
 		}, chainA)
 	}()
 
 	go func() {
 		defer wg.Done()
 		lockupWalletSuperfluid[0] = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid[0], []string{
-			"10000000000000000000" + poolShareDenom[0],
+			amountToFund + poolShareDenom[0],
 		}, chainA)
 	}()
 
@@ -218,14 +219,14 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet[1] = chainBNode.CreateWalletAndFund(config.LockupWallet[1], []string{
-			"10000000000000000000" + poolShareDenom[1],
+			amountToFund + poolShareDenom[1],
 		}, chainB)
 	}()
 
 	go func() {
 		defer wg.Done()
 		lockupWalletSuperfluid[1] = chainBNode.CreateWalletAndFund(config.LockupWalletSuperfluid[1], []string{
-			"10000000000000000000" + poolShareDenom[1],
+			amountToFund + poolShareDenom[1],
 		}, chainB)
 	}()
 

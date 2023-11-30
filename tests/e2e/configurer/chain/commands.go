@@ -16,13 +16,13 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,7 +31,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
 
-	app "github.com/osmosis-labs/osmosis/v20/app"
+	app "github.com/osmosis-labs/osmosis/v21/app"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
@@ -775,7 +775,6 @@ func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config, is
 	}
 
 	codeId := srcNode.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId = int(srcNode.QueryLatestWasmCodeID())
 	srcNode.InstantiateWasmContract(
 		strconv.Itoa(codeId),
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, initialization.ValidatorWalletName, paths),
