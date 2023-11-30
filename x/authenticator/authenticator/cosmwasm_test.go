@@ -5,7 +5,7 @@ import (
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,7 +99,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	accSeqs := []uint64{0}
 
 	// Generate a private key for signing
-	priv, _ := secp256r1.GenPrivKey()
+	priv := secp256k1.GenPrivKey()
 	signers := []cryptotypes.PrivKey{priv}
 	signatures := []cryptotypes.PrivKey{priv}
 
