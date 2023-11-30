@@ -72,6 +72,14 @@ var DefaultConfig = Config{
 
 // NewConfigFromOptions returns a new sidecar query server config from the given options.
 func NewConfigFromOptions(opts servertypes.AppOptions) Config {
+	isEnabled := osmoutils.ParseBool(opts, groupOptName, "enabled", false)
+
+	if !isEnabled {
+		return Config{
+			IsEnabled: false,
+		}
+	}
+
 	return Config{
 		IsEnabled: osmoutils.ParseBool(opts, groupOptName, "enabled", false),
 
