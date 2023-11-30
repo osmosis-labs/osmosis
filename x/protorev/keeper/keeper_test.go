@@ -906,7 +906,9 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Create a cosmwasm pool for testing
 	// Pool 51
-	cwPool := s.PrepareCosmWasmPool()
+	cwPool := s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"Atom", "test/2"})
+	cwFunds := sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(1000000000000)), sdk.NewCoin("test/2", osmomath.NewInt(1000000000000)))
+	s.JoinTransmuterPool(s.TestAccs[0], cwPool.GetId(), cwFunds)
 
 	// Add the new cosmwasm pool to the pool info
 	poolInfo := types.DefaultPoolTypeInfo

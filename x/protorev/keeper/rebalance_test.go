@@ -216,6 +216,18 @@ var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
+// CW pool swap test
+var cwPoolRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        37,
+		TokenOutDenom: "test/2",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        51,
+		TokenOutDenom: "Atom",
+	},
+}
+
 func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
@@ -356,6 +368,16 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 				expectedAmtIn:   osmomath.NewInt(414_000_000),
 				expectedProfit:  osmomath.NewInt(171_555_698),
 				routePoolPoints: 12,
+			},
+			expectPass: true,
+		},
+		{
+			name: "CW Pool Route",
+			param: param{
+				route:           cwPoolRoute,
+				expectedAmtIn:   osmomath.NewInt(131_072_000_000),
+				expectedProfit:  osmomath.NewInt(135_689_234_148),
+				routePoolPoints: 6,
 			},
 			expectPass: true,
 		},

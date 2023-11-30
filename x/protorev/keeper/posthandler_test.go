@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -80,6 +81,8 @@ func (s *KeeperTestSuite) TestPostHandle() {
 		expectedProfits     []sdk.Coin
 		expectedPoolPoints  uint64
 	}
+
+	s.Ctx = s.Ctx.WithLogger(log.TestingLogger())
 
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -317,6 +320,27 @@ func (s *KeeperTestSuite) TestPostHandle() {
 					},
 				},
 				expectedPoolPoints: 41,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Cosmwasm Pool Arb Route - 2 Pools",
+			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     51,
+						TokenOut: "Atom",
+						TokenIn:  "test/2",
+					},
+				},
+				expectedNumOfTrades: osmomath.NewInt(6),
+				expectedProfits: []sdk.Coin{
+					{
+						Denom:  "Atom",
+						Amount: osmomath.NewInt(15_767_231),
+					},
+				},
+				expectedPoolPoints: 6,
 			},
 			expectPass: true,
 		},
