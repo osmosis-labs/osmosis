@@ -1,12 +1,9 @@
 package app
 
 import (
-	"fmt"
 	"strings"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 // BlockedAddrs returns all the app's module account addresses that are not
@@ -14,11 +11,7 @@ import (
 func (app *OsmosisApp) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
-		if acc == protorevtypes.ModuleName {
-			continue
-		} else {
-			blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
-		}
+		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
 	}
 
 	// We block all OFAC-blocked ETH addresses from receiving tokens as well
@@ -53,8 +46,6 @@ func (app *OsmosisApp) BlockedAddrs() map[string]bool {
 		blockedAddrs[addr] = true
 		blockedAddrs[strings.ToLower(addr)] = true
 	}
-
-	fmt.Println("blockedAddrs", blockedAddrs)
 
 	return blockedAddrs
 }
