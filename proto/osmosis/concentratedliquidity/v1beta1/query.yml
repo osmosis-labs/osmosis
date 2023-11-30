@@ -74,3 +74,8 @@ queries:
       query_func: "k.NumNextInitializedTicks"
     cli:
       cmd: "NumNextInitializedTicks"
+  GetPoolHookContract:
+      proto_wrapper:
+        query_func: "k.GetPoolHookContract"
+      cli:
+        cmd: "GetPoolHookContract"

@@ -146,3 +146,12 @@ func GetTickAccumulatorTrackers() (*osmocli.QueryDescriptor, *queryproto.TickAcc
 {{.CommandPrefix}} tick-accumulator-trackers 1 "[-18000000]"`,
 	}, &queryproto.TickAccumulatorTrackersRequest{}
 }
+
+func GetPoolHookContract() (*osmocli.QueryDescriptor, *queryproto.PoolHookContractRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "get-pool-hook-contract [pool-id] [action-prefix]",
+		Short: "Query the contract address for a specific pool hook",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} get-pool-hook-contract 1 beforeSwapExactAmountIn`,
+	}, &queryproto.PoolHookContractRequest{}
+}

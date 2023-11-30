@@ -166,6 +166,12 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 				s.TickSpacingUpdateProp()
 			})
 		}()
+
+		go func() {
+			s.T().Run("test set pool hook contract proposal", func(t *testing.T) {
+				s.SetPoolHookContractProposalTest()
+			})
+		}()
 	}
 
 	changeProtorevAdminAndMaxPoolPoints := func() {
@@ -736,7 +742,7 @@ func (s *IntegrationTestSuite) SetPoolHookContractProposalTest() {
 		denom1                 = "uosmo"
 		tickSpacing     uint64 = 100
 		spreadFactor           = "0.001" // 0.1%
-		hookActions            = []string{"beforeSwap", "afterSwap"}
+		hookActions            = []string{"beforeSwapExactAmountIn", "afterSwapExactAmountIn"}
 		contractAddress        = "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
 	)
 
