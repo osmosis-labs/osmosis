@@ -91,6 +91,7 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/x/mint"
 )
 
@@ -245,6 +246,9 @@ func NewOsmosisApp(
 		app.BlockedAddrs(),
 	)
 
+	// Initialize the ingest manager for propagating data to external sinks.
+	app.IngestManager = ingest.NewIngestManager()
+
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
 	// hook, we will get a nil pointer dereference error due to the hooks in the keeper not being
@@ -392,6 +396,8 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	// Process the block and ingest data into various sinks.
+	app.IngestManager.ProcessBlock(ctx)
 	return app.mm.EndBlock(ctx, req)
 }
 
