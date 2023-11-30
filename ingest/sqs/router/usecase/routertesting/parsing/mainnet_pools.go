@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	concentratedmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // SerializedPool is a struct that is used to serialize a pool to JSON.

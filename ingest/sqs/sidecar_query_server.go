@@ -14,23 +14,23 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	chainInfoRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/repository/redis"
-	chainInfoUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/usecase"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/middleware"
-	poolsHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/delivery/http"
-	poolsRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/repository/redis"
-	poolsUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/usecase"
-	redisrepo "github.com/osmosis-labs/osmosis/v20/ingest/sqs/repository/redis"
-	routerRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/repository/redis"
-	tokensUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/tokens/usecase"
+	chainInfoRepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chain_info/repository/redis"
+	chainInfoUseCase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chain_info/usecase"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/middleware"
+	poolsHttpDelivery "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/delivery/http"
+	poolsRedisRepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/repository/redis"
+	poolsUseCase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/usecase"
+	redisrepo "github.com/osmosis-labs/osmosis/v21/ingest/sqs/repository/redis"
+	routerRedisRepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/repository/redis"
+	tokensUseCase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/tokens/usecase"
 
-	routerHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
-	routerUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	routerHttpDelivery "github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/delivery/http"
+	routerUseCase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
 
-	systemhttpdelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/system/delivery/http"
+	systemhttpdelivery "github.com/osmosis-labs/osmosis/v21/ingest/sqs/system/delivery/http"
 )
 
 // SideCarQueryServer defines an interface for sidecar query server (SQS).

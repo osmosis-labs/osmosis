@@ -12,9 +12,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 )
 
 // ResponseError represent the response error struct

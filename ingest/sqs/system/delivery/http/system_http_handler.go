@@ -12,8 +12,8 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 
 	"github.com/labstack/echo"
 )

@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/pools"
+	concentratedmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
 )
 
 func deepCopyTickModel(tickModel *domain.TickModel) *domain.TickModel {

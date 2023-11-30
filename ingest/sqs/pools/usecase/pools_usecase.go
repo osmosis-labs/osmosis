@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 type poolsUseCase struct {

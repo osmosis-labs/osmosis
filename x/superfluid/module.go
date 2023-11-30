@@ -24,11 +24,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/simulation"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/simulation"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 var (

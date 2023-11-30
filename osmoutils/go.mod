@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231026175343-311472e85591
-	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231026175856-5163fad0274e
+	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
@@ -165,5 +165,5 @@ replace (
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath
-// github.com/osmosis-labs/osmosis/v20 => ./../
+// github.com/osmosis-labs/osmosis/v21 => ./../
 )

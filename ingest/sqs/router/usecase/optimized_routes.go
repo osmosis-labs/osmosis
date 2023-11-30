@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 )
 
 // getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools

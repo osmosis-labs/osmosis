@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/routertesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 type RouterTestSuite struct {

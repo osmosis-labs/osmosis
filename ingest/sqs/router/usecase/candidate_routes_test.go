@@ -1,8 +1,8 @@
 package usecase_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 )
 
 // Validates that the router returns the correct routes for the given token pair.

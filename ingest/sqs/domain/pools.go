@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clqueryproto "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	clqueryproto "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // PoolI represents a generalized Pool interface.

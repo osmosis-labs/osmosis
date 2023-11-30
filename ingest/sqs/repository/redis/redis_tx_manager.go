@@ -3,7 +3,7 @@ package redis
 import (
 	"github.com/redis/go-redis/v9"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 )
 
 // RedisTxManager is a structure encapsulating creation of atomic transactions.

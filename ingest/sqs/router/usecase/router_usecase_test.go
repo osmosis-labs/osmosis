@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 )
 
 // Tests the call to handleRoutes by mocking the router repository and pools use case

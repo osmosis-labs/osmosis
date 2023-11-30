@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // TestPrepareResult prepares the result of the quote for output to the client.

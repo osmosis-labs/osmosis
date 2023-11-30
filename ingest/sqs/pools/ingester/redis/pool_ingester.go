@@ -10,15 +10,15 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 
-	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	routerusecase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // poolIngester is an ingester for pools.

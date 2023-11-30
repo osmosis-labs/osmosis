@@ -6,8 +6,8 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 // IncreaseTxFeesTracker gets the current value of the txfees tracker, adds the given amount to it, and sets the new value.

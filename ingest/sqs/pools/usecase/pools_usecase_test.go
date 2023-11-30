@@ -8,12 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/usecase"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/usecase"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/pools"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/routertesting"
 )
 
 type PoolsUsecaseTestSuite struct {

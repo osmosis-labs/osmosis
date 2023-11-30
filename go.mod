@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v20
+module github.com/osmosis-labs/osmosis/v21
 
 go 1.20
 
@@ -29,9 +29,9 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231128160617-9a7cef4bff58
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231124190325-d75e9ade352e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231130002422-33ba03710e16
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231130002422-33ba03710e16
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231130002422-33ba03710e16
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.0

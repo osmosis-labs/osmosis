@@ -6,8 +6,8 @@ import (
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 )
 
 // ResponseError represent the response error struct

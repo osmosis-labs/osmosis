@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/tokens/usecase"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/tokens/usecase"
 )
 
 type TokensUseCaseTestSuite struct {

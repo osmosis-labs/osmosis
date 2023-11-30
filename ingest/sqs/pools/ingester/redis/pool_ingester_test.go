@@ -9,17 +9,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
-	redisingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
-	clqueryproto "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
+	redisingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
+	clqueryproto "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 type IngesterTestSuite struct {

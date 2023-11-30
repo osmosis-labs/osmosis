@@ -3,8 +3,8 @@ package sqs
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
+	"github.com/osmosis-labs/osmosis/v21/ingest"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 )
 
 const sqsIngesterName = "sidecar-query-server"

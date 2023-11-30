@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 )
 
 type tokensUseCase struct {

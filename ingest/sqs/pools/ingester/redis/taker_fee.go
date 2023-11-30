@@ -3,8 +3,8 @@ package redis
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 // retrieveTakerFeeToMapIfNotExists retrieves the taker fee for the denom pair if it does not exist in the map

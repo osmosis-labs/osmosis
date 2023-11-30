@@ -8,12 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	clmath "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	clmath "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	concentratedmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var _ domain.RoutablePool = &routableConcentratedPoolImpl{}

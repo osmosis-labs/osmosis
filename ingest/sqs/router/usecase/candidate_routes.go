@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // candidatePoolWrapper is an intermediary internal data
