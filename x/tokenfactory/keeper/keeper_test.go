@@ -36,7 +36,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 type SudoAuthorizationPolicy struct{}
 
-func (p SudoAuthorizationPolicy) CanCreateCode(chainAccesscoConfig wasmkeeper.ChainAccessConfigs, actor sdk.AccAddress, config wasmtypes.AccessConfig) bool {
+func (p SudoAuthorizationPolicy) CanCreateCode(chainAccesscoConfig wasmtypes.ChainAccessConfigs, actor sdk.AccAddress, config wasmtypes.AccessConfig) bool {
 	return true
 }
 

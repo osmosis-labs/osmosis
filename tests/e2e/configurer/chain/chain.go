@@ -30,8 +30,6 @@ type Config struct {
 	NodeConfigs     []*NodeConfig
 	NodeTempConfigs []*NodeConfig
 
-	LatestCodeId int
-
 	t                *testing.T
 	containerManager *containers.Manager
 }
