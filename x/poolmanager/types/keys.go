@@ -5,12 +5,8 @@ import (
 	"sort"
 	"strings"
 
-<<<<<<< HEAD
-	"github.com/gogo/protobuf/proto"
-=======
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
->>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 )
 
 const (

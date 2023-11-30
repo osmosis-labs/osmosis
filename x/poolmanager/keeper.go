@@ -97,27 +97,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, poolRoute := range genState.PoolRoutes {
 		k.SetPoolRoute(ctx, poolRoute.PoolId, poolRoute.PoolType)
 	}
-<<<<<<< HEAD
-=======
-
-	// We track taker fees generated in the module's KVStore.
-	// If the values were exported, we set them here.
-	// If the values were not exported, we initialize the tracker to zero and set the accounting height to the current height.
-	if !genState.TakerFeesTracker.TakerFeesToStakers.Empty() {
-		k.SetTakerFeeTrackerForStakers(ctx, genState.TakerFeesTracker.TakerFeesToStakers)
-	} else {
-		k.SetTakerFeeTrackerForStakers(ctx, sdk.NewCoins())
-	}
-	if !genState.TakerFeesTracker.TakerFeesToCommunityPool.Empty() {
-		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesTracker.TakerFeesToCommunityPool)
-	} else {
-		k.SetTakerFeeTrackerForCommunityPool(ctx, sdk.NewCoins())
-	}
-	if genState.TakerFeesTracker.HeightAccountingStartsFrom != 0 {
-		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
-	} else {
-		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-	}
 
 	// Set the pool volumes KVStore.
 	for _, poolVolume := range genState.PoolVolumes {
@@ -128,17 +107,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, denomPairTakerFee := range genState.DenomPairTakerFeeStore {
 		k.SetDenomPairTakerFee(ctx, denomPairTakerFee.Denom0, denomPairTakerFee.Denom1, denomPairTakerFee.TakerFee)
 	}
->>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 }
 
 // ExportGenesis returns the poolmanager module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-<<<<<<< HEAD
-	return &types.GenesisState{
-		Params:     k.GetParams(ctx),
-		NextPoolId: k.GetNextPoolId(ctx),
-		PoolRoutes: k.getAllPoolRoutes(ctx),
-=======
 	pools, err := k.AllPools(ctx)
 	if err != nil {
 		panic(err)
@@ -160,20 +132,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	// Export KVStore values to the genesis state so they can be imported in init genesis.
-	takerFeesTracker := types.TakerFeesTracker{
-		TakerFeesToStakers:         k.GetTakerFeeTrackerForStakers(ctx),
-		TakerFeesToCommunityPool:   k.GetTakerFeeTrackerForCommunityPool(ctx),
-		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
-	}
 	return &types.GenesisState{
 		Params:                 k.GetParams(ctx),
 		NextPoolId:             k.GetNextPoolId(ctx),
 		PoolRoutes:             k.getAllPoolRoutes(ctx),
-		TakerFeesTracker:       &takerFeesTracker,
 		PoolVolumes:            poolVolumes,
 		DenomPairTakerFeeStore: denomPairTakerFees,
->>>>>>> 9a2ed414 (fix(poolmanager): store taker fee overwrites from kvstore to genesis (#6948))
 	}
 }
 
