@@ -72,7 +72,7 @@ var DefaultConfig = Config{
 
 // NewConfigFromOptions returns a new sidecar query server config from the given options.
 func NewConfigFromOptions(opts servertypes.AppOptions) Config {
-	isEnabled := osmoutils.ParseBool(opts, groupOptName, "enabled", false)
+	isEnabled := osmoutils.ParseBool(opts, groupOptName, "is-enabled", false)
 
 	if !isEnabled {
 		return Config{
@@ -81,7 +81,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 	}
 
 	return Config{
-		IsEnabled: osmoutils.ParseBool(opts, groupOptName, "enabled", false),
+		IsEnabled: isEnabled,
 
 		StorageHost: osmoutils.ParseString(opts, groupOptName, "db-host"),
 		StoragePort: osmoutils.ParseString(opts, groupOptName, "db-port"),
