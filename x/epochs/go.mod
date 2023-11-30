@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231026164244-324609ac64a6
-	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231019180727-d47810d6ead2
+	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb

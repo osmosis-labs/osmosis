@@ -8,13 +8,13 @@ import (
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolincenitvestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolincenitvestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 type IncentivizedCFMMDirectWhenMigrationLinkPresentError struct {

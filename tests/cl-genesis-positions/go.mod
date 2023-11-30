@@ -8,7 +8,7 @@ require (
 	github.com/ignite/cli v0.27.1
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231104014315-0e6ea39760ab
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231103234316-a43985716535
-	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231106011704-63e927e3b8c8
+	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha
 )
 
 require (
