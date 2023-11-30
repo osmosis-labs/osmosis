@@ -391,7 +391,7 @@ func (n *NodeConfig) SubmitSetPoolHookContractProposal(poolId uint64, hookAction
 		"--title=\"Set Pool Hook Contract Proposal Title\"",
 		"--summary=\"Set Pool Hook Contract Proposal Description\"",
 		"--from=val",
-		"--gas=400000",
+		"--gas=800000",
 		"--fees=5000uosmo",
 	}
 
