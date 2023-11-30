@@ -37,7 +37,7 @@ func StorePools(actualPools []domain.PoolI, tickModelMap map[uint64]domain.TickM
 			if pool.GetType() == poolmanagertypes.Concentrated {
 				tickModel, ok := tickModelMap[pool.GetId()]
 				if !ok {
-					return fmt.Errorf("no tick model in map %s", domain.ConcentratedTickModelNotSet{
+					return fmt.Errorf("no tick model in map %s", domain.ConcentratedTickModelNotSetError{
 						PoolId: pool.GetId(),
 					})
 				}

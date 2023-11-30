@@ -104,11 +104,11 @@ func (e ConcentratedNotEnoughLiquidityToCompleteSwapError) Error() string {
 	return fmt.Sprintf("not enough liquidity to complete swap in pool (%d) with amount in (%s)", e.PoolId, e.AmountIn)
 }
 
-type ConcentratedTickModelNotSet struct {
+type ConcentratedTickModelNotSetError struct {
 	PoolId uint64
 }
 
-func (e ConcentratedTickModelNotSet) Error() string {
+func (e ConcentratedTickModelNotSetError) Error() string {
 	return fmt.Sprintf("tick model is not set on pool (%d)", e.PoolId)
 }
 

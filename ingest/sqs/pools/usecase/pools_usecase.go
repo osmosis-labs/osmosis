@@ -102,7 +102,7 @@ func (p *poolsUseCase) GetRoutesFromCandidates(ctx context.Context, candidateRou
 				// Get tick model for concentrated pool
 				tickModel, ok := tickModelMap[pool.GetId()]
 				if !ok {
-					return nil, domain.ConcentratedTickModelNotSet{
+					return nil, domain.ConcentratedTickModelNotSetError{
 						PoolId: pool.GetId(),
 					}
 				}

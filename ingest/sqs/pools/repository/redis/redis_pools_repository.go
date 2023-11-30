@@ -338,25 +338,6 @@ func (r *redisPoolsRepo) GetTickModelForPools(ctx context.Context, pools []uint6
 	return result, nil
 }
 
-// getTicksMapByIdCmd returns a map of tick models by pool ID.
-// Uses transaction to ensure atomicity.
-func getTicksMapByIdCmd(ctx context.Context, tx mvc.Tx) (*redis.MapStringStringCmd, error) {
-	if !tx.IsActive() {
-		return nil, fmt.Errorf("tx is inactive")
-	}
-	redisTx, err := tx.AsRedisTx()
-	if err != nil {
-		return nil, err
-	}
-	pipeliner, err := redisTx.GetPipeliner(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	ticksMapByIDCmd := pipeliner.HGetAll(ctx, concentratedTicksModelKey(poolsKey))
-	return ticksMapByIDCmd, nil
-}
-
 func sqsPoolModelKey(storeKey string) string {
 	return fmt.Sprintf("%s/sqs", storeKey)
 }

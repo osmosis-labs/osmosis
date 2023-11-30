@@ -19,14 +19,14 @@ type PoolsUsecaseMock struct {
 // GetRoutesFromCandidates implements mvc.PoolsUsecase.
 // Note that taker fee are ignored and not set
 // Note that tick models are not set
-func (r *PoolsUsecaseMock) GetRoutesFromCandidates(ctx context.Context, candidateRoutes route.CandidateRoutes, takerFeeMap domain.TakerFeeMap, tokenInDenom string, tokenOutDenom string) ([]route.RouteImpl, error) {
+func (pm *PoolsUsecaseMock) GetRoutesFromCandidates(ctx context.Context, candidateRoutes route.CandidateRoutes, takerFeeMap domain.TakerFeeMap, tokenInDenom string, tokenOutDenom string) ([]route.RouteImpl, error) {
 	finalRoutes := make([]route.RouteImpl, 0, len(candidateRoutes.Routes))
 	for _, candidateRoute := range candidateRoutes.Routes {
 		routablePools := make([]domain.RoutablePool, 0, len(candidateRoute.Pools))
 		for _, candidatePool := range candidateRoute.Pools {
 			// Get the pool data for routing
 			var foundPool domain.PoolI
-			for _, pool := range r.Pools {
+			for _, pool := range pm.Pools {
 				if pool.GetId() == candidatePool.ID {
 					foundPool = pool
 				}
