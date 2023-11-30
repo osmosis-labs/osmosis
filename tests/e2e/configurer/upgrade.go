@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -350,17 +350,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 		node.DepositProposal(propNumber, false)
 
-		var wg sync.WaitGroup
-
-		for _, node := range chainConfig.NodeConfigs {
-			wg.Add(1)
-			go func(nodeConfig *chain.NodeConfig) {
-				defer wg.Done()
-				nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-			}(node)
-		}
-
-		wg.Wait()
+		chain.AllValsVoteOnProposal(chainConfig, propNumber)
 	}
 
 	// wait till all chains halt at upgrade height

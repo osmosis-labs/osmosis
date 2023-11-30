@@ -15,16 +15,16 @@ import (
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // clPoolCreationInfo encapsulates the returns from CL pool

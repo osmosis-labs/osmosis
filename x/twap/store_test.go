@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/twap"
+	"github.com/osmosis-labs/osmosis/v21/x/twap"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.

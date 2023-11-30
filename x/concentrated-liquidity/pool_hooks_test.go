@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 var (
@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 			s.Require().True(expectedTriggers.DenomsSubsetOf(balances), "expected balance to include: %s, actual balances: %s", expectedTriggers, balances)
 
 			// Derive actions that should not have been triggered
-			notTriggeredActions := osmoutils.Filter[string](func(s string) bool { return osmoutils.Contains(tc.actionPrefixes, s) }, allHooks)
+			notTriggeredActions := osmoutils.Filter(func(s string) bool { return osmoutils.Contains(tc.actionPrefixes, s) }, allHooks)
 
 			// Ensure that hooks that weren't set weren't triggered
 			for _, action := range notTriggeredActions {

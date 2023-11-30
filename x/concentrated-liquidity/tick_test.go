@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types/genesis"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
 )
 
 const validPoolId = 1
@@ -747,27 +747,27 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		},
 		{
 			name:          "lower tick is smaller than min tick",
-			lowerTick:     types.MinInitializedTickV2 - 2,
+			lowerTick:     DefaultMinTick - 2,
 			upperTick:     2,
-			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2 - 2, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:          "lower tick is greater than max tick",
 			lowerTick:     DefaultMaxTick + 2,
 			upperTick:     DefaultMaxTick + 4,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:          "upper tick is smaller than min tick",
 			lowerTick:     2,
-			upperTick:     types.MinInitializedTickV2 - 2,
-			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2 - 2, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
+			upperTick:     DefaultMinTick - 2,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:          "upper tick is greater than max tick",
 			lowerTick:     2,
 			upperTick:     DefaultMaxTick + 2,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:      "lower tick is greater than upper tick",
@@ -781,14 +781,14 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			lowerTick: types.MaxTick,
 			upperTick: types.MaxTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
 		},
 		{
 			name:      "upper tick is equal to min tick.",
-			lowerTick: types.MinInitializedTickV2,
-			upperTick: types.MinInitializedTickV2,
+			lowerTick: types.MinInitializedTick,
+			upperTick: types.MinInitializedTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
 		},
 	}
 

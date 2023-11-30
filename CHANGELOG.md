@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### API
+
+* [#6939](https://github.com/osmosis-labs/osmosis/pull/6939) Fix taker fee GRPC gateway query path in poolmanager.
+
 ### Features
 
 * [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
@@ -57,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6836](https://github.com/osmosis-labs/osmosis/pull/6836) Add DenomsMetadata to stargate whitelist and fixs the DenomMetadata response type
 * [#6814](https://github.com/osmosis-labs/osmosis/pull/6814) Add EstimateTradeBasedOnPriceImpact to stargate whitelist
 * [#6859](https://github.com/osmosis-labs/osmosis/pull/6859) Add hooks to core CL operations (position creation/withdrawal and swaps)
+* [#6937](https://github.com/osmosis-labs/osmosis/pull/6937) Update wasmd to v0.45.0 and wasmvm to v1.5.0
+* [#6949](https://github.com/osmosis-labs/osmosis/pull/6949) Valset withdraw rewards now considers all validators user is delegated to instead of valset
 
 ### Misc Improvements
 
@@ -1115,7 +1121,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 * [\#637](https://github.com/osmosis-labs/osmosis/pull/637) Add [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/)
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to Cosmos SDK v0.44.x
   * Numerous large updates, such as making module accounts be 32 bytes, Rosetta support, etc.
-  * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
+  * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz)
     See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
 * [\#560](https://github.com/osmosis-labs/osmosis/pull/560) Implements Osmosis [prop32](https://www.mintscan.io/osmosis/proposals/32) -- clawing back the final 20% of unclaimed osmo and ion airdrop.
@@ -1166,7 +1172,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 
 This release improves the CLI UX of creating and querying gauges.
 
-## [v1.0.1](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.1) - 2021-06-17
+## [v1.0.1](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.1) - 2021-06-17
 
 This release fixes a bug in `osmosisd version` always displaying 0.0.1.
 
