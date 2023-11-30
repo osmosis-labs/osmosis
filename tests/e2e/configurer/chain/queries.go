@@ -341,7 +341,7 @@ func (n *NodeConfig) QueryPoolHookContract(poolId uint64, actionPrefix string) (
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var poolHookResponse queryproto.PoolHookContractResponse
+	var poolHookResponse queryproto.GetPoolHookContractResponse
 	err = util.Cdc.UnmarshalJSON(bz, &poolHookResponse)
 	require.NoError(n.t, err)
 

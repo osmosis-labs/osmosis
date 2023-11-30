@@ -135,8 +135,8 @@ service Query {
 
   // PoolHookContract returns the contract address for a given poolId and action
   // prefix
-  rpc PoolHookContract(PoolHookContractRequest)
-      returns (PoolHookContractResponse) {
+  rpc GetPoolHookContract(GetPoolHookContractRequest)
+      returns (GetPoolHookContractResponse) {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
                                    "pools/{pool_id}/hooks/{action_prefix}";
   }
@@ -364,9 +364,9 @@ message NumNextInitializedTicksResponse {
 }
 
 //=============================== PoolHookContract
-message PoolHookContractRequest {
+message GetPoolHookContractRequest {
   uint64 pool_id = 1;
   string action_prefix = 2;
 }
 
-message PoolHookContractResponse { string contract_address = 1; }
+message GetPoolHookContractResponse { string contract_address = 1; }

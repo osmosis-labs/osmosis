@@ -319,7 +319,7 @@ func (q Querier) NumNextInitializedTicks(ctx sdk.Context, req clquery.NumNextIni
 	return &clquery.NumNextInitializedTicksResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }
 
-func (q Querier) PoolHookContract(ctx sdk.Context, req clquery.PoolHookContractRequest) (*clquery.PoolHookContractResponse, error) {
+func (q Querier) GetPoolHookContract(ctx sdk.Context, req clquery.GetPoolHookContractRequest) (*clquery.GetPoolHookContractResponse, error) {
 	contractAddress := q.Keeper.GetPoolHookContract(ctx, req.PoolId, req.ActionPrefix)
-	return &clquery.PoolHookContractResponse{ContractAddress: contractAddress}, nil
+	return &clquery.GetPoolHookContractResponse{ContractAddress: contractAddress}, nil
 }
