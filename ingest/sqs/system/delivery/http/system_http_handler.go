@@ -93,7 +93,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	// If the node is not synced, return HTTP 503
-	if latestChainHeight-10 > latestStoreHeight {
+	if latestChainHeight-latestStoreHeight > heightTolerance {
 		return echo.NewHTTPError(http.StatusServiceUnavailable, fmt.Sprintf("Node is not synced, chain height (%d), store height (%d), tolerance (%d)", latestChainHeight, latestStoreHeight, heightTolerance))
 	}
 
