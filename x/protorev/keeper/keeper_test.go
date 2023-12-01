@@ -733,11 +733,11 @@ func (s *KeeperTestSuite) setUpPools() {
 		{ // Pool 37
 			PoolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewCoin("Atom", osmomath.NewInt(406165719545)),
+					Token:  sdk.NewCoin("Atom", osmomath.NewInt(40616571954500000)),
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin("test/2", osmomath.NewInt(1095887931673)),
+					Token:  sdk.NewCoin("test/2", osmomath.NewInt(109588793167300000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},

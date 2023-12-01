@@ -305,8 +305,8 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			name: "Four Pool Test Route",
 			param: param{
 				route:           fourPoolRoute,
-				expectedAmtIn:   osmomath.NewInt(1_147_000_000),
-				expectedProfit:  osmomath.NewInt(15_761_405),
+				expectedAmtIn:   osmomath.NewInt(1_454_000_000),
+				expectedProfit:  osmomath.NewInt(19_982_422),
 				routePoolPoints: 8,
 			},
 			expectPass: true,
@@ -376,7 +376,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			param: param{
 				route:           cwPoolRoute,
 				expectedAmtIn:   osmomath.NewInt(131_072_000_000),
-				expectedProfit:  osmomath.NewInt(135_689_234_148),
+				expectedProfit:  osmomath.NewInt(221_515_219_115),
 				routePoolPoints: 6,
 			},
 			expectPass: true,
@@ -469,7 +469,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			param: param{
 				route:          fourPoolRoute,
 				inputCoin:      sdk.NewCoin("Atom", osmomath.NewInt(1_147_000_000)),
-				expectedProfit: osmomath.NewInt(15_761_405),
+				expectedProfit: osmomath.NewInt(19_099_654),
 			},
 			arbDenom:            "Atom",
 			expectPass:          true,
@@ -596,8 +596,8 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 			name: "Four-pool route test",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{fourPoolRoute},
-				expectedMaxProfitAmount:    osmomath.NewInt(13_202_729),
-				expectedMaxProfitInputCoin: sdk.NewCoin("Atom", osmomath.NewInt(1_147_000_000)),
+				expectedMaxProfitAmount:    osmomath.NewInt(16_738_513),
+				expectedMaxProfitInputCoin: sdk.NewCoin("Atom", osmomath.NewInt(1_454_000_000)),
 				expectedOptimalRoute:       fourPoolRoute,
 				arbDenom:                   "Atom",
 			},
