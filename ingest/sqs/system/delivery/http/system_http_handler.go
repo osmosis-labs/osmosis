@@ -26,6 +26,8 @@ type SystemHandler struct {
 	CIUsecase    mvc.ChainInfoUsecase
 }
 
+const heightTolerance = 10
+
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
 func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log.Logger, us mvc.ChainInfoUsecase) {
 	handler := &SystemHandler{
@@ -92,7 +94,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 
 	// If the node is not synced, return HTTP 503
 	if latestChainHeight-10 > latestStoreHeight {
-		return echo.NewHTTPError(http.StatusServiceUnavailable, "Node is not synced", " latestChainHeight", latestChainHeight, " latestStoreHeight", latestStoreHeight)
+		return echo.NewHTTPError(http.StatusServiceUnavailable, fmt.Sprintf("Node is not synced, chain height (%d), store height (%d), tolerance (%d)", latestChainHeight, latestStoreHeight, heightTolerance))
 	}
 
 	// Check Redis status
