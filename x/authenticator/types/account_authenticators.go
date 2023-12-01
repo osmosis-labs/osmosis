@@ -15,7 +15,7 @@ func (a *AccountAuthenticator) AsAuthenticator(
 		if authenticatorCode.Type() == a.Type {
 			instance, err := authenticatorCode.Initialize(a.Data)
 			if err != nil {
-				return nil // ToDo: We should probably handle errors here
+				return nil // TODO: We should probably handle errors here
 			}
 			return instance
 		}

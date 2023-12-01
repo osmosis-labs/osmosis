@@ -28,15 +28,17 @@ var (
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {
-	accBech32 := sdk.MustBech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, account)
-	return utils.BuildKey(KeyAccountAuthenticatorsPrefix, accBech32)
+	return utils.BuildKey(KeyAccountAuthenticatorsPrefix, account.String())
 }
 
 func KeyAccountId(account sdk.AccAddress, id uint64) []byte {
-	accBech32 := sdk.MustBech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, account)
-	return utils.BuildKey(KeyAccountAuthenticatorsPrefix, accBech32, id)
+	return utils.BuildKey(KeyAccountAuthenticatorsPrefix, account.String(), id)
 }
 
 func KeyNextAccountAuthenticatorId() []byte {
 	return utils.BuildKey(KeyNextAccountAuthenticatorIdPrefix)
+}
+
+func KeyAccountAuthenticatorsPrefixId() []byte {
+	return utils.BuildKey(KeyAccountAuthenticatorsPrefix)
 }
