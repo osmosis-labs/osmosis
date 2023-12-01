@@ -22,8 +22,8 @@ var DefaultMinGasPriceForArbitrageTx = osmomath.ZeroDec()
 var (
 	DefaultMinGasPriceForHighGasTx = osmomath.ZeroDec()
 	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
-	DefaultHighGasTxThreshold      = uint64(1 * 1000 * 1000)
-	DefaultMempool1559Enabled      = false
+	DefaultHighGasTxThreshold      = uint64(2 * 1000 * 1000)
+	DefaultMempool1559Enabled      = true
 )
 
 var GlobalMempool1559Enabled = false

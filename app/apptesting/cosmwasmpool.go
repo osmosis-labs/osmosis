@@ -9,11 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/cosmwasm/msg/transmuter"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/cosmwasm/msg/transmuter"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
 )
 
 const (
@@ -95,7 +95,7 @@ func (s *KeeperTestHelper) StoreCosmWasmPoolContractCode(contractName string) ui
 
 	code := s.GetContractCode(contractName)
 
-	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: cosmwasmpoolModuleAddr.String()}
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeAnyOfAddresses, Addresses: []string{cosmwasmpoolModuleAddr.String()}}
 	codeID, _, err := s.App.ContractKeeper.Create(s.Ctx, cosmwasmpoolModuleAddr, code, &instantiateConfig)
 	s.Require().NoError(err)
 

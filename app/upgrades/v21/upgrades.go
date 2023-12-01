@@ -1,9 +1,7 @@
 package v21
 
 import (
-	"cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,20 +11,22 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
 
 	// SDK v47 modules
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -94,15 +94,12 @@ func CreateUpgradeHandler(
 				keyTable = icahosttypes.ParamKeyTable() //nolint:staticcheck
 			case icacontrollertypes.SubModuleName:
 				keyTable = icacontrollertypes.ParamKeyTable() //nolint:staticcheck
+			case icqtypes.ModuleName:
+				keyTable = icqtypes.ParamKeyTable() //nolint:staticcheck
 
 			// wasm
 			case wasmtypes.ModuleName:
 				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
-
-			// POB
-			case auctiontypes.ModuleName:
-				// already SDK v47
-				continue
 
 			// osmosis modules
 			case protorevtypes.ModuleName:
@@ -150,15 +147,10 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Set POB Params:
-		err = setAuctionParams(ctx, keepers)
-		if err != nil {
-			return nil, err
-		}
-
 		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
 		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)))
+		govParams.MinInitialDepositRatio = "0.250000000000000000"
 		err = keepers.GovKeeper.SetParams(ctx, govParams)
 		if err != nil {
 			return nil, err
@@ -186,18 +178,4 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
-}
-
-func setAuctionParams(ctx sdk.Context, keepers *keepers.AppKeepers) error {
-	pobAddr := keepers.AccountKeeper.GetModuleAddress(auctiontypes.ModuleName)
-
-	auctionParams := auctiontypes.Params{
-		MaxBundleSize:          2,
-		EscrowAccountAddress:   pobAddr,
-		ReserveFee:             sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1_000_000)},
-		MinBidIncrement:        sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1_000_000)},
-		FrontRunningProtection: true,
-		ProposerFee:            math.LegacyNewDecWithPrec(25, 2),
-	}
-	return keepers.AuctionKeeper.SetParams(ctx, auctionParams)
 }

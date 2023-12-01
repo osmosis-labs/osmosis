@@ -7,8 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -45,7 +45,6 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 	return &clmodel.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
 }
 
-// TODO: tests, including events
 func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCreatePosition) (*types.MsgCreatePositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

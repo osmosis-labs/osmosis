@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)
@@ -43,6 +43,9 @@ type CreatePositionData struct {
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
+//
+// BeforeCreatePosition hook is triggered after validation logic but before any state changes are made.
+// AfterCreatePosition hook is triggered after state changes are complete if no errors have occurred.
 func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min osmomath.Int, lowerTick, upperTick int64) (CreatePositionData, error) {
 	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
@@ -89,14 +92,21 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return CreatePositionData{}, err
 	}
 
-	positionId := k.getNextPositionIdAndIncrement(ctx)
-
 	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1
 	// in order to assign an initial spot price.
 	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return CreatePositionData{}, err
 	}
+
+	// Trigger before hook for CreatePosition prior to mutating state.
+	// If no contract is set, this will be a no-op.
+	err = k.BeforeCreatePosition(ctx, poolId, owner, tokensProvided, amount0Min, amount1Min, lowerTick, upperTick)
+	if err != nil {
+		return CreatePositionData{}, err
+	}
+
+	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	if !hasPositions {
 		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
@@ -178,6 +188,13 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 	k.RecordTotalLiquidityIncrease(ctx, tokensAdded)
 
+	// Trigger after hook for CreatePosition.
+	// If no contract is set, this will be a no-op.
+	err = k.AfterCreatePosition(ctx, poolId, owner, tokensProvided, amount0Min, amount1Min, lowerTick, upperTick)
+	if err != nil {
+		return CreatePositionData{}, err
+	}
+
 	return CreatePositionData{
 		ID:        positionId,
 		Amount0:   updateData.Amount0,
@@ -203,6 +220,9 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if the position's underlying lock is not mature
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
+//
+// BeforeWithdrawPosition hook is triggered after validation logic but before any state changes are made.
+// AfterWithdrawPosition hook is triggered after state changes are complete if no errors have occurred.
 func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw osmomath.Dec) (amtDenom0, amtDenom1 osmomath.Int, err error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -241,6 +261,13 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// If it is greater than the available liquidity, return an error.
 	if requestedLiquidityAmountToWithdraw.GT(position.Liquidity) {
 		return osmomath.Int{}, osmomath.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
+	}
+
+	// Trigger before hook for WithdrawPosition prior to mutating state.
+	// If no contract is set, this will be a no-op.
+	err = k.BeforeWithdrawPosition(ctx, position.PoolId, owner, positionId, requestedLiquidityAmountToWithdraw)
+	if err != nil {
+		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
 	_, _, err = k.collectIncentives(ctx, owner, positionId)
@@ -330,6 +357,13 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		actualAmount1:  updateData.Amount1,
 	}
 	event.emit(ctx)
+
+	// Trigger after hook for WithdrawPosition.
+	// If no contract is set, this will be a no-op.
+	err = k.AfterWithdrawPosition(ctx, position.PoolId, owner, positionId, requestedLiquidityAmountToWithdraw)
+	if err != nil {
+		return osmomath.Int{}, osmomath.Int{}, err
+	}
 
 	return updateData.Amount0.Neg(), updateData.Amount1.Neg(), nil
 }

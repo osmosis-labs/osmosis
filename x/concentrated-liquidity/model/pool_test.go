@@ -11,10 +11,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 const (
@@ -856,4 +856,21 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 			suite.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 		})
 	}
+}
+
+// Test that the right denoms are returned.
+func (s *ConcentratedPoolTestSuite) TestGetPoolDenoms() {
+	s.Setup()
+
+	const (
+		expectedDenom1 = "bar"
+		expectedDenom2 = "foo"
+	)
+
+	pool := s.PrepareConcentratedPoolWithCoins(expectedDenom1, expectedDenom2)
+
+	denoms := pool.GetPoolDenoms(s.Ctx)
+	s.Require().Equal(2, len(denoms))
+	s.Require().Equal(expectedDenom1, denoms[0])
+	s.Require().Equal(expectedDenom2, denoms[1])
 }

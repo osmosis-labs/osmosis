@@ -11,9 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 //nolint:deadcode
@@ -981,4 +982,10 @@ func (p *Pool) ExitSwapExactAmountOut(
 
 func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 	return p
+}
+
+// GetPoolDenoms implements types.CFMMPoolI.
+func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
+	liquidity := p.GetTotalPoolLiquidity(ctx)
+	return osmoutils.CoinsDenoms(liquidity)
 }
