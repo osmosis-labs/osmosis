@@ -1,0 +1,7 @@
+{
+	"initial-deposit": "3000000000uusdc,1000000000uweth",
+	"swap-fee": "0.005",
+	"exit-fee": "0",
+	"future-governor": "",
+    "scaling-factors": "1,1"
+}
