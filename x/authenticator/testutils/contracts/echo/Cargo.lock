@@ -310,10 +310,10 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-storage-plus",
+ "osmosis-authenticators",
  "osmosis-std",
  "schemars",
  "serde",
- "serde-json-wasm 1.0.0",
  "sha2 0.10.8",
  "thiserror",
 ]
@@ -486,6 +486,16 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+
+[[package]]
+name = "osmosis-authenticators"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "serde-json-wasm 1.0.0",
+ "sha2 0.10.8",
+]
 
 [[package]]
 name = "osmosis-std"
