@@ -86,12 +86,10 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		}
 	}
 
-	// Compare latestHeight with latest_block_height from the status endpoint
-	nodeStatus := "synced"
-
 	// allow 10 blocks of difference before claiming node is not synced
+	// If the node is not synced, return HTTP 501
 	if fmt.Sprint(int64(latestHeight)+10) < statusResponse.Result.SyncInfo.LatestBlockHeight {
-		nodeStatus = "not_synced"
+		return echo.NewHTTPError(http.StatusNotImplemented, "Node is not synced")
 	}
 
 	// Check Redis status
@@ -109,6 +107,5 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"grpc_gateway_status": grpcStatus,
 		"redis_status":        redisStatus,
-		"node_status":         nodeStatus,
 	})
 }
