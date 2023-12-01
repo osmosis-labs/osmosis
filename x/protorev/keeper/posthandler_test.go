@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -234,7 +234,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -259,7 +259,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -309,7 +309,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -317,6 +317,31 @@ func (s *KeeperTestSuite) TestPostHandle() {
 					},
 				},
 				expectedPoolPoints: 41,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Cosmwasm Pool Arb Route - 2 Pools",
+			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     51,
+						TokenOut: "Atom",
+						TokenIn:  "test/2",
+					},
+				},
+				expectedNumOfTrades: osmomath.NewInt(6),
+				expectedProfits: []sdk.Coin{
+					{
+						Denom:  "Atom",
+						Amount: osmomath.NewInt(19_988_248),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: osmomath.NewInt(216_132_910_493),
+					},
+				},
+				expectedPoolPoints: 49,
 			},
 			expectPass: true,
 		},
