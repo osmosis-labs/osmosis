@@ -4,11 +4,9 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -49,8 +47,6 @@ func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase, logger log.Logger) {
 // GetOptimalQuote will determine the optimal quote for a given tokenIn and tokenOutDenom
 // Return the optimal quote.
 func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
-	start := time.Now()
-
 	ctx := c.Request().Context()
 
 	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
@@ -69,8 +65,6 @@ func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
-	a.logger.Info("GetOptimalQuote", zap.Duration("duration", time.Since(start)))
 
 	return nil
 }
@@ -96,8 +90,6 @@ func (a *RouterHandler) GetBestSingleRouteQuote(c echo.Context) error {
 
 // GetCandidateRoutes returns the candidate routes for a given tokenIn and tokenOutDenom
 func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
-	start := time.Now()
-
 	ctx := c.Request().Context()
 
 	tokenOutDenom, tokenIn, err := getValidTokenInTokenOutStr(c)
@@ -113,8 +105,6 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 	if err := c.JSON(http.StatusOK, routes); err != nil {
 		return err
 	}
-
-	a.logger.Info("GetCandidateRoutes", zap.Duration("duration", time.Since(start)))
 	return nil
 }
 
