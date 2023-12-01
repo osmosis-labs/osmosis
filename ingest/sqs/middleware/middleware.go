@@ -55,7 +55,6 @@ func InitMiddleware() *GoMiddleware {
 // InstrumentMiddleware will handle the instrumentation middleware
 func (m *GoMiddleware) InstrumentMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		start := time.Now()
 
 		parsedURL, err := url.Parse(c.Request().RequestURI)
