@@ -23,12 +23,15 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AuthenticatorData represents a genesis exported account with Authenticators
-// the address is used for the key and the account authenticator are the authenticators
+// AuthenticatorData represents a genesis exported account with Authenticators.
+// The address is used as the key, and the account authenticators are stored in
+// the authenticators field.
 type AuthenticatorData struct {
-	// address is an account address
+	// address is an account address, one address can have many authenticators
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// incentive records to be set
+	// authenticators are the account's authenticators, these can be multiple
+	// types including SignatureVerificationAuthenticator, AllOfAuthenticators and
+	// CosmWasmAuthenticators.
 	Authenticators []AccountAuthenticator `protobuf:"bytes,2,rep,name=authenticators,proto3" json:"authenticators"`
 }
 
@@ -81,11 +84,12 @@ func (m *AuthenticatorData) GetAuthenticators() []AccountAuthenticator {
 
 // GenesisState defines the authenticator module's genesis state.
 type GenesisState struct {
-	// params
+	// params define the parameters for the authenticator module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	// authenticator_data
+	// next_authenticator_id is the next available authenticator ID.
 	NextAuthenticatorId uint64 `protobuf:"varint,2,opt,name=next_authenticator_id,json=nextAuthenticatorId,proto3" json:"next_authenticator_id,omitempty"`
-	// authenticator_data
+	// authenticator_data contains the data for multiple accounts, each with their
+	// authenticators.
 	AuthenticatorData []AuthenticatorData `protobuf:"bytes,3,rep,name=authenticator_data,json=authenticatorData,proto3" json:"authenticator_data"`
 }
 
