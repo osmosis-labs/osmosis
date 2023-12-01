@@ -19,11 +19,6 @@ services:
     environment:
       MONIKER: val
       CHAIN_ID: localosmosis
-      INGEST_TYPE: "sqs"
-      INGEST_SQS_DBHOST: "redis"
-      INGEST_SQS_DBPORT: "6379"
-      INGEST_SQS_SERVER_ADDRESS: ":9092"
-      INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS: "2"
     ports:
       - 26657:26657
       - 1317:1317

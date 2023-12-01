@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -28,9 +27,6 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	sqslog "github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -76,25 +72,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs"
 
-	redischaininfoingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/ingester/redis"
-	redispoolsingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
 )
 
 const (
 	appName = "OsmosisApp"
-
-	// Environment variable configurations
-	// TODO: replace all SQS environment variables with a config file
-	ENV_NAME_INGEST_TYPE                             = "INGEST_TYPE"
-	ENV_NAME_INGEST_SQS_DBHOST                       = "INGEST_SQS_DBHOST"
-	ENV_NAME_INGEST_SQS_DBPORT                       = "INGEST_SQS_DBPORT"
-	ENV_NAME_INGEST_SQS_SERVER_ADDRESS               = "INGEST_SQS_SERVER_ADDRESS"
-	ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS = "INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS"
-	ENV_NAME_INGEST_SQS_LOGGER_FILENAME              = "INGEST_SQS_LOGGER_FILENAME"
-	ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION         = "INGEST_SQS_LOGGER_IS_PRODUCTION"
-	ENV_NAME_INGEST_SQS_LOGGER_LEVEL                 = "INGEST_SQS_LOGGER_LEVEL"
-	ENV_NAME_GRPC_GATEWAY_ENDPOINT                   = "ENV_NAME_GRPC_GATEWAY_ENDPOINT"
-	ENV_VALUE_INGESTER_SQS                           = "sqs"
 )
 
 var (
@@ -267,65 +249,25 @@ func NewOsmosisApp(
 		app.BlockedAddrs(),
 	)
 
-	isIngestManagerEnabled := os.Getenv(ENV_NAME_INGEST_TYPE) == ENV_VALUE_INGESTER_SQS
 	// Initialize the ingest manager for propagating data to external sinks.
 	app.IngestManager = ingest.NewIngestManager()
-	if isIngestManagerEnabled {
-		dbHost := os.Getenv(ENV_NAME_INGEST_SQS_DBHOST)
-		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
-		grpcAddress := os.Getenv(ENV_NAME_GRPC_GATEWAY_ENDPOINT)
-		if grpcAddress == "" {
-			grpcAddress = "http://localhost:26657"
+	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+
+	// Initialize the SQS ingester if it is enabled.
+	if sqsConfig.IsEnabled {
+		sqsKeepers := common.SQSIngestKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
-		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
-		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
+		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
 		if err != nil {
-			panic(fmt.Sprintf("error while parsing timeout duration: %s", err))
+			panic(err)
 		}
-
-		// logger configs
-		loggerFileName := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_FILENAME)
-		isProductionLoggerStr := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_IS_PRODUCTION)
-		isProductionLogger := isProductionLoggerStr == "true"
-		logLevel := os.Getenv(ENV_NAME_INGEST_SQS_LOGGER_LEVEL)
-
-		// logger
-		logger, err := sqslog.NewLogger(isProductionLogger, loggerFileName, logLevel)
-		if err != nil {
-			panic(fmt.Sprintf("error while creating logger: %s", err))
-		}
-		logger.Info("Starting sidecar query server")
-
-		// TODO: move to config file
-		routerConfig := domain.RouterConfig{
-			PreferredPoolIDs:          []uint64{},
-			MaxPoolsPerRoute:          4,
-			MaxRoutes:                 5,
-			MaxSplitRoutes:            3,
-			MaxSplitIterations:        10,
-			MinOSMOLiquidity:          10000, // 10_000 OSMO
-			RouteUpdateHeightInterval: 0,
-			RouteCacheEnabled:         false,
-		}
-
-		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, routerConfig, dbHost, dbPort, sidecarQueryServerAddress, grpcAddress, sidecarQueryServerTimeoutDuration, logger)
-		if err != nil {
-			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
-		}
-
-		txManager := sidecarQueryServer.GetTxManager()
-
-		// Create pools ingester
-		poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, routerConfig, app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
-		poolsIngester.SetLogger(sidecarQueryServer.GetLogger())
-
-		chainInfoingester := redischaininfoingester.NewChainInfoIngester(sidecarQueryServer.GetChainInfoRepository(), txManager)
-		chainInfoingester.SetLogger(sidecarQueryServer.GetLogger())
-
-		// Create sqs ingester that encapsulates all ingesters.
-		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)
 
 		// Set the sidecar query server ingester to the ingest manager.
 		app.IngestManager.RegisterIngester(sqsIngester)

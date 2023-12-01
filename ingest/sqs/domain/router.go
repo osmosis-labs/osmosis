@@ -78,15 +78,15 @@ type Quote interface {
 }
 
 type RouterConfig struct {
-	PreferredPoolIDs   []uint64
-	MaxPoolsPerRoute   int
-	MaxRoutes          int
-	MaxSplitRoutes     int
-	MaxSplitIterations int
+	PreferredPoolIDs   []uint64 `mapstructure:"preferred_pool_ids"`
+	MaxPoolsPerRoute   int      `mapstructure:"max_pools_per_route"`
+	MaxRoutes          int      `mapstructure:"max_routes"`
+	MaxSplitRoutes     int      `mapstructure:"max_split_routes"`
+	MaxSplitIterations int      `mapstructure:"max_split_iterations"`
 	// Denominated in OSMO (not uosmo)
-	MinOSMOLiquidity          int
-	RouteUpdateHeightInterval int64
-	RouteCacheEnabled         bool
+	MinOSMOLiquidity          int  `mapstructure:"min_osmo_liquidity"`
+	RouteUpdateHeightInterval int  `mapstructure:"route_update_height_interval"`
+	RouteCacheEnabled         bool `mapstructure:"route_cache_enabled"`
 }
 
 // DenomPair encapsulates a pair of denoms.
