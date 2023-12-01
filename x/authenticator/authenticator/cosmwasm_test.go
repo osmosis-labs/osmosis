@@ -9,6 +9,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/osmosis-labs/osmosis/v20/app"
@@ -110,8 +111,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo-aarch64.wasm")
 	instantiateMsg := InstantiateMsg{PubKey: priv.PubKey().Bytes()}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
-	pubKeyHex := fmt.Sprintf("%X", priv.PubKey().Bytes())
-	fmt.Println(pubKeyHex)
+	s.Require().NoError(err)
 	addr := s.InstantiateContract(string(instantiateMsgBz), 1)
 
 	auth, err := s.CosmwasmAuth.Initialize([]byte(
@@ -135,6 +135,13 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
 	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
+
+	authData.(authenticator.SignatureData).Signatures[0].Data = &txsigning.SingleSignatureData{
+		SignMode:  0,
+		Signature: []byte("invalid"),
+	}
+	status = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
+	s.Require().False(status.IsAuthenticated(), "Should not be authenticated")
 }
 
 func (s *CosmwasmAuthenticatorTest) StoreContractCode(path string) uint64 {

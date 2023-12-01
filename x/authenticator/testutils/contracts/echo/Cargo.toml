@@ -42,7 +42,8 @@ osmosis-std = "0.20.1"
 #base64-simd = "0.8.0"
 sha2 = "0.10.8"
 # TODO: Update this when I get access to push to the repo
-osmosis-authenticators = { path = "/Users/nicolas/devel/osmosis-rust/packages/osmosis-authenticators" }
+osmosis-authenticators = "0.22.0-alpha.1"
 
 
 [dev-dependencies]
+serde-json-wasm = "1.0.0"
