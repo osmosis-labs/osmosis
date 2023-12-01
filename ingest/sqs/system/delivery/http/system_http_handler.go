@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -54,7 +55,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	// Check the latest height from chain info use case
-	latestHeight, err := h.CIUsecase.GetLatestHeight(ctx)
+	latestStoreHeight, err := h.CIUsecase.GetLatestHeight(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get latest height from Redis")
 	}
@@ -83,9 +84,15 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	}
 
 	// allow 10 blocks of difference before claiming node is not synced
+
+	latestChainHeight, err := strconv.ParseUint(statusResponse.Result.SyncInfo.LatestBlockHeight, 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse latest block height from GRPC gateway")
+	}
+
 	// If the node is not synced, return HTTP 503
-	if fmt.Sprint(int64(latestHeight)+10) < statusResponse.Result.SyncInfo.LatestBlockHeight {
-		return echo.NewHTTPError(http.StatusServiceUnavailable, "Node is not synced")
+	if latestChainHeight-10 > latestStoreHeight {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "Node is not synced", " latestChainHeight", latestChainHeight, " latestStoreHeight", latestStoreHeight)
 	}
 
 	// Check Redis status
@@ -102,6 +109,7 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"grpc_gateway_status": "running",
 		"redis_status":        "running",
-		"chain_latest_height": fmt.Sprint(latestHeight),
+		"chain_latest_height": fmt.Sprint(latestChainHeight),
+		"store_latest_height": fmt.Sprint(latestStoreHeight),
 	})
 }
