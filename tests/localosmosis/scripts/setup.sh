@@ -138,6 +138,12 @@ enable_cors () {
 
     # Enable cors on gRPC Web
     dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
+
+    # Enable SQS & route caching
+    dasel put string -f $CONFIG_FOLDER/app.toml -v "true" '.osmosis-sqs.is-enabled'
+    dasel put string -f $CONFIG_FOLDER/app.toml -v "true" '.osmosis-sqs.route-cache-enabled'
+
+    dasel put string -f $CONFIG_FOLDER/app.toml -v "redis" '.osmosis-sqs.db-host'
 }
 
 run_with_retries() {
