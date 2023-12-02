@@ -973,9 +973,8 @@ github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-
 github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb h1:pXsC6vqGD+pbMGt+fVBHi9XBk/KDQuRZde2fh4s/1+k=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb/go.mod h1:jNZ952fypVNMzOsh31LAUS27JbF9naNJGtELxId6ZCg=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366 h1:EJDJ88w2Yv5LnlaJw5x53C0k/dp/fnEYOfBYOQiMsTc=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366/go.mod h1:Zmyx5zMUBN2KV94booSFn2v8KQcUKeCHqyWpKZ4PRMo=
-github.com/osmosis-labs/osmosis/v19 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231202014129-59ba6328b7ca h1:IfxGWU0UPk7bHHnxGk3zFF/CrdAhyL/wQTr+VKbeqAI=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231202014129-59ba6328b7ca/go.mod h1:Zwh4vmUsCsgot4TlUqbBLzZYt6bWGF1JOijzWPxxxZU=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366 h1:E6H0V3MKbSNwo1iXE9Kzatd2M02MgZpS5AiJ6CKK5us=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366/go.mod h1:vU0IHK5W38dqMeux3MkSaT3MZU6whAkx7vNuxv1IzeU=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb h1:6lYLEiJERdD+QK925XYyHkvNyvQTghVFufMH5VAQLpg=
