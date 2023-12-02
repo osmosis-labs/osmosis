@@ -20,6 +20,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -424,6 +425,8 @@ func initAppConfig() (string, interface{}) {
 		serverconfig.Config
 
 		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
+
+		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -439,7 +442,9 @@ func initAppConfig() (string, interface{}) {
 
 	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg}
+	sqsConfig := sqs.DefaultConfig
+
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -461,6 +466,59 @@ min-gas-price-for-high-gas-tx = ".0025"
 
 # This parameter enables EIP-1559 like fee market logic in the mempool
 adaptive-fee-enabled = "true"
+
+###############################################################################
+###              Osmosis Sidecar Query Server Configuration                 ###
+###############################################################################
+
+[osmosis-sqs]
+
+# SQS service is disabled by default.
+is-enabled = "false"
+
+# The hostname and address of the sidecar query server storage.
+db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
+db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
+
+# Defines the web server configuration.
+server-address = "{{ .SidecarQueryServerConfig.ServerAddress }}"
+timeout-duration-secs = "{{ .SidecarQueryServerConfig.ServerTimeoutDurationSecs }}"
+
+# Defines the logger configuration.
+logger-filename = "{{ .SidecarQueryServerConfig.LoggerFilename }}"
+logger-is-production = "{{ .SidecarQueryServerConfig.LoggerIsProduction }}"
+logger-level = "{{ .SidecarQueryServerConfig.LoggerLevel }}"
+
+# Defines the gRPC gateway endpoint of the chain.
+grpc-gateway-endpoint = "{{ .SidecarQueryServerConfig.ChainGRPCGatewayEndpoint }}"
+
+# The list of preferred poold IDs in the router.
+# These pools will be prioritized in the candidate route selection, ignoring all other
+# heuristics such as TVL.
+preferred-pool-ids = "{{ .SidecarQueryServerConfig.Router.PreferredPoolIDs }}"
+
+# The maximum number of pools to be included in a single route.
+max-pools-per-route = "{{ .SidecarQueryServerConfig.Router.MaxPoolsPerRoute }}"
+
+# The maximum number of routes to be returned in candidate route search.
+max-routes = "{{ .SidecarQueryServerConfig.Router.MaxRoutes }}"
+
+# The maximum number of routes to be split across. Must be smaller than or
+# equal to max-routes.
+max-split-routes = "{{ .SidecarQueryServerConfig.Router.MaxSplitRoutes }}"
+
+# The maximum number of iterations to split a route across.
+max-split-iterations = "{{ .SidecarQueryServerConfig.Router.MaxSplitIterations }}"
+
+# The minimum liquidity of a pool to be included in a route.
+min-osmo-liquidity = "{{ .SidecarQueryServerConfig.Router.MinOSMOLiquidity }}"
+
+# The height interval at which the candidate routes are recomputed and updated in
+# Redis
+route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateHeightInterval }}"
+
+# Whether to enable candidate route caching in Redis.
+route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg

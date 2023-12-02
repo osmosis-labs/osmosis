@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
 	redisingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
 	clqueryproto "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
@@ -489,7 +490,16 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	customTakerFeeConcentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, USDC, 1, osmomath.ZeroDec())
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 
-	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, domain.RouterConfig{}, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+	sqsKeepers := common.SQSIngestKeepers{
+		GammKeeper:         s.App.GAMMKeeper,
+		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
+		BankKeeper:         s.App.BankKeeper,
+		ProtorevKeeper:     s.App.ProtoRevKeeper,
+		PoolManagerKeeper:  s.App.PoolManagerKeeper,
+		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
+	}
+
+	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, domain.RouterConfig{}, sqsKeepers)
 	poolIngester.SetLogger(&log.NoOpLogger{})
 
 	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
@@ -561,7 +571,17 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 }
 
 func (s *IngesterTestSuite) initializePoolIngester() *redisingester.PoolIngester {
-	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, domain.RouterConfig{}, s.App.GAMMKeeper, s.App.ConcentratedLiquidityKeeper, s.App.CosmwasmPoolKeeper, s.App.BankKeeper, s.App.ProtoRevKeeper, s.App.PoolManagerKeeper)
+
+	sqsKeepers := common.SQSIngestKeepers{
+		GammKeeper:         s.App.GAMMKeeper,
+		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
+		BankKeeper:         s.App.BankKeeper,
+		ProtorevKeeper:     s.App.ProtoRevKeeper,
+		PoolManagerKeeper:  s.App.PoolManagerKeeper,
+		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
+	}
+
+	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, domain.RouterConfig{}, sqsKeepers)
 	poolIngester, ok := atomicIngester.(*redisingester.PoolIngester)
 	poolIngester.SetLogger(&log.NoOpLogger{})
 	s.Require().True(ok)

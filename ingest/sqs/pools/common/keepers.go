@@ -8,6 +8,16 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
+// Chain keepers required for sqs ingest.
+type SQSIngestKeepers struct {
+	GammKeeper         PoolKeeper
+	CosmWasmPoolKeeper CosmWasmPoolKeeper
+	BankKeeper         BankKeeper
+	ProtorevKeeper     ProtorevKeeper
+	PoolManagerKeeper  PoolManagerKeeper
+	ConcentratedKeeper ConcentratedKeeper
+}
+
 // PoolKeeper is an interface for getting pools from a keeper.
 type PoolKeeper interface {
 	GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
