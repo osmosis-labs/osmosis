@@ -27,8 +27,8 @@ Aggarwal's '[DAOfying Uniswap Automated Market Maker
 Pools](https://www.sunnya97.com/blog/daoifying-uniswap-automated-market-maker-pools)',
 the goal for Osmosis is to provide the best-in-class tools that extend
 the use of AMMs within the Cosmos ecosystem beyond traditional token
-swap-type use cases. Bonding curves, while have found its primary use
-case in decentralized exchange mechanisms, its potential use case can be
+swap-type use cases. Bonding curves, while having found their primary
+use case in decentralized exchange mechanisms, its potential use case can be
 further extended through the customizability that Osmosis offers.
 Through the customizability offered by Osmosis such as custom-curve AMMs,
 dynamic adjustments of spread factors, multi-token liquidity pools--the AMM
