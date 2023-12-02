@@ -31,7 +31,7 @@ jobs:
             .github/workflows/test.yml
       - name: Set output
         id: vars
-        run: echo "name=git_diff" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=git_diff::$GIT_DIFF"
     outputs:
       git_diff: ${{ steps.vars.outputs.git_diff }}
 
