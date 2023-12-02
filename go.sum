@@ -623,7 +623,6 @@ github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX
 github.com/aws/aws-sdk-go v1.44.224 h1:09CiaaF35nRmxrzWZ2uRq5v6Ghg/d2RiPjZnSgtt+RQ=
 github.com/aws/aws-sdk-go v1.44.224/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
-github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
@@ -1468,8 +1467,6 @@ github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:Ylmch
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e h1:9gxXkcV8NYVbsrHKPTekwh5bm8CZJs2GEUNUnJruiLE=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e/go.mod h1:NwGU1m9ng4/VV5P8wXJOhUaos/jlnOjGw7wIxL/7bu8=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231130002422-33ba03710e16 h1:TwrF61atXIHkLrDU8s06KWdCneGio5Xwu+jn+zHQsdU=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231130002422-33ba03710e16/go.mod h1:E/03wtLkkFoYHxM7+tofd/10nsTZZXn03PexWvs0ZFM=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231201210643-d8ee44cf41bc h1:aSzbnUV4S8tltsN4g5pDfPApkWFeQbmv4lghz6oYjLY=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231201210643-d8ee44cf41bc/go.mod h1:E/03wtLkkFoYHxM7+tofd/10nsTZZXn03PexWvs0ZFM=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231130002422-33ba03710e16 h1:5fsi1o27Xw/p6V6cKHaDz2mva580CBWwUfEZDjE4WmY=
