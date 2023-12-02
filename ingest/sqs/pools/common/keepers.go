@@ -25,7 +25,7 @@ type PoolKeeper interface {
 
 // CosmWasmPoolKeeper is an interface for getting CosmWasm pools from a keeper.
 type CosmWasmPoolKeeper interface {
-	GetPoolsWithWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
+	GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
 }
 
 // BankKeeper is an interface for getting bank balances.

@@ -124,7 +124,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 
 	// CosmWasm pools
 
-	cosmWasmPools, err := pi.cosmWasmKeeper.GetPoolsWithWasmKeeper(ctx)
+	cosmWasmPools, err := pi.cosmWasmKeeper.GetPools(ctx)
 	if err != nil {
 		return err
 	}
