@@ -533,18 +533,20 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 				stakeAmountCoin = StakeAmountCoinB
 			}
 			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)
+
+			const genesisSetupFailed = "genutil genesis setup failed: "
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genesisSetupFailed + err.Error())
 			}
 
 			signedTx, err := node.signMsg(createValmsg)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genesisSetupFailed + err.Error())
 			}
 
 			txRaw, err := util.Cdc.MarshalJSON(signedTx)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genesisSetupFailed + err.Error())
 			}
 			genTxs = append(genTxs, txRaw)
 		}

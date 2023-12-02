@@ -69,6 +69,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
 	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
 	v10 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v10"
@@ -93,6 +95,10 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v21/ingest"
 	"github.com/osmosis-labs/osmosis/v21/x/mint"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 const appName = "OsmosisApp"
@@ -110,7 +116,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{}
+	allowedReceivingModAcc = map[string]bool{protorevtypes.ModuleName: true}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
@@ -248,6 +254,28 @@ func NewOsmosisApp(
 
 	// Initialize the ingest manager for propagating data to external sinks.
 	app.IngestManager = ingest.NewIngestManager()
+
+	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+
+	// Initialize the SQS ingester if it is enabled.
+	if sqsConfig.IsEnabled {
+		sqsKeepers := common.SQSIngestKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
+		}
+
+		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
+		if err != nil {
+			panic(err)
+		}
+
+		// Set the sidecar query server ingester to the ingest manager.
+		app.IngestManager.RegisterIngester(sqsIngester)
+	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
