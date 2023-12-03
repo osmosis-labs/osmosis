@@ -24,9 +24,9 @@ type Keeper struct {
 var _ types.TxFeesKeeper = (*Keeper)(nil)
 
 func NewKeeper(
+	storeKey storetypes.StoreKey,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	storeKey storetypes.StoreKey,
 	poolManager types.PoolManager,
 	spotPriceCalculator types.SpotPriceCalculator,
 ) Keeper {

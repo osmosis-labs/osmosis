@@ -11,6 +11,7 @@ import (
 // The x/gamm keeper is expected to satisfy this interface.
 type SpotPriceCalculator interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, quoteDenom, baseDenom string) (sdk.Dec, error)
+	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 }
 
 // PoolManager defines the contract needed for swap related APIs.
@@ -21,15 +22,6 @@ type PoolManager interface {
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
-
-	SwapExactAmountIn(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		poolId uint64,
-		tokenIn sdk.Coin,
-		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-	) (sdk.Int, error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -48,7 +40,8 @@ type FeegrantKeeper interface {
 type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
 // TxFeesKeeper defines the expected transaction fee keeper
