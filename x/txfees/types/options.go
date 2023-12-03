@@ -12,10 +12,6 @@ import (
 // If Options are not set in a config somewhere,
 // use defaults to preserve functionality with old node software
 
-// DefaultMinGasPriceForArbitrageTx represents minimum gas price
-// for arbitrage transactions.
-var DefaultMinGasPriceForArbitrageTx = sdk.ZeroDec()
-
 var (
 	DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
 	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
@@ -23,27 +19,24 @@ var (
 )
 
 type MempoolFeeOptions struct {
-	MaxGasWantedPerTx         uint64
-	MinGasPriceForArbitrageTx sdk.Dec
-	HighGasTxThreshold        uint64
-	MinGasPriceForHighGasTx   sdk.Dec
+	MaxGasWantedPerTx       uint64
+	HighGasTxThreshold      uint64
+	MinGasPriceForHighGasTx sdk.Dec
 }
 
 func NewDefaultMempoolFeeOptions() MempoolFeeOptions {
 	return MempoolFeeOptions{
-		MaxGasWantedPerTx:         DefaultMaxGasWantedPerTx,
-		MinGasPriceForArbitrageTx: DefaultMinGasPriceForArbitrageTx.Clone(),
-		HighGasTxThreshold:        DefaultHighGasTxThreshold,
-		MinGasPriceForHighGasTx:   DefaultMinGasPriceForHighGasTx.Clone(),
+		MaxGasWantedPerTx:       DefaultMaxGasWantedPerTx,
+		HighGasTxThreshold:      DefaultHighGasTxThreshold,
+		MinGasPriceForHighGasTx: DefaultMinGasPriceForHighGasTx.Clone(),
 	}
 }
 
 func NewMempoolFeeOptions(opts servertypes.AppOptions) MempoolFeeOptions {
 	return MempoolFeeOptions{
-		MaxGasWantedPerTx:         parseMaxGasWantedPerTx(opts),
-		MinGasPriceForArbitrageTx: parseMinGasPriceForArbitrageTx(opts),
-		HighGasTxThreshold:        DefaultHighGasTxThreshold,
-		MinGasPriceForHighGasTx:   parseMinGasPriceForHighGasTx(opts),
+		MaxGasWantedPerTx:       parseMaxGasWantedPerTx(opts),
+		HighGasTxThreshold:      DefaultHighGasTxThreshold,
+		MinGasPriceForHighGasTx: parseMinGasPriceForHighGasTx(opts),
 	}
 }
 
@@ -57,10 +50,6 @@ func parseMaxGasWantedPerTx(opts servertypes.AppOptions) uint64 {
 		panic("invalidly configured osmosis-mempool.max-gas-wanted-per-tx")
 	}
 	return value
-}
-
-func parseMinGasPriceForArbitrageTx(opts servertypes.AppOptions) sdk.Dec {
-	return parseDecFromConfig(opts, "arbitrage-min-gas-fee", DefaultMinGasPriceForArbitrageTx.Clone())
 }
 
 func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) sdk.Dec {

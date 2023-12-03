@@ -20,12 +20,7 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 		return inputFee, nil
 	}
 
-	feeToken, err := k.GetFeeToken(ctx, inputFee.Denom)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-
-	spotPrice, err := k.CalcFeeSpotPrice(ctx, feeToken.Denom)
+	spotPrice, err := k.CalcFeeSpotPrice(ctx, inputFee.Denom)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
