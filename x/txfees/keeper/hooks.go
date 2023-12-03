@@ -32,6 +32,10 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 // at the end of each epoch, swap all non-DYM fees into DYM and burn them
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	if epochIdentifier != types.EpochIdentifier {
+		return nil
+	}
+
 	moduleAddr := k.accountKeeper.GetModuleAddress(txfeestypes.ModuleName)
 	baseDenom, _ := k.GetBaseDenom(ctx)
 

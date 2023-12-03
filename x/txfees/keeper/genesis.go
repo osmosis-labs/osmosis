@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +11,11 @@ import (
 // InitGenesis initializes the txfees module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
+	recipientAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+	if recipientAcc == nil {
+		panic(fmt.Sprintf("module account %s does not exist", types.ModuleName))
+	}
+
 	err := k.SetBaseDenom(ctx, genState.Basedenom)
 	if err != nil {
 		panic(err)

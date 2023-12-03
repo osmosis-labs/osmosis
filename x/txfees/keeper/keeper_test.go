@@ -8,8 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v15/app"
-
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
@@ -29,13 +27,6 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 
-	encodingConfig := osmosisapp.MakeEncodingConfig()
-	suite.clientCtx = client.Context{}.
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
-
 	// Mint some assets to the accounts.
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc,
@@ -49,16 +40,4 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 				sdk.NewCoin("bar", sdk.NewInt(10000000)),
 			))
 	}
-}
-
-func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
-	upgradeProp := types.NewUpdateFeeTokenProposal(
-		"Test Proposal",
-		"test",
-		types.FeeToken{
-			Denom:  feeToken,
-			PoolID: poolId,
-		},
-	)
-	return suite.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.Ctx, &upgradeProp)
 }

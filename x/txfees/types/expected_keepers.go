@@ -29,6 +29,7 @@ type PoolManager interface {
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 	GetModuleAddress(moduleName string) sdk.AccAddress
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

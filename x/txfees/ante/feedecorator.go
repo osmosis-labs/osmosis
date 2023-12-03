@@ -21,13 +21,11 @@ import (
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator.
 type MempoolFeeDecorator struct {
 	TxFeesKeeper keeper.Keeper
-	Opts         types.MempoolFeeOptions
 }
 
-func NewMempoolFeeDecorator(txFeesKeeper keeper.Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
+func NewMempoolFeeDecorator(txFeesKeeper keeper.Keeper) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
 		TxFeesKeeper: txFeesKeeper,
-		Opts:         opts,
 	}
 }
 
@@ -36,19 +34,6 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
-
-	//FIXME: CHECK DIFFERENT LIMITS ON GAS?
-	/*
-			if feeTx.GetGas() > mfd.Opts.MaxGasWantedPerTx {
-				msg := "Too much gas wanted: %d, maximum is %d"
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
-			}
-
-			// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
-			if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
-				cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
-		}
-	*/
 
 	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
@@ -83,21 +68,17 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
+	// The minimum base gas price is in udym, convert the fee denom's worth to udym terms.
 	// Then compare if its sufficient for paying the tx fee.
 	err = mfd.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
 	if err != nil {
 		return ctx, err
 	}
 
-	//FIXME: set priority as in cosmos-sdk??
-	// priority := getTxPriority(feeCoins, int64(gas))
-	// newCtx := ctx.WithPriority(priority)
-
 	return next(ctx, tx, simulate)
 }
 
-// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
+// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough udym at current spot prices
 // to pay the gas cost of this tx.
 func (mfd MempoolFeeDecorator) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
@@ -208,7 +189,7 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	// pulls base denom from TxFeesKeeper (should be uOSMO)
+	// pulls base denom from TxFeesKeeper (should be udym)
 	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
 	if err != nil {
 		return err
