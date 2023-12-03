@@ -5,18 +5,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-
-	clientCtx   client.Context
-	queryClient types.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -25,7 +20,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	suite.Setup()
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 
 	// Mint some assets to the accounts.
 	for _, acc := range suite.TestAccs {

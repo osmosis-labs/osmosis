@@ -35,6 +35,12 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
+	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	}
+
+	//TODO: skip on simulate
+
 	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
 	}
@@ -146,6 +152,11 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	feeGranter := feeTx.FeeGranter()
 	// set the fee payer as the default address to deduct fees from
 	deductFeesFrom := feePayer
+
+	if len(fee) > 1 {
+		return ctx, sdkerrors.Wrapf(types.ErrTooManyFeeCoins,
+			"Expected 1 fee denom attached, got %d", len(fee))
+	}
 
 	// If a fee granter was set, deduct fee from the fee granter's account.
 	if feeGranter != nil {
