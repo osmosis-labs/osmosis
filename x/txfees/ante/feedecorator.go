@@ -1,4 +1,4 @@
-package keeper
+package ante
 
 import (
 	"fmt"
@@ -9,6 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	keeper "github.com/osmosis-labs/osmosis/v15/x/txfees/keeper"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -18,11 +20,11 @@ import (
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator.
 type MempoolFeeDecorator struct {
-	TxFeesKeeper Keeper
+	TxFeesKeeper keeper.Keeper
 	Opts         types.MempoolFeeOptions
 }
 
-func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
+func NewMempoolFeeDecorator(txFeesKeeper keeper.Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
 		TxFeesKeeper: txFeesKeeper,
 		Opts:         opts,
@@ -35,33 +37,21 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	// Ensure that the provided gas is less than the maximum gas per tx,
-	// if this is a CheckTx. This is only for local mempool purposes, and thus
-	// is only ran on check tx.
-	if ctx.IsCheckTx() && !simulate {
-		if feeTx.GetGas() > mfd.Opts.MaxGasWantedPerTx {
-			msg := "Too much gas wanted: %d, maximum is %d"
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
+	//FIXME: CHECK DIFFERENT LIMITS ON GAS?
+	/*
+			if feeTx.GetGas() > mfd.Opts.MaxGasWantedPerTx {
+				msg := "Too much gas wanted: %d, maximum is %d"
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
+			}
+
+			// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
+			if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
+				cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 		}
 	*/
 
-	//FIXME: run it only on checkTx? as in cosmoms
-	/*
-		if ctx.IsCheckTx() {
-			minGasPrices := ctx.MinGasPrices()
-			if !minGasPrices.IsZero() {
-				requiredFees := make(sdk.Coins, len(minGasPrices))
-	*/
-
-	if !ctx.IsCheckTx() {
+	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
-	}
-
-	feeCoins := feeTx.GetFee()
-	// You should only be able to pay with one fee token in a single tx
-	if len(feeCoins) != 1 {
-		return ctx, sdkerrors.Wrapf(types.ErrInvalidFeeToken,
-			"Expected 1 fee denom attached, got %d", len(feeCoins))
 	}
 
 	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
@@ -75,6 +65,15 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return next(ctx, tx, simulate)
 	}
 
+	feeCoins := feeTx.GetFee()
+	if feeCoins.IsZero() {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fees provided")
+	}
+	// You should only be able to pay with one fee token in a single tx
+	if len(feeCoins) > 1 {
+		return ctx, sdkerrors.Wrapf(types.ErrTooManyFeeCoins,
+			"Expected 1 fee denom attached, got %d", len(feeCoins))
+	}
 	// If there is a fee attached to the tx, make sure the fee denom is a denom accepted by the chain
 	feeDenom := feeCoins.GetDenomByIndex(0)
 	if feeDenom != baseDenom {
@@ -86,7 +85,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
 	// Then compare if its sufficient for paying the tx fee.
-	err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
+	err = mfd.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
 	if err != nil {
 		return ctx, err
 	}
@@ -100,8 +99,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
-	baseDenom, err := k.GetBaseDenom(ctx)
+func (mfd MempoolFeeDecorator) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
+	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
@@ -111,7 +110,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	glDec := sdk.NewDec(int64(gasRequested))
 	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
 
-	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	convertedFee, err := mfd.TxFeesKeeper.ConvertToBaseToken(ctx, feeCoin)
 	if err != nil {
 		return err
 	}
@@ -132,10 +131,10 @@ type DeductFeeDecorator struct {
 	ak             types.AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper types.FeegrantKeeper
-	txFeesKeeper   Keeper
+	txFeesKeeper   keeper.Keeper
 }
 
-func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper) DeductFeeDecorator {
+func NewDeductFeeDecorator(tk keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,
