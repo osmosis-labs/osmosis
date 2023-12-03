@@ -81,6 +81,13 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 }
 
 func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtypes.LiquidityChangeType]bool) (string, bool) {
+	if m, ok := msg.(gammtypes.LiquidityChangeMsg); ok {
+		// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
+		lpTypesSeen[m.LiquidityChangeType()] = true
+		if len(lpTypesSeen) > 1 {
+			return swapInDenom, true
+		}
+	}
 	switch m := msg.(type) {
 	case *authztypes.MsgExec:
 		msgs, _ := m.GetMessages()
@@ -108,12 +115,6 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 			// Otherwise, we have an affiliate swap message, so we check if it's an arb
 			affiliateSwapMsg.TokenIn = tokensIn[0].Denom
 			return isArbTxLooseSwapMsg(affiliateSwapMsg, swapInDenom)
-		}
-	case gammtypes.LiquidityChangeMsg:
-		// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
-		lpTypesSeen[m.LiquidityChangeType()] = true
-		if len(lpTypesSeen) > 1 {
-			return swapInDenom, true
 		}
 	case poolmanagertypes.MultiSwapMsgRoute:
 		for _, swapMsg := range m.GetSwapMsgs() {
