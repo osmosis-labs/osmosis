@@ -60,7 +60,7 @@ func TestSDKDecMarshal(t *testing.T) {
 	// -> works fine but initializes unitialized field to zero.
 
 	twapResponse = queryproto.ArithmeticTwapResponse{
-		// Not uninitialized
+		// Not initialized
 	}
 
 	bz, err = twapResponse.Marshal()
