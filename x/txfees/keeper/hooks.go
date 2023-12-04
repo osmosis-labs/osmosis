@@ -53,7 +53,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		feetoken, err := k.GetFeeToken(ctx, coinBalance.Denom)
 		if err != nil {
-			return err
+			k.Logger(ctx).Error("unknown fee token", "denom", coinBalance.Denom, "error", err)
+			continue
 		}
 
 		// Do the swap of this fee token denom to base denom.
