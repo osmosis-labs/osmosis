@@ -1,13 +1,12 @@
 package client
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/client/rest"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
 var (
-	UpdatePoolIncentivesHandler  = govclient.NewProposalHandler(cli.NewCmdSubmitUpdatePoolIncentivesProposal, rest.ProposalUpdatePoolIncentivesRESTHandler)
-	ReplacePoolIncentivesHandler = govclient.NewProposalHandler(cli.NewCmdSubmitReplacePoolIncentivesProposal, rest.ProposalReplacePoolIncentivesRESTHandler)
+	UpdatePoolIncentivesHandler  = govclient.NewProposalHandler(cli.NewCmdSubmitUpdatePoolIncentivesProposal)
+	ReplacePoolIncentivesHandler = govclient.NewProposalHandler(cli.NewCmdSubmitReplacePoolIncentivesProposal)
 )

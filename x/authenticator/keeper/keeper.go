@@ -3,19 +3,20 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gogotypes "github.com/gogo/protobuf/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 )
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -23,7 +24,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
@@ -33,8 +34,8 @@ type Keeper struct {
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	managerStoreKey sdk.StoreKey,
-	authenticatorStoreKey sdk.StoreKey,
+	managerStoreKey storetypes.StoreKey,
+	authenticatorStoreKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	authenticatorManager *authenticator.AuthenticatorManager,
 ) Keeper {

@@ -3,16 +3,17 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -100,7 +101,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 				// Deposit some fee amount (non-native-denom) to the fee module account
 				_, _, addr0 := testdata.KeyTestPubAddr()
-				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
+				err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
 				s.NoError(err)
 				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.FeeCollectorForStakingRewardsName, sdk.Coins{coin})
 				s.NoError(err)
@@ -132,9 +133,10 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 	s.Setup()
 
 	var (
-		defaultTxFeesDenom, _ = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-		defaultPoolCoins      = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(100)))
-		defaultBalanceToSwap  = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)))
+		defaultTxFeesDenom, _  = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+		defaultPoolCoins       = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(100)))
+		balanceToSwapFoo       = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(50)))
+		balanceToSwapBaseDenom = sdk.NewCoins(sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(50)))
 	)
 
 	tests := []struct {
@@ -147,9 +149,15 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 	}{
 		{
 			name:          "happy path",
-			denomToSwapTo: defaultTxFeesDenom,
+			denomToSwapTo: balanceToSwapBaseDenom[0].Denom,
 			poolCoins:     defaultPoolCoins,
-			preFundCoins:  defaultBalanceToSwap,
+			preFundCoins:  balanceToSwapFoo,
+		},
+		{
+			name:          "same denom to swap to",
+			denomToSwapTo: balanceToSwapFoo[0].Denom,
+			poolCoins:     defaultPoolCoins,
+			preFundCoins:  balanceToSwapFoo,
 		},
 
 		// TODO: add more test cases
@@ -284,7 +292,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				name:               "same denom in balance as denomToSwapTo - no-op",
 				denomToSwapTo:      defaultTxFeesDenom,
 				poolCoins:          defaultPoolCoins,
-				preFundCoins:       defaultPoolCoins.FilterDenoms([]string{defaultTxFeesDenom}),
+				preFundCoins:       osmoutils.FilterDenoms(defaultPoolCoins, []string{defaultTxFeesDenom}),
 				protoRevLinkDenoms: defaultProtorevLinkDenoms,
 
 				// Swap did not happen but denomToSwapTo was already in balance.
@@ -399,6 +407,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		preFundCollectorCoins := prepareCoinsForSwapToDenomTest(denomToSwapTo)
 		s.FundModuleAcc(collectorName, preFundCollectorCoins)
 
+		currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
+		s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, currentTxFeesTrackerValue.Add(preFundCollectorCoins...))
+
 		// Prepare pools.
 		s.preparePoolsForSwappingToDenom(otherPreSwapDenom, preSwapDenom, denomToSwapTo)
 
@@ -441,7 +452,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	validateEndCollectorBalance(communityPoolCollectorAddress)
 
 	communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
+	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
 
 	// Confirm that that all tokens that are of the configured denom parameter are sent to the community pool.
 	s.Require().Len(communityPoolBalanceDelta, 1)

@@ -11,20 +11,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -703,4 +703,14 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 		})
 	}
 	return clPoolUserPositionRecords, nil
+}
+
+// TEMPORARY CODE
+func (q Querier) RestSupply(goCtx context.Context, req *types.QueryRestSupplyRequest) (*types.QueryRestSupplyResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	supply := q.bk.GetSupply(sdk.UnwrapSDKContext(goCtx), req.Denom)
+	return &types.QueryRestSupplyResponse{Amount: supply}, nil
 }

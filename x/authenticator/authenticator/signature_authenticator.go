@@ -3,7 +3,7 @@ package authenticator
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -150,7 +150,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 		}
 
 		// Retrieve and build the signer data struct
-		genesis := ctx.IsGenesis() || ctx.BlockHeight() == 0
+		genesis := ctx.BlockHeight() == 0
 		chainID := ctx.ChainID()
 		var accNum uint64
 		if !genesis {

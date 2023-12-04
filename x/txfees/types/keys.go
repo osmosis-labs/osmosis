@@ -2,7 +2,8 @@ package types
 
 const (
 	// ModuleName defines the module name.
-	ModuleName = "txfees"
+	ModuleName   = "txfees"
+	KeySeparator = "|"
 
 	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
@@ -26,6 +27,8 @@ const (
 )
 
 var (
-	BaseDenomKey         = []byte("base_denom")
-	FeeTokensStorePrefix = []byte("fee_tokens")
+	BaseDenomKey                       = []byte("base_denom")
+	FeeTokensStorePrefix               = []byte("fee_tokens")
+	KeyTxFeeProtorevTracker            = []byte("txfee_protorev_tracker")
+	KeyTxFeeProtorevTrackerStartHeight = []byte("txfee_protorev_tracker_start_height")
 )

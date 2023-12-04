@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
@@ -63,7 +63,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		}
 
 		// Get amount to distribute in coins (based on perpetual or non perpetual group gauge)
-		coinsToDistribute := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+		coinsToDistribute := groupGauge.Coins.Sub(groupGauge.DistributedCoins...)
 		if !groupGauge.IsPerpetual {
 			remainingEpochs := int64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs)
 
@@ -115,7 +115,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 			// Special case the last gauge to avoid leaving truncation dust in the group gauge
 			// and consume the amounts in-full.
 			if gaugeIndex == gaugeCount-1 {
-				err = k.addToGaugeRewards(ctx, coinsToDistribute.Sub(amountDistributed), distrRecord.GaugeId)
+				err = k.addToGaugeRewards(ctx, coinsToDistribute.Sub(amountDistributed...), distrRecord.GaugeId)
 				if err != nil {
 					// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
 					// unless something fundamental has gone wrong.
@@ -170,7 +170,7 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 		coins = coins.Add(gauge.Coins...)
 		distributed = distributed.Add(gauge.DistributedCoins...)
 	}
-	return coins.Sub(distributed)
+	return coins.Sub(distributed...)
 }
 
 // getToDistributeCoinsFromIterator utilizes iterator to return a list of gauges.
@@ -247,7 +247,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 		return types.Gauge{}, nil, true, nil
 	}
 
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 	// remainEpochs is the number of remaining epochs that the gauge will pay out its rewards.
 	// for a perpetual gauge, it will pay out everything in the next epoch, and we don't make
 	// an assumption of the rate at which it will get refilled at.
@@ -556,7 +556,7 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
@@ -711,7 +711,7 @@ func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 	// Prune expired non-perpetual gauges.
 	if groupGauge.IsLastNonPerpetualDistribution() {
 		// Send truncation dust to community pool.
-		truncationDust, anyNegative := groupGauge.Coins.SafeSub(groupGauge.DistributedCoins.Add(coinsDistributed...))
+		truncationDust, anyNegative := groupGauge.Coins.SafeSub(groupGauge.DistributedCoins.Add(coinsDistributed...)...)
 		if !anyNegative && !truncationDust.IsZero() {
 			err := k.ck.FundCommunityPool(ctx, truncationDust, k.ak.GetModuleAddress(types.ModuleName))
 			if err != nil {

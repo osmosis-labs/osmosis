@@ -3,7 +3,7 @@ package osmosis.authenticator;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/authenticator/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/authenticator/types";
 
 // Params defines the parameters for the module.
 message Params {

@@ -6,21 +6,21 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	v17 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	v17 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v17"
 
-	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 type UpgradeTestSuite struct {

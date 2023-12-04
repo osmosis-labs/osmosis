@@ -8,20 +8,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	v17 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v17"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	v17 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v17"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
 )
 
 type UpgradeTestSuite struct {
@@ -317,7 +317,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				}
 
 				// Validate that the community pool balance has been reduced by the amount of osmo that was used to create the pool.
-				s.Require().Equal(communityPoolBalancePre.Sub(expectedCoinsUsedInUpgradeHandler).String(), communityPoolBalancePost.String())
+				s.Require().Equal(communityPoolBalancePre.Sub(expectedCoinsUsedInUpgradeHandler...).String(), communityPoolBalancePost.String())
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of osmo that was used to create the pool.
 				s.Require().Equal(sdk.NewDecCoinsFromCoins(communityPoolBalancePost...).String(), feePoolCommunityPoolPost.String())
@@ -490,7 +490,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				}
 
 				// Validate that the community pool balance has been reduced by the amount of osmo that was used to create the pool.
-				s.Require().Equal(communityPoolBalancePre.Sub(expectedCoinsUsedInUpgradeHandler).String(), communityPoolBalancePost.String())
+				s.Require().Equal(communityPoolBalancePre.Sub(expectedCoinsUsedInUpgradeHandler...).String(), communityPoolBalancePost.String())
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of osmo that was used to create the pool.
 				s.Require().Equal(sdk.NewDecCoinsFromCoins(communityPoolBalancePost...).String(), feePoolCommunityPoolPost.String())

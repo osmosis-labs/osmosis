@@ -10,17 +10,17 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/tests/osmosisibctesting"
-	"github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {
@@ -84,7 +84,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 	channel := suite.path.EndpointA.ChannelID
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
 	accountTo := suite.chainB.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
@@ -92,7 +92,8 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 		accountFrom,
 		accountTo,
 		timeoutHeight,
-		0,
+		uint64(time.Now().UnixNano()),
+		"",
 	)
 }
 
@@ -102,7 +103,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 	channel := suite.path.EndpointB.ChannelID
 	accountFrom := suite.chainB.SenderAccount.GetAddress().String()
 	accountTo := suite.chainA.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
@@ -110,7 +111,8 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 		accountFrom,
 		accountTo,
 		timeoutHeight,
-		0,
+		uint64(time.Now().UnixNano()),
+		"",
 	)
 }
 
@@ -145,8 +147,9 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
 		suite.chainB.SenderAccount.GetAddress().String(),
 		strings.Repeat("x", 4097),
-		clienttypes.NewHeight(0, 100),
-		0,
+		clienttypes.NewHeight(10, 100),
+		uint64(time.Now().UnixNano()),
+		"",
 	)
 	_, ack, _ := suite.FullSendBToA(msg)
 	suite.Require().Contains(ack, "error",
@@ -475,8 +478,8 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	port := suite.path.EndpointA.ChannelConfig.PortID
 	channel := suite.path.EndpointA.ChannelID
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
-	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
+	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0, "")
 
 	// Sending the message manually because AssertSend updates both clients. We need to update the clients manually
 	// for this test so that the failure to receive on chain B happens after the second packet is sent from chain A.

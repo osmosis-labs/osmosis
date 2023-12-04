@@ -2,31 +2,35 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
-	downtimemodule "github.com/osmosis-labs/osmosis/v20/x/downtime-detector/module"
-	downtimetypes "github.com/osmosis-labs/osmosis/v20/x/downtime-detector/types"
+	downtimemodule "github.com/osmosis-labs/osmosis/v21/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v21/x/downtime-detector/types"
 
-	authzwrapper "github.com/osmosis-labs/osmosis/v20/app/keepers"
+	authzwrapper "github.com/osmosis-labs/osmosis/v21/app/keepers"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -59,42 +63,42 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	authenticator "github.com/osmosis-labs/osmosis/v20/x/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	authenticator "github.com/osmosis-labs/osmosis/v21/x/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
-	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmodule"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	cwpoolmodule "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/module"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/ibcratelimitmodule"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v20/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	poolmanager "github.com/osmosis-labs/osmosis/v20/x/poolmanager/module"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
-	superfluid "github.com/osmosis-labs/osmosis/v20/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/twapmodule"
-	twaptypes "github.com/osmosis-labs/osmosis/v20/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v20/x/valset-pref/valpref-module"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
+	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/clmodule"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	cwpoolmodule "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/module"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v21/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v21/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	superfluid "github.com/osmosis-labs/osmosis/v21/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v21/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v21/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -122,7 +126,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.ModuleName:                        nil,
 	txfeestypes.FeeCollectorForStakingRewardsName: nil,
 	txfeestypes.FeeCollectorForCommunityPoolName:  nil,
-	wasm.ModuleName:                               {authtypes.Burner},
+	wasmtypes.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:                  {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
@@ -145,19 +149,18 @@ func appModules(
 			app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
 		),
-		auth.NewAppModule(appCodec, *app.AccountKeeper, nil),
+		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
-		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		gov.NewAppModule(appCodec, app.GovKeeper, *app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		downtimemodule.NewAppModule(*app.DowntimeKeeper),
-		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(*app.UpgradeKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		upgrade.NewAppModule(app.UpgradeKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzwrapper.NewAppModuleWrapper(authzmodule.NewAppModule(appCodec, app.AuthzKeeper.Keeper(), app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), app.AuthzKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -188,9 +191,10 @@ func appModules(
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
-		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
-		packetforward.NewAppModule(app.PacketForwardKeeper),
+		icq.NewAppModule(*app.AppKeepers.ICQKeeper, app.GetSubspace(icqtypes.ModuleName)),
+		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
+		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		authenticator.NewAppModule(appCodec, *app.AuthenticatorKeeper),
 	}
 }
@@ -263,6 +267,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
@@ -274,7 +279,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		concentratedliquiditytypes.ModuleName,
 		ibcratelimittypes.ModuleName,
 		// wasm after ibc transfer
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
 		icqtypes.ModuleName,
@@ -302,7 +307,10 @@ func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 }
 
 // Required for ibctesting
-func (app *OsmosisApp) GetStakingKeeper() stakingkeeper.Keeper {
+func (app *OsmosisApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
+}
+func (app *OsmosisApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
 

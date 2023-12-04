@@ -3,11 +3,9 @@ package poolmanager
 import (
 	"errors"
 	"fmt"
-
 	"math/big"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,11 +13,19 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
-// 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
-var intMaxValue = osmomath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+var (
+	// 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
+	intMaxValue = osmomath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+	// lessPoolIFunc is used for sorting pools by poolID
+	lessPoolIFunc = func(i, j types.PoolI) bool {
+		return i.GetId() < j.GetId()
+	}
+)
 
 // RouteExactAmountIn processes a swap along the given route using the swap function
 // corresponding to poolID's pool type. It takes in the input denom and amount for
@@ -35,8 +41,7 @@ func (k Keeper) RouteExactAmountIn(
 	tokenOutMinAmount osmomath.Int,
 ) (tokenOutAmount osmomath.Int, err error) {
 	// Ensure that provided route is not empty and has valid denom format.
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -234,8 +239,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 	}()
 
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -258,7 +262,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			return osmomath.Int{}, err
 		}
 
-		tokenInAfterSubTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, takerFee)
+		tokenInAfterSubTakerFee, _ := CalcTakerFeeExactIn(tokenIn, takerFee)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
@@ -290,8 +294,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 ) (tokenInAmount osmomath.Int, err error) {
 	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, osmomath.Dec{}, osmomath.Dec{}
 	// Ensure that provided route is not empty and has valid denom format.
-	routeStep := types.SwapAmountOutRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountOutRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -529,10 +532,6 @@ func (k Keeper) GetPool(
 func (k Keeper) AllPools(
 	ctx sdk.Context,
 ) ([]types.PoolI, error) {
-	less := func(i, j types.PoolI) bool {
-		return i.GetId() < j.GetId()
-	}
-
 	//	Allocate the slice with the exact capacity to avoid reallocations.
 	poolCount := k.GetNextPoolId(ctx)
 	sortedPools := make([]types.PoolI, 0, poolCount)
@@ -542,9 +541,35 @@ func (k Keeper) AllPools(
 			return nil, err
 		}
 
-		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, less)
+		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, lessPoolIFunc)
 	}
 
+	return sortedPools, nil
+}
+
+// ListPoolsByDenom returns all pools by denom sorted by their ids
+// from every pool module registered in the
+// pool manager keeper.
+func (k Keeper) ListPoolsByDenom(
+	ctx sdk.Context,
+	denom string,
+) ([]types.PoolI, error) {
+	var sortedPools []types.PoolI
+	for _, poolModule := range k.poolModules {
+		currentModulePools, err := poolModule.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		var poolsByDenom []types.PoolI
+		for _, pool := range currentModulePools {
+			poolDenoms := pool.GetPoolDenoms(ctx)
+			if osmoutils.Contains(poolDenoms, denom) {
+				poolsByDenom = append(poolsByDenom, pool)
+			}
+		}
+		sortedPools = osmoutils.MergeSlices(sortedPools, poolsByDenom, lessPoolIFunc)
+	}
 	return sortedPools, nil
 }
 
@@ -584,7 +609,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		tokenInAfterTakerFee, _ := k.calcTakerFeeExactOut(tokenIn, takerFee)
+		tokenInAfterTakerFee, _ := CalcTakerFeeExactOut(tokenIn, takerFee)
 
 		insExpected[i] = tokenInAfterTakerFee.Amount
 		tokenOut = tokenInAfterTakerFee
@@ -744,10 +769,14 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are handled
-	// anyway.
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
 	if err != nil {
+		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if tokenOut.IsZero() {
@@ -765,6 +794,12 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 			ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
 		)
 		if err != nil {
+			if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+				}, nil
+			}
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
@@ -798,15 +833,18 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
-		// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are
-		// handled anyway.
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
 			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec(),
 		)
 		if err != nil {
+			if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+				}, nil
+			}
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-
 		if tokenOut.IsZero() {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),

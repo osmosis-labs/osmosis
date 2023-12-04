@@ -7,8 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,15 +21,16 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v20/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -149,7 +149,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	appState[distributiontypes.ModuleName] = distributionGenStateBz
 
 	// gov module genesis
-	govGenState := govtypes.DefaultGenesisState()
+	govGenState := govtypesv1.DefaultGenesisState()
 	govGenState.DepositParams = genesisParams.GovParams.DepositParams
 	govGenState.TallyParams = genesisParams.GovParams.TallyParams
 	govGenState.VotingParams = genesisParams.GovParams.VotingParams
@@ -216,7 +216,7 @@ type GenesisParams struct {
 
 	StrategicReserveAccounts []banktypes.Balance
 
-	ConsensusParams *tmproto.ConsensusParams
+	ConsensusParams *tmtypes.ConsensusParams
 
 	GenesisTime         time.Time
 	NativeCoinMetadatas []banktypes.Metadata
@@ -224,7 +224,7 @@ type GenesisParams struct {
 	StakingParams      stakingtypes.Params
 	MintParams         minttypes.Params
 	DistributionParams distributiontypes.Params
-	GovParams          govtypes.Params
+	GovParams          govtypesv1.Params
 
 	CrisisConstantFee sdk.Coin
 
@@ -452,12 +452,10 @@ func MainnetGenesisParams() GenesisParams {
 	}
 
 	genParams.DistributionParams = distributiontypes.DefaultParams()
-	genParams.DistributionParams.BaseProposerReward = osmomath.MustNewDecFromStr("0.01")
-	genParams.DistributionParams.BonusProposerReward = osmomath.MustNewDecFromStr("0.04")
 	genParams.DistributionParams.CommunityTax = osmomath.MustNewDecFromStr("0")
 	genParams.DistributionParams.WithdrawAddrEnabled = true
 
-	genParams.GovParams = govtypes.DefaultParams()
+	genParams.GovParams = govtypesv1.DefaultParams()
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
@@ -496,7 +494,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Block.MaxGas = 6_000_000
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
-	genParams.ConsensusParams.Version.AppVersion = 1
+	genParams.ConsensusParams.Version.App = 1
 
 	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
 	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadatas[0].Base

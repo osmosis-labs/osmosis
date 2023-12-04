@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 // NewCmdQuery returns the cli query commands for this module
@@ -30,6 +30,7 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryEnabledCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryInfoByPoolTypeCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryAllProtocolRevenueCmd)
 
 	return cmd
 }
@@ -155,6 +156,14 @@ func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolReq
 		Use:   "pool",
 		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
 	}, &types.QueryGetProtoRevPoolRequest{}
+}
+
+// NewQueryAllProtocolRevenueCmd returns the command to query protocol revenue across all modules
+func NewQueryAllProtocolRevenueCmd() (*osmocli.QueryDescriptor, *types.QueryGetAllProtocolRevenueRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-proto-rev",
+		Short: "Query protocol revenue across all modules",
+	}, &types.QueryGetAllProtocolRevenueRequest{}
 }
 
 // convert a string array "[1,2,3]" to []uint64

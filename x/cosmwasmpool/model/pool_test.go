@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 )
 
 type CosmWasmPoolSuite struct {
@@ -56,4 +56,11 @@ func (s *CosmWasmPoolSuite) TestSpotPrice() {
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedSpotPrice, actualSpotPrice)
+}
+
+// TestGetPoolDenoms validates that pool denoms are returned correctly.
+func (s *CosmWasmPoolSuite) TestGetPoolDenoms() {
+	cwPool := s.PrepareCosmWasmPool()
+	poolDenoms := cwPool.GetPoolDenoms(s.Ctx)
+	s.Require().Equal([]string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}, poolDenoms)
 }

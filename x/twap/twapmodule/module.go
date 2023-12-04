@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,12 +15,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v20/x/twap"
-	twapclient "github.com/osmosis-labs/osmosis/v20/x/twap/client"
-	twapcli "github.com/osmosis-labs/osmosis/v20/x/twap/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/client/grpc"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/x/twap"
+	twapclient "github.com/osmosis-labs/osmosis/v21/x/twap/client"
+	twapcli "github.com/osmosis-labs/osmosis/v21/x/twap/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/client/grpc"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
 )
 
 var (
@@ -51,9 +50,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // ---------------------------------------
 // Interfaces.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-}
-
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
@@ -91,19 +87,8 @@ func NewAppModule(twapKeeper twap.Keeper) AppModule {
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the gamm module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// LegacyQuerierHandler returns the x/gamm module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // InitGenesis performs genesis initialization for the twap module.
 // no validator updates.

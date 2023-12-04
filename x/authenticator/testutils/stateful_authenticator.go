@@ -3,9 +3,10 @@ package testutils
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -21,7 +22,7 @@ type StatefulAuthenticatorData struct {
 
 // StatefulAuthenticator is an experiment of how to write authenticators that handle state
 type StatefulAuthenticator struct {
-	KvStoreKey sdk.StoreKey
+	KvStoreKey storetypes.StoreKey
 }
 
 func (s StatefulAuthenticator) Type() string {

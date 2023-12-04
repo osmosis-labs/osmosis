@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue
@@ -43,14 +43,6 @@ func (k Keeper) CreateMultihopExpectedSwapOuts(
 	tokenOut sdk.Coin,
 ) ([]osmomath.Int, error) {
 	return k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
-}
-
-func (k Keeper) CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
-	return k.calcTakerFeeExactIn(tokenIn, takerFee)
-}
-
-func (k Keeper) CalcTakerFeeExactOut(tokenOut sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
-	return k.calcTakerFeeExactOut(tokenOut, takerFee)
 }
 
 func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {

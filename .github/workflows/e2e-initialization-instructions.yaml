@@ -26,6 +26,8 @@ permissions:
 
 jobs:
   comment:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - 

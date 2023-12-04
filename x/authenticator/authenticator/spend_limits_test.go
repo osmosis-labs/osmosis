@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
 )
 
 type SpendLimitAuthenticatorTest struct {

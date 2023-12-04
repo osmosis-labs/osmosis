@@ -12,7 +12,7 @@ queue_rules:
 pull_request_rules:
   - name: automerge to the base branch with label automerge and branch protection passing
     conditions:
-      - "#approved-reviews-by>=1"
+      - "#approved-reviews-by>=2"
       - base=main
       - label=A:automerge
     actions:
@@ -142,3 +142,11 @@ pull_request_rules:
       backport:
         branches:
           - v20.x
+  - name: backport patches to v21.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v21.x
+    actions:
+      backport:
+        branches:
+          - v21.x

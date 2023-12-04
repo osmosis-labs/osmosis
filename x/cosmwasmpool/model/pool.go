@@ -5,9 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
@@ -135,6 +136,12 @@ func (p Pool) GetStoreModel() poolmanagertypes.PoolI {
 // Set the wasm keeper.
 func (p *Pool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	p.WasmKeeper = wasmKeeper
+}
+
+// GetPoolDenoms implements types.PoolI.
+func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
+	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
+	return osmoutils.CoinsDenoms(poolLiquidity)
 }
 
 func (p Pool) AsSerializablePool() poolmanagertypes.PoolI {

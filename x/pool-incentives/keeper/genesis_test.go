@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v20/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v20/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v21/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v21/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 var (

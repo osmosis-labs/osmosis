@@ -7,7 +7,7 @@ import "google/protobuf/duration.proto";
 
 import "osmosis/txfees/v1beta1/feetoken.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/txfees/types";
 
 service Query {
   // FeeTokens returns a list of all the whitelisted fee tokens and their
@@ -33,6 +33,11 @@ service Query {
   // Returns a list of all base denom tokens and their corresponding pools.
   rpc BaseDenom(QueryBaseDenomRequest) returns (QueryBaseDenomResponse) {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/base_denom";
+  }
+
+  // Returns a list of all base denom tokens and their corresponding pools.
+  rpc GetEipBaseFee(QueryEipBaseFeeRequest) returns (QueryEipBaseFeeResponse) {
+    option (google.api.http).get = "/osmosis/txfees/v1beta1/cur_eip_base_fee";
   }
 }
 
@@ -72,4 +77,14 @@ message QueryDenomPoolIdResponse {
 message QueryBaseDenomRequest {}
 message QueryBaseDenomResponse {
   string base_denom = 1 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
+}
+
+message QueryEipBaseFeeRequest {}
+message QueryEipBaseFeeResponse {
+  string base_fee = 1 [
+    (gogoproto.moretags) = "yaml:\"base_fee\"",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }

@@ -11,9 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 //nolint:deadcode
@@ -769,7 +770,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFac
 	newTotalShares := totalShares.Add(numShares)
 
 	// 5) Now single asset join each remaining coin.
-	remainingTokensIn := tokensIn.Sub(tokensJoined)
+	remainingTokensIn := tokensIn.Sub(tokensJoined...)
 	newNumSharesFromRemaining, newLiquidityFromRemaining, err := p.calcJoinSingleAssetTokensIn(remainingTokensIn, newTotalShares, poolAssetsByDenom, spreadFactor)
 	if err != nil {
 		return osmomath.ZeroInt(), sdk.NewCoins(), err
@@ -820,7 +821,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spr
 	}
 
 	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
-	tokensJoined = tokensIn.Sub(remainingTokensIn)
+	tokensJoined = tokensIn.Sub(remainingTokensIn...)
 	if tokensJoined.IsAnyGT(tokensIn) {
 		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
 	}
@@ -867,7 +868,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares osmomath.Int, exitFee osm
 // exitPool exits the pool given exitingCoins and exitingShares.
 // updates the pool's liquidity and totalShares.
 func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares osmomath.Int) error {
-	balances := p.GetTotalPoolLiquidity(ctx).Sub(exitingCoins)
+	balances := p.GetTotalPoolLiquidity(ctx).Sub(exitingCoins...)
 	if err := p.UpdatePoolAssetBalances(balances); err != nil {
 		return err
 	}
@@ -981,4 +982,10 @@ func (p *Pool) ExitSwapExactAmountOut(
 
 func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 	return p
+}
+
+// GetPoolDenoms implements types.CFMMPoolI.
+func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
+	liquidity := p.GetTotalPoolLiquidity(ctx)
+	return osmoutils.CoinsDenoms(liquidity)
 }

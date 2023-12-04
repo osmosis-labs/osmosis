@@ -3,18 +3,17 @@ package concentrated_liquidity
 import (
 	fmt "fmt"
 
+	db "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	events "github.com/osmosis-labs/osmosis/v20/x/poolmanager/events"
+	events "github.com/osmosis-labs/osmosis/v21/x/poolmanager/events"
 
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // SwapState defines the state of a swap.
@@ -143,6 +142,13 @@ func (k Keeper) SwapExactAmountIn(
 		return osmomath.Int{}, err
 	}
 
+	// Trigger before hook for SwapExactAmountIn prior to mutating state.
+	// If no contract is set, this will be a no-op.
+	err = k.BeforeSwapExactAmountIn(ctx, pool.GetId(), sender, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
 	// Determine if we are swapping asset0 for asset1 or vice versa
 	zeroForOne := getZeroForOne(tokenIn.Denom, pool.GetToken0())
 
@@ -161,6 +167,13 @@ func (k Keeper) SwapExactAmountIn(
 
 	k.RecordTotalLiquidityIncrease(ctx, sdk.NewCoins(tokenIn))
 	k.RecordTotalLiquidityDecrease(ctx, sdk.NewCoins(tokenOut))
+
+	// Trigger after hook for SwapExactAmountIn after mutating state.
+	// If no contract is set, this will be a no-op.
+	err = k.AfterSwapExactAmountIn(ctx, pool.GetId(), sender, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
 
 	return tokenOutAmount, nil
 }
@@ -185,6 +198,13 @@ func (k Keeper) SwapExactAmountOut(
 		return osmomath.Int{}, err
 	}
 
+	// Trigger before hook for SwapExactAmountOut prior to mutating state.
+	// If no contract is set, this will be a no-op.
+	err = k.BeforeSwapExactAmountOut(ctx, pool.GetId(), sender, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
 	zeroForOne := getZeroForOne(tokenInDenom, pool.GetToken0())
 
 	// change priceLimit based on which direction we are swapping
@@ -203,6 +223,13 @@ func (k Keeper) SwapExactAmountOut(
 
 	k.RecordTotalLiquidityIncrease(ctx, sdk.NewCoins(tokenIn))
 	k.RecordTotalLiquidityDecrease(ctx, sdk.NewCoins(tokenOut))
+
+	// Trigger after hook for SwapExactAmountOut after mutating state.
+	// If no contract is set, this will be a no-op.
+	err = k.AfterSwapExactAmountOut(ctx, pool.GetId(), sender, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
 
 	return tokenInAmount, nil
 }
@@ -658,7 +685,7 @@ func (k Keeper) updatePoolForSwap(
 ) error {
 	// Fixed gas consumption per swap to prevent spam
 	poolId := pool.GetId()
-	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
+	ctx.GasMeter().ConsumeGas(types.ConcentratedGasFeeForSwap, "cl pool swap computation")
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err

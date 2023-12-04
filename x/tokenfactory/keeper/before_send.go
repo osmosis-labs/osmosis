@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 )
 
 func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress string) error {
@@ -47,21 +47,6 @@ func (k Keeper) GetBeforeSendHook(ctx sdk.Context, denom string) string {
 	return string(bz)
 }
 
-func CWCoinsFromSDKCoins(in sdk.Coins) wasmvmtypes.Coins {
-	var cwCoins wasmvmtypes.Coins
-	for _, coin := range in {
-		cwCoins = append(cwCoins, CWCoinFromSDKCoin(coin))
-	}
-	return cwCoins
-}
-
-func CWCoinFromSDKCoin(in sdk.Coin) wasmvmtypes.Coin {
-	return wasmvmtypes.Coin{
-		Denom:  in.GetDenom(),
-		Amount: in.Amount.String(),
-	}
-}
-
 // Hooks wrapper struct for bank keeper
 type Hooks struct {
 	k Keeper
@@ -91,7 +76,7 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errorsmod.Wrapf(types.ErrTrackBeforeSendOutOfGas, "%v", r)
+			err = errorsmod.Wrapf(types.ErrBeforeSendHookOutOfGas, "%v", r)
 		}
 	}()
 
@@ -114,7 +99,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 					BlockBeforeSend: types.BlockBeforeSendMsg{
 						From:   from.String(),
 						To:     to.String(),
-						Amount: CWCoinFromSDKCoin(coin),
+						Amount: osmoutils.CWCoinFromSDKCoin(coin),
 					},
 				}
 				msgBz, err = json.Marshal(msg)
@@ -123,7 +108,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 					TrackBeforeSend: types.TrackBeforeSendMsg{
 						From:   from.String(),
 						To:     to.String(),
-						Amount: CWCoinFromSDKCoin(coin),
+						Amount: osmoutils.CWCoinFromSDKCoin(coin),
 					},
 				}
 				msgBz, err = json.Marshal(msg)
@@ -133,22 +118,14 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			}
 			em := sdk.NewEventManager()
 
-			// if its track before send, apply gas meter to prevent infinite loop
-			if blockBeforeSend {
-				_, err = k.contractKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
-				if err != nil {
-					return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
-				}
-			} else {
-				childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.TrackBeforeSendGasLimit))
-				_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
-				if err != nil {
-					return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
-				}
-
-				// consume gas used for calling contract to the parent ctx
-				ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
+			childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.BeforeSendHookGasLimit))
+			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
+			if err != nil {
+				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
+
+			// consume gas used for calling contract to the parent ctx
+			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
 		}
 	}
 	return nil

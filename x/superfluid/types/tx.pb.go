@@ -10,14 +10,15 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
-	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -1258,8 +1259,8 @@ var fileDescriptor_55b645f187d22814 = []byte{
 	0xec, 0xf8, 0xec, 0x88, 0xa0, 0x3e, 0x24, 0x3b, 0x0e, 0x99, 0x2e, 0xe5, 0x07, 0x2f, 0x5e, 0xe7,
 	0xa4, 0x97, 0xaf, 0x73, 0xd2, 0x9f, 0xaf, 0x73, 0xd2, 0xb3, 0x37, 0xb9, 0x91, 0x97, 0x6f, 0x72,
 	0x23, 0xbf, 0xbd, 0xc9, 0x8d, 0x7c, 0x7c, 0x27, 0x34, 0xfd, 0x84, 0xe4, 0xa2, 0xa5, 0xd7, 0xa9,
-	0xbf, 0x50, 0xb7, 0x17, 0xe6, 0xd5, 0x9d, 0xae, 0x1f, 0x9d, 0xf9, 0x44, 0xac, 0x8f, 0xb9, 0xf7,
-	0xfb, 0xdb, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0x98, 0x17, 0x1f, 0x01, 0x97, 0x16, 0x00, 0x00,
+	0xbf, 0x50, 0xb7, 0x17, 0x4a, 0xea, 0x4e, 0xd7, 0x8f, 0xce, 0x7c, 0x22, 0xd6, 0xc7, 0xdc, 0xfb,
+	0xfd, 0xed, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x85, 0xea, 0xaa, 0x00, 0x97, 0x16, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2259,7 +2260,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Marsh
 	_ = i
 	var l int
 	_ = l
-	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
+	n5, err5 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JoinTime):])
 	if err5 != nil {
 		return 0, err5
 	}
@@ -2777,7 +2778,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Size(
 	n += 1 + l + sovTx(uint64(l))
 	l = m.LiquidityCreated.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JoinTime)
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -4579,7 +4580,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Unmar
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

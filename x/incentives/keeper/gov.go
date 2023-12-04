@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
 )
 
 func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroupsProposal) error {
@@ -27,8 +27,8 @@ func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroups
 	return nil
 }
 
-func NewIncentivesProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewIncentivesProposalHandler(k Keeper) govtypesv1.Handler {
+	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {
 		case *types.CreateGroupsProposal:
 			return k.HandleCreateGaugeProposal(ctx, c)

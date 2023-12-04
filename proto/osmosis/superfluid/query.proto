@@ -12,7 +12,7 @@ import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -140,6 +140,10 @@ service Query {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                    "account_undelegating_cl_positions/"
                                    "{delegator_address}";
+  }
+
+  rpc RestSupply(QueryRestSupplyRequest) returns (QueryRestSupplyResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/supply";
   }
 }
 
@@ -319,4 +323,12 @@ message UserConcentratedSuperfluidPositionsUndelegatingRequest {
 message UserConcentratedSuperfluidPositionsUndelegatingResponse {
   repeated ConcentratedPoolUserPositionRecord cl_pool_user_position_records = 1
       [ (gogoproto.nullable) = false ];
+}
+
+// THIS QUERY IS TEMPORARY
+message QueryRestSupplyRequest { string denom = 1; }
+
+message QueryRestSupplyResponse {
+  // amount is the supply of the coin.
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
 }

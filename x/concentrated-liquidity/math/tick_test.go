@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 const (
@@ -837,6 +837,12 @@ func TestCalculatePriceToTick(t *testing.T) {
 
 // This test validates that conversions	at the new initialized boundary are sound.
 func TestSqrtPriceToTick_MinInitializedTickV2(t *testing.T) {
+	// TODO: remove this Skip(). It is present to maintain backwards state-compatibility with
+	// v19.x and earlier major releases of Osmosis.
+	// Once https://github.com/osmosis-labs/osmosis/issues/5726 is fully complete,
+	// this should be removed.
+	t.Skip()
+
 	minSqrtPrice, err := osmomath.MonotonicSqrtBigDec(types.MinSpotPriceV2)
 	require.NoError(t, err)
 

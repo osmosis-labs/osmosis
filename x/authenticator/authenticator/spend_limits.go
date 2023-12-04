@@ -7,18 +7,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v20/x/twap"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v21/x/twap"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 )
 
 type PeriodType string
@@ -40,7 +41,7 @@ const (
 
 type SpendLimitAuthenticator struct {
 	store             sdk.KVStore
-	storeKey          sdk.StoreKey
+	storeKey          storetypes.StoreKey
 	quoteDenom        string
 	bankKeeper        bankkeeper.Keeper
 	poolManagerKeeper *poolmanager.Keeper
@@ -55,7 +56,7 @@ var _ iface.Authenticator = &SpendLimitAuthenticator{}
 
 // NewSpendLimitAuthenticator creates a new SpendLimitAuthenticator. Creators must make sure to use a properly prefixed
 // store with this authenticator. That is, prefix.NewStore(authenticatorsStoreKey, []byte("spendLimitAuthenticator"))
-func NewSpendLimitAuthenticator(storeKey sdk.StoreKey, quoteDenom string, priceStrategy PriceStrategy, bankKeeper bankkeeper.Keeper, poolManagerKeeper *poolmanager.Keeper, twapKeeper *twap.Keeper) SpendLimitAuthenticator {
+func NewSpendLimitAuthenticator(storeKey storetypes.StoreKey, quoteDenom string, priceStrategy PriceStrategy, bankKeeper bankkeeper.Keeper, poolManagerKeeper *poolmanager.Keeper, twapKeeper *twap.Keeper) SpendLimitAuthenticator {
 	// Ideally we'd validate that the store has been properly prefixed here, but the prefix store doesn't expose its prefix
 	if !(priceStrategy == AbsoluteValue || priceStrategy == Twap) {
 		panic("invalid price strategy")

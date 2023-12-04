@@ -3,9 +3,10 @@ package testutils
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -20,7 +21,7 @@ type MaxAmountAuthenticatorData struct {
 	Amount osmomath.Int
 }
 type MaxAmountAuthenticator struct {
-	KvStoreKey sdk.StoreKey
+	KvStoreKey storetypes.StoreKey
 }
 
 func (m MaxAmountAuthenticator) StaticGas() uint64 {

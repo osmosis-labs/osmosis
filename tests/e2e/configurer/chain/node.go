@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -66,7 +66,7 @@ func (n *NodeConfig) Run() error {
 		n.rpcClient = rpcClient
 
 		success := false
-		timeout := time.After(time.Second * 20)
+		timeout := time.After(time.Second * 10)
 		ticker := time.NewTicker(10 * time.Millisecond)
 		defer ticker.Stop()
 
@@ -74,7 +74,8 @@ func (n *NodeConfig) Run() error {
 			select {
 			case <-timeout:
 				n.t.Logf("Osmosis node failed to produce blocks")
-				break
+				// break out of the for loop, not just the select statement
+				goto Retry
 			case <-ticker.C:
 				_, err := n.QueryCurrentHeight()
 				if err == nil {
@@ -91,14 +92,18 @@ func (n *NodeConfig) Run() error {
 
 		if success {
 			break
-		} else {
-			n.t.Logf("failed to start node container, retrying... (%d/%d)", currentRetry+1, maxRetries)
+		}
+
+	Retry:
+		n.t.Logf("failed to start node container, retrying... (%d/%d)", currentRetry+1, maxRetries)
+		// Do not remove the node resource on the last retry
+		if currentRetry < maxRetries-1 {
 			err := n.containerManager.RemoveNodeResource(n.Name)
 			if err != nil {
 				return err
 			}
-			currentRetry++
 		}
+		currentRetry++
 	}
 
 	if currentRetry >= maxRetries {
@@ -166,7 +171,7 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 
 	cmd := []string{"osmosisd", "debug", "addr", n.PublicKey}
 	n.t.Logf("extracting validator operator addresses for validator: %s", n.Name)
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	if err != nil {
 		return err
 	}

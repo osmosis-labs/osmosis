@@ -3,11 +3,11 @@ package types_test
 import (
 	"testing"
 
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {

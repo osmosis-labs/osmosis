@@ -9,8 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/wasmbinding"
 )
 
 func TestFullDenom(t *testing.T) {
@@ -42,9 +42,9 @@ func TestFullDenom(t *testing.T) {
 			subdenom:     "",
 			expFullDenom: fmt.Sprintf("factory/%s/", actor.String()),
 		},
-		"invalid sub-denom (contains underscore)": {
+		"invalid sub-denom (contains exclamation point)": {
 			addr:     actor.String(),
-			subdenom: "sub_denom",
+			subdenom: "subdenom!",
 			expErr:   true,
 		},
 	}

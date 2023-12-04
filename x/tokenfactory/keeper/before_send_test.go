@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -40,18 +40,18 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 					expectPass: true,
 				},
 				{
-					desc: "sending 100 of non-factorydenom should not error",
+					desc: "sending 1 of non-factorydenom should not error",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							s.TestAccs[0],
 							s.TestAccs[1],
-							sdk.NewCoins(sdk.NewInt64Coin(factorydenom, 1)),
+							sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 						)
 					},
 					expectPass: true,
 				},
 				{
-					desc: "sending 100 of factorydenom should not work",
+					desc: "sending 100 of factorydenom should error",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							s.TestAccs[0],
@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 					expectPass: false,
 				},
 				{
-					desc: "sending 100 of factorydenom should not work",
+					desc: "sending 100 of non-factorydenom should work",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							s.TestAccs[0],
@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 							sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 						)
 					},
-					expectPass: false,
+					expectPass: true,
 				},
 				{
 					desc: "having 100 coin within coins should not work",
@@ -107,7 +107,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 			_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(denom, 1000000000)))
 			s.Require().NoError(err)
 			// mint some non token factory denom coins for testing
-			s.FundAcc(sdk.AccAddress(s.TestAccs[0].String()), sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
+			s.FundAcc(sdk.MustAccAddressFromBech32(s.TestAccs[0].String()), sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
 
 			// set beforesend hook to the new denom
 			_, err = s.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(s.Ctx), types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), denom, cosmwasmAddress.String()))
@@ -135,12 +135,19 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 		wasmFile        string
 		tokenToSend     sdk.Coins
 		useFactoryDenom bool
+		blockBeforeSend bool
 		expectedError   bool
 	}{
 		{
 			name:            "sending tokenfactory denom from module to module with infinite contract should panic",
 			wasmFile:        "./testdata/infinite_track_beforesend.wasm",
 			useFactoryDenom: true,
+		},
+		{
+			name:            "sending tokenfactory denom from module to module with infinite contract should panic",
+			wasmFile:        "./testdata/infinite_track_beforesend.wasm",
+			useFactoryDenom: true,
+			blockBeforeSend: true,
 		},
 		{
 			name:            "sending non-tokenfactory denom from module to module with infinite contract should not panic",
@@ -181,21 +188,31 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 			}
 
 			// send the mint module tokenToSend
-			s.FundModuleAcc("mint", tokenToSend)
+			if tc.blockBeforeSend {
+				s.FundAcc(s.TestAccs[0], tokenToSend)
+			} else {
+				s.FundModuleAcc("mint", tokenToSend)
+			}
 
 			// set beforesend hook to the new denom
 			// we register infinite loop contract here to test if we are gas metering properly
 			_, err = s.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(s.Ctx), types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), factoryDenom, cosmwasmAddress.String()))
 			s.Require().NoError(err, "test: %v", tc.name)
 
-			// track before send suppresses in any case, thus we expect no error
-			err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, "mint", "distribution", tokenToSend)
-			s.Require().NoError(err)
+			if tc.blockBeforeSend {
+				err = s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], s.TestAccs[1], tokenToSend)
+				s.Require().Error(err)
+			} else {
+				// track before send suppresses in any case, thus we expect no error
+				err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, "mint", "distribution", tokenToSend)
+				s.Require().NoError(err)
 
-			// send should happen regardless of trackBeforeSend results
-			distributionModuleAddress := s.App.AccountKeeper.GetModuleAddress("distribution")
-			distributionModuleBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, distributionModuleAddress)
-			s.Require().True(distributionModuleBalances.IsEqual(tokenToSend))
+				// send should happen regardless of trackBeforeSend results
+				distributionModuleAddress := s.App.AccountKeeper.GetModuleAddress("distribution")
+				distributionModuleBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, distributionModuleAddress)
+				s.Require().True(distributionModuleBalances.IsEqual(tokenToSend))
+			}
+
 		})
 	}
 }

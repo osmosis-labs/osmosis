@@ -6,15 +6,15 @@ import (
 	"sort"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"golang.org/x/exp/maps"
 
-	markov "github.com/osmosis-labs/osmosis/v20/simulation/simtypes/transitionmatrix"
+	markov "github.com/osmosis-labs/osmosis/v21/simulation/simtypes/transitionmatrix"
 )
 
 type mockValidator struct {
@@ -185,7 +185,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	return abci.RequestBeginBlock{
 		Header: header,
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Votes: voteInfos,
 		},
 		ByzantineValidators: evidence,
@@ -233,8 +233,8 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
 	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo,
-) []abci.Evidence {
-	evidence := []abci.Evidence{}
+) []abci.Misbehavior {
+	evidence := []abci.Misbehavior{}
 	// return if no past times or if only 10 validators remaining in the active set
 	if len(pastTimes) == 0 {
 		return evidence
@@ -269,8 +269,8 @@ func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time
 		}
 
 		evidence = append(evidence,
-			abci.Evidence{
-				Type:             abci.EvidenceType_DUPLICATE_VOTE,
+			abci.Misbehavior{
+				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
 				Time:             time,

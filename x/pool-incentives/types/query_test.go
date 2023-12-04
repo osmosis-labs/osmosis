@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {

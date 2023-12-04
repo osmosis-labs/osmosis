@@ -3,12 +3,15 @@ package simtypes
 import (
 	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+
+	"github.com/osmosis-labs/osmosis/v21/app/params"
 )
 
 // TODO: Must delete
@@ -30,7 +33,7 @@ func GenAndDeliverTxWithRandFees(
 	var fees sdk.Coins
 	var err error
 
-	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
+	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg...)
 	if hasNeg {
 		return simulation.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, err
 	}
@@ -57,11 +60,11 @@ func GenAndDeliverTx(
 	moduleName string,
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
-	tx, err := helpers.GenTx(
+	tx, err := genTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		sims.DefaultGenTxGas,
 		ctx.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -71,10 +74,13 @@ func GenAndDeliverTx(
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	gasInfo, _, err := app.Deliver(txGen.TxEncoder(), tx)
+	txConfig := params.MakeEncodingConfig().TxConfig
+	txBytes, err := txConfig.TxEncoder()(tx)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
+		return simulation.OperationMsg{}, nil, err
 	}
 
-	return simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, nil
+	app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+
+	return simulation.NewOperationMsg(msg, true, "", nil), nil, nil
 }

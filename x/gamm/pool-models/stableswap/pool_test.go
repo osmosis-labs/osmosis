@@ -7,13 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var (
@@ -707,7 +707,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			scalingFactors:        defaultTwoAssetScalingFactors,
 			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 			expectedTokenOut:      sdk.NewInt64Coin("bar", 99),
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))...),
 			spreadFactor:          osmomath.ZeroDec(),
 			expError:              false,
 		},
@@ -794,7 +794,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 			scalingFactors:        defaultTwoAssetScalingFactors,
 			tokenOut:              sdk.NewCoins(sdk.NewInt64Coin("bar", 100)),
 			expectedTokenIn:       sdk.NewInt64Coin("foo", 100),
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))...),
 			spreadFactor:          osmomath.ZeroDec(),
 			expError:              false,
 		},
@@ -1007,7 +1007,7 @@ func TestExitPool(t *testing.T) {
 			sharesIn:              types.InitPoolSharesSupply.Quo(osmomath.NewInt(10)),
 			initialPoolLiquidity:  twoEvenStablePoolAssets,
 			scalingFactors:        defaultTwoAssetScalingFactors,
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Sub(tenPercentOfTwoPoolCoins),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Sub(tenPercentOfTwoPoolCoins...),
 			expectedTokenOut:      tenPercentOfTwoPoolCoins,
 			expectPass:            true,
 		},
@@ -1015,7 +1015,7 @@ func TestExitPool(t *testing.T) {
 			sharesIn:              types.InitPoolSharesSupply.Quo(osmomath.NewInt(10)),
 			initialPoolLiquidity:  threeEvenStablePoolAssets,
 			scalingFactors:        defaultThreeAssetScalingFactors,
-			expectedPoolLiquidity: threeEvenStablePoolAssets.Sub(tenPercentOfThreePoolCoins),
+			expectedPoolLiquidity: threeEvenStablePoolAssets.Sub(tenPercentOfThreePoolCoins...),
 			expectedTokenOut:      tenPercentOfThreePoolCoins,
 			expectPass:            true,
 		},
@@ -1023,7 +1023,7 @@ func TestExitPool(t *testing.T) {
 			sharesIn:              types.InitPoolSharesSupply.Quo(osmomath.NewInt(10)),
 			initialPoolLiquidity:  threeUnevenStablePoolAssets,
 			scalingFactors:        defaultThreeAssetScalingFactors,
-			expectedPoolLiquidity: threeUnevenStablePoolAssets.Sub(tenPercentOfUnevenThreePoolCoins),
+			expectedPoolLiquidity: threeUnevenStablePoolAssets.Sub(tenPercentOfUnevenThreePoolCoins...),
 			expectedTokenOut:      tenPercentOfUnevenThreePoolCoins,
 			expectPass:            true,
 		},

@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
 )
 
 type simState struct {
@@ -175,7 +175,7 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 
 	// utilize proposer public key and generate validator hash
 	// then, with completed block header, generate app hash
-	// see https://github.com/tendermint/tendermint/blob/v0.34.x/spec/core/data_structures.md#header for more info on block header hashes
+	// see https://github.com/cometbft/cometbft/blob/v0.34.x/spec/core/data_structures.md#header for more info on block header hashes
 	return simState.constructHeaderHashes(proposerPubKey)
 }
 

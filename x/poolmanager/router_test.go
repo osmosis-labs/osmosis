@@ -4,25 +4,26 @@ import (
 	"errors"
 	"reflect"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/tests/mocks"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	cwpool "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
-	cwmodel "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	gamm "github.com/osmosis-labs/osmosis/v20/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/tests/mocks"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	cwpool "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool"
+	cwmodel "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
+	gamm "github.com/osmosis-labs/osmosis/v21/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 type poolSetup struct {
@@ -1340,7 +1341,7 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(routes []types.Swa
 		s.Require().NoError(err)
 
 		tokenInCoin := sdk.NewCoin(hop.TokenInDenom, tokenInAmt)
-		tokenInCoinAfterAddTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
+		tokenInCoinAfterAddTakerFee, _ := poolmanager.CalcTakerFeeExactOut(tokenInCoin, takerFee)
 
 		nextTokenOut = tokenInCoinAfterAddTakerFee
 	}
@@ -1365,7 +1366,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(routes []types
 		takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
 		s.Require().NoError(err)
 
-		nextTokenInAfterSubTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
+		nextTokenInAfterSubTakerFee, _ := poolmanager.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 		// we then do individual swaps until we reach the end of the swap route
 		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, osmomath.OneInt(), spreadFactor)
@@ -1559,9 +1560,10 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 	maxPriceImpactHalved := sdk.MustNewDecFromStr("0.005") // 0.5%
 	maxPriceImpactTiny := sdk.MustNewDecFromStr("0.0005")  // 0.05%
 
-	externalPriceOneBalancer := sdk.MustNewDecFromStr("0.666666667")   // Spot Price
-	externalPriceTwoBalancer := sdk.MustNewDecFromStr("0.622222222")   // Cheaper than spot price
-	externalPriceThreeBalancer := sdk.MustNewDecFromStr("0.663349917") // Transform adjusted max price impact by 50%
+	externalPriceOneBalancer := sdk.MustNewDecFromStr("0.666666667")                 // Spot Price
+	externalPriceOneBalancerInv := math.LegacyOneDec().Quo(externalPriceOneBalancer) // Inverse of externalPriceOneBalancer
+	externalPriceTwoBalancer := sdk.MustNewDecFromStr("0.622222222")                 // Cheaper than spot price
+	externalPriceThreeBalancer := sdk.MustNewDecFromStr("0.663349917")               // Transform adjusted max price impact by 50%
 
 	externalPriceOneStableSwap := sdk.MustNewDecFromStr("1.00000002")             // Spot Price
 	externalPriceTwoStableSwap := sdk.MustNewDecFromStr("0.98989903")             // Cheaper than spot price
@@ -1623,6 +1625,19 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 			},
 			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(39_947)),
 			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(59_327)),
+		},
+		"valid balancer pool - estimate trying to trade 1 token": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBar, sdk.NewInt(1)),
+				ToCoinDenom:    assetBaz,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				ExternalPrice:  externalPriceOneBalancerInv,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBar, sdk.NewInt(0)),
+			expectedOutputCoin: sdk.NewCoin(assetBaz, sdk.NewInt(0)),
 		},
 		"valid balancer pool - estimate trying to trade dust": {
 			preCreatePoolType: types.Balancer,
@@ -1934,6 +1949,21 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 			poolId:            poolId,
 			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
 				FromCoin:       sdk.NewCoin(assetUsdc, sdk.NewInt(20)),
+				ToCoinDenom:    assetEth,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				ExternalPrice:  externalPriceOneConcentratedInv,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetUsdc, sdk.NewInt(0)),
+			expectedOutputCoin:   sdk.NewCoin(assetEth, sdk.NewInt(0)),
+		},
+		"valid concentrated pool - estimate trying to trade one unit": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetUsdc, math.OneInt()),
 				ToCoinDenom:    assetEth,
 				PoolId:         poolId,
 				MaxPriceImpact: maxPriceImpact,
@@ -2787,7 +2817,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			newCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances...)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
@@ -3138,7 +3168,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			name:           "CL Pool:only non-pool coin - does not show up in result",
 			poolId:         1,
 			poolLiquidity:  sdk.NewCoins(nonPoolCool),
-			expectedResult: sdk.Coins(nil),
+			expectedResult: sdk.Coins{},
 		},
 		{
 			name:           "Balancer Pool: with default pool assets",
@@ -3586,12 +3616,10 @@ func (s *KeeperTestSuite) TestTakerFee() {
 		tokenInDenom      string
 		tokenOutMinAmount osmomath.Int
 
-		expectedTokenOutEstimate                            osmomath.Int
-		expectedTakerFees                                   expectedTakerFees
-		expectedCommunityPoolBalancesDelta                  sdk.Coins // actual community pool
-		expectedCommunityPoolFeeCollectorBalanceDelta       sdk.Coins // where non whitelisted fees are staged prior to being swapped and sent to community pool
-		expectedStakingRewardFeeCollectorMainBalanceDelta   sdk.Coins // where fees are staged prior to being distributed to stakers
-		expectedStakingRewardFeeCollectorTxfeesBalanceDelta sdk.Coins // where tx fees are initially sent, swapped, and then sent to main fee collector
+		expectedTokenOutEstimate                          osmomath.Int
+		expectedTakerFees                                 expectedTakerFees
+		expectedCommunityPoolBalancesDelta                sdk.Coins // actual community pool
+		expectedStakingRewardFeeCollectorMainBalanceDelta sdk.Coins // where fees are staged prior to being distributed to stakers
 
 		expectError error
 	}{
@@ -3602,12 +3630,13 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
-				communityPoolQuoteAssets:    sdk.NewCoins(),
-				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				communityPoolQuoteAssets:    sdk.Coins{},
+				communityPoolNonQuoteAssets: sdk.Coins{},
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// full native denom set in the main fee collector addr
 			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
+			expectedCommunityPoolBalancesDelta:                sdk.Coins{},
 		},
 		"quote denom taker fee": {
 			routes:            quoteQuoteDenomRoute,
@@ -3617,7 +3646,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
 				communityPoolQuoteAssets:    sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
-				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				communityPoolNonQuoteAssets: sdk.Coins{},
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// since foo is whitelisted token, it is sent directly to community pool
@@ -3632,7 +3661,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
-				communityPoolQuoteAssets:    sdk.NewCoins(),
+				communityPoolQuoteAssets:    sdk.Coins{},
 				communityPoolNonQuoteAssets: sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
@@ -3704,7 +3733,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			communityPoolBalancesAfterSwap := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook...)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address txfees community pool address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
@@ -3722,16 +3751,16 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			stakingRewardFeeCollectorTxfeesBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
 			commPoolFeeCollectorBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
 
-			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook)
-			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook)
-			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook)
-			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook)
+			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook...)
+			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook...)
+			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook...)
+			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook...)
 
 			// Ensure balances are as expected
 			s.Require().Equal(tc.expectedCommunityPoolBalancesDelta, communityPoolBalancesDelta)
-			s.Require().Equal(tc.expectedCommunityPoolFeeCollectorBalanceDelta, commPoolFeeCollectorBalanceDelta) // should always be empty after hook if all routes exist
+			s.Require().Equal(sdk.Coins{}, commPoolFeeCollectorBalanceDelta) // should always be empty after hook if all routes exist
 			s.Require().Equal(tc.expectedStakingRewardFeeCollectorMainBalanceDelta, stakingRewardFeeCollectorMainBalanceDelta)
-			s.Require().Equal(tc.expectedStakingRewardFeeCollectorTxfeesBalanceDelta, stakingRewardFeeCollectorTxfeesBalanceDelta) // should always be empty after hook if all routes exist
+			s.Require().Equal(sdk.Coins{}, stakingRewardFeeCollectorTxfeesBalanceDelta) // should always be empty after hook if all routes exist
 		})
 	}
 }
@@ -3784,4 +3813,83 @@ func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant 
 	// Validate that volume was updated
 	totalVolume = s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, concentratedPool.GetId())
 	s.Require().Equal(tokenIn.String(), totalVolume.String())
+}
+
+func (suite *KeeperTestSuite) TestListPoolsByDenom() {
+	suite.Setup()
+
+	tests := map[string]struct {
+		denom            string
+		poolCoins        []sdk.Coins
+		expectedNumPools int
+		expectedError    bool
+		poolType         []types.PoolType
+	}{
+		"Single pool, pool contain denom": {
+			poolType: []types.PoolType{types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+			},
+			denom:            BAR,
+			expectedNumPools: 1,
+		},
+		"Single pool, pool does not contain denom": {
+			poolType: []types.PoolType{types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+			},
+			denom:            FOO,
+			expectedNumPools: 0,
+		},
+		"Two pools, pools contains denom": {
+			poolType: []types.PoolType{types.Balancer, types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
+			},
+			denom:            BAR,
+			expectedNumPools: 2,
+		},
+		"Two pools, pools does not contains denom": {
+			poolType: []types.PoolType{types.Balancer, types.Concentrated},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2. baz-foo
+			},
+			denom:            FOO,
+			expectedNumPools: 0,
+		},
+		"Many pools": {
+			poolType: []types.PoolType{types.Concentrated, types.Balancer, types.Concentrated, types.Balancer},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),   // pool 3. bar-baz
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 4. baz-uosmo
+			},
+			denom:            BAR,
+			expectedNumPools: 2,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			for i := range tc.poolType {
+				suite.FundAcc(suite.TestAccs[0], tc.poolCoins[i])
+				suite.CreatePoolFromTypeWithCoins(tc.poolType[i], tc.poolCoins[i])
+			}
+
+			poolsResult, err := poolManagerKeeper.ListPoolsByDenom(ctx, tc.denom)
+			if tc.expectedError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedNumPools, len(poolsResult))
+			}
+		})
+	}
 }

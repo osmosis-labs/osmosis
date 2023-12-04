@@ -4,14 +4,14 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	simapp "github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 var now = time.Now().UTC()
