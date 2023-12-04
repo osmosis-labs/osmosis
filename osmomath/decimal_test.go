@@ -1744,3 +1744,47 @@ func (s *decimalTestSuite) TestTruncateSDKIntMutAndMut() {
 		s.Require().Equal(big.NewInt(60), d.BigInt())
 	}
 }
+
+func BenchmarkTruncateToSDKInt(b *testing.B) {
+	tests := []struct {
+		base osmomath.BigDec
+	}{
+		// TODO: Choose selection here more robustly
+		{
+			osmomath.NewBigDec(40),
+		},
+		{
+			osmomath.NewBigDec(10000000),
+		},
+		{
+			osmomath.NewBigDec(0),
+		},
+	}
+	for i := 0; i < b.N; i++ {
+		for _, test := range tests {
+			test.base.TruncateToSDKInt()
+		}
+	}
+}
+
+func BenchmarkTruncateToSDKIntMut(b *testing.B) {
+	tests := []struct {
+		base osmomath.BigDec
+	}{
+		// TODO: Choose selection here more robustly
+		{
+			osmomath.NewBigDec(40),
+		},
+		{
+			osmomath.NewBigDec(10000000),
+		},
+		{
+			osmomath.NewBigDec(0),
+		},
+	}
+	for i := 0; i < b.N; i++ {
+		for _, test := range tests {
+			test.base.TruncateToSDKIntMut()
+		}
+	}
+}
