@@ -262,9 +262,9 @@ func (d BigDec) TruncateToSDKInt() Int {
 	return truncatedInt
 }
 
-// TruncateSDKIntMut() returns the sdkmath.Int representation of a BigDec,mutative the input.
+// TruncateSDKIntMut() returns the sdkmath.Int representation of a BigDec, mutative the input.
 // Values in any additional decimal places are truncated.
-func (d BigDec) TruncateSDKIntMut() Int {
+func (d BigDec) TruncateToSDKIntMut() Int {
 	var precisionFactor *big.Int
 	precisionFactor = precisionFactors[0]
 	// big.Quo truncates numbers that would have been after decimal point

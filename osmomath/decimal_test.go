@@ -1725,8 +1725,8 @@ func (s *decimalTestSuite) TestTruncateSDKIntMutAndMut() {
 	for _, test := range tests {
 		d := test.d
 
-		p1 := d.TruncateSDKInt()
-		p2 := d.TruncateSDKIntMut()
+		p1 := d.TruncateToSDKInt()
+		p2 := d.TruncateToSDKIntMut()
 
 		s.Require().IsType(osmomath.NewInt(1), p1)
 		s.Require().IsType(osmomath.NewInt(1), p2)
