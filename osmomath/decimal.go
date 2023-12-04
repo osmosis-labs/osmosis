@@ -250,7 +250,7 @@ func (d BigDec) BigInt() *big.Int {
 
 // TruncateSDKInt() returns the sdkmath.Int representation of a BigDec.
 // Values in any additional decimal places are truncated.
-func (d BigDec) TruncateSDKInt() Int {
+func (d BigDec) TruncateToSDKInt() Int {
 	var precisionFactor *big.Int
 	precisionFactor = precisionFactors[0]
 	// Truncate any additional decimal values that exist due to BigDec's additional precision
