@@ -874,7 +874,7 @@ github.com/fogleman/gg v1.3.0/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzP
 github.com/fortytw2/leaktest v1.3.0 h1:u8491cBMTQ8ft8aeV+adlcytMZylmA5nnwwkRZjI8vw=
 github.com/franela/goblin v0.0.0-20200105215937-c9ffbefa60db/go.mod h1:7dvUGVsVBjqR7JHJk0brhHOZYGmfBYOrK0ZhYMEtBr4=
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=
-github.com/frankban/quicktest v1.14.4 h1:g2rn0vABPOOXmZUj+vbmUp0lPoXEMuhTpIluN0XL9UY=
+github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.6.0 h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=
@@ -1465,10 +1465,10 @@ github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231124185741-15259ccd2249 h1:WXgQ
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231124185741-15259ccd2249/go.mod h1:EHwCeN9IXonsjKcjpS12MqeStdZvIdxt3VYXhus3G3c=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e h1:9gxXkcV8NYVbsrHKPTekwh5bm8CZJs2GEUNUnJruiLE=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e/go.mod h1:NwGU1m9ng4/VV5P8wXJOhUaos/jlnOjGw7wIxL/7bu8=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231130002422-33ba03710e16 h1:TwrF61atXIHkLrDU8s06KWdCneGio5Xwu+jn+zHQsdU=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231130002422-33ba03710e16/go.mod h1:E/03wtLkkFoYHxM7+tofd/10nsTZZXn03PexWvs0ZFM=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231202052730-c364ecd6ae3f h1:CnljQ6xFEt+xu6RGUUmbfVosxCnkjA/mJoFgkVS+u0c=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231202052730-c364ecd6ae3f/go.mod h1:RV5/L2D2h2omHN4oT2tQax42W6YvNquFwX7cnrkM9hw=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231201210643-d8ee44cf41bc h1:aSzbnUV4S8tltsN4g5pDfPApkWFeQbmv4lghz6oYjLY=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231201210643-d8ee44cf41bc/go.mod h1:E/03wtLkkFoYHxM7+tofd/10nsTZZXn03PexWvs0ZFM=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231130002422-33ba03710e16 h1:5fsi1o27Xw/p6V6cKHaDz2mva580CBWwUfEZDjE4WmY=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231130002422-33ba03710e16/go.mod h1:V9N0rmNsok9QmCCVmnypdQHxQJzQtqdIGz02/tWIP74=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231130002422-33ba03710e16 h1:hgE6uRnlbMvZto9veApBbmwTqQQmLXdRUdbvfqhqEH4=
@@ -1651,8 +1651,8 @@ github.com/spf13/afero v1.9.2/go.mod h1:iUV7ddyEEZPO5gA3zD4fJt6iStLlL+Lg4m2cihcD
 github.com/spf13/afero v1.10.0 h1:EaGW2JJh15aKOejeuJ+wpFSHnbd7GE6Wvp3TsNhb6LY=
 github.com/spf13/afero v1.10.0/go.mod h1:UBogFpq8E9Hx+xc5CNTTEpTnuHVmXDwZcZcE1eb/UhQ=
 github.com/spf13/cast v1.3.0/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
-github.com/spf13/cast v1.5.1 h1:R+kOtfhWQE6TVQzY+4D7wJLBgkdVasCEFxSUBYBYIlA=
-github.com/spf13/cast v1.5.1/go.mod h1:b9PdjNptOpzXr7Rq1q9gJML/2cdGQAo69NKzQ10KN48=
+github.com/spf13/cast v1.6.0 h1:GEiTHELF+vaR5dhz3VqZfFSzZjYbgeKDpBxQVS4GYJ0=
+github.com/spf13/cast v1.6.0/go.mod h1:ancEpBxwJDODSW/UG4rDrAqiKolqNNh2DX3mk86cAdo=
 github.com/spf13/cobra v0.0.3/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
 github.com/spf13/cobra v0.0.5/go.mod h1:3K3wKZymM7VvHMDS9+Akkh4K60UwM26emMESw8tLCHU=
 github.com/spf13/cobra v1.8.0 h1:7aJaZx1B85qltLMc546zn58BxxfZdR/W22ej9CFoEf0=

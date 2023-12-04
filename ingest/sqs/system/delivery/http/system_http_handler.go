@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -25,6 +26,8 @@ type SystemHandler struct {
 	CIUsecase    mvc.ChainInfoUsecase
 }
 
+const heightTolerance = 10
+
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
 func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log.Logger, us mvc.ChainInfoUsecase) {
 	handler := &SystemHandler{
@@ -37,9 +40,6 @@ func NewSystemHandler(e *echo.Echo, redisAddress, grpcAddress string, logger log
 	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
 	e.GET("/healthcheck", handler.GetHealthStatus)
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
-
-	// // Register pprof handlers on "/debug/pprof"
-	// e.GET("/debug/pprof/*", echo.WrapHandler(http.HandlerFunc(pprof.Index)))
 }
 
 // GetHealthStatus handles health check requests for both GRPC gateway and Redis
@@ -47,20 +47,19 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// Check GRPC Gateway status
-	grpcStatus := "running"
 	url := h.grpcAddress + "/status"
 	resp, err := http.Get(url)
-	if err != nil {
-		grpcStatus = "down"
+	if err != nil || resp == nil || resp.StatusCode != http.StatusOK {
 		h.logger.Error("Error checking GRPC gateway status", zap.Error(err))
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "Error connecting to the Osmosis chain via GRPC gateway")
 	} else {
 		defer resp.Body.Close()
 	}
 
 	// Check the latest height from chain info use case
-	latestHeight, err := h.CIUsecase.GetLatestHeight(ctx)
+	latestStoreHeight, err := h.CIUsecase.GetLatestHeight(ctx)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get latest height from Redis")
 	}
 
 	// Parse the response from the GRPC Gateway status endpoint
@@ -86,29 +85,33 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		}
 	}
 
-	// Compare latestHeight with latest_block_height from the status endpoint
-	nodeStatus := "synced"
-
 	// allow 10 blocks of difference before claiming node is not synced
-	if fmt.Sprint(int64(latestHeight)+10) < statusResponse.Result.SyncInfo.LatestBlockHeight {
-		nodeStatus = "not_synced"
+
+	latestChainHeight, err := strconv.ParseUint(statusResponse.Result.SyncInfo.LatestBlockHeight, 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse latest block height from GRPC gateway")
+	}
+
+	// If the node is not synced, return HTTP 503
+	if latestChainHeight-latestStoreHeight > heightTolerance {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, fmt.Sprintf("Node is not synced, chain height (%d), store height (%d), tolerance (%d)", latestChainHeight, latestStoreHeight, heightTolerance))
 	}
 
 	// Check Redis status
-	redisStatus := "running"
 	rdb := redis.NewClient(&redis.Options{
 		Addr: h.redisAddress,
 	})
 
 	if _, err := rdb.Ping().Result(); err != nil {
-		redisStatus = "down"
 		h.logger.Error("Error connecting to Redis", zap.Error(err))
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "Error connecting to Redis", err)
 	}
 
 	// Return combined status
 	return c.JSON(http.StatusOK, map[string]string{
-		"grpc_gateway_status": grpcStatus,
-		"redis_status":        redisStatus,
-		"node_status":         nodeStatus,
+		"grpc_gateway_status": "running",
+		"redis_status":        "running",
+		"chain_latest_height": fmt.Sprint(latestChainHeight),
+		"store_latest_height": fmt.Sprint(latestStoreHeight),
 	})
 }
