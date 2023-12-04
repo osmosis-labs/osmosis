@@ -28,18 +28,6 @@ func (s *QueryTestSuite) SetupSuite() {
 	}
 	s.PrepareBalancerPoolWithCoins(poolAssets...)
 
-	// set up fee token
-	upgradeProp := types.NewUpdateFeeTokenProposal(
-		"Test Proposal",
-		"test",
-		types.FeeToken{
-			Denom:  "uosmo",
-			PoolID: 1,
-		},
-	)
-	err := s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
-	s.Require().NoError(err)
-
 	s.Commit()
 }
 
