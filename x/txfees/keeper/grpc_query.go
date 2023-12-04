@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	mempool1559 "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 var _ types.QueryServer = Querier{}
