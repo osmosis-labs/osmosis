@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -73,4 +74,17 @@ func TestSDKDecMarshal(t *testing.T) {
 	require.NotEqual(t, twapResponse, twapResponse2)
 	require.Equal(t, osmomath.Dec{}, twapResponse.ArithmeticTwap)
 	require.Equal(t, osmomath.ZeroDec(), twapResponse2.ArithmeticTwap)
+
+	var emptyBytes []byte
+	uninitDec := osmomath.Dec{}
+	err = uninitDec.Unmarshal(emptyBytes)
+	require.NoError(t, err)
+
+	strExample := "-34163867895291655204926482650"
+	bytes := []byte(strExample)
+	fmt.Println(string(bytes))
+	fmt.Println(len(bytes))
+	uninitDec = osmomath.Dec{}
+	err = uninitDec.Unmarshal(bytes)
+	require.NoError(t, err)
 }
