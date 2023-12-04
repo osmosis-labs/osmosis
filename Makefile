@@ -164,6 +164,35 @@ go-mock-update:
 	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
 	mockgen -source=x/gamm/types/pool.go -destination=tests/mocks/cfmm_pool.go -package=mocks
 	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
+	mockgen -source=ingest/sqs/domain/pools.go -destination=tests/mocks/sqs_pool.go -package=mocks -mock_names=PoolI=MockSQSPoolI
+
+###############################################################################
+###                                SQS                                      ###
+###############################################################################
+
+redis-start:
+	docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 -v ./redis-cache/:/data redis/redis-stack:7.2.0-v3
+
+redis-stop:
+	docker container rm -f redis-stack
+
+sqs-start:
+	./scripts/debug_builder.sh
+	build/osmosisd start
+
+sqs-load-test-ui:
+	docker compose -f ingest/sqs/locust/docker-compose.yml up --scale worker=4
+
+sqs-profile:
+	go tool pprof -http=:8080 http://localhost:9092/debug/pprof/profile?seconds=15
+
+# Updates go tests with the latest mainnet state
+# Make sure that the node is running locally
+sqs-update-mainnet-state:
+	curl -X POST "http:/localhost:9092/store-state"
+	mv pools.json ingest/sqs/router/usecase/routertesting/parsing/pools.json
+	mv taker_fees.json ingest/sqs/router/usecase/routertesting/parsing/taker_fees.json
+
 
 ###############################################################################
 ###                                Release                                  ###
