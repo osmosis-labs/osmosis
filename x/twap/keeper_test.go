@@ -6,11 +6,13 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v18/x/twap"
+	"github.com/osmosis-labs/osmosis/v18/x/twap/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v18/x/twap/types"
 )
 
@@ -614,4 +616,76 @@ func recordWithUpdatedSpotPrice(record types.TwapRecord, sp0 sdk.Dec, sp1 sdk.De
 	record.P0LastSpotPrice = sp0
 	record.P1LastSpotPrice = sp1
 	return record
+}
+
+func TestSDKDecMarshal(t *testing.T) {
+
+	// 1. Try to marshal and then unmarshal a zero Dec -> works fine
+	zeroDec := sdk.ZeroDec()
+
+	bz, err := zeroDec.Marshal()
+	require.NoError(t, err)
+
+	var dec sdk.Dec
+	err = dec.Unmarshal(bz)
+	require.NoError(t, err)
+
+	require.Equal(t, zeroDec, dec)
+
+	// 2. Try to marshal and unmarshal sdk dec as a field -> works fine.
+	twapResponse := queryproto.ArithmeticTwapResponse{
+		ArithmeticTwap: zeroDec,
+	}
+
+	bz, err = twapResponse.Marshal()
+	require.NoError(t, err)
+
+	var twapResponse2 queryproto.ArithmeticTwapResponse
+	err = twapResponse2.Unmarshal(bz)
+
+	require.NoError(t, err)
+
+	// 3. Now, try incorrectly initializing sdk.Dec and then marshal and unmarshal
+	// -> works fine but initializes to zero.
+
+	twapResponse = queryproto.ArithmeticTwapResponse{
+		ArithmeticTwap: sdk.Dec{}, // incorrectly initialized
+	}
+
+	bz, err = twapResponse.Marshal()
+	require.NoError(t, err)
+
+	err = twapResponse2.Unmarshal(bz)
+	require.NoError(t, err)
+
+	// Response are not equal but panic does not occur.
+	require.Equal(t, twapResponse, twapResponse2)
+
+	// The unmarshaled one gets intialized to zero.
+	require.Equal(t, sdk.ZeroDec(), twapResponse.ArithmeticTwap)
+	require.Equal(t, sdk.ZeroDec(), twapResponse2.ArithmeticTwap)
+
+	// 4. Now try not ininitializing sdk.Dec and then marshal and unmarshal
+	// -> works fine but initializes unitialized field to zero.
+
+	twapResponse = queryproto.ArithmeticTwapResponse{
+		// Not initialized
+	}
+
+	bz, err = twapResponse.Marshal()
+	require.NoError(t, err)
+
+	err = twapResponse2.Unmarshal(bz)
+	require.NoError(t, err)
+
+	// Response are not equal but panic does not occur.
+	require.Equal(t, twapResponse, twapResponse2)
+	require.Equal(t, sdk.ZeroDec(), twapResponse.ArithmeticTwap)
+	require.Equal(t, sdk.ZeroDec(), twapResponse2.ArithmeticTwap)
+
+	// Empty bytes
+	var bytes []byte
+	testDec := sdk.Dec{}
+	err = testDec.Unmarshal(bytes)
+	require.NoError(t, err)
 }
