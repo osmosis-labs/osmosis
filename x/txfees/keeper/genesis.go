@@ -24,6 +24,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if err != nil {
 		panic(err)
 	}
+
+	info := k.epochKeeper.GetEpochInfo(ctx, types.EpochIdentifier)
+	if info.Identifier == "" {
+		panic(fmt.Sprintf("epoch info for identifier %s does not exist", types.EpochIdentifier))
+	}
 }
 
 // ExportGenesis returns the txfees module's exported genesis.

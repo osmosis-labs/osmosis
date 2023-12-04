@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -22,6 +23,10 @@ type PoolManager interface {
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+}
+
+type EpochKeeper interface {
+	GetEpochInfo(ctx sdk.Context, identifier string) epochtypes.EpochInfo
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
