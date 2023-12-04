@@ -162,6 +162,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231204164528-a7a33398c456
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	cosmossdk.io/math => github.com/osmosis-labs/cosmos-sdk/math v1.1.3-rc.0.0.20231204192053-562c8be04571
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath
