@@ -26,6 +26,16 @@ type SystemHandler struct {
 	CIUsecase    mvc.ChainInfoUsecase
 }
 
+// Parse the response from the GRPC Gateway status endpoint
+type JsonResponse struct {
+	Result struct {
+		SyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+			CatchingUp        bool   `json:"catching_up"`
+		} `json:"sync_info"`
+	} `json:"result"`
+}
+
 const heightTolerance = 10
 
 // NewSystemHandler will initialize the /debug/ppof resources endpoint
@@ -53,43 +63,43 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		h.logger.Error("Error checking GRPC gateway status", zap.Error(err))
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "Error connecting to the Osmosis chain via GRPC gateway")
 	} else {
-		defer resp.Body.Close()
-	}
-
-	// Check the latest height from chain info use case
-	latestStoreHeight, err := h.CIUsecase.GetLatestHeight(ctx)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get latest height from Redis")
-	}
-
-	// Parse the response from the GRPC Gateway status endpoint
-	type JsonResponse struct {
-		Result struct {
-			SyncInfo struct {
-				LatestBlockHeight string `json:"latest_block_height"`
-			} `json:"sync_info"`
-		} `json:"result"`
+		if resp.Body != nil {
+			defer resp.Body.Close()
+		}
 	}
 
 	var statusResponse JsonResponse
 
-	if resp != nil {
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read response body")
-		}
+	if resp == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get response from GRPC gateway")
+	}
 
-		err = json.Unmarshal(bodyBytes, &statusResponse)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
-		}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read response body")
+	}
+
+	err = json.Unmarshal(bodyBytes, &statusResponse)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
+	}
+
+	// Check if the node is catching up. Error if so.
+	if statusResponse.Result.SyncInfo.CatchingUp {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "Node is still catching up")
 	}
 
 	// allow 10 blocks of difference before claiming node is not synced
-
 	latestChainHeight, err := strconv.ParseUint(statusResponse.Result.SyncInfo.LatestBlockHeight, 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse latest block height from GRPC gateway")
+	}
+
+	// Check the latest height from chain info use case
+	// Errors if the height has not beein updated for more than 30 seconds
+	latestStoreHeight, err := h.CIUsecase.GetLatestHeight(ctx)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("Failed to get latest height from Redis: %s", err))
 	}
 
 	// If the node is not synced, return HTTP 503
