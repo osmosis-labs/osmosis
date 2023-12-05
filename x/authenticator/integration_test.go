@@ -68,7 +68,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 	}
 
 	// Initialize a test account with the first private key
-	s.Account = s.CreateAccount(s.PrivKeys[0], 100_000)
+	s.Account = s.CreateAccount(s.PrivKeys[0], 500_000)
 }
 
 func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) authtypes.AccountI {
@@ -604,7 +604,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthz() {
 	}
 
 	// Create account for the second private key. This is needed for executing the grant
-	s.CreateAccount(s.PrivKeys[1], 50_000)
+	s.CreateAccount(s.PrivKeys[1], 200_000)
 
 	// Store the grant
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)
@@ -736,7 +736,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthzTableTest() {
 	}
 
 	// Create account for the second private key. This is needed for executing the grant
-	s.CreateAccount(s.PrivKeys[1], 100_000)
+	s.CreateAccount(s.PrivKeys[1], 500_000)
 
 	// Store the grant
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)
