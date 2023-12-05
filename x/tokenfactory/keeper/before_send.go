@@ -74,6 +74,7 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 // Note that we gas meter trackBeforeSend to prevent infinite contract calls.
 // CONTRACT: this should not be called in beginBlock or endBlock since out of gas will cause this method to panic.
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
+	ctx.Logger().Error("Call before send listener is called with amount %s", amount.String())
 	defer func() {
 		if r := recover(); r != nil {
 			err = errorsmod.Wrapf(types.ErrBeforeSendHookOutOfGas, "%v", r)
@@ -82,6 +83,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
+		ctx.Logger().Error("Before send hook fetched with addres %s", cosmwasmAddress)
 		if cosmwasmAddress != "" {
 			cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
 			if err != nil {
@@ -102,6 +104,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 						Amount: osmoutils.CWCoinFromSDKCoin(coin),
 					},
 				}
+				ctx.Logger().Error("Block Before send msg built with from %s, to %s, amount %s", from.String(), to.String(), amount.String())
 				msgBz, err = json.Marshal(msg)
 			} else {
 				msg := types.TrackBeforeSendSudoMsg{
@@ -121,11 +124,14 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.BeforeSendHookGasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
+				ctx.Logger().Error("Sudo has errored with %s ", err.Error())
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
-
+			ctx.Logger().Error("finished calling sudo without error")
 			// consume gas used for calling contract to the parent ctx
 			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
+			ctx.Logger().Error("consumed gas")
+			ctx.Logger().Error("===finished hook")
 		}
 	}
 	return nil
