@@ -78,6 +78,12 @@ func (k *Keeper) SetContractKeeper(contractKeeper types.ContractKeeper) {
 	k.contractKeeper = contractKeeper
 }
 
+// set the bank keeper
+// need this for setting the bank keeper with hooks registered
+func (k *Keeper) SetBankKeeper(bankKeeper types.BankKeeper) {
+	k.bankKeeper = bankKeeper
+}
+
 // CreateModuleAccount creates a module account with minting and burning capabilities
 // This account isn't intended to store any coins,
 // it purely mints and burns them on behalf of the admin of respective denoms,

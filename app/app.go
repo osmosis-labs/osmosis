@@ -285,6 +285,8 @@ func NewOsmosisApp(
 	// https://github.com/osmosis-labs/osmosis/issues/6580
 	app.SetupHooks()
 
+	app.TokenFactoryKeeper.SetBankKeeper(app.BankKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
