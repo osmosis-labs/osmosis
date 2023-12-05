@@ -100,8 +100,8 @@ func (s *IngesterTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee()
 	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 	s.Require().NoError(err)
 
-	// 2 for the spot price (each denom is worth 2 OSMO) and 2 for each denom
-	expectedTVL := defaultAmount.MulRaw(2 * 2)
+	// 0.5 for each token that equals 1 osmo and 2 for each denom
+	expectedTVL := defaultAmount
 	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(USDC, defaultAmount))
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
@@ -146,8 +146,8 @@ func (s *IngesterTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
 	// System under test
 	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
-	// 2 OSMO per USDT amount + 4 OSMO per USDC amount (overwritten by routing info)
-	expectedTVL := defaultAmount.MulRaw(2).Add(defaultAmount.MulRaw(4))
+	// 0.5 OSMO per USDT amount + 0.25 OSMO per USDC amount (overwritten by routing info)
+	expectedTVL := defaultAmount.QuoRaw(2).Add(defaultAmount.QuoRaw(4))
 	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(USDC, defaultAmount))
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
@@ -178,8 +178,8 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPoo
 	// System under test
 	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
-	// 2 OSMO per USDT amount + half amount OSMO itself
-	expectedTVL := defaultAmount.MulRaw(2).Add(halfDefaultAmount)
+	// 0.5 OSMO per USDT amount + half amount OSMO itself
+	expectedTVL := defaultAmount.QuoRaw(2).Add(halfDefaultAmount)
 	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
@@ -206,8 +206,8 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsItself()
 	// System under test
 	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, defaultOneToOneUosmoPrecisionMap)
 
-	// 2 OSMO per USDT amount + half amount OSMO itself
-	expectedTVL := defaultAmount.MulRaw(2).Add(halfDefaultAmount)
+	// 0.5 OSMO per USDT amount + half amount OSMO itself
+	expectedTVL := defaultAmount.QuoRaw(2).Add(halfDefaultAmount)
 	expectTVLErrorStr := noTotalValueLockedErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)

@@ -320,7 +320,7 @@ func (pi *poolIngester) convertPool(
 			}
 
 			// Scale on-chain spot price to the correct token precision.
-			precisionMultiplier := osmomath.NewBigDec(int64(basePrecison)).Quo(uosmoPrecisionBigDec)
+			precisionMultiplier := uosmoPrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
 
 			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
 
