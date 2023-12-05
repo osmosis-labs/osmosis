@@ -1727,7 +1727,7 @@ var (
 
 	pattern_Query_TotalVolumeForPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "poolmanager", "v1beta1", "pools", "pool_id", "total_volume"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TradingPairTakerFee_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"osmosis", "poolmanager", "v1beta1", "pools", "trading_pair_takerfee"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TradingPairTakerFee_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "poolmanager", "v1beta1", "trading_pair_takerfee"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_EstimateTradeBasedOnPriceImpact_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"osmosis", "poolmanager", "v1beta1", "pool_id", "estimate_trade"}, "", runtime.AssumeColonVerbOpt(false)))
 )

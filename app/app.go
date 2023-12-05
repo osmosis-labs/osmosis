@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -70,29 +69,36 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v21"
-	v3 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v20/x/mint"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
+	v3 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v21/ingest"
+	"github.com/osmosis-labs/osmosis/v21/x/mint"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 const appName = "OsmosisApp"
@@ -110,7 +116,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{}
+	allowedReceivingModAcc = map[string]bool{protorevtypes.ModuleName: true}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
@@ -126,35 +132,13 @@ var (
 	EnableSpecificWasmProposals = ""
 
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
-	EmptyWasmOpts []wasm.Option
+	EmptyWasmOpts []wasmkeeper.Option
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
-
-// GetWasmEnabledProposals parses the WasmProposalsEnabled and
-// EnableSpecificWasmProposals values to produce a list of enabled proposals to
-// pass into the application.
-func GetWasmEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificWasmProposals == "" {
-		if WasmProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-
-		return wasm.DisableAllProposals
-	}
-
-	chunks := strings.Split(EnableSpecificWasmProposals, ",")
-
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-
-	return proposals
-}
 
 // OsmosisApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
@@ -212,7 +196,7 @@ func NewOsmosisApp(
 	homePath string,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
+	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
@@ -222,8 +206,6 @@ func NewOsmosisApp(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
-
-	wasmEnabledProposals := GetWasmEnabledProposals()
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -266,10 +248,34 @@ func NewOsmosisApp(
 		dataDir,
 		wasmDir,
 		wasmConfig,
-		wasmEnabledProposals,
 		wasmOpts,
 		app.BlockedAddrs(),
 	)
+
+	// Initialize the ingest manager for propagating data to external sinks.
+	app.IngestManager = ingest.NewIngestManager()
+
+	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+
+	// Initialize the SQS ingester if it is enabled.
+	if sqsConfig.IsEnabled {
+		sqsKeepers := common.SQSIngestKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
+		}
+
+		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
+		if err != nil {
+			panic(err)
+		}
+
+		// Set the sidecar query server ingester to the ingest manager.
+		app.IngestManager.RegisterIngester(sqsIngester)
+	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
@@ -354,7 +360,7 @@ func NewOsmosisApp(
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
-		app.GetKey(wasm.StoreKey),
+		app.GetKey(wasmtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.TxFeesKeeper,
@@ -418,6 +424,8 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	// Process the block and ingest data into various sinks.
+	app.IngestManager.ProcessBlock(ctx)
 	return app.mm.EndBlock(ctx, req)
 }
 

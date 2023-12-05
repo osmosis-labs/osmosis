@@ -6,8 +6,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(
