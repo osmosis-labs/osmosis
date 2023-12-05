@@ -16,7 +16,7 @@ type chainInfoUseCase struct {
 	redisRepositoryManager mvc.TxManager
 }
 
-// The max number of seconds allowed for there to be no updated
+// The max number of seconds allowed for there to be no updates
 // TODO: epoch???
 const MaxAllowedHeightUpdateTimeDeltaSecs = 30
 
