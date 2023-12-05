@@ -118,7 +118,7 @@ func SignAndDeliver(
 		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5000)},
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000)},
 		simtestutil.DefaultGenTxGas,
 		chainID,
 		accNums,

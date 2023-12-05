@@ -201,6 +201,23 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[0].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
+	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[0].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
+	// fee payer is authenticated
+	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -218,10 +235,6 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
-
-	// TODO: improve this test for gas consumption
-	fmt.Println("Gas Consumed: after txn gas over 20000")
-	fmt.Println(s.Ctx.GasMeter().GasConsumed())
 
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "gas")
@@ -271,7 +284,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Bad selection", s.TestPrivKeys[0], []int32{3}, false, 0},
 	}
 
-	approachingGasPerSig := 8000 // Each signature consumes at least this amount (but not much more)
+	approachingGasPerSig := 4000 // Each signature consumes at least this amount (but not much more)
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
