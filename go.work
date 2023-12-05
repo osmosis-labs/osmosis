@@ -13,3 +13,5 @@ use ./tests/cl-genesis-positions
 use .
 
 use ./x/epochs
+
+replace cosmossdk.io/math => github.com/osmosis-labs/cosmos-sdk/math v1.1.3-rc.0.0.20231205224007-adb0bdd732ad
