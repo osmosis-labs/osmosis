@@ -31,6 +31,5 @@ func (p *chainInfoUseCase) GetLatestHeight(ctx context.Context) (uint64, error) 
 	if err != nil {
 		return 0, err
 	}
-
 	return latestHeight, nil
 }

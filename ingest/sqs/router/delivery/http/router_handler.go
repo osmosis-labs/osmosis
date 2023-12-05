@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -104,7 +103,7 @@ func (a *RouterHandler) GetCustomQuote(c echo.Context) error {
 
 	poolIDsStr := c.QueryParam("poolIDs")
 	if len(poolIDsStr) == 0 {
-		return c.JSON(http.StatusBadRequest, ResponseError{Message: fmt.Sprintf("poolIDs is required")})
+		return c.JSON(http.StatusBadRequest, ResponseError{Message: "poolIDs is required"})
 	}
 
 	poolIDs, err := parseNumbers(poolIDsStr)
