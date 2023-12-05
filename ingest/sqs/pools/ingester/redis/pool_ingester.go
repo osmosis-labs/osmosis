@@ -276,10 +276,6 @@ func (pi *poolIngester) convertPool(
 	// Otherwise, the CosmWasmPool model panics.
 	pool = pool.AsSerializablePool()
 
-	if pool.GetId() == uint64(398) {
-		fmt.Println("398")
-	}
-
 	var errorInTVLStr string
 	for _, balance := range balances {
 		// Note that there are edge cases where gamm shares or some random
@@ -323,10 +319,6 @@ func (pi *poolIngester) convertPool(
 				continue
 			}
 
-			if pool.GetId() == uint64(398) {
-				fmt.Printf("spot price (%s) for denom (%s)\n", uosmoBaseAssetSpotPrice.String(), balance.Denom)
-			}
-
 			// Scale on-chain spot price to the correct token precision.
 			precisionMultiplier := osmomath.NewBigDec(int64(basePrecison)).Quo(uosmoPrecisionBigDec)
 
@@ -339,15 +331,7 @@ func (pi *poolIngester) convertPool(
 		}
 
 		tvlAddition := osmomath.BigDecFromSDKInt(balance.Amount).QuoMut(routingInfo.Price).Dec().TruncateInt()
-		if pool.GetId() == uint64(398) {
-			fmt.Printf("tvl addition (%s) from denom (%s), balance (%s), price (%s) \n", tvlAddition, balance.Denom, balance.Amount, routingInfo.Price)
-		}
-
 		osmoPoolTVL = osmoPoolTVL.Add(tvlAddition)
-	}
-
-	if pool.GetId() == uint64(398) {
-		fmt.Println("tvl ", osmoPoolTVL.String())
 	}
 
 	// Get pool denoms. Although these can be inferred from balances, this is safer.
