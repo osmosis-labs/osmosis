@@ -3,6 +3,7 @@ package testutils
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -78,7 +79,7 @@ func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccA
 	if t.Confirm == Always {
 		return iface.Confirm()
 	} else {
-		return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block"))
+		return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block"))
 	}
 }
 

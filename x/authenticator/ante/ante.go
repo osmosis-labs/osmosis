@@ -75,7 +75,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				log := fmt.Sprintf(
 					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
 					maximumUnauthenticatedGasParam.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
-				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
 				panic(r)
 			}
@@ -103,7 +103,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// By default, the first signer is the account
 		account, err := utils.GetAccount(msg)
 		if err != nil {
-			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
 
 		// Get all authenticators for the executing account
@@ -118,7 +118,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		authenticators := allAuthenticators
 		if selectedAuthenticators[msgIndex] >= 0 {
 			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
+				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
 			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
@@ -156,14 +156,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		// if authentication failed, return an error
 		if !msgAuthenticated {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
 		}
 	}
 
 	// Ensure that the fee payer has been authenticated. For this to be true, the fee payer must be
 	// the signer of at least one message
 	if !feePayerAuthenticated {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee payer not authenticated")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "fee payer not authenticated")
 	}
 
 	// If the transaction has been authenticated, we call TrackMessages(...) to
@@ -198,7 +198,7 @@ func (ad AuthenticatorDecorator) GetSelectedAuthenticators(extTx authante.HasExt
 
 		if len(selectedAuthenticatorsFromExtension) != msgCount {
 			// Return an error if the number of selected authenticators does not match the number of messages.
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Mismatch between the number of selected authenticators and messages")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Mismatch between the number of selected authenticators and messages")
 		}
 
 		// Use the selected authenticators from the extension.

@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v21/x/twap"
 
+	errorsmod "cosmossdk.io/errors"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -90,15 +91,15 @@ func (sla SpendLimitAuthenticator) StaticGas() uint64 {
 func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	var initData InitData
 	if err := json.Unmarshal(data, &initData); err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to unmarshal initialization data")
+		return nil, errorsmod.Wrap(err, "failed to unmarshal initialization data")
 	}
 	sla.allowedDelta = sdk.NewUint(initData.AllowedDelta)
 	if sla.allowedDelta.IsZero() {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
 	}
 	sla.periodType = initData.PeriodType
 	if !(sla.periodType == Day || sla.periodType == Week || sla.periodType == Month || sla.periodType == Year) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", sla.periodType)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", sla.periodType)
 	}
 	return sla, nil
 }
@@ -144,7 +145,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 		price, err := sla.getPriceInQuoteDenom(ctx, coin)
 		if err != nil {
 			// ToDO: what do we want to do if we can't determine the price of an asset?
-			return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+			return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
 		}
 		totalPrevValue = totalPrevValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
@@ -153,7 +154,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 		price, err := sla.getPriceInQuoteDenom(ctx, coin)
 		if err != nil {
 			// ToDO: what do we want to do if we can't determine the price of an asset?
-			return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+			return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
 		}
 		totalCurrentValue = totalCurrentValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
@@ -164,7 +165,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	spentSoFar := sla.GetSpentInPeriod(account, ctx.BlockTime())
 
 	if delta.Add(spentSoFar).Int64() > int64(sla.allowedDelta.Uint64()) {
-		return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
+		return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
 	}
 
 	// Update the total spent so far in the current period
@@ -177,13 +178,13 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	var initData InitData
 	if err := json.Unmarshal(data, &initData); err != nil {
-		return sdkerrors.Wrap(err, "failed to unmarshal initialization data")
+		return errorsmod.Wrap(err, "failed to unmarshal initialization data")
 	}
 	if sdk.NewUint(initData.AllowedDelta).IsZero() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
 	}
 	if !(initData.PeriodType == Day || initData.PeriodType == Week || initData.PeriodType == Month || initData.PeriodType == Year) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", initData.PeriodType)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", initData.PeriodType)
 	}
 	return nil
 }
@@ -204,11 +205,11 @@ func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sd
 				return price, nil
 			}
 		}
-		return osmomath.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "no price found for %s", coin.Denom)
+		return osmomath.Dec{}, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "no price found for %s", coin.Denom)
 	case AbsoluteValue:
 		return osmomath.NewDec(1), nil
 	default:
-		return osmomath.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price strategy %s", sla.priceStrategy)
+		return osmomath.Dec{}, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price strategy %s", sla.priceStrategy)
 	}
 }
 

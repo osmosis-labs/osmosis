@@ -5,6 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +45,7 @@ func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
 	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	if !ok {
-		return iface.Rejected("", sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
+		return iface.Rejected("", errorsmod.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
 	}
 	if statefulData.Value > 10 {
 		return iface.Rejected("value is too high", nil)

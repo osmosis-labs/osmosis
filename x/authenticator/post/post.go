@@ -1,6 +1,7 @@
 package post
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -36,7 +37,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
 		if err != nil {
-			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "unable to get account")
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unable to get account")
 		}
 		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(ctx, account)
 		if err != nil {
@@ -54,7 +55,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 			successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
 
 			if successfulExecution.IsBlock() {
-				return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
+				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
 			}
 
 			success = successfulExecution.IsConfirm()
