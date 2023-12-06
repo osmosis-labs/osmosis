@@ -718,6 +718,55 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_ATOMAKT() {
 	s.Require().NotNil(quote.GetAmountOut())
 }
 
+// Validates custom quote for UOSMO to UION.
+// That is, with the given pool ID, we expect the quote to be routed through the route
+// that matches these pool IDs. Errors otherwise.
+func (s *RouterTestSuite) TestGetCustomQuote_Mainnet_UOSMOUION() {
+	config := defaultRouterConfig
+	config.MaxPoolsPerRoute = 5
+	config.MaxRoutes = 10
+
+	var (
+		amountIn = osmomath.NewInt(5000000)
+	)
+
+	router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
+
+	// Setup router repository mock
+	routerRepositoryMock := mocks.RedisRouterRepositoryMock{
+		TakerFees: takerFeeMap,
+	}
+	routerusecase.WithRouterRepository(router, &routerRepositoryMock)
+
+	// Setup pools usecase mock.
+	poolsRepositoryMock := mocks.RedisPoolsRepositoryMock{
+		Pools:     router.GetSortedPools(),
+		TickModel: tickMap,
+	}
+	poolsUsecase := poolsusecase.NewPoolsUsecase(time.Hour, &poolsRepositoryMock, nil)
+	routerusecase.WithPoolsUsecase(router, poolsUsecase)
+
+	routerUsecase := routerusecase.NewRouterUsecase(time.Hour, &routerRepositoryMock, poolsUsecase, config, &log.NoOpLogger{})
+
+	// This pool ID is second best: https://app.osmosis.zone/pool/2
+	// The top one is https://app.osmosis.zone/pool/1110 which is not selected
+	// due to custom parameter.
+	const expectedPoolID = uint64(2)
+	poolIDs := []uint64{expectedPoolID}
+
+	quote, err := routerUsecase.GetCustomQuote(context.Background(), sdk.NewCoin(UOSMO, amountIn), UION, poolIDs)
+
+	s.Require().NoError(err)
+	s.Require().NotNil(quote)
+
+	s.Require().Len(quote.GetRoute(), 1)
+	routePools := quote.GetRoute()[0].GetPools()
+	s.Require().Len(routePools, 1)
+
+	// Validate that the pool is pool 2
+	s.Require().Equal(expectedPoolID, routePools[0].GetId())
+}
+
 // Generates routes from mainnet state by:
 // - instrumenting pool repository mock with pools and ticks
 // - setting this mock on the pools use case
