@@ -38,6 +38,10 @@ func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (do
 	return r.getOptimalQuote(tokenIn, routes)
 }
 
+func (r *Router) EstimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []RouteWithOutAmount, error) {
+	return r.estimateBestSingleRouteQuote(routes, tokenIn)
+}
+
 // GetSortedPoolIDs returns the sorted pool IDs.
 // The sorting is initialized in NewRouter() by preferredPoolIDs and TVL.
 // Only used for tests.

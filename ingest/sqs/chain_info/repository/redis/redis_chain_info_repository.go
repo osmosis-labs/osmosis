@@ -51,7 +51,7 @@ func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx mvc.Tx, height
 		return err
 	}
 
-	return tx.Exec(ctx)
+	return nil
 }
 
 // GetLatestHeight retrieves the latest blockchain height from Redis
