@@ -666,7 +666,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
 	s.Require().Equal(uint64(1077), route.GetPools()[1].GetId())
 
 	// Validate that the pool is pool 1205
-	s.Require().Equal(uint64(1077), route.GetPools()[1].GetId())
+	s.Require().Equal(uint64(1205), route.GetPools()[2].GetId())
 }
 
 // This test validates that with a greater max routes value, SQS is able to find
