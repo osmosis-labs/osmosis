@@ -67,14 +67,13 @@ curl "https://sqs.osmosis.zone/pools/all" | jq .
 ## Router Resource
 
 
-1. GET `/router/quote?tokenIn=<amountIn><denomIn>&tokenOutDenom=<denomOut>`
+1. GET `/router/quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
 
 Description: returns the best quote it can compute for the given tokenIn and tokenOutDenom
 
 Parameters:
-- `amountIn` integer amount of tokenIn
-- `denomIn` string denom of tokenIn
-- `denomOut` string denom of tokenOut
+- `tokenIn` the string representation of the sdk.Coin for the token in
+- `tokenOutDenom` the string representing the denom of the token out
 
 Response example:
 
@@ -106,15 +105,14 @@ curl "https://sqs.osmosis.zone/router/quote?tokenIn=1000000uosmo&tokenOutDenom=u
 }
 ```
 
-2. GET `/router/single-quote?tokenIn=<amountIn><denomIn>&tokenOutDenom=<denomOut>`
+1. GET `/router/single-quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
 
 Description: returns the best quote it can compute w/o performing route splits,
 performing single direct route estimates only.
 
 Parameters:
-- `amountIn` integer amount of tokenIn
-- `denomIn` string denom of tokenIn
-- `denomOut` string denom of tokenOut
+- `tokenIn` the string representation of the sdk.Coin for the token in
+- `tokenOutDenom` the string representing the denom of the token out
 
 Response example:
 ```bash
@@ -145,13 +143,13 @@ curl "https://sqs.osmosis.zone/router/single-quote?tokenIn=1000000uosmo&tokenOut
 }
 ```
 
-3. GET `/router/routes?tokenIn=<denomIn>&tokenOutDenom=<denomOut>`
+1. GET `/router/routes?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
 
 Description: returns all routes that can be used for routing from tokenIn to tokenOutDenom
 
 Parameters:
-- `denomIn` string denom of tokenIn
-- `denomOut` string denom of tokenOut
+- `tokenIn` the string representation of the denom of the token in
+- `tokenOutDenom` the string representing the denom of the token out
 
 
 Response example:
@@ -220,14 +218,13 @@ curl "https://sqs.osmosis.zone/routes?tokenIn=uosmo&tokenOutDenom=uion" | jq .
 }
 ```
 
-4. GET `/router/custom-quote?tokenIn=<amountIn><denomIn>&tokenOutDenom=<denomOut>&poolIDs=<poolIDs>`
+4. GET `/router/custom-quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>&poolIDs=<poolIDs>`
 
 Description: returns the quote over route with the given poolIDs. If such route does not exist, returns error.
 
 Parameters:
-- `amountIn` integer amount of tokenIn
-- `denomIn` string denom of tokenIn
-- `denomOut` string denom of tokenOut
+- `tokenIn` the string representation of the sdk.Coin for the token in
+- `tokenOutDenom` the string representing the denom of the token out
 - `poolIDs` comma-separated list of pool IDs
 
 Response example:
@@ -259,7 +256,7 @@ curl "https://sqs.osmosis.zone/router/custom-quote?tokenIn=1000000uosmo&tokenOut
 }
 ```
 
-5. POST `/router/store-state`
+1. POST `/router/store-state`
 
 Description: stores the current state of the router in a JSON file locally. Used for debugging purposes.
 This endpoint should be disabled in production.
