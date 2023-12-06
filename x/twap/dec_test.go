@@ -80,11 +80,14 @@ func TestSDKDecMarshal(t *testing.T) {
 	err = uninitDec.Unmarshal(emptyBytes)
 	require.NoError(t, err)
 
-	strExample := "136615086517859659168519482847945"
+	strExample := "212881620000000000"
 	bytes := []byte(strExample)
 	fmt.Println(string(bytes))
 	fmt.Println(len(bytes))
 	uninitDec = osmomath.Dec{}
+	err = uninitDec.Unmarshal(bytes)
+	require.NoError(t, err)
+
 	err = uninitDec.Unmarshal(bytes)
 	require.NoError(t, err)
 }
