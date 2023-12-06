@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -87,6 +88,77 @@ func (r *routerUseCaseImpl) GetBestSingleRouteQuote(ctx context.Context, tokenIn
 	}
 
 	return router.getBestSingleRouteQuote(tokenIn, routes)
+}
+
+// GetCustomQuote implements mvc.RouterUsecase.
+func (r *routerUseCaseImpl) GetCustomQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string, poolIDs []uint64) (domain.Quote, error) {
+	// TODO: abstract this
+	router := r.initializeRouter()
+
+	candidateRoutes, err := r.handleRoutes(ctx, router, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	takerFees, err := r.routerRepository.GetAllTakerFees(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	routes, err := r.poolsUsecase.GetRoutesFromCandidates(ctx, candidateRoutes, takerFees, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	routeIndex := -1
+
+	for curRouteIndex, route := range routes {
+		routePools := route.GetPools()
+
+		// Skip routes that do not match the pool length.
+		if len(routePools) != len(poolIDs) {
+			continue
+		}
+
+		for i, pool := range routePools {
+			poolID := pool.GetId()
+
+			desiredPoolID := poolIDs[i]
+
+			// Break out of the loop if the poolID does not match the desired poolID
+			if poolID != desiredPoolID {
+				break
+			}
+
+			// Found a route that matches the poolIDs
+			if i == len(routePools)-1 {
+				routeIndex = curRouteIndex
+			}
+		}
+
+		// If the routeIndex is not -1, then we found a route that matches the poolIDs
+		// Break out of the loop
+		if routeIndex != -1 {
+			break
+		}
+	}
+
+	// Validate routeIndex
+	if routeIndex == -1 {
+		return nil, fmt.Errorf("no route found for poolIDs: %v", poolIDs)
+	}
+	if routeIndex >= len(routes) {
+		return nil, fmt.Errorf("routeIndex %d is out of bounds", routeIndex)
+	}
+
+	// Compute direct quote
+	foundRoute := routes[routeIndex]
+	quote, _, err := router.estimateBestSingleRouteQuote([]route.RouteImpl{foundRoute}, tokenIn)
+	if err != nil {
+		return nil, err
+	}
+
+	return quote, nil
 }
 
 // GetCandidateRoutes implements domain.RouterUsecase.
