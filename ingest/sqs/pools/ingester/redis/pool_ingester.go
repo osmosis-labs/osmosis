@@ -320,7 +320,7 @@ func (pi *poolIngester) convertPool(
 			}
 
 			// Scale on-chain spot price to the correct token precision.
-			precisionMultiplier := osmomath.NewBigDec(int64(basePrecison)).Quo(uosmoPrecisionBigDec)
+			precisionMultiplier := uosmoPrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
 
 			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
 
@@ -330,7 +330,8 @@ func (pi *poolIngester) convertPool(
 			}
 		}
 
-		osmoPoolTVL = osmoPoolTVL.Add(osmomath.NewBigDecFromBigInt(balance.Amount.BigInt()).MulMut(routingInfo.Price).Dec().TruncateInt())
+		tvlAddition := osmomath.BigDecFromSDKInt(balance.Amount).QuoMut(routingInfo.Price).Dec().TruncateInt()
+		osmoPoolTVL = osmoPoolTVL.Add(tvlAddition)
 	}
 
 	// Get pool denoms. Although these can be inferred from balances, this is safer.
