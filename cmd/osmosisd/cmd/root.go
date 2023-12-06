@@ -447,7 +447,7 @@ func initAppConfig() (string, interface{}) {
 
 	sqsConfig := sqs.DefaultConfig
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasm.DefaultWasmConfig()}
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig()}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
