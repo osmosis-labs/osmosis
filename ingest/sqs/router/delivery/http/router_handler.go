@@ -28,6 +28,12 @@ type RouterHandler struct {
 	logger   log.Logger
 }
 
+const routerResource = "/router"
+
+func formatRouterResource(resource string) string {
+	return routerResource + resource
+}
+
 // Define a regular expression pattern to match sdk.Coin where the first part is the amount and second is the denom name
 // Patterns tested:
 // 500ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
@@ -40,11 +46,11 @@ func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase, logger log.Logger) {
 		RUsecase: us,
 		logger:   logger,
 	}
-	e.GET("/quote", handler.GetOptimalQuote)
-	e.GET("/single-quote", handler.GetBestSingleRouteQuote)
-	e.GET("/routes", handler.GetCandidateRoutes)
-	e.GET("/custom-quote", handler.GetCustomQuote)
-	e.POST("/store-state", handler.StoreRouterStateInFiles)
+	e.GET(formatRouterResource("/quote"), handler.GetOptimalQuote)
+	e.GET(formatRouterResource("/single-quote"), handler.GetBestSingleRouteQuote)
+	e.GET(formatRouterResource("/routes"), handler.GetCandidateRoutes)
+	e.GET(formatRouterResource("/custom-quote"), handler.GetCustomQuote)
+	e.POST(formatRouterResource("/store-state"), handler.StoreRouterStateInFiles)
 }
 
 // GetOptimalQuote will determine the optimal quote for a given tokenIn and tokenOutDenom
