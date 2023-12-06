@@ -21,7 +21,7 @@ docker: docker-help
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
-		-t osmoroman/osmosis-dev:v21-log-adam-6 \
+		-t osmoroman/osmosis-dev:v21-log-adam-7 \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
 		--build-arg GIT_VERSION=$(VERSION) \
