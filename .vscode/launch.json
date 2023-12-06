@@ -318,7 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestGetBestSplitRoutesQuote_Mainnet_ATOMUSDT",
+                "TestRouterTestSuite/TestGetCustomQuote_Mainnet_UOSMOUION",
                 "-test.v"
             ],
         },
