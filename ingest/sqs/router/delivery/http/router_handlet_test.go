@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/delivery/http"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
 )
 
 // TestParseNumbers tests parsing a string of numbers to a slice of uint64
