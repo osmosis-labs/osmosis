@@ -80,7 +80,7 @@ func TestSDKDecMarshal(t *testing.T) {
 	err = uninitDec.Unmarshal(emptyBytes)
 	require.NoError(t, err)
 
-	strExample := "33041350233728"
+	strExample := "136615086517859659168519482847945"
 	bytes := []byte(strExample)
 	fmt.Println(string(bytes))
 	fmt.Println(len(bytes))
