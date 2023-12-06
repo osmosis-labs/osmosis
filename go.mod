@@ -372,7 +372,7 @@ require (
 )
 
 replace (
-	cosmossdk.io/math => github.com/osmosis-labs/cosmos-sdk/math v1.1.3-rc.0.0.20231206011357-e440455aeb2d
+	cosmossdk.io/math => github.com/osmosis-labs/cosmos-sdk/math v1.1.3-rc.0.0.20231206015816-64cff86717eb
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
 	github.com/cometbft/cometbft => github.com/nicolaslara/cometbft v0.0.0-20231204170323-9920cd418cde
 	// force utilizing the following versions
