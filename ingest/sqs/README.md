@@ -258,7 +258,7 @@ curl "https://sqs.osmosis.zone/router/custom-quote?tokenIn=1000000uosmo&tokenOut
 }
 ```
 
-1. POST `/router/store-state`
+5. POST `/router/store-state`
 
 Description: stores the current state of the router in a JSON file locally. Used for debugging purposes.
 This endpoint should be disabled in production.
