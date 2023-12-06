@@ -88,6 +88,8 @@ func TestSDKDecMarshal(t *testing.T) {
 	err = uninitDec.Unmarshal(bytes)
 	require.NoError(t, err)
 
+	fmt.Println("after unmarshal ", uninitDec.String())
+
 	err = uninitDec.Unmarshal(bytes)
 	require.NoError(t, err)
 }
