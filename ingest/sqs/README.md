@@ -156,11 +156,7 @@ Parameters:
 
 Response example:
 ```bash
-curl "https://sqs.osmosis.zone/router/custom-quote?tokenIn=1000000uosmo&tokenOutDenom=uion?poolIDs=2" | jq .
 curl "https://sqs.osmosis.zone/routes?tokenIn=uosmo&tokenOutDenom=uion" | jq .
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   522  100   522    0     0   1894      0 --:--:-- --:--:-- --:--:--  1891
 {
   "Routes": [
     {
