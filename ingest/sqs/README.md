@@ -67,7 +67,7 @@ curl "https://sqs.osmosis.zone/pools/all" | jq .
 ## Router Resource
 
 
-1. GET `/router/quote?tokenIn=<amount><denomIn>&tokenOutDenom=<denomOut>`
+1. GET `/router/quote?tokenIn=<amountIn><denomIn>&tokenOutDenom=<denomOut>`
 
 Description: returns the best quote it can compute for the given tokenIn and tokenOutDenom
 
@@ -106,7 +106,7 @@ curl "https://sqs.osmosis.zone/router/quote?tokenIn=1000000uosmo&tokenOutDenom=u
 }
 ```
 
-2. GET `/router/single-quote?tokenIn=<amount><denomIn>&tokenOutDenom=<denomOut>`
+2. GET `/router/single-quote?tokenIn=<amountIn><denomIn>&tokenOutDenom=<denomOut>`
 
 Description: returns the best quote it can compute w/o performing route splits,
 performing single direct route estimates only.
@@ -220,11 +220,12 @@ curl "https://sqs.osmosis.zone/routes?tokenIn=uosmo&tokenOutDenom=uion" | jq .
 }
 ```
 
-4. GET `/router/custom-quote?tokenIn=<denomIn>&tokenOutDenom=<denomOut>&poolIDs=<poolIDs>`
+4. GET `/router/custom-quote?tokenIn=<amountIn><denomIn>&tokenOutDenom=<denomOut>&poolIDs=<poolIDs>`
 
 Description: returns the quote over route with the given poolIDs. If such route does not exist, returns error.
 
 Parameters:
+- `amountIn` integer amount of tokenIn
 - `denomIn` string denom of tokenIn
 - `denomOut` string denom of tokenOut
 - `poolIDs` comma-separated list of pool IDs
