@@ -19,8 +19,7 @@ on:
     tags:
       - sqs-v[0-9]+.[0-9]+.[0-9]
     branches:
-      - v20.x
-      - v21.x
+      - "v[0-9]**"
 
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
