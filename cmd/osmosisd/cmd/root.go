@@ -524,7 +524,7 @@ route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateH
 route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
 ` + `
 ###############################################################################
-###              		       Wasm Configuration    					     ###
+###              		       Wasm Configuration    					    ###
 ###############################################################################
 ` + wasmtypes.DefaultConfigTemplate()
 
