@@ -38,6 +38,8 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// Begin by flushing all previous writes
+	// TODO: we need to make this clear only pools data
+	// while keeping the routes cache.
 	if err := tx.ClearAll(goCtx); err != nil {
 		return err
 	}

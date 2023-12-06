@@ -11,6 +11,11 @@ The use case for this is performing certain data and computationally intensive t
 the chain node or the clients. For example, routing falls under this category because it requires
 all pool data for performing the complex routing algorithm.
 
+## Integrator Guide
+
+Follow [this link](https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1bsqPAr6) to find a guide on how to 
+integrate with the sidecar query server.
+
 ## Supported Endpoints
 
 ## Pools Resource
@@ -360,8 +365,3 @@ factory/osmo19pw5d0jset8jlhawvkscj2gsfuyd5v524tfgek/TURKEY
 
 Any pool containing these tokens would have the TVL error error set to
 non-empty string, leading to the pool being deprioritized from the router.
-
-## Open Questions
-
-- How to handle atomicity between ticks and pools? E.g. let's say a block is written between the time initial pools are read
-and the time the ticks are read. Now, we have data that is partially up-to-date.
