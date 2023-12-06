@@ -656,7 +656,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
 	s.Require().Len(quote.GetRoute(), 1)
 
 	route := quote.GetRoute()[0]
-	// Expecting 2 pools in the route
+	// Expecting 3 pools in the route
 	s.Require().Len(route.GetPools(), 3)
 
 	// Validate that the pool is pool 1093
