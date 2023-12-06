@@ -55,6 +55,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/joho/godotenv"
 
@@ -427,6 +428,8 @@ func initAppConfig() (string, interface{}) {
 		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
 
 		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
+
+		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -444,7 +447,7 @@ func initAppConfig() (string, interface{}) {
 
 	sqsConfig := sqs.DefaultConfig
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig}
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig()}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -519,7 +522,11 @@ route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateH
 
 # Whether to enable candidate route caching in Redis.
 route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
-`
+` + `
+###############################################################################
+###              		       Wasm Configuration    					    ###
+###############################################################################
+` + wasmtypes.DefaultConfigTemplate()
 
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
