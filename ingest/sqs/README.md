@@ -11,6 +11,274 @@ The use case for this is performing certain data and computationally intensive t
 the chain node or the clients. For example, routing falls under this category because it requires
 all pool data for performing the complex routing algorithm.
 
+## Supported Endpoints
+
+## Pools Resource
+
+1. GET `/pools/all`
+
+Description: returns all pools in the chain state instrumented with denoms and TVL if available
+
+Parameters: none
+
+Response example:
+```bash
+curl "https://sqs.osmosis.zone/pools/all" | jq .
+[
+  {
+    "underlying_pool": {
+      "address": "osmo164pg0key096kxe7940h45csw5w9cmf4nc2a83m73e8tc0u2eymeqj7t0rm",
+      "incentives_address": "osmo1z6ae7saxlwnnd6whl2svw0k3zhsjdvzaap9ya2lcj8m3c0r02a6svtuzn2",
+      "spread_rewards_address": "osmo1jhzypnueeg75cm8tps7srn7ujva9qe4msjmtkajwaqpj0kyvdjjqu0xule",
+      "id": 1323,
+      "current_tick_liquidity": "1000000.000000000000100000",
+      "token0": "ibc/ECBE78BF7677320A93E7BA1761D144BCBF0CBC247C290C049655E106FE5DC68E",
+      "token1": "uosmo",
+      "current_sqrt_price": "1.000000000000000000000000000000000000",
+      "tick_spacing": 100,
+      "exponent_at_price_one": -6,
+      "spread_factor": "0.000500000000000000",
+      "last_liquidity_update": "2023-12-06T14:36:29.772040341Z"
+    },
+    "sqs_model": {
+      "total_value_locked_uosmo": "1000000",
+      "total_value_locked_error": "error getting token precision ibc/ECBE78BF7677320A93E7BA1761D144BCBF0CBC247C290C049655E106FE5DC68E",
+      "balances": [
+        {
+          "denom": "ibc/ECBE78BF7677320A93E7BA1761D144BCBF0CBC247C290C049655E106FE5DC68E",
+          "amount": "1000000"
+        },
+        {
+          "denom": "uosmo",
+          "amount": "1000000"
+        }
+      ],
+      "pool_denoms": [
+        "ibc/ECBE78BF7677320A93E7BA1761D144BCBF0CBC247C290C049655E106FE5DC68E",
+        "uosmo"
+      ],
+      "spread_factor": "0.000500000000000000"
+    }
+  },
+  ...
+]
+```
+
+## Router Resource
+
+
+1. GET `/router/quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
+
+Description: returns the best quote it can compute for the given tokenIn and tokenOutDenom
+
+Parameters:
+- `tokenIn` the string representation of the sdk.Coin for the token in
+- `tokenOutDenom` the string representing the denom of the token out
+
+Response example:
+
+```bash
+curl "https://sqs.osmosis.zone/router/quote?tokenIn=1000000uosmo&tokenOutDenom=uion" | jq .
+{
+  "amount_in": {
+    "denom": "uosmo",
+    "amount": "1000000"
+  },
+  "amount_out": "1803",
+  "route": [
+    {
+      "pools": [
+        {
+          "id": 2,
+          "type": 0,
+          "balances": [],
+          "spread_factor": "0.005000000000000000",
+          "token_out_denom": "uion",
+          "taker_fee": "0.001000000000000000"
+        }
+      ],
+      "out_amount": "1803",
+      "in_amount": "1000000"
+    }
+  ],
+  "effective_fee": "0.006000000000000000"
+}
+```
+
+2. GET `/router/single-quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
+
+Description: returns the best quote it can compute w/o performing route splits,
+performing single direct route estimates only.
+
+Parameters:
+- `tokenIn` the string representation of the sdk.Coin for the token in
+- `tokenOutDenom` the string representing the denom of the token out
+
+Response example:
+```bash
+curl "https://sqs.osmosis.zone/router/single-quote?tokenIn=1000000uosmo&tokenOutDenom=uion" | jq .
+{
+  "amount_in": {
+    "denom": "uosmo",
+    "amount": "1000000"
+  },
+  "amount_out": "1803",
+  "route": [
+    {
+      "pools": [
+        {
+          "id": 2,
+          "type": 0,
+          "balances": [],
+          "spread_factor": "0.005000000000000000",
+          "token_out_denom": "uion",
+          "taker_fee": "0.001000000000000000"
+        }
+      ],
+      "out_amount": "1803",
+      "in_amount": "1000000"
+    }
+  ],
+  "effective_fee": "0.006000000000000000"
+}
+```
+
+3. GET `/router/routes?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
+
+Description: returns all routes that can be used for routing from tokenIn to tokenOutDenom
+
+Parameters:
+- `tokenIn` the string representation of the denom of the token in
+- `tokenOutDenom` the string representing the denom of the token out
+
+
+Response example:
+```bash
+curl "https://sqs.osmosis.zone/routes?tokenIn=uosmo&tokenOutDenom=uion" | jq .
+{
+  "Routes": [
+    {
+      "Pools": [
+        {
+          "ID": 1100,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 2,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 1013,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 1092,
+          "TokenOutDenom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"
+        },
+        {
+          "ID": 476,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 1108,
+          "TokenOutDenom": "ibc/9712DBB13B9631EDFA9BF61B55F1B2D290B2ADB67E3A4EB3A875F3B6081B3B84"
+        },
+        {
+          "ID": 26,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    }
+  ],
+  "UniquePoolIDs": {
+    "1013": {},
+    "1092": {},
+    "1100": {},
+    "1108": {},
+    "2": {},
+    "26": {},
+    "476": {}
+  }
+}
+```
+
+4. GET `/router/custom-quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>&poolIDs=<poolIDs>`
+
+Description: returns the quote over route with the given poolIDs. If such route does not exist, returns error.
+
+Parameters:
+- `tokenIn` the string representation of the sdk.Coin for the token in
+- `tokenOutDenom` the string representing the denom of the token out
+- `poolIDs` comma-separated list of pool IDs
+
+Response example:
+```bash
+curl "https://sqs.osmosis.zone/router/custom-quote?tokenIn=1000000uosmo&tokenOutDenom=uion?poolIDs=2" | jq .
+{
+  "amount_in": {
+    "denom": "uosmo",
+    "amount": "1000000"
+  },
+  "amount_out": "1803",
+  "route": [
+    {
+      "pools": [
+        {
+          "id": 2,
+          "type": 0,
+          "balances": [],
+          "spread_factor": "0.005000000000000000",
+          "token_out_denom": "uion",
+          "taker_fee": "0.001000000000000000"
+        }
+      ],
+      "out_amount": "1803",
+      "in_amount": "1000000"
+    }
+  ],
+  "effective_fee": "0.006000000000000000"
+}
+```
+
+5. POST `/router/store-state`
+
+Description: stores the current state of the router in a JSON file locally. Used for debugging purposes.
+This endpoint should be disabled in production.
+
+Parameters: none
+
+## System Resource
+
+1. GET `/system/healthcheck`
+
+Description: returns 200 if the server is healthy.
+Validates the following conditions:
+- Redis is reachable
+- Node is reachable
+- Node is not synching
+- The latest height in Redis is within threshold of the latest height in the node
+- The latest height in Redis was updated within a configurable number of seconds
+
+2. GET `/system/metrics`
+
+Description: returns the prometheus metrics for the server
+
 ## Development Setup
 
 ### Mainnet
