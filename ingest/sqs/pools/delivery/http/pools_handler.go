@@ -20,12 +20,19 @@ type PoolsHandler struct {
 	PUsecase mvc.PoolsUsecase
 }
 
+const resourcePrefix = "/pools"
+
+func formatPoolsResource(resource string) string {
+	return resourcePrefix + resource
+}
+
 // NewPoolsHandler will initialize the pools/ resources endpoint
 func NewPoolsHandler(e *echo.Echo, us mvc.PoolsUsecase) {
 	handler := &PoolsHandler{
 		PUsecase: us,
 	}
-	e.GET("/all-pools", handler.GetAllPools)
+
+	e.GET(formatPoolsResource("/all"), handler.GetAllPools)
 }
 
 // GetAllPools will fetch all supported pool types by the Osmosis
