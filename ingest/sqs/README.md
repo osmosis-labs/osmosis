@@ -105,7 +105,7 @@ curl "https://sqs.osmosis.zone/router/quote?tokenIn=1000000uosmo&tokenOutDenom=u
 }
 ```
 
-1. GET `/router/single-quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
+2. GET `/router/single-quote?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
 
 Description: returns the best quote it can compute w/o performing route splits,
 performing single direct route estimates only.
@@ -143,7 +143,7 @@ curl "https://sqs.osmosis.zone/router/single-quote?tokenIn=1000000uosmo&tokenOut
 }
 ```
 
-1. GET `/router/routes?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
+3. GET `/router/routes?tokenIn=<tokenIn>&tokenOutDenom=<tokenOutDenom>`
 
 Description: returns all routes that can be used for routing from tokenIn to tokenOutDenom
 
@@ -256,7 +256,7 @@ curl "https://sqs.osmosis.zone/router/custom-quote?tokenIn=1000000uosmo&tokenOut
 }
 ```
 
-1. POST `/router/store-state`
+5. POST `/router/store-state`
 
 Description: stores the current state of the router in a JSON file locally. Used for debugging purposes.
 This endpoint should be disabled in production.
