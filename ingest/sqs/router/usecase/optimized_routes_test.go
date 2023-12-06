@@ -652,7 +652,7 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_AKTUMEE() {
 	// We only validate that error does not occur without actually validating the quote.
 	s.Require().NoError(err)
 
-	// Expecting 3 routes based on mainnet state
+	// Expecting 1 route based on mainnet state
 	s.Require().Len(quote.GetRoute(), 1)
 
 	route := quote.GetRoute()[0]
