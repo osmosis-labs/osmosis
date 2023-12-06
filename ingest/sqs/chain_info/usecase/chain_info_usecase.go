@@ -52,6 +52,8 @@ func (p *chainInfoUseCase) GetLatestHeight(ctx context.Context) (uint64, error) 
 			if err := p.chainInfoRepository.StoreLatestHeightRetrievalTime(ctx, currentTimeUTC); err != nil {
 				return 0, err
 			}
+
+			return latestHeight, nil
 		}
 
 		return 0, err
