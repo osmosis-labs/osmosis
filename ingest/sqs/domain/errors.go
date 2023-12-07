@@ -121,3 +121,13 @@ type TransmuterInsufficientBalanceError struct {
 func (e TransmuterInsufficientBalanceError) Error() string {
 	return fmt.Sprintf("insufficient balance of token (%s), balance (%s), amount (%s)", e.Denom, e.BalanceAmount, e.Amount)
 }
+
+type StaleHeightError struct {
+	StoredHeight            uint64
+	TimeSinceLastUpdate     int
+	MaxAllowedTimeDeltaSecs int
+}
+
+func (e StaleHeightError) Error() string {
+	return fmt.Sprintf("stored height (%d) is stale, time since last update (%d), max allowed seconds (%d)", e.StoredHeight, e.TimeSinceLastUpdate, e.MaxAllowedTimeDeltaSecs)
+}
