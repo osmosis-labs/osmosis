@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v21/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries
@@ -33,6 +33,10 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 		})
 		if err != nil {
 			return nil, err
+		}
+
+		if res.Value == nil {
+			return nil, fmt.Errorf("Res returned from abci query route is nil")
 		}
 
 		bz, err := ConvertProtoToJSONMarshal(protoResponseType, res.Value, cdc)

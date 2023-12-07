@@ -42,8 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### API
+
+* [#6944](https://github.com/osmosis-labs/osmosis/pull/6944) Fix: total liquidity poolmanager grpc gateway query
+* [#6939](https://github.com/osmosis-labs/osmosis/pull/6939) Fix taker fee GRPC gateway query path in poolmanager.
+
 ### Features
 
+* [#6804](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
 * [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
 
 ### Fix Localosmosis docker-compose with state.
@@ -55,7 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
 * [#6836](https://github.com/osmosis-labs/osmosis/pull/6836) Add DenomsMetadata to stargate whitelist and fixs the DenomMetadata response type
 * [#6814](https://github.com/osmosis-labs/osmosis/pull/6814) Add EstimateTradeBasedOnPriceImpact to stargate whitelist
+* [#6886](https://github.com/osmosis-labs/osmosis/pull/6886) Add Err handling for ABCI Query Route for wasm binded query
 * [#6859](https://github.com/osmosis-labs/osmosis/pull/6859) Add hooks to core CL operations (position creation/withdrawal and swaps)
+* [#6932](https://github.com/osmosis-labs/osmosis/pull/6932) Allow protorev module to receive tokens
+* [#6937](https://github.com/osmosis-labs/osmosis/pull/6937) Update wasmd to v0.45.0 and wasmvm to v1.5.0
+* [#6949](https://github.com/osmosis-labs/osmosis/pull/6949) Valset withdraw rewards now considers all validators user is delegated to instead of valset
 
 ### Misc Improvements
 
@@ -65,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6884](https://github.com/osmosis-labs/osmosis/pull/6884) Improve ListPoolsByDenom function filter denom logic
 * [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
 * [#6884](https://github.com/osmosis-labs/osmosis/pull/6914) Update ListPoolsByDenom function by using pool.GetPoolDenoms to filter denom directly
+* [#6959](https://github.com/osmosis-labs/osmosis/pull/6959) Increase high gas threshold to 2m from 1m
 
 ### API Breaks
 
@@ -1113,7 +1124,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 * [\#637](https://github.com/osmosis-labs/osmosis/pull/637) Add [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/)
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to Cosmos SDK v0.44.x
   * Numerous large updates, such as making module accounts be 32 bytes, Rosetta support, etc.
-  * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
+  * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz)
     See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
 * [\#560](https://github.com/osmosis-labs/osmosis/pull/560) Implements Osmosis [prop32](https://www.mintscan.io/osmosis/proposals/32) -- clawing back the final 20% of unclaimed osmo and ion airdrop.
@@ -1164,7 +1175,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 
 This release improves the CLI UX of creating and querying gauges.
 
-## [v1.0.1](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.1) - 2021-06-17
+## [v1.0.1](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.1) - 2021-06-17
 
 This release fixes a bug in `osmosisd version` always displaying 0.0.1.
 

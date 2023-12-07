@@ -14,15 +14,15 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	v15 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v15"
-	gamm "github.com/osmosis-labs/osmosis/v20/x/gamm/keeper"
-	balancer "github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	v15 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v15"
+	gamm "github.com/osmosis-labs/osmosis/v21/x/gamm/keeper"
+	balancer "github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {
@@ -216,7 +216,7 @@ func (s *UpgradeTestSuite) TestSetRateLimits() {
 	code, err := os.ReadFile("../v13/rate_limiter.wasm")
 	s.Require().NoError(err)
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
-	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeAnyOfAddresses, Addresses: []string{govModule.String()}}
 	codeID, _, err := contractKeeper.Create(s.Ctx, govModule, code, &instantiateConfig)
 	s.Require().NoError(err)
 	transferModule := accountKeeper.GetModuleAddress(transfertypes.ModuleName)

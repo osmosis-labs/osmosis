@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -49,6 +49,9 @@ var (
 				Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
 			},
 		},
+		Params: &types.Params{
+			ForceUnlockAllowedAddresses: []string{acc1.String(), acc2.String()},
+		},
 	}
 )
 
@@ -73,6 +76,9 @@ func TestInitGenesis(t *testing.T) {
 		Duration: time.Second,
 	})
 	require.Equal(t, osmomath.NewInt(30000000), acc)
+
+	params := app.LockupKeeper.GetParams(ctx)
+	require.Equal(t, params.ForceUnlockAllowedAddresses, []string{acc1.String(), acc2.String()})
 }
 
 func TestExportGenesis(t *testing.T) {
@@ -125,6 +131,9 @@ func TestExportGenesis(t *testing.T) {
 			EndTime:               time.Time{},
 			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
 		},
+	})
+	require.Equal(t, genesisExported.Params, &types.Params{
+		ForceUnlockAllowedAddresses: []string{acc1.String(), acc2.String()},
 	})
 }
 

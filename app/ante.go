@@ -1,8 +1,8 @@
 package app
 
 import (
-	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
@@ -11,20 +11,20 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	osmoante "github.com/osmosis-labs/osmosis/v20/ante"
-	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v21/ante"
+	v9 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v9"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
-	wasmConfig wasm.Config,
+	wasmConfig wasmtypes.WasmConfig,
 	txCounterStoreKey storetypes.StoreKey,
 	ak ante.AccountKeeper,
 	bankKeeper txfeestypes.BankKeeper,
