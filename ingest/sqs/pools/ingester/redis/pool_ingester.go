@@ -181,7 +181,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 	if pi.routerConfig.RouteUpdateHeightInterval > routeIngestDisablePlaceholder && ctx.BlockHeight()%int64(pi.routerConfig.RouteUpdateHeightInterval) == 0 {
 		allPools := make([]domain.PoolI, 0, len(allPoolsParsed))
 
-		pi.logger.Info("getting routes for pools", zap.Int64("height", ctx.BlockHeight()))
+		pi.logger.Debug("getting routes for pools", zap.Int64("height", ctx.BlockHeight()))
 
 		pi.updateRoutes(sdk.WrapSDKContext(ctx), tx, allPools, denomPairToTakerFeeMap)
 	}
