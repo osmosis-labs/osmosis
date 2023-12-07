@@ -63,7 +63,7 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (do
 	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
 		routes := bestSplitRouteQuote.GetRoute()
 
-		r.logger.Debug("split route is selected", zap.Int("route_count", len(routes)))
+		r.logger.Debug("split route selected", zap.Int("route_count", len(routes)))
 		for _, route := range routes {
 			r.logger.Debug("route", zap.Stringer("route", route))
 		}
@@ -71,8 +71,7 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (do
 		finalQuote = bestSplitRouteQuote
 	}
 
-	r.logger.Debug("single route is selected")
-	r.logger.Debug("route", zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
+	r.logger.Debug("single route selected", zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
 
 	if finalQuote.GetAmountOut().IsZero() {
 		return nil, errors.New("best we can do is no tokens out")
