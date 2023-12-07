@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"strings"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	"github.com/pelletier/go-toml"
 	"github.com/prometheus/client_golang/prometheus"
 
 	cometbftdb "github.com/cometbft/cometbft-db"
@@ -285,6 +287,28 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithBroadcastMode(flags.BroadcastSync).
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
+
+	userConfigMap, err := loadUserConfig(homeDir + "/config/config.toml")
+	if err != nil {
+		fmt.Println("Failed to load user config:", err)
+	}
+	fmt.Println("Using config.toml:", userConfigMap)
+
+	defaultConfigMap, err := loadDefaultConfig()
+	if err != nil {
+		fmt.Println("Failed to load default config:", err)
+	}
+
+	for key, value := range defaultConfigMap {
+		if _, ok := userConfigMap[key]; !ok {
+			userConfigMap[key] = value
+		}
+	}
+
+	err = saveUserConfig(userConfigMap, homeDir+"/config/config.toml")
+	if err != nil {
+		fmt.Println("Failed to save user config:", err)
+	}
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
@@ -832,4 +856,52 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 		}
 	}
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
+}
+
+func loadUserConfig(configFilePath string) (map[string]interface{}, error) {
+	// Read the file content
+	bytes, err := ioutil.ReadFile(configFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the TOML into a map
+	var config map[string]interface{}
+	if err := toml.Unmarshal(bytes, &config); err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+func loadDefaultConfig() (map[string]interface{}, error) {
+	// Get the default configuration
+	defaultConfig := serverconfig.DefaultConfig()
+
+	// Convert the default configuration to JSON
+	jsonData, err := json.Marshal(defaultConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert the JSON to a map
+	var configMap map[string]interface{}
+	err = json.Unmarshal(jsonData, &configMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the map
+	return configMap, nil
+}
+
+func saveUserConfig(config map[string]interface{}, configFilePath string) error {
+	// Convert the map to TOML
+	tomlBytes, err := toml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	// Write the TOML to the file
+	return ioutil.WriteFile(configFilePath, tomlBytes, 0644)
 }

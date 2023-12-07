@@ -32,6 +32,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231201210643-d8ee44cf41bc
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231130002422-33ba03710e16
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231130002422-33ba03710e16
+	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.0
