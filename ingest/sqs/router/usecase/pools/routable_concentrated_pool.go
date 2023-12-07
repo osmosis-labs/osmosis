@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	clmath "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
 	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
@@ -59,7 +60,7 @@ func (r *routableConcentratedPoolImpl) GetTakerFee() math.LegacyDec {
 // - tick model has no liquidity flag set
 // - the current sqrt price is zero
 // - rans out of ticks during swap (token in is too high for liquidity in the pool)
-func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (sdk.Coin, error) {
 	concentratedPool := r.ChainPool
 	tickModel := r.TickModel
 
@@ -115,6 +116,9 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 		amountRemainingIn = tokenIn.Amount.ToLegacyDec()
 		amountOutTotal    = osmomath.ZeroDec()
 	)
+
+	fmt.Println("currentSqrtPrice", currentSqrtPrice)
+	fmt.Println("amountRemainingIn", amountRemainingIn)
 
 	if currentSqrtPrice.IsZero() {
 		return sdk.Coin{}, domain.ConcentratedZeroCurrentSqrtPriceError{

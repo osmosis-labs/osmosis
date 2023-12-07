@@ -694,6 +694,29 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_UMEEStOsmo() {
 	s.Require().NotNil(quote.GetAmountOut())
 }
 
+func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_stAtomAtom() {
+	config := defaultRouterConfig
+	config.MaxPoolsPerRoute = 4
+	// Note that max routes is set to 20
+	config.MaxRoutes = 20
+	config.MaxSplitRoutes = 3
+
+	var (
+		amountIn = osmomath.NewInt(1_000_000)
+	)
+
+	router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
+
+	routes := s.constructRoutesFromMainnetPools(router, stATOM, ATOM, tickMap, takerFeeMap)
+
+	quote, err := router.GetOptimalQuote(sdk.NewCoin(stATOM, amountIn), routes)
+
+	// We only validate that error does not occur without actually validating the quote.
+	s.Require().NoError(err)
+
+	s.Require().NotNil(quote.GetAmountOut())
+}
+
 func (s *RouterTestSuite) TestGetBestSplitRoutesQuote_Mainnet_ATOMAKT() {
 	config := defaultRouterConfig
 	config.MaxPoolsPerRoute = 4

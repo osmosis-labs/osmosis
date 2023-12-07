@@ -266,7 +266,7 @@ func (s *RouterTestSuite) setupMainnetRouter(config domain.RouterConfig) (*route
 	takerFeeMap, err := parsing.ReadTakerFees(relativePathMainnetFiles + takerFeesFileName)
 	s.Require().NoError(err)
 
-	logger, err := log.NewLogger(false, "", "info")
+	logger, err := log.NewLogger(false, "", "debug")
 	s.Require().NoError(err)
 	router := routerusecase.NewRouter(config.PreferredPoolIDs, config.MaxPoolsPerRoute, config.MaxRoutes, config.MaxSplitRoutes, config.MaxSplitIterations, config.MinOSMOLiquidity, logger)
 	router = routerusecase.WithSortedPools(router, pools)

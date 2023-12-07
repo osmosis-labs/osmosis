@@ -26,7 +26,7 @@ func (r *Router) GetSplitQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (doma
 	// If only one route, return the best single route quote
 	if len(routes) == 1 {
 		route := routes[0]
-		coinOut, err := route.CalculateTokenOutByTokenIn(tokenIn)
+		coinOut, err := route.CalculateTokenOutByTokenIn(tokenIn, r.logger)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ func (r *Router) findSplit(memo []map[uint8]osmomath.Int, routes []route.RouteIm
 		currentIncrement := remainingIncrements
 
 		// Attempt to get memoized value.
-		currentAmtOut, err := getAmountOut(currentRoute, currentRouteIndex, memo, currentIncrement, tokenInAmountDec, tokenIn.Denom)
+		currentAmtOut, err := r.getAmountOut(currentRoute, currentRouteIndex, memo, currentIncrement, tokenInAmountDec, tokenIn.Denom)
 		if err != nil {
 			// Note that we should always return bestSplitSoFar if there is an error
 			// since we silently skip the failing splits and want to preserve the context about bestSplitSoFar
@@ -163,7 +163,7 @@ func (r *Router) findSplit(memo []map[uint8]osmomath.Int, routes []route.RouteIm
 
 	// TODO: start from highest and exit early
 	for currentIncrement := uint8(0); currentIncrement <= remainingIncrements; currentIncrement++ {
-		currentAmtOut, err := getAmountOut(currentRoute, currentRouteIndex, memo, currentIncrement, tokenInAmountDec, tokenIn.Denom)
+		currentAmtOut, err := r.getAmountOut(currentRoute, currentRouteIndex, memo, currentIncrement, tokenInAmountDec, tokenIn.Denom)
 		if err != nil {
 			continue
 		}
@@ -190,7 +190,7 @@ func (r *Router) findSplit(memo []map[uint8]osmomath.Int, routes []route.RouteIm
 // Otherwise, it calculates the amount out and memoizes it by mutating the memo.
 // Returns error if the amount out cannot be calculated.
 // Otherwise, returns nil.
-func getAmountOut(route route.RouteImpl, memoRouteIndex uint8, memo []map[uint8]osmomath.Int, currentIncrement uint8, totalAmountIn osmomath.Dec, tokenInDenom string) (amtOut osmomath.Int, err error) {
+func (r *Router) getAmountOut(route route.RouteImpl, memoRouteIndex uint8, memo []map[uint8]osmomath.Int, currentIncrement uint8, totalAmountIn osmomath.Dec, tokenInDenom string) (amtOut osmomath.Int, err error) {
 	if currentIncrement == 0 {
 		zeroResult := osmomath.ZeroInt()
 		memo[memoRouteIndex][currentIncrement] = zeroResult
@@ -204,7 +204,7 @@ func getAmountOut(route route.RouteImpl, memoRouteIndex uint8, memo []map[uint8]
 	amtIn := currentTokenAmountIn.TruncateInt()
 
 	if !ok {
-		coinOut, err := route.CalculateTokenOutByTokenIn(sdk.NewCoin(tokenInDenom, amtIn))
+		coinOut, err := route.CalculateTokenOutByTokenIn(sdk.NewCoin(tokenInDenom, amtIn), r.logger)
 		if err != nil {
 			return osmomath.Int{}, err
 		}

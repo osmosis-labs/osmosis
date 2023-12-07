@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	cwpoolmodel "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -50,7 +51,7 @@ func (r *routableTransmuterPoolImpl) GetSpreadFactor() math.LegacyDec {
 // - the underlying chain pool set on the routable pool is not of transmuter type
 // - the token in amount is greater than the balance of the token in
 // - the token in amount is greater than the balance of the token out
-func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (sdk.Coin, error) {
 	poolType := r.GetType()
 
 	// Esnure that the pool is concentrated

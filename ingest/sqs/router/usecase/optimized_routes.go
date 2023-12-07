@@ -111,7 +111,7 @@ func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn 
 	routesWithAmountOut := make([]RouteWithOutAmount, 0, len(routes))
 
 	for _, route := range routes {
-		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn)
+		directRouteTokenOut, err := route.CalculateTokenOutByTokenIn(tokenIn, r.logger)
 		if err != nil {
 			r.logger.Debug("skipping single route due to error in estimate", zap.Error(err))
 			continue

@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
@@ -24,7 +25,7 @@ type routableStableswapPoolImpl struct {
 }
 
 // CalculateTokenOutByTokenIn implements RoutablePool.
-func (r *routableStableswapPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+func (r *routableStableswapPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (sdk.Coin, error) {
 	tokenOut, err := r.ChainPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), r.TokenOutDenom, r.GetSpreadFactor())
 	if err != nil {
 		return sdk.Coin{}, err

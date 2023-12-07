@@ -649,7 +649,7 @@ sqs-profile:
 # Updates go tests with the latest mainnet state
 # Make sure that the node is running locally
 sqs-update-mainnet-state:
-	curl -X POST "http:/localhost:9092/store-state"
+	curl -X POST "http:/localhost:9092/router/store-state"
 	mv pools.json ingest/sqs/router/usecase/routertesting/parsing/pools.json
 	mv taker_fees.json ingest/sqs/router/usecase/routertesting/parsing/taker_fees.json
 

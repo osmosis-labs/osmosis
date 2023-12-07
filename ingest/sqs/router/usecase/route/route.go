@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 )
 
@@ -52,7 +53,7 @@ func (r *RouteImpl) AddPool(pool domain.PoolI, tokenOutDenom string, takerFee os
 }
 
 // CalculateTokenOutByTokenIn implements Route.
-func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.Coin, err error) {
+func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (tokenOut sdk.Coin, err error) {
 	defer func() {
 		// TODO: cover this by test
 		if r := recover(); r != nil {
@@ -62,7 +63,7 @@ func (r *RouteImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (tokenOut sdk.C
 	}()
 
 	for _, pool := range r.Pools {
-		tokenOut, err = pool.CalculateTokenOutByTokenIn(tokenIn)
+		tokenOut, err = pool.CalculateTokenOutByTokenIn(tokenIn, logger)
 		if err != nil {
 			return sdk.Coin{}, err
 		}

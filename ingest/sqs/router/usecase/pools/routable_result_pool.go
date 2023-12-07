@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
@@ -91,7 +92,7 @@ func (*routableResultPoolImpl) Validate(minUOSMOTVL math.Int) error {
 }
 
 // CalculateTokenOutByTokenIn implements RoutablePool.
-func (r *routableResultPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+func (r *routableResultPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (sdk.Coin, error) {
 	return sdk.Coin{}, errors.New("not implemented")
 }
 

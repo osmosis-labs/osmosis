@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
 	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 )
@@ -87,7 +88,7 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Succ
 			}
 			routablePool := pools.NewRoutablePool(poolWrapper, tc.TokenOutDenom, noTakerFee)
 
-			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.TokenIn)
+			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.TokenIn, &log.NoOpLogger{})
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.ExpectedTokenOut.String(), tokenOut.String())
@@ -265,7 +266,7 @@ func (s *RoutablePoolTestSuite) TestCalculateTokenOutByTokenIn_Concentrated_Erro
 				TakerFee:      osmomath.ZeroDec(),
 			}
 
-			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)
+			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn, &log.NoOpLogger{})
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

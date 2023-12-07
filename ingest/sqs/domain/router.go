@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -20,7 +21,7 @@ type RoutablePool interface {
 
 	GetTokenOutDenom() string
 
-	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
+	CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (sdk.Coin, error)
 	ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin)
 
 	// SetTokenOutDenom sets the token out denom on the routable pool.
@@ -44,7 +45,7 @@ type Route interface {
 	AddPool(pool PoolI, tokenOut string, takerFee osmomath.Dec)
 	// CalculateTokenOutByTokenIn calculates the token out amount given the token in amount.
 	// Returns error if the calculation fails.
-	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
+	CalculateTokenOutByTokenIn(tokenIn sdk.Coin, logger log.Logger) (sdk.Coin, error)
 
 	GetTokenOutDenom() string
 
