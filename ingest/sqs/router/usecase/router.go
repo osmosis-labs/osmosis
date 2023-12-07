@@ -106,7 +106,7 @@ func WithSortedPools(router *Router, allPools []domain.PoolI) *Router {
 	// Make a copy and filter pools
 	for _, pool := range allPools {
 		if err := pool.Validate(minUOSMOTVL); err != nil {
-			router.logger.Info("pool validation failed, skip silently", zap.Uint64("pool_id", pool.GetId()), zap.Error(err))
+			router.logger.Debug("pool validation failed, skip silently", zap.Uint64("pool_id", pool.GetId()), zap.Error(err))
 			continue
 		}
 
@@ -196,15 +196,13 @@ func sortPools(pools []domain.PoolI, totalTVL osmomath.Int, preferredPoolIDsMap 
 		return ratedPools[i].rating.GT(ratedPools[j].rating)
 	})
 
-	logger.Debug("pool count in router ", zap.Int("pool_count", len(ratedPools)))
-	logger.Info("initial pool order")
-	for i, pool := range ratedPools {
-		sqsModel := pool.pool.GetSQSPoolModel()
-		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool.GetId()), zap.Stringer("rate", pool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.String("tvl_error", sqsModel.TotalValueLockedError))
-	}
-
+	logger.Info("pool count in router ", zap.Int("pool_count", len(ratedPools)))
 	// Convert back to pools
 	for i, ratedPool := range ratedPools {
+		pool := ratedPool.pool
+
+		sqsModel := pool.GetSQSPoolModel()
+		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.GetId()), zap.Stringer("rate", ratedPool.rating), zap.Stringer("tvl", sqsModel.TotalValueLockedUSDC), zap.String("tvl_error", sqsModel.TotalValueLockedError))
 		pools[i] = ratedPool.pool
 	}
 	return pools
