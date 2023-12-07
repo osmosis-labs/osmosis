@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+* [#6804](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
 * [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
 
 ### Fix Localosmosis docker-compose with state.

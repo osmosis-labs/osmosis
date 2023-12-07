@@ -248,6 +248,15 @@ func (d BigDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
+// BigIntMut converts BigDec to big.Int, mutative the input
+func (d BigDec) ToBigInt() *big.Int {
+	if d.IsNil() {
+		return nil
+	}
+
+	return d.i
+}
+
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
 	copy := d.Clone()
