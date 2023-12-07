@@ -49,7 +49,7 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 	}
 
 	for _, route := range candidateRoutes.Routes {
-		r.logger.Info("filtered_candidate_route", zap.Any("route", route))
+		r.logger.Debug("filtered_candidate_route", zap.Any("route", route))
 	}
 
 	// Note that retrieving pools and taker fees is done in separate transactions.
@@ -183,11 +183,6 @@ func (r *routerUseCaseImpl) initializeRouter() *Router {
 	router = WithRouterRepository(router, r.routerRepository)
 	router = WithPoolsUsecase(router, r.poolsUsecase)
 
-	r.logger.Info("sorted pools", zap.Int("num_pools", len(router.sortedPools)))
-	for _, pool := range router.sortedPools {
-		r.logger.Debug("sorted pool", zap.Uint64("pool_id", pool.GetId()), zap.Stringer("tvl", pool.GetTotalValueLockedUOSMO()))
-	}
-
 	return router
 }
 
@@ -199,7 +194,7 @@ func (r *routerUseCaseImpl) initializeRouter() *Router {
 // - there are no routes cached and there is an error computing them
 // - fails to persist the computed routes in cache
 func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (candidateRoutes route.CandidateRoutes, err error) {
-	r.logger.Info("getting routes")
+	r.logger.Debug("getting routes")
 
 	// Check cache for routes if enabled
 	if r.config.RouteCacheEnabled {
@@ -209,19 +204,16 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 		}
 	}
 
-	// TODO: swithch to debug
 	r.logger.Info("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
 	// If no routes are cached, find them
 	if len(candidateRoutes.Routes) == 0 {
-		r.logger.Info("calculating routes")
-
-		r.logger.Info("retrieving pools")
+		r.logger.Debug("calculating routes")
 		allPools, err := r.poolsUsecase.GetAllPools(ctx)
 		if err != nil {
 			return route.CandidateRoutes{}, err
 		}
-		r.logger.Info("retrieved pools", zap.Int("num_pools", len(allPools)))
+		r.logger.Debug("retrieved pools", zap.Int("num_pools", len(allPools)))
 		router = WithSortedPools(router, allPools)
 
 		candidateRoutes, err = router.GetCandidateRoutes(tokenInDenom, tokenOutDenom)
@@ -233,8 +225,7 @@ func (r *routerUseCaseImpl) handleRoutes(ctx context.Context, router *Router, to
 
 		// Persist routes
 		if len(candidateRoutes.Routes) > 0 && r.config.RouteCacheEnabled {
-			r.logger.Info("persisting routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
-
+			r.logger.Debug("persisting routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 			if err := r.routerRepository.SetRoutes(ctx, tokenInDenom, tokenOutDenom, candidateRoutes); err != nil {
 				return route.CandidateRoutes{}, err
 			}
