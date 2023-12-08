@@ -3,6 +3,7 @@ package keepers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -160,6 +161,12 @@ func NewAppModuleWrapper(original authzmodule.AppModule, keeperWrapper AuthzKeep
 func (amw AppModuleWrapper) RegisterServices(cfg module.Configurator) {
 	authz.RegisterQueryServer(cfg.QueryServer(), amw.keeperWrapper)
 	authz.RegisterMsgServer(cfg.MsgServer(), amw.keeperWrapper)
+
+	m := authzkeeper.NewMigrator(amw.keeperWrapper.Keeper())
+	err := cfg.RegisterMigration(authz.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", authz.ModuleName, err))
+	}
 }
 
 func (amw AppModuleWrapper) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
