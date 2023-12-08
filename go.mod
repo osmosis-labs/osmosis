@@ -373,6 +373,8 @@ require (
 
 replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
+
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.0.0-20231208164035-32aec28f40e2
 	// force utilizing the following versions
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231124185741-15259ccd2249
