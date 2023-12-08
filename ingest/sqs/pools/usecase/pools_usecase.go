@@ -120,7 +120,6 @@ func (p *poolsUseCase) GetTickModelMap(ctx context.Context, poolIDs []uint64) (m
 
 // GetPool implements mvc.PoolsUsecase.
 func (p *poolsUseCase) GetPool(ctx context.Context, poolID uint64) (domain.PoolI, error) {
-
 	pools, err := p.poolsRepository.GetPools(ctx, map[uint64]struct {
 	}{
 		poolID: {},
