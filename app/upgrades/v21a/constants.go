@@ -1,4 +1,4 @@
-package v21
+package v21a
 
 import (
 	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
