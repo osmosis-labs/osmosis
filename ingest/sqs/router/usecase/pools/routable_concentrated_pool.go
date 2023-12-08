@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
@@ -117,8 +118,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 		amountOutTotal    = osmomath.ZeroDec()
 	)
 
-	fmt.Println("currentSqrtPrice", currentSqrtPrice)
-	fmt.Println("amountRemainingIn", amountRemainingIn)
+	logger.Info("begin cl swap")
 
 	if currentSqrtPrice.IsZero() {
 		return sdk.Coin{}, domain.ConcentratedZeroCurrentSqrtPriceError{
@@ -128,6 +128,8 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 
 	// Compute swap over all buckets.
 	for amountRemainingIn.GT(osmomath.ZeroDec()) {
+		logger.Info("begin cl swap step", zap.Stringer("amount_remaining_in", amountRemainingIn), zap.Int64("current_bucket_index", currentBucketIndex))
+
 		if currentBucketIndex >= int64(len(tickModel.Ticks)) || currentBucketIndex < 0 {
 			// This happens when there is not enough liquidity in the pool to complete the swap
 			// for a given amount of token in.
@@ -166,6 +168,8 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Co
 
 		// Update current sqrt price
 		currentSqrtPrice = sqrtPriceNext
+
+		logger.Info("end cl swap step", zap.Stringer("sqrt_price_cur", currentSqrtPrice), zap.Stringer("sqrt_price_target", sqrtPriceTarget), zap.Stringer("sqrt_price_next", sqrtPriceNext), zap.Stringer("amount_in_consumed", amountInConsumed), zap.Stringer("amount_out_computed", amountOutComputed), zap.Stringer("spread_reward_charge_total", spreadRewardChargeTotal), zap.Stringer("amount_remaining_in", amountRemainingIn), zap.Stringer("amount_out_total", amountOutTotal))
 	}
 
 	// Return the total amount out.
