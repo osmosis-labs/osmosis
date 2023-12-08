@@ -34,4 +34,6 @@ type PoolsUsecase interface {
 	GetRoutesFromCandidates(ctx context.Context, candidateRoutes route.CandidateRoutes, takerFeeMap domain.TakerFeeMap, tokenInDenom, tokenOutDenom string) ([]route.RouteImpl, error)
 
 	GetTickModelMap(ctx context.Context, poolIDs []uint64) (map[uint64]domain.TickModel, error)
+	// GetPool returns the pool with the given ID.
+	GetPool(ctx context.Context, poolID uint64) (domain.PoolI, error)
 }
