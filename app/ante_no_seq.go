@@ -1,5 +1,5 @@
-//go:build !excludeIncrement
-// +build !excludeIncrement
+//go:build excludeIncrement
+// +build excludeIncrement
 
 package app
 
@@ -61,7 +61,7 @@ func NewAnteHandler(
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
-		ante.NewIncrementSequenceDecorator(ak),
+		// ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)
 }
