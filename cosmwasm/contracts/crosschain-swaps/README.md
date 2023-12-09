@@ -563,17 +563,17 @@ sequenceDiagram
     actor Alice
     actor Alice
     Alice->>ChainA: Send Transfer M1
-    Note over ChainA,Relayer: Block commited. 
+    Note over ChainA,Relayer: Block committed. 
     Relayer-->>ChainB: Relay M1
     critical Execute Contract
             ChainB->>ChainB: Swap tokens
             ChainB->>ChainB: Send IBC tx M2
     end
-    Note over ChainB,Relayer: Block commited. 
+    Note over ChainB,Relayer: Block committed. 
     Relayer-->>ChainA: Ack M1
     Relayer-->>ChainA: Relay M2
     ChainA->>Alice: Send Swapped Tokens
-    Note over ChainA,Relayer: Block commited. 
+    Note over ChainA,Relayer: Block committed. 
     Relayer-->>ChainB: Ack M2
 ```
 

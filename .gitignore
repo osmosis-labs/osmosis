@@ -238,7 +238,7 @@ tests/e2e/scripts/*.wasm
 blocks.db
 **/blocks.db*
 
-# Ignore e2e test artifacts (which clould leak information if commited)
+# Ignore e2e test artifacts (which clould leak information if committed)
 .ash_history
 .bash_history
 
