@@ -96,6 +96,8 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 	return outBuf, errBuf, nil
 }
 
+var memoCounter int = 1
+
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
@@ -113,6 +115,12 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	if addGasFlags {
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
+	// Add memo field to every tx
+	memo := fmt.Sprintf("--note=%d", memoCounter)
+	allTxArgs = append(allTxArgs, memo)
+	// Increment the counter for the next tx
+	memoCounter++
+
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr, true, false)
 }
