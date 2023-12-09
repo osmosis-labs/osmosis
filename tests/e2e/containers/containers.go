@@ -118,6 +118,10 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
 	// Add memo field to every tx
+	// This is done because in E2E, we remove the sequence number ante handler.
+	// This allows for quick throughput of txs, but if two txs are the same (i.e. two CL claims, two bank sends with the same amount),
+	// the sdk treats them as the same tx and errors with code 19 (tx already in mempool). By changing the memo field on every tx,
+	// we ensure that every tx is unique and can be submitted.
 	memo := fmt.Sprintf("--note=%d", memoCounter)
 	allTxArgs = append(allTxArgs, memo)
 	// Increment the counter for the next tx
