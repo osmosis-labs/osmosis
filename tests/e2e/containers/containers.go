@@ -18,7 +18,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 type TxResponse struct {
@@ -48,7 +50,7 @@ const (
 
 var (
 	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
-	Fees = 10000
+	Fees = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64()
 
 	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
 

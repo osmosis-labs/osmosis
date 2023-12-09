@@ -307,8 +307,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	addr1BalancesAfter := s.addrBalance(chainBNode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
-	fmt.Println("addr1BalancesBefore", addr1BalancesBefore)
-	fmt.Println("addr1BalancesAfter", addr1BalancesAfter)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
 
 	// Assert Balances: Swap 1
