@@ -403,7 +403,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 			if amountOut.IsZero() && isWithinDesiredBucketAfterSwap {
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
-				// We discound by two so that we do no cross any tick and remain in the same bucket.
+				// We discounted by two so that we do no cross any tick and remain in the same bucket.
 				curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false).QuoInt64(2)
 				amountOut = amountOut.Add(curAmountIn.DecRoundUp())
 			}
@@ -1019,7 +1019,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		// at the end of configured swaps of the test.
 		// See diagram above the definition of defaultTickSpacingsAway variable for layout.
 		// The first position is NR1, the second position is NR2 etc.
-		// That is, the wider range position is preceeds the narrower range position.
+		// That is, the wider range position is precedes the narrower range position.
 		isPositionActiveFlag []bool
 	}
 
@@ -1411,7 +1411,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 // that liquidiy is calculated for that position as well as the adjacent position on the swap path.
 // It then repeats this for the other direction.
 func (s *KeeperTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
-	// See definiton of defaultTickSpacingsAway for position layout diagram.
+	// See definition of defaultTickSpacingsAway for position layout diagram.
 	poolId, positions := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 	var (
 		// 3 tick spacings away [30999997, 31000003) (3TS) from the original current tick (31000000)

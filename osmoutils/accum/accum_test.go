@@ -1251,7 +1251,7 @@ func (suite *AccumTestSuite) TestAddToAccumulator() {
 
 			// Validations.
 
-			// validate that the reciever is mutated.
+			// validate that the receiver is mutated.
 			suite.Require().Equal(tc.expectedValue, originalAccum.GetValue())
 
 			accumFromStore, err := accumPackage.GetAccumulator(suite.store, testNameOne)
