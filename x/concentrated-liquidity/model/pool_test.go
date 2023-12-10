@@ -290,13 +290,13 @@ func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
 			false,
 		},
 		{
-			"lower tick is greater then pool tick",
+			"lower tick is greater than pool tick",
 			DefaultCurrTick + 1,
 			DefaultCurrTick + 3,
 			false,
 		},
 		{
-			"upper tick is lower then pool tick",
+			"upper tick is lower than pool tick",
 			DefaultCurrTick - 3,
 			DefaultCurrTick - 1,
 			false,

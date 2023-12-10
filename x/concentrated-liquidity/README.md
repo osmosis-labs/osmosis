@@ -273,7 +273,7 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick =
 
 Bob set his limit order at tick 36650010
 
-## Chosing an Exponent At Price One Value
+## Choosing an Exponent At Price One Value
 
 The creator of a pool cannot choose an exponenetAtPriceOne as one of the input
 parameters since it is hard coded to -6. The number can be psedo-controlled by
@@ -388,7 +388,7 @@ type MsgCreatePosition struct {
 
 - **Response**
 
-On succesful response, we receive the actual amounts of each token used to
+On successful response, we receive the actual amounts of each token used to
 create the liquidityCreated number of shares in the given range.
 
 ```go
@@ -1840,7 +1840,7 @@ osmosisd q gamm spot-price 1011 uosmo ibc/10E5E5B06D78FFBB61FD9F89209DEE5FD4446E
 spot_price: "0.000000000002155018"
 ```
 
-As a protocol, we need to accomodate prices that are very far apart.
+As a protocol, we need to accommodate prices that are very far apart.
 In the example above, the difference between `10**6 and 10**18`
 
 Most of the native precision is 10**6. However, most of the ETH

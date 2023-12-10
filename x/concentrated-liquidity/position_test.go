@@ -2421,10 +2421,10 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				}
 
 				allPositions := append(tc.inRangePositions, tc.outOfRangePositions...)
-				positionsNotTransfered := osmoutils.DisjointArrays(allPositions, tc.positionsToTransfer)
+				positionsNotTransferred := osmoutils.DisjointArrays(allPositions, tc.positionsToTransfer)
 
 				// Check that the positions not transferred were not modified
-				for _, positionId := range positionsNotTransfered {
+				for _, positionId := range positionsNotTransferred {
 					oldPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 					s.Require().NoError(err)
 

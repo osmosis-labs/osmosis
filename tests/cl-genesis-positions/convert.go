@@ -118,7 +118,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	clMsgServer := cl.NewMsgServerImpl(osmosis.App.ConcentratedLiquidityKeeper)
 
-	numberOfSuccesfulPositions := 0
+	numberOfSuccessfulPositions := 0
 
 	bigBangPositions := make([]clgenesis.PositionData, 0)
 
@@ -196,7 +196,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		}
 
 		fmt.Printf("created position with liquidity (%s) between ticks (%d) and (%d)\n", position.LiquidityCreated, lowerTickOsmosis, upperTickOsmosis)
-		numberOfSuccesfulPositions++
+		numberOfSuccessfulPositions++
 
 		bigBangPositions = append(bigBangPositions, clgenesis.PositionData{
 			Position: &model.Position{
@@ -214,7 +214,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		})
 	}
 
-	fmt.Printf("\nout of %d uniswap positions, %d were successfully created\n", len(positions), numberOfSuccesfulPositions)
+	fmt.Printf("\nout of %d uniswap positions, %d were successfully created\n", len(positions), numberOfSuccessfulPositions)
 
 	if writeBigBangConfigToDisk {
 		writeBigBangPositionsToState(bigBangPositions)
