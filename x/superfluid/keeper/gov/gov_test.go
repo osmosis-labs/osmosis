@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	nonExistentToken := types.SuperfluidAsset{
-		Denom:     "nonexistanttoken",
+		Denom:     "nonexistenttoken",
 		AssetType: types.SuperfluidAssetTypeNative,
 	}
 

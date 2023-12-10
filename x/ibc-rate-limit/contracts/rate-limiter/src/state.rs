@@ -220,7 +220,7 @@ impl From<&QuotaMsg> for Quota {
 
 /// RateLimit is the main structure tracked for each channel/denom pair. Its quota
 /// represents rate limit configuration, and the flow its
-/// current state (i.e.: how much value has been transfered in the current period)
+/// current state (i.e.: how much value has been transferred in the current period)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct RateLimit {
     pub quota: Quota,

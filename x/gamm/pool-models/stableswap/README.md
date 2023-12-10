@@ -385,7 +385,7 @@ We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{
 
 Tieing this all together, we have that $e_k > .01e_y$. Therefore $e_y < 100 e_k$, satisfying our theoerem!
 
-To show the informal claims, the constraint that led to this 100x error blowup was trying to accomodate high $y_{out}$. When $y_{out}$ is smaller, the error is far lower. (Often to the case that $e_y < e_k$, you can convince yourself of this by setting the ratio to being greater than 1 in wolfram alpha) When $y_{out}$ is bigger than $.9y_0$, we can rely on x_f^2 + w being much larger to lower this error. In these cases, the $x_f$ term must be large relative to $y_0$, which would yield a far better error bound.
+To show the informal claims, the constraint that led to this 100x error blowup was trying to accommodate high $y_{out}$. When $y_{out}$ is smaller, the error is far lower. (Often to the case that $e_y < e_k$, you can convince yourself of this by setting the ratio to being greater than 1 in wolfram alpha) When $y_{out}$ is bigger than $.9y_0$, we can rely on x_f^2 + w being much larger to lower this error. In these cases, the $x_f$ term must be large relative to $y_0$, which would yield a far better error bound.
 
 TODO: Justify a_y << y_out. (This should be easy, assume its not, that leads to e_k being high. Ratio test probably easiest. Maybe just add a sentence to that effect)
 

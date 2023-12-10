@@ -712,7 +712,7 @@ There is 1 type of event that exists in ProtoRev:
 
 ### `types.TypeEvtBackrun`
 
-This event is emitted after ProtoRev succesfully backruns a transaction.
+This event is emitted after ProtoRev successfully backruns a transaction.
 
 It consists of the following attributes:
 
