@@ -97,7 +97,7 @@ func (m *QuerySpotPriceRequest) GetQuoteAssetDenom() string {
 	return ""
 }
 
-// Deprecated: please use alternate in x/poolmanager
+// Depreacted: please use alternate in x/poolmanager
 //
 // Deprecated: Do not use.
 type QuerySpotPriceResponse struct {
