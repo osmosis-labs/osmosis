@@ -298,7 +298,7 @@ func NewOsmosisApp(
 	// Generally NewAppModule will require the keeper that module defines to be passed in as an exact struct,
 	// but should take in every other keeper as long as it matches a certain interface. (So no need to be de-ref'd)
 	//
-	// Any time a module requires a keeper de-ref'd thats not its native one,
+	// Any time a module requires a keeper de-ref'd that's not its native one,
 	// its code-smell and should probably change. We should get the staking keeper dependencies fixed.
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
 

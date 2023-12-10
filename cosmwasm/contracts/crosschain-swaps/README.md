@@ -178,7 +178,7 @@ TODO: Add an example in TS
 #### Native to Osmosis native
 
 Similarly, if you wanted to swap for a token that is native to osmosis (osmo, ion, or tokenfactory tokens) you can use a 
-memo like the one above but with the appropriate valies for the token and receiver.
+memo like the one above but with the appropriate values for the token and receiver.
 
 ```json
 {

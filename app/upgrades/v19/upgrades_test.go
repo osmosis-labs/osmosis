@@ -107,7 +107,7 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 
 	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
 
-	// set lockable duration so that we don't have erros upon creating gauge
+	// set lockable duration so that we don't have errors upon creating gauge
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,

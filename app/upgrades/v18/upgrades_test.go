@@ -186,7 +186,7 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 	s.Require().NoError(err)
 
 	// also create a lock with the shares that would stay locked during the upgrade.
-	// doing this would help us assert if the accumulator has been resetted to the correct value.
+	// doing this would help us assert if the accumulator has been reset to the correct value.
 	shareCoinsStaysLocked := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, osmomath.NewInt(shareStaysLocked)))
 	s.FundAcc(addr, shareCoinsStaysLocked)
 	_, err = keepers.LockupKeeper.CreateLock(s.Ctx, addr, shareCoinsStaysLocked, time.Hour*24*14)
@@ -219,7 +219,7 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 }
 
 // We want to ensure that with the corrupted state of the lockup accumulator,
-// `AfterEpochEnd` was panicing.
+// `AfterEpochEnd` was panicking.
 // We can do this check by creating a CL pool, then trying to distribute using that specific
 // CL pool gauge. If our test setup was correct, this should panic.
 func (s *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {

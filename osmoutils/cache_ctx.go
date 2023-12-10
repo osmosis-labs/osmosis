@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// This function lets you run the function f, but if theres an error or panic
+// This function lets you run the function f, but if there's an error or panic
 // drop the state machine change and log the error.
 // If there is no error, proceeds as normal (but with some slowdown due to SDK store weirdness)
 // Try to avoid usage of iterators in f.

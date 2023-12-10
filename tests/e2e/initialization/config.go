@@ -456,7 +456,7 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 		gammGenState := &gammtypes.GenesisState{}
 		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
 
-		// Lower keep period from defaults to allos us to test pruning.
+		// Lower keep period from defaults to allows us to test pruning.
 		twapGenState.Params.RecordHistoryKeepPeriod = time.Second * 15
 
 		for _, poolAny := range gammGenState.Pools {

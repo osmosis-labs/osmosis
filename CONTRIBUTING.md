@@ -333,7 +333,7 @@ For v6.x, and v4.x, most PRs to them should go to main and get a "backport" labe
 
 ### How to build proto files. (rm -rf vendor/ && make build-reproducible once docker is installed)
 
-You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmosis. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes ure you have docker installed.
+You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmosis. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes sure you have docker installed.
 
 If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that.
 

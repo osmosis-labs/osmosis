@@ -55,7 +55,7 @@ Additionally, it takes the following arguments:
   - the id of the chain (string)
 - `--config`
   - serialized node configurats (e.g. Pruning and Snapshot options).
-    These correspond to the stuct `NodeConfig`, located in
+    These correspond to the struct `NodeConfig`, located in
     `tests/e2e/initialization/config.go` The number of initialized
     validators on the new chain corresponds to the number of
     `NodeConfig`s provided by this parameter
@@ -88,7 +88,7 @@ initResource, err := m.pool.RunWithOptions(
 
 #### Container Output
 
-Assumming that the container was correctly mounted on a volume,
+Assuming that the container was correctly mounted on a volume,
 it produces the following:
 
 - `osmo-test-< chain id >-encode` file
