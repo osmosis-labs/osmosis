@@ -60,7 +60,7 @@ type ConcentratedLiquidityKeeper interface {
 }
 
 // PoolManager defines the interface needed to be fulfilled for
-// the pool manger.
+// the pool manager.
 type PoolManager interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 

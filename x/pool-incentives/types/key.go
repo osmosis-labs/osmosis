@@ -32,13 +32,13 @@ func GetPoolIdFromGaugeIdStoreKey(gaugeId uint64, duration time.Duration) []byte
 }
 
 // GetPoolNoLockGaugeIdStoreKey returns a StoreKey with pool ID and gauge id as input
-// assumming that the pool has no lockable duration.
+// assuming that the pool has no lockable duration.
 func GetPoolNoLockGaugeIdStoreKey(poolId uint64, gaugeId uint64) []byte {
 	return []byte(fmt.Sprintf("no-lock-pool-incentives/%d/%d", poolId, gaugeId))
 }
 
 // GetPoolNoLockGaugeIdIterationStoreKey returns a StoreKey with pool ID as input
-// assumming that the pool has no lockable duration. It is used for collecting
+// assuming that the pool has no lockable duration. It is used for collecting
 // values by iterating over this prefix.
 func GetPoolNoLockGaugeIdIterationStoreKey(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("no-lock-pool-incentives/%d/", poolId))
