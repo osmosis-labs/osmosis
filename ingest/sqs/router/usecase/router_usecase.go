@@ -173,6 +173,40 @@ func (r *routerUseCaseImpl) GetCandidateRoutes(ctx context.Context, tokenInDenom
 	return routes, nil
 }
 
+// GetTakerFee implements mvc.RouterUsecase.
+func (r *routerUseCaseImpl) GetTakerFee(ctx context.Context, poolID uint64) ([]domain.TakerFeeForPair, error) {
+	takerFees, err := r.routerRepository.GetAllTakerFees(ctx)
+	if err != nil {
+		return []domain.TakerFeeForPair{}, err
+	}
+
+	pool, err := r.poolsUsecase.GetPool(ctx, poolID)
+	if err != nil {
+		return []domain.TakerFeeForPair{}, err
+	}
+
+	poolDenoms := pool.GetPoolDenoms()
+
+	result := make([]domain.TakerFeeForPair, 0)
+
+	for i := range poolDenoms {
+		for j := i + 1; j < len(poolDenoms); j++ {
+			denom0 := poolDenoms[i]
+			denom1 := poolDenoms[j]
+
+			takerFee := takerFees.GetTakerFee(denom0, denom1)
+
+			result = append(result, domain.TakerFeeForPair{
+				Denom0:   denom0,
+				Denom1:   denom1,
+				TakerFee: takerFee,
+			})
+		}
+	}
+
+	return result, nil
+}
+
 // initializeRouter initializes the router per configuration defined on the use case
 // Returns error if:
 // - there is an error retrieving pools from the store
