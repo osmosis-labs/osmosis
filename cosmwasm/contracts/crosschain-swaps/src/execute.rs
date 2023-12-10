@@ -152,7 +152,7 @@ pub fn swap_and_forward(
 
     // Check that the received is valid and retrieve its channel
     let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
-    // If there is a memo, check that it is valid (i.e. a valid json object that
+    // If there is a memo, check that it is valid (i.e. a valud json object that
     // doesn't contain the key that we will insert later)
     let memo = if let Some(memo) = &next_memo {
         // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY

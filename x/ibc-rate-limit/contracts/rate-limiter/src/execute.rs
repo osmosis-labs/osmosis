@@ -213,7 +213,7 @@ mod tests {
             env.block.time.plus_seconds(1600),
         );
 
-        // Paths are overridden if they share a name and denom
+        // Paths are overriden if they share a name and denom
         let msg = ExecuteMsg::AddPath {
             channel_id: format!("channel2"),
             denom: format!("denom"),

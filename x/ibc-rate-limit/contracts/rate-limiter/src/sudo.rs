@@ -39,7 +39,7 @@ pub fn process_packet(
 }
 
 /// This function checks the rate limit and, if successful, stores the updated data about the value
-/// that has been transferred through the channel for a specific denom.
+/// that has been transfered through the channel for a specific denom.
 /// If the period for a RateLimit has ended, the Flow information is reset.
 ///
 /// The channel_value is the current value of the denom for the the channel as

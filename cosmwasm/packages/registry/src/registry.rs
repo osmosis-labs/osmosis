@@ -351,10 +351,7 @@ impl<'a> Registry<'a> {
 
         for chunk in &parts.chunks(2) {
             let Some((port, channel)) = chunk.take(2).collect_tuple() else {
-                return Err(RegistryError::InvalidDenomTracePath {
-                    path: path.clone(),
-                    denom: denom.into(),
-                });
+                return Err(RegistryError::InvalidDenomTracePath{ path: path.clone(), denom: denom.into() });
             };
 
             // Check that the port is "transfer"
