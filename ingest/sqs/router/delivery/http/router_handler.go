@@ -50,6 +50,7 @@ func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase, logger log.Logger) {
 	e.GET(formatRouterResource("/single-quote"), handler.GetBestSingleRouteQuote)
 	e.GET(formatRouterResource("/routes"), handler.GetCandidateRoutes)
 	e.GET(formatRouterResource("/custom-quote"), handler.GetCustomQuote)
+	e.GET(formatRouterResource("/taker-fee-pool/:id"), handler.GetTakerFee)
 	e.POST(formatRouterResource("/store-state"), handler.StoreRouterStateInFiles)
 }
 
@@ -146,6 +147,23 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 		return err
 	}
 	return nil
+}
+
+func (a *RouterHandler) GetTakerFee(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	idStr := c.Param("id")
+	poolID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ResponseError{Message: err.Error()})
+	}
+
+	takerFees, err := a.RUsecase.GetTakerFee(ctx, poolID)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, takerFees)
 }
 
 // TODO: authentication for the endpoint and enable only in dev mode.

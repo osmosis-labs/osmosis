@@ -42,6 +42,8 @@ type RouterUsecase interface {
 	GetCustomQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string, poolIDs []uint64) (domain.Quote, error)
 	// GetCandidateRoutes returns the candidate routes for the given tokenIn and tokenOutDenom.
 	GetCandidateRoutes(ctx context.Context, tokenInDenom, tokenOutDenom string) (route.CandidateRoutes, error)
+	// GetTakerFee returns the taker fee for all token pairs in a pool.
+	GetTakerFee(ctx context.Context, poolID uint64) ([]domain.TakerFeeForPair, error)
 	// StoreRoutes stores all router state in the files locally. Used for debugging.
 	StoreRouterStateFiles(ctx context.Context) error
 }
