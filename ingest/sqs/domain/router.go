@@ -87,6 +87,8 @@ type RouterConfig struct {
 	MinOSMOLiquidity          int  `mapstructure:"min_osmo_liquidity"`
 	RouteUpdateHeightInterval int  `mapstructure:"route_update_height_interval"`
 	RouteCacheEnabled         bool `mapstructure:"route_cache_enabled"`
+	// The number of seconds to cache routes for before expiry.
+	RouteCacheExpirySeconds uint64 `mapstructure:"route_cache_expiry_seconds"`
 }
 
 // DenomPair encapsulates a pair of denoms.
