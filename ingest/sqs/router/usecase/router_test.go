@@ -163,7 +163,7 @@ func (s *RouterTestSuite) TestNewRouter() {
 
 			// Note that the pools below have higher TVL.
 			// However, since they have TVL error flag set, they
-			// should be sorted after other pools, unless overriden by preferredPoolIDs.
+			// should be sorted after other pools, unless overridden by preferredPoolIDs.
 			&domain.PoolWrapper{
 				ChainModel: secondBalancerPool,
 				SQSModel: domain.SQSPool{

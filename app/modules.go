@@ -205,7 +205,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// TODO: Perhaps this can be relaxed, left to future work to analyze.
 	ord.Sequence(distrtypes.ModuleName, slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName)
 	// superfluid must come after distribution & epochs.
-	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
+	// TODO: we actually set it to come after staking, since that's what happened before, and want to minimize chance of break.
 	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
 	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
 	// IBChost came after staking, before superfluid.
@@ -231,7 +231,7 @@ func OrderEndBlockers(allModuleNames []string) []string {
 
 // OrderInitGenesis returns module names in order for init genesis calls.
 func OrderInitGenesis(allModuleNames []string) []string {
-	// NOTE: The genutils moodule must occur after staking so that pools are
+	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain

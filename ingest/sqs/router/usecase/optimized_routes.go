@@ -102,7 +102,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, routes []route.RouteI
 
 // Returns best quote as well as all routes sorted by amount out and error if any.
 // CONTRACT: router repository must be set on the router.
-// CONTRACT: pools reporitory must be set on the router
+// CONTRACT: pools repository must be set on the router
 func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
 	if len(routes) == 0 {
 		return nil, nil, errors.New("no routes were provided")

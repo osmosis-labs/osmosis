@@ -53,5 +53,5 @@ perform_status_check() {
     echo "Height" $block_height
 
     is_syncing=$(echo "$full_response" | jq .result.sync_info.catching_up)
-    echo "Is Synching" $is_syncing
+    echo "Is Syncing" $is_syncing
 }

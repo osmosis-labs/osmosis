@@ -22,7 +22,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum FailedDeliveryAction {
     DoNothing,
-    /// An osmosis addres used to recover any tokens that get stuck in the
+    /// An osmosis address used to recover any tokens that get stuck in the
     /// contract due to IBC failures
     LocalRecoveryAddr(Addr),
     //

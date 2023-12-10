@@ -60,7 +60,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// acc := s.App.AccountKeeper.GetAccount(s.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				// s.App.AccountKeeper.RemoveAccount(s.Ctx, acc)
 
-				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
+				// Because of SDK version map bug, we can't do the following, and instead do a massive hack
 				// vm := s.App.UpgradeKeeper.GetModuleVersionMap(s.Ctx)
 				// delete(vm, ibchookstypes.ModuleName)
 				// OR
