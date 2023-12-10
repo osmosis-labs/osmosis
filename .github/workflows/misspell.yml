@@ -1,0 +1,17 @@
+name: Check typos on PR
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - concentrated-liquidity-main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for misspellings
+        uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
