@@ -245,3 +245,4 @@ The Code Layout is very similar to TWAP module.
 - keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
 - msg_server.go - handle messages request from client and process responses. 
 - store.go - Managing logic for getting and setting things to underlying stores (KVStore)
+- fake comment to test mispelings
