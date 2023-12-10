@@ -14,4 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check for misspellings
+        id: misspell
         uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
+      - name: Fail if misspellings are found
+        run: exit $(cat ${{ steps.misspell.outputs.report }} | wc -l)
