@@ -66,7 +66,7 @@ func (r *Router) GetSplitQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (doma
 
 	totalIncrementsInSplits := uint8(0)
 	resultRoutes := make([]domain.SplitRoute, 0, len(routes))
-	totalAmoutOutFromSplits := osmomath.ZeroInt()
+	totalAmountOutFromSplits := osmomath.ZeroInt()
 	for i, currentRouteIncrement := range bestSplit.routeIncrements {
 		currentRoute := routes[i]
 
@@ -105,11 +105,11 @@ func (r *Router) GetSplitQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (doma
 		})
 
 		totalIncrementsInSplits += uint8(currentRouteIncrement)
-		totalAmoutOutFromSplits = totalAmoutOutFromSplits.Add(currentRouteAmtOut)
+		totalAmountOutFromSplits = totalAmountOutFromSplits.Add(currentRouteAmtOut)
 	}
 
-	if !totalAmoutOutFromSplits.Equal(bestSplit.amountOut) {
-		return nil, fmt.Errorf("total amount out from splits (%s) does not equal actual amount out (%s)", totalAmoutOutFromSplits, bestSplit.amountOut)
+	if !totalAmountOutFromSplits.Equal(bestSplit.amountOut) {
+		return nil, fmt.Errorf("total amount out from splits (%s) does not equal actual amount out (%s)", totalAmountOutFromSplits, bestSplit.amountOut)
 	}
 
 	// This may happen if one of the routes is consistently returning 0 amount out for all increments.

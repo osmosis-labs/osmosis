@@ -131,7 +131,7 @@ func TestPerfectSquares(t *testing.T) {
 
 func TestSqrtRounding(t *testing.T) {
 	testCases := []Dec{
-		// TODO: uncomment when SDK supports dec from str with bigger bitlenghths.
+		// TODO: uncomment when SDK supports dec from str with bigger bitlengthhs.
 		// it works if you override the sdk panic locally.
 		// MustNewDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
 	}

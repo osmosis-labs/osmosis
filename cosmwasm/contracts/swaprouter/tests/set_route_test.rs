@@ -156,7 +156,7 @@ test_set_route!(
 );
 
 test_set_route!(
-    non_existant_pool
+    non_existent_pool
     should failed_with
     r#"Invalid Pool Route: "denom uosmo is not in pool id 3": execute wasm contract failed"#,
 

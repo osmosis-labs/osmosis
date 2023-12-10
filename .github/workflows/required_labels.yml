@@ -7,7 +7,7 @@ on:
       - "main"
 
 jobs:
-  state_compatability_labels:
+  state_compatibility_labels:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
