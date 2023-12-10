@@ -59,4 +59,9 @@ func (pm *PoolsUsecaseMock) GetTickModelMap(ctx context.Context, poolIDs []uint6
 	return pm.TickModelMap, nil
 }
 
+// GetPool implements mvc.PoolsUsecase.
+func (pm *PoolsUsecaseMock) GetPool(ctx context.Context, poolID uint64) (domain.PoolI, error) {
+	panic("unimplemented")
+}
+
 var _ mvc.PoolsUsecase = &PoolsUsecaseMock{}
