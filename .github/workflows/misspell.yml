@@ -25,7 +25,10 @@ jobs:
         run: |
           # Define the file and the line containing the misspelling
           FILE1="./proto/osmosis/downtimedetector/v1beta1/query.proto"
+          LINE1="bool succesfully_recovered = 1;"
+
           FILE2="./x/downtime-detector/client/query_proto_wrap.go"
+          LINE2="SuccesfullyRecovered: val,"
 
           # Check if the file contains the "incorrect" correction and revert it
           if grep -q "successfully_recovered" "$FILE1"; then
@@ -36,14 +39,22 @@ jobs:
               sed -i "s/SuccessfullyRecovered/SuccesfullyRecovered/" "$FILE2"
           fi
 
+          # Commit the reverts if any changes were made
+          if [[ `git status --porcelain` ]]; then
+            git config --global user.name 'GitHub Actions'
+            git config --global user.email 'actions@github.com'
+            git add $FILE1 $FILE2
+            git commit -m "Revert specific spelling corrections"
+            git push
+          fi
+
       # Check if there are any changes
       - name: Check for changes
         id: git-check
         run: |
           if [[ `git status --porcelain` ]]; then
-            echo "::set-output name=changes::true"
+          echo "::set-output name=changes::true"
           fi
-
       # Fail the job if there were changes (indicating misspellings were fixed)
       - name: Fail if misspellings were corrected
         if: steps.git-check.outputs.changes == 'true'
