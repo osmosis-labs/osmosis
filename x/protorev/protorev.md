@@ -91,7 +91,7 @@ The `x/protorev` module keeps the following objects in state:
 
 ### TokenPairArbRoutes
 
-TokenPairArbRoutes are cyclic arbitrage routes that are not going to be captured by the highest liquidity method (described in state transitions below). If there is a cyclic arbitrage route that is frequently being utilized by searchers, `x/protorev` can manually enter this route - through the admin account - and allow it to be used for trading. Each TokenPairArbRoutes object tracks a directional swap of two assets, and associats the swap with cyclic routes. When the module sees a swap of (`token_in`, `token_out`), it will extract the `arb_routes` that should be used and will simulate trades and execute them if profitable.
+TokenPairArbRoutes are cyclic arbitrage routes that are not going to be captured by the highest liquidity method (described in state transitions below). If there is a cyclic arbitrage route that is frequently being utilized by searchers, `x/protorev` can manually enter this route - through the admin account - and allow it to be used for trading. Each TokenPairArbRoutes object tracks a directional swap of two assets, and associates the swap with cyclic routes. When the module sees a swap of (`token_in`, `token_out`), it will extract the `arb_routes` that should be used and will simulate trades and execute them if profitable.
 
 ```go
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
@@ -110,7 +110,7 @@ message TokenPairArbRoutes {
 message Route {
   option (gogoproto.equal) = true;
 
-  // The pool IDs that are travered in the directed cyclic graph (traversed left
+  // The pool IDs that are traversed in the directed cyclic graph (traversed left
   // -> right)
   repeated Trade trades = 1;
   // The step size that will be used to find the optimal swap amount in the
@@ -125,7 +125,7 @@ message Route {
 message Trade {
   option (gogoproto.equal) = true;
 
-  // The pool IDs that are travered in the directed cyclic graph (traversed left
+  // The pool IDs that are traversed in the directed cyclic graph (traversed left
   // -> right)
   uint64 pool = 1;
   // The denom of token A that is traded
@@ -320,7 +320,7 @@ This will take in a route and determine the optimal amount to swap in to maximiz
 
 Execute trade takes the route and optimal input amount as params, mints the optimal amount of input coin, executes the swaps via `poolmanagerKeeper`’s `MultiHopSwapExactAmountIn`, and then burns the amount of coins originally minted, storing the profits in it’s own module account.
 
-This will also update various trading statistics in the module’s store. It will update the total number of trades the module has executed, total profits captured, profits made on this specific route, share of profits the developer account can withdraw, and mor.
+This will also update various trading statistics in the module’s store. It will update the total number of trades the module has executed, total profits captured, profits made on this specific route, share of profits the developer account can withdraw, and more.
 
 ## Execution Guardrails
 
@@ -411,7 +411,7 @@ type MsgSetDeveloperAccount struct {
 }
 ```
 
-Messsage stateless validation fails if:
+Message stateless validation fails if:
 
 - The admin is not a valid bech32 address
 - The signature of the user does not match the admin account’s
@@ -712,7 +712,7 @@ There is 1 type of event that exists in ProtoRev:
 
 ### `types.TypeEvtBackrun`
 
-This event is emitted after ProtoRev succesfully backruns a transaction.
+This event is emitted after ProtoRev successfully backruns a transaction.
 
 It consists of the following attributes:
 

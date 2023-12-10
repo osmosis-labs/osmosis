@@ -36,7 +36,7 @@ type GenesisState struct {
 	// genesis
 	Gauges []Gauge `protobuf:"bytes,2,rep,name=gauges,proto3" json:"gauges"`
 	// lockable_durations are all lockup durations that gauges can be locked for
-	// in order to recieve incentives
+	// in order to receive incentives
 	LockableDurations []time.Duration `protobuf:"bytes,3,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
 	// last_gauge_id is what the gauge number will increment from when creating
 	// the next gauge after genesis

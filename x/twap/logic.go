@@ -165,7 +165,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	// then the TwapAccumulator variables are zero.
 
 	// Handle record after creating pool
-	// Incase record height should equal to ctx height
+	// In case record height should equal to ctx height
 	// But ArithmeticTwapAccumulators should be zero
 	if (record.Height == ctx.BlockHeight() || record.Time.Equal(ctx.BlockTime())) &&
 		!record.P1ArithmeticTwapAccumulator.IsZero() &&

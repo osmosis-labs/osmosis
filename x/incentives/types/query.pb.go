@@ -787,7 +787,7 @@ func (m *RewardsEstRequest) GetEndEpoch() int64 {
 }
 
 type RewardsEstResponse struct {
-	// Estimated coin rewards that will be recieved at provided address
+	// Estimated coin rewards that will be received at provided address
 	// from specified locks between current time and end epoch
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
@@ -869,7 +869,7 @@ func (m *QueryLockableDurationsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryLockableDurationsRequest proto.InternalMessageInfo
 
 type QueryLockableDurationsResponse struct {
-	// Time durations that users can lock coins for in order to recieve rewards
+	// Time durations that users can lock coins for in order to receive rewards
 	LockableDurations []time.Duration `protobuf:"bytes,1,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
 }
 
@@ -1531,9 +1531,9 @@ type QueryClient interface {
 	ActiveGauges(ctx context.Context, in *ActiveGaugesRequest, opts ...grpc.CallOption) (*ActiveGaugesResponse, error)
 	// ActiveGaugesPerDenom returns active gauges by denom
 	ActiveGaugesPerDenom(ctx context.Context, in *ActiveGaugesPerDenomRequest, opts ...grpc.CallOption) (*ActiveGaugesPerDenomResponse, error)
-	// Returns scheduled gauges that have not yet occured
+	// Returns scheduled gauges that have not yet occurred
 	UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequest, opts ...grpc.CallOption) (*UpcomingGaugesResponse, error)
-	// UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
+	// UpcomingGaugesPerDenom returns scheduled gauges that have not yet occurred
 	// by denom
 	UpcomingGaugesPerDenom(ctx context.Context, in *UpcomingGaugesPerDenomRequest, opts ...grpc.CallOption) (*UpcomingGaugesPerDenomResponse, error)
 	// RewardsEst returns an estimate of the rewards from now until a specified
@@ -1702,9 +1702,9 @@ type QueryServer interface {
 	ActiveGauges(context.Context, *ActiveGaugesRequest) (*ActiveGaugesResponse, error)
 	// ActiveGaugesPerDenom returns active gauges by denom
 	ActiveGaugesPerDenom(context.Context, *ActiveGaugesPerDenomRequest) (*ActiveGaugesPerDenomResponse, error)
-	// Returns scheduled gauges that have not yet occured
+	// Returns scheduled gauges that have not yet occurred
 	UpcomingGauges(context.Context, *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error)
-	// UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
+	// UpcomingGaugesPerDenom returns scheduled gauges that have not yet occurred
 	// by denom
 	UpcomingGaugesPerDenom(context.Context, *UpcomingGaugesPerDenomRequest) (*UpcomingGaugesPerDenomResponse, error)
 	// RewardsEst returns an estimate of the rewards from now until a specified

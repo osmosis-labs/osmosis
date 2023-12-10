@@ -75,7 +75,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 	}
 
 	// Calculate the amount of uosmo that we can get if we swapped the
-	// profited amount of the orignal asset through the highest uosmo liquidity pool
+	// profited amount of the original asset through the highest uosmo liquidity pool
 	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
 		conversionPool,

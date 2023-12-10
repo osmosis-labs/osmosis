@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 }
 
 // Tests GetTickLiquidityForFullRange by creating a position as opposed to directly
-// setting tick net liquidity valies
+// setting tick net liquidity values
 func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange_CreatePosition() {
 	// Init suite for each test.
 	s.SetupTest()
