@@ -8,13 +8,32 @@ on:
       - concentrated-liquidity-main
 
 jobs:
-  build:
+  check-typos:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - name: Check for misspellings
-        id: misspell
+
+      # Run misspell-fixer action to fix typos
+      - name: Fix misspellings
         uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
-      - name: Fail if misspellings are found
-        run: exit $(cat ${{ steps.misspell.outputs.report }} | wc -l)
+
+      # Check if there are any changes
+      - name: Check for changes
+        id: git-check
+        run: |
+          if [[ `git status --porcelain` ]]; then
+          echo "::set-output name=changes::true"
+          fi
+      # Fail the job if there were changes (indicating misspellings were fixed)
+      - name: Fail if misspellings were corrected
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          echo "Misspellings were found and fixed"
+          exit 1
+
+      # This step will only run if no misspellings were corrected
+      - name: No misspellings found
+        if: steps.git-check.outputs.changes != 'true'
+        run: |
+          echo "No misspellings found"
