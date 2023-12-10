@@ -256,7 +256,87 @@ curl "https://sqs.osmosis.zone/router/custom-quote?tokenIn=1000000uosmo&tokenOut
 }
 ```
 
-5. POST `/router/store-state`
+
+5. GET `/router/cached-routes?tokenIn=uosmo&tokenOutDenom=uion`
+
+Description: returns cached routes for the given tokenIn and tokenOutDenomn if cache
+is enabled. If not, returns error. Contrary to `/router/routes...` endpoint, does
+not attempt to compute routes if cache is not enabled.
+
+Parameters: none
+
+Parameters:
+- `tokenIn` the string representation of the denom of the token in
+- `tokenOutDenom` the string representing the denom of the token out
+
+
+Response example:
+```bash
+curl "https://sqs.osmosis.zone/cached-routes?tokenIn=uosmo&tokenOutDenom=uion" | jq .
+{
+  "Routes": [
+    {
+      "Pools": [
+        {
+          "ID": 1100,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 2,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 1013,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 1092,
+          "TokenOutDenom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"
+        },
+        {
+          "ID": 476,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    },
+    {
+      "Pools": [
+        {
+          "ID": 1108,
+          "TokenOutDenom": "ibc/9712DBB13B9631EDFA9BF61B55F1B2D290B2ADB67E3A4EB3A875F3B6081B3B84"
+        },
+        {
+          "ID": 26,
+          "TokenOutDenom": "uion"
+        }
+      ]
+    }
+  ],
+  "UniquePoolIDs": {
+    "1013": {},
+    "1092": {},
+    "1100": {},
+    "1108": {},
+    "2": {},
+    "26": {},
+    "476": {}
+  }
+}
+```
+
+6. POST `/router/store-state`
 
 Description: stores the current state of the router in a JSON file locally. Used for debugging purposes.
 This endpoint should be disabled in production.

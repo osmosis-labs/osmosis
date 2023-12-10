@@ -515,6 +515,9 @@ route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateH
 
 # Whether to enable candidate route caching in Redis.
 route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
+
+# The number of seconds to cache routes for before expiry.
+route_cache_expiry_seconds = "{{ .SidecarQueryServerConfig.Router.RouteCacheExpirySeconds }}"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg

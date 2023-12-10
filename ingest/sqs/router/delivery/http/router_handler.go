@@ -49,6 +49,7 @@ func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase, logger log.Logger) {
 	e.GET(formatRouterResource("/quote"), handler.GetOptimalQuote)
 	e.GET(formatRouterResource("/single-quote"), handler.GetBestSingleRouteQuote)
 	e.GET(formatRouterResource("/routes"), handler.GetCandidateRoutes)
+	e.GET(formatRouterResource("/cached-routes"), handler.GetCachedCandidateRoutes)
 	e.GET(formatRouterResource("/custom-quote"), handler.GetCustomQuote)
 	e.POST(formatRouterResource("/store-state"), handler.StoreRouterStateInFiles)
 }
@@ -134,10 +135,31 @@ func (a *RouterHandler) GetCandidateRoutes(c echo.Context) error {
 
 	tokenOutDenom, tokenIn, err := getValidTokenInTokenOutStr(c)
 	if err != nil {
-		return err
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
 
 	routes, err := a.RUsecase.GetCandidateRoutes(ctx, tokenIn, tokenOutDenom)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	if err := c.JSON(http.StatusOK, routes); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetCandidateRoutes returns the candidate routes for a given tokenIn and tokenOutDenom from cache.
+// If no routes present in cache, it does not attempt to recompute them.
+func (a *RouterHandler) GetCachedCandidateRoutes(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	tokenOutDenom, tokenIn, err := getValidTokenInTokenOutStr(c)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	routes, err := a.RUsecase.GetCachedCandidateRoutes(ctx, tokenIn, tokenOutDenom)
 	if err != nil {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
