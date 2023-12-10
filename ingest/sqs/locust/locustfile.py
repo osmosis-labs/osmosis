@@ -40,44 +40,44 @@ class SQS(HttpUser):
 
     @task
     def all_pools(self):
-        self.client.get("/all-pools")
+        self.client.get("/pools/all")
     
     # Quote the same pair of UOSMO and USDC (UOSMO in) while progressively
     # increasing the amount of the tokenIn per endpoint.
 
     @task
     def quoteUOSMOUSDC_1In(self):
-        self.client.get(f"/quote?tokenIn=1000000{UOSMO}&tokenOutDenom={USDC}")
+        self.client.get(f"/router/quote?tokenIn=1000000{UOSMO}&tokenOutDenom={USDC}")
 
     @task
     def quoteUOSMOUSDC_1000In(self):
-        self.client.get(f"/quote?tokenIn=1000000000{UOSMO}&tokenOutDenom={USDC}")
+        self.client.get(f"/router/quote?tokenIn=1000000000{UOSMO}&tokenOutDenom={USDC}")
 
     @task
     def quoteUOSMOUSDC_1000000In(self):
-        self.client.get(f"/quote?tokenIn=1000000000000{UOSMO}&tokenOutDenom={USDC}")
+        self.client.get(f"/router/quote?tokenIn=1000000000000{UOSMO}&tokenOutDenom={USDC}")
 
     @task
     def singleQuoteUOSMOUSDC_1000000In(self):
-        self.client.get(f"/single-quote?tokenIn=1000000000000{UOSMO}&tokenOutDenom={USDC}")
+        self.client.get(f"/router/single-quote?tokenIn=1000000000000{UOSMO}&tokenOutDenom={USDC}")
 
     # Quote the same pair of UOSMO and USDC (USDC in).
     @task
     def quoteUSDCUOSMO_1000000In(self):
-        self.client.get(f"/quote?tokenIn=100000000000{USDC}&tokenOutDenom={UOSMO}")
+        self.client.get(f"/router/quote?tokenIn=100000000000{USDC}&tokenOutDenom={UOSMO}")
 
     @task
     def quoteUSDCTUMEE_3000IN(self):
-        self.client.get(f"/quote?tokenIn=3000000000{USDT}&tokenOutDenom={UMEE}")
+        self.client.get(f"/router/quote?tokenIn=3000000000{USDT}&tokenOutDenom={UMEE}")
 
     @task
     def routesUOSMOUSDC(self):
-        self.client.get(f"/routes?tokenIn={UOSMO}&tokenOutDenom={USDC}")
+        self.client.get(f"/router/routes?tokenIn={UOSMO}&tokenOutDenom={USDC}")
 
     
     @task
     def routesUSDCUOSMO(self):
-        self.client.get(f"/routes?tokenIn={USDC}&tokenOutDenom={UOSMO}")
+        self.client.get(f"/router/routes?tokenIn={USDC}&tokenOutDenom={UOSMO}")
 
     # TODO:
     # Add tests for routes search

@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	redischaininfoingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/chain_info/ingester/redis"
@@ -116,7 +118,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 }
 
 // Initialize initializes the sidecar query server and returns the ingester.
-func (c Config) Initialize(appCodec codec.Codec, keepers common.SQSIngestKeepers) (ingest.Ingester, error) {
+func (c Config) Initialize(appCodec codec.Codec, txDecoder sdk.TxDecoder, keepers common.SQSIngestKeepers) (ingest.Ingester, error) {
 	// logger
 	logger, err := sqslog.NewLogger(c.LoggerIsProduction, c.LoggerFilename, c.LoggerLevel)
 	if err != nil {
@@ -141,7 +143,7 @@ func (c Config) Initialize(appCodec codec.Codec, keepers common.SQSIngestKeepers
 	txManager := sidecarQueryServer.GetTxManager()
 
 	// Create pools ingester
-	poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, *c.Router, keepers)
+	poolsIngester := redispoolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), sidecarQueryServer.GetRouterRepository(), sidecarQueryServer.GetTokensUseCase(), txManager, *c.Router, keepers, txDecoder)
 	poolsIngester.SetLogger(sidecarQueryServer.GetLogger())
 
 	chainInfoingester := redischaininfoingester.NewChainInfoIngester(sidecarQueryServer.GetChainInfoRepository(), txManager)

@@ -17,6 +17,7 @@ import (
 
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -45,6 +46,10 @@ type poolIngester struct {
 	poolManagerKeeper  common.PoolManagerKeeper
 	logger             log.Logger
 
+	txDecoder sdk.TxDecoder
+
+	hasFetchedInitialData bool
+
 	routerConfig domain.RouterConfig
 }
 
@@ -70,7 +75,7 @@ const (
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository mvc.PoolsRepository, routerRepository mvc.RouterRepository, tokensUseCase domain.TokensUsecase, repositoryManager mvc.TxManager, routerConfig domain.RouterConfig, keepers common.SQSIngestKeepers) mvc.AtomicIngester {
+func NewPoolIngester(poolsRepository mvc.PoolsRepository, routerRepository mvc.RouterRepository, tokensUseCase domain.TokensUsecase, repositoryManager mvc.TxManager, routerConfig domain.RouterConfig, keepers common.SQSIngestKeepers, txDecoder sdk.TxDecoder) mvc.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		routerRepository:   routerRepository,
@@ -83,6 +88,9 @@ func NewPoolIngester(poolsRepository mvc.PoolsRepository, routerRepository mvc.R
 		protorevKeeper:     keepers.ProtorevKeeper,
 		poolManagerKeeper:  keepers.PoolManagerKeeper,
 		routerConfig:       routerConfig,
+
+		hasFetchedInitialData: false,
+		txDecoder:             txDecoder,
 	}
 }
 
@@ -96,6 +104,8 @@ var _ mvc.AtomicIngester = &poolIngester{}
 // processPoolState processes the pool state. an
 func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
+
+	concentratedPoolIDUpdateMap := make(map[uint64]struct{})
 
 	// TODO: can be cached
 	tokenPrecisionMap, err := pi.tokensUseCase.GetDenomPrecisions(goCtx)
@@ -145,13 +155,48 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 	}
 
 	for _, pool := range concentratedPools {
-		// Parse concentrated pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
-		if err != nil {
-			return err
-		}
+		// Updating concentrated pools is expensive. As a result, we only update them in the following cases:
+		// - Initial fetch
+		// - If concentrated pool state is updated
+		// - TODO: every epoch.
+		_, isConcentratedTickStateUpdated := concentratedPoolIDUpdateMap[pool.GetId()]
 
-		allPoolsParsed = append(allPoolsParsed, pool)
+		// Update only on the initial fetch or if the tick state is updated
+		if !pi.hasFetchedInitialData || isConcentratedTickStateUpdated {
+			// Parse concentrated pool to the standard SQS types.
+			pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+			if err != nil {
+				return err
+			}
+
+			var tickModel *domain.TickModel
+
+			// For CL pools, get the tick data
+			tickData, currentTickIndex, err := pi.concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
+			// If there is no error, we set the tick model
+			if err == nil {
+				tickModel = &domain.TickModel{
+					Ticks:            tickData,
+					CurrentTickIndex: currentTickIndex,
+				}
+				// If there is no liquidity, we set the tick model to nil and update no liquidity flag
+			} else if err != nil && errors.Is(err, concentratedtypes.RanOutOfTicksForPoolError{PoolId: pool.GetId()}) {
+				tickModel = &domain.TickModel{
+					Ticks:            []queryproto.LiquidityDepthWithRange{},
+					CurrentTickIndex: -1,
+					HasNoLiquidity:   true,
+				}
+
+				// On any other error, we return the error
+			} else {
+				return err
+			}
+
+			// Set tick model
+			pool.SetTickModel(tickModel)
+
+			allPoolsParsed = append(allPoolsParsed, pool)
+		}
 	}
 
 	for _, pool := range cosmWasmPools {
@@ -185,6 +230,8 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 
 		pi.updateRoutes(sdk.WrapSDKContext(ctx), tx, allPools, denomPairToTakerFeeMap)
 	}
+
+	pi.hasFetchedInitialData = true
 
 	return nil
 }
@@ -349,33 +396,6 @@ func (pi *poolIngester) convertPool(
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the tick model for concentrated pools
-	var tickModel *domain.TickModel
-
-	// For CL pools, get the tick data
-	if pool.GetType() == poolmanagertypes.Concentrated {
-		tickData, currentTickIndex, err := pi.concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
-		// If there is no error, we set the tick model
-		if err == nil {
-			tickModel = &domain.TickModel{
-				Ticks:            tickData,
-				CurrentTickIndex: currentTickIndex,
-			}
-			// If there is no liquidity, we set the tick model to nil and update no liquidity flag
-		} else if err != nil && errors.Is(err, concentratedtypes.RanOutOfTicksForPoolError{PoolId: pool.GetId()}) {
-			tickModel = &domain.TickModel{
-				Ticks:            []queryproto.LiquidityDepthWithRange{},
-				CurrentTickIndex: -1,
-				HasNoLiquidity:   true,
-			}
-
-			// On any other error, we return the error
-		} else {
-			return nil, err
-		}
-	}
-
 	return &domain.PoolWrapper{
 		ChainModel: pool,
 		SQSModel: domain.SQSPool{
@@ -385,7 +405,6 @@ func (pi *poolIngester) convertPool(
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
 		},
-		TickModel: tickModel,
 	}, nil
 }
 
@@ -404,4 +423,166 @@ func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx mvc.Tx, takerFeeMap
 // SetLogger implements ingest.AtomicIngester.
 func (pi *poolIngester) SetLogger(logger log.Logger) {
 	pi.logger = logger
+}
+
+func (pi *poolIngester) parseTx(ctx sdk.Context) error {
+	sdkTxBytes := ctx.TxBytes()
+
+	// Decode the transaction
+	sdkTx, err := pi.txDecoder(sdkTxBytes)
+	if err != nil {
+		return err
+	}
+
+	messages := sdkTx.GetMsgs()
+
+	// map of pool IDs that had concentrated pool updates.
+	// These include:
+	// - new pool
+	// - create position
+	// - add to position
+	// - withdraw position
+	// - claim spread factor rewards
+	// - claim incentive rewards
+	// - swap
+	concentratedPoolUpdates := make(map[uint64]struct{})
+
+	for _, msg := range messages {
+		switch msg.(type) {
+		case *cltypes.MsgCreatePosition:
+
+			createPositionMsg := msg.(*cltypes.MsgCreatePosition)
+			poolID := createPositionMsg.PoolId
+
+			concentratedPoolUpdates[poolID] = struct{}{}
+		case *cltypes.MsgAddToPosition:
+
+			addToPositionMsg := msg.(*cltypes.MsgAddToPosition)
+
+			// Get the position
+			position, err := pi.concentratedKeeper.GetPosition(ctx, addToPositionMsg.PositionId)
+			if err != nil {
+				return err
+			}
+
+			// Get the pool ID
+			poolID := position.PoolId
+
+			concentratedPoolUpdates[poolID] = struct{}{}
+		case *cltypes.MsgWithdrawPosition:
+
+			withdrawPositionMsg := msg.(*cltypes.MsgWithdrawPosition)
+
+			// Get the position
+			position, err := pi.concentratedKeeper.GetPosition(ctx, withdrawPositionMsg.PositionId)
+			if err != nil {
+				return err
+			}
+
+			// Get the pool ID
+			poolID := position.PoolId
+
+			// Updates both pool model and tick model
+			concentratedPoolUpdates[poolID] = struct{}{}
+		case *cltypes.MsgCollectIncentives:
+
+			collectIncentivesMsg := msg.(*cltypes.MsgCollectIncentives)
+
+			for _, positionID := range collectIncentivesMsg.PositionIds {
+				// Get the position
+				position, err := pi.concentratedKeeper.GetPosition(ctx, positionID)
+				if err != nil {
+					return err
+				}
+
+				// Get the pool ID
+				poolID := position.PoolId
+
+				// Updates only pool model
+				concentratedPoolUpdates[poolID] = struct{}{}
+			}
+		case *cltypes.MsgCollectSpreadRewards:
+
+			collectIncentivesMsg := msg.(*cltypes.MsgCollectSpreadRewards)
+
+			collectIncentivesPoolIDs, err := pi.getPoolIDsFromPositionIDs(ctx, collectIncentivesMsg.PositionIds)
+			if err != nil {
+				return err
+			}
+
+			concentratedPoolUpdates = MergeMaps(concentratedPoolUpdates, collectIncentivesPoolIDs)
+
+		case *poolmanagertypes.MsgSwapExactAmountIn:
+
+			msgSwapExactAmountIn := msg.(*poolmanagertypes.MsgSwapExactAmountIn)
+
+			for _, route := range msgSwapExactAmountIn.Routes {
+				// Get the pool ID
+				poolID := route.PoolId
+
+				// Updates both
+				concentratedPoolUpdates[poolID] = struct{}{}
+			}
+
+		case *poolmanagertypes.MsgSwapExactAmountOut:
+
+		case *poolmanagertypes.MsgSplitRouteSwapExactAmountIn:
+
+		case *poolmanagertypes.MsgSplitRouteSwapExactAmountOut:
+
+		default:
+			// do nothing
+		}
+	}
+
+	return nil
+}
+
+// returns pool IDs associated with the given position IDs.
+func (pi *poolIngester) getPoolIDsFromPositionIDs(ctx sdk.Context, positionIDs []uint64) (map[uint64]struct{}, error) {
+	poolIDs := make(map[uint64]struct{})
+
+	for _, positionID := range positionIDs {
+		// Get the pool ID
+		poolID, err := pi.getPoolIDFromPositionID(ctx, positionID)
+		if err != nil {
+			return nil, err
+		}
+
+		poolIDs[poolID] = struct{}{}
+	}
+
+	return poolIDs, nil
+}
+
+// returns pool ID associated with the given position ID.
+func (pi *poolIngester) getPoolIDFromPositionID(ctx sdk.Context, positionID uint64) (uint64, error) {
+	// Get the position
+	position, err := pi.concentratedKeeper.GetPosition(ctx, positionID)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the pool ID
+	poolID := position.PoolId
+
+	return poolID, nil
+}
+
+// MergeMaps merges two maps and returns a new map containing the merged result.
+// TODO: move to osmoutils.
+func MergeMaps[K comparable, T any](map1, map2 map[K]T) map[K]T {
+	result := make(map[K]T)
+
+	// Copy values from the first map
+	for key, value := range map1 {
+		result[key] = value
+	}
+
+	// Copy values from the second map, overwriting existing keys
+	for key, value := range map2 {
+		result[key] = value
+	}
+
+	return result
 }

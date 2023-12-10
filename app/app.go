@@ -264,7 +264,7 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
-		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
+		sqsIngester, err := sqsConfig.Initialize(appCodec, encodingConfig.TxConfig.TxDecoder(), sqsKeepers)
 		if err != nil {
 			panic(err)
 		}

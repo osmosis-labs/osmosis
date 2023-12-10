@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -25,6 +26,8 @@ type PoolKeeper interface {
 
 // CosmWasmPoolKeeper is an interface for getting CosmWasm pools from a keeper.
 type CosmWasmPoolKeeper interface {
+	PoolKeeper
+
 	GetPoolsWithWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
 }
 
@@ -68,4 +71,5 @@ type PoolManagerKeeper interface {
 type ConcentratedKeeper interface {
 	PoolKeeper
 	GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, int64, error)
+	GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error)
 }

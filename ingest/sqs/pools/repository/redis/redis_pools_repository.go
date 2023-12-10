@@ -338,6 +338,56 @@ func (r *redisPoolsRepo) GetTickModelForPools(ctx context.Context, pools []uint6
 	return result, nil
 }
 
+// func (r *redisPoolsRepo) deleteKeysWithPrefix(tx mvc.Tx, ctx context.Context, prefix string) error {
+// 	redisTx, err := tx.AsRedisTx()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	pipeliner, err := redisTx.GetPipeliner(ctx)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	var cursor uint64
+// 	keysDeleted := 0
+
+// 	for {
+// 		// Scan for keys with the specified prefix
+// 		keys, nextCursor, err := pipeliner.Scan(ctx, cursor, prefix, 10).Result()
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		// Delete keys with the specified prefix
+// 		if len(keys) > 0 {
+// 			keysToDelete := make([]string, len(keys))
+// 			for i, key := range keys {
+// 				keysToDelete[i] = key
+// 			}
+
+// 			// Use the DEL command to delete the keys
+// 			delCmd := client.Del(ctx, keysToDelete...)
+// 			if delCmd.Err() != nil {
+// 				return delCmd.Err()
+// 			}
+
+// 			keysDeleted += delCmd.Val()
+// 		}
+
+// 		// Update the cursor for the next iteration
+// 		cursor = nextCursor
+
+// 		// Check if the iteration has finished
+// 		if cursor == 0 {
+// 			break
+// 		}
+// 	}
+
+// 	fmt.Printf("Deleted %d keys with prefix '%s'\n", keysDeleted, prefix)
+// 	return nil
+// }
+
 func sqsPoolModelKey(storeKey string) string {
 	return fmt.Sprintf("%s/sqs", storeKey)
 }
