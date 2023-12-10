@@ -1,5 +1,3 @@
 .*\.pb\.go
 .*\.pb\.gw\.go
 .*\.css
-proto/osmosis/downtimedetector/v1beta1/query.proto
-x/downtime-detector/client/query_proto_wrap.go
