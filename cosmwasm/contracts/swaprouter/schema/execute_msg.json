@@ -3,7 +3,7 @@
   "title": "ExecuteMsg",
   "oneOf": [
     {
-      "description": "The contract's owner determines how can update the routes. This method allows the owner to be transferred to someone else.",
+      "description": "The contract's owner determines how can update the routes. This method allows the owner to be transfered to someone else.",
       "type": "object",
       "required": [
         "transfer_ownership"
