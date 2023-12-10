@@ -29,7 +29,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the pool incentives module's genesis state.
 type GenesisState struct {
-	// params defines all the paramaters of the module.
+	// params defines all the parameters of the module.
 	Params            Params          `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	LockableDurations []time.Duration `protobuf:"bytes,2,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
 	DistrInfo         *DistrInfo      `protobuf:"bytes,3,opt,name=distr_info,json=distrInfo,proto3" json:"distr_info,omitempty" yaml:"distr_info"`
