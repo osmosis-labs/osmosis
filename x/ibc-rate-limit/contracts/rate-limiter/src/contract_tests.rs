@@ -33,7 +33,7 @@ fn proper_instantiation() {
     assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
 }
 
-#[test] // Tests that when a packet is transferred, the peropper allowance is consumed
+#[test] // Tests that when a packet is transferred, the peropper allowance is consummed
 fn consume_allowance() {
     let mut deps = mock_dependencies();
 
@@ -72,7 +72,7 @@ fn consume_allowance() {
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
-#[test] // Tests that the balance of send and receive is maintained (i.e: receives are sustracted from the send allowance and sends from the receives)
+#[test] // Tests that the balance of send and receive is maintained (i.e: recives are sustracted from the send allowance and sends from the receives)
 fn symetric_flows_dont_consume_allowance() {
     let mut deps = mock_dependencies();
 
@@ -201,7 +201,7 @@ fn asymetric_quotas() {
     let err = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 
-    // Sending 1%: Allowed; because sending has a 4% allowance. We've sent 4% already, but received 1%, so there's send capacity again
+    // Sending 1%: Allowed; because sending has a 4% allowance. We've sent 4% already, but received 1%, so there's send cappacity again
     let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
