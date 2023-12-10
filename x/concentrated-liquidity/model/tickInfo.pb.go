@@ -2,7 +2,7 @@
 // source: osmosis/concentratedliquidity/v1beta1/tickInfo.proto
 
 // this is a legacy package that requires additional migration logic
-// in order to use the correct packge. Decision made to use legacy package path
+// in order to use the correct package. Decision made to use legacy package path
 // until clear steps for migration logic and the unknowns for state breaking are
 // investigated for changing proto package.
 

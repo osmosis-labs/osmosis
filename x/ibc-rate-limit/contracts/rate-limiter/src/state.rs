@@ -8,7 +8,7 @@ use cw_storage_plus::{Item, Map};
 use crate::{msg::QuotaMsg, ContractError};
 
 /// This represents the key for our rate limiting tracker. A tuple of a denom and
-/// a channel. When interactic with storage, it's preffered to use this struct
+/// a channel. When interactic with storage, it's preferred to use this struct
 /// and call path.into() on it to convert it to the composite key of the
 /// RATE_LIMIT_TRACKERS map
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -220,7 +220,7 @@ impl From<&QuotaMsg> for Quota {
 
 /// RateLimit is the main structure tracked for each channel/denom pair. Its quota
 /// represents rate limit configuration, and the flow its
-/// current state (i.e.: how much value has been transfered in the current period)
+/// current state (i.e.: how much value has been transferred in the current period)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct RateLimit {
     pub quota: Quota,

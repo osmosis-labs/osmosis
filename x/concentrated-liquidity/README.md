@@ -273,7 +273,7 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick =
 
 Bob set his limit order at tick 36650010
 
-## Chosing an Exponent At Price One Value
+## Choosing an Exponent At Price One Value
 
 The creator of a pool cannot choose an exponenetAtPriceOne as one of the input
 parameters since it is hard coded to -6. The number can be psedo-controlled by
@@ -388,7 +388,7 @@ type MsgCreatePosition struct {
 
 - **Response**
 
-On succesful response, we receive the actual amounts of each token used to
+On successful response, we receive the actual amounts of each token used to
 create the liquidityCreated number of shares in the given range.
 
 ```go
@@ -703,7 +703,7 @@ From the user perspective, there are two ways to swap:
 2. Swap given token out for token in
    - E.g. I want to get out 3000 DAI for some amount of ETH to compute.
 
-Each case has a corresponding message discussed previosly in the `x/poolmanager`
+Each case has a corresponding message discussed previously in the `x/poolmanager`
 section.
 
 - `MsgSwapExactIn`
@@ -875,7 +875,7 @@ Once the swap is completed, we persiste the swap state to the global state
 ## Liquidity depths calculation
 
 ### Calculating liquidity for buckets
-Each bucket (the area between two initialized ticks) contains ceratin amount of liquidity. The liquidity amount can be obtained through `GetTickLiquidityNetInDirection` query. `GetTickLiquidityNetInDirection` returns two results:
+Each bucket (the area between two initialized ticks) contains certain amount of liquidity. The liquidity amount can be obtained through `GetTickLiquidityNetInDirection` query. `GetTickLiquidityNetInDirection` returns two results:
 - `expectedStartTickLiquidity` which is the global liquidity, the cumulative liquidity from the bucket of the current price
 - `expectedLiquidityDepths` which is list of liquidity deltas for each and every initialized tick for the full price range in a certain direction that should be cumulatively added to or subtracted starting from the global liquidity in order to get the liquidity for an arbitrary range.
 
@@ -1508,7 +1508,7 @@ spreadRewardChargeTotal = amountIn.Mul(spreadFactor)
 3. Price impact protection makes it exit before consuming all amount remaining.
 
 The spread factor is charged on the amount in actually consumed before price impact
-protection got trigerred.
+protection got triggered.
 
 ```go
 spreadRewardChargeTotal = amountIn.Mul(spreadFactor)
@@ -1840,7 +1840,7 @@ osmosisd q gamm spot-price 1011 uosmo ibc/10E5E5B06D78FFBB61FD9F89209DEE5FD4446E
 spot_price: "0.000000000002155018"
 ```
 
-As a protocol, we need to accomodate prices that are very far apart.
+As a protocol, we need to accommodate prices that are very far apart.
 In the example above, the difference between `10**6 and 10**18`
 
 Most of the native precision is 10**6. However, most of the ETH

@@ -247,7 +247,7 @@ func (m *PositionData) GetUptimeAccumRecords() []accum.Record {
 type GenesisState struct {
 	// params are all the parameters of the module
 	Params types1.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	// pool data containining serialized pool struct and ticks.
+	// pool data containing serialized pool struct and ticks.
 	PoolData              []PoolData     `protobuf:"bytes,2,rep,name=pool_data,json=poolData,proto3" json:"pool_data"`
 	PositionData          []PositionData `protobuf:"bytes,3,rep,name=position_data,json=positionData,proto3" json:"position_data"`
 	NextPositionId        uint64         `protobuf:"varint,4,opt,name=next_position_id,json=nextPositionId,proto3" json:"next_position_id,omitempty" yaml:"next_position_id"`

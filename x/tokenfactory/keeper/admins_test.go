@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 }
 
 // TestMintDenom ensures the following properties of the MintMessage:
-// * Noone can mint tokens for a denom that doesn't exist
+// * No one can mint tokens for a denom that doesn't exist
 // * Only the admin of a denom can mint tokens for it
 // * The admin of a denom can mint tokens for it
 func (s *KeeperTestSuite) TestMintDenom() {
