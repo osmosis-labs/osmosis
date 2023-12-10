@@ -45,7 +45,7 @@ var (
 func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
 	poolAddr := poolmanagertypes.NewPoolAddress(poolId)
 
-	// pool thats created up to ensuring the assets and params are valid.
+	// pool that created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
 	pool := &Pool{
 		Address:            poolAddr.String(),
@@ -570,7 +570,7 @@ func (p Pool) CalcInAmtGivenOut(
 	// Therefore we divide by (1 - spread factor) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(osmomath.OneDec().Sub(spreadFactor))
 
-	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
+	// We round up tokenInAmt, as this is what charged for the swap, for the precise amount out.
 	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmt := tokenAmountInBeforeFee.Ceil().TruncateInt()
 
@@ -832,7 +832,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spr
 // calcJoinSingleAssetTokensIn attempts to calculate single
 // asset join for all tokensIn given totalShares in pool,
 // poolAssetsByDenom and spreadFactor. totalShares is the number
-// of shares in pool before beginnning to join any of the tokensIn.
+// of shares in pool before beginning to join any of the tokensIn.
 //
 // Returns totalNewShares and totalNewLiquidity from joining all tokensIn
 // by mimicking individually single asset joining each.
@@ -896,7 +896,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 
 	normalizedWeight := poolAssetIn.Weight.ToLegacyDec().Quo(p.GetTotalWeight().ToLegacyDec())
 
-	// We round up tokenInAmount, as this is whats charged for the swap, for the precise amount out.
+	// We round up tokenInAmount, as this is what's charged for the swap, for the precise amount out.
 	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
 		poolAssetIn.Token.Amount.ToLegacyDec(),
