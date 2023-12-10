@@ -18,7 +18,7 @@ jobs:
       - name: Fix misspellings
         uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
         with:
-          options: -rsn .
+          options: -rsnv .
 
       # Check if there are any changes
       - name: Check for changes
