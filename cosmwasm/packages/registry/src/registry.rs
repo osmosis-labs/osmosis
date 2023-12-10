@@ -19,7 +19,7 @@ pub fn hash_denom_trace(unwrapped: &str) -> String {
     format!("ibc/{}", hash.to_uppercase())
 }
 
-// When a contract is called using ibc callbacks, the address is a combination of
+// When a contract is called using ibc callbacks, the addres is a combination of
 // the channel and the original sender. This function lets us compute that.
 pub fn derive_wasmhooks_sender(
     channel: &str,
@@ -342,7 +342,7 @@ impl<'a> Registry<'a> {
             }),
         }?;
 
-        self.debug(format!("processing denom trace {path}"));
+        self.debug(format!("procesing denom trace {path}"));
         // Let's iterate over the parts of the denom trace and extract the
         // chain/channels into a more useful structure: MultiHopDenom
         let mut hops: Vec<MultiHopDenom> = vec![];
@@ -351,7 +351,10 @@ impl<'a> Registry<'a> {
 
         for chunk in &parts.chunks(2) {
             let Some((port, channel)) = chunk.take(2).collect_tuple() else {
-                return Err(RegistryError::InvalidDenomTracePath{ path: path.clone(), denom: denom.into() });
+                return Err(RegistryError::InvalidDenomTracePath {
+                    path: path.clone(),
+                    denom: denom.into(),
+                });
             };
 
             // Check that the port is "transfer"
