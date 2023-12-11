@@ -246,7 +246,7 @@
             ]
           },
           {
-            "description": "An osmosis address used to recover any tokens that get stuck in the contract due to IBC failures",
+            "description": "An osmosis addres used to recover any tokens that get stuck in the contract due to IBC failures",
             "type": "object",
             "required": [
               "local_recovery_addr"

@@ -37,7 +37,7 @@ pub struct Packet {
 }
 
 // SupplyOf query message definition.
-// osmosis-std doesn't currently support the SupplyOf query, so I'm defining it locally so it can be used to obtain the channel value
+// osmosis-std doesn't currently support the SupplyOf query, so I'm defining it localy so it can be used to obtain the channel value
 #[derive(
     Clone,
     PartialEq,

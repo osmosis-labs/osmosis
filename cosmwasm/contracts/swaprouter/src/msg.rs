@@ -19,7 +19,7 @@ pub enum Slippage {
 #[cw_serde]
 pub enum ExecuteMsg {
     /// The contract's owner determines how can update the routes. This method
-    /// allows the owner to be transferred to someone else.
+    /// allows the owner to be transfered to someone else.
     TransferOwnership { new_owner: String },
     SetRoute {
         input_denom: String,
