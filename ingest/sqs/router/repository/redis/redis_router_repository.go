@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/json"
 	"errors"
 	"fmt"
 	"strings"

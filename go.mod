@@ -76,10 +76,13 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
+	github.com/json-iterator/go v1.1.12
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.5 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect

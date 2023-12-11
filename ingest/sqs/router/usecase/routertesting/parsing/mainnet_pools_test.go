@@ -1,7 +1,6 @@
 package parsing_test
 
 import (
-	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/routertesting/parsing"
 	concentratedmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/json"
 )
 
 const testFileName = "pools.json"

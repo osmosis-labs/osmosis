@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/json"
 
 	"github.com/labstack/echo"
 )
