@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 )
