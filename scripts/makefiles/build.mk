@@ -89,7 +89,7 @@ build-install-with-autocomplete: build-check-version go.sum
 	fi
 
 
-# Cross-building for arm64 from amd64 (or viceversa) takes
+# Cross-building for arm64 from amd64 (or vice-versa) takes
 # a lot of time due to QEMU virtualization but it's the only way (afaik)
 # to get a statically linked binary with CosmWasm
 

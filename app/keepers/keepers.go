@@ -557,7 +557,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 // * RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
 // channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> forward.OnRecvPacket -> transfer.OnRecvPacket
 //
-// Note that the forward middleware is only integrated on the "reveive" direction. It can be safely skipped when sending.
+// Note that the forward middleware is only integrated on the "receive" direction. It can be safely skipped when sending.
 // Note also that the forward middleware is called "router", but we are using the name "forward" for clarity
 // This may later be renamed upstream: https://github.com/ibc-apps/middleware/packet-forward-middleware/issues/10
 //

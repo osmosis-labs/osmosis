@@ -271,7 +271,7 @@ Description: returns 200 if the server is healthy.
 Validates the following conditions:
 - Redis is reachable
 - Node is reachable
-- Node is not synching
+- Node is not syncing
 - The latest height in Redis is within threshold of the latest height in the node
 - The latest height in Redis was updated within a configurable number of seconds
 

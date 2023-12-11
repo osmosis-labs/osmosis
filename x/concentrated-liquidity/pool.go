@@ -48,7 +48,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 
 	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName).GetAddress()
 
-	// allow pool mananger module account to bypass restrictions (i.e. gov prop)
+	// allow pool manager module account to bypass restrictions (i.e. gov prop)
 	if creatorAddress.Equals(poolmanagerModuleAcc) {
 		bypassRestrictions = true
 	}

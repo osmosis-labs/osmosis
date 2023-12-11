@@ -1167,7 +1167,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
 			curAccum = accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...), emptyDec)
 
-			// Get position size from valid address (or from nonexistant if address does not exist)
+			// Get position size from valid address (or from nonexistent if address does not exist)
 			positionSize, err := curAccum.GetPositionSize(positionName)
 
 			if tc.changedShares.IsPositive() {
@@ -1251,7 +1251,7 @@ func (suite *AccumTestSuite) TestAddToAccumulator() {
 
 			// Validations.
 
-			// validate that the reciever is mutated.
+			// validate that the receiver is mutated.
 			suite.Require().Equal(tc.expectedValue, originalAccum.GetValue())
 
 			accumFromStore, err := accumPackage.GetAccumulator(suite.store, testNameOne)
@@ -1398,7 +1398,7 @@ func (suite *AccumTestSuite) TestUpdatePositionIntervalAccumulation() {
 		suite.Run(tc.testName, func() {
 			suite.SetupTest()
 
-			// make accumualtor based off of tc.accObject
+			// make accumulator based off of tc.accObject
 			accumObject := suite.MakeAndGetAccumulator(testNameOne)
 
 			expectedGlobalAccValue := tc.initialShares.Add(tc.numShareUnits)

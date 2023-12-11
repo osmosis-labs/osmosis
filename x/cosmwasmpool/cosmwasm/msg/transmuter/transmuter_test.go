@@ -92,7 +92,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 	s.Require().NoError(err)
 
-	// Distirbute rewards
+	// Distribute rewards
 	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivetypes.Gauge{*gauge})
 	s.Require().NoError(err)
 

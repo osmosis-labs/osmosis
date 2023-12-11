@@ -50,7 +50,7 @@ type KeeperTestHelper struct {
 
 	// defaults to false,
 	// set to true if any method that potentially alters baseapp/abci is used.
-	// this controls whether or not we can re-use the app instance, or have to set a new one.
+	// this controls whether or not we can reuse the app instance, or have to set a new one.
 	hasUsedAbci bool
 	// defaults to false, set to true if we want to use a new app instance with caching enabled.
 	// then on new setup test call, we just drop the current cache.
@@ -183,7 +183,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo 
 // On first reset, will instantiate a new app, with caching enabled.
 // NOTE: If you are using ABCI methods, usage of Reset vs Setup has not been well tested.
 // It is believed to work, but if you get an odd error, try changing the call to this for setup to sanity check.
-// whats supposed to happen is a new setup call, and reset just does that in such a case.
+// what's supposed to happen is a new setup call, and reset just does that in such a case.
 func (s *KeeperTestHelper) Reset() {
 	if s.hasUsedAbci || !s.withCaching {
 		s.withCaching = true

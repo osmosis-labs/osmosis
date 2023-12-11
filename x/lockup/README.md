@@ -101,7 +101,7 @@ references. (`b_prefix_key`)
 3. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
 4. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
 
-If the lock is unlocking, it also stores the below referneces.
+If the lock is unlocking, it also stores the below references.
 
 1. `{KeyPrefixLockTimestamp}{LockEndTime}`
 2. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
@@ -396,7 +396,7 @@ Lockup admin keeper provides god privilege functions to remove tokens
 from locks and create new locks.
 
 ```go
-// AdminKeeper defines a god priviledge keeper functions to remove tokens from locks and create new locks
+// AdminKeeper defines a god privilege keeper functions to remove tokens from locks and create new locks
 // For the governance system of token pools, we want a "ragequit" feature
 // So governance changes will take 1 week to go into effect
 // During that time, people can choose to "ragequit" which means they would leave the original pool
@@ -409,7 +409,7 @@ type AdminKeeper interface {
 
     // this unlock previous lockID and create a new lock with newCoins with same duration and endtime
     Relock(sdk.Context, lockID uint64, newCoins sdk.Coins) error
-    // this unlock without time check with an admin priviledge
+    // this unlock without time check with an admin privilege
     BreakLock(sdk.Context, lockID uint64) error
 }
 ```

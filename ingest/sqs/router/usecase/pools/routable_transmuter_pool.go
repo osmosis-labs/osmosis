@@ -53,7 +53,7 @@ func (r *routableTransmuterPoolImpl) GetSpreadFactor() math.LegacyDec {
 func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	poolType := r.GetType()
 
-	// Esnure that the pool is concentrated
+	// Ensure that the pool is concentrated
 	if poolType != poolmanagertypes.CosmWasm {
 		return sdk.Coin{}, domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 	}

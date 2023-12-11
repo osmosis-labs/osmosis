@@ -71,7 +71,7 @@ func TestReadPoolsFileFromState(t *testing.T) {
 	}
 }
 
-// This test validates that StorePools succesfull stores pools to a file
+// This test validates that StorePools successful stores pools to a file
 // that ReadPools can then read back into the system.
 func TestStoreFilesAndReadBack(t *testing.T) {
 

@@ -33,7 +33,7 @@ This stems from the idea that a 30% asset depeg is ~infinitely better than a 100
 Its _crazy_ that today these complex bridged assets can instantly go to 0 in event of bug.
 The goal of a rate limit is to raise an alert that something has potentially gone wrong, allowing validators and developers to have time to analyze, react, and protect larger portions of user funds.
 
-The thesis of this is that, it is worthwile to sacrifice liveness in the case of legitimate demand to send extreme amounts of funds, to prevent the terrible long-tail full fund risks.
+The thesis of this is that, it is worthwhile to sacrifice liveness in the case of legitimate demand to send extreme amounts of funds, to prevent the terrible long-tail full fund risks.
 Rate limits aren't the end-all of safety controls, they're merely the simplest automated one. More should be explored and added onto IBC!
 
 ## Rate limit types
@@ -71,7 +71,7 @@ Definitely needs far more ideation and iteration!
 
 ## Parameterizing the rate limit
 
-One element is we don't want any rate limit timespan thats too short, e.g. not enough time for humans to react to. So we wouldn't want a 1 hour rate limit, unless we think that if its hit, it could be assessed within an hour.
+One element is we don't want any rate limit timespan that's too short, e.g. not enough time for humans to react to. So we wouldn't want a 1 hour rate limit, unless we think that if its hit, it could be assessed within an hour.
 
 ### Handling rate limit boundaries
 
@@ -101,7 +101,7 @@ It does get more complex when the counterparty chain is itself a DEX, but this i
 
 The "Outflow" side of a rate limit is protection against a bug on Osmosis OR IBC.
 This has potential for much more user-frustrating issues, if set too low.
-E.g. if theres some event that causes many people to suddenly withdraw many STARS or many USDC.
+E.g. if there's some event that causes many people to suddenly withdraw many STARS or many USDC.
 
 So this parameterization has to contend with being a tradeoff of withdrawal liveness in high volatility periods vs being a crucial safety rail, in event of on-Osmosis bug.
 
@@ -192,8 +192,8 @@ All of these messages receive the packet from the chain and extract the necessar
 To determine if a packet should be rate limited, we need:
 
 * Channel: The channel on the Osmosis side: `packet.SourceChannel` for sends, and `packet.DestinationChannel` for receives. 
-* Denom: The denom of the token being transferred as known on the Osmosis side (more on that bellow)
-* Channel Value: The total value of the chanel denominated in `Denom` (i.e.: channel-17 is worth 10k osmo).  
+* Denom: The denom of the token being transferred as known on the Osmosis side (more on that below)
+* Channel Value: The total value of the channel denominated in `Denom` (i.e.: channel-17 is worth 10k osmo).  
 * Funds: the amount being transferred
 
 #### Notes on Channel

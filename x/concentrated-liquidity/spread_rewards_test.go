@@ -1012,7 +1012,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("6.7"))),
 			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
-			// This can be thought of as the diffence between the non-truncated total amount of spread rewards and the truncated toal amount of spread rewards
+			// This can be thought of as the difference between the non-truncated total amount of spread rewards and the truncated toal amount of spread rewards
 			// divided by the number of shares.
 			expectedReinvestedDustAmount: osmomath.MustNewDecFromStr("0.2"),
 		},
@@ -1432,7 +1432,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	spreadRewardsCollected := s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionDataOne.ID, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
 	expectedSpreadRewardsTruncated := totalSpreadRewardsExpected
 	for i, spreadRewardToken := range totalSpreadRewardsExpected {
-		// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
+		// We run expected spread rewards through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior
 		expectedSpreadRewardsTruncated[i] = sdk.NewCoin(spreadRewardToken.Denom, spreadRewardToken.Amount.ToLegacyDec().QuoTruncate(positionDataOne.Liquidity).MulTruncate(positionDataOne.Liquidity).TruncateInt())
 	}
 	s.Require().Equal(expectedSpreadRewardsTruncated, spreadRewardsCollected)

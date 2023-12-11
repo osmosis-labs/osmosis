@@ -209,7 +209,7 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // On success, returns a positive amount of each token withdrawn.
 // If we are attempting to withdraw all liquidity available in the position, we also collect spread factors and incentives for the position.
 // When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
-// Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
+// Currently, it creates twap records. Assuming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
 // is undefined. When the last position is removed by calling this method, the current sqrt price and current
 // tick of the pool are set to zero. Lastly, if the tick being withdrawn from is now empty due to the withdrawal,

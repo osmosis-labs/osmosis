@@ -27,7 +27,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ===================== GetSwapFeeQueryMsg
 type GetSwapFeeQueryMsg struct {
-	// get_swap_fee is the query strcuture to get swap fee.
+	// get_swap_fee is the query structure to get swap fee.
 	GetSwapFee EmptyStruct `protobuf:"bytes,1,opt,name=get_swap_fee,json=getSwapFee,proto3" json:"get_swap_fee"`
 }
 
