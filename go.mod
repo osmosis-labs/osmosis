@@ -377,13 +377,15 @@ require (
 
 replace (
 	// adds expedited proposal support and 1000MB cache default
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.1-0.20231207232630-aba521a80563
+	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/15259ccd2249d2f3f413e0de7b8e27fe4cc6169a
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231124185741-15259ccd2249
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-osmo
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
