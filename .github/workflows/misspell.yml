@@ -8,32 +8,35 @@ on:
       - concentrated-liquidity-main
 
 jobs:
-  check-typos:
+  spelling:
+    name: Check Spelling
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      security-events: write
+    outputs:
+      followup: ${{ steps.spelling.outputs.followup }}
     runs-on: ubuntu-latest
-
+    if: ${{ contains(github.event_name, 'pull_request') || github.event_name == 'push' }}
+    concurrency:
+      group: spelling-${{ github.event.pull_request.number || github.ref }}
+      # note: If you use only_check_changed_files, you do not want cancel-in-progress
+      cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
-
-      # Run misspell-fixer action to fix typos
-      - name: Fix misspellings
-        uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
-
-      # Check if there are any changes
-      - name: Check for changes
-        id: git-check
-        run: |
-          if [[ `git status --porcelain` ]]; then
-          echo "::set-output name=changes::true"
-          fi
-      # Fail the job if there were changes (indicating misspellings were fixed)
-      - name: Fail if misspellings were corrected
-        if: steps.git-check.outputs.changes == 'true'
-        run: |
-          echo "Misspellings were found and fixed"
-          exit 1
-
-      # This step will only run if no misspellings were corrected
-      - name: No misspellings found
-        if: steps.git-check.outputs.changes != 'true'
-        run: |
-          echo "No misspellings found"
+      - name: check-spelling
+        id: spelling
+        uses: check-spelling/check-spelling@main
+        with:
+          suppress_push_for_open_pull_request: ${{ github.actor != 'dependabot[bot]' && 1 }}
+          checkout: true
+          check_file_names: 1
+          spell_check_this: check-spelling/spell-check-this@prerelease
+          post_comment: 0
+          use_magic_file: 1
+          report-timing: 1
+          warnings: bad-regex,binary-file,deprecated-feature,large-file,limited-references,no-newline-at-eof,noisy-file,non-alpha-in-dictionary,token-is-substring,unexpected-line-ending,whitespace-in-dictionary,minified-file,unsupported-configuration,no-files-to-check
+          experimental_apply_changes_via_bot: 1
+          use_sarif: ${{ (!github.event.pull_request || (github.event.pull_request.head.repo.full_name == github.repository)) && 1 }}
+          extra_dictionary_limit: 20
+          extra_dictionaries: cspell:software-terms/dict/softwareTerms.txt
