@@ -5,20 +5,6 @@ ARG RUNNER_IMAGE="gcr.io/distroless/static-debian11"
 ARG BUILD_TAGS="netgo,ledger,muslc"
 
 # --------------------------------------------------------
-# Dependencies
-# --------------------------------------------------------
-
-FROM golang:${GO_VERSION}-alpine3.18 as dependencies
-
-# Cosmwasm - Download correct libwasmvm version
-RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | sed 's/.* //') && \
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$ARCH.a \
-    -O /lib/libwasmvm_muslc.a && \
-    # verify checksum
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
-    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$ARCH | cut -d ' ' -f 1)
-
-# --------------------------------------------------------
 # Builder
 # --------------------------------------------------------
 
@@ -27,8 +13,6 @@ FROM golang:${GO_VERSION}-alpine3.18 as builder
 ARG GIT_VERSION
 ARG GIT_COMMIT
 ARG BUILD_TAGS
-
-COPY --from=dependencies /lib/libwasmvm_muslc.a /lib/libwasmvm_muslc.a
 
 RUN apk add --no-cache \
     ca-certificates \
@@ -42,6 +26,14 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download
 
+# Cosmwasm - Download correct libwasmvm version
+RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | sed 's/.* //') && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$ARCH.a \
+    -O /lib/libwasmvm_muslc.a && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$ARCH | cut -d ' ' -f 1)
+
 # Copy the remaining files
 COPY . .
 
@@ -50,7 +42,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     GOWORK=off go build \
     -mod=readonly \
-    -tags ${BUILD_TAGS} \
     -ldflags \
     "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
     -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
