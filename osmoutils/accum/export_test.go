@@ -61,7 +61,7 @@ func WithPosition(accum *AccumulatorObject, name string, position Record) *Accum
 	return accum
 }
 
-// SetValue is a convinience test helper for updatung the value of an accumulator object
+// SetValue is a convenience test helper for updatung the value of an accumulator object
 // in tests.
 func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
 	accum.valuePerShare = value

@@ -1060,7 +1060,7 @@ paths:
       parameters:
         - name: min_liquidity
           description: |-
-            String of the coins in single string seperated by comma. Ex)
+            String of the coins in single string separated by comma. Ex)
             10uatom,100uosmo.
           in: query
           required: false
@@ -6409,7 +6409,7 @@ paths:
                   type: string
                 title: >-
                   Time durations that users can lock coins for in order to
-                  recieve rewards
+                  receive rewards
         default:
           description: An unexpected error response.
           schema:
@@ -6520,7 +6520,7 @@ paths:
 
                     signatures required by gogoproto.
                 title: >-
-                  Estimated coin rewards that will be recieved at provided
+                  Estimated coin rewards that will be received at provided
                   address
 
                   from specified locks between current time and end epoch
@@ -6573,7 +6573,7 @@ paths:
         - Query
   /osmosis/incentives/v1beta1/upcoming_gauges:
     get:
-      summary: Returns scheduled gauges that have not yet occured
+      summary: Returns scheduled gauges that have not yet occurred
       operationId: UpcomingGauges
       responses:
         '200':
@@ -6853,7 +6853,7 @@ paths:
     get:
       summary: >-
         UpcomingGaugesPerDenom returns scheduled gauges that have not yet
-        occured
+        occurred
 
         by denom
       operationId: UpcomingGaugesPerDenom
@@ -11210,7 +11210,7 @@ paths:
                   to be set as the Time-weighted-average-osmo-backing for the
                   entire duration
 
-                  of epoch N-1. (Thereby locking whats in use for epoch N as
+                  of epoch N-1. (Thereby locking what's in use for epoch N as
                   based on the prior
 
                   epochs rewards) However for now, this is not the TWAP but
@@ -12575,7 +12575,7 @@ paths:
         - Query
   /osmosis/superfluid/v1beta1/superfluid_delegations/{delegator_address}:
     get:
-      summary: Returns all the delegated superfluid poistions for a specific delegator.
+      summary: Returns all the delegated superfluid positions for a specific delegator.
       operationId: SuperfluidDelegationsByDelegator
       responses:
         '200':
@@ -13128,7 +13128,7 @@ paths:
   /osmosis/superfluid/v1beta1/superfluid_undelegations_by_delegator/{delegator_address}:
     get:
       summary: >-
-        Returns all the undelegating superfluid poistions for a specific
+        Returns all the undelegating superfluid positions for a specific
         delegator.
       operationId: SuperfluidUndelegationsByDelegator
       responses:
@@ -27092,7 +27092,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
     get:
-      summary: Allowance returns granted allwance to the grantee by the granter.
+      summary: Allowance returns granted allowance to the grantee by the granter.
       operationId: Allowance
       responses:
         '200':
@@ -33074,7 +33074,7 @@ paths:
                         type: string
                         format: uint64
                       title: >-
-                        list of unbonding ids, each uniquely identifing an
+                        list of unbonding ids, each uniquely identifying an
                         unbonding of this validator
                   description: >-
                     Validator defines a validator, together with the total
@@ -33696,7 +33696,7 @@ paths:
                       type: string
                       format: uint64
                     title: >-
-                      list of unbonding ids, each uniquely identifing an
+                      list of unbonding ids, each uniquely identifying an
                       unbonding of this validator
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -34333,7 +34333,7 @@ paths:
                             type: string
                             format: uint64
                           title: >-
-                            list of unbonding ids, each uniquely identifing an
+                            list of unbonding ids, each uniquely identifying an
                             unbonding of this validator
                       description: >-
                         Validator defines a validator, together with the total
@@ -35388,7 +35388,7 @@ paths:
                         type: string
                         format: uint64
                       title: >-
-                        list of unbonding ids, each uniquely identifing an
+                        list of unbonding ids, each uniquely identifying an
                         unbonding of this validator
                   description: >-
                     Validator defines a validator, together with the total
@@ -36008,7 +36008,7 @@ paths:
                       type: string
                       format: uint64
                     title: >-
-                      list of unbonding ids, each uniquely identifing an
+                      list of unbonding ids, each uniquely identifying an
                       unbonding of this validator
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -44965,7 +44965,7 @@ definitions:
         items:
           type: string
         title: >-
-          Time durations that users can lock coins for in order to recieve
+          Time durations that users can lock coins for in order to receive
           rewards
   osmosis.incentives.RewardsEstResponse:
     type: object
@@ -44985,7 +44985,7 @@ definitions:
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
         title: |-
-          Estimated coin rewards that will be recieved at provided address
+          Estimated coin rewards that will be received at provided address
           from specified locks between current time and end epoch
   osmosis.incentives.SplittingPolicy:
     type: string
@@ -47157,7 +47157,7 @@ definitions:
           to be set as the Time-weighted-average-osmo-backing for the entire
           duration
 
-          of epoch N-1. (Thereby locking whats in use for epoch N as based on
+          of epoch N-1. (Thereby locking what's in use for epoch N as based on
           the prior
 
           epochs rewards) However for now, this is not the TWAP but instead the
@@ -47317,7 +47317,7 @@ definitions:
       to be set as the Time-weighted-average-osmo-backing for the entire
       duration
 
-      of epoch N-1. (Thereby locking whats in use for epoch N as based on the
+      of epoch N-1. (Thereby locking what's in use for epoch N as based on the
       prior
 
       epochs rewards) However for now, this is not the TWAP but instead the spot
@@ -60934,7 +60934,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -61530,7 +61530,7 @@ definitions:
               type: string
               format: uint64
             title: >-
-              list of unbonding ids, each uniquely identifing an unbonding of
+              list of unbonding ids, each uniquely identifying an unbonding of
               this validator
         description: >-
           Validator defines a validator, together with the total amount of the
@@ -61851,7 +61851,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -62279,7 +62279,7 @@ definitions:
                     type: string
                     format: uint64
                   title: >-
-                    list of unbonding ids, each uniquely identifing an unbonding
+                    list of unbonding ids, each uniquely identifying an unbonding
                     of this validator
               description: >-
                 Validator defines a validator, together with the total amount of
@@ -62965,7 +62965,7 @@ definitions:
               type: string
               format: uint64
             title: >-
-              list of unbonding ids, each uniquely identifing an unbonding of
+              list of unbonding ids, each uniquely identifying an unbonding of
               this validator
         description: >-
           Validator defines a validator, together with the total amount of the
@@ -63362,7 +63362,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -64029,7 +64029,7 @@ definitions:
           type: string
           format: uint64
         title: >-
-          list of unbonding ids, each uniquely identifing an unbonding of this
+          list of unbonding ids, each uniquely identifying an unbonding of this
           validator
     description: >-
       Validator defines a validator, together with the total amount of the
@@ -65286,7 +65286,7 @@ definitions:
       gas to be used by the transaction. The ratio yields an effective
       "gasprice",
 
-      which must be above some miminum to be accepted into the mempool.
+      which must be above some minimum to be accepted into the mempool.
   cosmos.tx.v1beta1.GetBlockWithTxsResponse:
     type: object
     properties:

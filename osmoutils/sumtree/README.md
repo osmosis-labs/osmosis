@@ -76,7 +76,7 @@ underlying data being updatable as explained above.
 Every Leaf has a `Weight` field, and the address its stored at in state
 is the key which we want to sort by. The implementation sorts leaves as
 byteslices, Leafs are sorted under their byteslice key, and the branch
-nodes have accumulation for each childs.
+nodes have accumulation for each child.
 
 A node is pointed by a `node` struct, used internally.
 
@@ -141,7 +141,7 @@ Here is an example tree data:
         - Level 0 0xef1234 Value 300
         - Level 0 0xffff Value 400
 
-The branch nodes will have the following childrens:
+The branch nodes will have the following children:
 
 ``` {.go}
 require.Equal(sumtree.Get(nodeKey(2, nil)), Children{{0xaaaa, 60}, {0xbb44, 300}, {0xeeaaaa, 700}})
