@@ -138,6 +138,7 @@ func (server msgServer) DelegateBondedTokens(goCtx context.Context, msg *types.M
 	}
 
 	// Message 2: Perform osmo token delegation.
+	// Anoter test of spell
 	_, err = server.DelegateToValidatorSet(goCtx, types.NewMsgDelegateToValidatorSet(delegator, unlockedOsmoToken))
 	if err != nil {
 		return nil, err
