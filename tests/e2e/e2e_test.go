@@ -967,7 +967,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Assume base = stake, quote = uosmo
 	// At pool creation time, the twap should be:
-	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	// quote asset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewDecWithPrec(5, 1), initialTwapAOverB)

@@ -80,7 +80,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
 
-	// after the accum values have been resetted correctly after upgrade, we expect the accumulator store to be initialized with the correct value,
+	// after the accum values have been reset correctly after upgrade, we expect the accumulator store to be initialized with the correct value,
 	// which in our test case would be 10000(the amount that was locked)
 	valueAfterClear := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,

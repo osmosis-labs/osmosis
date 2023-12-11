@@ -892,7 +892,7 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 * [#1193](https://github.com/osmosis-labs/osmosis/pull/1193) Setup e2e tests on a single chain; add balances query test
 * [#1095](https://github.com/osmosis-labs/osmosis/pull/1095) Fix authz being unable to use lockup & superfluid types.
 * [#1105](https://github.com/osmosis-labs/osmosis/pull/1105) Add GitHub Actions to automatically push the osmosis Docker image
-* [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test worflow
+* [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test workflow
 * [#1127](https://github.com/osmosis-labs/osmosis/pull/1127) Stricter Linting:  bump golangci-lint version and enable additional linters.
 * [#1184](https://github.com/osmosis-labs/osmosis/pull/1184) Fix endtime event output on BeginUnlocking
 
@@ -1168,7 +1168,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 
 * Update the cosmos-sdk version we modify to v0.42.9
 * Fix a bug in the min commission rate code that allows validators to be created with commission rates less than the minimum.
-* Automatically upgrade any validator with less than the minimum comission rate to the minimum at upgrade time.
+* Automatically upgrade any validator with less than the minimum commission rate to the minimum at upgrade time.
 * Unbrick on-chain governance, by fixing the deposit parameter to use `uosmo` instead of `osmo`.
 
 ## [v1.0.2](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.2) - 2021-06-18
