@@ -19,7 +19,7 @@ pub fn hash_denom_trace(unwrapped: &str) -> String {
     format!("ibc/{}", hash.to_uppercase())
 }
 
-// When a contract is called using ibc callbacks, the addres is a combination of
+// When a contract is called using ibc callbacks, the address is a combination of
 // the channel and the original sender. This function lets us compute that.
 pub fn derive_wasmhooks_sender(
     channel: &str,
@@ -39,7 +39,7 @@ pub fn derive_wasmhooks_sender(
 
     let result = hasher.finalize();
 
-    // The bech32 crate requires a Vec<u5> as input, so we need to convert the bytes.
+    // The bech32 create requires a Vec<u5> as input, so we need to convert the bytes.
     let result_u5 = bech32::convert_bits(result.as_slice(), 8, 5, true)?;
     // result_u5 contains the bytes as a u5 but in an u8 type, so we need to explicitly
     // do the type conversion
@@ -342,7 +342,7 @@ impl<'a> Registry<'a> {
             }),
         }?;
 
-        self.debug(format!("procesing denom trace {path}"));
+        self.debug(format!("processing denom trace {path}"));
         // Let's iterate over the parts of the denom trace and extract the
         // chain/channels into a more useful structure: MultiHopDenom
         let mut hops: Vec<MultiHopDenom> = vec![];

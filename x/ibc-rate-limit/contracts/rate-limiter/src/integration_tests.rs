@@ -343,7 +343,7 @@ fn channel_value_cached() {
 
     // Sending 1% of a new value (10_000) passes the daily check, cause it
     // has expired, but not the weekly check (The value for last week is
-    // sitll 100, as only 1 day has passed)
+    // still 100, as only 1 day has passed)
     let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
