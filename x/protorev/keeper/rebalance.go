@@ -8,6 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
+var zeroInt = osmomath.ZeroInt()
+
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
 func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, osmomath.Int, poolmanagertypes.SwapAmountInRoutes) {
@@ -30,7 +32,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 		}
 
 		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
-		if profit.GT(osmomath.ZeroInt()) {
+		if profit.GT(zeroInt) {
 			profit, err := k.ConvertProfits(ctx, inputCoin, profit)
 			if err != nil {
 				k.Logger(ctx).Error("Error converting profits: " + err.Error())
