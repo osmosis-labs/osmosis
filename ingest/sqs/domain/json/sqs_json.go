@@ -1,3 +1,8 @@
+// This package encapsulates the JSON library used by the sidecar query server.
+//
+// Instead of using the standard library's JSON library, we use jsoniter.
+// jsoniter is a drop-in replacement for the standard library's JSON library.
+// It is faster than the standard library's JSON library.
 package json
 
 import (
