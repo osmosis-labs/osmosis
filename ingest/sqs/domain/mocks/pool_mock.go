@@ -95,7 +95,7 @@ func (mp *MockRoutablePool) GetTokenOutDenom() string {
 
 // ChargeTakerFee implements domain.RoutablePool.
 func (*MockRoutablePool) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
-	panic("unimplemented")
+	return tokenIn.Sub(sdk.NewCoin(tokenIn.Denom, domain.DefaultTakerFee.Mul(tokenIn.Amount.ToLegacyDec()).TruncateInt()))
 }
 
 // GetTakerFee implements domain.PoolI.
