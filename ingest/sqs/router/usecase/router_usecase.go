@@ -90,6 +90,9 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 			return nil, fmt.Errorf("no ranked routes found")
 		}
 
+		// Update ranked routes with filtered ranked routes
+		rankedRoutes = filterDuplicatePoolIDRoutes(rankedRoutes)
+
 		// TODO: Cache ranked routes
 	}
 
@@ -126,6 +129,52 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 	}
 
 	return finalQuote, nil
+}
+
+// filterDuplicatePoolIDRoutes filters routes that contain duplicate pool IDs.
+// CONTRACT: rankedRoutes are sorted in decreasing order by amount out
+// from first to last.
+func filterDuplicatePoolIDRoutes(rankedRoutes []route.RouteImpl) []route.RouteImpl {
+	// We use two maps for all routes and for the current route.
+	// This is so that if a route ends up getting filtered, its pool IDs are not added to the combined map.
+	combinedPoolIDsMap := make(map[uint64]struct{})
+	filteredRankedRoutes := make([]route.RouteImpl, 0)
+
+	for _, route := range rankedRoutes {
+		pools := route.GetPools()
+
+		currentRoutePoolIDsMap := make(map[uint64]struct{})
+
+		existsPoolID := false
+
+		for _, pool := range pools {
+			poolID := pool.GetId()
+
+			_, existsPoolID = combinedPoolIDsMap[poolID]
+
+			// If found a pool ID that was already seen, break and skip the route.
+			if existsPoolID {
+				break
+			}
+
+			// Add pool ID to current pool IDs map
+			currentRoutePoolIDsMap[poolID] = struct{}{}
+		}
+
+		// If pool ID exists, we skip this route
+		if existsPoolID {
+			continue
+		}
+
+		// Merge current route pool IDs map into the combined map
+		for poolID := range currentRoutePoolIDsMap {
+			combinedPoolIDsMap[poolID] = struct{}{}
+		}
+
+		// Add route to filtered ranked routes
+		filteredRankedRoutes = append(filteredRankedRoutes, route)
+	}
+	return filteredRankedRoutes
 }
 
 // rankRoutesByDirectQuote ranks the given candidate routes by estimating direct quotes over each route.

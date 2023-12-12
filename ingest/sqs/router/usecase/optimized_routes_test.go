@@ -614,7 +614,7 @@ func (s *RouterTestSuite) TestGetOptimalQuote() {
 
 			amountIn: osmomath.NewInt(100_000_000),
 
-			expectedRoutesCount: 2,
+			expectedRoutesCount: 1,
 		},
 		// This test validates that with a greater max routes value, SQS is able to find
 		// the path from umee to stOsmo

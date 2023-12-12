@@ -48,3 +48,7 @@ func (r Router) GetSortedPoolIDs() []uint64 {
 	}
 	return sortedPoolIDs
 }
+
+func FilterDuplicatePoolIDRoutes(rankedRoutes []route.RouteImpl) []route.RouteImpl {
+	return filterDuplicatePoolIDRoutes(rankedRoutes)
+}
