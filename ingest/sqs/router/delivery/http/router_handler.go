@@ -167,7 +167,6 @@ func (a *RouterHandler) GetTakerFee(c echo.Context) error {
 	return c.JSON(http.StatusOK, takerFees)
 }
 
-
 // GetCandidateRoutes returns the candidate routes for a given tokenIn and tokenOutDenom from cache.
 // If no routes present in cache, it does not attempt to recompute them.
 func (a *RouterHandler) GetCachedCandidateRoutes(c echo.Context) error {
