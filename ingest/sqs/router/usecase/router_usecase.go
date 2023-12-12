@@ -63,7 +63,7 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 
 	if hasRankedRoutesInCache {
 		// TODO: if top routes are present in cache, estimate the quotes and return the best.
-		topSingleRouteQuote, rankedRoutes, err = estimateDirectQuote(router, rankedRoutes, tokenIn, tokenOutDenom)
+		topSingleRouteQuote, rankedRoutes, err = estimateDirectQuote(router, rankedRoutes, tokenIn)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func (r *routerUseCaseImpl) rankRoutesByDirectQuote(ctx context.Context, router 
 		return nil, nil, err
 	}
 
-	topQuote, routes, err := estimateDirectQuote(router, routes, tokenIn, tokenOutDenom)
+	topQuote, routes, err := estimateDirectQuote(router, routes, tokenIn)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -160,7 +160,7 @@ func (r *routerUseCaseImpl) rankRoutesByDirectQuote(ctx context.Context, router 
 // Also, returns the routes ranked by amount out in decreasing order.
 // Returns error if:
 // - fails to estimate direct quotes
-func estimateDirectQuote(router *Router, routes []route.RouteImpl, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, []route.RouteImpl, error) {
+func estimateDirectQuote(router *Router, routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []route.RouteImpl, error) {
 	topQuote, routesSortedByAmtOut, err := router.estimateBestSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, nil, err
