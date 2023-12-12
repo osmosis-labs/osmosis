@@ -6,13 +6,13 @@
 ### Quote
 
 ```bash
-curl "localhost:9092/quote?tokenIn=5000000uosmo&tokenOutDenom=uusdc" | jq .
+curl "localhost:9092/router/quote?tokenIn=5000000uosmo&tokenOutDenom=uion" | jq .
 ```
 
 ### Pools
 
 ```bash
-curl "localhost:9092/all-pools" | jq .
+curl "localhost:9092/pools/all" | jq .
 ```
 
 ## Trade-offs To Re-evaluate
