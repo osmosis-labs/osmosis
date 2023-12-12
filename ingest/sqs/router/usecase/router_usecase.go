@@ -103,7 +103,7 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 		return nil, err
 	}
 
-	// TODO: Cache split route quote.
+	// TODO: Cache split route proportions
 
 	finalQuote := topSingleRouteQuote
 
