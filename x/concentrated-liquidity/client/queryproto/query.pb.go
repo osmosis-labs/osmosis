@@ -1836,7 +1836,7 @@ type QueryClient interface {
 	Pools(ctx context.Context, in *PoolsRequest, opts ...grpc.CallOption) (*PoolsResponse, error)
 	// Params returns concentrated liquidity module params.
 	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
-	// UserPositions returns all concentrated postitions of some address.
+	// UserPositions returns all concentrated positions of some address.
 	UserPositions(ctx context.Context, in *UserPositionsRequest, opts ...grpc.CallOption) (*UserPositionsResponse, error)
 	// LiquidityPerTickRange returns the amount of liquidity per every tick range
 	// existing within the given pool
@@ -2023,7 +2023,7 @@ type QueryServer interface {
 	Pools(context.Context, *PoolsRequest) (*PoolsResponse, error)
 	// Params returns concentrated liquidity module params.
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
-	// UserPositions returns all concentrated postitions of some address.
+	// UserPositions returns all concentrated positions of some address.
 	UserPositions(context.Context, *UserPositionsRequest) (*UserPositionsResponse, error)
 	// LiquidityPerTickRange returns the amount of liquidity per every tick range
 	// existing within the given pool

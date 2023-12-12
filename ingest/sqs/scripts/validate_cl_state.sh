@@ -26,7 +26,7 @@ validate_cl_pool_state() {
     local url=$2
 
     ###############################################
-    # 1. Query chain for the curren ticks
+    # 1. Query chain for the current ticks
     chain_tick_query_resp=$(osmosisd q concentratedliquidity liquidity-per-tick-range $pool_id --output=json)
     bucket_index_resp=$(echo $chain_tick_query_resp | jq .bucket_index)
     echo "chain_bucket_index: $bucket_index_resp"

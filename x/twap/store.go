@@ -16,7 +16,7 @@ type timeTooOldError struct {
 }
 
 func (e timeTooOldError) Error() string {
-	return fmt.Sprintf("looking for a time thats too old, not in the historical index. "+
+	return fmt.Sprintf("looking for a time that's too old, not in the historical index. "+
 		" Try storing the accumulator value. (requested time %s)", e.Time)
 }
 

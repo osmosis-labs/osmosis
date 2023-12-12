@@ -129,7 +129,7 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 	// With a > 0, |x| << 1, and p sufficiently low, perhaps this actually is true.
 
 	// TODO: Check with our parameterization
-	// TODO: If theres a bug, balancer is also wrong here :thonk:
+	// TODO: If there's a bug, balancer is also wrong here :thonk:
 
 	base := originalBase.Clone()
 	x, xneg := AbsDifferenceWithSign(base, one)

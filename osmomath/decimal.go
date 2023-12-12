@@ -822,7 +822,7 @@ func (d BigDec) TruncateDec() BigDec {
 	return NewBigDecFromBigInt(chopPrecisionAndTruncate(d.i))
 }
 
-// Ceil returns the smallest interger value (as a decimal) that is greater than
+// Ceil returns the smallest integer value (as a decimal) that is greater than
 // or equal to the given decimal.
 func (d BigDec) Ceil() BigDec {
 	tmp := new(big.Int).Set(d.i)

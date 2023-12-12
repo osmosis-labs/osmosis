@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) StateSync() {
 				return true
 			}
 		}
-		s.T().Log("state sync snashot after trust height is not found")
+		s.T().Log("state sync snapshot after trust height is not found")
 		return false
 	}
 	chainANode.WaitUntil(hasSnapshotsAvailable)
@@ -92,7 +92,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	err = stateSynchingNode.Run()
 	s.Require().NoError(err)
 
-	// ensure that the state synching node cathes up to the running node.
+	// ensure that the state syncing node cathes up to the running node.
 	s.Require().Eventually(func() bool {
 		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
 		s.Require().NoError(err)
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) StateSync() {
 		10*time.Millisecond,
 	)
 
-	// stop the state synching node.
+	// stop the state syncing node.
 	err = chainA.RemoveTempNode(stateSynchingNode.Name)
 	s.Require().NoError(err)
 }

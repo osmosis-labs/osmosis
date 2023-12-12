@@ -30,7 +30,7 @@ func SyntheticLockupInvariant(keeper Keeper) sdk.Invariant {
 			}
 			if baselock.ID != synthlock.UnderlyingLockId {
 				return sdk.FormatInvariant(types.ModuleName, "synthetic-lockup-invariant",
-					fmt.Sprintf("\tSynthetic lock denom %s\n\tUnderlying lock ID: %d\n\tActual underying lock ID: %d\n",
+					fmt.Sprintf("\tSynthetic lock denom %s\n\tUnderlying lock ID: %d\n\tActual underlying lock ID: %d\n",
 						synthlock.SynthDenom, synthlock.UnderlyingLockId, baselock.ID,
 					)), true
 			}

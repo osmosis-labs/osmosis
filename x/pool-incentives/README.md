@@ -32,7 +32,7 @@ selected gauges.
 
 ```go
 type GenesisState struct {
- // params defines all the paramaters of the module.
+ // params defines all the parameters of the module.
  Params            Params          
  LockableDurations []time.Duration 
  DistrInfo         *DistrInfo      

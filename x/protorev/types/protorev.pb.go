@@ -95,7 +95,8 @@ func (m *TokenPairArbRoutes) GetTokenOut() string {
 
 // Route is a hot route for a given pair of tokens
 type Route struct {
-	// The pool IDs that are travered in the directed cyclic graph (traversed left
+	// The pool IDs that are traversed in the directed cyclic graph (traversed
+	// left
 	// -> right)
 	Trades []Trade `protobuf:"bytes,1,rep,name=trades,proto3" json:"trades" yaml:"trades"`
 	// The step size that will be used to find the optimal swap amount in the

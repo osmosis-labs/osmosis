@@ -55,7 +55,7 @@ func TestNonStandardAPIOrder(t *testing.T) {
 }
 
 // This test ad-hocly tests combination of multiple sequences, first elements, and an After
-// invokation.
+// invocation.
 func TestSequence(t *testing.T) {
 	// This test uses direct ordering before First, and after Last
 	names := []string{"A", "B", "C", "D", "E", "F", "G"}

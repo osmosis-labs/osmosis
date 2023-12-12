@@ -214,7 +214,7 @@ their multiplier. We currently support two asset types.
 
 1. Native Token
 
-The multiplier for OSMO is alway 1.
+The multiplier for OSMO is always 1.
 
 2. Gamm LP Shares
 
@@ -283,7 +283,7 @@ type MsgSuperfluidUndelegate struct {
   pair
 - Create a new `SyntheticLockup` which is unbonding
 - Calculate the amount of `Osmo` delegated on behalf of this `lock` as
-  `Osmo Equivalent Multipler` \* `# LP Shares` \*
+  `Osmo Equivalent Multiplier` \* `# LP Shares` \*
   `Risk Adjustment Factor`
   - If this amount is less than 0.000001 `Osmo`, there is no
     delegated `Osmo` to undelegate and burn
@@ -429,7 +429,7 @@ Overall Epoch sequence
     - (Currently spot price at epoch)
   - Refresh delegation amounts for all `Intermediary Accounts`
     - Calculate the expected delegation for this account as
-      `Osmo Equivalent Multipler` _`# LP Shares`_
+      `Osmo Equivalent Multiplier` _`# LP Shares`_
       `Risk adjustment`
       - If this is less than 0.000001 `Osmo` it will be rounded
         to 0
@@ -666,7 +666,7 @@ The params query returns the params for the superfluid module. This
 currently contains:
 
 - `MinimumRiskFactor` which is an osmomath.Dec that represents the discount
-  to apply to all superfluid staked modules when calcultating their
+  to apply to all superfluid staked modules when calculating their
   staking power. For example, if a specific denom has an OSMO
   equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param
   is 0.05, then the denom will only get 95 OSMO worth of staking power
@@ -840,7 +840,7 @@ message SuperfluidDelegationRecord {
 ```
 
 This query returns a list of all the superfluid delegations of a
-specific delegator. The return value includes, the validator delgated to
+specific delegator. The return value includes, the validator delegated to
 and the delegated coins (both denom and amount).
 
 The return value of the query also includes the `total_delegated_coins`
@@ -969,7 +969,7 @@ already safely handled by the Superfluid refreshing logic.
 
 The refreshing logic checks the total amount of tokens in locks to this
 denom (Reading from the lockup accumulation store), calculates how many
-osmo thats worth at the epochs new osmo worth for that asset, and then
+osmo that's worth at the epochs new osmo worth for that asset, and then
 uses that. Thus this safely handles this edge case, as it uses the new
 'live' lockup amount.
 
@@ -1035,7 +1035,7 @@ for the underlying asset.
 
 ### SlashLockupsForValidatorSlash (BeforeValidatorSlashed Hook)
 
-During slashing the invariant is likely to be temporraily broken if the
+During slashing the invariant is likely to be temporarily broken if the
 referenced validator has any unbonding delegations. These unbonding
 delegations are slashed first, which means that the amount delegated by
 the `IntermediaryAccount` will be slashed by less than the

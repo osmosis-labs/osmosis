@@ -45,7 +45,7 @@ Next, manually edit the `localosmosisFromHomePath` variable in the script:
 
 Set the value to `.osmosisd-testnet-script` and save.
 
-Now, you are able to run this script on testnet. This assummes that
+Now, you are able to run this script on testnet. This assumes that
 testnet accounts have been set up with the default test accounts
 and balances. By default, we mean accounts created with
 `make localnet-keys`.
@@ -74,7 +74,7 @@ In the current state, it does the following:
 - Queries pool with id 1.
 - Performs 100 randomized swaps against the pool with id 1.
 
-Note that this script does not set up positions, assumming they are
+Note that this script does not set up positions, assuming they are
 already set up.
 
 ### Create Positions and Make Small Randomized Swaps
@@ -101,7 +101,7 @@ In other words, it takes one large amount and swaps it into the pool. Then, take
 and swaps it back while accounting for the spread factor. This is done to
 ensure that we cross ticks while minimizing the chance of running out of funds or liquidity.
 
-Note that this script does not set up positions, assumming they are
+Note that this script does not set up positions, assuming they are
 already set up.
 
 ### Create Positions and Make Large Invertible Swaps

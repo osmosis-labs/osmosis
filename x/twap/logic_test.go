@@ -410,7 +410,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom0:      baseRecord.Asset0Denom,
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			expectedErr: fmt.Errorf("looking for a time that's too old, not in the historical index. "+
 				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"on lexicographical order denom parameters": {
@@ -521,7 +521,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 		"call 1 second before existing record": {
 			recordsToPreSet: baseRecord,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			expectedErr: fmt.Errorf("looking for a time that's too old, not in the historical index. "+
 				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"test non lexicographical order parameter": {

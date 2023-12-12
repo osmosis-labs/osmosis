@@ -125,13 +125,13 @@ func main() {
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
 	// Print warnings with common problems
-	log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
+	log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assumed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
 
 	log.Printf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId)
 
 	log.Println("\n\n\nWARNING 3: sometimes the script hangs when just started. In that case, kill it and restart")
 
-	// Check if need to create pool before every opperation.
+	// Check if need to create pool before every operation.
 	if operation(desiredOperation) != createPoolOperation {
 		createPoolOp(igniteClient)
 	}

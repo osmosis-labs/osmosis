@@ -30,10 +30,10 @@ message ReplaceMigrationRecordsProposal {
 // UpdateMigrationRecordsProposal is a gov Content type for updating the
 // migration records. If a UpdateMigrationRecordsProposal passes, all the
 // MigrationRecords in the proposals are edited. An existing
-// BalancerToConcentratedPoolLink is not overriden unless explicitly included in
-// the proposal. This differs from a ReplaceMigrationRecordsProposal because it
-// only does an in place update of the MigrationRecords for records explicitly
-// mentioned in the proposal.
+// BalancerToConcentratedPoolLink is not overridden unless explicitly included
+// in the proposal. This differs from a ReplaceMigrationRecordsProposal because
+// it only does an in place update of the MigrationRecords for records
+// explicitly mentioned in the proposal.
 
 // Lastly, if the clPoolId is set to 0, the BalancerToConcentratedPoolLink is
 // deleted

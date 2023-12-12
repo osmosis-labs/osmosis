@@ -191,7 +191,7 @@ sqs-profile:
 sqs-validate-cl-state:
 	ingest/sqs/scripts/validate-cl-state.sh "http://localhost:9092"
 
-# Compares the quotes betwen SQS and chain over pool 1136
+# Compares the quotes between SQS and chain over pool 1136
 # which is concentrated.
 sqs-quote-compare:
 	ingest/sqs/scripts/quote.sh "http://localhost:9092"

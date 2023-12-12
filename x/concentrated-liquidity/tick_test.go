@@ -306,7 +306,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				preexistingLiquidity = DefaultLiquidityAmt
 			}
 
-			// if this param is set to true, we manually set the tick liquidity net value ot default liquidity amount
+			// if this param is set to true, we manually set the tick liquidity net value to default liquidity amount
 			// for testing purpose.
 			if test.param.initLiquidityNet {
 				tickInfoBefore, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
