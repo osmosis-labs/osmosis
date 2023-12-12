@@ -112,6 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Misc Improvements
 
+* [#6847](https://github.com/osmosis-labs/osmosis/pull/6847) feat: allow sending denoms with URL encoding
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
 
 ### API Breaks
@@ -123,6 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+* [#6847](https://github.com/osmosis-labs/osmosis/pull/6847) feat: allow sending denoms with URL encoding
 * [#6766](https://github.com/osmosis-labs/osmosis/pull/6766) CLI: Query pool by coin denom
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
 * [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
