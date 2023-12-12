@@ -13,73 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 )
 
-// getOptimalQuote returns the optimal quote by estimating the optimal route(s) through pools
-// Considers all routes and splits.
-// Returns error if router repository is not set on the router.
-func (r *Router) getOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (domain.Quote, error) {
-	if r.routerRepository == nil {
-		return nil, ErrNilRouterRepository
-	}
-	if r.poolsUsecase == nil {
-		return nil, ErrNilPoolsRepository
-	}
-
-	bestSingleRouteQuote, routesSortedByAmtOut, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
-	if err != nil {
-		return nil, err
-	}
-
-	if r.maxSplitRoutes == 0 {
-		return bestSingleRouteQuote, nil
-	}
-
-	numRoutes := len(routesSortedByAmtOut)
-
-	// If there are more routes than the max split routes, keep only the top routes
-	if len(routesSortedByAmtOut) > r.maxSplitRoutes {
-		// Keep only top routes for splits
-		routes = routes[:r.maxSplitRoutes]
-		numRoutes = r.maxSplitRoutes
-	}
-
-	// Convert routes sorted by amount out to routes
-	for i := 0; i < numRoutes; i++ {
-		// Update routes with the top routes
-		routes[i] = routesSortedByAmtOut[i].RouteImpl
-	}
-
-	r.logger.Info("bestSingleRouteQuote ", zap.Stringer("quote", bestSingleRouteQuote))
-
-	bestSplitRouteQuote, err := r.GetSplitQuote(routes, tokenIn)
-	if err != nil {
-		return nil, err
-	}
-
-	r.logger.Info("bestSplitRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
-
-	finalQuote := bestSingleRouteQuote
-
-	// If the split route quote is better than the single route quote, return the split route quote
-	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
-		routes := bestSplitRouteQuote.GetRoute()
-
-		r.logger.Debug("split route selected", zap.Int("route_count", len(routes)))
-		for _, route := range routes {
-			r.logger.Debug("route", zap.Stringer("route", route))
-		}
-
-		finalQuote = bestSplitRouteQuote
-	}
-
-	r.logger.Debug("single route selected", zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
-
-	if finalQuote.GetAmountOut().IsZero() {
-		return nil, errors.New("best we can do is no tokens out")
-	}
-
-	return finalQuote, nil
-}
-
 // getSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
 // Returns error if router repository is not set on the router.
 func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (quote domain.Quote, err error) {
@@ -94,8 +27,6 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, routes []route.RouteI
 	if err != nil {
 		return nil, err
 	}
-
-	r.logger.Info("bestSingleRouteQuote ", zap.Any("out", bestSingleRouteQuote.GetAmountOut()))
 
 	return bestSingleRouteQuote, nil
 }
