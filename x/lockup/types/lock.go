@@ -62,6 +62,7 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 	return p.Coins[0], nil
 }
 
+// TODO: Can we use sumtree instead here?
 func SumLocksByDenom(locks []PeriodLock, denom string) osmomath.Int {
 	sum := osmomath.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
@@ -70,6 +71,7 @@ func SumLocksByDenom(locks []PeriodLock, denom string) osmomath.Int {
 		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
 	}
 	for _, lock := range locks {
+		// TODO: Replace with Mutative Int Operations
 		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
 	}
 	return sum
