@@ -67,6 +67,7 @@ var DefaultConfig = Config{
 		MinOSMOLiquidity:          10000, // 10_000 OSMO
 		RouteUpdateHeightInterval: 0,
 		RouteCacheEnabled:         false,
+		RouteCacheExpirySeconds:   600, // 10 minutes
 	},
 }
 
@@ -111,6 +112,8 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 			RouteUpdateHeightInterval: osmoutils.ParseInt(opts, groupOptName, "route-update-height-interval"),
 
 			RouteCacheEnabled: osmoutils.ParseBool(opts, groupOptName, "route-cache-enabled", false),
+
+			RouteCacheExpirySeconds: uint64(osmoutils.ParseInt(opts, groupOptName, "route-cache-expiry-seconds")),
 		},
 	}
 }
