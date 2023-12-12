@@ -652,14 +652,17 @@ func (k Keeper) distributeInternal(
 		if lockSum.IsZero() {
 			return nil, nil
 		}
+		remainingEpochsAsInt := osmomath.NewInt(int64(remainEpochs))
+		// total_denom_lock_amount * remain_epochs
+		lockSumTimesRemainingEpochs := lockSum.Mul(remainingEpochsAsInt)
 
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
-			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+			// ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(osmomath.NewInt(int64(remainEpochs))))
+				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSumTimesRemainingEpochs)
 				if amt.IsPositive() {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
