@@ -1,11 +1,11 @@
 package parsing
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	concentratedmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"

@@ -24,14 +24,15 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/iancoleman/orderedmap v0.3.0
+	github.com/json-iterator/go v1.1.12
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231124190325-d75e9ade352e
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231202014138-9c8676d98dad
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231130002422-33ba03710e16
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231130002422-33ba03710e16
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231211173227-afdfd0b87e09
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231207233718-ef61c5f32b31
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231207233718-ef61c5f32b31
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231207233718-ef61c5f32b31
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.0
@@ -124,6 +125,8 @@ require (
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.5 // indirect
 	github.com/otiai10/copy v1.11.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
@@ -372,10 +375,16 @@ require (
 )
 
 replace (
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
-	// force utilizing the following versions
+	// adds expedited proposal support and 1000MB cache default
+	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
+
+	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231124185741-15259ccd2249
+
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/15259ccd2249d2f3f413e0de7b8e27fe4cc6169a
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-osmo
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

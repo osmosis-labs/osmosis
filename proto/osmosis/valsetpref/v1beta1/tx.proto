@@ -106,7 +106,7 @@ message MsgUndelegateFromValidatorSet {
 message MsgUndelegateFromValidatorSetResponse {}
 
 message MsgUndelegateFromRebalancedValidatorSet {
-  option (amino.name) = "osmosis/MsgUndelegateFromRebalancedValidatorSet";
+  option (amino.name) = "osmosis/MsgUndelegateFromRebalValset";
 
   // delegator is the user who is trying to undelegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
