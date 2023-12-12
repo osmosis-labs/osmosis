@@ -151,7 +151,7 @@ func (tfm TakerFeeMap) Has(denom0, denom1 string) bool {
 // GetTakerFee returns the taker fee for the given denoms.
 // It sorts the denoms lexicographically before looking up the taker fee.
 // Returns error if the taker fee is not found.
-func (tfm TakerFeeMap) GetTakerFee(denom0, denom1 string) (osmomath.Dec, error) {
+func (tfm TakerFeeMap) GetTakerFee(denom0, denom1 string) osmomath.Dec {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -160,13 +160,10 @@ func (tfm TakerFeeMap) GetTakerFee(denom0, denom1 string) (osmomath.Dec, error) 
 	takerFee, found := tfm[DenomPair{Denom0: denom0, Denom1: denom1}]
 
 	if !found {
-		return osmomath.Dec{}, TakerFeeNotFoundForDenomPairError{
-			Denom0: denom0,
-			Denom1: denom1,
-		}
+		return DefaultTakerFee
 	}
 
-	return takerFee, nil
+	return takerFee
 }
 
 // SetTakerFee sets the taker fee for the given denoms.
@@ -178,6 +175,13 @@ func (tfm TakerFeeMap) SetTakerFee(denom0, denom1 string, takerFee osmomath.Dec)
 	}
 
 	tfm[DenomPair{Denom0: denom0, Denom1: denom1}] = takerFee
+}
+
+// TakerFeeForPair represents the taker fee for a pair of tokens
+type TakerFeeForPair struct {
+	Denom0   string
+	Denom1   string
+	TakerFee osmomath.Dec
 }
 
 var DefaultTakerFee = osmomath.MustNewDecFromStr("0.001000000000000000")
