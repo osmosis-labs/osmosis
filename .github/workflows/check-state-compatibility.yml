@@ -122,12 +122,10 @@ jobs:
         run: |
           REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | sed 's/\.x//')
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
-
           # Get the latest pre-epoch snapshot information from bucket
           SNAPSHOT_INFO=$(curl -sL --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
           SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").url')
           SNAPSHOT_ID=$(echo $SNAPSHOT_INFO |  jq -r '.[] | select(.type == "pre-epoch").filename' | cut -f 1 -d '.')
-
           # Download snapshot if not already present
           mkdir -p /mnt/data/snapshots/$REPO_MAJOR_VERSION/
           if [ ! -d "/mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID" ]; then
@@ -135,7 +133,6 @@ jobs:
               mkdir /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID
               wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID -xvf -
           fi
-
           # Copy snapshot in Data folder
           cp -R /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/* $HOME/.osmosisd/
       -
