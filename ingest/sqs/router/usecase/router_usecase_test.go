@@ -199,3 +199,140 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 		})
 	}
 }
+
+// Tests that routes that overlap in pools IDs get filtered out.
+// Tests that the order of the routes is in decreasing priority.
+// That is, if routes A and B overlap where A comes before B, then B is filtered out.
+// Additionally, tests that overlapping within the same route has no effect on fitlering.
+// Lastly, validates that if a route overlaps with subsequent routes in the list but gets filtered out,
+// then subesequent routes are not affected by filtering.
+func (s *RouterTestSuite) TestFilterDuplicatePoolIDRoutes() {
+	var (
+		deafaultPool = &mocks.MockRoutablePool{ID: defaultPoolID}
+
+		otherPool = &mocks.MockRoutablePool{ID: defaultPoolID + 1}
+
+		defaultSingleRoute = WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+			deafaultPool,
+		})
+	)
+
+	tests := map[string]struct {
+		routes []route.RouteImpl
+
+		expectedRoutes []route.RouteImpl
+	}{
+		"empty routes": {
+			routes:         []route.RouteImpl{},
+			expectedRoutes: []route.RouteImpl{},
+		},
+
+		"single route single pool": {
+			routes: []route.RouteImpl{
+				defaultSingleRoute,
+			},
+
+			expectedRoutes: []route.RouteImpl{
+				defaultSingleRoute,
+			},
+		},
+
+		"single route two different pools": {
+			routes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					deafaultPool,
+					otherPool,
+				}),
+			},
+
+			expectedRoutes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					deafaultPool,
+					otherPool,
+				}),
+			},
+		},
+
+		// Note that filtering only happens if pool ID duplciated across different routes.
+		// Duplicate pool IDs within the same route are filtered out at a different step
+		// in the router logic.
+		"single route two same pools (have no effect on filtering)": {
+			routes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					deafaultPool,
+					deafaultPool,
+				}),
+			},
+
+			expectedRoutes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					deafaultPool,
+					deafaultPool,
+				}),
+			},
+		},
+
+		"two single hop routes and no duplicates": {
+			routes: []route.RouteImpl{
+				defaultSingleRoute,
+
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					otherPool,
+				}),
+			},
+
+			expectedRoutes: []route.RouteImpl{
+				defaultSingleRoute,
+
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					otherPool,
+				}),
+			},
+		},
+
+		"two single hop routes with duplicates (second filtered)": {
+			routes: []route.RouteImpl{
+				defaultSingleRoute,
+
+				defaultSingleRoute,
+			},
+
+			expectedRoutes: []route.RouteImpl{
+				defaultSingleRoute,
+			},
+		},
+
+		"three route. first and second overlap. second and third overlap. second is filtered out but not third": {
+			routes: []route.RouteImpl{
+				defaultSingleRoute,
+
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					deafaultPool, // first and second overlap
+					otherPool,    // second and third overlap
+				}),
+
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					otherPool,
+				}),
+			},
+
+			expectedRoutes: []route.RouteImpl{
+				defaultSingleRoute,
+
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					otherPool,
+				}),
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			actualRoutes := usecase.FilterDuplicatePoolIDRoutes(tc.routes)
+
+			s.Require().Equal(len(tc.expectedRoutes), len(actualRoutes))
+		})
+	}
+}
