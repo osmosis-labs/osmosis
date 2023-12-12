@@ -318,7 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestGetCustomQuote_Mainnet_UOSMOUION",
+                "TestRouterTestSuite/TestGetOptimalQuote",
                 "-test.v"
             ],
         },
