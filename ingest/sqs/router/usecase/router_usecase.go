@@ -354,7 +354,7 @@ func (r *routerUseCaseImpl) initializeRouter() *Router {
 	return router
 }
 
-// handleCandidateRoutes attempts to retrieve routes from the cache. If no routes are cached, it will
+// handleCandidateRoutes attempts to retrieve candidate routes from the cache. If no routes are cached, it will
 // compute, persist in cache and return them.
 // Returns routes on success
 // Errors if:
