@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 
@@ -16,7 +17,8 @@ import (
 )
 
 type redisRouterRepo struct {
-	repositoryManager mvc.TxManager
+	repositoryManager        mvc.TxManager
+	routerCacheExpirySeconds uint64
 }
 
 const (
@@ -32,9 +34,10 @@ var (
 )
 
 // NewRedisRouterRepo will create an implementation of pools.Repository
-func NewRedisRouterRepo(repositoryManager mvc.TxManager) mvc.RouterRepository {
+func NewRedisRouterRepo(repositoryManager mvc.TxManager, routesCacheExpirySeconds uint64) mvc.RouterRepository {
 	return &redisRouterRepo{
-		repositoryManager: repositoryManager,
+		repositoryManager:        repositoryManager,
+		routerCacheExpirySeconds: routesCacheExpirySeconds,
 	}
 }
 
@@ -165,7 +168,9 @@ func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, de
 		return err
 	}
 
-	cmd := pipeliner.HSet(ctx, routesPrefix, denom0+keySeparator+denom1, routesStr)
+	routeCacheExpiryDuration := time.Second * time.Duration(r.routerCacheExpirySeconds)
+
+	cmd := pipeliner.Set(ctx, getRoutesPrefixByDenoms(denom0, denom1), routesStr, routeCacheExpiryDuration)
 	if err := cmd.Err(); err != nil {
 		return err
 	}
@@ -207,7 +212,7 @@ func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) 
 	}
 
 	// Create command to retrieve results.
-	getCmd := pipeliner.HGet(ctx, routesPrefix, denom0+keySeparator+denom1)
+	getCmd := pipeliner.Get(ctx, getRoutesPrefixByDenoms(denom0, denom1))
 
 	_, err = pipeliner.Exec(ctx)
 	if err != nil {
@@ -225,4 +230,8 @@ func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) 
 	}
 
 	return routes, nil
+}
+
+func getRoutesPrefixByDenoms(denom0, denom1 string) string {
+	return routesPrefix + denom0 + keySeparator + denom1
 }

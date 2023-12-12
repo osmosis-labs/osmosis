@@ -207,6 +207,20 @@ func (r *routerUseCaseImpl) GetTakerFee(ctx context.Context, poolID uint64) ([]d
 	return result, nil
 }
 
+// GetCachedCandidateRoutes implements mvc.RouterUsecase.
+func (r *routerUseCaseImpl) GetCachedCandidateRoutes(ctx context.Context, tokenInDenom string, tokenOutDenom string) (route.CandidateRoutes, error) {
+	if !r.config.RouteCacheEnabled {
+		return route.CandidateRoutes{}, fmt.Errorf("route cache is disabled")
+	}
+
+	cachedCandidateRoutes, err := r.routerRepository.GetRoutes(ctx, tokenInDenom, tokenOutDenom)
+	if err != nil {
+		return route.CandidateRoutes{}, err
+	}
+
+	return cachedCandidateRoutes, nil
+}
+
 // initializeRouter initializes the router per configuration defined on the use case
 // Returns error if:
 // - there is an error retrieving pools from the store
