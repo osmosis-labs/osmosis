@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )

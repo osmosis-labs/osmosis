@@ -44,6 +44,10 @@ type RouterUsecase interface {
 	GetCandidateRoutes(ctx context.Context, tokenInDenom, tokenOutDenom string) (route.CandidateRoutes, error)
 	// GetTakerFee returns the taker fee for all token pairs in a pool.
 	GetTakerFee(ctx context.Context, poolID uint64) ([]domain.TakerFeeForPair, error)
+	// GetCachedCandidateRoutes returns the candidate routes for the given tokenIn and tokenOutDenom from cache.
+	// It does not recompute the routes if they are not present in cache.
+	// Returns error if cache is disabled.
+	GetCachedCandidateRoutes(ctx context.Context, tokenInDenom, tokenOutDenom string) (route.CandidateRoutes, error)
 	// StoreRoutes stores all router state in the files locally. Used for debugging.
 	StoreRouterStateFiles(ctx context.Context) error
 }

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 

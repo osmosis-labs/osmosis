@@ -1,13 +1,13 @@
 package domain
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
@@ -87,6 +87,8 @@ type RouterConfig struct {
 	MinOSMOLiquidity          int  `mapstructure:"min_osmo_liquidity"`
 	RouteUpdateHeightInterval int  `mapstructure:"route_update_height_interval"`
 	RouteCacheEnabled         bool `mapstructure:"route_cache_enabled"`
+	// The number of seconds to cache routes for before expiry.
+	RouteCacheExpirySeconds uint64 `mapstructure:"route_cache_expiry_seconds"`
 }
 
 // DenomPair encapsulates a pair of denoms.
