@@ -3,6 +3,7 @@ package domain_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
@@ -75,7 +76,10 @@ var (
 func (s *RouterTestSuite) TestPrepareResultPools() {
 	s.Setup()
 
-	balancerPoolID := s.PrepareBalancerPool()
+	balancerPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(
+		sdk.NewCoin(DenomOne, sdk.NewInt(1_000_000_000)),
+		sdk.NewCoin(DenomTwo, sdk.NewInt(1_000_000_000)),
+	)...)
 
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
 	s.Require().NoError(err)
@@ -118,9 +122,10 @@ func (s *RouterTestSuite) TestPrepareResultPools() {
 		tc := tc
 		s.Run(name, func() {
 
-			resultPools := tc.route.PrepareResultPools()
+			// Note: token in is chosen arbitrarily since it is irrelevant for this test
+			_, _, err := tc.route.PrepareResultPools(sdk.NewCoin(DenomTwo, DefaultAmt0))
+			s.Require().NoError(err)
 
-			s.ValidateRoutePools(tc.expectedPools, resultPools)
 			s.ValidateRoutePools(tc.expectedPools, tc.route.GetPools())
 		})
 	}
