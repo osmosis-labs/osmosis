@@ -1,8 +1,6 @@
 package mocks
 
 import (
-	"fmt"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,15 +26,16 @@ type MockRoutablePool struct {
 
 // CalcSpotPrice implements domain.RoutablePool.
 func (mp *MockRoutablePool) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
-	baseDenomSupply := mp.Balances.AmountOf(baseDenom)
-
-	quoteDenomSupply := mp.Balances.AmountOf(quoteDenom)
-
-	if baseDenomSupply.IsZero() || quoteDenomSupply.IsZero() {
-		return osmomath.BigDec{}, fmt.Errorf("cannot calculate spot price with zero supply")
+	if mp.PoolType == poolmanagertypes.CosmWasm {
+		return osmomath.OneBigDec(), nil
 	}
 
-	return osmomath.NewBigDecFromBigInt(quoteDenomSupply.BigInt()).Quo(osmomath.NewBigDecFromBigInt(baseDenomSupply.BigInt())), nil
+	spotPrice, err := mp.ChainPoolModel.SpotPrice(sdk.Context{}, quoteDenom, baseDenom)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	return spotPrice, nil
 }
 
 // GetSpreadFactor implements domain.RoutablePool.
@@ -72,6 +71,10 @@ func (mp *MockRoutablePool) GetSQSPoolModel() domain.SQSPool {
 
 // CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
 func (mp *MockRoutablePool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+	if mp.PoolType == poolmanagertypes.CosmWasm {
+		return sdk.NewCoin(mp.TokenOutDenom, tokenIn.Amount), nil
+	}
+
 	// Cast to balancer
 	balancerPool, ok := mp.ChainPoolModel.(*balancer.Pool)
 	if !ok {
@@ -185,6 +188,8 @@ func WithTokenOutDenom(mockPool *MockRoutablePool, tokenOutDenom string) *MockRo
 func WithChainPoolModel(mockPool *MockRoutablePool, chainPool poolmanagertypes.PoolI) *MockRoutablePool {
 	newPool := deepCopyPool(mockPool)
 	newPool.ChainPoolModel = chainPool
+	newPool.PoolType = chainPool.GetType()
+	newPool.ID = chainPool.GetId()
 	return newPool
 }
 
