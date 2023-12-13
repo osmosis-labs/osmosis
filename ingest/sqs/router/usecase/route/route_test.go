@@ -76,7 +76,10 @@ var (
 func (s *RouterTestSuite) TestPrepareResultPools() {
 	s.Setup()
 
-	balancerPoolID := s.PrepareBalancerPool()
+	balancerPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(
+		sdk.NewCoin(DenomOne, DefaultAmt0),
+		sdk.NewCoin(DenomTwo, DefaultAmt1),
+	)...)
 
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
 	s.Require().NoError(err)
@@ -120,7 +123,7 @@ func (s *RouterTestSuite) TestPrepareResultPools() {
 		s.Run(name, func() {
 
 			// Note: token in is chosen arbitrarily since it is irrelevant for this test
-			_, _, err := tc.route.PrepareResultPools(sdk.NewCoin(DenomTwo, sdk.NewInt(1)))
+			_, _, err := tc.route.PrepareResultPools(sdk.NewCoin(DenomTwo, sdk.NewInt(10000)))
 			s.Require().NoError(err)
 
 			s.ValidateRoutePools(tc.expectedPools, tc.route.GetPools())
