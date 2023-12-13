@@ -22,6 +22,8 @@ var (
 	one = osmomath.OneDec()
 )
 
+var _ domain.Quote = &quoteImpl{}
+
 // PrepareResult implements domain.Quote.
 // PrepareResult mutates the quote to prepare
 // it with the data formatted for output to the client.
@@ -109,4 +111,7 @@ func (q *quoteImpl) String() string {
 	return builder.String()
 }
 
-var _ domain.Quote = &quoteImpl{}
+// GetPriceImpact implements domain.Quote.
+func (q *quoteImpl) GetPriceImpact() osmomath.Dec {
+	return q.PriceImpact
+}

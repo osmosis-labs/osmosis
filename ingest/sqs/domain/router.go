@@ -73,6 +73,7 @@ type Quote interface {
 	GetAmountOut() osmomath.Int
 	GetRoute() []SplitRoute
 	GetEffectiveSpreadFactor() osmomath.Dec
+	GetPriceImpact() osmomath.Dec
 
 	// PrepareResult mutates the quote to prepare
 	// it with the data formatted for output to the client.
