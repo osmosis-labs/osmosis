@@ -15,7 +15,12 @@ type quoteImpl struct {
 	AmountOut    osmomath.Int        "json:\"amount_out\""
 	Route        []domain.SplitRoute "json:\"route\""
 	EffectiveFee osmomath.Dec        "json:\"effective_fee\""
+	PriceImpact  osmomath.Dec        "json:\"price_impact\""
 }
+
+var (
+	one = osmomath.OneDec()
+)
 
 // PrepareResult implements domain.Quote.
 // PrepareResult mutates the quote to prepare
@@ -28,6 +33,9 @@ type quoteImpl struct {
 func (q *quoteImpl) PrepareResult() ([]domain.SplitRoute, osmomath.Dec) {
 	totalAmountIn := q.AmountIn.Amount.ToLegacyDec()
 	totalFeeAcrossRoutes := osmomath.ZeroDec()
+
+	totalSpotPriceInOverOut := osmomath.ZeroDec()
+	totalEffectiveSpotPriceInOverOut := osmomath.ZeroDec()
 
 	for i, route := range q.Route {
 		routeTotalFee := osmomath.ZeroDec()
@@ -49,7 +57,18 @@ func (q *quoteImpl) PrepareResult() ([]domain.SplitRoute, osmomath.Dec) {
 		// Update the spread factor pro-rated by the amount in
 		totalFeeAcrossRoutes.AddMut(routeTotalFee.MulMut(routeAmountInFraction))
 
-		q.Route[i].PrepareResultPools()
+		routeSpotPriceInOverOut, effectiveSpotPriceInOverOut, err := q.Route[i].PrepareResultPools(q.AmountIn)
+		if err != nil {
+			panic(err)
+		}
+
+		totalSpotPriceInOverOut = totalSpotPriceInOverOut.AddMut(routeSpotPriceInOverOut.MulMut(routeAmountInFraction))
+		totalEffectiveSpotPriceInOverOut = totalEffectiveSpotPriceInOverOut.AddMut(effectiveSpotPriceInOverOut.MulMut(routeAmountInFraction))
+	}
+
+	// Calculate price impact
+	if !totalSpotPriceInOverOut.IsZero() {
+		q.PriceImpact = totalEffectiveSpotPriceInOverOut.Quo(totalSpotPriceInOverOut).SubMut(one)
 	}
 
 	q.EffectiveFee = totalFeeAcrossRoutes

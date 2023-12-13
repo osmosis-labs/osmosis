@@ -3,6 +3,7 @@ package route_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
@@ -118,9 +119,10 @@ func (s *RouterTestSuite) TestPrepareResultPools() {
 		tc := tc
 		s.Run(name, func() {
 
-			resultPools := tc.route.PrepareResultPools()
+			// Note: token in is chosen arbitrarily since it is irrelevant for this test
+			_, _, err := tc.route.PrepareResultPools(sdk.NewCoin(DenomTwo, sdk.NewInt(1)))
+			s.Require().NoError(err)
 
-			s.ValidateRoutePools(tc.expectedPools, resultPools)
 			s.ValidateRoutePools(tc.expectedPools, tc.route.GetPools())
 		})
 	}

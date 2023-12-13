@@ -196,6 +196,9 @@ sqs-validate-cl-state:
 sqs-quote-compare:
 	ingest/sqs/scripts/quote.sh "http://localhost:9092"
 
+sqs-quote-compare-stage:
+	ingest/sqs/scripts/quote.sh "http://165.227.168.61"
+
 # Updates go tests with the latest mainnet state
 # Make sure that the node is running locally
 sqs-update-mainnet-state:
