@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/pools"
@@ -75,7 +77,10 @@ var (
 func (s *RouterTestSuite) TestPrepareResultPools() {
 	s.Setup()
 
-	balancerPoolID := s.PrepareBalancerPool()
+	balancerPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(
+		sdk.NewCoin(DenomOne, sdk.NewInt(1_000_000_000)),
+		sdk.NewCoin(DenomTwo, sdk.NewInt(1_000_000_000)),
+	)...)
 
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
 	s.Require().NoError(err)
@@ -118,9 +123,9 @@ func (s *RouterTestSuite) TestPrepareResultPools() {
 		tc := tc
 		s.Run(name, func() {
 
-			resultPools := tc.route.PrepareResultPools()
+			_, _, err := tc.route.PrepareResultPools(sdk.NewCoin(DenomTwo, DefaultAmt0))
+			s.Require().NoError(err)
 
-			s.ValidateRoutePools(tc.expectedPools, resultPools)
 			s.ValidateRoutePools(tc.expectedPools, tc.route.GetPools())
 		})
 	}

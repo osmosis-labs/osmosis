@@ -28,9 +28,34 @@ type RouteImpl struct {
 // - Token Out Denom
 // - Taker Fee
 // Note that it mutates the route.
-// Returns the resulting pools.
-func (r *RouteImpl) PrepareResultPools() []domain.RoutablePool {
+// Returns spot price before swap and the effective spot price
+func (r *RouteImpl) PrepareResultPools(tokenIn sdk.Coin) (osmomath.Dec, osmomath.Dec, error) {
+	var (
+		routeSpotPriceInOverOut     = osmomath.OneDec()
+		effectiveSpotPriceInOverOut = osmomath.OneDec()
+	)
+
 	for i, pool := range r.Pools {
+		// Compute spot price before swap.
+		spotPriceInOverOut, err := pool.CalcSpotPrice(pool.GetTokenOutDenom(), tokenIn.Denom)
+		if err != nil {
+			return osmomath.Dec{}, osmomath.Dec{}, err
+		}
+
+		// Charge taker fee
+		tokenIn = pool.ChargeTakerFeeExactIn(tokenIn)
+
+		tokenOut, err := pool.CalculateTokenOutByTokenIn(tokenIn)
+		if err != nil {
+			return osmomath.Dec{}, osmomath.Dec{}, err
+		}
+
+		// Update effective spot price
+		effectiveSpotPriceInOverOut.MulMut(tokenIn.Amount.ToLegacyDec().QuoMut(tokenOut.Amount.ToLegacyDec()))
+
+		// Note, in the future we may want to increase the precision of the spot price
+		routeSpotPriceInOverOut.MulMut(spotPriceInOverOut.Dec())
+
 		r.Pools[i] = pools.NewRoutableResultPool(
 			pool.GetId(),
 			pool.GetType(),
@@ -38,8 +63,10 @@ func (r *RouteImpl) PrepareResultPools() []domain.RoutablePool {
 			pool.GetTokenOutDenom(),
 			pool.GetTakerFee(),
 		)
+
+		tokenIn = tokenOut
 	}
-	return r.Pools
+	return routeSpotPriceInOverOut, effectiveSpotPriceInOverOut, nil
 }
 
 // GetPools implements Route.

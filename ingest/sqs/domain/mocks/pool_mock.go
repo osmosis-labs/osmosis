@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,6 +24,19 @@ type MockRoutablePool struct {
 	TokenOutDenom        string
 	TakerFee             osmomath.Dec
 	SpreadFactor         osmomath.Dec
+}
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (mp *MockRoutablePool) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	baseDenomSupply := mp.Balances.AmountOf(baseDenom)
+
+	quoteDenomSupply := mp.Balances.AmountOf(quoteDenom)
+
+	if baseDenomSupply.IsZero() || quoteDenomSupply.IsZero() {
+		return osmomath.BigDec{}, fmt.Errorf("cannot calculate spot price with zero supply")
+	}
+
+	return osmomath.NewBigDecFromBigInt(quoteDenomSupply.BigInt()).Quo(osmomath.NewBigDecFromBigInt(baseDenomSupply.BigInt())), nil
 }
 
 // GetSpreadFactor implements domain.RoutablePool.
