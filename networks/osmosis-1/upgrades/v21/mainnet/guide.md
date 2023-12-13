@@ -2,9 +2,9 @@
 
 ## Overview
 
-- **v21 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/TODO)
-- **v21 Upgrade Block Height**: `TODO`
-- **v21 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/TODO)
+- **v21 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/696)
+- **v21 Upgrade Block Height**: `12834100)`
+- **v21 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/block/12834100)
 
 ## Hardware Requirements
 
@@ -95,7 +95,7 @@ At the designated block height, Cosmovisor will automatically upgrade to version
 
 Follow these steps if you opt for a manual upgrade:
 
-1. Monitor Osmosis until it reaches the specified upgrade block height: TODO.
+1. Monitor Osmosis until it reaches the specified upgrade block height: [12834100](https://www.mintscan.io/osmosis/block/12834100).
 2. Observe for a panic message followed by continuous peer logs, then halt the daemon.
 3. Perform these steps:
 
