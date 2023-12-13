@@ -115,3 +115,8 @@ func (r *routableTransmuterPoolImpl) GetTakerFee() math.LegacyDec {
 func (r *routableTransmuterPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 	r.TokenOutDenom = tokenOutDenom
 }
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	return osmomath.OneBigDec(), nil
+}

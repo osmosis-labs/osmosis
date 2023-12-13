@@ -22,6 +22,22 @@ type MockRoutablePool struct {
 	TokenOutDenom        string
 	TakerFee             osmomath.Dec
 	SpreadFactor         osmomath.Dec
+
+	mockedTokenOut sdk.Coin
+}
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (mp *MockRoutablePool) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	if mp.PoolType == poolmanagertypes.CosmWasm {
+		return osmomath.OneBigDec(), nil
+	}
+
+	spotPrice, err := mp.ChainPoolModel.SpotPrice(sdk.Context{}, quoteDenom, baseDenom)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	return spotPrice, nil
 }
 
 // GetSpreadFactor implements domain.RoutablePool.
@@ -57,6 +73,15 @@ func (mp *MockRoutablePool) GetSQSPoolModel() domain.SQSPool {
 
 // CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
 func (mp *MockRoutablePool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+	// We allow the ability to mock out the token out amount.
+	if !mp.mockedTokenOut.IsNil() {
+		return mp.mockedTokenOut, nil
+	}
+
+	if mp.PoolType == poolmanagertypes.CosmWasm {
+		return sdk.NewCoin(mp.TokenOutDenom, tokenIn.Amount), nil
+	}
+
 	// Cast to balancer
 	balancerPool, ok := mp.ChainPoolModel.(*balancer.Pool)
 	if !ok {
@@ -94,8 +119,8 @@ func (mp *MockRoutablePool) GetTokenOutDenom() string {
 }
 
 // ChargeTakerFee implements domain.RoutablePool.
-func (*MockRoutablePool) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
-	return tokenIn.Sub(sdk.NewCoin(tokenIn.Denom, domain.DefaultTakerFee.Mul(tokenIn.Amount.ToLegacyDec()).TruncateInt()))
+func (mp *MockRoutablePool) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin) {
+	return tokenIn.Sub(sdk.NewCoin(tokenIn.Denom, mp.TakerFee.Mul(tokenIn.Amount.ToLegacyDec()).TruncateInt()))
 }
 
 // GetTakerFee implements domain.PoolI.
@@ -167,9 +192,18 @@ func WithTokenOutDenom(mockPool *MockRoutablePool, tokenOutDenom string) *MockRo
 	return newPool
 }
 
+// Allows mocking out quote token out when CalculateTokenOutByTokenIn is called.
+func WithMockedTokenOut(mockPool *MockRoutablePool, tokenOut sdk.Coin) *MockRoutablePool {
+	newPool := deepCopyPool(mockPool)
+	newPool.mockedTokenOut = tokenOut
+	return newPool
+}
+
 func WithChainPoolModel(mockPool *MockRoutablePool, chainPool poolmanagertypes.PoolI) *MockRoutablePool {
 	newPool := deepCopyPool(mockPool)
 	newPool.ChainPoolModel = chainPool
+	newPool.PoolType = chainPool.GetType()
+	newPool.ID = chainPool.GetId()
 	return newPool
 }
 
