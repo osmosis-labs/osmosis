@@ -72,7 +72,7 @@ type Manager struct {
 }
 
 // NewManager creates a new Manager instance and initializes
-// all Docker specific utilies. Returns an error if initialiation fails.
+// all Docker specific utilities. Returns an error if initialisation fails.
 func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Manager, err error) {
 	docker = &Manager{
 		ImageConfig:       NewImageConfig(isUpgrade, isFork),
@@ -98,6 +98,9 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 	return outBuf, errBuf, nil
 }
 
+var memoCounter int = 1
+var counterLock sync.Mutex
+
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
@@ -115,6 +118,18 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	if addGasFlags {
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
+	// Add memo field to every tx
+	// This is done because in E2E, we remove the sequence number ante handler.
+	// This allows for quick throughput of txs, but if two txs are the same (i.e. two CL claims, two bank sends with the same amount),
+	// the sdk treats them as the same tx and errors with code 19 (tx already in mempool). By changing the memo field on every tx,
+	// we ensure that every tx is unique and can be submitted.
+	counterLock.Lock()
+	memo := fmt.Sprintf("--note=%d", memoCounter)
+	allTxArgs = append(allTxArgs, memo)
+	// Increment the counter for the next tx
+	memoCounter++
+	counterLock.Unlock()
+
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr, true, false)
 }
@@ -455,7 +470,7 @@ func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnem
 	return hermesResource, nil
 }
 
-// RunNodeResource runs a node container. Assings containerName to the container.
+// RunNodeResource runs a node container. Assigns containerName to the container.
 // Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
 func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()

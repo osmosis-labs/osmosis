@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 
@@ -84,11 +84,6 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse JSON response")
 	}
 
-	// Check if the node is catching up. Error if so.
-	if statusResponse.Result.SyncInfo.CatchingUp {
-		return echo.NewHTTPError(http.StatusServiceUnavailable, "Node is still catching up")
-	}
-
 	// allow 10 blocks of difference before claiming node is not synced
 	latestChainHeight, err := strconv.ParseUint(statusResponse.Result.SyncInfo.LatestBlockHeight, 10, 64)
 	if err != nil {
@@ -100,6 +95,11 @@ func (h *SystemHandler) GetHealthStatus(c echo.Context) error {
 	latestStoreHeight, err := h.CIUsecase.GetLatestHeight(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("Failed to get latest height from Redis: %s", err))
+	}
+
+	// Check if the node is catching up. Error if so.
+	if statusResponse.Result.SyncInfo.CatchingUp {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "Node is still catching up")
 	}
 
 	// If the node is not synced, return HTTP 503

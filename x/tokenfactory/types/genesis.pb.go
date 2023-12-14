@@ -25,7 +25,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the tokenfactory module's genesis state.
 type GenesisState struct {
-	// params defines the paramaters of the module.
+	// params defines the parameters of the module.
 	Params        Params         `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	FactoryDenoms []GenesisDenom `protobuf:"bytes,2,rep,name=factory_denoms,json=factoryDenoms,proto3" json:"factory_denoms" yaml:"factory_denoms"`
 }

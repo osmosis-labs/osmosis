@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
 )
 
-// BaseAppParamManager defines an interrace that BaseApp is expected to fullfil
+// BaseAppParamManager defines an interrace that BaseApp is expected to fulfill
 // that allows upgrade handlers to modify BaseApp parameters.
 type BaseAppParamManager interface {
 	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams

@@ -55,7 +55,7 @@ func CreateUpgradeHandler(
 		// wouldn't allow us to run each migration.
 		//
 		// Now, starting from 2 only works on mainnet because the legacysubspace is set.
-		// Because the legacysubspace is not set in the gotest, we cant simply run these migrations without setting the legacysubspace.
+		// Because the legacysubspace is not set in the gotest, we can't simply run these migrations without setting the legacysubspace.
 		// This legacysubspace can only be set at the initChain level, so it isn't clear to me how to directly set this in the test.
 		if ctx.ChainID() != TestingChainId {
 			fromVM[govtypes.ModuleName] = 2

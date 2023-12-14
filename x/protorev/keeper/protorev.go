@@ -143,7 +143,7 @@ func (k Keeper) GetPoolForDenomPairNoOrder(ctx sdk.Context, tokenA, tokenB strin
 	poolId, err := k.GetPoolForDenomPair(ctx, tokenA, tokenB)
 	if err != nil {
 		if errors.Is(err, types.NoPoolForDenomPairError{BaseDenom: tokenA, MatchDenom: tokenB}) {
-			// Attempt changing base and mathch denoms.
+			// Attempt changing base and match denoms.
 			poolId, err = k.GetPoolForDenomPair(ctx, tokenB, tokenA)
 			if err != nil {
 				return 0, err

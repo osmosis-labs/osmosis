@@ -143,7 +143,7 @@ Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.
 important for calculation of arthmetic twap. 
 
 Besides those values, TWAP records currently hold:  poolId, Asset0Denom, Asset1Denom, Height (for debugging purposes), Time and  
-Last error time - time in which the last spot price error occured. This will allert the caller if they are getting a potentially erroneous TWAP.
+Last error time - time in which the last spot price error occurred. This will allert the caller if they are getting a potentially erroneous TWAP.
 
 All TWAP records are indexed in state by the time of write.
 

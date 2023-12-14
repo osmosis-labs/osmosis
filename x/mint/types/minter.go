@@ -31,7 +31,7 @@ func DefaultInitialMinter() Minter {
 	return InitialMinter()
 }
 
-// Validate validates minter. Returns nil on success, error otherewise.
+// Validate validates minter. Returns nil on success, error otherwise.
 func (m Minter) Validate() error {
 	if m.EpochProvisions.IsNil() {
 		return errNilEpochProvisions
@@ -56,7 +56,7 @@ func (m Minter) EpochProvision(params Params) sdk.Coin {
 }
 
 // GetInflationProvisions returns the inflation provisions.
-// These are calculated as the current epoch provisons * (1 - developer rewards proportion)
+// These are calculated as the current epoch provisions * (1 - developer rewards proportion)
 // The returned denom is taken from input parameters.
 func (m Minter) GetInflationProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.GetInflationProportion())
@@ -64,7 +64,7 @@ func (m Minter) GetInflationProvisions(params Params) sdk.DecCoin {
 }
 
 // GetDeveloperVestingEpochProvisions returns the developer vesting provisions.
-// These are calculated as the current epoch provisons * developer rewards proportion
+// These are calculated as the current epoch provisions * developer rewards proportion
 // The returned denom is taken from input parameters.
 func (m Minter) GetDeveloperVestingEpochProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.GetDeveloperVestingProportion())

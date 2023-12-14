@@ -505,13 +505,13 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 1000),
 		},
 		{
-			name:                      "error: cant create position whose lower tick is not divisible by new tick spacing",
+			name:                      "error: can't create position whose lower tick is not divisible by new tick spacing",
 			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
 			position:                  positionRange{lowerTick: -95, upperTick: 100},
 			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -95, UpperTick: 100},
 		},
 		{
-			name:                      "error: cant create position whose upper tick is not divisible by new tick spacing",
+			name:                      "error: can't create position whose upper tick is not divisible by new tick spacing",
 			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
 			position:                  positionRange{lowerTick: -100, upperTick: 95},
 			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -100, UpperTick: 95},

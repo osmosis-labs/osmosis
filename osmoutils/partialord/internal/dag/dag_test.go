@@ -15,7 +15,7 @@ type edge struct {
 func TestTopologicalSort(t *testing.T) {
 	// Tests that topological sort works for various inputs.
 	// We hardcode the satisfying solution in the tests, even though it suffices
-	// to check that the partial ordering is sufficient. (and thats the only guarantee given externally)
+	// to check that the partial ordering is sufficient. (and that's the only guarantee given externally)
 	// This is to ensure we catch differences in order between changes, and across machines.
 	simpleNodes := []string{"dog", "cat", "banana", "apple"}
 	simpleNodesRev := []string{"apple", "banana", "cat", "dog"}

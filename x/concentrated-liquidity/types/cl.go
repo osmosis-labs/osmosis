@@ -12,7 +12,7 @@ func GetConcentratedLockupDenomFromPoolId(poolId uint64) string {
 }
 
 // CreateFullRangePositionData represents the return data from any method
-// that creates a full range position. We have multipl variants to
+// that creates a full range position. We have multiple variants to
 // account for varying locking scenarios.
 type CreateFullRangePositionData struct {
 	ID        uint64

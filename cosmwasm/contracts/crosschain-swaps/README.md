@@ -178,7 +178,7 @@ TODO: Add an example in TS
 #### Native to Osmosis native
 
 Similarly, if you wanted to swap for a token that is native to osmosis (osmo, ion, or tokenfactory tokens) you can use a 
-memo like the one above but with the appropriate valies for the token and receiver.
+memo like the one above but with the appropriate values for the token and receiver.
 
 ```json
 {
@@ -563,17 +563,17 @@ sequenceDiagram
     actor Alice
     actor Alice
     Alice->>ChainA: Send Transfer M1
-    Note over ChainA,Relayer: Block commited. 
+    Note over ChainA,Relayer: Block committed. 
     Relayer-->>ChainB: Relay M1
     critical Execute Contract
             ChainB->>ChainB: Swap tokens
             ChainB->>ChainB: Send IBC tx M2
     end
-    Note over ChainB,Relayer: Block commited. 
+    Note over ChainB,Relayer: Block committed. 
     Relayer-->>ChainA: Ack M1
     Relayer-->>ChainA: Relay M2
     ChainA->>Alice: Send Swapped Tokens
-    Note over ChainA,Relayer: Block commited. 
+    Note over ChainA,Relayer: Block committed. 
     Relayer-->>ChainB: Ack M2
 ```
 

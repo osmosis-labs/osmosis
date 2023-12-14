@@ -13,6 +13,12 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
+func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
+	var defaultTakerFee sdk.Dec
+	k.paramSpace.Get(ctx, types.KeyDefaultTakerFee, &defaultTakerFee)
+	return defaultTakerFee
+}
+
 // SetDenomPairTakerFee sets the taker fee for the given trading pair.
 // If the taker fee for this denom pair matches the default taker fee, then
 // it is deleted from state.
@@ -20,7 +26,8 @@ func (k Keeper) SetDenomPairTakerFee(ctx sdk.Context, denom0, denom1 string, tak
 	store := ctx.KVStore(k.storeKey)
 	// if given taker fee is equal to the default taker fee,
 	// delete whatever we have in current state to use default taker fee.
-	if takerFee.Equal(k.GetParams(ctx).TakerFeeParams.DefaultTakerFee) {
+	// TODO: This logic is actually wrong imo, where it can be valid to set an override over the default.
+	if takerFee.Equal(k.GetDefaultTakerFee(ctx)) {
 		store.Delete(types.FormatDenomTradePairKey(denom0, denom1))
 		return
 	} else {
@@ -71,7 +78,7 @@ func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (
 		return osmomath.Dec{}, err
 	}
 	if !found {
-		return k.GetParams(ctx).TakerFeeParams.DefaultTakerFee, nil
+		return k.GetDefaultTakerFee(ctx), nil
 	}
 
 	return takerFee.Dec, nil

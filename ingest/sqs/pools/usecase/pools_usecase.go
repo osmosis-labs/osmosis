@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
@@ -78,25 +77,7 @@ func (p *poolsUseCase) GetRoutesFromCandidates(ctx context.Context, candidateRou
 			}
 
 			// Get taker fee
-			takerFee, err := takerFeeMap.GetTakerFee(previousTokenOutDenom, candidatePool.TokenOutDenom)
-			if err != nil {
-				denom0 := previousTokenOutDenom
-				denom1 := candidatePool.TokenOutDenom
-				if denom1 < denom0 {
-					denom0, denom1 = denom1, denom0
-				}
-
-				// If taker fee is not found, set default
-				if errors.Is(err, domain.TakerFeeNotFoundForDenomPairError{
-					Denom0: denom0,
-					Denom1: denom1,
-				}) {
-					// TODO: make this more dynamic instead of hardcoding
-					takerFee = domain.DefaultTakerFee
-				} else {
-					return nil, err
-				}
-			}
+			takerFee := takerFeeMap.GetTakerFee(previousTokenOutDenom, candidatePool.TokenOutDenom)
 
 			if pool.GetType() == poolmanagertypes.Concentrated {
 				// Get tick model for concentrated pool
@@ -135,4 +116,22 @@ func (p *poolsUseCase) GetTickModelMap(ctx context.Context, poolIDs []uint64) (m
 	}
 
 	return tickModelMap, nil
+}
+
+// GetPool implements mvc.PoolsUsecase.
+func (p *poolsUseCase) GetPool(ctx context.Context, poolID uint64) (domain.PoolI, error) {
+	pools, err := p.poolsRepository.GetPools(ctx, map[uint64]struct {
+	}{
+		poolID: {},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	pool, ok := pools[poolID]
+	if !ok {
+		return nil, domain.PoolNotFoundError{PoolID: poolID}
+	}
+	return pool, nil
 }

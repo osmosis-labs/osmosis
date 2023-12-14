@@ -31,11 +31,7 @@ func (r *routerUseCaseImpl) InitializeRouter() *Router {
 }
 
 func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, tokenInDenom, tokenOutDenom string) (candidateRoutes route.CandidateRoutes, err error) {
-	return r.handleRoutes(ctx, router, tokenInDenom, tokenOutDenom)
-}
-
-func (r *Router) GetOptimalQuote(tokenIn sdk.Coin, routes []route.RouteImpl) (domain.Quote, error) {
-	return r.getOptimalQuote(tokenIn, routes)
+	return r.handleCandidateRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
 
 func (r *Router) EstimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []RouteWithOutAmount, error) {
@@ -51,4 +47,8 @@ func (r Router) GetSortedPoolIDs() []uint64 {
 		sortedPoolIDs[i] = pool.GetId()
 	}
 	return sortedPoolIDs
+}
+
+func FilterDuplicatePoolIDRoutes(rankedRoutes []route.RouteImpl) []route.RouteImpl {
+	return filterDuplicatePoolIDRoutes(rankedRoutes)
 }

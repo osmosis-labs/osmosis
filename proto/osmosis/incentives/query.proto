@@ -39,12 +39,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/active_gauges_per_denom";
   }
-  // Returns scheduled gauges that have not yet occured
+  // Returns scheduled gauges that have not yet occurred
   rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/upcoming_gauges";
   }
-  // UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
+  // UpcomingGaugesPerDenom returns scheduled gauges that have not yet occurred
   // by denom
   rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
       returns (UpcomingGaugesPerDenomResponse) {
@@ -185,7 +185,7 @@ message RewardsEstRequest {
   int64 end_epoch = 3;
 }
 message RewardsEstResponse {
-  // Estimated coin rewards that will be recieved at provided address
+  // Estimated coin rewards that will be received at provided address
   // from specified locks between current time and end epoch
   repeated cosmos.base.v1beta1.Coin coins = 1 [
     (gogoproto.nullable) = false,
@@ -195,7 +195,7 @@ message RewardsEstResponse {
 
 message QueryLockableDurationsRequest {}
 message QueryLockableDurationsResponse {
-  // Time durations that users can lock coins for in order to recieve rewards
+  // Time durations that users can lock coins for in order to receive rewards
   repeated google.protobuf.Duration lockable_durations = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,

@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 			tokenoutMinAmount: min_amount,
 			expectedError:     true,
 		},
-		"error path: denom doesnot exist routes": {
+		"error path: denom does not exist routes": {
 			routes: []types.SwapAmountInSplitRoute{
 				{
 					Pools:         []types.SwapAmountInRoute{pool1_in, pool2_in},

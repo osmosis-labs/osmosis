@@ -1,7 +1,6 @@
 package parsing_test
 
 import (
-	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/routertesting"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/routertesting/parsing"
@@ -71,7 +71,7 @@ func TestReadPoolsFileFromState(t *testing.T) {
 	}
 }
 
-// This test validates that StorePools succesfull stores pools to a file
+// This test validates that StorePools successful stores pools to a file
 // that ReadPools can then read back into the system.
 func TestStoreFilesAndReadBack(t *testing.T) {
 

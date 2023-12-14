@@ -29,7 +29,8 @@ message TokenPairArbRoutes {
 message Route {
   option (gogoproto.equal) = true;
 
-  // The pool IDs that are travered in the directed cyclic graph (traversed left
+  // The pool IDs that are traversed in the directed cyclic graph (traversed
+  // left
   // -> right)
   repeated Trade trades = 1 [
     (gogoproto.nullable) = false,

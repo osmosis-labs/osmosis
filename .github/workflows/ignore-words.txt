@@ -1,0 +1,4 @@
+compres
+startd
+ans
+crate

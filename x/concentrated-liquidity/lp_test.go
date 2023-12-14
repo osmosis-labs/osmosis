@@ -643,7 +643,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-			// owner should only have tokens equivilent to the delta balance of the pool
+			// owner should only have tokens equivalent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedSpreadRewardsClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw...)
 
@@ -743,7 +743,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				// We want the hook to be called only when the last position (liquidity) is removed.
 				// Not having any liquidity in the pool implies not having a valid sqrt price and tick. As a result,
 				// we want the hook to run for the purposes of updating twap records.
-				// Upon readding liquidity (recreating positions) to such pool, AfterInitialPoolPositionCreatedCallCount
+				// Upon reading liquidity (recreating positions) to such pool, AfterInitialPoolPositionCreatedCallCount
 				// will be called. Hence, updating twap with valid latest spot price.
 				expectedAfterLastPoolPositionRemovedCallCount = 1
 			}
@@ -1121,7 +1121,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			expectedAmount1Delta := osmomath.ZeroInt()
 
-			// delta amount1 only exists if the actual amount from addToPosition is not equivilent to tokens provided.
+			// delta amount1 only exists if the actual amount from addToPosition is not equivalent to tokens provided.
 			// delta amount1 is calculated via (amount1 to create initial position) + (amount1 added to position) - (actual amount 1)
 			if fundCoins.AmountOf(pool.GetToken1()).Add(tc.amount1ToAdd).Sub(newAmt1).GT(osmomath.ZeroInt()) {
 				expectedAmount1Delta = config.tokensProvided.AmountOf(pool.GetToken1()).Add(tc.amount1ToAdd).Sub(newAmt1)
@@ -1133,7 +1133,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			osmoassert.Equal(s.T(), errToleranceOneRoundDown, preBalanceToken0.Amount, postBalanceToken0.Amount)
 			osmoassert.Equal(s.T(), errToleranceOneRoundDown, expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd))
 
-			// now check that old position id has been succesfully deleted
+			// now check that old position id has been successfully deleted
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().Error(err)
 		})
@@ -1165,7 +1165,7 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
 				// calculated with x/concentrated-liquidity/python/clmath.py
-				// The input values are taken from debugger assumming the rest of the system is correct:
+				// The input values are taken from debugger assuming the rest of the system is correct:
 				// sqrtPriceLowerTick = Decimal("1.000049998750062497000000000000000000")
 				// sqrtPriceUpperTick = Decimal("1.000099995000499938000000000000000000")
 				// liquidity = Decimal("20004500137.498290928785113714000000000000000000")
@@ -1699,7 +1699,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				}
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
-				// Test that liquidity update time was succesfully changed.
+				// Test that liquidity update time was successfully changed.
 				s.Require().Equal(expectedUpdateTime, poolI.GetLastLiquidityUpdate())
 			}
 		})
@@ -1926,7 +1926,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 			poolId:      defaultPoolId + 1,
 			expectError: types.PoolNotFoundError{PoolId: defaultPoolId + 1},
 		},
-		"error: attempted to unitialize pool with liquidity": {
+		"error: attempted to uninitialize pool with liquidity": {
 			poolId:       defaultPoolId,
 			hasPositions: true,
 			expectError:  types.UninitializedPoolWithLiquidityError{PoolId: defaultPoolId},

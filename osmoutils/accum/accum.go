@@ -31,7 +31,7 @@ type AccumulatorObject struct {
 // Makes a new accumulator at store/accum/{accumName}
 // Returns error if:
 // * accumName already exists
-// * theres some overlapping keys
+// * there's some overlapping keys
 // * Accumulator name contains "||"
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
@@ -52,7 +52,7 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 // Makes a new accumulator at store/accum/{accumName}
 // Returns error if:
 // * accumName already exists
-// * theres some overlapping keys
+// * there's some overlapping keys
 // * Accumulator name contains "||"
 func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares osmomath.Dec) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {

@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		//
 		// Note that reached sqrt price is different in both cases leading to different amounts in.
 		// Traced the values with clmath.py.
-		// Conclusion: the small rounding difference uner 1 unit leads to such a large difference because
+		// Conclusion: the small rounding difference under 1 unit leads to such a large difference because
 		// the affected sqrt price range is long
 		//
 		// This is what we get in in given out calculation of sqrt price with non-rounded tokenOut:

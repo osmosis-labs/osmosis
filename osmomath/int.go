@@ -275,7 +275,7 @@ func (i BigInt) Mul(i2 BigInt) (res BigInt) {
 	return
 }
 
-// MulRaw multipies Int and int64
+// MulRaw multiplies Int and int64
 func (i BigInt) MulRaw(i2 int64) BigInt {
 	return i.Mul(NewBigInt(i2))
 }

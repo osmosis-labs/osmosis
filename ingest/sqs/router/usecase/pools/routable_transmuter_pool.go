@@ -53,7 +53,7 @@ func (r *routableTransmuterPoolImpl) GetSpreadFactor() math.LegacyDec {
 func (r *routableTransmuterPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	poolType := r.GetType()
 
-	// Esnure that the pool is concentrated
+	// Ensure that the pool is concentrated
 	if poolType != poolmanagertypes.CosmWasm {
 		return sdk.Coin{}, domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 	}
@@ -114,4 +114,9 @@ func (r *routableTransmuterPoolImpl) GetTakerFee() math.LegacyDec {
 // SetTokenOutDenom implements domain.RoutablePool.
 func (r *routableTransmuterPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 	r.TokenOutDenom = tokenOutDenom
+}
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (r *routableTransmuterPoolImpl) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	return osmomath.OneBigDec(), nil
 }
