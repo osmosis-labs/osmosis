@@ -203,7 +203,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 // Tests that routes that overlap in pools IDs get filtered out.
 // Tests that the order of the routes is in decreasing priority.
 // That is, if routes A and B overlap where A comes before B, then B is filtered out.
-// Additionally, tests that overlapping within the same route has no effect on fitlering.
+// Additionally, tests that overlapping within the same route has no effect on filtering.
 // Lastly, validates that if a route overlaps with subsequent routes in the list but gets filtered out,
 // then subesequent routes are not affected by filtering.
 func (s *RouterTestSuite) TestFilterDuplicatePoolIDRoutes() {
@@ -253,7 +253,7 @@ func (s *RouterTestSuite) TestFilterDuplicatePoolIDRoutes() {
 			},
 		},
 
-		// Note that filtering only happens if pool ID duplciated across different routes.
+		// Note that filtering only happens if pool ID duplicated across different routes.
 		// Duplicate pool IDs within the same route are filtered out at a different step
 		// in the router logic.
 		"single route two same pools (have no effect on filtering)": {
