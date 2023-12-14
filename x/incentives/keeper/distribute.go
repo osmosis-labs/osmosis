@@ -647,7 +647,7 @@ func (k Keeper) distributeInternal(
 
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
+		lockSum := k.lk.GetPeriodLocksAccumulation(ctx, gauge.DistributeTo)
 
 		if lockSum.IsZero() {
 			return nil, nil
