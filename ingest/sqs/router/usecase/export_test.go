@@ -35,7 +35,7 @@ func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, to
 }
 
 func (r *Router) EstimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []RouteWithOutAmount, error) {
-	return r.estimateBestSingleRouteQuote(routes, tokenIn)
+	return r.estimateAndRankSingleRouteQuote(routes, tokenIn)
 }
 
 // GetSortedPoolIDs returns the sorted pool IDs.

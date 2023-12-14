@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/cache"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase/route"
@@ -25,6 +26,8 @@ type routerUseCaseImpl struct {
 	poolsUsecase     mvc.PoolsUsecase
 	config           domain.RouterConfig
 	logger           log.Logger
+
+	rankedRouteCache *cache.Cache
 }
 
 // NewRouterUsecase will create a new pools use case object
@@ -35,6 +38,8 @@ func NewRouterUsecase(timeout time.Duration, routerRepository mvc.RouterReposito
 		poolsUsecase:     poolsUsecase,
 		config:           config,
 		logger:           logger,
+
+		rankedRouteCache: cache.New(),
 	}
 }
 
@@ -53,6 +58,8 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 	// TODO: implement and check ranked route cache
 	hasRankedRoutesInCache := false
 
+	rankedRoutesData, hasRankedRoutesInCache := r.rankedRouteCache.Get(formatTokenPairKey(tokenIn.Denom, tokenOutDenom))
+
 	var (
 		rankedRoutes        []route.RouteImpl
 		topSingleRouteQuote domain.Quote
@@ -62,8 +69,13 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 	router := r.initializeRouter()
 
 	if hasRankedRoutesInCache {
-		// TODO: if top routes are present in cache, estimate the quotes and return the best.
-		topSingleRouteQuote, rankedRoutes, err = estimateDirectQuote(router, rankedRoutes, tokenIn)
+		rankedCandidateRoutes, ok := rankedRoutesData.(route.CandidateRoutes)
+		if !ok {
+			return nil, fmt.Errorf("error casting ranked routes from cache")
+		}
+
+		// If top routes are present in cache, estimate the quotes and return the best.
+		topSingleRouteQuote, rankedRoutes, err = r.rankRoutesByDirectQuote(ctx, router, rankedCandidateRoutes, tokenIn, tokenOutDenom)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +105,35 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 		// Update ranked routes with filtered ranked routes
 		rankedRoutes = filterDuplicatePoolIDRoutes(rankedRoutes)
 
-		// TODO: Cache ranked routes
+		if len(rankedRoutes) > 0 {
+			// Convert ranked routes back to candidate for caching
+			candidateRoutes = route.CandidateRoutes{
+				Routes:        make([]route.CandidateRoute, 0, len(rankedRoutes)),
+				UniquePoolIDs: map[uint64]struct{}{},
+			}
+
+			for _, rankedRoute := range rankedRoutes {
+				candidateRoute := route.CandidateRoute{
+					Pools: make([]route.CandidatePool, 0, len(rankedRoute.GetPools())),
+				}
+
+				for _, randkedPool := range rankedRoute.GetPools() {
+					candidatePool := route.CandidatePool{
+						ID:            randkedPool.GetId(),
+						TokenOutDenom: randkedPool.GetTokenOutDenom(),
+					}
+
+					candidateRoute.Pools = append(candidateRoute.Pools, candidatePool)
+
+					candidateRoutes.UniquePoolIDs[randkedPool.GetId()] = struct{}{}
+				}
+
+				candidateRoutes.Routes = append(candidateRoutes.Routes, candidateRoute)
+			}
+
+			// TODO move cache value to config.
+			r.rankedRouteCache.Set(formatTokenPairKey(tokenIn.Denom, tokenOutDenom), candidateRoutes, time.Minute*5)
+		}
 	}
 
 	if len(rankedRoutes) == 1 {
@@ -210,7 +250,7 @@ func (r *routerUseCaseImpl) rankRoutesByDirectQuote(ctx context.Context, router 
 // Returns error if:
 // - fails to estimate direct quotes
 func estimateDirectQuote(router *Router, routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []route.RouteImpl, error) {
-	topQuote, routesSortedByAmtOut, err := router.estimateBestSingleRouteQuote(routes, tokenIn)
+	topQuote, routesSortedByAmtOut, err := router.estimateAndRankSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -322,7 +362,7 @@ func (r *routerUseCaseImpl) GetCustomQuote(ctx context.Context, tokenIn sdk.Coin
 
 	// Compute direct quote
 	foundRoute := routes[routeIndex]
-	quote, _, err := router.estimateBestSingleRouteQuote([]route.RouteImpl{foundRoute}, tokenIn)
+	quote, _, err := router.estimateAndRankSingleRouteQuote([]route.RouteImpl{foundRoute}, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +461,7 @@ func (r *routerUseCaseImpl) handleCandidateRoutes(ctx context.Context, router *R
 		}
 	}
 
-	r.logger.Info("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
+	r.logger.Debug("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
 	// If no routes are cached, find them
 	if len(candidateRoutes.Routes) == 0 {
@@ -488,4 +528,8 @@ func (r *routerUseCaseImpl) StoreRouterStateFiles(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func formatTokenPairKey(tokenInDenom string, tokenOutDenom string) string {
+	return fmt.Sprintf("%s/%s", tokenInDenom, tokenOutDenom)
 }
