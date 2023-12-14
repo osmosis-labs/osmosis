@@ -131,3 +131,8 @@ func (r *routableResultPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 func (r *routableResultPoolImpl) GetSpreadFactor() math.LegacyDec {
 	return r.SpreadFactor
 }
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (r *routableResultPoolImpl) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	panic("not implemented")
+}

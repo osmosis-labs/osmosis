@@ -79,3 +79,12 @@ func (r *routableBalancerPoolImpl) GetPoolDenoms() []string {
 func (*routableBalancerPoolImpl) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Balancer
 }
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (r *routableBalancerPoolImpl) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	spotPrice, err := r.ChainPool.SpotPrice(sdk.Context{}, quoteDenom, baseDenom)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+	return spotPrice, nil
+}
