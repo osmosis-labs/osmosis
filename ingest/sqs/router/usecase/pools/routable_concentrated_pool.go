@@ -190,3 +190,12 @@ func (r *routableConcentratedPoolImpl) ChargeTakerFeeExactIn(tokenIn sdk.Coin) (
 func (r *routableConcentratedPoolImpl) SetTokenOutDenom(tokenOutDenom string) {
 	r.TokenOutDenom = tokenOutDenom
 }
+
+// CalcSpotPrice implements domain.RoutablePool.
+func (r *routableConcentratedPoolImpl) CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error) {
+	spotPrice, err := r.ChainPool.SpotPrice(sdk.Context{}, quoteDenom, baseDenom)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+	return spotPrice, nil
+}

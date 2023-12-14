@@ -5,11 +5,19 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/pools"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+)
+
+var (
+	defaultAmount  = sdk.NewInt(100_000_00)
+	totalInAmount  = defaultAmount
+	totalOutAmount = defaultAmount.MulRaw(4)
 )
 
 // TestPrepareResult prepares the result of the quote for output to the client.
@@ -30,11 +38,6 @@ func (s *RouterTestSuite) TestPrepareResult() {
 		takerFeeOne   = osmomath.NewDecWithPrec(2, 2)
 		takerFeeTwo   = osmomath.NewDecWithPrec(4, 4)
 		takerFeeThree = osmomath.NewDecWithPrec(3, 3)
-
-		defaultAmount = sdk.NewInt(100_000_00)
-
-		totalInAmount  = defaultAmount
-		totalOutAmount = defaultAmount.MulRaw(4)
 
 		poolOneBalances = sdk.NewCoins(
 			sdk.NewCoin(USDT, defaultAmount.MulRaw(5)),
@@ -224,6 +227,77 @@ func (s *RouterTestSuite) TestPrepareResult() {
 	// Validate effective spread factor.
 	s.Require().Equal(expectedEffectiveSpreadFactor.String(), effectiveSpreadFactor.String())
 	s.Require().Equal(expectedEffectiveSpreadFactor.String(), testQuote.GetEffectiveSpreadFactor().String())
+}
+
+// This test validates that price impact is computed correctly.
+func (s *RouterTestSuite) TestPrepareResult_PriceImpact() {
+	s.Setup()
+
+	// Pool ETH / USDC -> 0.005 spread factor & 4 USDC for 1 ETH
+	poolID := s.PrepareCustomBalancerPool([]balancer.PoolAsset{
+		{
+			Token:  sdk.NewCoin(ETH, defaultAmount),
+			Weight: sdk.NewInt(100),
+		},
+		{
+			Token:  sdk.NewCoin(USDC, defaultAmount.MulRaw(4)),
+			Weight: sdk.NewInt(100),
+		},
+	}, balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(5, 3),
+		ExitFee: osmomath.ZeroDec(),
+	})
+
+	poolOne, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Compute spot price before swap
+	spotPriceInOverOut, err := poolOne.SpotPrice(sdk.Context{}, ETH, USDC)
+	s.Require().NoError(err)
+
+	coinIn := sdk.NewCoin(ETH, totalInAmount)
+
+	// Compute expected effective price
+	tokenInAfterFee, _ := poolmanager.CalcTakerFeeExactIn(coinIn, DefaultTakerFee)
+	// .Sub(spreadFactor.TruncateDec())
+	expectedEffectivePrice := tokenInAfterFee.Amount.ToLegacyDec().Quo(totalOutAmount.ToLegacyDec())
+
+	// Compute expected price impact
+	expectedPriceImpact := expectedEffectivePrice.Quo(spotPriceInOverOut.Dec()).Sub(osmomath.OneDec())
+
+	// Setup quote
+	testQuote := &usecase.QuoteImpl{
+		AmountIn:  sdk.NewCoin(ETH, totalInAmount),
+		AmountOut: totalOutAmount,
+
+		// 2 routes with 50-50 split, each single hop
+		Route: []domain.SplitRoute{
+
+			// Route 1
+			&usecase.RouteWithOutAmount{
+				RouteImpl: route.RouteImpl{
+					Pools: []domain.RoutablePool{
+						mocks.WithMockedTokenOut(
+							mocks.WithTokenOutDenom(
+								mocks.WithChainPoolModel(DefaultMockPool, poolOne), USDC),
+							sdk.NewCoin(USDC, totalOutAmount),
+						),
+					},
+				},
+
+				InAmount:  totalInAmount,
+				OutAmount: totalOutAmount,
+			},
+		},
+		EffectiveFee: osmomath.ZeroDec(),
+	}
+
+	// System under test.
+	testQuote.PrepareResult()
+
+	// Validate price impact.
+	s.Require().Equal(expectedPriceImpact.String(), testQuote.GetPriceImpact().String())
+
 }
 
 // validateRoutes validates that the given routes are equal.

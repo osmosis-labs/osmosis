@@ -4,11 +4,14 @@ url=$1
 
 # This script compares single hop quotes by running them against SQS and chain directly.
 
-chain_amount_out=$(osmosisd q poolmanager estimate-swap-exact-amount-in 1136 1000000ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901 --swap-route-pool-ids 1136 --swap-route-denoms ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2)
+chain_amount_out=$(osmosisd q poolmanager estimate-swap-exact-amount-in 1248 10000000000ibc/D79E7D83AB399BFFF93433E54FAA480C191248FC556924A2A8351AE2638B3877 --swap-route-pool-ids 1248 --swap-route-denoms uosmo --node $url:26657)
 
-sqs_res=$(curl "$url/router/custom-quote?tokenIn=1000000ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901&tokenOutDenom=ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2&poolIDs=1136")
+sqs_custom_res=$(curl "$url/router/custom-quote?tokenIn=10000000000ibc/D79E7D83AB399BFFF93433E54FAA480C191248FC556924A2A8351AE2638B3877&tokenOutDenom=uosmo&poolIDs=1248")
+sqs_custom_amount_out=$(echo $sqs_custom_res | jq .amount_out)
 
-sqs_amount_out=$(echo $sqs_res | jq .amount_out)
+sqs_optimal_res=$(curl "$url/router/quote?tokenIn=10000000000ibc/D79E7D83AB399BFFF93433E54FAA480C191248FC556924A2A8351AE2638B3877&tokenOutDenom=uosmo")
+sqs_optimal_amount_out=$(echo $sqs_optimal_res | jq .amount_out)
 
 echo "chain_amount_out: $chain_amount_out"
-echo "sqs_amount_out: $sqs_amount_out"
+echo "sqs_custom_amount_out: $sqs_custom_amount_out"
+echo "sqs_optimal_amount_out: $sqs_optimal_amount_out"
