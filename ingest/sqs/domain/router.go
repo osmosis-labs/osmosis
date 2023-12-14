@@ -20,6 +20,8 @@ type RoutablePool interface {
 
 	GetTokenOutDenom() string
 
+	CalcSpotPrice(baseDenom string, quoteDenom string) (osmomath.BigDec, error)
+
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
 	ChargeTakerFeeExactIn(tokenIn sdk.Coin) (tokenInAfterFee sdk.Coin)
 
@@ -51,9 +53,11 @@ type Route interface {
 	// PrepareResultPools strips away unnecessary fields
 	// from each pool in the route,
 	// leaving only the data needed by client
+	// Runs the quote logic one final time to compute the effective spot price.
 	// Note that it mutates the route.
-	// Returns the resulting pools.
-	PrepareResultPools() []RoutablePool
+	// Computes the spot price of the route.
+	// Returns the spot price before swap and effective spot price.
+	PrepareResultPools(tokenIn sdk.Coin) (osmomath.Dec, osmomath.Dec, error)
 
 	String() string
 }
@@ -69,6 +73,7 @@ type Quote interface {
 	GetAmountOut() osmomath.Int
 	GetRoute() []SplitRoute
 	GetEffectiveSpreadFactor() osmomath.Dec
+	GetPriceImpact() osmomath.Dec
 
 	// PrepareResult mutates the quote to prepare
 	// it with the data formatted for output to the client.
