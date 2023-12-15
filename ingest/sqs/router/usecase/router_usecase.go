@@ -9,7 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/zap"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/cache"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
@@ -25,16 +27,20 @@ type routerUseCaseImpl struct {
 	poolsUsecase     mvc.PoolsUsecase
 	config           domain.RouterConfig
 	logger           log.Logger
+
+	rankedRouteCache *cache.Cache
 }
 
 // NewRouterUsecase will create a new pools use case object
-func NewRouterUsecase(timeout time.Duration, routerRepository mvc.RouterRepository, poolsUsecase mvc.PoolsUsecase, config domain.RouterConfig, logger log.Logger) mvc.RouterUsecase {
+func NewRouterUsecase(timeout time.Duration, routerRepository mvc.RouterRepository, poolsUsecase mvc.PoolsUsecase, config domain.RouterConfig, logger log.Logger, rankedRouteCache *cache.Cache) mvc.RouterUsecase {
 	return &routerUseCaseImpl{
 		contextTimeout:   timeout,
 		routerRepository: routerRepository,
 		poolsUsecase:     poolsUsecase,
 		config:           config,
 		logger:           logger,
+
+		rankedRouteCache: rankedRouteCache,
 	}
 }
 
@@ -50,8 +56,11 @@ func NewRouterUsecase(timeout time.Duration, routerRepository mvc.RouterReposito
 // - fails to retrieve candidate routes
 // -
 func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
-	// TODO: implement and check ranked route cache
-	hasRankedRoutesInCache := false
+	// Get an order of magnitude for the token in amount
+	// This is used for caching ranked routes as these might differ depending on the amount swapped in.
+	tokenInOrderOfMagnitude := osmomath.OrderOfMagnitude(tokenIn.Amount.ToLegacyDec())
+
+	rankedRoutesData, hasRankedRoutesInCache := r.rankedRouteCache.Get(formatRankedRouteCacheKey(tokenIn.Denom, tokenOutDenom, tokenInOrderOfMagnitude))
 
 	var (
 		rankedRoutes        []route.RouteImpl
@@ -62,8 +71,13 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 	router := r.initializeRouter()
 
 	if hasRankedRoutesInCache {
-		// TODO: if top routes are present in cache, estimate the quotes and return the best.
-		topSingleRouteQuote, rankedRoutes, err = estimateDirectQuote(router, rankedRoutes, tokenIn)
+		rankedCandidateRoutes, ok := rankedRoutesData.(route.CandidateRoutes)
+		if !ok {
+			return nil, fmt.Errorf("error casting ranked routes from cache")
+		}
+
+		// If top routes are present in cache, estimate the quotes and return the best.
+		topSingleRouteQuote, rankedRoutes, err = r.rankRoutesByDirectQuote(ctx, router, rankedCandidateRoutes, tokenIn, tokenOutDenom)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +107,13 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 		// Update ranked routes with filtered ranked routes
 		rankedRoutes = filterDuplicatePoolIDRoutes(rankedRoutes)
 
-		// TODO: Cache ranked routes
+		if len(rankedRoutes) > 0 {
+			// Convert ranked routes back to candidate for caching
+			candidateRoutes = convertRankedToCandidateRoutes(rankedRoutes)
+
+			// TODO move cache value to config.
+			r.rankedRouteCache.Set(formatRankedRouteCacheKey(tokenIn.Denom, tokenOutDenom, tokenInOrderOfMagnitude), candidateRoutes, time.Minute*5)
+		}
 	}
 
 	if len(rankedRoutes) == 1 {
@@ -210,7 +230,7 @@ func (r *routerUseCaseImpl) rankRoutesByDirectQuote(ctx context.Context, router 
 // Returns error if:
 // - fails to estimate direct quotes
 func estimateDirectQuote(router *Router, routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []route.RouteImpl, error) {
-	topQuote, routesSortedByAmtOut, err := router.estimateBestSingleRouteQuote(routes, tokenIn)
+	topQuote, routesSortedByAmtOut, err := router.estimateAndRankSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -322,7 +342,7 @@ func (r *routerUseCaseImpl) GetCustomQuote(ctx context.Context, tokenIn sdk.Coin
 
 	// Compute direct quote
 	foundRoute := routes[routeIndex]
-	quote, _, err := router.estimateBestSingleRouteQuote([]route.RouteImpl{foundRoute}, tokenIn)
+	quote, _, err := router.estimateAndRankSingleRouteQuote([]route.RouteImpl{foundRoute}, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +441,7 @@ func (r *routerUseCaseImpl) handleCandidateRoutes(ctx context.Context, router *R
 		}
 	}
 
-	r.logger.Info("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
+	r.logger.Debug("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
 	// If no routes are cached, find them
 	if len(candidateRoutes.Routes) == 0 {
@@ -488,4 +508,38 @@ func (r *routerUseCaseImpl) StoreRouterStateFiles(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// formatRankedRouteCacheKey formats the given token in and token out denoms and order of magnitude to a string.
+func formatRankedRouteCacheKey(tokenInDenom string, tokenOutDenom string, tokenIOrderOfMagnitude int) string {
+	return fmt.Sprintf("%s/%s/%d", tokenInDenom, tokenOutDenom, tokenIOrderOfMagnitude)
+}
+
+// convertRankedToCandidateRoutes converts the given ranked routes to candidate routes.
+// The primary use case for this is to keep minimal data for caching.
+func convertRankedToCandidateRoutes(rankedRoutes []route.RouteImpl) route.CandidateRoutes {
+	candidateRoutes := route.CandidateRoutes{
+		Routes:        make([]route.CandidateRoute, 0, len(rankedRoutes)),
+		UniquePoolIDs: map[uint64]struct{}{},
+	}
+
+	for _, rankedRoute := range rankedRoutes {
+		candidateRoute := route.CandidateRoute{
+			Pools: make([]route.CandidatePool, 0, len(rankedRoute.GetPools())),
+		}
+
+		for _, randkedPool := range rankedRoute.GetPools() {
+			candidatePool := route.CandidatePool{
+				ID:            randkedPool.GetId(),
+				TokenOutDenom: randkedPool.GetTokenOutDenom(),
+			}
+
+			candidateRoute.Pools = append(candidateRoute.Pools, candidatePool)
+
+			candidateRoutes.UniquePoolIDs[randkedPool.GetId()] = struct{}{}
+		}
+
+		candidateRoutes.Routes = append(candidateRoutes.Routes, candidateRoute)
+	}
+	return candidateRoutes
 }
