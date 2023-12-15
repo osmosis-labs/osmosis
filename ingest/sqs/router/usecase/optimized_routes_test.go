@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/cache"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
@@ -554,7 +555,7 @@ func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 
 // Validates that quotes constructed from mainnet state can be computed with no error
 // for selected pairs.
-func (s *RouterTestSuite) TestGetOptimalQuote() {
+func (s *RouterTestSuite) TestGetOptimalQuote_Mainnet() {
 	tests := map[string]struct {
 		tokenInDenom  string
 		tokenOutDenom string
@@ -660,7 +661,7 @@ func (s *RouterTestSuite) TestGetOptimalQuote() {
 			router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
 
 			// Mock router use case.
-			routerUsecase, _ := s.setupRouterAndPoolsUsecase(router, tc.tokenInDenom, tc.tokenOutDenom, tickMap, takerFeeMap)
+			routerUsecase, _ := s.setupRouterAndPoolsUsecase(router, tc.tokenInDenom, tc.tokenOutDenom, tickMap, takerFeeMap, cache.New())
 
 			// System under test
 			quote, err := routerUsecase.GetOptimalQuote(context.Background(), sdk.NewCoin(tc.tokenInDenom, tc.amountIn), tc.tokenOutDenom)
@@ -706,7 +707,7 @@ func (s *RouterTestSuite) TestGetCustomQuote_Mainnet_UOSMOUION() {
 	poolsUsecase := poolsusecase.NewPoolsUsecase(time.Hour, &poolsRepositoryMock, nil)
 	routerusecase.WithPoolsUsecase(router, poolsUsecase)
 
-	routerUsecase := routerusecase.NewRouterUsecase(time.Hour, &routerRepositoryMock, poolsUsecase, config, &log.NoOpLogger{})
+	routerUsecase := routerusecase.NewRouterUsecase(time.Hour, &routerRepositoryMock, poolsUsecase, config, &log.NoOpLogger{}, cache.New())
 
 	// This pool ID is second best: https://app.osmosis.zone/pool/2
 	// The top one is https://app.osmosis.zone/pool/1110 which is not selected
@@ -734,7 +735,7 @@ func (s *RouterTestSuite) TestGetCustomQuote_Mainnet_UOSMOUION() {
 // - converting candidate routes to routes with all the necessary data.
 // COTRACT: router is initialized with setupMainnetRouter(...) or setupDefaultMainnetRouter(...)
 func (s *RouterTestSuite) constructRoutesFromMainnetPools(router *routerusecase.Router, tokenInDenom, tokenOutDenom string, tickMap map[uint64]domain.TickModel, takerFeeMap domain.TakerFeeMap) []route.RouteImpl {
-	_, poolsUsecase := s.setupRouterAndPoolsUsecase(router, tokenInDenom, tokenOutDenom, tickMap, takerFeeMap)
+	_, poolsUsecase := s.setupRouterAndPoolsUsecase(router, tokenInDenom, tokenOutDenom, tickMap, takerFeeMap, cache.New())
 
 	candidateRoutes, err := router.GetCandidateRoutes(tokenInDenom, tokenOutDenom)
 	s.Require().NoError(err)
@@ -747,7 +748,7 @@ func (s *RouterTestSuite) constructRoutesFromMainnetPools(router *routerusecase.
 
 // Sets up and returns usecases for router and pools by mocking the mainnet data
 // from json files.
-func (s *RouterTestSuite) setupRouterAndPoolsUsecase(router *routerusecase.Router, tokenInDenom, tokenOutDenom string, tickMap map[uint64]domain.TickModel, takerFeeMap domain.TakerFeeMap) (mvc.RouterUsecase, mvc.PoolsUsecase) {
+func (s *RouterTestSuite) setupRouterAndPoolsUsecase(router *routerusecase.Router, tokenInDenom, tokenOutDenom string, tickMap map[uint64]domain.TickModel, takerFeeMap domain.TakerFeeMap, cache *cache.Cache) (mvc.RouterUsecase, mvc.PoolsUsecase) {
 	// Setup router repository mock
 	routerRepositoryMock := mocks.RedisRouterRepositoryMock{}
 	routerusecase.WithRouterRepository(router, &routerRepositoryMock)
@@ -760,7 +761,7 @@ func (s *RouterTestSuite) setupRouterAndPoolsUsecase(router *routerusecase.Route
 	poolsUsecase := poolsusecase.NewPoolsUsecase(time.Hour, &poolsRepositoryMock, nil)
 	routerusecase.WithPoolsUsecase(router, poolsUsecase)
 
-	routerUsecase := usecase.NewRouterUsecase(time.Hour, &routerRepositoryMock, poolsUsecase, defaultRouterConfig, &log.NoOpLogger{})
+	routerUsecase := usecase.NewRouterUsecase(time.Hour, &routerRepositoryMock, poolsUsecase, defaultRouterConfig, &log.NoOpLogger{}, cache)
 
 	return routerUsecase, poolsUsecase
 }
