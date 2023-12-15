@@ -23,7 +23,6 @@ import (
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
