@@ -7,15 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO: Get this into the SDK https://github.com/cosmos/cosmos-sdk/issues/12538
-func CoinsDenoms(coins sdk.Coins) []string {
-	denoms := make([]string, len(coins))
-	for i, coin := range coins {
-		denoms[i] = coin.Denom
-	}
-	return denoms
-}
-
 // SubDecCoinArrays subtracts the contents of the second param from the first (decCoinsArrayA - decCoinsArrayB)
 // Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
 func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {

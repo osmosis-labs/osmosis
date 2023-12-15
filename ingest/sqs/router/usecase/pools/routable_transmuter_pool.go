@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 	cwpoolmodel "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
@@ -30,7 +29,7 @@ func (r *routableTransmuterPoolImpl) GetId() uint64 {
 
 // GetPoolDenoms implements domain.RoutablePool.
 func (r *routableTransmuterPoolImpl) GetPoolDenoms() []string {
-	return osmoutils.CoinsDenoms(r.Balances)
+	return r.Balances.Denoms()
 }
 
 // GetType implements domain.RoutablePool.
