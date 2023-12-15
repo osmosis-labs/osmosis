@@ -35,7 +35,7 @@ export CONTRACT_ADDRESS=$(chainA query wasm list-contract-by-code 1 -o json | jq
 denom=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].denom')
 balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].amount')
 
-# send ibc transaction to execite the contract
+# send ibc transaction to execute the contract
 MEMO=$(jenv -c '{"wasm":{"contract":$CONTRACT_ADDRESS,"msg": {"increment": {}} }}' )
 chainB tx ibc-transfer transfer transfer channel-0 $CONTRACT_ADDRESS 10uosmo \
        --from validator -y  \
