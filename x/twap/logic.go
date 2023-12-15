@@ -225,10 +225,10 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
 	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
-	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0NewAccum)
+	newRecord.P0ArithmeticTwapAccumulator = p0NewAccum.AddMut(newRecord.P0ArithmeticTwapAccumulator)
 
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
-	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
+	newRecord.P1ArithmeticTwapAccumulator = p1NewAccum.AddMut(newRecord.P1ArithmeticTwapAccumulator)
 
 	// If the last spot price is zero, then the logarithm is undefined.
 	// As a result, we cannot update the geometric accumulator.
@@ -249,7 +249,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
 	p0NewGeomAccum := types.SpotPriceMulDuration(logP0SpotPrice, timeDelta)
-	newRecord.GeometricTwapAccumulator = newRecord.GeometricTwapAccumulator.Add(p0NewGeomAccum)
+	newRecord.GeometricTwapAccumulator = p0NewGeomAccum.AddMut(newRecord.GeometricTwapAccumulator)
 
 	return newRecord
 }
