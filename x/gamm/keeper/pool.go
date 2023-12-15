@@ -241,8 +241,7 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 		return nil, err
 	}
 
-	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
-	return denoms, err
+	return pool.GetTotalPoolLiquidity(ctx).Denoms(), err
 }
 
 // setNextPoolId sets next pool Id.

@@ -27,7 +27,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 	if err != nil {
 		return nil, err
 	}
-	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+	poolDenoms := pool.GetTotalPoolLiquidity(ctx).Denoms()
 
 	// get address that has all denoms from the randomly selected pool
 	sender, tokenIn, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
