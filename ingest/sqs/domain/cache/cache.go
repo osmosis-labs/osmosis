@@ -47,7 +47,6 @@ func (c *Cache) Get(key string) (interface{}, bool) {
 	}
 
 	if time.Now().After(item.Expiration) {
-
 		// Unlock before locking again
 		c.mutex.RUnlock()
 
