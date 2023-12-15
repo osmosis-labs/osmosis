@@ -74,6 +74,10 @@ func TestConcurrentCache(t *testing.T) {
 	// Channel for goroutines to communicate errors
 	errCh := make(chan error, numGoroutines*numRunsPerRoutine)
 
+	// Mutex protecting the random number generator preventing
+	// data races.
+	randMx := sync.Mutex{}
+
 	// Run goroutines
 	for i := 0; i < numGoroutines; i++ {
 		go func(index int) {
@@ -81,20 +85,30 @@ func TestConcurrentCache(t *testing.T) {
 
 			for i := 0; i < numRunsPerRoutine; i++ {
 
+				randMx.Lock()
 				randKey := rand.Intn(maxKeyNumRand)
+				randMx.Unlock()
 
 				// Random key and value
 				key := fmt.Sprintf("key%d", randKey)
 				value := "does not matter"
 
 				// Random expiration time
-				expiration := time.Millisecond * time.Duration(rand.Intn(expirationMaxMs))
+				randMx.Lock()
+				randDurarion := rand.Intn(expirationMaxMs)
+				randMx.Unlock()
+
+				expiration := time.Millisecond * time.Duration(randDurarion)
 
 				// Set value in cache
 				cache.Set(key, value, expiration)
 
 				// Simulate some random work in the goroutine
-				time.Sleep(time.Millisecond * time.Duration(rand.Intn(expirationMaxMs)))
+				randMx.Lock()
+				randDuarion := rand.Intn(expirationMaxMs)
+				randMx.Unlock()
+
+				time.Sleep(time.Millisecond * time.Duration(randDuarion))
 
 				// Retrieve value from the cache
 				val, exists := cache.Get(key)
