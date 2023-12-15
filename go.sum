@@ -1485,6 +1485,8 @@ github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:Ylmch
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231211173227-afdfd0b87e09 h1:AXaAPdFmhl9+3Y57e8GwDMaOKkNIQyCZ8Y80rtwPUl8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231211173227-afdfd0b87e09/go.mod h1:TgRPf8FTJn2ceab7j3NovGC7DQBGDBrXR+icGUJUdbM=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231215224605-7c13c8d20c96 h1:VsXG3TeeOeuDjrpe9iL9T7biMdMSP1ur3mmKweAQ5i8=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231215224605-7c13c8d20c96/go.mod h1:TgRPf8FTJn2ceab7j3NovGC7DQBGDBrXR+icGUJUdbM=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231207233718-ef61c5f32b31 h1:7kGOQdocFexW8LoBavYJ/fTAydZENc+7/AU4HcHTpqQ=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231207233718-ef61c5f32b31/go.mod h1:H82/DKmIxsBu/0pawNuFElRtHegc/9VMiwPknDjN+S0=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231207233718-ef61c5f32b31 h1:bBnd9GNniYODaBx+4HTLTmOjy92J+ydqcAVu3PF9hsc=
