@@ -5,18 +5,17 @@
     - any-glob-to-any-file:
       # Match all of app folder except wasm sub-folder
       - app/*.go
-      - app/apptesting/**/*
-      - app/keepers/**/*
-      - app/params/**/*
-      - app/upgrades/**/*
+      - app/apptesting/**
+      - app/keepers/**
+      - app/params/**
+      - app/upgrades/**
       # Also match any module.go update
       - x/**/module.go
 "C:simulator":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of simulation & tests/simulator folder
-      - simulation/**/*
-      - simulation/**/**/*
+      - simulation/**
       - tests/simulator/**
       # Match any module update
       - x/**/simulation/*.go
@@ -24,72 +23,72 @@
   - changed-files:
     - any-glob-to-any-file:
       # Match all of app/wasm folder
-      - app/wasm/**/*
+      - app/wasm/**
 "C:x/claim":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/claim folder
-      - x/claim/**/*
+      - x/claim/**
 "C:x/concentrated-liquidity":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/concentrated-liquidity folder
-      - x/concentrated-liquidity/**/*
+      - x/concentrated-liquidity/**
 "C:x/epochs":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/epochs folder
-      - x/epochs/**/*
+      - x/epochs/**
 "C:x/gamm":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/gamm folder
-      - x/gamm/**/*
+      - x/gamm/**
 "C:x/incentives":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/incentives folder
-      - x/incentives/**/*
+      - x/incentives/**
 "C:x/lockup":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/lockup folder
-      - x/lockup/**/*
+      - x/lockup/**
 "C:x/mint":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/mint folder
-      - x/mint/**/*
+      - x/mint/**
 "C:x/pool-incentives":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/pool-incentives folder
-      - x/pool-incentives/**/*
+      - x/pool-incentives/**
 "C:x/superfluid":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/superfluid folder
-      - x/superfluid/**/*
+      - x/superfluid/**
 "C:x/poolmanager":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/poolmanager folder
-      - x/poolmanager/**/*
+      - x/poolmanager/**
 "C:x/txfees":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/txfees folder
-      - x/txfees/**/* 
+      - x/txfees/**
 "C:x/tokenfactory":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/tokenfactory folder
-      - x/tokenfactory/**/*
+      - x/tokenfactory/**
 "C:x/twap":
   - changed-files:
     - any-glob-to-any-file:
       # Match all of x/twap folder
-      - x/twap/**/*
+      - x/twap/**
 "T:build":
   - changed-files:
     - any-glob-to-any-file:
@@ -106,8 +105,8 @@
 "C:CLI":
   - changed-files:
     - any-glob-to-any-file:
-      - client/**/*
-      - x/*/client/**/*
+      - client/**
+      - x/*/client/**
 # Add "C:docs" label to documented related files and directories.
 "C:docs":
   - changed-files:
