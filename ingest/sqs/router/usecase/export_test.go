@@ -34,8 +34,8 @@ func (r *routerUseCaseImpl) HandleRoutes(ctx context.Context, router *Router, to
 	return r.handleCandidateRoutes(ctx, router, tokenInDenom, tokenOutDenom)
 }
 
-func (r *Router) EstimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []RouteWithOutAmount, error) {
-	return r.estimateBestSingleRouteQuote(routes, tokenIn)
+func (r *Router) EstimateAndRankSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (domain.Quote, []RouteWithOutAmount, error) {
+	return r.estimateAndRankSingleRouteQuote(routes, tokenIn)
 }
 
 // GetSortedPoolIDs returns the sorted pool IDs.
@@ -51,4 +51,12 @@ func (r Router) GetSortedPoolIDs() []uint64 {
 
 func FilterDuplicatePoolIDRoutes(rankedRoutes []route.RouteImpl) []route.RouteImpl {
 	return filterDuplicatePoolIDRoutes(rankedRoutes)
+}
+
+func ConvertRankedToCandidateRoutes(rankedRoutes []route.RouteImpl) route.CandidateRoutes {
+	return convertRankedToCandidateRoutes(rankedRoutes)
+}
+
+func FormatRankedRouteCacheKey(tokenInDenom string, tokenOutDenom string, tokenIOrderOfMagnitude int) string {
+	return formatRankedRouteCacheKey(tokenInDenom, tokenOutDenom, tokenIOrderOfMagnitude)
 }
