@@ -19,7 +19,8 @@ type CosmwasmAuthenticator struct {
 	cdc            codectypes.AnyUnpacker
 	sigModeHandler authsigning.SignModeHandler
 
-	contractAddr sdk.AccAddress
+	contractAddr        sdk.AccAddress
+	authenticatorParams []byte
 }
 
 var (
@@ -36,7 +37,7 @@ func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, account
 }
 
 func (cwa CosmwasmAuthenticator) Type() string {
-	return "CosmwasmAuthenticator"
+	return "CosmwasmAuthenticatorV1"
 }
 
 func (cwa CosmwasmAuthenticator) StaticGas() uint64 {
@@ -45,6 +46,7 @@ func (cwa CosmwasmAuthenticator) StaticGas() uint64 {
 
 type CosmwasmAuthenticatorInitData struct {
 	Contract string `json:"contract"`
+	Params   []byte `json:"params"`
 }
 
 func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
@@ -109,13 +111,14 @@ type simplifiedSignatureData struct {
 }
 
 type AuthenticationRequest struct {
-	Account        sdk.AccAddress          `json:"account"`
-	Msg            LocalAny                `json:"msg"`
-	Signature      []byte                  `json:"signature"` // Only allowing messages with a single signer
-	SignModeTxData SignModeData            `json:"sign_mode_tx_data"`
-	TxData         ExplicitTxData          `json:"tx_data"`
-	SignatureData  simplifiedSignatureData `json:"signature_data"`
-	Simulate       bool                    `json:"simulate"`
+	Account             sdk.AccAddress          `json:"account"`
+	Msg                 LocalAny                `json:"msg"`
+	Signature           []byte                  `json:"signature"` // Only allowing messages with a single signer
+	SignModeTxData      SignModeData            `json:"sign_mode_tx_data"`
+	TxData              ExplicitTxData          `json:"tx_data"`
+	SignatureData       simplifiedSignatureData `json:"signature_data"`
+	Simulate            bool                    `json:"simulate"`
+	AuthenticatorParams []byte                  `json:"authenticator_params,omitempty"`
 }
 
 type TrackRequest struct {
@@ -213,7 +216,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 			msgSignature = single.Signature
 		}
 	}
-
+	// should we pass ctx.IsReCheckTx() here?
 	authRequest := AuthenticationRequest{
 		Account: account,
 		Msg: LocalAny{
@@ -229,7 +232,8 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 			Signers:    signatureData.Signers,
 			Signatures: signatures,
 		},
-		Simulate: signatureData.Simulate,
+		Simulate:            signatureData.Simulate,
+		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{Authenticate: &authRequest})
 	if err != nil {
