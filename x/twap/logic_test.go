@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
@@ -1323,7 +1322,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 			s.Require().Equal(tc.poolId, poolId)
 			s.Require().NoError(err)
 
-			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denoms := tc.poolCoins.Denoms()
 			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for _, denomPair := range denomPairs {

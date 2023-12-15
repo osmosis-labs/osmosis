@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v21/x/twap"
 	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
 
@@ -58,7 +57,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 					s.RunBasicSwap(poolId)
 				}
 
-				denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+				denoms := tc.poolCoins.Denoms()
 				denomPairs := types.GetAllUniqueDenomPairs(denoms)
 				expectedRecords := []types.TwapRecord{}
 				for _, denomPair := range denomPairs {
