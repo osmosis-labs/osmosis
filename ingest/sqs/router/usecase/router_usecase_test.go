@@ -8,10 +8,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/cache"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
 )
 
 // Tests the call to handleRoutes by mocking the router repository and pools use case
@@ -160,7 +162,7 @@ func (s *RouterTestSuite) TestHandleRoutes() {
 
 			routerUseCase := usecase.NewRouterUsecase(defaultTimeoutDuration, routerRepositoryMock, poolsUseCaseMock, domain.RouterConfig{
 				RouteCacheEnabled: !tc.isCacheDisabled,
-			}, &log.NoOpLogger{})
+			}, &log.NoOpLogger{}, cache.New())
 
 			routerUseCaseImpl, ok := routerUseCase.(*usecase.RouterUseCaseImpl)
 			s.Require().True(ok)
@@ -333,6 +335,260 @@ func (s *RouterTestSuite) TestFilterDuplicatePoolIDRoutes() {
 			actualRoutes := usecase.FilterDuplicatePoolIDRoutes(tc.routes)
 
 			s.Require().Equal(len(tc.expectedRoutes), len(actualRoutes))
+		})
+	}
+}
+
+func (s *RouterTestSuite) TestConvertRankedToCandidateRoutes() {
+
+	tests := map[string]struct {
+		rankedRoutes []route.RouteImpl
+
+		expectedCandidateRoutes route.CandidateRoutes
+	}{
+		"empty ranked routes": {
+			rankedRoutes: []route.RouteImpl{},
+
+			expectedCandidateRoutes: route.CandidateRoutes{
+				Routes:        []route.CandidateRoute{},
+				UniquePoolIDs: map[uint64]struct{}{},
+			},
+		},
+		"single route": {
+			rankedRoutes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					mocks.WithPoolID(mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), &balancer.Pool{}), defaultPoolID),
+				}),
+			},
+
+			expectedCandidateRoutes: route.CandidateRoutes{
+				Routes: []route.CandidateRoute{
+					WithCandidateRoutePools(route.CandidateRoute{}, []route.CandidatePool{
+						{
+							ID:            defaultPoolID,
+							TokenOutDenom: DenomOne,
+						},
+					}),
+				},
+				UniquePoolIDs: map[uint64]struct{}{
+					defaultPoolID: {},
+				},
+			},
+		},
+		"two routes": {
+			rankedRoutes: []route.RouteImpl{
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					mocks.WithPoolID(mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), &balancer.Pool{}), defaultPoolID),
+				}),
+				WithRoutePools(route.RouteImpl{}, []domain.RoutablePool{
+					mocks.WithPoolID(mocks.WithChainPoolModel(mocks.WithTokenOutDenom(DefaultMockPool, DenomOne), &balancer.Pool{}), defaultPoolID+1),
+				}),
+			},
+
+			expectedCandidateRoutes: route.CandidateRoutes{
+				Routes: []route.CandidateRoute{
+					WithCandidateRoutePools(route.CandidateRoute{}, []route.CandidatePool{
+						{
+							ID:            defaultPoolID,
+							TokenOutDenom: DenomOne,
+						},
+					}),
+					WithCandidateRoutePools(route.CandidateRoute{}, []route.CandidatePool{
+						{
+							ID:            defaultPoolID + 1,
+							TokenOutDenom: DenomOne,
+						},
+					}),
+				},
+				UniquePoolIDs: map[uint64]struct{}{
+					defaultPoolID:     {},
+					defaultPoolID + 1: {},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			actualCandidateRoutes := usecase.ConvertRankedToCandidateRoutes(tc.rankedRoutes)
+
+			s.Require().Equal(tc.expectedCandidateRoutes, actualCandidateRoutes)
+		})
+	}
+}
+
+// Validates that the ranked route cache functions as expected for optimal quotes.
+// This test is set up by focusing on ATOM / OSMO mainnet state pool.
+// We restrict the number of routes via config.
+//
+// As of today there are 3 major ATOM / OSMO pools:
+// Pool ID 1: https://app.osmosis.zone/pool/1 (balancer) 0.2% spread factor and 20M of liquidity to date
+// Pool ID 1135: https://app.osmosis.zone/pool/1135 (concentrated) 0.2% spread factor and 14M of liquidity to date
+// Pool ID 1265: https://app.osmosis.zone/pool/1265 (concentrated) 0.05% spread factor and 224K of liquidity to date
+//
+// Based on this state, the small amounts of token in should go through pool 1265
+// Medium amounts of token in should go through pool 1135
+// and large amounts of token in should go through pool 1.
+//
+// For the purposes of testing cache, we focus on a small amount of token in (1_000_000 uosmo), expecting pool 1265 to be returned.
+// We will, however, tweak the cache by test case to force other pools to be returned and ensure that the cache is used.
+func (s *RouterTestSuite) TestGetOptimalQuote_Cache() {
+	const (
+		defaultTokenInDenom  = UOSMO
+		defaultTokenOutDenom = ATOM
+
+		// See test description above for details about
+		// the pools.
+		poolIDOneBalancer      = uint64(1)
+		poolID1135Concentrated = uint64(1135)
+		poolID1265Concentrated = uint64(1265)
+	)
+
+	var (
+		defaultAmountIn = osmomath.NewInt(1_000_000)
+	)
+
+	tests := map[string]struct {
+		preCachedRoutes              route.CandidateRoutes
+		cacheOrderOfMagnitudeTokenIn int
+
+		cacheExpiryDuration time.Duration
+
+		amountIn osmomath.Int
+
+		expectedRoutePoolID uint64
+	}{
+		"cache is not set, computes routes": {
+			amountIn: defaultAmountIn,
+
+			// For the default amount in, we expect pool 1265 to be returned.
+			// See test description above for details.
+			expectedRoutePoolID: poolID1265Concentrated,
+		},
+		"cache is set to balancer - overwrites computed": {
+			amountIn: defaultAmountIn,
+
+			preCachedRoutes: route.CandidateRoutes{
+				Routes: []route.CandidateRoute{
+					{
+						Pools: []route.CandidatePool{
+							{
+								ID:            poolIDOneBalancer,
+								TokenOutDenom: ATOM,
+							},
+						},
+					},
+				},
+				UniquePoolIDs: map[uint64]struct{}{
+					poolIDOneBalancer: {},
+				},
+			},
+
+			cacheOrderOfMagnitudeTokenIn: osmomath.OrderOfMagnitude(defaultAmountIn.ToLegacyDec()),
+
+			cacheExpiryDuration: time.Hour,
+
+			// We expect balancer because it is cached.
+			expectedRoutePoolID: poolIDOneBalancer,
+		},
+		"cache is set to balancer but for a different order of magnitude - computes new routes": {
+			amountIn: defaultAmountIn,
+
+			preCachedRoutes: route.CandidateRoutes{
+				Routes: []route.CandidateRoute{
+					{
+						Pools: []route.CandidatePool{
+							{
+								ID:            poolIDOneBalancer,
+								TokenOutDenom: ATOM,
+							},
+						},
+					},
+				},
+				UniquePoolIDs: map[uint64]struct{}{
+					poolIDOneBalancer: {},
+				},
+			},
+
+			// Note that we multiply the order of magnitude by 10 so cache is not applied for this amount in.
+			cacheOrderOfMagnitudeTokenIn: osmomath.OrderOfMagnitude(defaultAmountIn.ToLegacyDec().MulInt64(10)),
+
+			cacheExpiryDuration: time.Hour,
+
+			// We expect pool 1265 because the cache is not applied.
+			expectedRoutePoolID: poolID1265Concentrated,
+		},
+		"cache is expired - overwrites computed": {
+			amountIn: defaultAmountIn,
+
+			preCachedRoutes: route.CandidateRoutes{
+				Routes: []route.CandidateRoute{
+					{
+						Pools: []route.CandidatePool{
+							{
+								ID:            poolIDOneBalancer,
+								TokenOutDenom: ATOM,
+							},
+						},
+					},
+				},
+				UniquePoolIDs: map[uint64]struct{}{
+					poolIDOneBalancer: {},
+				},
+			},
+
+			cacheOrderOfMagnitudeTokenIn: osmomath.OrderOfMagnitude(defaultAmountIn.ToLegacyDec()),
+
+			// Note: we rely on the fact that the it takes more than 1 nanosecond from the test set up to
+			// test execution.
+			cacheExpiryDuration: time.Nanosecond,
+
+			// We expect pool 1265 because the cache with balancer pool expires.
+			expectedRoutePoolID: poolID1265Concentrated,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			// Setup router config
+			config := defaultRouterConfig
+			// Note that we set one max route for ease of testing caching specifically.
+			config.MaxRoutes = 1
+
+			// Setup mainnet router
+			router, tickMap, takerFeeMap := s.setupMainnetRouter(config)
+
+			rankedRouteCache := cache.New()
+
+			if len(tc.preCachedRoutes.Routes) > 0 {
+				rankedRouteCache.Set(usecase.FormatRankedRouteCacheKey(defaultTokenInDenom, defaultTokenOutDenom, tc.cacheOrderOfMagnitudeTokenIn), tc.preCachedRoutes, tc.cacheExpiryDuration)
+			}
+
+			// Mock router use case.
+			routerUsecase, _ := s.setupRouterAndPoolsUsecase(router, defaultTokenInDenom, defaultTokenOutDenom, tickMap, takerFeeMap, rankedRouteCache)
+
+			// System under test
+			quote, err := routerUsecase.GetOptimalQuote(context.Background(), sdk.NewCoin(defaultTokenInDenom, tc.amountIn), defaultTokenOutDenom)
+
+			// We only validate that error does not occur without actually validating the quote.
+			s.Require().NoError(err)
+
+			// By construction, this test always expects 1 route
+			quoteRoutes := quote.GetRoute()
+			s.Require().Len(quoteRoutes, 1)
+
+			// By construction, this test always expects 1 pool
+			routePools := quoteRoutes[0].GetPools()
+			s.Require().Len(routePools, 1)
+
+			// Validate that the pool ID is the expected one
+			s.Require().Equal(tc.expectedRoutePoolID, routePools[0].GetId())
+
+			// Validate that the quote is not nil
+			s.Require().NotNil(quote.GetAmountOut())
 		})
 	}
 }
