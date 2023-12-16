@@ -1,5 +1,6 @@
 # TWAP (Time Weighted Average Price)
 
+
 The TWAP package is responsible for being able to serve TWAPs for every AMM pool.
 
 A time weighted average price is a function that takes a sequence of `(time, price)` pairs, and returns a price representing an 'average' over the entire time period. The method of averaging can vary from the classic arithmetic mean, (such as geometric mean, harmonic mean), however we currently only implement arithmetic mean.

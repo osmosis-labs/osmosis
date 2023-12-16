@@ -13,6 +13,7 @@ Currently the initialization of the simulator is a mess of spaghetti code / brok
 
 We are iteratively cleaning up more and more of this.
 
+
 The direction we should be moving towards is:
 * The simulator executor can start a chain in one of two forms:
   * From a RequestInitChain

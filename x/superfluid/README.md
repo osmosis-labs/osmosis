@@ -13,6 +13,7 @@ bank module.
 
 ### The process
 
+
 All of the below methods are found under the [Superfluid
 modules](https://github.com/osmosis-labs/osmosis/tree/main/x/superfluid).
 

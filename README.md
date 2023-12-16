@@ -22,6 +22,7 @@ interchain assets that allows the creation and management of
 non-custodial, self-balancing, interchain token index similar to one of
 Balancer.
 
+
 Inspired by [Balancer](http://balancer.finance/whitepaper) and Sunny
 Aggarwal's '[DAOfying Uniswap Automated Market Maker
 Pools](https://www.sunnya97.com/blog/daoifying-uniswap-automated-market-maker-pools)',

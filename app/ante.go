@@ -46,7 +46,7 @@ func NewAnteHandler(
 	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, ak, bankKeeper, nil)
 	return sdk.ChainAnteDecorators(
-		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		ante.NewSetUpContextDecorator(), // Outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewExtensionOptionsDecorator(nil),
