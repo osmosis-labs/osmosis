@@ -380,7 +380,7 @@ It is also possible to run the sidecar query server against a localosmosis node.
 
 ```bash
 # Starts localosmosis with all services enabled and a few pools pre-created
-# make localnset-start for empty state
+# make localnet-start for empty state
 # See localosmosis docs for more details
 make localnet-start-with-state
 ```
@@ -403,7 +403,7 @@ is instrumented with OSMO-denominated TVL.
 ### Router
 
 For routing, we must know about the taker fee for every denom pair. As a result, in the router
-repository, we stote the taker fee keyed by the denom pair.
+repository, we store the taker fee keyed by the denom pair.
 
 These taker fees are then read from Redis to initialize the router.
 
