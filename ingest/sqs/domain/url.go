@@ -7,8 +7,13 @@ import (
 	"github.com/labstack/echo"
 )
 
-// RequestPathCtxKey is the key used to store the request path in the request context
-const RequestPathCtxKey = "request_path"
+// RequestPathKeyType is a custom type for request path key.
+type RequestPathKeyType string
+
+const (
+	// RequestPathCtxKey is the key used to store the request path in the request context
+	RequestPathCtxKey RequestPathKeyType = "request_path"
+)
 
 // ParseURLPath parses the URL path from the echo context
 func ParseURLPath(c echo.Context) (string, error) {
