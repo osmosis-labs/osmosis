@@ -69,7 +69,7 @@ func (s *CosmwasmAuthenticatorTest) TestInitialize() {
 	}
 }
 
-type InstantiateMsg struct {
+type EchoInstantiateMsg struct {
 	PubKey []byte `json:"pubkey"`
 }
 
@@ -109,7 +109,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	// Set up the contract
 	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo-aarch64.wasm")
-	instantiateMsg := InstantiateMsg{PubKey: priv.PubKey().Bytes()}
+	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
 	addr := s.InstantiateContract(string(instantiateMsgBz), 1)
@@ -142,6 +142,80 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	}
 	status = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
 	s.Require().False(status.IsAuthenticated(), "Should not be authenticated")
+}
+
+type CosignerInstantiateMsg struct {
+	PubKeys [][]byte `json:"pubkeys"`
+}
+
+func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
+	accounts := apptesting.CreateRandomAccounts(2)
+	for _, acc := range accounts {
+		someCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+		err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, someCoins)
+		s.Require().NoError(err)
+		err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, someCoins)
+		s.Require().NoError(err)
+	}
+
+	// Mocking some data for the GenTx function based on PassKeyTests
+	osmoToken := "osmo"
+	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+
+	// Create a test message for signing
+	testMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, accounts[0]),
+		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, accounts[1]),
+		Amount:      feeCoins,
+	}
+
+	// Generate a private key for signing
+	msgs := []sdk.Msg{testMsg}
+
+	// Account numbers and sequences
+	accNums := []uint64{0, 0}
+	accSeqs := []uint64{0, 0}
+
+	// Generate a private key for signing
+	priv := secp256k1.GenPrivKey()
+	cosigner := secp256k1.GenPrivKey()
+	signers := []cryptotypes.PrivKey{priv, cosigner}
+	signatures := []cryptotypes.PrivKey{priv, cosigner}
+
+	// Define encoding config if not already defined
+	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
+
+	// Set up the contract
+	s.StoreContractCode("../testutils/contracts/cosigner-authenticator/artifacts/cosigner_authenticator-aarch64.wasm")
+	instantiateMsg := CosignerInstantiateMsg{PubKeys: [][]byte{priv.PubKey().Bytes()}}
+	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	s.Require().NoError(err)
+	addr := s.InstantiateContract(string(instantiateMsgBz), 1)
+
+	auth, err := s.CosmwasmAuth.Initialize([]byte(
+		fmt.Sprintf(`{"contract": "%s"}`, addr)))
+	s.Require().NoError(err, "Should succeed")
+
+	tx, _ := GenTx(
+		encodingConfig.TxConfig,
+		msgs,
+		feeCoins,
+		300000,
+		"",
+		accNums,
+		accSeqs,
+		signers,
+		signatures,
+	)
+
+	// TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better
+	//  cosigner implementation later?
+	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
+	s.Require().NoError(err, "Should succeed")
+
+	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
+	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
+
 }
 
 func (s *CosmwasmAuthenticatorTest) StoreContractCode(path string) uint64 {

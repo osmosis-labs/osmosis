@@ -103,6 +103,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, err
 	}
 
+	cosignerActive, cosignerContract := ad.isCosignerActive(cacheCtx)
+	//
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		// By default, the first signer is the account
@@ -128,10 +131,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
-		cosignerActive, cosignerContract := ad.isCosignerActive(cacheCtx)
-
 		if cosignerActive && isCosignerMsg(msg) {
-			cosignerAuthenticator, err := ad.cosignerAuthenticator(ctx, account, cosignerContract)
+			cosignerAuthenticator, err := ad.cosignerAuthenticator(ctx, account, cosignerContract) // CosmwasmAuthenticator.Inititialize()
 			if err != nil {
 				return sdk.Context{}, err
 			}
@@ -215,7 +216,7 @@ func (ad AuthenticatorDecorator) cosignerAuthenticator(ctx sdk.Context, account 
 	}
 	initData := authenticator.CosmwasmAuthenticatorInitData{
 		Contract: cosignerContract,
-		Params:   []byte(fmt.Sprintf(`{"account":"%s"}`, acc.GetPubKey().Bytes())),
+		Params:   acc.GetPubKey().Bytes(),
 	}
 	initDataBz, err := json.Marshal(initData)
 	if err != nil {

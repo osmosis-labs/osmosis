@@ -86,6 +86,8 @@ func GetSignersAndSignatures(
 		}
 	}
 
+	// TODO: This strips any extra signatures. We should include all signatures
+
 	// Handle the feePayer.
 	if feePayer != "" {
 		if _, exists := signerToSignature[feePayer]; !exists {

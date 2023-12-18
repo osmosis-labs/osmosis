@@ -63,6 +63,7 @@ func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, e
 		return nil, err
 	}
 	cwa.contractAddr = contractAddr
+	cwa.authenticatorParams = initData.Params
 	return cwa, nil
 }
 

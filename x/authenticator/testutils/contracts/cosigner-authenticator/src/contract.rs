@@ -1,66 +1,62 @@
-use crate::types::Pubkey;
+use crate::types::Signature;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{entry_point, Binary, DepsMut, Env, Response, StdError, StdResult};
-use cw_storage_plus::{Item, Map};
+use cw_storage_plus::Item;
 use osmosis_authenticators as oa;
-use sylvia::contract;
 use sylvia::types::{InstantiateCtx, QueryCtx};
+use sylvia::{contract, entry_points};
 
 pub struct CosignerAuthenticator {
-    pub(crate) pubkeys: Item<'static, Vec<Pubkey>>,
-    pub(crate) named_pubkeys: Map<'static, String, Binary>,
+    pub(crate) pubkeys: Item<'static, Vec<Binary>>,
 }
 
+#[entry_points]
 #[contract]
 #[sv::override_entry_point(sudo=sudo(SudoMsg))]
 impl CosignerAuthenticator {
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         CosignerAuthenticator {
             pubkeys: Item::new("pubkeys"),
-            named_pubkeys: Map::new("named_pubkeys"),
         }
     }
 
     #[msg(instantiate)]
-    pub fn instantiate(&self, ctx: InstantiateCtx, pubkeys: Vec<Pubkey>) -> StdResult<Response> {
+    fn instantiate(&self, ctx: InstantiateCtx, pubkeys: Vec<Binary>) -> StdResult<Response> {
         self.pubkeys.save(ctx.deps.storage, &pubkeys)?;
         Ok(Response::default())
     }
 
     #[msg(query)]
-    pub fn pubkeys(&self, ctx: QueryCtx) -> StdResult<crate::types::PubkeysResponse> {
+    fn pubkeys(&self, ctx: QueryCtx) -> StdResult<crate::types::PubkeysResponse> {
         let pubkeys = self.pubkeys.load(ctx.deps.storage)?;
         Ok(crate::types::PubkeysResponse { pubkeys })
     }
 
-    pub fn sudo_authenticate(
+    fn sudo_authenticate(
         &self,
         deps: DepsMut,
         auth_request: oa::AuthenticationRequest,
     ) -> Result<Response, StdError> {
-        let signatures: Vec<Binary> = cosmwasm_std::from_json(&auth_request.signature)?;
-        if signatures.len() != self.pubkeys.load(deps.storage)?.len() {
+        deps.api.debug(&format!("auth_request {:?}", auth_request));
+        let sigs: Vec<Signature> = cosmwasm_std::from_json(&auth_request.signature)?;
+
+        if sigs.len() != self.pubkeys.load(deps.storage)?.len() {
             return Ok(Response::new().set_data(oa::AuthenticationResult::NotAuthenticated {}));
         }
 
-        // The message hash is what gets signed
-        let hash = oa::sha256(&auth_request.sign_mode_tx_data.sign_mode_direct);
-        for (i, pubkey) in self.pubkeys.load(deps.storage)?.iter().enumerate() {
-            // Fetch the pubkey binary from the name map if necessary
-            let raw = match pubkey {
-                Pubkey::ByName(name) => self
-                    .named_pubkeys
-                    .load(deps.storage, name.to_string())
-                    .or_else(|_| {
-                        Err(StdError::generic_err(format!("Pubkey {} not found", name)))
-                    })?,
-                Pubkey::Raw(raw) => raw.clone(),
-            };
+        let mut pubkeys = self.pubkeys.load(deps.storage)?;
+        pubkeys.push(auth_request.authenticator_params.clone().unwrap());
 
+        // The message hash is what gets signed
+        for (i, pubkey) in pubkeys.iter().enumerate() {
+            let hash = oa::sha256(&concat(
+                &auth_request.sign_mode_tx_data.sign_mode_direct,
+                &sigs[i].salt,
+            ));
             // Verify signature i
             let valid = deps
                 .api
-                .secp256k1_verify(&hash, &signatures[i], &raw)
+                .secp256k1_verify(&hash, &sigs[i].signature, &pubkey)
                 .or_else(|e| {
                     deps.api.debug(&format!("error {:?}", e));
                     Err(StdError::generic_err("Failed to verify signature"))
@@ -73,6 +69,12 @@ impl CosignerAuthenticator {
 
         Ok(Response::new().set_data(oa::AuthenticationResult::Authenticated {}))
     }
+}
+
+fn concat(a: &Binary, b: &Binary) -> Binary {
+    let mut combined = a.to_vec();
+    combined.extend(b.as_slice());
+    Binary(combined)
 }
 
 #[cw_serde]
