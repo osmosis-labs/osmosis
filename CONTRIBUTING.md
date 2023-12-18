@@ -16,6 +16,8 @@ If you have a feature request, please use the [feature-request repo](https://git
 
 Once you find an existing issue that you want to work on or if you have a new issue to create, continue below.
 
+Important note to contributors: We deeply value your contributions. However, due to a large influx of airdrop hunters, we are currently unable to accept small lint changes from first-time contributors. We encourage you to look for issues that offer more substantial contributions to the project or issues from the **good first issue** label. This helps us maintain the quality and integrity of the codebase, and provides a more meaningful experience for you as a contributor.
+
 ## Proposing changes
 
 To contribute a change proposal, use the following workflow:

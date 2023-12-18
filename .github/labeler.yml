@@ -1,67 +1,120 @@
 # Note that any updates to this files will not be applied in CI
-# until this file is merged into main. This is due to oddities of the labeller Github Action.
+# until this file is merged into main. This is due to oddities of the labeler Github Action.
 "C:app-wiring":
-  # Match all of app folder except wasm sub-folder
-  - app/*.go
-  - app/apptesting/**/*
-  - app/keepers/**/*
-  - app/params/**/*
-  - app/upgrades/**/*
-  # Also match any module.go update
-  - x/**/module.go
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of app folder except wasm sub-folder
+      - app/*.go
+      - app/apptesting/**
+      - app/keepers/**
+      - app/params/**
+      - app/upgrades/**
+      # Also match any module.go update
+      - x/**/module.go
 "C:simulator":
-  # Match all of simulation & tests/simulator folder
-  - simulation/**/*
-  - simulation/**/**/*
-  - tests/simulator/**
-  # Match any module update
-  - x/**/simulation/*.go
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of simulation & tests/simulator folder
+      - simulation/**
+      - tests/simulator/**
+      # Match any module update
+      - x/**/simulation/*.go
 "C:wasm":
-  - app/wasm/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of app/wasm folder
+      - app/wasm/**
 "C:x/claim":
-  - x/claim/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/claim folder
+      - x/claim/**
 "C:x/concentrated-liquidity":
-  - x/concentrated-liquidity/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/concentrated-liquidity folder
+      - x/concentrated-liquidity/**
 "C:x/epochs":
-  - x/epochs/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/epochs folder
+      - x/epochs/**
 "C:x/gamm":
-  - x/gamm/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/gamm folder
+      - x/gamm/**
 "C:x/incentives":
-  - x/incentives/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/incentives folder
+      - x/incentives/**
 "C:x/lockup":
-  - x/lockup/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/lockup folder
+      - x/lockup/**
 "C:x/mint":
-  - x/mint/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/mint folder
+      - x/mint/**
 "C:x/pool-incentives":
-  - x/pool-incentives/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/pool-incentives folder
+      - x/pool-incentives/**
 "C:x/superfluid":
-  - x/superfluid/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/superfluid folder
+      - x/superfluid/**
 "C:x/poolmanager":
-  - x/poolmanager/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/poolmanager folder
+      - x/poolmanager/**
 "C:x/txfees":
-  - x/txfees/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/txfees folder
+      - x/txfees/**
 "C:x/tokenfactory":
-  - x/tokenfactory/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/tokenfactory folder
+      - x/tokenfactory/**
 "C:x/twap":
-  - x/twap/*
-  - x/twap/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      # Match all of x/twap folder
+      - x/twap/**
 "T:build":
-  - Makefile
-  - Dockerfile
-  - scripts/*
+  - changed-files:
+    - any-glob-to-any-file:
+      - Makefile
+      - Dockerfile
+      - scripts/*
 "T:CI":
-  - .github/**/*.yml
-  - .mergify.yml
-  - .golangci.yml
+  - changed-files:
+    - any-glob-to-any-file:
+    # Match all of the CI files
+      - .github/**/*.yml
+      - .mergify.yml
+      - .golangci.yml
 "C:CLI":
-  - client/**/*
-  - x/*/client/**/*
+  - changed-files:
+    - any-glob-to-any-file:
+      - client/**
+      - x/*/client/**
 # Add "C:docs" label to documented related files and directories.
 "C:docs":
-  - bug.md
-  - issue.md
-  - proto-docs.md
-  - README.md
-  - x/**/*.md
-  - x/**/*/*.md
-  - tests/**/*.md
+  - changed-files:
+    - any-glob-to-any-file:
+      - bug.md
+      - issue.md
+      - proto-docs.md
+      - README.md
+      - x/**/*.md
+      - x/**/*/*.md
+      - tests/**/*.md
