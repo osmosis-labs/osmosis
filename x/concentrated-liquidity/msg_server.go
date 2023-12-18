@@ -58,14 +58,6 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
 	// Note: create position event is emitted in keeper.createPosition(...)
 
 	return &types.MsgCreatePositionResponse{PositionId: positionData.ID, Amount0: positionData.Amount0, Amount1: positionData.Amount1, LiquidityCreated: positionData.Liquidity, LowerTick: positionData.LowerTick, UpperTick: positionData.UpperTick}, nil
@@ -91,14 +83,6 @@ func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddTo
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
 	return &types.MsgAddToPositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1}, nil
 }
 
@@ -115,14 +99,6 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	if err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
 
 	// Note: withdraw position event is emitted in keeper.withdrawPosition(...)
 
@@ -149,11 +125,6 @@ func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.M
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
 		sdk.NewEvent(
 			types.TypeEvtTotalCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
@@ -187,11 +158,6 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-		sdk.NewEvent(
 			types.TypeEvtTotalCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
@@ -221,11 +187,6 @@ func (server msgServer) TransferPositions(goCtx context.Context, msg *types.MsgT
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
 		sdk.NewEvent(
 			types.TypeEvtTransferPositions,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
