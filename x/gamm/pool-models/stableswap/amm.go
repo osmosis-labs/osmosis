@@ -72,8 +72,8 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.B
 		// horners method
 		// ax^3 + bx^2 + cx = x(c + x(b + ax))
 		res := cubicCoeff.Mul(xOut)
-		res = res.Add(quadraticCoeff).Mul(xOut)
-		res = res.Add(linearCoeff).Mul(xOut)
+		res = res.AddMut(quadraticCoeff).MulMut(xOut)
+		res = res.AddMut(linearCoeff).MulMut(xOut)
 		return res
 	}
 }
