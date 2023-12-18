@@ -44,12 +44,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### API
 
-* [#6944](https://github.com/osmosis-labs/osmosis/pull/6944) Fix: total liquidity poolmanager grpc gateway query
+* [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
+
+### Features
+* [#6804](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
+
+### Misc Improvements
+* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
+* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100) Lower CPU overheads of the Osmosis epoch.
+
+## v21.0.0
+
+### API
+
 * [#6939](https://github.com/osmosis-labs/osmosis/pull/6939) Fix taker fee GRPC gateway query path in poolmanager.
 
 ### Features
 
-* [#6804](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
 * [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
 
 ### Fix Localosmosis docker-compose with state.
@@ -76,10 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6890](https://github.com/osmosis-labs/osmosis/pull/6890) Enable arb filter for affiliate swap contract
 * [#6884](https://github.com/osmosis-labs/osmosis/pull/6914) Update ListPoolsByDenom function by using pool.GetPoolDenoms to filter denom directly
 * [#6959](https://github.com/osmosis-labs/osmosis/pull/6959) Increase high gas threshold to 2m from 1m
-* [#7068](https://github.com/osmosis-labs/osmosis/pull/7068) Add CI action that check for typo on new PRs (Thanks @codespell)
-* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100) Lower CPU overheads of the Osmosis epoch.
-* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
-
 
 ### API Breaks
 
