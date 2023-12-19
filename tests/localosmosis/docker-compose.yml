@@ -18,6 +18,7 @@ services:
       - ./scripts/setup.sh:/osmosis/setup.sh
       - ../cl-genesis-positions:/osmosis/cl-genesis-positions
       - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
+      - "./test:/osmosis"
     entrypoint:
       - /osmosis/setup.sh
     command:
@@ -29,13 +30,3 @@ services:
       - 9091:9091
       - 6060:6060
       - 9092:9092
-    links:
-      - redis
-   # Enable Redis for sidecar query server
-  redis:
-    image: redis/redis-stack:7.2.0-v3
-    ports:
-      - 6379:6379
-      - 8001:8001
-    volumes:
-      - ./redis-data:/data

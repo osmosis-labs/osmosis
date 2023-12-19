@@ -207,6 +207,15 @@ func NewOsmosisApp(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
+	file, err := os.Create("/osmosis/app.log")
+	if err != nil {
+		panic(err)
+	}
+
+	logger = log.NewTMLogger(file)
+
+	logger = log.NewFilter(logger, log.AllowInfoWith("sim", "info"))
+
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
