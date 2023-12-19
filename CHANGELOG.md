@@ -44,15 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### API
 
-* [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
 * [#7149](https://github.com/osmosis-labs/osmosis/pull/7149) Fix double emitting CacheCtx events (e.g. Epoch, Superfluid, CL)
-
-### Features
-* [#6804](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
-
-### Misc Improvements
-* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
-* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100) Lower CPU overheads of the Osmosis epoch.
 
 ## v21.0.0
 
