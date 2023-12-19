@@ -524,7 +524,7 @@ route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateH
 route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
 
 # The number of seconds to cache routes for before expiry.
-route_cache_expiry_seconds = "{{ .SidecarQueryServerConfig.Router.RouteCacheExpirySeconds }}"
+route-cache-expiry-seconds = "{{ .SidecarQueryServerConfig.Router.RouteCacheExpirySeconds }}"
 
 ###############################################################################
 ###              		       Wasm Configuration    					    ###
