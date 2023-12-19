@@ -54,7 +54,7 @@ func Query[T any, K any](ctx sdk.Context, wasmKeeper WasmKeeper, contractAddress
 		return response, err
 	}
 
-	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(wasmKeeper.QueryGasLimit()))
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(wasmKeeper.QueryGasLimit(), ctx.Logger()))
 	responseBz, err := wasmKeeper.QuerySmart(ctx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err

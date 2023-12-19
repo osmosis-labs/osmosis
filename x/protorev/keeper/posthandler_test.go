@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -356,7 +357,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.Ctx = s.Ctx.WithIsCheckTx(false)
-			s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+			s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter(log.NewNopLogger()))
 			s.Ctx = s.Ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 			gasLimit := uint64(500000)
@@ -422,7 +423,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 			posthandlerProtoRev := sdk.ChainPostDecorators(protoRevDecorator)
 
 			// Added so we can check the gas consumed during the posthandler
-			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
+			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(gasLimit, log.NewNopLogger()))
 			halfGas := gasLimit / 2
 			s.Ctx.GasMeter().ConsumeGas(halfGas, "consume half gas")
 
@@ -444,7 +445,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				// Check that the gas limit is the same before and after the posthandler
 				s.Require().Equal(gasLimitBefore, gasLimitAfter)
 
-				s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+				s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter(log.NewNopLogger()))
 
 				// Check that the number of trades is correct
 				numOfTrades, _ := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
@@ -709,7 +710,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	s.SetupTest()
 
 	// Set up the app to the correct state to run the test
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter(log.NewNopLogger()))
 	err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 40)
 	s.Require().NoError(err)
 

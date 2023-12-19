@@ -133,7 +133,7 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 	//
 	// We ensure this limit only applies to this call by creating a child context with a gas
 	// limit and then metering the gas used in parent context once the operation is completed.
-	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(k.GetParams(ctx).HookGasLimit))
+	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(k.GetParams(ctx).HookGasLimit, ctx.Logger()))
 	_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 	if err != nil {
 		return err

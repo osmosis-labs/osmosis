@@ -1,6 +1,7 @@
 package osmoutils_test
 
 import (
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -39,7 +40,7 @@ func (s *TestSuite) TestCacheCtxConsumeGas() {
 	}
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(tc.gasLimit))
+			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(tc.gasLimit, log.NewNopLogger()))
 			ctx.GasMeter().ConsumeGas(tc.gasUsedPreCtx, "pre ctx")
 			var err error
 			f := func() {
