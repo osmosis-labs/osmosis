@@ -38,7 +38,6 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	} else {
 		// no error, write the output of f
 		write()
-		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	}
 	return err
 }
