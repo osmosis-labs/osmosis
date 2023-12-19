@@ -357,7 +357,11 @@ require (
 	gitlab.com/bosi/decorder v0.4.0 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/crypto v0.14.0 // indirect
+=======
+	golang.org/x/crypto v0.17.0 // indirect
+>>>>>>> c79ca3f2 (chore(deps): bump golang.org/x/crypto from 0.16.0 to 0.17.0 (#7158))
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
