@@ -29,7 +29,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231211161501-28475581c846
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231215070550-ca294af82738
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231211161501-28475581c846
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231211161501-28475581c846
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231211161501-28475581c846
@@ -39,7 +39,7 @@ require (
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.17.0
+	github.com/spf13/viper v1.18.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.6.0
 	github.com/tidwall/gjson v1.16.0
@@ -358,7 +358,7 @@ require (
 	gitlab.com/bosi/decorder v0.4.0 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.19.0 // indirect

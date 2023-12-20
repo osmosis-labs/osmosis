@@ -23,7 +23,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, routes []route.RouteI
 		return nil, ErrNilPoolsRepository
 	}
 
-	bestSingleRouteQuote, _, err := r.estimateBestSingleRouteQuote(routes, tokenIn)
+	bestSingleRouteQuote, _, err := r.estimateAndRankSingleRouteQuote(routes, tokenIn)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (r *Router) getBestSingleRouteQuote(tokenIn sdk.Coin, routes []route.RouteI
 // Returns best quote as well as all routes sorted by amount out and error if any.
 // CONTRACT: router repository must be set on the router.
 // CONTRACT: pools repository must be set on the router
-func (r *Router) estimateBestSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
+func (r *Router) estimateAndRankSingleRouteQuote(routes []route.RouteImpl, tokenIn sdk.Coin) (quote domain.Quote, sortedRoutesByAmtOut []RouteWithOutAmount, err error) {
 	if len(routes) == 0 {
 		return nil, nil, errors.New("no routes were provided")
 	}

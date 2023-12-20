@@ -49,22 +49,22 @@ localnet-keys:
 localnet-init: localnet-clean localnet-build
 
 localnet-build:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-start:
-	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
+	@STATE="" docker compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-start-with-state:
-	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up
+	@STATE=-s docker compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
-	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up -d
+	@STATE="" docker compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-startd-with-state:
-	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up -d
+	@STATE=-s docker compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-stop:
-	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
+	@STATE="" docker compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-clean:
 	@rm -rfI $(HOME)/.osmosisd-local/

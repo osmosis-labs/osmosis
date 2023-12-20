@@ -17,6 +17,7 @@ import (
 	chainInfoRepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chain_info/repository/redis"
 	chainInfoUseCase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chain_info/usecase"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/cache"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/middleware"
@@ -142,7 +143,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, routerConfig domain.RouterConfi
 
 	// Initialize router repository, usecase and HTTP handler
 	routerRepository := routerRedisRepository.NewRedisRouterRepo(redisTxManager, routerConfig.RouteCacheExpirySeconds)
-	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, routerRepository, poolsUseCase, routerConfig, logger)
+	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, routerRepository, poolsUseCase, routerConfig, logger, cache.New())
 	routerHttpDelivery.NewRouterHandler(e, routerUsecase, logger)
 
 	// Initialize system handler

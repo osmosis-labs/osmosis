@@ -206,3 +206,38 @@ func TestPow(t *testing.T) {
 		})
 	}
 }
+
+func TestOrderOfMagnitudeWithoutLog(t *testing.T) {
+	// Test cases
+	testCases := []struct {
+		name     string
+		input    Dec
+		expected int
+
+		expectedPanic bool
+	}{
+		{"PositiveNumber", MustNewDecFromStr("12345.6789"), 4, false},
+		{"Zero", ZeroDec(), 0, false},
+		{"SmallNumber", MustNewDecFromStr("0.00012345"), -4, false},
+		{"One", OneDec(), 0, false},
+		{"NegativeNumber", MustNewDecFromStr("-9876.54321"), 4, true},
+	}
+
+	// Run tests
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			if tc.expectedPanic {
+				require.Panics(t, func() { OrderOfMagnitude(tc.input) })
+				return
+			}
+
+			result := OrderOfMagnitude(tc.input)
+
+			// Check if the result matches the expected value
+			if result != tc.expected {
+				t.Errorf("Expected order of magnitude %d, got %d", tc.expected, result)
+			}
+		})
+	}
+}
