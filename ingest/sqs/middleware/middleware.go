@@ -1,11 +1,13 @@
 package middleware
 
 import (
-	"net/url"
+	"context"
 	"time"
 
 	"github.com/labstack/echo"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 )
 
 // GoMiddleware represent the data-struct for middleware
@@ -57,16 +59,20 @@ func (m *GoMiddleware) InstrumentMiddleware(next echo.HandlerFunc) echo.HandlerF
 	return func(c echo.Context) error {
 		start := time.Now()
 
-		parsedURL, err := url.Parse(c.Request().RequestURI)
+		requestMethod := c.Request().Method
+		requestPath, err := domain.ParseURLPath(c)
 		if err != nil {
 			return err
 		}
 
-		requestMethod := c.Request().Method
-		requestPath := parsedURL.Path
-
 		// Increment the request counter
 		requestsTotal.WithLabelValues(requestMethod, requestPath).Inc()
+
+		// Insert the request path into the context
+		ctx := c.Request().Context()
+		ctx = context.WithValue(ctx, domain.RequestPathCtxKey, requestPath)
+		request := c.Request().WithContext(ctx)
+		c.SetRequest(request)
 
 		err = next(c)
 
