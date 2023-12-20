@@ -243,10 +243,17 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	if deductFeesFromAcc == nil {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
+	fees := feeTx.GetFee()
+
+	// if we are simulating, set the fees to 1 uosmo as they don't matter.
+	if simulate {
+		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
+		deductFeesFromAcc = dfd.ak.GetAccount(ctx, sdk.AccAddress{0})
+	}
 
 	// deducts the fees and transfer them to the module account
-	if !feeTx.GetFee().IsZero() {
-		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
+	if !fees.IsZero() {
+		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, fees)
 		if err != nil {
 			return ctx, err
 		}
