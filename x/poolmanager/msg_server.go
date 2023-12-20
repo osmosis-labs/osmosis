@@ -21,7 +21,7 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 // TODO: spec and tests, including events
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ctx.Logger().With("sim", "info").Info("SwapExactAmountIn start")
+	ctx.Logger().With("sim", "info").Info("SwapExactAmountIn start", "height", ctx.BlockHeight(), "sender", msg.Sender)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -42,7 +42,7 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		),
 	})
 
-	ctx.Logger().With("sim", "info").Info("SwapExactAmountIn end")
+	ctx.Logger().With("sim", "info").Info("SwapExactAmountIn end", "height", ctx.BlockHeight(), "sender", msg.Sender)
 
 	return &types.MsgSwapExactAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
