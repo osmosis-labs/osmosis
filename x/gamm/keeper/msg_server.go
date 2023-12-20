@@ -91,6 +91,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg poolmanagertypes.C
 // * For the case of a not containing tokens, we simply perform calculation of sharesOut and needed amount of tokens for joining the pool
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.Logger().With("sim", "info").Info("JoinPool start")
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -109,6 +110,8 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
+	ctx.Logger().With("sim", "info").Info("JoinPool end")
 
 	return &types.MsgJoinPoolResponse{
 		ShareOutAmount: sharesOut,
