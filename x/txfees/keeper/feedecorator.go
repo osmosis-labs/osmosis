@@ -251,7 +251,11 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	if simulate && fees.IsZero() {
 		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
 		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
-		deductFeesFromAcc = dfd.ak.GetAccount(ctx, burnAcctAddr)
+		// were doing 1 extra get account call alas
+		burnAcct := dfd.ak.GetAccount(ctx, burnAcctAddr)
+		if burnAcct != nil {
+			deductFeesFromAcc = burnAcct
+		}
 	}
 
 	// deducts the fees and transfer them to the module account
