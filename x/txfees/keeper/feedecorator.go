@@ -248,16 +248,26 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
+	fees := feeTx.GetFee()
+
+	// if we are simulating, set the fees to 1 uosmo as they don't matter.
+	// set it as coming from the burn addr
+	if simulate && fees.IsZero() {
+		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
+		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+		deductFeesFromAcc = dfd.ak.GetAccount(ctx, burnAcctAddr)
+	}
+
 	// deducts the fees and transfer them to the module account
-	if !feeTx.GetFee().IsZero() {
-		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
+	if !fees.IsZero() {
+		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, fees)
 		if err != nil {
 			return ctx, err
 		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
-		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+		sdk.NewAttribute(sdk.AttributeKeyFee, fees.String()),
 	)})
 
 	return next(ctx, tx, simulate)
