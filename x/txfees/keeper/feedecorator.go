@@ -48,7 +48,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	ctx.Logger().With("sim", "info").Info("MempoolFeeDecorator", "fee", feeTx.GetFee(), feeTx.FeeGranter())
+	ctx.Logger().With("sim", "info").Info("MempoolFeeDecorator", "fee", feeTx.GetFee(), "granter", feeTx.FeeGranter())
 
 	// Ensure that the provided gas is less than the maximum gas per tx,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
