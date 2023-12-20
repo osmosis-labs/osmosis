@@ -130,6 +130,7 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 	// UNFORKINGTODO OQ: look into what we should use in place of ctx.IsGenesis() here
 	// if ctx.IsGenesis() || simulate {
 	if simulate {
+		ctx.Logger().With("sim", "info").Info("MempoolFeeDecorator SIMULATE", "fee", feeTx.GetFee())
 		minBaseGasPrice = osmomath.ZeroDec()
 	}
 	return minBaseGasPrice
