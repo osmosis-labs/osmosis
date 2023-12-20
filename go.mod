@@ -30,7 +30,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231211173227-afdfd0b87e09
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231220185444-78d2c6fefe94
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231207233718-ef61c5f32b31
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231207233718-ef61c5f32b31
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231207233718-ef61c5f32b31
 	github.com/pkg/errors v0.9.1
@@ -388,16 +388,16 @@ replace (
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	// Local replaces commented for development
-	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
-
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+
+// Local replaces commented for development
+// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
