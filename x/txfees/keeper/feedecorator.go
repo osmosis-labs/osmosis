@@ -41,7 +41,7 @@ func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) M
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// The SDK currently requires all txs to be FeeTx's in CheckTx, within its mempool fee decorator.
 	// See: https://github.com/cosmos/cosmos-sdk/blob/f726a2398a26bdaf71d78dbf56a82621e84fd098/x/auth/middleware/fee.go#L34-L37
-	// So this is not a real restriction at the moment.
+	// So this is not a real restriction at the moment.294
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		ctx.Logger().With("sim", "info").Info("MempoolFeeDecorator NOT FEE TX")
@@ -254,7 +254,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// set it as coming from the burn addr
 	if simulate && fees.IsZero() {
 		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
-		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks")
+		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1q8709l2656zjtg567xnrxjr6j35a2pvwhxxms2")
 		deductFeesFromAcc = dfd.ak.GetAccount(ctx, burnAcctAddr)
 	}
 
