@@ -388,16 +388,16 @@ replace (
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
+	// Local replaces commented for development
+	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
-
-// Local replaces commented for development
-// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
