@@ -121,6 +121,7 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 
 func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) (*types.MsgExitPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.Logger().With("sim", "info").Info("ExitPool start", "height", ctx.BlockHeight(), "sender", msg.Sender)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -139,6 +140,8 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
+	ctx.Logger().With("sim", "info").Info("ExitPool end", "height", ctx.BlockHeight(), "sender", msg.Sender)
 
 	return &types.MsgExitPoolResponse{
 		TokenOut: exitCoins,
