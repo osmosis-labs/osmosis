@@ -44,6 +44,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So this is not a real restriction at the moment.
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
+		ctx.Logger().With("sim", "info").Info("MempoolFeeDecorator NOT FEE TX")
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
