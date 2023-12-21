@@ -700,7 +700,7 @@ func (k Keeper) distributeInternal(
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.
-// returns a new big int that can be mutated.
+// returns a new sdk int that can be mutated.
 func guaranteedNonzeroCoinAmountOf(coins sdk.Coins, denom string) osmomath.Int {
 	if coins.Len() == 1 {
 		return coins[0].Amount
