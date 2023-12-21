@@ -673,11 +673,11 @@ func (k Keeper) distributeInternal(
 			denomLockAmt := guaranteedNonzeroCoinAmountOf(lock.Coins, denom)
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-				amtInt := coin.Amount.Mul(denomLockAmt)
-				amtIntBi := amtInt.BigIntMut()
-				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
-				if amtInt.IsPositive() {
-					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
+				amt := coin.Amount.Mul(denomLockAmt).BigIntMut()
+				amt = amt.Quo(amt, lockSumTimesRemainingEpochsBi)
+				coinAmt := osmomath.NewIntFromBigInt(amt)
+				if coinAmt.IsPositive() {
+					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: coinAmt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
 				}
 			}
@@ -709,7 +709,7 @@ func (k Keeper) distributeInternal(
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.
-// returns a new sdk int that can be mutated.
+// returns a new big int that can be mutated.
 func guaranteedNonzeroCoinAmountOf(coins sdk.Coins, denom string) osmomath.Int {
 	if coins.Len() == 1 {
 		return coins[0].Amount
