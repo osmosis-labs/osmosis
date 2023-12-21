@@ -49,10 +49,10 @@ var (
 	// If recovering at ~30M gas per block, decrease is .94
 	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(10))
 	TargetGas          = int64(75_000_000)
-	// In face of continuous spam, will take ~21 blocks from base fee > spam cost, to mempool eviction
+	// In face of continuous spam, will take ~19 blocks from base fee > spam cost, to mempool eviction
 	// ceil(log_{1.06}(RecheckFeeConstant))
-	// So potentially 2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
-	RecheckFeeConstant = "3.3"
+	// So potentially 1.8 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
+	RecheckFeeConstant = "3.0"
 	ResetInterval      = int64(3000)
 )
 
