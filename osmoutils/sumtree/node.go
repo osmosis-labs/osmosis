@@ -21,7 +21,7 @@ func (ptr *ptr) isLeaf() bool {
 
 func (ptr *ptr) node() (res *Node) {
 	res = new(Node)
-	bz := ptr.tree.store.Get(ptr.tree.nodeKey(ptr.level, ptr.key))
+	bz := ptr.tree.store.Get(nodeKey(ptr.level, ptr.key))
 	if bz != nil {
 		if err := proto.Unmarshal(bz, res); err != nil {
 			panic(err)
@@ -35,7 +35,7 @@ func (ptr *ptr) set(node *Node) {
 	if err != nil {
 		panic(err)
 	}
-	ptr.tree.store.Set(ptr.tree.nodeKey(ptr.level, ptr.key), bz)
+	ptr.tree.store.Set(nodeKey(ptr.level, ptr.key), bz)
 }
 
 func (ptr *ptr) setLeaf(leaf *Leaf) {
@@ -46,11 +46,11 @@ func (ptr *ptr) setLeaf(leaf *Leaf) {
 	if err != nil {
 		panic(err)
 	}
-	ptr.tree.store.Set(ptr.tree.leafKey(ptr.key), bz)
+	ptr.tree.store.Set(leafKey(ptr.key), bz)
 }
 
 func (ptr *ptr) delete() {
-	ptr.tree.store.Delete(ptr.tree.nodeKey(ptr.level, ptr.key))
+	ptr.tree.store.Delete(nodeKey(ptr.level, ptr.key))
 }
 
 func (ptr *ptr) leftSibling() *ptr {
@@ -102,7 +102,7 @@ func (ptr *ptr) exists() bool {
 	if ptr == nil {
 		return false
 	}
-	return ptr.tree.store.Has(ptr.tree.nodeKey(ptr.level, ptr.key))
+	return ptr.tree.store.Has(nodeKey(ptr.level, ptr.key))
 }
 
 // updateAccumulation changes the accumulation value of a ptr in the tree,

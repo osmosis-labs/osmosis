@@ -26,6 +26,8 @@ type Tree struct {
 	m     uint8
 }
 
+var nilLeafKey = leafKey(nil)
+
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
 	if tree.IsEmpty() {
@@ -35,7 +37,7 @@ func NewTree(store store.KVStore, m uint8) Tree {
 }
 
 func (t Tree) IsEmpty() bool {
-	return !t.store.Has(t.leafKey(nil))
+	return !t.store.Has(nilLeafKey)
 }
 
 func (t Tree) Set(key []byte, acc osmomath.Int) {
@@ -108,7 +110,7 @@ func (iter ptrIterator) ptr() *ptr {
 
 // nodeKey takes in a nodes layer, and its key, and constructs the
 // its key in the underlying datastore.
-func (t Tree) nodeKey(level uint16, key []byte) []byte {
+func nodeKey(level uint16, key []byte) []byte {
 	// node key prefix is of len 7
 	bz := make([]byte, nodeKeyPrefixLen+2+len(key))
 	copy(bz, nodeKeyPrefix)
@@ -118,8 +120,8 @@ func (t Tree) nodeKey(level uint16, key []byte) []byte {
 }
 
 // leafKey constructs a key for a node pointer representing a leaf node.
-func (t Tree) leafKey(key []byte) []byte {
-	return t.nodeKey(0, key)
+func leafKey(key []byte) []byte {
+	return nodeKey(0, key)
 }
 
 func (t Tree) root() *ptr {
@@ -139,7 +141,7 @@ func (t Tree) root() *ptr {
 // Get returns the (osmomath.Int) accumulation value at a given leaf.
 func (t Tree) Get(key []byte) osmomath.Int {
 	res := new(Leaf)
-	keybz := t.leafKey(key)
+	keybz := leafKey(key)
 	if !t.store.Has(keybz) {
 		return osmomath.ZeroInt()
 	}
@@ -152,7 +154,7 @@ func (t Tree) Get(key []byte) osmomath.Int {
 }
 
 func (ptr *ptr) create(node *Node) {
-	keybz := ptr.tree.nodeKey(ptr.level, ptr.key)
+	keybz := nodeKey(ptr.level, ptr.key)
 	bz, err := proto.Marshal(node)
 	if err != nil {
 		panic(err)
@@ -171,28 +173,28 @@ func (t Tree) ptrGet(level uint16, key []byte) *ptr {
 func (t Tree) ptrIterator(level uint16, begin, end []byte) ptrIterator {
 	var endBytes []byte
 	if end != nil {
-		endBytes = t.nodeKey(level, end)
+		endBytes = nodeKey(level, end)
 	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
+		endBytes = stypes.PrefixEndBytes(nodeKey(level, nil))
 	}
 	return ptrIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.Iterator(t.nodeKey(level, begin), endBytes),
+		Iterator: t.store.Iterator(nodeKey(level, begin), endBytes),
 	}
 }
 
 func (t Tree) ptrReverseIterator(level uint16, begin, end []byte) ptrIterator {
 	var endBytes []byte
 	if end != nil {
-		endBytes = t.nodeKey(level, end)
+		endBytes = nodeKey(level, end)
 	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
+		endBytes = stypes.PrefixEndBytes(nodeKey(level, nil))
 	}
 	return ptrIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.ReverseIterator(t.nodeKey(level, begin), endBytes),
+		Iterator: t.store.ReverseIterator(nodeKey(level, begin), endBytes),
 	}
 }
 
@@ -213,7 +215,7 @@ func (ptr *ptr) accumulationSplit(key []byte) (left osmomath.Int, exact osmomath
 	left, exact, right = osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt()
 	if ptr.isLeaf() {
 		var leaf Leaf
-		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
+		bz := ptr.tree.store.Get(leafKey(ptr.key))
 		err := proto.Unmarshal(bz, &leaf)
 		if err != nil {
 			panic(err)
@@ -229,7 +231,7 @@ func (ptr *ptr) accumulationSplit(key []byte) (left osmomath.Int, exact osmomath
 		case 1:
 			right = leaf.Leaf.Accumulation
 		}
-		return
+		return left, exact, right
 	}
 
 	node := ptr.node()
