@@ -207,6 +207,16 @@ func NewOsmosisApp(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
+	file, err := os.Create("/root/app.log")
+	if err != nil {
+		panic(err)
+	}
+
+	logger = log.NewTMLogger(file)
+	logger = log.NewFilter(logger, log.AllowInfoWith("filter", "epoch"))
+
+	logger.With("filter", "epoch").Info("HERE")
+
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
@@ -418,6 +428,16 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+
+	// if ctx.BlockHeight() == 12863070 {
+	// 	ctx.Logger().With("filter", "epoch").Info("sleep")
+	// 	time.Sleep(time.Hour)
+	// }
+
+	fmt.Println(ctx.BlockHeight())
+
+	ctx.Logger().With("filter", "epoch").Info("begin blocker")
+
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
