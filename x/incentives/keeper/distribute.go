@@ -370,7 +370,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // the distrInfo struct. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeSyntheticInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
 
@@ -394,12 +394,12 @@ func (k Keeper) distributeSyntheticInternal(
 		}
 	}
 
-	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
+	sortedAndTrimmedQualifiedLocks := make([]*lockuptypes.PeriodLock, curIndex)
 	for _, v := range qualifiedLocksMap {
 		if v.index < 0 {
 			continue
 		}
-		sortedAndTrimmedQualifiedLocks[v.index] = v.lock
+		sortedAndTrimmedQualifiedLocks[v.index] = &(v.lock)
 	}
 
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
@@ -552,7 +552,7 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 //
 // CONTRACT: gauge passed in as argument must be an active gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
@@ -753,10 +753,10 @@ func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 }
 
 // getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
-func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
+func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []*lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
 	if gauge.Coins.Empty() {
-		return []lockuptypes.PeriodLock{}
+		return []*lockuptypes.PeriodLock{}
 	}
 	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 	// All gauges have a precondition of being ByDuration.
