@@ -777,7 +777,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
-	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
+	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock, len(gauges)/2)
 	totalDistributedCoins := sdk.NewCoins()
 
 	for _, gauge := range gauges {

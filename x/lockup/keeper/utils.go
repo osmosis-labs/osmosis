@@ -108,5 +108,7 @@ func syntheticLockRefKeys(lock types.PeriodLock, synthLock types.SyntheticLock) 
 }
 
 func combineLocks(pl1 []types.PeriodLock, pl2 []types.PeriodLock) []types.PeriodLock {
-	return append(pl1, pl2...)
+	result := make([]types.PeriodLock, 0, len(pl1)+len(pl2))
+	result = append(result, pl2...)
+	return append(result, pl1...)
 }
