@@ -654,22 +654,28 @@ func (k Keeper) distributeInternal(
 		}
 		// total_denom_lock_amount * remain_epochs
 		lockSumTimesRemainingEpochs := lockSum.MulRaw(int64(remainEpochs))
+		lockSumTimesRemainingEpochsBi := lockSumTimesRemainingEpochs.BigIntMut()
 
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
 			// too expensive + verbose even in debug mode.
 			// ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
 
+			denomLockAmt := guaranteedNonzeroCoinAmountOf(lock.Coins, denom)
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSumTimesRemainingEpochs)
-				if amt.IsPositive() {
-					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
+				amt := coin.Amount.Mul(denomLockAmt).BigIntMut()
+				amt = amt.Quo(amt, lockSumTimesRemainingEpochsBi)
+				coinAmt := osmomath.NewIntFromBigInt(amt)
+				if coinAmt.IsPositive() {
+					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: coinAmt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
 				}
 			}
-			distrCoins = distrCoins.Sort()
+			if distrCoins.Len() > 1 {
+				// Sort makes a runtime copy, due to some interesting golang details.
+				distrCoins = distrCoins.Sort()
+			}
 			if distrCoins.Empty() {
 				continue
 			}
@@ -691,6 +697,15 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
+}
+
+// faster coins.AmountOf if we know that coins must contain the denom.
+// returns a new sdk int that can be mutated.
+func guaranteedNonzeroCoinAmountOf(coins sdk.Coins, denom string) osmomath.Int {
+	if coins.Len() == 1 {
+		return coins[0].Amount
+	}
+	return coins.AmountOfNoDenomValidation(denom)
 }
 
 // updateGaugePostDistribute increments the gauge's filled epochs field.
