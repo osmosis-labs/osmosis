@@ -303,14 +303,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 
-			// configure the viper instance to parse home flags
-			if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
-				return err
-			}
-			if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
-				return err
-			}
-
 			// overwrite config.toml values
 			cometConfig, err := overwriteConfigTomlValues(serverCtx)
 			if err != nil {
