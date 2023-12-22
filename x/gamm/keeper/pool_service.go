@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -142,6 +143,9 @@ func (k Keeper) JoinPoolNoSwap(
 		if r := recover(); r != nil {
 			tokenIn = sdk.Coins{}
 			sharesOut = osmomath.Int{}
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function JoinPoolNoSwap failed due to lack of gas: %v", d)
+			}
 			err = fmt.Errorf("function JoinPoolNoSwap failed due to internal reason: %v", r)
 		}
 	}()
@@ -234,6 +238,9 @@ func (k Keeper) JoinSwapExactAmountIn(
 	defer func() {
 		if r := recover(); r != nil {
 			sharesOut = osmomath.Int{}
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function JoinSwapExactAmountIn failed due to lack of gas: %v", d)
+			}
 			err = fmt.Errorf("function JoinSwapExactAmountIn failed due to internal reason: %v", r)
 		}
 	}()
@@ -278,6 +285,9 @@ func (k Keeper) JoinSwapShareAmountOut(
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = osmomath.Int{}
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function JoinSwapShareAmountOut failed due to lack of gas: %v", d)
+			}
 			err = fmt.Errorf("function JoinSwapShareAmountOut failed due to internal reason: %v", r)
 		}
 	}()

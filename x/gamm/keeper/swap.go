@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,6 +40,9 @@ func (k Keeper) SwapExactAmountIn(
 
 	defer func() {
 		if r := recover(); r != nil {
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function swapExactAmountIn failed due to lack of gas: %v", d)
+			}
 			tokenOutAmount = osmomath.Int{}
 			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
 		}
@@ -94,6 +98,9 @@ func (k Keeper) SwapExactAmountOut(
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = osmomath.Int{}
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function swapExactAmountOut failed due to lack of gas: %v", d)
+			}
 			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
 		}
 	}()

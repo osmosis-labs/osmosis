@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -113,7 +114,10 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 	// recover from panic
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("Protorev failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("protorev failed due to lack of gas: %v", d)
+			}
+			err = fmt.Errorf("protorev failed due to internal reason: %v", r)
 		}
 	}()
 
