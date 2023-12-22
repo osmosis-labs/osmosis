@@ -40,11 +40,12 @@ func (k Keeper) SwapExactAmountIn(
 
 	defer func() {
 		if r := recover(); r != nil {
+			tokenOutAmount = osmomath.Int{}
 			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
 				err = fmt.Errorf("function swapExactAmountIn failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
 			}
-			tokenOutAmount = osmomath.Int{}
-			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
 		}
 	}()
 
@@ -100,8 +101,9 @@ func (k Keeper) SwapExactAmountOut(
 			tokenInAmount = osmomath.Int{}
 			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
 				err = fmt.Errorf("function swapExactAmountOut failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
 			}
-			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
 		}
 	}()
 

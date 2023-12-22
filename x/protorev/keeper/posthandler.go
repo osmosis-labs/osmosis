@@ -116,8 +116,9 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 		if r := recover(); r != nil {
 			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
 				err = fmt.Errorf("protorev failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("protorev failed due to internal reason: %v", r)
 			}
-			err = fmt.Errorf("protorev failed due to internal reason: %v", r)
 		}
 	}()
 
