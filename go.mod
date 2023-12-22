@@ -29,10 +29,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231215224605-7c13c8d20c96
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231207233718-ef61c5f32b31
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231207233718-ef61c5f32b31
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231207233718-ef61c5f32b31
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231222061512-c511aeb834f0
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231222061512-c511aeb834f0
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231222061512-c511aeb834f0
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231222061512-c511aeb834f0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.0
@@ -107,6 +107,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/gobwas/ws v1.1.0 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
