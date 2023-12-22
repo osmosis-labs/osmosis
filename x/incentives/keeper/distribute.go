@@ -16,6 +16,10 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
+var (
+	millisecondsInSecDec = osmomath.NewDec(1000)
+)
+
 // AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
 // policy and allocates the coins to the underlying gauges per the updated weights.
 // Note, every group is associated with a group gauge. The distribution to regular gauges
@@ -601,7 +605,7 @@ func (k Keeper) distributeInternal(
 			// emissionRate calculates amount of tokens to emit per second
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
+			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncateMut(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoMut(millisecondsInSecDec))
 
 			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
