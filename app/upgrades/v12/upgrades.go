@@ -76,11 +76,12 @@ func CreateUpgradeHandler(
 		// Initialize TWAP state
 		// N.B.: deprecation nolint
 		// nolint: staticcheck
-		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
-		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
-		if err != nil {
-			return nil, err
-		}
+		// Note: left for historic reasons.
+		// latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		// err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		// Set TWAP parameters to default values.
 		keepers.TwapKeeper.SetParams(ctx, twaptypes.DefaultParams())
