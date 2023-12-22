@@ -787,6 +787,8 @@ github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiK
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
+github.com/cosmos/iavl v1.0.1-0.20231222230750-7c66a6cadca0 h1:5rVpRBNDtIHe6DuQ40C0mhZlQzM7+eNuVs48WDpfQIE=
+github.com/cosmos/iavl v1.0.1-0.20231222230750-7c66a6cadca0/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 h1:PqIK9vTr6zxCdQmrDZwxwL4KMAqg/GRGsiMEiaMP4wA=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 h1:02RCbih5lQ8aGdDMSvxhTnk5JDLEDitn17ytEE1Qhko=
@@ -809,8 +811,6 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/creack/pty v1.1.18 h1:n56/Zwd5o6whRC5PMGretI4IdRLlmBXYNjScPaBgsbY=
 github.com/curioswitch/go-reassign v0.2.0 h1:G9UZyOcpk/d7Gd6mqYgd8XYWFMw/znxwGDUstnC9DIo=
 github.com/curioswitch/go-reassign v0.2.0/go.mod h1:x6OpXuWvgfQaMGks2BZybTngWjT84hqJfKoO8Tt/Roc=
-github.com/czarcas7ic/iavl v1.0.1-0.20231222221742-b87619867c54 h1:TXrP9AUy/Gxx1jpC9LmI8OsgB41kqoPhqUzpoTy+Zyk=
-github.com/czarcas7ic/iavl v1.0.1-0.20231222221742-b87619867c54/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/daixiang0/gci v0.11.0 h1:XeQbFKkCRxvVyn06EOuNY6LPGBLVuB/W130c8FrnX6A=
 github.com/daixiang0/gci v0.11.0/go.mod h1:xtHP9N7AHdNvtRNfcx9gwTDfw7FRJx4bZUsiEfiNNAI=
 github.com/danieljoos/wincred v1.1.2 h1:QLdCxFs1/Yl4zduvBdcHB8goaYk9RARS2SgLLRuAyr0=
@@ -1539,8 +1539,8 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231222225410-cbc721b8feaf h1:pT60I+92BkfMAmBFKLF1j7YMZZ1Rp2U+6KSwtkUyk3A=
-github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231222225410-cbc721b8feaf/go.mod h1:gj/WVOa5qTGz3WDwtuYxWPIuyoLX8feblElVMvtzBz4=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231222231249-88d22f858701 h1:NIfrQbvR+DIjM8KZvACWr5sRKeOufGL6uXpFU2JYgiA=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231222231249-88d22f858701/go.mod h1:k+UDC058r5c61Xe5GoSpYf/LYb68zaItGrWrQuCeJ3k=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231222061512-c511aeb834f0 h1:6KzrEBdBaS7WGgzZi9S/BvWLmYHMkyq8un3yPyLFTHE=
