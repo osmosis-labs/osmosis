@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Config
 
-* [#7180](https://github.com/osmosis-labs/osmosis/pull/7180) Change `consensus.timeout-commit` from 5s to 4s. Overwrites the existing value on start-up. Default is set to 4s.
+* [#7180](https://github.com/osmosis-labs/osmosis/pull/7180) Change `consensus.timeout-commit` from 5s to 4s in `config.toml`. Overwrites the existing value on start-up. Default is set to 4s.
 
 ### API
 
