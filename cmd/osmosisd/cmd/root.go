@@ -429,12 +429,12 @@ func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error)
 
 	_, err := os.Stat(configFilePath)
 	if err != nil {
+		// something besides a does not exist error
 		if !os.IsNotExist(err) {
 			return nil, fmt.Errorf("failed to read in %s: %w", configFilePath, err)
 		}
 
-		// If does not exist, write default config.toml to update
-
+		// It does not exist, so we update the default config.toml to update
 		// We modify the default config.toml to have faster block times
 		// It will be written by server.InterceptConfigsPreRunHandler
 		tmcConfig.Consensus.TimeoutCommit = 4 * time.Second
@@ -453,12 +453,19 @@ func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error)
 
 		// The original default is 5s and is set in Cosmos SDK.
 		// We lower it to 4s for faster block times.
-		serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
-
-		// It will be re-read in server.InterceptConfigsPreRunHandler
-		tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
-
+		if serverCtx.Config.Consensus.TimeoutCommit == 5*time.Second {
+			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
+		}
 		tmcConfig = serverCtx.Config
+
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
+			}
+		}()
+		// It will be re-read in server.InterceptConfigsPreRunHandler
+		// this may panic for permissions issues. So we catch the panic.
+		tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
 	}
 	return tmcConfig, nil
 }
