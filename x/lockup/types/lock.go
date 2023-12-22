@@ -65,7 +65,7 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 
 // TODO: Can we use sumtree instead here?
 // Assumes that caller is passing in locks that contain denom
-func SumLocksByDenom(locks []PeriodLock, denom string) osmomath.Int {
+func SumLocksByDenom(locks []*PeriodLock, denom string) osmomath.Int {
 	sumBi := big.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
