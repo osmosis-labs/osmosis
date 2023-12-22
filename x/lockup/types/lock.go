@@ -102,7 +102,7 @@ func IsSyntheticDenom(denom string) bool {
 
 // Converts period lock pointers to structs.
 // This is done to avoid breaking query APIs and protos.
-// TODO: break query APIs to return pointers as oppossed to structs
+// TODO: break query APIs to return pointers as opposed to structs
 // and aboid this redundant convertsion.
 func ConvertPointersToLocks(locksPtr []*PeriodLock) []PeriodLock {
 	locks := make([]PeriodLock, 0, len(locksPtr))
