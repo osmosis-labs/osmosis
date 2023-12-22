@@ -668,11 +668,11 @@ func (k Keeper) distributeInternal(
 			denomLockAmt := guaranteedNonzeroCoinAmountOf(lock.Coins, denom)
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-				amt := coin.Amount.Mul(denomLockAmt).BigIntMut()
-				amt = amt.Quo(amt, lockSumTimesRemainingEpochsBi)
-				coinAmt := osmomath.NewIntFromBigInt(amt)
-				if coinAmt.IsPositive() {
-					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: coinAmt}
+				amtInt := coin.Amount.Mul(denomLockAmt)
+				amtIntBi := amtInt.BigIntMut()
+				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
+				if amtInt.IsPositive() {
+					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
 				}
 			}
