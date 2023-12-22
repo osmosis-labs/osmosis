@@ -213,17 +213,20 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 // Returns remaining amount in to swap, and takerFeeCoins.
 // returns (1 - takerFee) * tokenIn, takerFee * tokenIn
 func CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
-	amountInAfterSubTakerFee := tokenIn.Amount.ToLegacyDec().MulTruncate(osmomath.OneDec().Sub(takerFee))
-	tokenInAfterSubTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterSubTakerFee.TruncateInt())
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(tokenInAfterSubTakerFee.Amount))
+	takerFeeFactor := osmomath.OneDec().SubMut(takerFee)
+	// TODO: Remove .ToLegacyDec and instead do MulInt. Need to test state compat.
+	amountInAfterSubTakerFee := tokenIn.Amount.ToLegacyDec().MulTruncate(takerFeeFactor)
+	tokenInAfterSubTakerFee := sdk.Coin{Denom: tokenIn.Denom, Amount: amountInAfterSubTakerFee.TruncateInt()}
+	takerFeeCoin := sdk.Coin{Denom: tokenIn.Denom, Amount: tokenIn.Amount.Sub(tokenInAfterSubTakerFee.Amount)}
 
 	return tokenInAfterSubTakerFee, takerFeeCoin
 }
 
 func CalcTakerFeeExactOut(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
-	amountInAfterAddTakerFee := tokenIn.Amount.ToLegacyDec().Quo(osmomath.OneDec().Sub(takerFee))
-	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.Ceil().TruncateInt())
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount))
+	takerFeeFactor := osmomath.OneDec().SubMut(takerFee)
+	amountInAfterAddTakerFee := tokenIn.Amount.ToLegacyDec().Quo(takerFeeFactor)
+	tokenInAfterAddTakerFee := sdk.Coin{Denom: tokenIn.Denom, Amount: amountInAfterAddTakerFee.Ceil().TruncateInt()}
+	takerFeeCoin := sdk.Coin{Denom: tokenIn.Denom, Amount: tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount)}
 
 	return tokenInAfterAddTakerFee, takerFeeCoin
 }
