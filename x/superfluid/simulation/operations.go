@@ -194,10 +194,10 @@ func RandomLockAndAccount(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, 
 	lock := locks[r.Intn(len(locks))]
 	for _, acc := range accs {
 		if acc.Address.String() == lock.Owner {
-			return &lock, acc
+			return lock, acc
 		}
 	}
-	return &lock, simAccount
+	return lock, simAccount
 }
 
 func RandomAccountLock(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, addr sdk.AccAddress) *lockuptypes.PeriodLock {
@@ -205,7 +205,7 @@ func RandomAccountLock(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, add
 	if len(locks) == 0 {
 		return nil
 	}
-	return &locks[r.Intn(len(locks))]
+	return locks[r.Intn(len(locks))]
 }
 
 func RandomValidator(ctx sdk.Context, r *rand.Rand, sk types.StakingKeeper) *stakingtypes.Validator {

@@ -52,7 +52,7 @@ func MergeLockupsForSimilarDurations(
 		// We make at most one lock per (addr, denom, base duration) triplet, which we keep adding coins to.
 		// We call this the new "normalized lock", and the value in the map is the new lock ID.
 		normals := make(map[string]uint64)
-		locksToNormalize := []types.PeriodLock{}
+		locksToNormalize := []*types.PeriodLock{}
 		for _, lock := range k.GetAccountPeriodLocks(ctx, addr) {
 			// ignore multilocks
 			if len(lock.Coins) > 1 {
@@ -129,7 +129,7 @@ func MergeLockupsForSimilarDurations(
 			}
 
 			k.deleteLock(ctx, lock.ID)
-			err = k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+			err = k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, *lock)
 			if err != nil {
 				panic(err)
 			}

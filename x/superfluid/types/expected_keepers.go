@@ -19,12 +19,12 @@ import (
 
 // LockupKeeper defines the expected interface needed to retrieve locks.
 type LockupKeeper interface {
-	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock
-	GetAccountLockedLongerDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []lockuptypes.PeriodLock
-	GetAccountLockedLongerDurationDenomNotUnlockingOnly(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []lockuptypes.PeriodLock
+	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []*lockuptypes.PeriodLock
+	GetAccountLockedLongerDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []*lockuptypes.PeriodLock
+	GetAccountLockedLongerDurationDenomNotUnlockingOnly(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []*lockuptypes.PeriodLock
 	GetPeriodLocksAccumulation(ctx sdk.Context, query lockuptypes.QueryCondition) osmomath.Int
-	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
-	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
+	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []*lockuptypes.PeriodLock
+	GetPeriodLocks(ctx sdk.Context) ([]*lockuptypes.PeriodLock, error)
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 	// Despite the name, BeginForceUnlock is really BeginUnlock
 	// TODO: Fix this in future code update

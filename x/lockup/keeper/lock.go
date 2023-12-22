@@ -47,7 +47,7 @@ func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCon
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking locks of the given account.
-func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, error) {
+func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]*types.PeriodLock, error) {
 	locks, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
 	return locks, err
 }
@@ -897,7 +897,7 @@ func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	return splitLock, err
 }
 
-func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
+func (k Keeper) getCoinsFromLocks(locks []*types.PeriodLock) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, lock := range locks {
 		coins = coins.Add(lock.Coins...)

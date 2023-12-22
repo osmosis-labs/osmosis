@@ -111,7 +111,10 @@ func (q Querier) AccountLockedPastTime(goCtx context.Context, req *types.Account
 		return nil, err
 	}
 
-	return &types.AccountLockedPastTimeResponse{Locks: q.Keeper.GetAccountLockedPastTime(ctx, owner, req.Timestamp)}, nil
+	locksPtr := q.Keeper.GetAccountLockedPastTime(ctx, owner, req.Timestamp)
+	locks := types.ConvertPointersToLocks(locksPtr)
+
+	return &types.AccountLockedPastTimeResponse{Locks: locks}, nil
 }
 
 // AccountUnlockedBeforeTime returns locks of an account of which unlock time is before the provided timestamp.
@@ -130,7 +133,14 @@ func (q Querier) AccountUnlockedBeforeTime(goCtx context.Context, req *types.Acc
 		return nil, err
 	}
 
-	return &types.AccountUnlockedBeforeTimeResponse{Locks: q.Keeper.GetAccountUnlockedBeforeTime(ctx, owner, req.Timestamp)}, nil
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountUnlockedBeforeTime(ctx, owner, req.Timestamp)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
+	return &types.AccountUnlockedBeforeTimeResponse{Locks: locks}, nil
 }
 
 // AccountLockedPastTimeDenom returns the locks of an account whose unlock time is beyond provided timestamp, limited to locks with
@@ -150,7 +160,14 @@ func (q Querier) AccountLockedPastTimeDenom(goCtx context.Context, req *types.Ac
 		return nil, err
 	}
 
-	return &types.AccountLockedPastTimeDenomResponse{Locks: q.Keeper.GetAccountLockedPastTimeDenom(ctx, owner, req.Denom, req.Timestamp)}, nil
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountLockedPastTimeDenom(ctx, owner, req.Denom, req.Timestamp)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
+	return &types.AccountLockedPastTimeDenomResponse{Locks: locks}, nil
 }
 
 // LockedByID returns lock by lock ID.
@@ -238,7 +255,13 @@ func (q Querier) AccountLockedLongerDuration(goCtx context.Context, req *types.A
 		return nil, err
 	}
 
-	locks := q.Keeper.GetAccountLockedLongerDuration(ctx, owner, req.Duration)
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountLockedLongerDuration(ctx, owner, req.Duration)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
 	return &types.AccountLockedLongerDurationResponse{Locks: locks}, nil
 }
 
@@ -258,7 +281,13 @@ func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *ty
 		return nil, err
 	}
 
-	locks := q.Keeper.GetAccountLockedLongerDurationDenom(ctx, owner, req.Denom, req.Duration)
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountLockedLongerDurationDenom(ctx, owner, req.Denom, req.Duration)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
 	return &types.AccountLockedLongerDurationDenomResponse{Locks: locks}, nil
 }
 
@@ -278,7 +307,13 @@ func (q Querier) AccountLockedDuration(goCtx context.Context, req *types.Account
 		return nil, err
 	}
 
-	locks := q.Keeper.GetAccountLockedDuration(ctx, owner, req.Duration)
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountLockedDuration(ctx, owner, req.Duration)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
 	return &types.AccountLockedDurationResponse{Locks: locks}, nil
 }
 
@@ -299,7 +334,14 @@ func (q Querier) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, re
 		return nil, err
 	}
 
-	return &types.AccountLockedPastTimeNotUnlockingOnlyResponse{Locks: q.Keeper.GetAccountLockedPastTimeNotUnlockingOnly(ctx, owner, req.Timestamp)}, nil
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountLockedPastTimeNotUnlockingOnly(ctx, owner, req.Timestamp)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
+	return &types.AccountLockedPastTimeNotUnlockingOnlyResponse{Locks: locks}, nil
 }
 
 // AccountLockedLongerDurationNotUnlockingOnly returns locks of an account with longer duration
@@ -319,7 +361,14 @@ func (q Querier) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Conte
 		return nil, err
 	}
 
-	return &types.AccountLockedLongerDurationNotUnlockingOnlyResponse{Locks: q.Keeper.GetAccountLockedLongerDurationNotUnlockingOnly(ctx, owner, req.Duration)}, nil
+	// TODO: find a better way to abstract this or break APIs.
+	locksPtr := q.Keeper.GetAccountLockedLongerDurationNotUnlockingOnly(ctx, owner, req.Duration)
+	locks := make([]types.PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+
+	return &types.AccountLockedLongerDurationNotUnlockingOnlyResponse{Locks: locks}, nil
 }
 
 // LockedDenom returns the total amount of denom locked throughout all locks.

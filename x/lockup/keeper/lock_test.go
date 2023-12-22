@@ -270,11 +270,11 @@ func (s *KeeperTestSuite) TestUnlock() {
 			s.Require().Equal(len(actualUnlockingCoins), 1)
 			s.Require().Equal(expectedUnlockingCoins[0].Amount, actualUnlockingCoins[0].Amount)
 
-			lock = lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[0]
+			lock = *lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[0]
 
 			// if it is partial unlocking, get the new partial lock id
 			if partialUnlocking {
-				lock = lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[1]
+				lock = *lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[1]
 			}
 
 			// check lock state

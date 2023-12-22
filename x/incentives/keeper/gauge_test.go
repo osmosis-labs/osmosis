@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestGaugeOperations() {
 		s.Require().Equal(gaugeID, gaugeIdsByDenom[0])
 
 		// check rewards estimation
-		rewardsEst := s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+		rewardsEst := s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []*lockuptypes.PeriodLock{}, 100)
 		s.Require().Equal(expectedCoinsPerLock.String(), rewardsEst.String())
 
 		// check gauges
@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestGaugeOperations() {
 			// check invalid gauge ID
 			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID+1000)
 			s.Require().Error(err)
-			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []*lockuptypes.PeriodLock{}, 100)
 			s.Require().Equal(sdk.Coins{}, rewardsEst)
 
 			// check gauge ids by denom
@@ -263,7 +263,7 @@ func (s *KeeperTestSuite) TestGaugeOperations() {
 			s.Require().Len(gauges, 0)
 
 			// check rewards estimation
-			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []*lockuptypes.PeriodLock{}, 100)
 			s.Require().Equal(sdk.Coins{}, rewardsEst)
 
 			// check gauge ids by denom

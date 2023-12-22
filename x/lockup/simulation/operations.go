@@ -47,7 +47,7 @@ func RandomMsgBeginUnlocking(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	}, nil
 }
 
-var notUnlockingFilter = func(l types.PeriodLock) bool { return !l.IsUnlocking() }
+var notUnlockingFilter = func(l *types.PeriodLock) bool { return !l.IsUnlocking() }
 
 func accountHasLockConstraint(k keeper.Keeper, ctx sdk.Context) simtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
@@ -55,7 +55,7 @@ func accountHasLockConstraint(k keeper.Keeper, ctx sdk.Context) simtypes.SimAcco
 	}
 }
 
-func randLock(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, addr sdk.AccAddress) types.PeriodLock {
+func randLock(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, addr sdk.AccAddress) *types.PeriodLock {
 	locks := k.GetAccountPeriodLocks(ctx, addr)
 	notUnlockingLocks := osmoutils.Filter(notUnlockingFilter, locks)
 	return simtypes.RandSelect(sim, notUnlockingLocks...)

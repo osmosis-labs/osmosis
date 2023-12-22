@@ -179,8 +179,8 @@ func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bo
 }
 
 // getLocksFromIterator returns an array of single lock unit by period defined by the x/lockup module.
-func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []types.PeriodLock {
-	locks := []types.PeriodLock{}
+func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []*types.PeriodLock {
+	locks := []*types.PeriodLock{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		lockID := sdk.BigEndianToUint64(iterator.Value())
@@ -188,13 +188,13 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 		if err != nil {
 			panic(err)
 		}
-		locks = append(locks, *lock)
+		locks = append(locks, lock)
 	}
 	return locks
 }
 
 // unlockFromIterator gets locks from the iterator, then unlocks all matured locks. Returns locks unlocked and sum of coins unlocked.
-func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
+func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]*types.PeriodLock, sdk.Coins) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
 
@@ -212,7 +212,7 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 }
 
 // beginUnlockFromIterator starts unlocking coins from NotUnlocking queue.
-func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, error) {
+func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]*types.PeriodLock, error) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
 

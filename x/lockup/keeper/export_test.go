@@ -18,7 +18,7 @@ func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	return k.getLockRefs(ctx, key)
 }
 
-func (k Keeper) GetCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
+func (k Keeper) GetCoinsFromLocks(locks []*types.PeriodLock) sdk.Coins {
 	return k.getCoinsFromLocks(locks)
 }
 

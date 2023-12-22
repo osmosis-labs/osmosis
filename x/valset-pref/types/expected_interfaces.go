@@ -37,5 +37,5 @@ type LockupKeeper interface {
 	GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (lockuptypes.SyntheticLock, bool, error)
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 	BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error)
-	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
+	GetPeriodLocks(ctx sdk.Context) ([]*lockuptypes.PeriodLock, error)
 }

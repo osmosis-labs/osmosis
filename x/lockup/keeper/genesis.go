@@ -25,10 +25,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	locks, err := k.GetPeriodLocks(ctx)
+	locksPtr, err := k.GetPeriodLocks(ctx)
 	if err != nil {
 		panic(err)
 	}
+
+	locks := types.ConvertPointersToLocks(locksPtr)
+
 	params := k.GetParams(ctx)
 	return &types.GenesisState{
 		LastLockId:     k.GetLastLockID(ctx),

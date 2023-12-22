@@ -65,7 +65,7 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 
 // TODO: Can we use sumtree instead here?
 // Assumes that caller is passing in locks that contain denom
-func SumLocksByDenom(locks []PeriodLock, denom string) osmomath.Int {
+func SumLocksByDenom(locks []*PeriodLock, denom string) osmomath.Int {
 	sumBi := big.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
@@ -98,4 +98,16 @@ func NativeDenom(denom string) string {
 
 func IsSyntheticDenom(denom string) bool {
 	return NativeDenom(denom) != denom
+}
+
+// Converts period lock pointers to structs.
+// This is done to avoid breaking query APIs and protos.
+// TODO: break query APIs to return pointers as oppossed to structs
+// and aboid this redundant convertsion.
+func ConvertPointersToLocks(locksPtr []*PeriodLock) []PeriodLock {
+	locks := make([]PeriodLock, 0, len(locksPtr))
+	for _, lock := range locksPtr {
+		locks = append(locks, *lock)
+	}
+	return locks
 }

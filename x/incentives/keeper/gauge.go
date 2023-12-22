@@ -295,7 +295,7 @@ func (k Keeper) GetFinishedGauges(ctx sdk.Context) []types.Gauge {
 // GetRewardsEst returns rewards estimation at a future specific time (by epoch)
 // If locks are nil, it returns the rewards between now and the end epoch associated with address.
 // If locks are not nil, it returns all the rewards for the given locks between now and end epoch.
-func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, endEpoch int64) sdk.Coins {
+func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []*lockuptypes.PeriodLock, endEpoch int64) sdk.Coins {
 	// if locks are nil, populate with all locks associated with the address
 	if len(locks) == 0 {
 		locks = k.lk.GetAccountPeriodLocks(ctx, addr)

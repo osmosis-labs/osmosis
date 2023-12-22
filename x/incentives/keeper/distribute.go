@@ -224,7 +224,7 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 
 // getLocksToDistributionWithMaxDuration returns locks that match the provided lockuptypes QueryCondition,
 // are greater than the provided minDuration, AND have yet to be distributed to.
-func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
+func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []*lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
 		denom := lockuptypes.NativeDenom(distrTo.Denom)
@@ -236,13 +236,13 @@ func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo l
 		panic("Gauge by time is present, however is no longer supported. This should have been blocked in ValidateBasic")
 	default:
 	}
-	return []lockuptypes.PeriodLock{}
+	return []*lockuptypes.PeriodLock{}
 }
 
 // FilteredLocksDistributionEst estimates distribution amount of coins from gauge.
 // It also applies an update for the gauge, handling the sending of the rewards.
 // (Note this update is in-memory, it does not change state.)
-func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, bool, error) {
+func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []*lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, bool, error) {
 	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, gauge.DistributeTo)
 	if TotalAmtLocked.IsZero() {
 		return types.Gauge{}, nil, false, nil
@@ -374,7 +374,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // the distrInfo struct. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeSyntheticInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
 
@@ -383,7 +383,7 @@ func (k Keeper) distributeSyntheticInternal(
 	// to be in the same order as what is present in locks.
 	// in a future release, we can just use qualified locks directly.
 	type lockIndexPair struct {
-		lock  lockuptypes.PeriodLock
+		lock  *lockuptypes.PeriodLock
 		index int
 	}
 	qualifiedLocksMap := make(map[uint64]lockIndexPair, len(qualifiedLocks))
@@ -398,7 +398,7 @@ func (k Keeper) distributeSyntheticInternal(
 		}
 	}
 
-	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
+	sortedAndTrimmedQualifiedLocks := make([]*lockuptypes.PeriodLock, curIndex)
 	for _, v := range qualifiedLocksMap {
 		if v.index < 0 {
 			continue
@@ -556,7 +556,7 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 //
 // CONTRACT: gauge passed in as argument must be an active gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
@@ -757,10 +757,10 @@ func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 }
 
 // getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
-func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
+func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]*lockuptypes.PeriodLock) []*lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
 	if gauge.Coins.Empty() {
-		return []lockuptypes.PeriodLock{}
+		return []*lockuptypes.PeriodLock{}
 	}
 	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 	// All gauges have a precondition of being ByDuration.
@@ -781,7 +781,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
-	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
+	locksByDenomCache := make(map[string][]*lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
 
 	for _, gauge := range gauges {

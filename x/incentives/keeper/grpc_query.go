@@ -157,13 +157,13 @@ func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest)
 		ownerAddress = owner
 	}
 
-	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIds))
+	locks := make([]*lockuptypes.PeriodLock, 0, len(req.LockIds))
 	for _, lockId := range req.LockIds {
 		lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
 		if err != nil {
 			return nil, err
 		}
-		locks = append(locks, *lock)
+		locks = append(locks, lock)
 	}
 
 	return &types.RewardsEstResponse{Coins: q.Keeper.GetRewardsEst(ctx, ownerAddress, locks, req.EndEpoch)}, nil
