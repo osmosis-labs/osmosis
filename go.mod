@@ -2,8 +2,6 @@ module github.com/osmosis-labs/osmosis/v21
 
 go 1.20
 
-toolchain go1.21.3
-
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
