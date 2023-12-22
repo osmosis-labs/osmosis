@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +44,16 @@ var (
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
 func FormatModuleRouteKey(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
+	// Estimate the length of the string representation of poolId
+	// 7 is a safe upper bound, (9999999) pools, and is an 8 byte allocation (not bad)
+	length := 7
+	result := make([]byte, 1, 1+length)
+	result[0] = SwapModuleRouterPrefix[0]
+	// Write poolId into the byte slice starting after the prefix
+	written := strconv.AppendUint(result[1:], poolId, 10)
+
+	// Slice result to the actual length used
+	return result[:1+len(written)]
 }
 
 // FormatDenomTradePairKey serializes denom trade pair to bytes.
