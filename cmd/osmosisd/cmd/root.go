@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,6 +33,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -58,8 +60,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/joho/godotenv"
-
-	"github.com/cosmos/cosmos-sdk/client/config"
 
 	osmosis "github.com/osmosis-labs/osmosis/v21/app"
 )
@@ -301,6 +301,22 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
+			serverCtx := server.GetServerContextFromCmd(cmd)
+
+			// configure the viper instance to parse home flags
+			if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
+			if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+				return err
+			}
+
+			// overwrite config.toml values
+			cometConfig, err := overwriteConfigTomlValues(serverCtx)
+			if err != nil {
+				return err
+			}
+
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -389,7 +405,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					}
 				})
 			}
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, cometConfig)
 		},
 		SilenceUsage: true,
 	}
@@ -399,6 +415,59 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	initRootCmd(rootCmd, encodingConfig)
 
 	return rootCmd, encodingConfig
+}
+
+// overwrites config.toml values if it exists, otherwise it writes the default config.toml
+func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error) {
+	// Get paths to config.toml and config parent directory
+	rootDir := serverCtx.Viper.GetString(flags.FlagHome)
+	configParentDirPath := filepath.Join(rootDir, "config")
+	configFilePath := filepath.Join(configParentDirPath, "config.toml")
+
+	// Initialize default config
+	tmcConfig := tmcfg.DefaultConfig()
+
+	_, err := os.Stat(configFilePath)
+	if err != nil {
+		// something besides a does not exist error
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		}
+
+		// It does not exist, so we update the default config.toml to update
+		// We modify the default config.toml to have faster block times
+		// It will be written by server.InterceptConfigsPreRunHandler
+		tmcConfig.Consensus.TimeoutCommit = 4 * time.Second
+	} else {
+		// config.toml exists
+
+		serverCtx.Viper.SetConfigType("toml")
+		serverCtx.Viper.SetConfigName("config")
+		serverCtx.Viper.AddConfigPath(configParentDirPath)
+
+		// We read it in and modify the consensus timeout commit
+		// and write it back.
+		if err := serverCtx.Viper.ReadInConfig(); err != nil {
+			return nil, fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		}
+
+		// The original default is 5s and is set in Cosmos SDK.
+		// We lower it to 4s for faster block times.
+		if serverCtx.Config.Consensus.TimeoutCommit == 5*time.Second {
+			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
+		}
+		tmcConfig = serverCtx.Config
+
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
+			}
+		}()
+		// It will be re-read in server.InterceptConfigsPreRunHandler
+		// this may panic for permissions issues. So we catch the panic.
+		tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+	}
+	return tmcConfig, nil
 }
 
 func getHomeEnvironment() string {
