@@ -146,6 +146,9 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		// reset pool and accounts for each test
 		s.SetupTest(false)
 		s.Run(tc.name, func() {
+			// See DeductFeeDecorator AnteHandler for how this is used
+			s.FundAcc(sdk.MustAccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"), sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1)))
+
 			preFeeDecoratorTxFeeTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
 			err := s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, tc.minGasPrices, tc.gasRequested, tc.isCheckTx, tc.isSimulate, tc.txFee)
 			if tc.expectPass {
