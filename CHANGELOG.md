@@ -40,6 +40,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v21.1.4]
+
+* [#7180](https://github.com/osmosis-labs/osmosis/pull/7180) Change `consensus.timeout-commit` from 5s to 4s in `config.toml`. Overwrites the existing value on start-up. Default is set to 4s.
+
+## [v21.1.3]
+
+Epoch optimizations
+
 ## [v21.1.1]
 
 ### API
