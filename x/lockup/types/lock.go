@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -63,18 +64,25 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 }
 
 // TODO: Can we use sumtree instead here?
-func SumLocksByDenom(locks []PeriodLock, denom string) osmomath.Int {
-	sum := osmomath.NewInt(0)
+// Assumes that caller is passing in locks that contain denom
+func SumLocksByDenom(locks []*PeriodLock, denom string) osmomath.Int {
+	sumBi := big.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
 	if err != nil {
 		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
 	}
 	for _, lock := range locks {
-		// TODO: Replace with Mutative Int Operations
-		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
+		var amt osmomath.Int
+		// skip a 1second cumulative runtimeEq check
+		if len(lock.Coins) == 1 {
+			amt = lock.Coins[0].Amount
+		} else {
+			amt = lock.Coins.AmountOfNoDenomValidation(denom)
+		}
+		sumBi.Add(sumBi, amt.BigIntMut())
 	}
-	return sum
+	return osmomath.NewIntFromBigInt(sumBi)
 }
 
 // quick fix for getting native denom from synthetic denom.

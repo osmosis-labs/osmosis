@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -29,6 +30,33 @@ type routerUseCaseImpl struct {
 	logger           log.Logger
 
 	rankedRouteCache *cache.Cache
+}
+
+const (
+	candidateRouteCacheLabel = "candidate_route"
+	rankedRouteCacheLabel    = "ranked_route"
+)
+
+var (
+	cacheHits = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sqs_cache_hits_total",
+			Help: "Total number of cache hits",
+		},
+		[]string{"route", "cache_type", "token_in", "token_out"},
+	)
+	cacheMisses = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sqs_cache_misses_total",
+			Help: "Total number of cache misses",
+		},
+		[]string{"route", "cache_type", "token_in", "token_out"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(cacheHits)
+	prometheus.MustRegister(cacheMisses)
 }
 
 // NewRouterUsecase will create a new pools use case object
@@ -54,7 +82,6 @@ func NewRouterUsecase(timeout time.Duration, routerRepository mvc.RouterReposito
 // Returns error if:
 // - fails to estimate direct quotes for ranked routes
 // - fails to retrieve candidate routes
-// -
 func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
 	// Get an order of magnitude for the token in amount
 	// This is used for caching ranked routes as these might differ depending on the amount swapped in.
@@ -70,7 +97,16 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 
 	router := r.initializeRouter()
 
+	// Get request path for metrics
+	requestURLPath, err := domain.GetURLPathFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if hasRankedRoutesInCache {
+		// Increase cache hits
+		cacheHits.WithLabelValues(requestURLPath, rankedRouteCacheLabel, tokenIn.Denom, tokenOutDenom).Inc()
+
 		rankedCandidateRoutes, ok := rankedRoutesData.(route.CandidateRoutes)
 		if !ok {
 			return nil, fmt.Errorf("error casting ranked routes from cache")
@@ -82,6 +118,9 @@ func (r *routerUseCaseImpl) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coi
 			return nil, err
 		}
 	} else {
+		// Increase cache misses
+		cacheMisses.WithLabelValues(requestURLPath, rankedRouteCacheLabel, tokenIn.Denom, tokenOutDenom).Inc()
+
 		// If top routes are not present in cache, retrieve unranked candidate routes
 		candidateRoutes, err := r.handleCandidateRoutes(ctx, router, tokenIn.Denom, tokenOutDenom)
 		if err != nil {
@@ -443,8 +482,17 @@ func (r *routerUseCaseImpl) handleCandidateRoutes(ctx context.Context, router *R
 
 	r.logger.Debug("cached routes", zap.Int("num_routes", len(candidateRoutes.Routes)))
 
+	// Get request path for metrics
+	requestURLPath, err := domain.GetURLPathFromContext(ctx)
+	if err != nil {
+		return route.CandidateRoutes{}, err
+	}
+
 	// If no routes are cached, find them
 	if len(candidateRoutes.Routes) == 0 {
+		// Increase cache misses
+		cacheMisses.WithLabelValues(requestURLPath, candidateRouteCacheLabel, tokenInDenom, tokenOutDenom).Inc()
+
 		r.logger.Debug("calculating routes")
 		allPools, err := r.poolsUsecase.GetAllPools(ctx)
 		if err != nil {
@@ -467,6 +515,8 @@ func (r *routerUseCaseImpl) handleCandidateRoutes(ctx context.Context, router *R
 				return route.CandidateRoutes{}, err
 			}
 		}
+	} else {
+		cacheHits.WithLabelValues(requestURLPath, candidateRouteCacheLabel, tokenInDenom, tokenOutDenom).Inc()
 	}
 
 	return candidateRoutes, nil

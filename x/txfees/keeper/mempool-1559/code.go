@@ -17,12 +17,12 @@ import (
 
 	 This logic does two things:
    - Maintaining data parsed from chain transaction execution and updating eipState accordingly.
-   - Resetting eipState to default every ResetInterval (1000) block height intervals to maintain consistency.
+   - Resetting eipState to default every ResetInterval (3000) block height intervals to maintain consistency.
 
    Additionally:
    - Periodically evaluating CheckTx and RecheckTx for compliance with these parameters.
 
-   Note: The reset interval is set to 2000 blocks, which is approximately 4 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
+   Note: The reset interval is set to 3000 blocks, which is approximately 6 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
 
    Challenges:
    - Transactions falling under their gas bounds are currently discarded by nodes. This behavior can be modified for CheckTx, rather than RecheckTx.
@@ -30,30 +30,33 @@ import (
    Global variables stored in memory:
    - DefaultBaseFee: Default base fee, initialized to 0.01.
    - MinBaseFee: Minimum base fee, initialized to 0.0025.
-   - MaxBaseFee: Maximum base fee, initialized to 10.
+   - MaxBaseFee: Maximum base fee, initialized to 5.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
 
    Global constants:
-   - TargetGas: Gas wanted per block, initialized to 70,000,000.
-   - ResetInterval: The interval at which eipState is reset, initialized to 1000 blocks.
+   - TargetGas: Gas wanted per block, initialized to 75,000,000.
+   - ResetInterval: The interval at which eipState is reset, initialized to 3000 blocks.
    - BackupFile: File for backup, set to "eip1559state.json".
-   - RecheckFeeConstant: A constant value for rechecking fees, initialized to 4.
+   - RecheckFeeConstant: A constant value for rechecking fees, initialized to 3.3.
 */
 
 var (
 	DefaultBaseFee = sdk.MustNewDecFromStr("0.01")
 	MinBaseFee     = sdk.MustNewDecFromStr("0.0025")
-	MaxBaseFee     = sdk.MustNewDecFromStr("10")
+	MaxBaseFee     = sdk.MustNewDecFromStr("5")
 
-	// Max increase per block is a factor of 15/14, max decrease is 9/10
+	// Max increase per block is a factor of 1.06, max decrease is 9/10
+	// If recovering at ~30M gas per block, decrease is .94
 	MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(10))
-	TargetGas          = int64(70_000_000)
-	// In face of continuous spam, will take ~21 blocks from base fee > spam cost, to mempool eviction
-	// ceil(log_{15/14}(RecheckFee mnConstant))
-	// So potentially 2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
-	RecheckFeeConstant = int64(4)
-	ResetInterval      = int64(2000)
+	TargetGas          = int64(75_000_000)
+	// In face of continuous spam, will take ~19 blocks from base fee > spam cost, to mempool eviction
+	// ceil(log_{1.06}(RecheckFeeConstant))
+	// So potentially 1.8 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
+	RecheckFeeConstant = "3.0"
+	ResetInterval      = int64(3000)
 )
+
+var RecheckFeeDec = sdk.MustNewDecFromStr(RecheckFeeConstant)
 
 const (
 	BackupFilename = "eip1559state.json"
@@ -151,7 +154,7 @@ func (e *EipState) GetCurBaseFee() osmomath.Dec {
 // GetCurRecheckBaseFee returns a clone of the CurBaseFee / RecheckFeeConstant to account for
 // rechecked transactions in the feedecorator ante handler
 func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
-	return e.CurBaseFee.Clone().Quo(sdk.NewDec(RecheckFeeConstant))
+	return e.CurBaseFee.Clone().Quo(RecheckFeeDec)
 }
 
 var rwMtx = sync.Mutex{}

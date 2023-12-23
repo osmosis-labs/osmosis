@@ -2,6 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/osmosisd/main.go",
+            "args": [
+                "init",
+                "test",
+            ],
+        },
+        
+        {
             // Note: Osmosisd must already be running
             // Binary must be built with debug flags.
             // See CONTRIBUTING.md
