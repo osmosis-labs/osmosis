@@ -303,14 +303,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
-
-			// overwrite config.toml values
-			cometConfig, err := overwriteConfigTomlValues(serverCtx)
-			if err != nil {
-				return err
-			}
-
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -399,7 +391,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					}
 				})
 			}
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, cometConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 		SilenceUsage: true,
 	}
@@ -414,7 +406,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 // overwrites config.toml values if it exists, otherwise it writes the default config.toml
 func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error) {
 	// Get paths to config.toml and config parent directory
-	rootDir := getHomePathFromFlag()
+	rootDir := serverCtx.Viper.GetString(cli.HomeFlag)
 
 	fmt.Println("rootDir:", rootDir)
 
@@ -651,6 +643,29 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
 
+	for i, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "start" {
+
+			startRunE := cmd.RunE
+
+			// Instrument start command pre run hook with custom logic
+			cmd.RunE = func(cmd *cobra.Command, args []string) error {
+				serverCtx := server.GetServerContextFromCmd(cmd)
+
+				// overwrite config.toml values
+				_, err := overwriteConfigTomlValues(serverCtx)
+				if err != nil {
+					return err
+				}
+
+				return startRunE(cmd, args)
+			}
+
+			rootCmd.Commands()[i] = cmd
+			break
+		}
+	}
+
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
@@ -721,6 +736,7 @@ func txCommand() *cobra.Command {
 
 // newApp initializes and returns a new Osmosis app.
 func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
