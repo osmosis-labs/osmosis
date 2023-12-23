@@ -53,7 +53,7 @@ Epoch and CPU time optimizations
 
 ## [v21.1.2]
 
-* [#7170](https://github.com/osmosis-labs/osmosis/pull/7170) Update mempool-eip1559 params to cause less spikyness on mainnet.
+* [#7170](https://github.com/osmosis-labs/osmosis/pull/7170) Update mempool-eip1559 params to cause less base fee spikes on mainnet.
 
 ## [v21.1.1]
 
