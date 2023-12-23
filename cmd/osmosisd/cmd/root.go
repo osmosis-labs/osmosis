@@ -301,22 +301,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
-
-			// configure the viper instance to parse home flags
-			if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
-				return err
-			}
-			if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
-				return err
-			}
-
-			// overwrite config.toml values
-			cometConfig, err := overwriteConfigTomlValues(serverCtx)
-			if err != nil {
-				return err
-			}
-
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -405,7 +389,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					}
 				})
 			}
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, cometConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 		SilenceUsage: true,
 	}
@@ -420,7 +404,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 // overwrites config.toml values if it exists, otherwise it writes the default config.toml
 func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error) {
 	// Get paths to config.toml and config parent directory
-	rootDir := serverCtx.Viper.GetString(flags.FlagHome)
+	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
+
 	configParentDirPath := filepath.Join(rootDir, "config")
 	configFilePath := filepath.Join(configParentDirPath, "config.toml")
 
@@ -640,6 +625,28 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
+
+	for i, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "start" {
+			startRunE := cmd.RunE
+
+			// Instrument start command pre run hook with custom logic
+			cmd.RunE = func(cmd *cobra.Command, args []string) error {
+				serverCtx := server.GetServerContextFromCmd(cmd)
+
+				// overwrite config.toml values
+				_, err := overwriteConfigTomlValues(serverCtx)
+				if err != nil {
+					return err
+				}
+
+				return startRunE(cmd, args)
+			}
+
+			rootCmd.Commands()[i] = cmd
+			break
+		}
+	}
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
