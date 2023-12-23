@@ -24,12 +24,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/cli"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	viper "github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -412,7 +414,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 // overwrites config.toml values if it exists, otherwise it writes the default config.toml
 func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error) {
 	// Get paths to config.toml and config parent directory
-	rootDir := serverCtx.Viper.GetString(flags.FlagHome)
+	rootDir := getHomePathFromFlag()
+
+	fmt.Println("rootDir:", rootDir)
+
 	configParentDirPath := filepath.Join(rootDir, "config")
 	configFilePath := filepath.Join(configParentDirPath, "config.toml")
 
@@ -460,6 +465,19 @@ func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error)
 		tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
 	}
 	return tmcConfig, nil
+}
+
+func getHomePathFromFlag() string {
+	pflag.String(cli.HomeFlag, osmosis.DefaultNodeHome, "directory for config and data")
+
+	// Parse the command-line arguments
+	pflag.Parse()
+
+	// Bind the command-line flags to Viper
+	viper.BindPFlags(pflag.CommandLine)
+
+	home := viper.GetString(cli.HomeFlag)
+	return home
 }
 
 func getHomeEnvironment() string {
