@@ -406,7 +406,6 @@ func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error)
 	// Get paths to config.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
 
-
 	configParentDirPath := filepath.Join(rootDir, "config")
 	configFilePath := filepath.Join(configParentDirPath, "config.toml")
 
