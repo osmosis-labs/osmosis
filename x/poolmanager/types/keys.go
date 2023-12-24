@@ -45,8 +45,8 @@ var (
 // ModuleRouteToBytes serializes moduleRoute to bytes.
 func FormatModuleRouteKey(poolId uint64) []byte {
 	// Estimate the length of the string representation of poolId
-	// 7 is a safe upper bound, (9999999) pools, and is an 8 byte allocation (not bad)
-	length := 7
+	// 11 is a very safe upper bound, (99,999,999,999) pools, and is a 12 byte allocation
+	length := 11
 	result := make([]byte, 1, 1+length)
 	result[0] = SwapModuleRouterPrefix[0]
 	// Write poolId into the byte slice starting after the prefix
