@@ -92,7 +92,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.0.1-0.20231223035538-ae885e64439f // indirect
+	github.com/cosmos/iavl v1.0.1-0.20231224183638-b589c452c833 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
