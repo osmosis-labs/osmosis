@@ -34,6 +34,7 @@ on:
       - "v[0-9]+.x"
 
 env:
+  GOLANG_VERSION: 1.18
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
   ADDRBOOK_URL: https://rpc.osmosis.zone/addrbook
   SNAPSHOT_BUCKET: https://snapshots.osmosis.zone
@@ -50,7 +51,6 @@ jobs:
     # Compare current mainnet osmosis major version with the major version of github branch
     # Skip the next job if the current github major is greater than the current mainnet major
     runs-on: self-hosted
-    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     outputs:
       should_i_run: ${{ steps.compare_versions.outputs.should_i_run }}
       mainnet_major_version: ${{ steps.mainnet_version.outputs.mainnet_major_version }}
