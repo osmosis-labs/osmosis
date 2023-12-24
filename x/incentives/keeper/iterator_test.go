@@ -27,7 +27,8 @@ func TestFilterLocksByMinDuration(t *testing.T) {
 		}
 	}
 
-	filteredLocks := keeper.FilterLocksByMinDuration(locks, minDuration)
+	scratchSlice := []*lockuptypes.PeriodLock{}
+	filteredLocks := keeper.FilterLocksByMinDuration(locks, minDuration, &scratchSlice)
 
 	require.Equal(t, len(locks), len(filteredLocks))
 
