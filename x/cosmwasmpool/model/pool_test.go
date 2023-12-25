@@ -3,6 +3,7 @@ package model_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -41,14 +42,18 @@ func (s *CosmWasmPoolSuite) TestGetSpreadFactor() {
 
 // TestSpotPrice validates that spot price is returned as one.
 func (s *CosmWasmPoolSuite) TestSpotPrice() {
-	var (
-		expectedSpotPrice = osmomath.OneBigDec()
-	)
+	var expectedSpotPrice = osmomath.OneBigDec()
 
 	pool := s.PrepareCosmWasmPool()
 
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1000000))
+
 	actualSpotPrice, err := pool.SpotPrice(s.Ctx, denomA, denomB)
 	s.Require().NoError(err)
+
+	// Validate that the gas was charged on the input context
+	endGas := s.Ctx.GasMeter().GasConsumed()
+	s.Require().NotZero(endGas)
 
 	s.Require().Equal(expectedSpotPrice, actualSpotPrice)
 
