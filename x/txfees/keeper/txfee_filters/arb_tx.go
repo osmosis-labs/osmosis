@@ -257,55 +257,6 @@ type Coin struct {
 	Amount string `json:"amount"`
 }
 
-// "msg": {
-// 	"set_route": {
-// 	  "input_denom": "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F",
-// 	  "output_denom": "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F",
-// 	  "pool_route": [
-// 		{
-// 		  "pool_id": "712",
-// 		  "token_out_denom": "uosmo"
-// 		},
-// 		{
-// 		  "pool_id": "1221",
-// 		  "token_out_denom": "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
-// 		},
-// 		{
-// 		  "pool_id": "1277",
-// 		  "token_out_denom": "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F"
-// 		}
-// 	  ]
-// 	}
-
-func isSetRouteMsg(msg []byte) bool {
-	// Check that the contract message is a valid JSON object
-	jsonObject := make(map[string]interface{})
-	err := json.Unmarshal(msg, &jsonObject)
-	if err != nil {
-		return false
-	}
-
-	// check the main key is "set_route"
-	setRoute, ok := jsonObject["set_route"].(map[string]interface{})
-	if !ok {
-		return false
-	}
-
-	if inputDenom, ok := setRoute["input_denom"].(string); !ok || len(inputDenom) == 0 {
-		return false
-	}
-
-	if outputDenom, ok := setRoute["output_denom"].(string); !ok || len(outputDenom) == 0 {
-		return false
-	}
-
-	if poolRoute, ok := setRoute["pool_route"].([]interface{}); !ok || len(poolRoute) == 0 {
-		return false
-	}
-
-	return true
-}
-
 func isSwapContractMsg(msg []byte) bool {
 	// Check that the contract message is a valid JSON object
 	jsonObject := make(map[string]interface{})
