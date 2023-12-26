@@ -173,8 +173,14 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 			}
 
 			// Otherwise, we have a contract swap message, so we check if it's an arb
-			// (1) Check that swap denom in != swap denom out
 			swapInDenom, isArb := isArbTxLooseSwapMsg(contractSwapMsg, swapInDenom)
+			if isArb {
+				return swapInDenom, true
+			}
+
+			// Also, check sent tokenIn just in case.
+			contractSwapMsg.InputCoin.Denom = tokenIn.Denom
+			swapInDenom, isArb = isArbTxLooseSwapMsg(contractSwapMsg, swapInDenom)
 			if isArb {
 				return swapInDenom, true
 			}
