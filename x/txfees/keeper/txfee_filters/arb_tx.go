@@ -26,6 +26,25 @@ type AffiliateSwapMsg struct {
 	Swap `json:"swap"`
 }
 
+type InputCoin struct {
+	Denom  string `json:"denom"`
+	Amount string `json:"amount"`
+}
+
+type Slippage struct {
+	MinOutputAmount string `json:"min_output_amount"`
+}
+
+type ContractSwap struct {
+	InputCoin   InputCoin `json:"input_coin"`
+	OutputDenom string    `json:"output_denom"`
+	Slippage    Slippage  `json:"slippage"`
+}
+
+type ContractSwapMsg struct {
+	ContractSwap `json:"swap"`
+}
+
 // TokenDenomsOnPath implements types.SwapMsgRoute.
 func (m AffiliateSwapMsg) TokenDenomsOnPath() []string {
 	denoms := make([]string, 0, len(m.Routes)+1)
@@ -108,6 +127,15 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 
 		// Check that the contract message is an affiliate swap message
 		if ok := isAffiliateSwapMsg(contractMessage); !ok {
+
+			if ok := isSwapContractMsg(contractMessage); !ok {
+				return swapInDenom, false
+			}
+
+			return swapInDenom, false
+		}
+
+		if ok := isSwapContractMsg(contractMessage); !ok {
 			return swapInDenom, false
 		}
 
@@ -190,6 +218,36 @@ func isAffiliateSwapMsg(msg []byte) bool {
 	}
 
 	if tokenOutMinAmount, ok := swap["token_out_min_amount"].(map[string]interface{}); !ok || len(tokenOutMinAmount) == 0 {
+		return false
+	}
+
+	return true
+}
+
+type Coin struct {
+	Denom  string `json:"denom"`
+	Amount string `json:"amount"`
+}
+
+func isSwapContractMsg(msg []byte) bool {
+	// Check that the contract message is a valid JSON object
+	jsonObject := make(map[string]interface{})
+	err := json.Unmarshal(msg, &jsonObject)
+	if err != nil {
+		return false
+	}
+
+	// check the main key is "swap"
+	swap, ok := jsonObject["swap"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	if routes, ok := swap["input_coin"].([]interface{}); !ok || len(routes) == 0 {
+		return false
+	}
+
+	if tokenOutMinAmount, ok := swap["output_denom"].(map[string]interface{}); !ok || len(tokenOutMinAmount) == 0 {
 		return false
 	}
 
