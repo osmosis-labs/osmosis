@@ -793,6 +793,8 @@ github.com/cosmos/iavl v1.0.1-0.20231226003953-42b159e2db0c h1:cUS06dfQtJcOwYqZ9
 github.com/cosmos/iavl v1.0.1-0.20231226003953-42b159e2db0c/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/cosmos/iavl v1.0.1-0.20231226004832-0c2384b0412c h1:vk2k8/OgdJ0rzAStEpgaSZOvmh57zd872lHKuQ+6M74=
 github.com/cosmos/iavl v1.0.1-0.20231226004832-0c2384b0412c/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
+github.com/cosmos/iavl v1.0.1-0.20231226005320-71e90e247e6f h1:TdjK80vXXWjr0HJvqHD2uRjMQVLRzO7emiLYyhNUy1s=
+github.com/cosmos/iavl v1.0.1-0.20231226005320-71e90e247e6f/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 h1:PqIK9vTr6zxCdQmrDZwxwL4KMAqg/GRGsiMEiaMP4wA=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 h1:02RCbih5lQ8aGdDMSvxhTnk5JDLEDitn17ytEE1Qhko=
