@@ -144,7 +144,7 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 
 		// Check that the contract message is an affiliate swap message
 		isAffliliateSwap := isAffiliateSwapMsg(contractMessage)
-		isContractSwap := isSwapContractMsg(contractMessage)
+		isContractSwap := isContractSwapContractMsg(contractMessage)
 
 		if !isAffliliateSwap && !isContractSwap {
 			return swapInDenom, false
@@ -252,12 +252,8 @@ func isAffiliateSwapMsg(msg []byte) bool {
 	return true
 }
 
-type Coin struct {
-	Denom  string `json:"denom"`
-	Amount string `json:"amount"`
-}
-
-func isSwapContractMsg(msg []byte) bool {
+// check if this: https://celatone.osmosis.zone/osmosis-1/txs/8D20755D4E009CB72C763963A76886BCCCC5C2EBFC3F57266332710216A0D10D
+func isContractSwapContractMsg(msg []byte) bool {
 	// Check that the contract message is a valid JSON object
 	jsonObject := make(map[string]interface{})
 	err := json.Unmarshal(msg, &jsonObject)
