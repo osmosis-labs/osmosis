@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
-* [#]() Charge gas on input context when querying cw contracts.
+* [#7209](https://github.com/osmosis-labs/osmosis/pull/7209) Charge gas on input context when querying cw contracts.
 
 ## v21.0.0
 
