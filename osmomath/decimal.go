@@ -253,8 +253,8 @@ func (d BigDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
-// BigIntMut converts BigDec to big.Int, mutative the input
-func (d BigDec) ToBigInt() *big.Int {
+// BigInt returns a copy of the underlying big.Int.
+func (d BigDec) BigIntMut() *big.Int {
 	if d.IsNil() {
 		return nil
 	}
