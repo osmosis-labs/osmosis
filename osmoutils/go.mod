@@ -165,7 +165,7 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
-	github.com/cosmos/iav => github.com/cosmos/iavl v1.0.1-0.20231226005320-71e90e247e6f
+	github.com/cosmos/iav => github.com/cosmos/iavl v1.0.1-0.20231227044037-fd1ff2dc5b89
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath

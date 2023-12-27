@@ -201,7 +201,7 @@ replace (
 	// adds expedited proposal support and 1000MB cache default
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
-	github.com/cosmos/iav => github.com/cosmos/iavl v1.0.1-0.20231226005320-71e90e247e6f
+	github.com/cosmos/iav => github.com/cosmos/iavl v1.0.1-0.20231227044037-fd1ff2dc5b89
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
