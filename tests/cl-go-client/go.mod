@@ -183,6 +183,7 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	github.com/cosmos/iav => github.com/cosmos/iavl v1.0.1-0.20231227042603-8c9921046640
 )
 
 // exclusion so we use v1.0.0
