@@ -8,6 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
+var MaxPoolId uint64 = 99_999_999_999
+
 // PoolI defines an interface for pools that hold tokens.
 type PoolI interface {
 	proto.Message
