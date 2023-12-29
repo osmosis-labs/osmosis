@@ -283,12 +283,12 @@
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/x/txfees/keeper/txfee_filters",
+            "program": "${workspaceFolder}/x/txfees",
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestTxFeeFilter/TestIsArbTxLooseAuthz_SwapMsg",
+                "TestKeeperTestSuite/TestYourName",
                 "-test.v"
             ],
         },
