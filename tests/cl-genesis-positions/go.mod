@@ -197,9 +197,9 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/adam/osmo/v0.47.5-iavl-v1, current branch: adam/osmo/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/7665e0b50d50ab16d0b34e7b217f472116d0728c
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/adam/osmo/v0.47.5-iavl-v1-con, current branch: adam/osmo/v0.47.5-iavl-v1-con. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/dd329e199c5f44c66e73bc9ea12d9f77602f2dfe
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo-4
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231228194904-7665e0b50d50
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231229040010-dd329e199c5f
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

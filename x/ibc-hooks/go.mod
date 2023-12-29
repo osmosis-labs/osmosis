@@ -191,9 +191,9 @@ require (
 )
 
 replace (
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/adam/osmo/v0.47.5-iavl-v1, current branch: adam/osmo/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/7665e0b50d50ab16d0b34e7b217f472116d0728c
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/adam/osmo/v0.47.5-iavl-v1-con, current branch: adam/osmo/v0.47.5-iavl-v1-con. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/dd329e199c5f44c66e73bc9ea12d9f77602f2dfe
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo-4
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231228194904-7665e0b50d50
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231229040010-dd329e199c5f
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
