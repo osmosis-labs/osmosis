@@ -51,7 +51,7 @@ func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
 	return alteredPoolIds
 }
 
-// storeHistoricalTWAP writes a twap to the store, in all needed indexing.
+// StoreHistoricalTWAP writes a twap to the store, in all needed indexing.
 func (k Keeper) StoreHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -162,7 +162,7 @@ func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapR
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }
 
-// GetAllHistoricalPoolIndexedTWAPsForPoolId returns HistoricalTwapRecord for a pool give poolId.
+// GetAllHistoricalPoolIndexedTWAPsForPoolId returns list of TwapRecord for a pool give poolId.
 func (k Keeper) GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.FormatKeyPoolTwapRecords(poolId), types.ParseTwapFromBz)
 }
@@ -212,7 +212,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		_, errDiagnose := k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 		if errDiagnose != nil {
 			return types.TwapRecord{}, fmt.Errorf(
-				"getTwapRecord: querying for assets %s %s that are not in pool id %d",
+				"getMostRecentRecord: querying for assets %s %s that are not in pool id %d",
 				asset0Denom, asset1Denom, poolId)
 		} else {
 			return types.TwapRecord{}, timeTooOldError{Time: t}
