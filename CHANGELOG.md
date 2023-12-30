@@ -42,22 +42,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Config
-
-* [#7180](https://github.com/osmosis-labs/osmosis/pull/7180) Change `consensus.timeout-commit` from 5s to 4s in `config.toml`. Overwrites the existing value on start-up. Default is set to 4s.
-
 ### API
 
 * [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
 * [#7149](https://github.com/osmosis-labs/osmosis/pull/7149) Fix double emitting CacheCtx events (e.g. Epoch, Superfluid, CL)
 
 ### Features
-* [#6804](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
+
+* [#6993](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
 
 ### Misc Improvements
+
 * [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
 * [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172) Lower CPU overheads of the Osmosis epoch.
 * [#7203](https://github.com/osmosis-labs/osmosis/pull/7203) Make a maximum number of pools of 100 billion.
+
+## v21.1.5
+
+* [#7210](https://github.com/osmosis-labs/osmosis/pull/7210) Arb filter for new authz exec swap.
+
+## v21.1.4
+
+* [#7180](https://github.com/osmosis-labs/osmosis/pull/7180) Change `consensus.timeout-commit` from 5s to 4s in `config.toml`. Overwrites the existing value on start-up. Default is set to 4s.
+
+## v21.1.3
+
+Epoch and CPU time optimizations
+
+* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172),[#7174](https://github.com/osmosis-labs/osmosis/pull/7174),[#7186](https://github.com/osmosis-labs/osmosis/pull/7186), [#7192](https://github.com/osmosis-labs/osmosis/pull/7192)   Lower CPU overheads of the Osmosis epoch.
+* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
+
+## v21.1.2
+
+* [#7170](https://github.com/osmosis-labs/osmosis/pull/7170) Update mempool-eip1559 params to cause less base fee spikes on mainnet.
+* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172),[#7174](https://github.com/osmosis-labs/osmosis/pull/7174),[#7186](https://github.com/osmosis-labs/osmosis/pull/7186), [#7192](https://github.com/osmosis-labs/osmosis/pull/7186)   Lower CPU overheads of the Osmosis epoch.
+* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
+
+## v21.1.1
+
+Epoch optimizations are in this release, see a subset of PR links in v21.1.3 section.
 
 ## v21.0.0
 

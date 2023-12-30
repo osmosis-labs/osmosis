@@ -29,10 +29,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231215070550-ca294af82738
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231211161501-28475581c846
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231211161501-28475581c846
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231211161501-28475581c846
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231229191315-aff18520757d
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231229191315-aff18520757d
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231229191315-aff18520757d
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231229191315-aff18520757d
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.0
@@ -383,9 +383,9 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/15259ccd2249d2f3f413e0de7b8e27fe4cc6169a
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-osmo
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/cc29414c72c73d567e0c75b4a0800961a26d7af4
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo-4
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-osmo-4
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
