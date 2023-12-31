@@ -17,7 +17,7 @@ func SigFigRound(d Dec, tenToSigFig Int) Dec {
 		dTimesK.MulInt64Mut(10)
 	}
 	// d * 10^k * 10^sigfig
-	dkSigFig := dTimesK.MulIntMut(tenToSigFig)
+	dkSigFig := dTimesK.MulInt(tenToSigFig)
 	numerator := dkSigFig.RoundInt().ToLegacyDec()
 
 	// TODO: Use pre-computed table for 10^k
