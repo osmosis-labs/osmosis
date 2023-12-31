@@ -290,6 +290,11 @@ func (d BigDec) Sub(d2 BigDec) BigDec {
 	return BigDec{res}
 }
 
+func (d BigDec) NegMut() BigDec {
+	d.i.Neg(d.i)
+	return d
+} // reverse the decimal sign
+
 // Clone performs a deep copy of the receiver
 // and returns the new result.
 func (d BigDec) Clone() BigDec {
