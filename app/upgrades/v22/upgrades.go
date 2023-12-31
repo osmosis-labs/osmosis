@@ -1,6 +1,7 @@
 package v22
 
 import (
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -22,6 +23,13 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Properly register consensus params. In the process, change params as per:
+		// https://forum.osmosis.zone/t/raise-maximum-gas-to-300m-and-lower-max-bytes-to-5mb/1116
+		defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
+		defaultConsensusParams.Block.MaxBytes = 5000000
+		defaultConsensusParams.Block.MaxGas = 300000000
+		keepers.ConsensusParamsKeeper.Set(ctx, &defaultConsensusParams)
 
 		return migrations, nil
 	}
