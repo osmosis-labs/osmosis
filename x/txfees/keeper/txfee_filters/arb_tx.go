@@ -52,6 +52,42 @@ func (m AffiliateSwapMsg) TokenOutDenom() string {
 
 var _ poolmanagertypes.SwapMsgRoute = AffiliateSwapMsg{}
 
+type InputCoin struct {
+	Denom  string `json:"denom"`
+	Amount string `json:"amount"`
+}
+
+type Slippage struct {
+	MinOutputAmount string `json:"min_output_amount"`
+}
+
+type ContractSwap struct {
+	InputCoin   InputCoin `json:"input_coin"`
+	OutputDenom string    `json:"output_denom"`
+	Slippage    Slippage  `json:"slippage"`
+}
+
+type ContractSwapMsg struct {
+	ContractSwap `json:"swap"`
+}
+
+// TokenDenomsOnPath implements types.SwapMsgRoute.
+func (c ContractSwapMsg) TokenDenomsOnPath() []string {
+	return []string{c.InputCoin.Denom, c.OutputDenom}
+}
+
+// TokenInDenom implements types.SwapMsgRoute.
+func (c ContractSwapMsg) TokenInDenom() string {
+	return c.InputCoin.Denom
+}
+
+// TokenOutDenom implements types.SwapMsgRoute.
+func (c ContractSwapMsg) TokenOutDenom() string {
+	return c.OutputDenom
+}
+
+var _ poolmanagertypes.SwapMsgRoute = ContractSwapMsg{}
+
 // We check if a tx is an arbitrage for the mempool right now by seeing:
 // 1) does start token of a msg = final token of msg (definitionally correct)
 // 2) does it have multiple swap messages, with different tx ins. If so, we assume its an arb.
@@ -107,21 +143,47 @@ func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtype
 		contractMessage := msgExecuteContract.GetMsg()
 
 		// Check that the contract message is an affiliate swap message
-		if ok := isAffiliateSwapMsg(contractMessage); !ok {
+		isAffliliateSwap := isAffiliateSwapMsg(contractMessage)
+		isContractSwap := isContractSwapContractMsg(contractMessage)
+
+		if !isAffliliateSwap && !isContractSwap {
 			return swapInDenom, false
 		}
 
-		var affiliateSwapMsg AffiliateSwapMsg
-		if err := json.Unmarshal(contractMessage, &affiliateSwapMsg); err != nil {
-			// If we can't unmarshal it, it's not an affiliate swap message
-			return swapInDenom, false
+		if isAffliliateSwap {
+			var affiliateSwapMsg AffiliateSwapMsg
+			if err := json.Unmarshal(contractMessage, &affiliateSwapMsg); err != nil {
+				// If we can't unmarshal it, it's not an affiliate swap message
+				return swapInDenom, false
+			}
+
+			// Otherwise, we have an affiliate swap message, so we check if it's an arb
+			affiliateSwapMsg.TokenIn = tokenIn.Denom
+			swapInDenom, isArb := isArbTxLooseSwapMsg(affiliateSwapMsg, swapInDenom)
+			if isArb {
+				return swapInDenom, true
+			}
 		}
 
-		// Otherwise, we have an affiliate swap message, so we check if it's an arb
-		affiliateSwapMsg.TokenIn = tokenIn.Denom
-		swapInDenom, isArb := isArbTxLooseSwapMsg(affiliateSwapMsg, swapInDenom)
-		if isArb {
-			return swapInDenom, true
+		if isContractSwap {
+			var contractSwapMsg ContractSwapMsg
+			if err := json.Unmarshal(contractMessage, &contractSwapMsg); err != nil {
+				// If we can't unmarshal it, it's not a contract swap message
+				return swapInDenom, false
+			}
+
+			// Otherwise, we have a contract swap message, so we check if it's an arb
+			swapInDenom, isArb := isArbTxLooseSwapMsg(contractSwapMsg, swapInDenom)
+			if isArb {
+				return swapInDenom, true
+			}
+
+			// Also, check sent tokenIn just in case.
+			contractSwapMsg.InputCoin.Denom = tokenIn.Denom
+			swapInDenom, isArb = isArbTxLooseSwapMsg(contractSwapMsg, swapInDenom)
+			if isArb {
+				return swapInDenom, true
+			}
 		}
 
 		return swapInDenom, false
@@ -190,6 +252,32 @@ func isAffiliateSwapMsg(msg []byte) bool {
 	}
 
 	if tokenOutMinAmount, ok := swap["token_out_min_amount"].(map[string]interface{}); !ok || len(tokenOutMinAmount) == 0 {
+		return false
+	}
+
+	return true
+}
+
+// check if this: https://celatone.osmosis.zone/osmosis-1/txs/8D20755D4E009CB72C763963A76886BCCCC5C2EBFC3F57266332710216A0D10D
+func isContractSwapContractMsg(msg []byte) bool {
+	// Check that the contract message is a valid JSON object
+	jsonObject := make(map[string]interface{})
+	err := json.Unmarshal(msg, &jsonObject)
+	if err != nil {
+		return false
+	}
+
+	// check the main key is "swap"
+	swap, ok := jsonObject["swap"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	if input_coin, ok := swap["input_coin"].(map[string]interface{}); !ok || len(input_coin) == 0 {
+		return false
+	}
+
+	if outputDenom, ok := swap["output_denom"].(string); !ok || len(outputDenom) == 0 {
 		return false
 	}
 
