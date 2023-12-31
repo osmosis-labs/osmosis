@@ -154,7 +154,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		preUpgradePoolId[0] = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 		poolShareDenom[0] = fmt.Sprintf("gamm/pool/%d", preUpgradePoolId[0])
-		chainANode.EnableSuperfluidAsset(chainA, poolShareDenom[0], false)
+		chainANode.EnableSuperfluidAsset(chainA, poolShareDenom[0], true)
 	}()
 
 	go func() {
@@ -168,7 +168,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		preUpgradePoolId[1] = chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
 		poolShareDenom[1] = fmt.Sprintf("gamm/pool/%d", preUpgradePoolId[1])
-		chainBNode.EnableSuperfluidAsset(chainB, poolShareDenom[1], false)
+		chainBNode.EnableSuperfluidAsset(chainB, poolShareDenom[1], true)
 	}()
 
 	go func() {
@@ -258,7 +258,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainA")
-		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA, false)
+		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA, true)
 		errCh <- err
 	}()
 
@@ -279,7 +279,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainB")
-		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB, false)
+		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB, true)
 		errCh <- err
 	}()
 
@@ -347,7 +347,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 			return err
 		}
 		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), false)
+		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), true)
 
 		node.DepositProposal(propNumber, false)
 

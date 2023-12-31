@@ -124,6 +124,8 @@ func (n *internalNode) createAppConfig(nodeConfig *NodeConfig) {
 	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
 	appConfig.StateSync.SnapshotInterval = nodeConfig.SnapshotInterval
 	appConfig.StateSync.SnapshotKeepRecent = nodeConfig.SnapshotKeepRecent
+	appConfig.GRPC.Address = "0.0.0.0:9090"
+	appConfig.API.Address = "tcp://0.0.0.0:1317"
 
 	srvconfig.WriteConfigFile(appCfgPath, appConfig)
 }
