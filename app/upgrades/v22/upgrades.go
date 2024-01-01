@@ -1,10 +1,11 @@
 package v22
 
 import (
-	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
 	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
