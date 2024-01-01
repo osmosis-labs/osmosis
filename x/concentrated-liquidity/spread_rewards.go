@@ -193,6 +193,7 @@ func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, pos
 		sdk.NewEvent(
 			types.TypeEvtCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.GetId(), 10)),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, spreadRewardsClaimed.String()),
 		),

@@ -112,6 +112,7 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 
 ### Misc Improvements
 
+* [#7147](https://github.com/osmosis-labs/osmosis/pull/7147) Add poolID to collect CL rewards and incentives events.
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
 * [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
 * [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist
