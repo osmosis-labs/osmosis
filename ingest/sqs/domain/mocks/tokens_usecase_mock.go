@@ -6,13 +6,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 )
 
-type TokensUseCaseMock struct {
+type AssetListGetterMock struct {
 	tokenPrecisionMap map[string]int
 }
 
 // GetDenomPrecisions implements domain.TokensUsecase.
-func (tu *TokensUseCaseMock) GetDenomPrecisions(ctx context.Context) (map[string]int, error) {
+func (tu *AssetListGetterMock) GetDenomPrecisions(ctx context.Context) (map[string]int, error) {
 	return tu.tokenPrecisionMap, nil
 }
 
-var _ domain.TokensUsecase = &TokensUseCaseMock{}
+var _ domain.AssetListGetter = &AssetListGetterMock{}

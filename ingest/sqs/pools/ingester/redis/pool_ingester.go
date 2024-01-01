@@ -1,21 +1,16 @@
 package redis
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 
-	routerusecase "github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase"
 	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
@@ -33,19 +28,16 @@ import (
 // - If error in TVL calculation, TVL is set to the value that could be computed and the pool struct
 // has a flag to indicate that there was an error in TVL calculation.
 type poolIngester struct {
-	poolsRepository    mvc.PoolsRepository
-	routerRepository   mvc.RouterRepository
-	tokensUseCase      domain.TokensUsecase
-	repositoryManager  mvc.TxManager
+	poolsRepository    domain.PoolsRepository
+	routerRepository   domain.RouterRepository
+	repositoryManager  domain.TxManager
 	gammKeeper         common.PoolKeeper
 	concentratedKeeper common.ConcentratedKeeper
 	cosmWasmKeeper     common.CosmWasmPoolKeeper
 	bankKeeper         common.BankKeeper
 	protorevKeeper     common.ProtorevKeeper
 	poolManagerKeeper  common.PoolManagerKeeper
-	logger             log.Logger
-
-	routerConfig domain.RouterConfig
+	assetListGetter    domain.AssetListGetter
 }
 
 // denomRoutingInfo encapsulates the routing information for a pool.
@@ -70,11 +62,10 @@ const (
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository mvc.PoolsRepository, routerRepository mvc.RouterRepository, tokensUseCase domain.TokensUsecase, repositoryManager mvc.TxManager, routerConfig domain.RouterConfig, keepers common.SQSIngestKeepers) mvc.AtomicIngester {
+func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository domain.RouterRepository, repositoryManager domain.TxManager, assetListGetter domain.AssetListGetter, keepers common.SQSIngestKeepers) domain.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		routerRepository:   routerRepository,
-		tokensUseCase:      tokensUseCase,
 		repositoryManager:  repositoryManager,
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
@@ -82,23 +73,23 @@ func NewPoolIngester(poolsRepository mvc.PoolsRepository, routerRepository mvc.R
 		bankKeeper:         keepers.BankKeeper,
 		protorevKeeper:     keepers.ProtorevKeeper,
 		poolManagerKeeper:  keepers.PoolManagerKeeper,
-		routerConfig:       routerConfig,
+		assetListGetter:    assetListGetter,
 	}
 }
 
 // ProcessBlock implements ingest.Ingester.
-func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx mvc.Tx) error {
+func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx domain.Tx) error {
 	return pi.processPoolState(ctx, tx)
 }
 
-var _ mvc.AtomicIngester = &poolIngester{}
+var _ domain.AtomicIngester = &poolIngester{}
 
 // processPoolState processes the pool state. an
-func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
+func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// TODO: can be cached
-	tokenPrecisionMap, err := pi.tokensUseCase.GetDenomPrecisions(goCtx)
+	tokenPrecisionMap, err := pi.assetListGetter.GetDenomPrecisions(goCtx)
 	if err != nil {
 		return err
 	}
@@ -164,7 +155,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 		allPoolsParsed = append(allPoolsParsed, pool)
 	}
 
-	pi.logger.Info("ingesting pools to Redis", zap.Int64("height", ctx.BlockHeight()), zap.Int("num_cfmm", len(cfmmPools)), zap.Int("num_concentrated", len(concentratedPools)), zap.Int("num_cosmwasm", len(cosmWasmPools)))
+	ctx.Logger().Info("ingesting pools to Redis", "height", ctx.BlockHeight(), "num_cfmm", len(cfmmPools), "num_concentrated", len(concentratedPools), "num_cosmwasm", len(cosmWasmPools))
 
 	err = pi.poolsRepository.StorePools(goCtx, tx, allPoolsParsed)
 	if err != nil {
@@ -177,71 +168,73 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx mvc.Tx) error {
 		return err
 	}
 
-	// Update routes every RouteUpdateHeightInterval blocks unless RouteUpdateHeightInterval is 0.
-	if pi.routerConfig.RouteUpdateHeightInterval > routeIngestDisablePlaceholder && ctx.BlockHeight()%int64(pi.routerConfig.RouteUpdateHeightInterval) == 0 {
-		allPools := make([]domain.PoolI, 0, len(allPoolsParsed))
+	// TODO: decide later if we need this
+	// // Update routes every RouteUpdateHeightInterval blocks unless RouteUpdateHeightInterval is 0.
+	// if pi.routerConfig.RouteUpdateHeightInterval > routeIngestDisablePlaceholder && ctx.BlockHeight()%int64(pi.routerConfig.RouteUpdateHeightInterval) == 0 {
+	// 	allPools := make([]domain.PoolI, 0, len(allPoolsParsed))
 
-		pi.logger.Debug("getting routes for pools", zap.Int64("height", ctx.BlockHeight()))
+	// 	pi.logger.Debug("getting routes for pools", zap.Int64("height", ctx.BlockHeight()))
 
-		pi.updateRoutes(sdk.WrapSDKContext(ctx), tx, allPools, denomPairToTakerFeeMap)
-	}
+	// 	pi.updateRoutes(sdk.WrapSDKContext(ctx), tx, allPools, denomPairToTakerFeeMap)
+	// }
 
 	return nil
 }
 
-// updateRoutes updates the routes for all denom pairs in the taker fee map. The taker fee map value is unused.
-// It returns a channel that is closed when all routes are updated.
-// TODO: test
-func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []domain.PoolI, denomPairToTakerFeeMap map[domain.DenomPair]osmomath.Dec) chan domain.DenomPair {
-	// Initialize a channel that will be closed when all routes are updated.
-	completionChan := make(chan domain.DenomPair, len(denomPairToTakerFeeMap))
+// TODO: decide later if we need this.
+// // updateRoutes updates the routes for all denom pairs in the taker fee map. The taker fee map value is unused.
+// // It returns a channel that is closed when all routes are updated.
+// // TODO: test
+// func (pi *poolIngester) updateRoutes(ctx context.Context, tx mvc.Tx, pools []domain.PoolI, denomPairToTakerFeeMap map[domain.DenomPair]osmomath.Dec) chan domain.DenomPair {
+// 	// Initialize a channel that will be closed when all routes are updated.
+// 	completionChan := make(chan domain.DenomPair, len(denomPairToTakerFeeMap))
 
-	defer func() {
-		// Close completion channel before returning.
-		close(completionChan)
-	}()
+// 	defer func() {
+// 		// Close completion channel before returning.
+// 		close(completionChan)
+// 	}()
 
-	for denomPair := range denomPairToTakerFeeMap {
-		denomPair := denomPair
-		// router
-		router := routerusecase.NewRouter([]uint64{}, pi.routerConfig.MaxPoolsPerRoute, pi.routerConfig.MaxRoutes, pi.routerConfig.MaxSplitRoutes, pi.routerConfig.MaxSplitIterations, pi.routerConfig.MinOSMOLiquidity, pi.logger)
-		router = routerusecase.WithSortedPools(router, pools)
+// 	for denomPair := range denomPairToTakerFeeMap {
+// 		denomPair := denomPair
+// 		// router
+// 		router := routerusecase.NewRouter([]uint64{}, pi.routerConfig.MaxPoolsPerRoute, pi.routerConfig.MaxRoutes, pi.routerConfig.MaxSplitRoutes, pi.routerConfig.MaxSplitIterations, pi.routerConfig.MinOSMOLiquidity, pi.logger)
+// 		router = routerusecase.WithSortedPools(router, pools)
 
-		go func(denomPair domain.DenomPair) {
-			// TODO: abstract this better
+// 		go func(denomPair domain.DenomPair) {
+// 			// TODO: abstract this better
 
-			candidateRoutes, err := router.GetCandidateRoutes(denomPair.Denom0, denomPair.Denom1)
-			if err != nil {
-				pi.logger.Error("error getting routes", zap.Error(err))
-				return
-			}
+// 			candidateRoutes, err := router.GetCandidateRoutes(denomPair.Denom0, denomPair.Denom1)
+// 			if err != nil {
+// 				pi.logger.Error("error getting routes", zap.Error(err))
+// 				return
+// 			}
 
-			err = pi.routerRepository.SetRoutesTx(ctx, tx, denomPair.Denom0, denomPair.Denom1, candidateRoutes)
-			if err != nil {
-				pi.logger.Error("error setting routes", zap.Error(err))
-				return
-			}
+// 			err = pi.routerRepository.SetRoutesTx(ctx, tx, denomPair.Denom0, denomPair.Denom1, candidateRoutes)
+// 			if err != nil {
+// 				pi.logger.Error("error setting routes", zap.Error(err))
+// 				return
+// 			}
 
-			// In the other direction. This can be optimized later.
+// 			// In the other direction. This can be optimized later.
 
-			candidateRoutes, err = router.GetCandidateRoutes(denomPair.Denom1, denomPair.Denom0)
-			if err != nil {
-				pi.logger.Error("error getting routes", zap.Error(err))
-				return
-			}
+// 			candidateRoutes, err = router.GetCandidateRoutes(denomPair.Denom1, denomPair.Denom0)
+// 			if err != nil {
+// 				pi.logger.Error("error getting routes", zap.Error(err))
+// 				return
+// 			}
 
-			err = pi.routerRepository.SetRoutesTx(ctx, tx, denomPair.Denom1, denomPair.Denom0, candidateRoutes)
-			if err != nil {
-				pi.logger.Error("error setting routes", zap.Error(err))
-				return
-			}
+// 			err = pi.routerRepository.SetRoutesTx(ctx, tx, denomPair.Denom1, denomPair.Denom0, candidateRoutes)
+// 			if err != nil {
+// 				pi.logger.Error("error setting routes", zap.Error(err))
+// 				return
+// 			}
 
-			completionChan <- denomPair
-		}(denomPair)
-	}
+// 			completionChan <- denomPair
+// 		}(denomPair)
+// 	}
 
-	return completionChan
-}
+// 	return completionChan
+// }
 
 // convertPool converts a pool to the standard SQS pool type.
 // It instruments the pool with chain native balances and OSMO based TVL.
@@ -300,7 +293,7 @@ func (pi *poolIngester) convertPool(
 		if !ok {
 			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
 			if err != nil {
-				pi.logger.Debug("error getting OSMO-based pool", zap.String("denom", balance.Denom), zap.Error(err))
+				ctx.Logger().Debug("error getting OSMO-based pool", "denom", balance.Denom, "error", err)
 				errorInTVLStr = err.Error()
 				continue
 			}
@@ -308,14 +301,14 @@ func (pi *poolIngester) convertPool(
 			basePrecison, ok := tokenPrecisionMap[balance.Denom]
 			if !ok {
 				errorInTVLStr = fmt.Sprintf(noTokenPrecisionErrorFmtStr, balance.Denom)
-				pi.logger.Debug(errorInTVLStr)
+				ctx.Logger().Debug(errorInTVLStr)
 				continue
 			}
 
 			uosmoBaseAssetSpotPrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
 			if err != nil {
 				errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
-				pi.logger.Debug(errorInTVLStr)
+				ctx.Logger().Debug(errorInTVLStr)
 				continue
 			}
 
@@ -390,7 +383,7 @@ func (pi *poolIngester) convertPool(
 }
 
 // persistTakerFees persists all taker fees to the router repository.
-func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx mvc.Tx, takerFeeMap domain.TakerFeeMap) error {
+func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx domain.Tx, takerFeeMap domain.TakerFeeMap) error {
 	for denomPair, takerFee := range takerFeeMap {
 		err := pi.routerRepository.SetTakerFee(sdk.WrapSDKContext(ctx), tx, denomPair.Denom0, denomPair.Denom1, takerFee)
 		if err != nil {
@@ -399,9 +392,4 @@ func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx mvc.Tx, takerFeeMap
 	}
 
 	return nil
-}
-
-// SetLogger implements ingest.AtomicIngester.
-func (pi *poolIngester) SetLogger(logger log.Logger) {
-	pi.logger = logger
 }

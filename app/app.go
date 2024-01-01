@@ -31,6 +31,9 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -68,7 +71,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-
 	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
@@ -95,10 +97,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v21/ingest"
 	"github.com/osmosis-labs/osmosis/v21/x/mint"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 const appName = "OsmosisApp"

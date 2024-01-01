@@ -12,8 +12,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
 	redisingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
@@ -472,12 +470,12 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		redisRouterMock = &mocks.RedisRouterRepositoryMock{
 			TakerFees: domain.TakerFeeMap{},
 		}
-		tokensUseCaseMock = &mocks.TokensUseCaseMock{}
+		assetListGetterMock = &mocks.AssetListGetterMock{}
 
 		// Note: this is a dummy tx that is not initialized correctly.
 		// We do note expect it to be called or used by the system under test
 		// due to using the mock repository.
-		redisTx = mvc.NewRedisTx(nil)
+		redisTx = domain.NewRedisTx(nil)
 	)
 
 	// Set the default taker fee
@@ -499,8 +497,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
-	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, tokensUseCaseMock, nil, domain.RouterConfig{}, sqsKeepers)
-	poolIngester.SetLogger(&log.NoOpLogger{})
+	poolIngester := redisingester.NewPoolIngester(redisRepoMock, redisRouterMock, nil, assetListGetterMock, sqsKeepers)
 
 	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
 	s.Require().NoError(err)
@@ -581,9 +578,8 @@ func (s *IngesterTestSuite) initializePoolIngester() *redisingester.PoolIngester
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
-	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, domain.RouterConfig{}, sqsKeepers)
+	atomicIngester := redisingester.NewPoolIngester(nil, nil, nil, nil, sqsKeepers)
 	poolIngester, ok := atomicIngester.(*redisingester.PoolIngester)
-	poolIngester.SetLogger(&log.NoOpLogger{})
 	s.Require().True(ok)
 	return poolIngester
 }

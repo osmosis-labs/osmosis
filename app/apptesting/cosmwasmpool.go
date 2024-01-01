@@ -2,6 +2,7 @@ package apptesting
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -22,6 +23,9 @@ const (
 	TransmuterContractName        = "transmuter"
 	TransmuterMigrateContractName = "transmuter_migrate"
 	DefaultCodeId                 = 1
+
+	osmosisRepository         = "osmosis"
+	osmosisRepoTransmuterPath = "x/cosmwasmpool/bytecode"
 )
 
 // PrepareCosmWasmPool sets up a cosmwasm pool with the default parameters.
@@ -29,13 +33,21 @@ func (s *KeeperTestHelper) PrepareCosmWasmPool() cosmwasmpooltypes.CosmWasmExten
 	return s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB})
 }
 
-// PrepareCustomTransmuterPool sets up a transmuter pool with the custom parameters.
+// PrepareCustomTransmuterPool sets up a transmuter pool with the default parameters assumming that
+// the transmuter contract is stored under x/cosmwasmpool/bytecode in the Osmosis repository.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, denoms []string) cosmwasmpooltypes.CosmWasmExtension {
+	return s.PrepareCustomTransmuterPoolCustomProject(owner, denoms, osmosisRepository, osmosisRepoTransmuterPath)
+}
+
+// PrepareCustomTransmuterPoolCustomProject sets up a transmuter pool with the custom parameters.
+// Gives flexibility for the helper to be reused outside of the Osmosis repository by providing custom
+// project name and path.
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.AccAddress, denoms []string, projectName, path string) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Upload contract code and get the code id.
-	codeId := s.StoreCosmWasmPoolContractCode(TransmuterContractName)
+	codeId := s.StoreCosmWasmPoolContractCodeCustomProject(TransmuterContractName, projectName, path)
 
 	// Add code id to the whitelist.
 	s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
@@ -79,6 +91,13 @@ func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytes(poolAssetDenoms []st
 // StoreCosmWasmPoolContractCode stores the cosmwasm pool contract code in the wasm keeper and returns the code id.
 // contractName is the name of the contract file in the x/cosmwasmpool/bytecode directory without the .wasm extension.
 func (s *KeeperTestHelper) StoreCosmWasmPoolContractCode(contractName string) uint64 {
+	return s.StoreCosmWasmPoolContractCodeCustomProject(contractName, osmosisRepository, osmosisRepoTransmuterPath)
+}
+
+// StoreCosmWasmPoolContractCodeCustomProject stores the cosmwasm pool contract code in the wasm keeper and returns the code id.
+// contractName is the name of the contract file in the x/cosmwasmpool/bytecode directory without the .wasm extension.
+// It has the flexibility of being used from outside the Osmosis repository by providing custom project name and path.
+func (s *KeeperTestHelper) StoreCosmWasmPoolContractCodeCustomProject(contractName, projectName, path string) uint64 {
 	cosmwasmpoolModuleAddr := s.App.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName)
 	s.Require().NotNil(cosmwasmpoolModuleAddr)
 
@@ -93,7 +112,7 @@ func (s *KeeperTestHelper) StoreCosmWasmPoolContractCode(contractName string) ui
 	})
 	s.Require().NoError(err)
 
-	code := s.GetContractCode(contractName)
+	code := s.GetContractCodeCustomProject(contractName, projectName, path)
 
 	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeAnyOfAddresses, Addresses: []string{cosmwasmpoolModuleAddr.String()}}
 	codeID, _, err := s.App.ContractKeeper.Create(s.Ctx, cosmwasmpoolModuleAddr, code, &instantiateConfig)
@@ -102,16 +121,20 @@ func (s *KeeperTestHelper) StoreCosmWasmPoolContractCode(contractName string) ui
 	return codeID
 }
 
+func (s *KeeperTestHelper) GetContractCode(contractName string) []byte {
+	return s.GetContractCodeCustomProject(contractName, "osmosis", "x/cosmwasmpool/bytecode")
+}
+
 // GetContractCode returns the contract code for the given contract name.
 // Assumes that the contract code is stored under x/cosmwasmpool/bytecode.
-func (s *KeeperTestHelper) GetContractCode(contractName string) []byte {
+func (s *KeeperTestHelper) GetContractCodeCustomProject(contractName string, projectName string, path string) []byte {
 	workingDir, err := os.Getwd()
 	s.Require().NoError(err)
 
-	projectRootPath := "/osmosis/"
+	projectRootPath := fmt.Sprintf("/%s/", projectName)
 	projectRootIndex := strings.LastIndex(workingDir, projectRootPath) + len(projectRootPath)
 	workingDir = workingDir[:projectRootIndex]
-	code, err := os.ReadFile(workingDir + "x/cosmwasmpool/bytecode/" + contractName + ".wasm")
+	code, err := os.ReadFile(workingDir + path + "/" + contractName + ".wasm")
 	s.Require().NoError(err)
 
 	return code

@@ -2,23 +2,15 @@ package redis
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
-	"time"
-
-	"github.com/redis/go-redis/v9"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/usecase/route"
 )
 
 type redisRouterRepo struct {
-	repositoryManager        mvc.TxManager
-	routerCacheExpirySeconds uint64
+	repositoryManager domain.TxManager
 }
 
 const (
@@ -30,14 +22,13 @@ const (
 )
 
 var (
-	_ mvc.RouterRepository = &redisRouterRepo{}
+	_ domain.RouterRepository = &redisRouterRepo{}
 )
 
 // NewRedisRouterRepo will create an implementation of pools.Repository
-func NewRedisRouterRepo(repositoryManager mvc.TxManager, routesCacheExpirySeconds uint64) mvc.RouterRepository {
+func NewRedisRouterRepo(repositoryManager domain.TxManager) domain.RouterRepository {
 	return &redisRouterRepo{
-		repositoryManager:        repositoryManager,
-		routerCacheExpirySeconds: routesCacheExpirySeconds,
+		repositoryManager: repositoryManager,
 	}
 }
 
@@ -129,7 +120,7 @@ func (r *redisRouterRepo) GetTakerFee(ctx context.Context, denom0 string, denom1
 }
 
 // SetTakerFee sets taker fee for a denom pair.
-func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx mvc.Tx, denom0, denom1 string, takerFee osmomath.Dec) error {
+func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx domain.Tx, denom0, denom1 string, takerFee osmomath.Dec) error {
 	// Ensure increasing lexicographic order.
 	if denom1 < denom0 {
 		denom0, denom1 = denom1, denom0
@@ -150,88 +141,4 @@ func (r *redisRouterRepo) SetTakerFee(ctx context.Context, tx mvc.Tx, denom0, de
 	}
 
 	return nil
-}
-
-// SetRoutesTx implements mvc.RouterRepository.
-func (r *redisRouterRepo) SetRoutesTx(ctx context.Context, tx mvc.Tx, denom0, denom1 string, routes route.CandidateRoutes) error {
-	redisTx, err := tx.AsRedisTx()
-	if err != nil {
-		return err
-	}
-	pipeliner, err := redisTx.GetPipeliner(ctx)
-	if err != nil {
-		return err
-	}
-
-	routesStr, err := json.Marshal(routes)
-	if err != nil {
-		return err
-	}
-
-	routeCacheExpiryDuration := time.Second * time.Duration(r.routerCacheExpirySeconds)
-
-	cmd := pipeliner.Set(ctx, getRoutesPrefixByDenoms(denom0, denom1), routesStr, routeCacheExpiryDuration)
-	if err := cmd.Err(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// SetRoutes implements mvc.RouterRepository.
-func (r *redisRouterRepo) SetRoutes(ctx context.Context, denom0, denom1 string, routes route.CandidateRoutes) error {
-	// Create transaction
-	tx := r.repositoryManager.StartTx()
-
-	// Set routes
-	if err := r.SetRoutesTx(ctx, tx, denom0, denom1, routes); err != nil {
-		return err
-	}
-
-	// Execute transaction.
-	if err := tx.Exec(ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GetRoutes implements mvc.RouterRepository.
-func (r *redisRouterRepo) GetRoutes(ctx context.Context, denom0, denom1 string) (route.CandidateRoutes, error) {
-	// Create transaction
-	tx := r.repositoryManager.StartTx()
-
-	redisTx, err := tx.AsRedisTx()
-	if err != nil {
-		return route.CandidateRoutes{}, err
-	}
-
-	pipeliner, err := redisTx.GetPipeliner(ctx)
-	if err != nil {
-		return route.CandidateRoutes{}, err
-	}
-
-	// Create command to retrieve results.
-	getCmd := pipeliner.Get(ctx, getRoutesPrefixByDenoms(denom0, denom1))
-
-	_, err = pipeliner.Exec(ctx)
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return route.CandidateRoutes{}, nil
-		}
-		return route.CandidateRoutes{}, err
-	}
-
-	// Parse routes
-	var routes route.CandidateRoutes
-	err = json.Unmarshal([]byte(getCmd.Val()), &routes)
-	if err != nil {
-		return route.CandidateRoutes{}, err
-	}
-
-	return routes, nil
-}
-
-func getRoutesPrefixByDenoms(denom0, denom1 string) string {
-	return routesPrefix + denom0 + keySeparator + denom1
 }

@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 )
 
 type chainInfoRepo struct {
-	repositoryManager mvc.TxManager
+	repositoryManager domain.TxManager
 }
 
 // TimeWrapper is a wrapper for time.Time to allow for JSON marshalling
@@ -26,14 +26,14 @@ const (
 )
 
 // NewChainInfoRepo creates a new repository for chain information
-func NewChainInfoRepo(repositoryManager mvc.TxManager) *chainInfoRepo {
+func NewChainInfoRepo(repositoryManager domain.TxManager) *chainInfoRepo {
 	return &chainInfoRepo{
 		repositoryManager: repositoryManager,
 	}
 }
 
 // StoreLatestHeight stores the latest blockchain height into Redis
-func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx mvc.Tx, height uint64) error {
+func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx domain.Tx, height uint64) error {
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
