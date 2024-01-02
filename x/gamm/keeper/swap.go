@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	errorsmod "cosmossdk.io/errors"
