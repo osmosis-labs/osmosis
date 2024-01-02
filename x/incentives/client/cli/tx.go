@@ -187,9 +187,6 @@ Group 3: Pool IDs 6, 7
 			if err != nil {
 				return err
 			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
