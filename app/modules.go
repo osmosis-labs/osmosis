@@ -64,6 +64,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/skip-mev/block-sdk/x/auction"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
@@ -132,6 +135,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
+	auctiontypes.ModuleName:                       nil, // initialize a module account
 }
 
 // appModules return modules to initialize module manager.
@@ -197,6 +201,10 @@ func appModules(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
+		auction.NewAppModule(
+			appCodec,
+			*app.AuctionKeeper,
+		),
 	}
 }
 
@@ -289,6 +297,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
+		auctiontypes.ModuleName,
 	}
 }
 
