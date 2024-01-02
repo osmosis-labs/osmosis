@@ -14,7 +14,7 @@ type chainInfoUseCase struct {
 	chainInfoRepository    mvc.ChainInfoRepository
 	redisRepositoryManager mvc.TxManager
 
-	// N.B. sometimes the node get stuck and does not make progress.
+	// N.B. sometimes the node gets stuck and does not make progress.
 	// However, it returns 200 OK for the status endpoint and claims to be not catching up.
 	// This has caused the healthcheck to pass with false positive a number of times in production.
 	// As a result, we need to keep track of the last seen height and time to ensure that the height is
