@@ -147,7 +147,7 @@ require (
 	github.com/xen0n/gosmopolitan v1.2.1 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
-	github.com/zondax/ledger-go v0.14.1 // indirect
+	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.tmz.dev/musttag v0.7.2 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
@@ -193,7 +193,7 @@ require (
 	github.com/confio/ics23/go v0.9.1 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
 	github.com/daixiang0/gci v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -354,7 +354,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/zimmski/go-tool v0.0.0-20150119110811-2dfdc9ac8439 // indirect
 	github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac // indirect
-	github.com/zondax/hid v0.9.1 // indirect
+	github.com/zondax/hid v0.9.2 // indirect
 	gitlab.com/bosi/decorder v0.4.0 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
