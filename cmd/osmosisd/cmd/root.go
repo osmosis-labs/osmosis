@@ -459,7 +459,6 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		if timeoutCommitValue == fiveSecondsString {
 			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
 		}
-		tmcConfig = serverCtx.Config
 
 		defer func() {
 			if err := recover(); err != nil {
