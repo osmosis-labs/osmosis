@@ -36,6 +36,8 @@ jobs:
       - 
         name: Comment on PR
         uses: thollander/actions-comment-pull-request@v2
+        permissions: 
+          pull-requests: write 
         with:
           message: |
             **Important Notice** 
