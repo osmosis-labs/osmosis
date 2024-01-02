@@ -2,7 +2,7 @@
 
 ARG GO_VERSION="1.20"
 ARG RUNNER_IMAGE="gcr.io/distroless/static-debian11"
-ARG BUILD_TAGS="netgo,ledger,muslc"
+ARG BUILD_TAGS="netgo,ledger,muslc,excludeIncrement"
 
 # --------------------------------------------------------
 # Builder
@@ -72,4 +72,4 @@ EXPOSE 1317
 # We disable it by default in out main Dockerfile for security reasons
 # EXPOSE 6060
 
-ENTRYPOINT ["osmosisd"]
+ENTRYPOINT ["osmosisd", "start"]

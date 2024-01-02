@@ -60,6 +60,7 @@ import (
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v22/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+	"github.com/skip-mev/block-sdk/x/auction"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -128,4 +129,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
+	auction.AppModuleBasic{},
 }
