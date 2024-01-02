@@ -91,6 +91,7 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 ### Features
 
 * [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
+* [#7139](https://github.com/osmosis-labs/osmosis/pull/7139) feat: add amino signing support to tokenfactory messages
 
 ### Fix Localosmosis docker-compose with state.
 
