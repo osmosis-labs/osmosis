@@ -269,9 +269,6 @@ func ProposalExecute(cmd *cobra.Command, args []string, createContent func(title
 	if err != nil {
 		return err
 	}
-	if err = proposalMsg.ValidateBasic(); err != nil {
-		return err
-	}
 
 	return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 }
