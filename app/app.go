@@ -10,6 +10,8 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/skip-mev/block-sdk/block"
+	"github.com/skip-mev/block-sdk/block/base"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -80,31 +82,38 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v22/app/keepers"
-	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v21"
-	v22 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v22"
-	v3 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v22/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v22/ingest"
-	"github.com/osmosis-labs/osmosis/v22/x/mint"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
+	v3 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v21/ingest"
+	"github.com/osmosis-labs/osmosis/v21/x/mint"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
+
+	blocksdkabci "github.com/skip-mev/block-sdk/abci"
+	"github.com/skip-mev/block-sdk/abci/checktx"
+	cometabci "github.com/cometbft/cometbft/abci/types"
 )
 
 const appName = "OsmosisApp"
@@ -162,6 +171,8 @@ type OsmosisApp struct {
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
+
+	checkTxHandler checktx.CheckTx
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -358,6 +369,21 @@ func NewOsmosisApp(
 
 	app.sm.RegisterStoreDecoders()
 
+	// initialize lanes + mempool
+	mevLane, defaultLane, freeLane := CreateLanes(app, txConfig)
+
+	// create the mempool
+	lanedMempool, err := block.NewLanedMempool(
+		app.Logger(),
+		[]block.Lane{mevLane, defaultLane, freeLane},
+	)
+	if err != nil {
+		panic(err)
+	}
+	// set the mempool
+	app.SetMempool(lanedMempool)
+
+
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())
@@ -374,7 +400,52 @@ func NewOsmosisApp(
 		ante.DefaultSigVerificationGasConsumer,
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
+		BlockSDKAnteHandlerParams{
+			freeLane:   freeLane,
+			mevLane:    mevLane,
+			auctionKeeper: *app.AppKeepers.AuctionKeeper,
+			txConfig: txConfig,
+		},
 	)
+
+	// update ante-handlers on lanes
+	opt := []base.LaneOption{
+		base.WithAnteHandler(anteHandler),
+	}
+	mevLane.WithOptions(opt...)
+	defaultLane.WithOptions(opt...)
+	freeLane.WithOptions(opt...)
+
+	// ABCI handlers
+	// prepare proposal
+	proposalHandler := blocksdkabci.NewProposalHandler(
+		app.Logger(),
+		txConfig.TxDecoder(),
+		txConfig.TxEncoder(),
+		lanedMempool,
+	)
+	app.SetPrepareProposal(proposalHandler.PrepareProposalHandler())
+	app.SetProcessProposal(proposalHandler.ProcessProposalHandler())
+
+	// check-tx
+	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
+		app,
+		txConfig.TxDecoder(),
+		mevLane,
+		anteHandler,
+		app.BaseApp.CheckTx,
+		app.ChainID(),
+	)
+
+	// wrap checkTxHandler with mempool parity handler
+	parityCheckTx := checktx.NewMempoolParityCheckTx(
+		app.Logger(),
+		lanedMempool,
+		txConfig.TxDecoder(),
+		mevCheckTxHandler.CheckTx(),
+	)
+
+	app.SetCheckTx(parityCheckTx.CheckTx())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -618,6 +689,17 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	}
 
 	return app
+// CheckTx will check the transaction with the provided checkTxHandler. We override the default
+// handler so that we can verify bid transactions before they are inserted into the mempool.
+// With the POB CheckTx, we can verify the bid transaction and all of the bundled transactions
+// before inserting the bid transaction into the mempool.
+func (app *OsmosisApp) CheckTx(req cometabci.RequestCheckTx) cometabci.ResponseCheckTx {
+	return app.checkTxHandler(req)
+}
+
+// SetCheckTx sets the checkTxHandler for the app.
+func (app *OsmosisApp) SetCheckTx(handler checktx.CheckTx) {
+	app.checkTxHandler = handler
 }
 
 // MakeCodecs returns the application codec and a legacy Amino codec.
