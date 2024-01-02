@@ -2,9 +2,8 @@ package usecase
 
 import (
 	"context"
+	"sync"
 	"time"
-
-	"github.com/go-redis/redis"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
@@ -14,6 +13,15 @@ type chainInfoUseCase struct {
 	contextTimeout         time.Duration
 	chainInfoRepository    mvc.ChainInfoRepository
 	redisRepositoryManager mvc.TxManager
+
+	// N.B. sometimes the node get stuck and does not make progress.
+	// However, it returns 200 OK for the status endpoint and claims to be not catching up.
+	// This has caused the healthcheck to pass with false positive a number of times in production.
+	// As a result, we need to keep track of the last seen height and time to ensure that the height is
+	// updated within a reasonable time frame.
+	lastSeenMx            sync.Mutex
+	lastSeenUpdatedHeight uint64
+	lastSeenUpdatedTime   time.Time
 }
 
 // The max number of seconds allowed for there to be no updates
@@ -27,6 +35,8 @@ func NewChainInfoUsecase(timeout time.Duration, chainInfoRepository mvc.ChainInf
 		contextTimeout:         timeout,
 		chainInfoRepository:    chainInfoRepository,
 		redisRepositoryManager: redisRepositoryManager,
+
+		lastSeenMx: sync.Mutex{},
 	}
 }
 
@@ -39,31 +49,18 @@ func (p *chainInfoUseCase) GetLatestHeight(ctx context.Context) (uint64, error) 
 		return 0, err
 	}
 
-	// Current UTC time
+	p.lastSeenMx.Lock()
+	defer p.lastSeenMx.Unlock()
+
 	currentTimeUTC := time.Now().UTC()
 
-	latestHeightRetrievalTime, err := p.chainInfoRepository.GetLatestHeightRetrievalTime(ctx)
-	if err != nil {
-		// If there is no entry, then we can assume that the height has never been retrieved,
-		// so we store the current time.
-		// TODO: clean up this error handling
-		if err.Error() == redis.Nil.Error() {
-			// Store the latest height retrieval time
-			if err := p.chainInfoRepository.StoreLatestHeightRetrievalTime(ctx, currentTimeUTC); err != nil {
-				return 0, err
-			}
-
-			return latestHeight, nil
-		}
-
-		return 0, err
-	}
-
 	// Time since last height retrieval
-	timeDeltaSecs := int(currentTimeUTC.Sub(latestHeightRetrievalTime).Seconds())
+	timeDeltaSecs := int(currentTimeUTC.Sub(p.lastSeenUpdatedTime).Seconds())
+
+	isHeightUpdated := latestHeight > p.lastSeenUpdatedHeight
 
 	// Validate that it does not exceed the max allowed time delta
-	if timeDeltaSecs > MaxAllowedHeightUpdateTimeDeltaSecs {
+	if !isHeightUpdated && timeDeltaSecs > MaxAllowedHeightUpdateTimeDeltaSecs {
 		return 0, domain.StaleHeightError{
 			StoredHeight:            latestHeight,
 			TimeSinceLastUpdate:     timeDeltaSecs,
@@ -71,10 +68,9 @@ func (p *chainInfoUseCase) GetLatestHeight(ctx context.Context) (uint64, error) 
 		}
 	}
 
-	// Store the latest height retrieval time
-	if err := p.chainInfoRepository.StoreLatestHeightRetrievalTime(ctx, currentTimeUTC); err != nil {
-		return 0, err
-	}
+	// Update the last seen height and time
+	p.lastSeenUpdatedHeight = latestHeight
+	p.lastSeenUpdatedTime = currentTimeUTC
 
 	return latestHeight, nil
 }

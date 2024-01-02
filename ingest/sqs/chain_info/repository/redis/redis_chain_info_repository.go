@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/json"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain/mvc"
 )
 
@@ -20,9 +19,8 @@ type TimeWrapper struct {
 }
 
 const (
-	latestHeightKey     = "latestHeight"
-	latestHeightField   = "height"
-	latestHeightTimeKey = "timeLatestHeight"
+	latestHeightKey   = "latestHeight"
+	latestHeightField = "height"
 )
 
 // NewChainInfoRepo creates a new repository for chain information
@@ -81,69 +79,4 @@ func (r *chainInfoRepo) GetLatestHeight(ctx context.Context) (uint64, error) {
 	}
 
 	return height, nil
-}
-
-// GetLatestHeightRetrievalTime implements mvc.ChainInfoRepository.
-func (r *chainInfoRepo) GetLatestHeightRetrievalTime(ctx context.Context) (time.Time, error) {
-	tx := r.repositoryManager.StartTx()
-	redisTx, err := tx.AsRedisTx()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	pipeliner, err := redisTx.GetPipeliner(ctx)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	cmd := pipeliner.Get(ctx, latestHeightTimeKey)
-
-	if err := tx.Exec(ctx); err != nil {
-		return time.Time{}, err
-	}
-
-	heightStr := cmd.Val()
-
-	var timeWrapper TimeWrapper
-	if err := json.Unmarshal([]byte(heightStr), &timeWrapper); err != nil {
-		return time.Time{}, err
-	}
-
-	return timeWrapper.Time, nil
-}
-
-// StoreLatestHeightRetrievalTime implements mvc.ChainInfoRepository.
-func (r *chainInfoRepo) StoreLatestHeightRetrievalTime(ctx context.Context, time time.Time) error {
-	tx := r.repositoryManager.StartTx()
-	redisTx, err := tx.AsRedisTx()
-	if err != nil {
-		return err
-	}
-
-	pipeliner, err := redisTx.GetPipeliner(ctx)
-	if err != nil {
-		return err
-	}
-
-	timeWrapper := TimeWrapper{
-		Time: time.UTC(), // always in UTC
-	}
-
-	bz, err := json.Marshal(timeWrapper)
-	if err != nil {
-		return err
-	}
-
-	cmd := pipeliner.Set(ctx, latestHeightTimeKey, bz, 0)
-
-	if err := tx.Exec(ctx); err != nil {
-		return err
-	}
-
-	err = cmd.Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
