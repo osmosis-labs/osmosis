@@ -12,15 +12,8 @@ message GenesisState {
   string basedenom = 1;
   repeated FeeToken feetokens = 2 [ (gogoproto.nullable) = false ];
 
-  // KVStore state
-  TxFeesTracker txFeesTracker = 3;
-}
-
-message TxFeesTracker {
-  repeated cosmos.base.v1beta1.Coin tx_fees = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  int64 height_accounting_starts_from = 2
-      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
+  // // KVStore state
+  // TxFeesTracker txFeesTracker = 3;
+  reserved 3;
+  reserved "txFeesTracker";
 }

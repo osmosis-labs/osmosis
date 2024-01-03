@@ -149,7 +149,6 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 			// See DeductFeeDecorator AnteHandler for how this is used
 			s.FundAcc(sdk.MustAccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"), sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1)))
 
-			preFeeDecoratorTxFeeTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
 			err := s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, tc.minGasPrices, tc.gasRequested, tc.isCheckTx, tc.isSimulate, tc.txFee)
 			if tc.expectPass {
 				// ensure fee was collected
@@ -160,7 +159,6 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 					}
 					moduleAddr := s.App.AccountKeeper.GetModuleAddress(moduleName)
 					s.Require().Equal(tc.txFee[0], s.App.BankKeeper.GetBalance(s.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
-					s.Require().Equal(preFeeDecoratorTxFeeTrackerValue.Add(tc.txFee[0]), s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx))
 				}
 				s.Require().NoError(err, "test: %s", tc.name)
 			} else {

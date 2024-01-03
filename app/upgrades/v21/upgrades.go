@@ -168,7 +168,7 @@ func CreateUpgradeHandler(
 		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
 		// that generates protocol rev.
 		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
+		// keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
 		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
 		// This will allow us to display the amount of cyclic arb profits that have been generated from a certain block height.
 		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)
