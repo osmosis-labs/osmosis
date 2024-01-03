@@ -81,8 +81,3 @@ type ConcentratedLiquidityKeeper interface {
 		maxTicksCrossed uint64,
 	) (maxTokenIn, resultingTokenOut sdk.Coin, err error)
 }
-
-type TxFeesKeeper interface {
-	GetTxFeesTrackerValue(ctx sdk.Context) (currentTxFees sdk.Coins)
-	GetTxFeesTrackerStartHeight(ctx sdk.Context) int64
-}

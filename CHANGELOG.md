@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
 * [#7149](https://github.com/osmosis-labs/osmosis/pull/7149) Fix double emitting CacheCtx events (e.g. Epoch, Superfluid, CL)
+* [#7237](https://github.com/osmosis-labs/osmosis/pull/7237) Removes tx_fee_tracker from the proto rev tracker, no longer tracks in state.
 
 ### Features
 

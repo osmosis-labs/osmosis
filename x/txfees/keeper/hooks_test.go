@@ -407,9 +407,6 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		preFundCollectorCoins := prepareCoinsForSwapToDenomTest(denomToSwapTo)
 		s.FundModuleAcc(collectorName, preFundCollectorCoins)
 
-		currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
-		s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, currentTxFeesTrackerValue.Add(preFundCollectorCoins...))
-
 		// Prepare pools.
 		s.preparePoolsForSwappingToDenom(otherPreSwapDenom, preSwapDenom, denomToSwapTo)
 

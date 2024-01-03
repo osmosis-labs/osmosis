@@ -71,7 +71,6 @@ type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
 	GetFeeToken(ctx sdk.Context, denom string) (FeeToken, error)
-	IncreaseTxFeesTracker(ctx sdk.Context, txFees sdk.Coin)
 }
 
 type ProtorevKeeper interface {
