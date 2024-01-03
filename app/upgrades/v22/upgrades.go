@@ -28,8 +28,8 @@ func CreateUpgradeHandler(
 		// Properly register consensus params. In the process, change params as per:
 		// https://forum.osmosis.zone/t/raise-maximum-gas-to-300m-and-lower-max-bytes-to-5mb/1116
 		defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
-		defaultConsensusParams.Block.MaxBytes = 5000000
-		defaultConsensusParams.Block.MaxGas = 300000000
+		defaultConsensusParams.Block.MaxBytes = 5000000 // previously 10485760
+		defaultConsensusParams.Block.MaxGas = 300000000 // previously 120000000
 		keepers.ConsensusParamsKeeper.Set(ctx, &defaultConsensusParams)
 
 		return migrations, nil
