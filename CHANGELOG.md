@@ -40,7 +40,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v21.1.4]
+## v21.1.6
+
+### API
+
+* [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
+
+### Features
+
+* [#6993](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
+
+### Misc Improvements
+
+* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
+* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7093) Lower CPU overheads of the Osmosis epoch.
+
+### Bug Fixes
+
+* [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values 
+
+## v21.1.5
+
+* [#7210](https://github.com/osmosis-labs/osmosis/pull/7210) Arb filter for new authz exec swap.
+
+## v21.1.4
 
 * [#7180](https://github.com/osmosis-labs/osmosis/pull/7180) Change `consensus.timeout-commit` from 5s to 4s in `config.toml`. Overwrites the existing value on start-up. Default is set to 4s.
 
