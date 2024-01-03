@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime/pprof"
+	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -206,6 +208,16 @@ func NewOsmosisApp(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+
+	file, err := os.Create("/root/app.log")
+	if err != nil {
+		panic(err)
+	}
+
+	logger = log.NewTMLogger(file)
+	logger = log.NewFilter(logger, log.AllowInfoWith("filter", "epoch"))
+
+	logger.With("filter", "epoch").Info("HERE")
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -418,6 +430,29 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	const epochHeight int64 = 12892222
+
+	// if ctx.BlockHeight() == epochHeight-100 {
+	// 	ctx.Logger().With("filter", "epoch").Info("sleep", "height", ctx.BlockHeight())
+	// 	time.Sleep(time.Hour * 2)
+	// }
+
+	if ctx.BlockHeight() == epochHeight {
+		time := time.Now().UTC().Unix()
+
+		// Start CPU profiling
+		f, err := os.Create(fmt.Sprintf("/root/cpu_profile-%d.prof", time))
+		defer f.Close()
+		if err != nil {
+			ctx.Logger().With("filter", "epoch").Info("epoch failed", "height", ctx.BlockHeight())
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+
+		ctx.Logger().With("filter", "epoch").Info("epoch finished", "height", ctx.BlockHeight())
+	}
+
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
