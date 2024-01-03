@@ -56,6 +56,7 @@ const (
 	spotPriceErrorFmtStr        = "error calculating spot price for denom %s, %s"
 
 	// placeholder value to disable route updates at the end of every block.
+	// nolint: unused
 	routeIngestDisablePlaceholder = 0
 )
 

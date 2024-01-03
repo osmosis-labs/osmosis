@@ -61,7 +61,6 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 
 // Initialize initializes the sidecar query server and returns the ingester.
 func (c Config) Initialize(appCodec codec.Codec, keepers common.SQSIngestKeepers) (ingest.Ingester, error) {
-
 	// Create redis client and ensure that it is up.
 	redisAddress := fmt.Sprintf("%s:%s", c.StorageHost, c.StoragePort)
 	redisClient := redis.NewClient(&redis.Options{
