@@ -53,6 +53,12 @@ func (r *chainInfoRepo) StoreLatestHeight(ctx context.Context, tx mvc.Tx, height
 }
 
 // GetLatestHeight retrieves the latest blockchain height from Redis
+//
+// N.B. sometimes the node gets stuck and does not make progress.
+// However, it returns 200 OK for the status endpoint and claims to be not catching up.
+// This has caused the healthcheck to pass with false positives in production.
+// As a result, we need to keep track of the last seen height that chain ingester pushes into
+// the Redis repository.
 func (r *chainInfoRepo) GetLatestHeight(ctx context.Context) (uint64, error) {
 	tx := r.repositoryManager.StartTx()
 	redisTx, err := tx.AsRedisTx()
