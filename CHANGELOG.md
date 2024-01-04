@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
 * [#7149](https://github.com/osmosis-labs/osmosis/pull/7149) Fix double emitting CacheCtx events (e.g. Epoch, Superfluid, CL)
 * [#7237](https://github.com/osmosis-labs/osmosis/pull/7237) Removes tx_fee_tracker from the proto rev tracker, no longer tracks in state.
+* [#7240](https://github.com/osmosis-labs/osmosis/pull/7240) Protorev tracker now tracks a coin array to improve gas efficiency.
 
 ### Features
 
@@ -60,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
-* [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values 
+* [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values
 
 ## v21.1.5
 
