@@ -33,7 +33,7 @@ func (s *KeeperTestHelper) PrepareCosmWasmPool() cosmwasmpooltypes.CosmWasmExten
 	return s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB})
 }
 
-// PrepareCustomTransmuterPool sets up a transmuter pool with the default parameters assumming that
+// PrepareCustomTransmuterPool sets up a transmuter pool with the default parameters assuming that
 // the transmuter contract is stored under x/cosmwasmpool/bytecode in the Osmosis repository.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, denoms []string) cosmwasmpooltypes.CosmWasmExtension {
 	return s.PrepareCustomTransmuterPoolCustomProject(owner, denoms, osmosisRepository, osmosisRepoTransmuterPath)
