@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 * [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values 
+* [#7243](https://github.com/osmosis-labs/osmosis/pull/7243) fix: chore: update gov metadata length from 256 to 10200
 
 ## v21.1.5
 
