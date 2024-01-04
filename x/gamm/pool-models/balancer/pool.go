@@ -267,7 +267,7 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 	tokenA sdk.Coin, Aasset PoolAsset, Basset PoolAsset, err error,
 ) {
 	if len(tokensA) != 1 {
-		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
+		return tokenA, Aasset, Basset, fmt.Errorf("expected token in to be of length one, token in was (%s)", tokensA.String())
 	}
 	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
 	if err != nil {
