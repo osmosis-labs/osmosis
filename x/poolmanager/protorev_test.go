@@ -37,10 +37,12 @@ func (s *KeeperTestSuite) TestGetTakerFeeTrackerForStakersAndCommunityPool() {
 			s.Require().Empty(s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
 
 			for _, coin := range tc.firstTakerFeeForStakers {
-				s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
 			}
 			for _, coin := range tc.firstTakerFeeForCommunityPool {
-				s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
 			}
 
 			actualFirstTakerFeeForStakers := s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx)
@@ -50,10 +52,12 @@ func (s *KeeperTestSuite) TestGetTakerFeeTrackerForStakersAndCommunityPool() {
 			s.Require().Equal(tc.firstTakerFeeForCommunityPool, actualFirstTakerFeeForCommunityPool)
 
 			for _, coin := range tc.secondTakerFeeForStakers {
-				s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
 			}
 			for _, coin := range tc.secondTakerFeeForCommunityPool {
-				s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
 			}
 
 			expectedFinalTakerFeeForStakers := []sdk.Coin{}
@@ -143,10 +147,12 @@ func (s *KeeperTestSuite) TestUpdateTakerFeeTrackerForStakersAndCommunityPool() 
 			s.Require().Empty(s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
 
 			for _, coin := range tc.initialTakerFeeForStakers {
-				s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
 			}
 			for _, coin := range tc.initialTakerFeeForCommunityPool {
-				s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
 			}
 
 			actualInitialTakerFeeForStakers := s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx)
@@ -155,8 +161,10 @@ func (s *KeeperTestSuite) TestUpdateTakerFeeTrackerForStakersAndCommunityPool() 
 			s.Require().Equal(tc.initialTakerFeeForStakers, actualInitialTakerFeeForStakers)
 			s.Require().Equal(tc.initialTakerFeeForCommunityPool, actualInitialTakerFeeForCommunityPool)
 
-			s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, tc.increaseTakerFeeForStakersBy.Denom, tc.increaseTakerFeeForStakersBy.Amount)
-			s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, tc.increaseTakerFeeForCommunityPoolBy.Denom, tc.increaseTakerFeeForCommunityPoolBy.Amount)
+			err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, tc.increaseTakerFeeForStakersBy.Denom, tc.increaseTakerFeeForStakersBy.Amount)
+			s.Require().NoError(err)
+			err = s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, tc.increaseTakerFeeForCommunityPoolBy.Denom, tc.increaseTakerFeeForCommunityPoolBy.Amount)
+			s.Require().NoError(err)
 
 			expectedFinalTakerFeeForStakers := []sdk.Coin{}
 			expectedFinalTakerFeeForCommunityPool := []sdk.Coin{}

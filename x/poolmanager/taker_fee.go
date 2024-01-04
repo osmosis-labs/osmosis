@@ -164,7 +164,10 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			k.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
+			err = k.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
+			if err != nil {
+				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)
+			}
 		}
 
 		// If the denom is not the base denom:
@@ -203,7 +206,10 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			k.UpdateTakerFeeTrackerForStakersByDenom(ctx, nonOsmoTakerFeeToStakingRewardsCoin.Denom, nonOsmoTakerFeeToStakingRewardsCoin.Amount)
+			err = k.UpdateTakerFeeTrackerForStakersByDenom(ctx, nonOsmoTakerFeeToStakingRewardsCoin.Denom, nonOsmoTakerFeeToStakingRewardsCoin.Amount)
+			if err != nil {
+				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)
+			}
 		}
 	}
 
