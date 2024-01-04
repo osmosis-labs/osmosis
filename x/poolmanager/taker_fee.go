@@ -152,7 +152,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			k.IncreaseTakerFeeTrackerForCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoin)
+			k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, osmoTakerFeeToCommunityPoolCoin.Denom, osmoTakerFeeToCommunityPoolCoin.Amount)
 			takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(osmoTakerFeeToCommunityPoolCoin.Amount)
 		}
 		// Staking Rewards:
@@ -164,7 +164,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			k.IncreaseTakerFeeTrackerForStakers(ctx, osmoTakerFeeToStakingRewardsCoin)
+			k.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
 		}
 
 		// If the denom is not the base denom:
@@ -180,7 +180,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 				if err != nil {
 					return sdk.Coin{}, err
 				}
-				k.IncreaseTakerFeeTrackerForCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoin)
+				k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, nonOsmoTakerFeeToCommunityPoolCoin.Denom, nonOsmoTakerFeeToCommunityPoolCoin.Amount)
 				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoin.Amount)
 			} else {
 				// If the non osmo denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
@@ -191,7 +191,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 				if err != nil {
 					return sdk.Coin{}, err
 				}
-				k.IncreaseTakerFeeTrackerForCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoin)
+				k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, nonOsmoTakerFeeToCommunityPoolCoin.Denom, nonOsmoTakerFeeToCommunityPoolCoin.Amount)
 				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoin.Amount)
 			}
 		}
@@ -203,7 +203,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			k.IncreaseTakerFeeTrackerForStakers(ctx, nonOsmoTakerFeeToStakingRewardsCoin)
+			k.UpdateTakerFeeTrackerForStakersByDenom(ctx, nonOsmoTakerFeeToStakingRewardsCoin.Denom, nonOsmoTakerFeeToStakingRewardsCoin.Amount)
 		}
 	}
 

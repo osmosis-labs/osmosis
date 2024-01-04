@@ -126,14 +126,10 @@ message TakerFeeDistributionPercentage {
 }
 
 message TakerFeesTracker {
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2
+      [ (gogoproto.nullable) = false ];
   int64 height_accounting_starts_from = 3
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }

@@ -7,6 +7,7 @@ import (
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -52,10 +53,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TakerFeesTracker.HeightAccountingStartsFrom)
 	// s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
 	// All values should be nill except for the cyclic arb profits, which should start at the value it was at time of upgrade
-	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
-	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
 	// s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
-	s.Require().Equal(cyclicArbProfits, allProtocolRevenue.CyclicArbTracker.CyclicArb)
+	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(cyclicArbProfits), allProtocolRevenue.CyclicArbTracker.CyclicArb)
 
 }
 
