@@ -1,9 +1,10 @@
-package redis_test
+package poolsingester_test
 
 import (
+	"github.com/osmosis-labs/sqs/sqsdomain"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
+	poolsingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 // and the map is correctly mutated.
 func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 	type denomPairTakerFee struct {
-		denomPair domain.DenomPair
+		denomPair sqsdomain.DenomPair
 		takerFee  osmomath.Dec
 	}
 
@@ -29,14 +30,14 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 		preSetTakerFeePairs []denomPairTakerFee
 
 		denoms                         []string
-		denomPairToTakerFeeMap         domain.TakerFeeMap
+		denomPairToTakerFeeMap         sqsdomain.TakerFeeMap
 		expectError                    error
-		expectedDenomPairToTakerFeeMap domain.TakerFeeMap
+		expectedDenomPairToTakerFeeMap sqsdomain.TakerFeeMap
 	}{
 		"one denom pair, taker fee is not in the map, pre-set taker fee": {
 			preSetTakerFeePairs: []denomPairTakerFee{
 				{
-					denomPair: domain.DenomPair{
+					denomPair: sqsdomain.DenomPair{
 						Denom0: USDC,
 						Denom1: USDT,
 					},
@@ -46,9 +47,9 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT},
 
-			denomPairToTakerFeeMap: domain.TakerFeeMap{},
+			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{},
 
-			expectedDenomPairToTakerFeeMap: domain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -58,7 +59,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 		"one denom pair, taker fee is in the map, pre-set taker fee": {
 			preSetTakerFeePairs: []denomPairTakerFee{
 				{
-					denomPair: domain.DenomPair{
+					denomPair: sqsdomain.DenomPair{
 						Denom0: USDC,
 						Denom1: USDT,
 					},
@@ -69,7 +70,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT},
 
-			denomPairToTakerFeeMap: domain.TakerFeeMap{
+			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -77,7 +78,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 				}: otherCustomTakerFee,
 			},
 
-			expectedDenomPairToTakerFeeMap: domain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -91,9 +92,9 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT},
 
-			denomPairToTakerFeeMap: domain.TakerFeeMap{},
+			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{},
 
-			expectedDenomPairToTakerFeeMap: domain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -103,7 +104,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 		"three denom pairs, one taker fee is from pre-set, one from params and one is already in the map": {
 			preSetTakerFeePairs: []denomPairTakerFee{
 				{
-					denomPair: domain.DenomPair{
+					denomPair: sqsdomain.DenomPair{
 						Denom0: USDC,
 						Denom1: USDT,
 					},
@@ -113,14 +114,14 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT, USDW},
 
-			denomPairToTakerFeeMap: domain.TakerFeeMap{
+			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
 				{
 					Denom0: USDT,
 					Denom1: USDW,
 				}: otherCustomTakerFee,
 			},
 
-			expectedDenomPairToTakerFeeMap: domain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -149,7 +150,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 				s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, takerFeePair.denomPair.Denom0, takerFeePair.denomPair.Denom1, takerFeePair.takerFee)
 			}
 
-			err := redis.RetrieveTakerFeeToMapIfNotExists(s.Ctx, tc.denoms, tc.denomPairToTakerFeeMap, s.App.PoolManagerKeeper)
+			err := poolsingester.RetrieveTakerFeeToMapIfNotExists(s.Ctx, tc.denoms, tc.denomPairToTakerFeeMap, s.App.PoolManagerKeeper)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

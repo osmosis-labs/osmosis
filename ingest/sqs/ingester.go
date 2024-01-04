@@ -2,6 +2,7 @@ package sqs
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
@@ -14,7 +15,7 @@ var _ ingest.Ingester = &sqsIngester{}
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
-	txManager         domain.TxManager
+	txManager         repository.TxManager
 	poolsIngester     domain.AtomicIngester
 	chainInfoIngester domain.AtomicIngester
 }
@@ -22,7 +23,7 @@ type sqsIngester struct {
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester domain.AtomicIngester, txManager domain.TxManager) ingest.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester domain.AtomicIngester, txManager repository.TxManager) ingest.Ingester {
 	return &sqsIngester{
 		txManager:         txManager,
 		chainInfoIngester: chainInfoIngester,

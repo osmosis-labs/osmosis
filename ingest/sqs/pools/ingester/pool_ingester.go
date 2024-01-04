@@ -1,4 +1,4 @@
-package redis
+package poolsingester
 
 import (
 	"errors"
@@ -6,10 +6,14 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/sqs/pools/common"
+	"github.com/osmosis-labs/sqs/sqsdomain"
+	"github.com/osmosis-labs/sqs/sqsdomain/repository"
+	poolsredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/pools"
+	routerredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/router"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 
 	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
@@ -28,9 +32,9 @@ import (
 // - If error in TVL calculation, TVL is set to the value that could be computed and the pool struct
 // has a flag to indicate that there was an error in TVL calculation.
 type poolIngester struct {
-	poolsRepository    domain.PoolsRepository
-	routerRepository   domain.RouterRepository
-	repositoryManager  domain.TxManager
+	poolsRepository    poolsredisrepo.PoolsRepository
+	routerRepository   routerredisrepo.RouterRepository
+	repositoryManager  repository.TxManager
 	gammKeeper         common.PoolKeeper
 	concentratedKeeper common.ConcentratedKeeper
 	cosmWasmKeeper     common.CosmWasmPoolKeeper
@@ -63,7 +67,7 @@ const (
 var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository domain.RouterRepository, repositoryManager domain.TxManager, assetListGetter domain.AssetListGetter, keepers common.SQSIngestKeepers) domain.AtomicIngester {
+func NewPoolIngester(poolsRepository poolsredisrepo.PoolsRepository, routerRepository routerredisrepo.RouterRepository, repositoryManager repository.TxManager, assetListGetter domain.AssetListGetter, keepers domain.SQSIngestKeepers) domain.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		routerRepository:   routerRepository,
@@ -79,14 +83,14 @@ func NewPoolIngester(poolsRepository domain.PoolsRepository, routerRepository do
 }
 
 // ProcessBlock implements ingest.Ingester.
-func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx domain.Tx) error {
+func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx repository.Tx) error {
 	return pi.processPoolState(ctx, tx)
 }
 
 var _ domain.AtomicIngester = &poolIngester{}
 
 // processPoolState processes the pool state. an
-func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
+func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// TODO: can be cached
@@ -121,9 +125,9 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx domain.Tx) error {
 		return err
 	}
 
-	denomPairToTakerFeeMap := make(map[domain.DenomPair]osmomath.Dec, 0)
+	denomPairToTakerFeeMap := make(map[sqsdomain.DenomPair]osmomath.Dec, 0)
 
-	allPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
+	allPoolsParsed := make([]sqsdomain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
 
 	// Parse CFMM pool to the standard SQS types.
 	for _, pool := range cfmmPools {
@@ -249,9 +253,9 @@ func (pi *poolIngester) convertPool(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
 	denomToRoutingInfoMap map[string]denomRoutingInfo,
-	denomPairToTakerFeeMap domain.TakerFeeMap,
+	denomPairToTakerFeeMap sqsdomain.TakerFeeMap,
 	tokenPrecisionMap map[string]int,
-) (domain.PoolI, error) {
+) (sqsdomain.PoolI, error) {
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
 	osmoPoolTVL := osmomath.ZeroInt()
@@ -345,20 +349,20 @@ func (pi *poolIngester) convertPool(
 	}
 
 	// Get the tick model for concentrated pools
-	var tickModel *domain.TickModel
+	var tickModel *sqsdomain.TickModel
 
 	// For CL pools, get the tick data
 	if pool.GetType() == poolmanagertypes.Concentrated {
 		tickData, currentTickIndex, err := pi.concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
 		// If there is no error, we set the tick model
 		if err == nil {
-			tickModel = &domain.TickModel{
+			tickModel = &sqsdomain.TickModel{
 				Ticks:            tickData,
 				CurrentTickIndex: currentTickIndex,
 			}
 			// If there is no liquidity, we set the tick model to nil and update no liquidity flag
 		} else if err != nil && errors.Is(err, concentratedtypes.RanOutOfTicksForPoolError{PoolId: pool.GetId()}) {
-			tickModel = &domain.TickModel{
+			tickModel = &sqsdomain.TickModel{
 				Ticks:            []queryproto.LiquidityDepthWithRange{},
 				CurrentTickIndex: -1,
 				HasNoLiquidity:   true,
@@ -370,9 +374,9 @@ func (pi *poolIngester) convertPool(
 		}
 	}
 
-	return &domain.PoolWrapper{
+	return &sqsdomain.PoolWrapper{
 		ChainModel: pool,
-		SQSModel: domain.SQSPool{
+		SQSModel: sqsdomain.SQSPool{
 			TotalValueLockedUSDC:  osmoPoolTVL,
 			TotalValueLockedError: errorInTVLStr,
 			Balances:              balances,
@@ -384,7 +388,7 @@ func (pi *poolIngester) convertPool(
 }
 
 // persistTakerFees persists all taker fees to the router repository.
-func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx domain.Tx, takerFeeMap domain.TakerFeeMap) error {
+func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx repository.Tx, takerFeeMap sqsdomain.TakerFeeMap) error {
 	for denomPair, takerFee := range takerFeeMap {
 		err := pi.routerRepository.SetTakerFee(sdk.WrapSDKContext(ctx), tx, denomPair.Denom0, denomPair.Denom1, takerFee)
 		if err != nil {

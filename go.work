@@ -16,4 +16,6 @@ use ./x/epochs
 
 use ../sqs
 
+use ../sqs/sqsdomain
+
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.2

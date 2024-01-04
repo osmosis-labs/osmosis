@@ -1,10 +1,11 @@
-package redis
+package poolsingester
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/sqs/pools/common"
+	"github.com/osmosis-labs/sqs/sqsdomain"
+
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
@@ -20,10 +21,10 @@ type (
 	PoolIngester     = poolIngester
 )
 
-func (pi *poolIngester) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, denomPairToTakerFeeMap domain.TakerFeeMap, tokenPrecisionMap map[string]int) (domain.PoolI, error) {
+func (pi *poolIngester) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, tokenPrecisionMap map[string]int) (sqsdomain.PoolI, error) {
 	return pi.convertPool(ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 }
 
-func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap domain.TakerFeeMap, poolManagerKeeper common.PoolManagerKeeper) error {
+func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper common.PoolManagerKeeper) error {
 	return retrieveTakerFeeToMapIfNotExists(ctx, denoms, denomPairToTakerFeeMap, poolManagerKeeper)
 }

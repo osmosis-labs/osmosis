@@ -1,7 +1,10 @@
-package redis
+package chaininfoingester
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/sqs/sqsdomain/repository"
+	chaininforedisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/chaininfo"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 )
@@ -10,12 +13,12 @@ import (
 // It implements ingest.Ingester.
 // It reads the latest blockchain height and writes it to the chainInfo repository.
 type chainInfoIngester struct {
-	chainInfoRepo     domain.ChainInfoRepository
-	repositoryManager domain.TxManager
+	chainInfoRepo     chaininforedisrepo.ChainInfoRepository
+	repositoryManager repository.TxManager
 }
 
-// NewChainInfoIngester returns a new chain information ingester.
-func NewChainInfoIngester(chainInfoRepo domain.ChainInfoRepository, repositoryManager domain.TxManager) domain.AtomicIngester {
+// New returns a new chain information ingester.
+func New(chainInfoRepo chaininforedisrepo.ChainInfoRepository, repositoryManager repository.TxManager) domain.AtomicIngester {
 	return &chainInfoIngester{
 		chainInfoRepo:     chainInfoRepo,
 		repositoryManager: repositoryManager,
@@ -24,7 +27,7 @@ func NewChainInfoIngester(chainInfoRepo domain.ChainInfoRepository, repositoryMa
 
 // ProcessBlock implements ingest.Ingester.
 // It reads the latest blockchain height and stores it in Redis.
-func (ci *chainInfoIngester) ProcessBlock(ctx sdk.Context, tx domain.Tx) error {
+func (ci *chainInfoIngester) ProcessBlock(ctx sdk.Context, tx repository.Tx) error {
 	height := ctx.BlockHeight()
 
 	ctx.Logger().Info("ingesting latest blockchain height", "height", height)

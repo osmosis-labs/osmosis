@@ -8,16 +8,16 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/redis/go-redis/v9"
 
+	redisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis"
+	chaininforedisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/chaininfo"
+	poolsredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/pools"
+	routerredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/router"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v21/ingest"
-	redischaininfoingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chain_info/ingester/redis"
-	redischaininforepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chain_info/repository/redis"
+	chaininfoingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/chaininfo/ingester"
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
-	redispoolsingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester/redis"
-
-	redispoolsrepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/repository/redis"
-	redisrouterrepository "github.com/osmosis-labs/osmosis/v21/ingest/sqs/router/repository/redis"
+	poolsingester "github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/ingester"
 )
 
 // Config defines the config for the sidecar query server.
@@ -30,7 +30,11 @@ type Config struct {
 	StoragePort string `mapstructure:"db-port"`
 }
 
-const groupOptName = "osmosis-sqs"
+const (
+	groupOptName = "osmosis-sqs"
+
+	noRoutesCacheExpiry = 0
+)
 
 // DefaultConfig defines the default config for the sidecar query server.
 var DefaultConfig = Config{
@@ -60,7 +64,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 }
 
 // Initialize initializes the sidecar query server and returns the ingester.
-func (c Config) Initialize(appCodec codec.Codec, keepers common.SQSIngestKeepers) (ingest.Ingester, error) {
+func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers) (ingest.Ingester, error) {
 	// Create redis client and ensure that it is up.
 	redisAddress := fmt.Sprintf("%s:%s", c.StorageHost, c.StoragePort)
 	redisClient := redis.NewClient(&redis.Options{
@@ -74,18 +78,18 @@ func (c Config) Initialize(appCodec codec.Codec, keepers common.SQSIngestKeepers
 		return nil, err
 	}
 
-	txManager := domain.NewTxManager(redisClient)
+	txManager := redisrepo.NewTxManager(redisClient)
 
-	redisPoolsRepository := redispoolsrepository.NewRedisPoolsRepo(appCodec, txManager)
+	redisPoolsRepository := poolsredisrepo.New(appCodec, txManager)
 
-	redisRouterRepository := redisrouterrepository.NewRedisRouterRepo(txManager)
+	redisRouterRepository := routerredisrepo.New(txManager, noRoutesCacheExpiry)
 
 	// Create pools ingester
-	poolsIngester := redispoolsingester.NewPoolIngester(redisPoolsRepository, redisRouterRepository, txManager, domain.NewAssetListGetter(), keepers)
+	poolsIngester := poolsingester.NewPoolIngester(redisPoolsRepository, redisRouterRepository, txManager, domain.NewAssetListGetter(), keepers)
 
 	// Create chain info ingester
-	chainInfoRepository := redischaininforepository.NewChainInfoRepo(txManager)
-	chainInfoingester := redischaininfoingester.NewChainInfoIngester(chainInfoRepository, txManager)
+	chainInfoRepository := chaininforedisrepo.New(txManager)
+	chainInfoingester := chaininfoingester.New(chainInfoRepository, txManager)
 
 	// Create sqs ingester that encapsulates all ingesters.
 	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)

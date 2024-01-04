@@ -1,15 +1,6 @@
-# Sidecar Query Server
+# Sidecar Query Server Ingester
 
-This is a sidecar query server that is used for performing query tasks outside of the main chain.
-The high-level architecture is that the chain reads data at the end of the block, parses it
-and then writes into a Redis instance.
-
-The sidecar query server then reads the parsed data from Redis and serves it to the client
-via HTTP endpoints.
-
-The use case for this is performing certain data and computationally intensive tasks outside of
-the chain node or the clients. For example, routing falls under this category because it requires
-all pool data for performing the complex routing algorithm.
+This 
 
 ## Supported Endpoints
 

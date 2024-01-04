@@ -32,7 +32,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -71,6 +71,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+
 	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
@@ -257,7 +258,7 @@ func NewOsmosisApp(
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
-		sqsKeepers := common.SQSIngestKeepers{
+		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
 			BankKeeper:         app.BankKeeper,

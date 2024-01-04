@@ -1,10 +1,11 @@
-package redis
+package poolsingester
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/sqs/sqsdomain"
+
 	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 // retrieveTakerFeeToMapIfNotExists retrieves the taker fee for the denom pair if it does not exist in the map
@@ -12,7 +13,7 @@ import (
 // If the taker fee for a denom pair already exists in the map, it is not retrieved again.
 // Note that the denoms in denomPair must always be lexicographically sorted to avoid duplicates.
 // Returns error if fails to retrieve taker fee from chain. Nil otherwise
-func retrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap domain.TakerFeeMap, poolManagerKeeper common.PoolManagerKeeper) error {
+func retrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper domain.PoolManagerKeeper) error {
 	for i, denomI := range denoms {
 		for j := i + 1; j < len(denoms); j++ {
 			if !denomPairToTakerFeeMap.Has(denomI, denoms[j]) {

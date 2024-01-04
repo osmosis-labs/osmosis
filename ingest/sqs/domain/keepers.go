@@ -1,4 +1,4 @@
-package common
+package domain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
