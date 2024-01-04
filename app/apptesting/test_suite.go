@@ -142,9 +142,13 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 	}
 }
 
+func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
+	return s.PrepareAllSupportedPoolsCustomProject(osmosisRepository, osmosisRepoTransmuterPath)
+}
+
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
 // Additionally, attaches an internal gauge ID for each pool.
-func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
+func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, path string) SupportedPoolAndGaugeInfo {
 	// This is the ID of the first gauge created next (concentrated).
 	nextGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
 
@@ -156,7 +160,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo 
 		concentratedPoolID = concentratedPool.GetId()
 		balancerPoolID     = s.PrepareBalancerPool()
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
-		cosmWasmPool       = s.PrepareCosmWasmPool()
+		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, path)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
 	)
 	return SupportedPoolAndGaugeInfo{

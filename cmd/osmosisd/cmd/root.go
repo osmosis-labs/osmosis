@@ -554,49 +554,6 @@ is-enabled = "false"
 db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
 db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
 
-# Defines the web server configuration.
-server-address = "{{ .SidecarQueryServerConfig.ServerAddress }}"
-timeout-duration-secs = "{{ .SidecarQueryServerConfig.ServerTimeoutDurationSecs }}"
-
-# Defines the logger configuration.
-logger-filename = "{{ .SidecarQueryServerConfig.LoggerFilename }}"
-logger-is-production = "{{ .SidecarQueryServerConfig.LoggerIsProduction }}"
-logger-level = "{{ .SidecarQueryServerConfig.LoggerLevel }}"
-
-# Defines the gRPC gateway endpoint of the chain.
-grpc-gateway-endpoint = "{{ .SidecarQueryServerConfig.ChainGRPCGatewayEndpoint }}"
-
-# The list of preferred poold IDs in the router.
-# These pools will be prioritized in the candidate route selection, ignoring all other
-# heuristics such as TVL.
-preferred-pool-ids = "{{ .SidecarQueryServerConfig.Router.PreferredPoolIDs }}"
-
-# The maximum number of pools to be included in a single route.
-max-pools-per-route = "{{ .SidecarQueryServerConfig.Router.MaxPoolsPerRoute }}"
-
-# The maximum number of routes to be returned in candidate route search.
-max-routes = "{{ .SidecarQueryServerConfig.Router.MaxRoutes }}"
-
-# The maximum number of routes to be split across. Must be smaller than or
-# equal to max-routes.
-max-split-routes = "{{ .SidecarQueryServerConfig.Router.MaxSplitRoutes }}"
-
-# The maximum number of iterations to split a route across.
-max-split-iterations = "{{ .SidecarQueryServerConfig.Router.MaxSplitIterations }}"
-
-# The minimum liquidity of a pool to be included in a route.
-min-osmo-liquidity = "{{ .SidecarQueryServerConfig.Router.MinOSMOLiquidity }}"
-
-# The height interval at which the candidate routes are recomputed and updated in
-# Redis
-route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateHeightInterval }}"
-
-# Whether to enable candidate route caching in Redis.
-route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
-
-# The number of seconds to cache routes for before expiry.
-route-cache-expiry-seconds = "{{ .SidecarQueryServerConfig.Router.RouteCacheExpirySeconds }}"
-
 ###############################################################################
 ###              		       Wasm Configuration    					    ###
 ###############################################################################
