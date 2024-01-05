@@ -19,7 +19,7 @@ func (k Keeper) GetTakerFeeTrackerForStakers(ctx sdk.Context) []sdk.Coin {
 	takerFeesForStakers := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeStakersProtoRev)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeStakersProtoRevArray)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -36,7 +36,7 @@ func (k Keeper) GetTakerFeeTrackerForStakers(ctx sdk.Context) []sdk.Coin {
 // GetTakerFeeTrackerForStakersByDenom returns the taker fee for stakers tracker for the specified denom that has been
 // collected since the accounting height.
 func (k Keeper) GetTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string) (sdk.Coin, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeStakersProtoRev)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeStakersProtoRevArray)
 	key := types.GetKeyPrefixTakerFeeStakersProtoRevByDenom(denom)
 
 	bz := store.Get(key)
@@ -54,7 +54,7 @@ func (k Keeper) GetTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom strin
 
 // UpdateTakerFeeTrackerForStakersByDenom increases the take fee for stakers tracker for the specified denom by the specified amount.
 func (k Keeper) UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeStakersProtoRev)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeStakersProtoRevArray)
 	key := types.GetKeyPrefixTakerFeeStakersProtoRevByDenom(denom)
 
 	takerFeeForStakers, _ := k.GetTakerFeeTrackerForStakersByDenom(ctx, denom)
@@ -71,50 +71,50 @@ func (k Keeper) UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom st
 // GetTakerFeeTrackerForCommunityPool returns the taker fee for community pool tracker for all denoms that has been
 // collected since the accounting height.
 func (k Keeper) GetTakerFeeTrackerForCommunityPool(ctx sdk.Context) []sdk.Coin {
-	takerFeesForStakers := make([]sdk.Coin, 0)
+	takerFeesForCommunityPool := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeCommunityPoolProtoRev)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeCommunityPoolProtoRevArray)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		bz := iterator.Value()
-		takerFeeForStakers := sdk.Coin{}
-		if err := takerFeeForStakers.Unmarshal(bz); err == nil {
-			takerFeesForStakers = append(takerFeesForStakers, takerFeeForStakers)
+		takerFeeForCommunityPool := sdk.Coin{}
+		if err := takerFeeForCommunityPool.Unmarshal(bz); err == nil {
+			takerFeesForCommunityPool = append(takerFeesForCommunityPool, takerFeeForCommunityPool)
 		}
 	}
 
-	return takerFeesForStakers
+	return takerFeesForCommunityPool
 }
 
 // GetTakerFeeTrackerForCommunityPoolByDenom returns the taker fee for community pool tracker for the specified denom that has been
 // collected since the accounting height.
 func (k Keeper) GetTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom string) (sdk.Coin, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeCommunityPoolProtoRev)
-	key := types.GetKeyPrefixTakerFeeStakersProtoRevByDenom(denom)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeCommunityPoolProtoRevArray)
+	key := types.GetKeyPrefixTakerFeeCommunityPoolProtoRevByDenom(denom)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no taker fees for stakers for denom %s", denom)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no taker fees for community pool for denom %s", denom)
 	}
 
-	takerFeeForStakers := sdk.Coin{}
-	if err := takerFeeForStakers.Unmarshal(bz); err != nil {
+	takerFeeForCommunityPool := sdk.Coin{}
+	if err := takerFeeForCommunityPool.Unmarshal(bz); err != nil {
 		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
 	}
 
-	return takerFeeForStakers, nil
+	return takerFeeForCommunityPool, nil
 }
 
 // UpdateTakerFeeTrackerForCommunityPoolByDenom increases the take fee for community pool tracker for the specified denom by the specified amount.
 func (k Keeper) UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeCommunityPoolProtoRev)
-	key := types.GetKeyPrefixTakerFeeStakersProtoRevByDenom(denom)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyTakerFeeCommunityPoolProtoRevArray)
+	key := types.GetKeyPrefixTakerFeeCommunityPoolProtoRevByDenom(denom)
 
-	takerFeeForStakers, _ := k.GetTakerFeeTrackerForCommunityPoolByDenom(ctx, denom)
-	takerFeeForStakers.Amount = takerFeeForStakers.Amount.Add(increasedAmt)
-	bz, err := takerFeeForStakers.Marshal()
+	takerFeeForCommunityPool, _ := k.GetTakerFeeTrackerForCommunityPoolByDenom(ctx, denom)
+	takerFeeForCommunityPool.Amount = takerFeeForCommunityPool.Amount.Add(increasedAmt)
+	bz, err := takerFeeForCommunityPool.Marshal()
 	if err != nil {
 		return err
 	}

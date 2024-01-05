@@ -23,6 +23,9 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// For sake of simplicity, we restart the taker fee tracker accounting height.
+		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
+
 		return migrations, nil
 	}
 }
