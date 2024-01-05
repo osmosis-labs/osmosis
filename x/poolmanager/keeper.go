@@ -100,8 +100,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 
 	// We track taker fees generated in the module's KVStore.
-	// If the values were exported, we set them here.
-	// If the values were not exported, we set the accounting height to the current height.
 	for _, coin := range genState.TakerFeesTracker.TakerFeesToStakers {
 		if err := k.UpdateTakerFeeTrackerForStakersByDenom(ctx, coin.Denom, coin.Amount); err != nil {
 			panic(err)
@@ -112,12 +110,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(err)
 		}
 	}
-
-	if genState.TakerFeesTracker.HeightAccountingStartsFrom != 0 {
-		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
-	} else {
-		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-	}
+	k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
 
 	// Set the pool volumes KVStore.
 	for _, poolVolume := range genState.PoolVolumes {
