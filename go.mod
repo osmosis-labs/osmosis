@@ -30,7 +30,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231231222019-bcdabda4fc36
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231229191315-aff18520757d
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240105203124-b98972cbb0f8
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231229191315-aff18520757d
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231229191315-aff18520757d
 	github.com/pkg/errors v0.9.1
@@ -65,18 +65,24 @@ require (
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/log v1.2.1 // indirect
+	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/Abirdcfly/dupword v0.0.13 // indirect
+	github.com/Antonboom/testifylint v0.2.3 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
-	github.com/GaijinEntertainment/go-exhaustruct/v2 v2.3.0 // indirect
+	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.1.0 // indirect
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/OpenPeeDeeP/depguard v1.1.1 // indirect
+	github.com/OpenPeeDeeP/depguard/v2 v2.1.0 // indirect
+	github.com/alecthomas/go-check-sumtype v0.1.3 // indirect
+	github.com/alexkohler/nakedret/v2 v2.0.2 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
+	github.com/butuzov/mirror v1.1.0 // indirect
+	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
@@ -98,6 +104,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
+	github.com/ghostiam/protogetter v0.2.3 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
@@ -112,13 +119,13 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/junk1tm/musttag v0.4.5 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/linxGnu/grocksdb v1.7.16 // indirect
+	github.com/macabu/inamedparam v0.1.2 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
@@ -127,7 +134,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.14.1 // indirect
-	github.com/otiai10/copy v1.11.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -142,8 +148,12 @@ require (
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/xen0n/gosmopolitan v1.2.2 // indirect
+	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
+	go-simpler.org/sloglint v0.1.2 // indirect
+	go.tmz.dev/musttag v0.7.2 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
