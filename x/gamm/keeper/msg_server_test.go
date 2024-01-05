@@ -88,6 +88,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			s.Setup()
 			ctx := s.Ctx
 
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
+
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()
 
@@ -186,6 +190,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		s.Run(name, func() {
 			s.Reset()
 			ctx := s.Ctx
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()

@@ -80,6 +80,10 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 			s.Setup()
 			ctx := s.Ctx
 
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
+
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()
@@ -166,6 +170,10 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 		s.Run(name, func() {
 			s.Setup()
 			ctx := s.Ctx
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()
