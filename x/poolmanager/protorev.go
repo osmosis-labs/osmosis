@@ -1,8 +1,6 @@
 package poolmanager
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
@@ -41,7 +39,7 @@ func (k Keeper) GetTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom strin
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no taker fees for stakers for denom %s", denom)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), nil
 	}
 
 	takerFeeForStakers := sdk.Coin{}
@@ -96,7 +94,7 @@ func (k Keeper) GetTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no taker fees for community pool for denom %s", denom)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), nil
 	}
 
 	takerFeeForCommunityPool := sdk.Coin{}
