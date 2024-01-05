@@ -419,7 +419,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	// Initialize default config
 	tmcConfig := tmcfg.DefaultConfig()
 
-	_, err := os.Stat(configFilePath)
+	fileInfo, err := os.Stat(configFilePath)
 	if err != nil {
 		// something besides a does not exist error
 		if !os.IsNotExist(err) {
@@ -465,9 +465,15 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
 			}
 		}()
-		// It will be re-read in server.InterceptConfigsPreRunHandler
-		// this may panic for permissions issues. So we catch the panic.
-		tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+
+		// Check if the file is writable
+		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+			// It will be re-read in server.InterceptConfigsPreRunHandler
+			// this may panic for permissions issues. So we catch the panic.
+			// Note that this exits with a non-zero exit code if fails to write the file.
+			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+		}
+
 	}
 	return nil
 }
