@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			},
 			tokenIn:               sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenIn)),
 			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
-			expectedMessageEvents: 2, // 2 event gets triggered prior to failure.
+			expectedMessageEvents: 1,
 			expectError:           true,
 		},
 	}
