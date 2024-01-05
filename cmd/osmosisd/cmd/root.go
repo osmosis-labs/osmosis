@@ -473,7 +473,6 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 			// Note that this exits with a non-zero exit code if fails to write the file.
 			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
 		}
-
 	}
 	return nil
 }
