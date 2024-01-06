@@ -56,8 +56,22 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
 
 // GetProfitsByDenom returns the profits made by the ProtoRev module for the given denom.
 // If the denom is not found, a zero coin is returned.
+// GetProfitsByDenom returns the profits made by the ProtoRev module for the given denom
 func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, error) {
-	return osmoutils.GetCoinByDenomFromPrefix(ctx, k.storeKey, types.KeyPrefixProfitByDenom, denom)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProfitByDenom)
+	key := types.GetKeyPrefixProfitByDenom(denom)
+
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no profits for denom %s", denom)
+	}
+
+	profits := sdk.Coin{}
+	if err := profits.Unmarshal(bz); err != nil {
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
+	}
+
+	return profits, nil
 }
 
 // UpdateProfitsByDenom updates the profits made by the ProtoRev module for the given denom
