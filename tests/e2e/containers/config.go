@@ -65,7 +65,7 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		config.OsmosisTag = CurrentBranchOsmoTag
 	} else {
 		// Upgrades are run at the time when upgrade height is reached
-		// and are submitted via a governance proposal. Thefore, we
+		// and are submitted via a governance proposal. Therefore, we
 		// must start running the previous Osmosis version. Then, the node
 		// should auto-upgrade, at which point we can restart the updated
 		// Osmosis validator container.
