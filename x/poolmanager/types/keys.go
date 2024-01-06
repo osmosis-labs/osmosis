@@ -108,11 +108,3 @@ func ParseDenomTradePairKey(key []byte) (denom0, denom1 string, err error) {
 
 	return denom0, denom1, nil
 }
-
-func GetKeyPrefixTakerFeeStakersProtoRevByDenom(denom string) []byte {
-	return append(KeyTakerFeeStakersProtoRevArray, []byte(denom)...)
-}
-
-func GetKeyPrefixTakerFeeCommunityPoolProtoRevByDenom(denom string) []byte {
-	return append(KeyTakerFeeCommunityPoolProtoRevArray, []byte(denom)...)
-}

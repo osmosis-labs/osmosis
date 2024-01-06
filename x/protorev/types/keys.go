@@ -114,11 +114,6 @@ func GetKeyPrefixRouteForTokenPair(tokenA, tokenB string) []byte {
 	return append(KeyPrefixTokenPairRoutes, []byte(tokenA+"|"+tokenB)...)
 }
 
-// Returns the key needed to fetch the profit by coin
-func GetKeyPrefixProfitByDenom(denom string) []byte {
-	return append(KeyPrefixProfitByDenom, []byte(denom)...)
-}
-
 // Returns the key needed to fetch the number of trades by route
 func GetKeyPrefixTradesByRoute(route []uint64) []byte {
 	return append(KeyPrefixTradesByRoute, CreateRouteKey(route)...)
