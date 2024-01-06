@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231124190325-d75e9ade352e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240106210541-b0e27771c13a
 	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
