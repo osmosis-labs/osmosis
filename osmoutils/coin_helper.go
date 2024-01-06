@@ -2,7 +2,6 @@ package osmoutils
 
 import (
 	"fmt"
-	"sort"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,14 +134,9 @@ func ConvertCoinsToCoinArray(coins sdk.Coins) []sdk.Coin {
 	}
 
 	coinArray := make([]sdk.Coin, len(coins))
-	for i, coin := range coins {
-		coinArray[i] = coin
+	for i := len(coins) - 1; i >= 0; i-- {
+		coinArray[i] = coins[i]
 	}
-
-	// Sort the coinArray lexicographically by Denom
-	sort.Slice(coinArray, func(i, j int) bool {
-		return coinArray[i].Denom < coinArray[j].Denom
-	})
 
 	return coinArray
 }

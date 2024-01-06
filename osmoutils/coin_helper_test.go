@@ -323,3 +323,35 @@ func TestConvertCoinArrayToCoins(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertCoinsToCoinArray(t *testing.T) {
+	tests := []struct {
+		name              string
+		coins             sdk.Coins
+		expectedCoinArray []sdk.Coin
+	}{
+		{
+			name:              "Empty input",
+			coins:             sdk.NewCoins(),
+			expectedCoinArray: []sdk.Coin{},
+		},
+		{
+			name:              "Single coin",
+			coins:             sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(100000000))),
+			expectedCoinArray: []sdk.Coin{sdk.NewCoin("atom", osmomath.NewInt(100000000))},
+		},
+		{
+			name:              "Multiple coins",
+			coins:             sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(100000000)), sdk.NewCoin("usdc", osmomath.NewInt(500000000))),
+			expectedCoinArray: []sdk.Coin{sdk.NewCoin("atom", osmomath.NewInt(100000000)), sdk.NewCoin("usdc", osmomath.NewInt(500000000))},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := osmoutils.ConvertCoinsToCoinArray(test.coins)
+			require.Equal(t, result, test.expectedCoinArray)
+
+		})
+	}
+}
