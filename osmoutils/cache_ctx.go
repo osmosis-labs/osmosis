@@ -42,33 +42,6 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	return err
 }
 
-// This function only exists because somehow events are edge-case gas metered.
-// TODO: This should become ApplyFuncIfNoError next upgrade.
-func UnmeteredApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
-	// Add a panic safeguard
-	defer func() {
-		if recoveryError := recover(); recoveryError != nil {
-			if isErr, _ := IsOutOfGasError(recoveryError); isErr {
-				// We panic with the same error, to replicate the normal tx execution flow.
-				panic(recoveryError)
-			} else {
-				PrintPanicRecoveryError(ctx, recoveryError)
-				err = errors.New("panic occurred during execution")
-			}
-		}
-	}()
-	// makes a new cache context, which all state changes get wrapped inside of.
-	cacheCtx, write := ctx.CacheContext()
-	err = f(cacheCtx)
-	if err != nil {
-		ctx.Logger().Error(err.Error())
-	} else {
-		// no error, write the output of f
-		write()
-	}
-	return err
-}
-
 // Frustratingly, this has to return the error descriptor, not an actual error itself
 // because the SDK errors here are not actually errors. (They don't implement error interface)
 func IsOutOfGasError(err any) (bool, string) {

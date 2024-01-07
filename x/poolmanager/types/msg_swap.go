@@ -34,7 +34,7 @@ type SwapAmountInSplitRouteWrapper struct {
 
 type SwapAmountOutSplitRouteWrapper struct {
 	Pools    []SwapAmountOutRoute `json:"pools"`
-	OutDenom string               `json:"in_denom"`
+	OutDenom string               `json:"out_denom"`
 }
 
 var (
