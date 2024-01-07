@@ -253,8 +253,6 @@ func (d BigDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
-<<<<<<< HEAD
-=======
 // BigIntMut returns the pointer of the underlying big.Int.
 func (d BigDec) BigIntMut() *big.Int {
 	if d.IsNil() {
@@ -264,7 +262,6 @@ func (d BigDec) BigIntMut() *big.Int {
 	return d.i
 }
 
->>>>>>> 9cd72313 (Speedup more stable swap math operations (#7214))
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
 	copy := d.Clone()

@@ -1701,8 +1701,6 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 		})
 	}
 }
-<<<<<<< HEAD
-=======
 
 func (s *decimalTestSuite) TestBigIntMut() {
 	r := big.NewInt(30)
@@ -1723,4 +1721,3 @@ func (s *decimalTestSuite) TestBigIntMut() {
 	s.Require().NotEqual(big.NewInt(50), d.BigIntMut())
 	s.Require().NotEqual(big.NewInt(50), d.BigInt())
 }
->>>>>>> 9cd72313 (Speedup more stable swap math operations (#7214))
