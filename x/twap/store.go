@@ -151,6 +151,23 @@ func (k Keeper) GetAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) (
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
 }
 
+// GetAllMostRecentRecordsForPool returns all most recent twap records
+// (in state representation) for the provided pool id.
+func (k Keeper) GetAllMostRecentRecordsForPoolWithDenoms(ctx sdk.Context, poolId uint64, denoms []string) ([]types.TwapRecord, error) {
+	store := ctx.KVStore(k.storeKey)
+	// if length != 2, use iterator
+	if len(denoms) != 2 {
+		return types.GetAllMostRecentTwapsForPool(store, poolId)
+	}
+	// else, directly fetch the key.
+	asset0Denom, asset1Denom, err := types.LexicographicalOrderDenoms(denoms[0], denoms[1])
+	if err != nil {
+		return []types.TwapRecord{}, err
+	}
+	record, err := types.GetMostRecentTwapForPool(store, poolId, asset0Denom, asset1Denom)
+	return []types.TwapRecord{record}, err
+}
+
 // getAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
 func (k Keeper) GetAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
