@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
@@ -369,9 +368,9 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 
 	// Check protocol revenue
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(cyclicArbProfits), allProtoRev.CyclicArbTracker.CyclicArb)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(expectedTakerFeeToStakers), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(expectedTakerFeeToCommunityPool), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfits), allProtoRev.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToStakers), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToCommunityPool), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
@@ -390,7 +389,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 
 	// Check protocol revenue
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(cyclicArbProfits.Add(cyclicArbProfits...)), allProtoRev.CyclicArbTracker.CyclicArb)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...)), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...)), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfits.Add(cyclicArbProfits...)), allProtoRev.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...)), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...)), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 }

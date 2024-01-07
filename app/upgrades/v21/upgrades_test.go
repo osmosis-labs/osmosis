@@ -7,7 +7,6 @@ import (
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -56,7 +55,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
 	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
 	// s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(cyclicArbProfits), allProtocolRevenue.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfits), allProtocolRevenue.CyclicArbTracker.CyclicArb)
 
 }
 

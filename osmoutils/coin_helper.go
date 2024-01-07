@@ -127,16 +127,3 @@ func ConvertCoinArrayToCoins(coinArray []sdk.Coin) sdk.Coins {
 	}
 	return coins
 }
-
-func ConvertCoinsToCoinArray(coins sdk.Coins) []sdk.Coin {
-	if coins == nil {
-		return []sdk.Coin(nil)
-	}
-
-	coinArray := make([]sdk.Coin, len(coins))
-	for i := len(coins) - 1; i >= 0; i-- {
-		coinArray[i] = coins[i]
-	}
-
-	return coinArray
-}

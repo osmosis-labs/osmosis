@@ -1,6 +1,6 @@
 package keeper_test
 
-import "github.com/osmosis-labs/osmosis/osmoutils"
+import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // TestInitGenesis tests the initialization and export of the module's genesis state.
 func (s *KeeperTestSuite) TestInitGenesis() {
@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(profits, exportedGenesis.Profits)
 
 	cyclicArbProfit := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx)
-	s.Require().Equal(osmoutils.ConvertCoinsToCoinArray(cyclicArbProfit), exportedGenesis.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfit), exportedGenesis.CyclicArbTracker.CyclicArb)
 
 	cyclicArbProfitAccountingHeight := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerStartHeight(s.Ctx)
 	s.Require().Equal(cyclicArbProfitAccountingHeight, exportedGenesis.CyclicArbTracker.HeightAccountingStartsFrom)
