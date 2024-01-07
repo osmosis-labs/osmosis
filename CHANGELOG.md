@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
+* [#7245](https://github.com/osmosis-labs/osmosis/pull/7245) fix: correcting json tag value for `SwapAmountOutSplitRouteWrapper.OutDenom`
 * [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values 
 * [#7243](https://github.com/osmosis-labs/osmosis/pull/7243) fix: chore: update gov metadata length from 256 to 10200
 * [#7246](https://github.com/osmosis-labs/osmosis/pull/7246) fix: config overwrite fails with exit code 1 if wrong permissions
