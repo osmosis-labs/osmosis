@@ -33,7 +33,7 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 
 	ctx.Logger().Info("Distribute Superfluid gauges")
 	//nolint:errcheck
-	osmoutils.UnmeteredApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+	osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		k.distributeSuperfluidGauges(cacheCtx)
 		return nil
 	})
@@ -70,7 +70,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 
 		// To avoid unexpected issues on WithdrawDelegationRewards and AddToGaugeRewards
 		// we use cacheCtx and apply the changes later
-		_ = osmoutils.UnmeteredApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.ck.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
 			if errors.Is(err, distributiontypes.ErrEmptyDelegationDistInfo) {
 				ctx.Logger().Debug("no swaps occurred in this pool between last epoch and this epoch")
@@ -80,7 +80,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		})
 
 		// Send delegation rewards to gauges
-		_ = osmoutils.UnmeteredApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			// Note! We only send the bond denom (osmo), to avoid attack vectors where people
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			bondDenom := k.sk.BondDenom(cacheCtx)

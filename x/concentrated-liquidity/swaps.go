@@ -787,10 +787,7 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.Concentrat
 	if err != nil {
 		return p, err
 	}
-	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
-	if err != nil {
-		return p, err
-	}
+	hasPositionInPool := k.PoolHasPosition(ctx, p)
 	if !hasPositionInPool {
 		return p, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}

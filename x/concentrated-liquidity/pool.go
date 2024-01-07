@@ -164,6 +164,17 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, nil
 }
 
+// Return true if the Pool has a position. This is guaranteed to be equi-satisfiable to
+// the current sqrt price being 0.
+// We also check that the current tick is 0, which is also guaranteed in this situation.
+// That derisks any edge-case where the sqrt price is 0 but the tick is not 0.
+func (k Keeper) PoolHasPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension) bool {
+	if pool.GetCurrentSqrtPrice().IsZero() && pool.GetCurrentTick() == 0 {
+		return false
+	}
+	return true
+}
+
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolId uint64,
@@ -175,10 +186,7 @@ func (k Keeper) CalculateSpotPrice(
 		return osmomath.BigDec{}, err
 	}
 
-	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
-	if err != nil {
-		return osmomath.BigDec{}, err
-	}
+	hasPositions := k.PoolHasPosition(ctx, concentratedPool)
 
 	if !hasPositions {
 		return osmomath.BigDec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
