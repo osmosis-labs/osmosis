@@ -30,6 +30,8 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240108040604-9632b2b8af1b
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240108040604-9632b2b8af1b
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240108040604-9632b2b8af1b
+	github.com/osmosis-labs/sqs v0.0.0-20240108041740-335fcbc6ac1e
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108041740-335fcbc6ac1e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.1
