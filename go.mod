@@ -31,7 +31,7 @@ require (
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231230033922-af0ba43e918a
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231230033922-af0ba43e918a
 	github.com/osmosis-labs/sqs v0.0.0-20240105053446-2e6f66587d6a
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108033313-dd9fa21cd1cd
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108041740-335fcbc6ac1e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.1
@@ -395,6 +395,8 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+
+	github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
