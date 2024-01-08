@@ -207,6 +207,9 @@ replace (
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 
+	// fork of cometbft which allows for better app hash logging
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.0.0-20240103055822-28da358e3146
+
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
 // github.com/osmosis-labs/osmosis/v19 => ./../
