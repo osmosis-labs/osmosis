@@ -185,6 +185,12 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 		if err != nil {
 			panic(err)
 		}
+
+		// Check if newConsensusParams.Block is nil to prevent panic
+		if newConsensusParams.Block == nil || newConsensusParams.Block.MaxGas == 0 {
+			return
+		}
+
 		newBlockMaxGas := newConsensusParams.Block.MaxGas
 		mempool1559.TargetGas = newBlockMaxGas
 		return
