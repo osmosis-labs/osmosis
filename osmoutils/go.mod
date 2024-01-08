@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/math v1.1.3-rc.1
+	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
@@ -157,6 +158,10 @@ require (
 )
 
 replace (
+	// adds expedited proposal support and 1000MB cache default
+	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
+
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
