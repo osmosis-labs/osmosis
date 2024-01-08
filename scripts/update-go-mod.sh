@@ -6,30 +6,33 @@
 
 commit_after=$1
 
-# UPDATE OSMOUTILS
-go get github.com/osmosis-labs/osmosis/osmoutils@$commit_after
+# Define modules
+modules=("osmoutils" "osmomath" "x/ibc-hooks" "x/epochs")
 
-# x/epochs depends on osmoutils
-cd x/epochs
-go get github.com/osmosis-labs/osmosis/osmoutils@$commit_after
-go mod tidy
+# Find all go.mod files in the repo
+go_mod_files=$(find . -name go.mod)
 
-# x/ibc-hooks depends on osmoutils
-cd ../ibc-hooks
-go get github.com/osmosis-labs/osmosis/osmoutils@$commit_after
-go mod tidy
+# Loop over each go.mod file
+for file in $go_mod_files; do
+  # Get the directory of the go.mod file
+  dir=$(dirname $file)
 
-# return to root
-cd ../..
+  # Change to that directory
+  cd $dir
 
-# UPDATE OSMOMATH
-go get github.com/osmosis-labs/osmosis/osmomath@$commit_after
+  # Loop over each module
+  for module in ${modules[@]}; do
+    # Check if the module is a direct requirement
+    if grep -q "github.com/osmosis-labs/osmosis/$module" go.mod; then
+      # If it is, run go get with the provided commit
+      go get "github.com/osmosis-labs/osmosis/$module@$commit_after"
+    fi
+  done
 
-# UPDATE IBC HOOKS
-go get github.com/osmosis-labs/osmosis/x/ibc-hooks@$commit_after
+  # Run go mod tidy and go work sync
+  go mod tidy
+  go work sync
 
-# UPDATE EPOCHS
-go get github.com/osmosis-labs/osmosis/x/epochs@$commit_after
-
-go mod tidy
-go work sync
+  # Return to the root directory
+  cd - > /dev/null
+done
