@@ -396,8 +396,6 @@ replace (
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 
-	github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5
-
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
 // github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
