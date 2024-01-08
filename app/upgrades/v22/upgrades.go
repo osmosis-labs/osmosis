@@ -23,8 +23,23 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// For sake of simplicity, we restart the taker fee tracker accounting height.
-		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
+		// Migrate legacy taker fee tracker to new taker fee tracker (for performance reasons)
+
+		oldTakerFeeTrackerForStakers := keepers.PoolManagerKeeper.GetLegacyTakerFeeTrackerForStakers(ctx)
+		for _, coin := range oldTakerFeeTrackerForStakers {
+			err := keepers.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(ctx, coin.Denom, coin.Amount)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		oldTakerFeeTrackerForCommunityPool := keepers.PoolManagerKeeper.GetLegacyTakerFeeTrackerForCommunityPool(ctx)
+		for _, coin := range oldTakerFeeTrackerForCommunityPool {
+			err := keepers.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, coin.Denom, coin.Amount)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		return migrations, nil
 	}
