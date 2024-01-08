@@ -44,6 +44,13 @@ type PoolManager interface {
 	) (osmomath.Int, error)
 
 	GetParams(ctx sdk.Context) (params poolmanagertypes.Params)
+
+	RouteCalculateSpotPrice(
+		ctx sdk.Context,
+		poolId uint64,
+		quoteAssetDenom string,
+		baseAssetDenom string,
+	) (price osmomath.BigDec, err error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

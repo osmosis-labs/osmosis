@@ -18,14 +18,13 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	accountKeeper       types.AccountKeeper
-	bankKeeper          types.BankKeeper
-	poolManager         types.PoolManager
-	spotPriceCalculator types.SpotPriceCalculator
-	protorevKeeper      types.ProtorevKeeper
-	distributionKeeper  types.DistributionKeeper
-	consensusKeeper     types.ConsensusKeeper
-	dataDir             string
+	accountKeeper      types.AccountKeeper
+	bankKeeper         types.BankKeeper
+	poolManager        types.PoolManager
+	protorevKeeper     types.ProtorevKeeper
+	distributionKeeper types.DistributionKeeper
+	consensusKeeper    types.ConsensusKeeper
+	dataDir            string
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
@@ -35,22 +34,20 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	storeKey storetypes.StoreKey,
 	poolManager types.PoolManager,
-	spotPriceCalculator types.SpotPriceCalculator,
 	protorevKeeper types.ProtorevKeeper,
 	distributionKeeper types.DistributionKeeper,
 	consensusKeeper types.ConsensusKeeper,
 	dataDir string,
 ) Keeper {
 	return Keeper{
-		accountKeeper:       accountKeeper,
-		bankKeeper:          bankKeeper,
-		storeKey:            storeKey,
-		poolManager:         poolManager,
-		spotPriceCalculator: spotPriceCalculator,
-		protorevKeeper:      protorevKeeper,
-		distributionKeeper:  distributionKeeper,
-		consensusKeeper:     consensusKeeper,
-		dataDir:             dataDir,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
+		storeKey:           storeKey,
+		poolManager:        poolManager,
+		protorevKeeper:     protorevKeeper,
+		distributionKeeper: distributionKeeper,
+		consensusKeeper:    consensusKeeper,
+		dataDir:            dataDir,
 	}
 }
 
