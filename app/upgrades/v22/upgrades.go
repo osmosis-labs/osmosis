@@ -23,6 +23,14 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Increase the tx size cost per byte to 20 to reduce the exploitability of bandwidth amplification problems.
+		accountParams := keepers.AccountKeeper.GetParams(ctx)
+		accountParams.TxSizeCostPerByte = 20 // Double from the default value of 10
+		err = keepers.AccountKeeper.SetParams(ctx, accountParams)
+		if err != nil {
+			return nil, err
+		}
+
 		return migrations, nil
 	}
 }
