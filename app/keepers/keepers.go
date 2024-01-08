@@ -403,6 +403,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.ConsensusParamsKeeper,
 		dataDir,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
