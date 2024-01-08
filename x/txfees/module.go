@@ -191,7 +191,7 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 			return
 		}
 
-		newBlockMaxGas := newConsensusParams.Block.MaxGas
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		return
 	}

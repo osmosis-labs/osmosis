@@ -62,19 +62,19 @@ func TestBeginBlock(t *testing.T) {
 	)
 
 	// Begin block hasn't happened yet, target gas should be equal to hard coded default value
-	hardCodedGasTarget := int64(75_000_000)
+	hardCodedGasTarget := int64(187_500_000)
 	require.Equal(t, hardCodedGasTarget, mempool1559.TargetGas)
 
 	// Run begin block
 	ctx = RunBeginBlock(ctx, app)
 
 	// Target gas should be updated to the value set in InitChain
-	defaultBlockMaxGas := sims.DefaultConsensusParams.Block.MaxGas
-	require.Equal(t, defaultBlockMaxGas, mempool1559.TargetGas)
+	defaultBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(sims.DefaultConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Run begin block again, should not update target gas
 	ctx = RunBeginBlock(ctx, app)
-	require.Equal(t, defaultBlockMaxGas, mempool1559.TargetGas)
+	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Update the consensus params
 	newDefaultBlockMaxGas := int64(300_000_000)
@@ -83,7 +83,7 @@ func TestBeginBlock(t *testing.T) {
 	app.ConsensusParamsKeeper.Set(ctx, &newConsensusParams)
 
 	// Ensure that the consensus params have not been updated yet
-	require.Equal(t, defaultBlockMaxGas, mempool1559.TargetGas)
+	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Run begin block again, should update target gas
 	RunBeginBlock(ctx, app)
