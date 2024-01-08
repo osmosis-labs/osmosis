@@ -29,10 +29,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231231222019-bcdabda4fc36
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231229191315-aff18520757d
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231229191315-aff18520757d
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231229191315-aff18520757d
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240108040604-9632b2b8af1b
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240108040604-9632b2b8af1b
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240108040604-9632b2b8af1b
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240108040604-9632b2b8af1b
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.1
@@ -99,7 +99,6 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
