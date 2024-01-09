@@ -101,6 +101,10 @@ Epoch and CPU time optimizations
 
 Epoch optimizations are in this release, see a subset of PR links in v21.1.3 section.
 
+### Bug Fixes
+
+* [#7209](https://github.com/osmosis-labs/osmosis/pull/7209) Charge gas on input context when querying cw contracts.
+
 ## v21.0.0
 
 ### API
