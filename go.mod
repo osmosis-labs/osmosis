@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109172325-ba52471441fd
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109172325-ba52471441fd
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240109172325-ba52471441fd
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109172325-ba52471441fd
 	github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108192026-6ccc0a29f77d
 	github.com/pkg/errors v0.9.1
@@ -141,7 +141,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/timonwong/loggercheck v0.9.4 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	github.com/xen0n/gosmopolitan v1.2.1 // indirect
+	github.com/xen0n/gosmopolitan v1.2.2 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect

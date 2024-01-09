@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ibc-go/v7 v7.3.1
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109172325-ba52471441fd
 	github.com/osmosis-labs/osmosis/v21 v21.2.1
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
