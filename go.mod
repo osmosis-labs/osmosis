@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v21
+module github.com/osmosis-labs/osmosis/v22
 
 go 1.21
 
@@ -26,12 +26,12 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109214800-856d6ce64d0c
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109214800-856d6ce64d0c
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240109214800-856d6ce64d0c
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109214800-856d6ce64d0c
-	github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108192026-6ccc0a29f77d
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109225011-e09c4d480bf0
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109225011-e09c4d480bf0
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240109225011-e09c4d480bf0
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109225011-e09c4d480bf0
+	github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
@@ -391,9 +391,9 @@ replace (
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	// We explicitly use tags from the `main` branch in https://github.com/osmosis-labs/sqs
-	github.com/osmosis-labs/sqs => github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108192026-6ccc0a29f77d
+	// We explicitly use commits from the `adam/v22.x` branch in https://github.com/osmosis-labs/sqs
+	github.com/osmosis-labs/sqs => github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/sqs/pools/common"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 const (
