@@ -4,6 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
@@ -86,4 +88,9 @@ type ProtorevKeeper interface {
 
 type DistributionKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+type ConsensusKeeper interface {
+	GetParamsNoUnmarshal(ctx sdk.Context) []byte
+	UnmarshalParamBytes(ctx sdk.Context, bz []byte) (*tmproto.ConsensusParams, error)
 }
