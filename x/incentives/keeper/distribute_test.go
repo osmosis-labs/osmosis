@@ -2406,3 +2406,93 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		validateLastEpochNonPerpetualPruning(currentGauge.Id, currentGauge.DistributedCoins.Add(defaultCoins...), initialDistributionCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName)))
 	})
 }
+
+func (s *KeeperTestSuite) TestSkipSpamGaugeDistribute() {
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+
+	tenCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 10)}
+	oneKCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
+	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin("uosmo", 1000)}
+	tests := []struct {
+		name                    string
+		locks                   []*lockuptypes.PeriodLock
+		gauge                   perpGaugeDesc
+		totalDistrCoins         sdk.Coins
+		remainCoins             sdk.Coins
+		expectedToSkip          bool
+		expectedTotalDistrCoins sdk.Coins
+		expectedGaugeUpdated    bool
+	}{
+		{
+			name:                    "Lock length of 0, should be skipped",
+			locks:                   []*lockuptypes.PeriodLock{},
+			gauge:                   defaultGauge,
+			totalDistrCoins:         oneKCoins,
+			remainCoins:             sdk.Coins{},
+			expectedToSkip:          true,
+			expectedTotalDistrCoins: nil,
+			expectedGaugeUpdated:    false,
+		},
+		{
+			name: "Empty remainCoins, should be skipped",
+			locks: []*lockuptypes.PeriodLock{
+				{ID: 1, Owner: string(s.TestAccs[0]), Coins: oneKCoins, Duration: defaultLockDuration},
+			},
+			gauge:                   defaultGauge,
+			totalDistrCoins:         oneKCoins,
+			remainCoins:             sdk.Coins{},
+			expectedToSkip:          true,
+			expectedTotalDistrCoins: oneKCoins,
+			expectedGaugeUpdated:    true,
+		},
+		{
+			name: "Remain coins len == 1 and value less than 100 threshold, should be skipped",
+			locks: []*lockuptypes.PeriodLock{
+				{ID: 1, Owner: string(s.TestAccs[0]), Coins: oneKCoins, Duration: defaultLockDuration},
+			},
+			gauge:                   defaultGauge,
+			totalDistrCoins:         oneKCoins,
+			remainCoins:             tenCoins,
+			expectedToSkip:          true,
+			expectedTotalDistrCoins: oneKCoins,
+			expectedGaugeUpdated:    true,
+		},
+		{
+			name: "Lock length > 0, gauge value greater than 100 threshold, and remain coins len != 1, should not be skipped",
+			locks: []*lockuptypes.PeriodLock{
+				{ID: 1, Owner: string(s.TestAccs[0]), Coins: oneKCoins, Duration: defaultLockDuration},
+			},
+			gauge:                   defaultGauge,
+			totalDistrCoins:         oneKCoins,
+			remainCoins:             twoCoinsOneK,
+			expectedToSkip:          false,
+			expectedTotalDistrCoins: oneKCoins,
+			expectedGaugeUpdated:    false,
+		},
+	}
+	for _, tc := range tests {
+		s.SetupTest()
+		// setup gauge defined in test case
+		gauges := s.SetupGauges([]perpGaugeDesc{tc.gauge}, defaultLPDenom)
+
+		shouldBeSkipped, distrCoins, err := s.App.IncentivesKeeper.SkipSpamGaugeDistribute(s.Ctx, tc.locks, gauges[0], tc.totalDistrCoins, tc.remainCoins)
+		s.Require().NoError(err)
+		s.Require().Equal(tc.expectedToSkip, shouldBeSkipped)
+		s.Require().Equal(tc.expectedTotalDistrCoins, distrCoins)
+
+		// Retrieve gauge
+		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gauges[0].Id)
+		s.Require().NoError(err)
+
+		expectedGauge := gauges[0]
+		if tc.expectedGaugeUpdated {
+			expectedGauge.FilledEpochs++
+			expectedGauge.DistributedCoins = expectedGauge.DistributedCoins.Add(distrCoins...)
+		}
+		s.Require().Equal(expectedGauge, *gauge)
+	}
+}
