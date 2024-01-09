@@ -11,6 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type Keeper struct {
@@ -21,6 +23,7 @@ type Keeper struct {
 	poolManager        types.PoolManager
 	protorevKeeper     types.ProtorevKeeper
 	distributionKeeper types.DistributionKeeper
+	consensusKeeper    types.ConsensusKeeper
 	dataDir            string
 }
 
@@ -33,6 +36,7 @@ func NewKeeper(
 	poolManager types.PoolManager,
 	protorevKeeper types.ProtorevKeeper,
 	distributionKeeper types.DistributionKeeper,
+	consensusKeeper types.ConsensusKeeper,
 	dataDir string,
 ) Keeper {
 	return Keeper{
@@ -42,6 +46,7 @@ func NewKeeper(
 		poolManager:        poolManager,
 		protorevKeeper:     protorevKeeper,
 		distributionKeeper: distributionKeeper,
+		consensusKeeper:    consensusKeeper,
 		dataDir:            dataDir,
 	}
 }
@@ -53,4 +58,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GetFeeTokensStore(ctx sdk.Context) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.FeeTokensStorePrefix)
+}
+
+// GetParamsNoUnmarshal returns the current consensus parameters from the consensus params store as raw bytes.
+func (k Keeper) GetParamsNoUnmarshal(ctx sdk.Context) []byte {
+	return k.consensusKeeper.GetParamsNoUnmarshal(ctx)
+}
+
+// UnmarshalParamBytes unmarshals the consensus params bytes to the consensus params type.
+func (k Keeper) UnmarshalParamBytes(ctx sdk.Context, bz []byte) (*tmproto.ConsensusParams, error) {
+	return k.consensusKeeper.UnmarshalParamBytes(ctx, bz)
 }

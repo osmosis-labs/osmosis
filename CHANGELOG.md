@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#6993](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
+* [#7270](https://github.com/osmosis-labs/osmosis/pull/7270) feat: eip target gas from consensus params
 
 ### Misc Improvements
 
@@ -100,6 +101,10 @@ Epoch and CPU time optimizations
 ## v21.1.1
 
 Epoch optimizations are in this release, see a subset of PR links in v21.1.3 section.
+
+### Bug Fixes
+
+* [#7209](https://github.com/osmosis-labs/osmosis/pull/7209) Charge gas on input context when querying cw contracts.
 
 ## v21.0.0
 

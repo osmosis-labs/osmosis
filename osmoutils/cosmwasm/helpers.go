@@ -54,11 +54,13 @@ func Query[T any, K any](ctx sdk.Context, wasmKeeper WasmKeeper, contractAddress
 		return response, err
 	}
 
-	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(wasmKeeper.QueryGasLimit()))
-	responseBz, err := wasmKeeper.QuerySmart(ctx, sdk.MustAccAddressFromBech32(contractAddress), bz)
+	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(wasmKeeper.QueryGasLimit()))
+	responseBz, err := wasmKeeper.QuerySmart(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err
 	}
+
+	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "query smart")
 
 	if err := json.Unmarshal(responseBz, &response); err != nil {
 		return response, err

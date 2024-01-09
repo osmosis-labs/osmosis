@@ -10,6 +10,7 @@ only specify their tx fee parameters for a single "base" asset.
 package txfees
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -31,8 +32,9 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_                    module.AppModule      = AppModule{}
+	_                    module.AppModuleBasic = AppModuleBasic{}
+	cachedConsParamBytes []byte
 )
 
 const ModuleName = types.ModuleName
@@ -151,6 +153,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	mempool1559.BeginBlockCode(ctx)
+
+	// Check if the block gas limit has changed.
+	// If it has, update the target gas for eip1559.
+	am.CheckAndSetTargetGas(ctx)
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the txfees module. It
@@ -162,3 +168,53 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// On start, we unmarshal the consensus params once and cache them.
+// Then, on every block, we check if the current consensus param bytes have changed in comparison to the cached value.
+// If they have, we unmarshal the current consensus params, update the target gas, and cache the value.
+// This is done to improve performance by not having to fetch and unmarshal the consensus params on every block.
+func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
+	// Check if the block gas limit has changed.
+	// If it has, update the target gas for eip1559.
+	consParamsBytes := am.keeper.GetParamsNoUnmarshal(ctx)
+
+	// If cachedConsParamBytes is nil, set equal to consParamsBytes and set the target gas.
+	if cachedConsParamBytes == nil {
+		cachedConsParamBytes = consParamsBytes
+		newConsensusParams, err := am.keeper.UnmarshalParamBytes(ctx, consParamsBytes)
+		if err != nil {
+			panic(err)
+		}
+
+		// Check if newConsensusParams.Block is nil to prevent panic
+		if newConsensusParams.Block == nil || newConsensusParams.Block.MaxGas == 0 {
+			return
+		}
+
+		if newConsensusParams.Block.MaxGas == -1 {
+			return
+		}
+
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		mempool1559.TargetGas = newBlockMaxGas
+		return
+	}
+
+	// If the consensus params have changed, unmarshal and update the target gas.
+	if !bytes.Equal(consParamsBytes, cachedConsParamBytes) {
+		newConsensusParams, err := am.keeper.UnmarshalParamBytes(ctx, consParamsBytes)
+		if err != nil {
+			panic(err)
+		}
+
+		if newConsensusParams.Block.MaxGas == -1 {
+			return
+		}
+
+		// Sure, its possible that the thing that changes in consensus params was something other than the block gas limit,
+		// but just double setting it here is fine instead of doing more logic to see what actually changed.
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		mempool1559.TargetGas = newBlockMaxGas
+		cachedConsParamBytes = consParamsBytes
+	}
+}
