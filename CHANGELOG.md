@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
 * [#7149](https://github.com/osmosis-labs/osmosis/pull/7149) Fix double emitting CacheCtx events (e.g. Epoch, Superfluid, CL)
+* [#7237](https://github.com/osmosis-labs/osmosis/pull/7237) Removes tx_fee_tracker from the proto rev tracker, no longer tracks in state.
 
 ### Features
 
@@ -57,6 +58,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172) Lower CPU overheads of the Osmosis epoch.
 * [#7203](https://github.com/osmosis-labs/osmosis/pull/7203) Make a maximum number of pools of 100 billion.
 * [#7220](https://github.com/osmosis-labs/osmosis/pull/7220) Register consensus params; Set MaxGas to 300m and MaxBytes to 5mb.
+* [#7249](https://github.com/osmosis-labs/osmosis/pull/7249) Double auth tx size cost per byte from 10 to 20
+* [#7259](https://github.com/osmosis-labs/osmosis/pull/7259) Lower gas and CPU overhead of chargeTakerFee (in every swap)
+* [#7258](https://github.com/osmosis-labs/osmosis/pull/7258) Remove an iterator call in CL swaps and spot price calls.
+
+### Bug Fixes
+
+* [#7245](https://github.com/osmosis-labs/osmosis/pull/7245) fix: correcting json tag value for `SwapAmountOutSplitRouteWrapper.OutDenom`
+* [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values
+* [#7243](https://github.com/osmosis-labs/osmosis/pull/7243) fix: chore: update gov metadata length from 256 to 10200
+* [#7246](https://github.com/osmosis-labs/osmosis/pull/7246) fix: config overwrite fails with exit code 1 if wrong permissions
+* [#7267](https://github.com/osmosis-labs/osmosis/pull/7267) fix: support CL pools in tx fee module
 
 ## v21.1.5
 
@@ -92,6 +104,7 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 ### Features
 
 * [#6804](https://github.com/osmosis-labs/osmosis/pull/6804) feat: track and query protocol rev across all modules
+* [#7139](https://github.com/osmosis-labs/osmosis/pull/7139) feat: add amino signing support to tokenfactory messages
 
 ### Fix Localosmosis docker-compose with state.
 
@@ -110,6 +123,7 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 
 ### Misc Improvements
 
+* [#7147](https://github.com/osmosis-labs/osmosis/pull/7147) Add poolID to collect CL rewards and incentives events.
 * [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
 * [#6858](https://github.com/osmosis-labs/osmosis/pull/6858) Merge mempool improvements from v20
 * [#6861](https://github.com/osmosis-labs/osmosis/pull/6861) Protorev address added to reduced taker fee whitelist

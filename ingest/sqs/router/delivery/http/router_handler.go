@@ -3,7 +3,6 @@ package http
 import (
 	"errors"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -33,12 +32,6 @@ const routerResource = "/router"
 func formatRouterResource(resource string) string {
 	return routerResource + resource
 }
-
-// Define a regular expression pattern to match sdk.Coin where the first part is the amount and second is the denom name
-// Patterns tested:
-// 500ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-// 100uion
-var coinPattern = regexp.MustCompile(`([0-9]+)(([a-z]+)(\/([A-Z0-9]+))*)`)
 
 // NewRouterHandler will initialize the pools/ resources endpoint
 func NewRouterHandler(e *echo.Echo, us mvc.RouterUsecase, logger log.Logger) {
@@ -221,19 +214,11 @@ func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
 		return "", sdk.Coin{}, err
 	}
 
-	matches := coinPattern.FindStringSubmatch(tokenInStr)
-	if len(matches) != 3 && len(matches) != 6 {
+	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
+	if err != nil {
 		return "", sdk.Coin{}, errors.New("tokenIn is invalid - must be in the format amountDenom")
 	}
 
-	tokenIn := sdk.Coin{
-		Amount: sdk.MustNewDecFromStr(matches[1]).TruncateInt(),
-		Denom:  matches[2],
-	}
-
-	if err := tokenIn.Validate(); err != nil {
-		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: err.Error()})
-	}
 	return tokenOutStr, tokenIn, nil
 }
 

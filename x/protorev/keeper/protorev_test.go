@@ -6,7 +6,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -338,10 +337,6 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 			TakerFeesToCommunityPool:   sdk.Coins(nil),
 			HeightAccountingStartsFrom: 0,
 		},
-		TxFeesTracker: txfeestypes.TxFeesTracker{
-			TxFees:                     sdk.Coins(nil),
-			HeightAccountingStartsFrom: 0,
-		},
 		CyclicArbTracker: types.CyclicArbTracker{
 			CyclicArb:                  sdk.NewCoins(),
 			HeightAccountingStartsFrom: 0,
@@ -374,7 +369,6 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// Check protocol revenue
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
 	s.Require().Equal(cyclicArbProfits, allProtoRev.CyclicArbTracker.CyclicArb)
-	s.Require().Equal(txFeeCharged, allProtoRev.TxFeesTracker.TxFees)
 	s.Require().Equal(expectedTakerFeeToStakers, allProtoRev.TakerFeesTracker.TakerFeesToStakers)
 	s.Require().Equal(expectedTakerFeeToCommunityPool, allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 
@@ -396,7 +390,6 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// Check protocol revenue
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
 	s.Require().Equal(cyclicArbProfits.Add(cyclicArbProfits...), allProtoRev.CyclicArbTracker.CyclicArb)
-	s.Require().Equal(txFeeCharged.Add(txFeeCharged...), allProtoRev.TxFeesTracker.TxFees)
 	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
 	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 }

@@ -6,7 +6,6 @@ import (
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -503,14 +502,8 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
 	}
 
-	txFeesTracker := txfeestypes.TxFeesTracker{
-		TxFees:                     k.txfeesKeeper.GetTxFeesTrackerValue(ctx),
-		HeightAccountingStartsFrom: k.txfeesKeeper.GetTxFeesTrackerStartHeight(ctx),
-	}
-
 	return types.AllProtocolRevenue{
 		TakerFeesTracker: takerFeesTracker,
-		TxFeesTracker:    txFeesTracker,
 		CyclicArbTracker: cyclicArbTracker,
 	}
 }

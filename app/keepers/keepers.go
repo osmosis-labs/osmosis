@@ -391,7 +391,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.EpochsKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.ConcentratedLiquidityKeeper,
-		appKeepers.TxFeesKeeper,
 	)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 	appKeepers.PoolManagerKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)
@@ -401,13 +400,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.PoolManagerKeeper,
-		appKeepers.GAMMKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.DistrKeeper,
 		dataDir,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
-	appKeepers.ProtoRevKeeper.SetTxFeesKeeper(appKeepers.TxFeesKeeper)
 
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -542,6 +539,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(incentivestypes.RouterKey, incentiveskeeper.NewIncentivesProposalHandler(*appKeepers.IncentivesKeeper))
 
 	govConfig := govtypes.DefaultConfig()
+	// Set the maximum metadata length for government-related configurations to 10,200, deviating from the default value of 256.
+	govConfig.MaxMetadataLen = 10200
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, appKeepers.keys[govtypes.StoreKey],
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.SuperfluidKeeper, bApp.MsgServiceRouter(),

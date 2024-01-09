@@ -15,6 +15,8 @@ const (
 	PropVoteBlocks float32 = 1
 	// number of blocks used as a calculation buffer
 	PropBufferBlocks float32 = 30
+	// number of blocks used as a calculation buffer (used to set actual voting period)
+	PropBufferBlocksVotePeriod float32 = 8
 	// max retries for json unmarshalling
 	MaxRetries = 60
 )

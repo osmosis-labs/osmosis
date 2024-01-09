@@ -26,11 +26,19 @@ func CreateUpgradeHandler(
 		}
 
 		// Properly register consensus params. In the process, change params as per:
-		// https://forum.osmosis.zone/t/raise-maximum-gas-to-300m-and-lower-max-bytes-to-5mb/1116
+		// https://www.mintscan.io/osmosis/proposals/705
 		defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
 		defaultConsensusParams.Block.MaxBytes = 5000000 // previously 10485760
 		defaultConsensusParams.Block.MaxGas = 300000000 // previously 120000000
 		keepers.ConsensusParamsKeeper.Set(ctx, &defaultConsensusParams)
+
+		// Increase the tx size cost per byte to 20 to reduce the exploitability of bandwidth amplification problems.
+		accountParams := keepers.AccountKeeper.GetParams(ctx)
+		accountParams.TxSizeCostPerByte = 20 // Double from the default value of 10
+		err = keepers.AccountKeeper.SetParams(ctx, accountParams)
+		if err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}

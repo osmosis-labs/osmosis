@@ -189,10 +189,12 @@ message AllProtocolRevenue {
     (gogoproto.moretags) = "yaml:\"taker_fees_tracker\"",
     (gogoproto.nullable) = false
   ];
-  osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 2 [
-    (gogoproto.moretags) = "yaml:\"tx_fees_tracker\"",
-    (gogoproto.nullable) = false
-  ];
+  // osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 2 [
+  //   (gogoproto.moretags) = "yaml:\"tx_fees_tracker\"",
+  //   (gogoproto.nullable) = false
+  // ];
+  reserved 2;                 // Reserve the field number
+  reserved "tx_fees_tracker"; // Reserve the field name
   CyclicArbTracker cyclic_arb_tracker = 3 [
     (gogoproto.moretags) = "yaml:\"cyclic_arb_tracker\"",
     (gogoproto.nullable) = false

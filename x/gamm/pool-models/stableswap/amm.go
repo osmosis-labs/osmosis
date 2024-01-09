@@ -63,15 +63,16 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 // $$k_{iter}(x_f) = -x_{out}^3 + 3 x_0 x_{out}^2 - (y_f^2 + w + 3x_0^2)x_{out}$$
 // where x_out = x_0 - x_f
 func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.BigDec {
-	// compute coefficients first
-	cubicCoeff := osmomath.OneBigDec().Neg()
+	// compute coefficients first. Notice that the leading coefficient is -1, we will use this to compute faster.
+	// cubicCoeff := -1
 	quadraticCoeff := x0.MulInt64(3)
-	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).Neg()
+	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).NegMut()
 	return func(xf osmomath.BigDec) osmomath.BigDec {
 		xOut := x0.Sub(xf)
 		// horners method
 		// ax^3 + bx^2 + cx = x(c + x(b + ax))
-		res := cubicCoeff.Mul(xOut)
+		// a = -1
+		res := xOut.Neg()
 		res = res.AddMut(quadraticCoeff).MulMut(xOut)
 		res = res.AddMut(linearCoeff).MulMut(xOut)
 		return res
