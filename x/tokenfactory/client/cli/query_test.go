@@ -45,6 +45,12 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.QueryDenomAuthorityMetadataResponse{},
 		},
 		{
+			"Query denom with encoded values",
+			"/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata",
+			&types.QueryDenomAuthorityMetadataRequest{Denom: "factory%2Fosmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n%2Fdenom"},
+			&types.QueryDenomAuthorityMetadataResponse{},
+		},
+		{
 			"Query denoms by creator",
 			"/osmosis.tokenfactory.v1beta1.Query/DenomsFromCreator",
 			&types.QueryDenomsFromCreatorRequest{Creator: s.TestAccs[0].String()},

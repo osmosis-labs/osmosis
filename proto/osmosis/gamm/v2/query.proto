@@ -30,7 +30,7 @@ message QuerySpotPriceRequest {
       [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
 }
 
-// Depreacted: please use alternate in x/poolmanager
+// Deprecated: please use alternate in x/poolmanager
 message QuerySpotPriceResponse {
   option deprecated = true;
   // String of the Dec. Ex) 10.203uatom

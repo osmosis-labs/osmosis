@@ -6,7 +6,7 @@
 #
 # The script fetches 
 # - the checksums from the osmosis release page
-# - package informations from the `go.mod` in osmosis repository 
+# - package information from the `go.mod` in osmosis repository 
 
 # Options:
 #   --upgrade_version VERSION  Required. The version tag for the upgrade (e.g., v19.0.0).
@@ -138,7 +138,7 @@ def update_codebase(codebase, version, height):
     if compare_versions(version, curr_recommended_version) < 0:
         if DEBUG:
             # I should still handle this case as it could be
-            # a minor release for a previous major verson
+            # a minor release for a previous major version
             print("New version is older than recommended version")
             print("Skipping update")
         return

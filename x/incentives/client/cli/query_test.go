@@ -69,7 +69,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.QueryLockableDurationsResponse{},
 		},
 		{
-			"Query module to distibute coins",
+			"Query module to distribute coins",
 			"/osmosis.incentives.Query/ModuleToDistributeCoins",
 			&types.ModuleToDistributeCoinsRequest{},
 			&types.ModuleToDistributeCoinsResponse{},

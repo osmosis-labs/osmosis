@@ -119,7 +119,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) osmomath.Int {
 	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 
-	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	// ToDo: The commented-out code below is what we want to happen, but we're temporarily
 	//  using the whole supply for efficiency until there's a solution for
 	//  https://github.com/cosmos/ibc-go/issues/2664
 
@@ -443,7 +443,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
 	suite.fullRecvTest(false)
 }
 
-// Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
+// Test no rate limiting occurs when the contract is set, but no quotas are configured for the path
 func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")

@@ -65,7 +65,7 @@ message TwapRecord {
     (gogoproto.nullable) = false
   ];
 
-  // This field contains the time in which the last spot price error occured.
+  // This field contains the time in which the last spot price error occurred.
   // It is used to alert the caller if they are getting a potentially erroneous
   // TWAP, due to an unforeseen underlying error.
   google.protobuf.Timestamp last_error_time = 11 [

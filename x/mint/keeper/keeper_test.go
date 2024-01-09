@@ -558,7 +558,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			expectedError: errorsmod.Wrap(bech32.ErrInvalidLength(len(invalidAddress)), "decoding bech32 failed"),
 			// This case should not happen in practice due to parameter validation.
 			// The method spec also requires that all recipient addresses are valid by CONTRACT.
-			// Since we still handle error returned by the converion from string to address,
+			// Since we still handle error returned by the conversion from string to address,
 			// we try to cover it explicitly. However, it changes balance so we don't test it.
 			allowBalanceChange: true,
 		},

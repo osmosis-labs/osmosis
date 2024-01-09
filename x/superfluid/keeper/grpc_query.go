@@ -215,7 +215,7 @@ func (q Querier) SuperfluidDelegationAmount(goCtx context.Context, req *types.Su
 	return &types.SuperfluidDelegationAmountResponse{Amount: periodLocks[0].GetCoins()}, nil
 }
 
-// SuperfluidDelegationsByDelegator returns all the superfluid poistions for a specific delegator.
+// SuperfluidDelegationsByDelegator returns all the superfluid positions for a specific delegator.
 func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *types.SuperfluidDelegationsByDelegatorRequest) (*types.SuperfluidDelegationsByDelegatorResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

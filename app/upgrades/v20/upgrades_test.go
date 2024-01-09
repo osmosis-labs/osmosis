@@ -202,8 +202,8 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 
 	// 2 concentrated pools linked to 2 balancer pools - converted to group
 	// linked balancer pools are not incentivized individually
-	// seperate individual balancer pool - no-op
-	// 2 seperate individual stableswap pools - no-op
+	// separate individual balancer pool - no-op
+	// 2 separate individual stableswap pools - no-op
 	// concentrated pool that does not have migration link - no-op
 	s.Run("valid multi distr record test", func() {
 
@@ -297,7 +297,7 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 }
 
 func (s *UpgradeTestSuite) runCreateGroupsForIncentivePairsTest(migrationInfo []gammmigration.BalancerToConcentratedPoolLink, distributionRecords []poolincentivestypes.DistrRecord, expectedDistributionRecords []poolincentivestypes.DistrRecord, expectedGroupGaugeID uint64, expectedError error) {
-	// Confgiure migration records for each test individually (overwrites previous migration records).
+	// Configure migration records for each test individually (overwrites previous migration records).
 	err := s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: migrationInfo})
 	s.Require().NoError(err)
 

@@ -27,7 +27,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type GenesisState struct {
 	// minter is an abstraction for holding current rewards information.
 	Minter Minter `protobuf:"bytes,1,opt,name=minter,proto3" json:"minter"`
-	// params defines all the paramaters of the mint module.
+	// params defines all the parameters of the mint module.
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 	// reduction_started_epoch is the first epoch in which the reduction of mint
 	// begins.

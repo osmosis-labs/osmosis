@@ -68,7 +68,7 @@ Cosmovisor requires some ENVIRONMENT VARIABLES be set in order to
 function properly. We recommend setting these in your `.profile` so it
 is automatically set in every session.
 
-For validators we recommmend setting
+For validators we recommend setting
 
 - `DAEMON_ALLOW_DOWNLOAD_BINARIES=false` for security reasons
 - `DAEMON_LOG_BUFFER_SIZE=512` to avoid a bug with extra long log

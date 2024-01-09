@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 )
 
-// A synthetic lock object is a lock obejct used for the superfluid module.
+// A synthetic lock object is a lock object used for the superfluid module.
 // Each synthetic lock object is stored in state using lock id and synthetic denom
 // as it's key, where a synthetic denom would be consisted of the original denom of the lock,
 // validator address, and the staking positiion of the lock.

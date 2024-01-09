@@ -181,7 +181,7 @@ func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uin
 // Contrary to GetPoolGaugeId, it determines the appropriate lockable duration based on the pool type.
 // For balancer or stableswap pools that have 3 gauges, it assumes the longest lockable duration gauge.
 // For CL pools, it assumes the gauge with the incentive module epoch duration.
-// Returns gauge ID on succcess, returns error if:
+// Returns gauge ID on success, returns error if:
 // - fails to get pool
 // - given pool type does not support incentives (e.g. CW pools at the time of writing)
 // - fails to get the gauge ID for the given poolID and inferred lockable duration
@@ -268,7 +268,7 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 // the lockable durations for the pool, then using them to query the pool incentives keeper for the
 // gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
 // actual gauges from the retrieved gauge IDs.
-// CONTRACT: pool id must be assocated with a CFMM pool.
+// CONTRACT: pool id must be associated with a CFMM pool.
 func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error) {
 	lockableDurations := k.GetLockableDurations(ctx)
 	cfmmGauges := make([]incentivestypes.Gauge, 0, len(lockableDurations))
@@ -304,7 +304,7 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 func (k Keeper) GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error) {
 	lockableDurations := k.GetLockableDurations(ctx)
 	if len(lockableDurations) == 0 {
-		return 0, fmt.Errorf("Lockable Durations doesnot exist")
+		return 0, fmt.Errorf("Lockable Durations does not exist")
 	}
 	longestDuration := time.Duration(0)
 

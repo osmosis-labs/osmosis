@@ -50,7 +50,7 @@ type KeeperTestHelper struct {
 
 	// defaults to false,
 	// set to true if any method that potentially alters baseapp/abci is used.
-	// this controls whether or not we can re-use the app instance, or have to set a new one.
+	// this controls whether or not we can reuse the app instance, or have to set a new one.
 	hasUsedAbci bool
 	// defaults to false, set to true if we want to use a new app instance with caching enabled.
 	// then on new setup test call, we just drop the current cache.
@@ -145,6 +145,13 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
 // Additionally, attaches an internal gauge ID for each pool.
 func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
+	return s.PrepareAllSupportedPoolsCustomProject(osmosisRepository, osmosisRepoTransmuterPath)
+}
+
+// PrepareAllSupportedPoolsCustomProject creates all supported pools and returns their IDs.
+// Additionally, attaches an internal gauge ID for each pool.
+// Allows the flexibility of being used from outside the Osmosis repository by providing custom project name and transmuter bytecode path.
+func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, transmuterPath string) SupportedPoolAndGaugeInfo {
 	// This is the ID of the first gauge created next (concentrated).
 	nextGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
 
@@ -156,7 +163,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo 
 		concentratedPoolID = concentratedPool.GetId()
 		balancerPoolID     = s.PrepareBalancerPool()
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
-		cosmWasmPool       = s.PrepareCosmWasmPool()
+		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, transmuterPath)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
 	)
 	return SupportedPoolAndGaugeInfo{
@@ -183,7 +190,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo 
 // On first reset, will instantiate a new app, with caching enabled.
 // NOTE: If you are using ABCI methods, usage of Reset vs Setup has not been well tested.
 // It is believed to work, but if you get an odd error, try changing the call to this for setup to sanity check.
-// whats supposed to happen is a new setup call, and reset just does that in such a case.
+// what's supposed to happen is a new setup call, and reset just does that in such a case.
 func (s *KeeperTestHelper) Reset() {
 	if s.hasUsedAbci || !s.withCaching {
 		s.withCaching = true

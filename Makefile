@@ -40,7 +40,7 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
-E2E_UPGRADE_VERSION := "v21"
+E2E_UPGRADE_VERSION := "v22"
 #SHELL := /bin/bash
 
 # Go version to be used in docker images
@@ -186,12 +186,26 @@ sqs-load-test-ui:
 sqs-profile:
 	go tool pprof -http=:8080 http://localhost:9092/debug/pprof/profile?seconds=15
 
+# Validates that SQS concentrated liquidity pool state is
+# consistent with the state of the chain.
+sqs-validate-cl-state:
+	ingest/sqs/scripts/validate-cl-state.sh "http://localhost:9092"
+
+# Compares the quotes between SQS and chain over pool 1136
+# which is concentrated.
+sqs-quote-compare:
+	ingest/sqs/scripts/quote.sh "http://localhost:9092"
+
+sqs-quote-compare-stage:
+	ingest/sqs/scripts/quote.sh "http://165.227.168.61"
+
 # Updates go tests with the latest mainnet state
 # Make sure that the node is running locally
 sqs-update-mainnet-state:
-	curl -X POST "http:/localhost:9092/store-state"
+	curl -X POST "http:/localhost:9092/router/store-state"
 	mv pools.json ingest/sqs/router/usecase/routertesting/parsing/pools.json
 	mv taker_fees.json ingest/sqs/router/usecase/routertesting/parsing/taker_fees.json
+
 
 
 ###############################################################################

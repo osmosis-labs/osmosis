@@ -9,7 +9,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types";
 
 // GenesisState defines the tokenfactory module's genesis state.
 message GenesisState {
-  // params defines the paramaters of the module.
+  // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
 
   repeated GenesisDenom factory_denoms = 2 [

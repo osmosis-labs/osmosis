@@ -406,8 +406,8 @@ func (k Keeper) getAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 }
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes.
-// UptimeGrowthInside tracks the incentives accured by a specific LP within a pool. It keeps track of the cumulative amount of incentives
-// collected by a specific LP within a pool. This function also measures the growth of incentives accured by a particular LP since the last
+// UptimeGrowthInside tracks the incentives accrued by a specific LP within a pool. It keeps track of the cumulative amount of incentives
+// collected by a specific LP within a pool. This function also measures the growth of incentives accrued by a particular LP since the last
 // time incentives were collected.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // The mutation occurs in the call to GetTickInfo().
@@ -467,8 +467,8 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 }
 
 // GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes.
-// UptimeGrowthOutside tracks the incentive accured by the entire pool. It keeps track of the cumulative amount of incentives collected
-// by a specific pool since the last time incentives were accured.
+// UptimeGrowthOutside tracks the incentive accrued by the entire pool. It keeps track of the cumulative amount of incentives collected
+// by a specific pool since the last time incentives were accrued.
 // We use this function to calculate the total amount of incentives owed to the LPs when they withdraw their liquidity or when they
 // attempt to claim their incentives.
 // When LPs are ready to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - uptimeGrowthInside)
@@ -779,6 +779,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		sdk.NewEvent(
 			types.TypeEvtCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.GetId(), 10)),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentivesForPosition.String()),
 			sdk.NewAttribute(types.AttributeKeyForfeitedTokens, forfeitedIncentivesForPosition.String()),

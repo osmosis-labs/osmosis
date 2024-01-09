@@ -108,6 +108,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 
+			// The original default is 5s and is set in Cosmos SDK.
+			// We lower it to 4s for faster block times.
+			config.Consensus.TimeoutCommit = 4 * time.Second
+
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)

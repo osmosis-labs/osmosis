@@ -55,7 +55,7 @@ func CreateUpgradeHandler(
 		// wouldn't allow us to run each migration.
 		//
 		// Now, starting from 2 only works on mainnet because the legacysubspace is set.
-		// Because the legacysubspace is not set in the gotest, we cant simply run these migrations without setting the legacysubspace.
+		// Because the legacysubspace is not set in the gotest, we can't simply run these migrations without setting the legacysubspace.
 		// This legacysubspace can only be set at the initChain level, so it isn't clear to me how to directly set this in the test.
 		if ctx.ChainID() != TestingChainId {
 			fromVM[govtypes.ModuleName] = 2
@@ -168,7 +168,7 @@ func CreateUpgradeHandler(
 		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
 		// that generates protocol rev.
 		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
+		// keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
 		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
 		// This will allow us to display the amount of cyclic arb profits that have been generated from a certain block height.
 		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)

@@ -31,6 +31,9 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -85,6 +88,7 @@ import (
 	v19 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v19"
 	v20 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v20"
 	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v22"
 	v3 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v5"
@@ -95,10 +99,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v21/ingest"
 	"github.com/osmosis-labs/osmosis/v21/x/mint"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 const appName = "OsmosisApp"
@@ -136,7 +136,7 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -259,7 +259,7 @@ func NewOsmosisApp(
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
-		sqsKeepers := common.SQSIngestKeepers{
+		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
 			BankKeeper:         app.BankKeeper,
@@ -298,7 +298,7 @@ func NewOsmosisApp(
 	// Generally NewAppModule will require the keeper that module defines to be passed in as an exact struct,
 	// but should take in every other keeper as long as it matches a certain interface. (So no need to be de-ref'd)
 	//
-	// Any time a module requires a keeper de-ref'd thats not its native one,
+	// Any time a module requires a keeper de-ref'd that's not its native one,
 	// its code-smell and should probably change. We should get the staking keeper dependencies fixed.
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
 

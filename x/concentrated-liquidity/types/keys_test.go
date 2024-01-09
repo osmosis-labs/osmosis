@@ -11,7 +11,7 @@ import (
 )
 
 // TestReverseRelationTickIndexToBytes tests if TickIndexToBytes and TickIndexFromBytes
-// succesfully converts back to the original value.
+// successfully converts back to the original value.
 func TestReverseRelationTickIndexToBytes(t *testing.T) {
 	tests := map[string]struct {
 		tickIndex int64

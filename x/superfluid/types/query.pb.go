@@ -2071,9 +2071,9 @@ type QueryClient interface {
 	// Returns the coins superfluid delegated for the delegator, validator, denom
 	// triplet
 	SuperfluidDelegationAmount(ctx context.Context, in *SuperfluidDelegationAmountRequest, opts ...grpc.CallOption) (*SuperfluidDelegationAmountResponse, error)
-	// Returns all the delegated superfluid poistions for a specific delegator.
+	// Returns all the delegated superfluid positions for a specific delegator.
 	SuperfluidDelegationsByDelegator(ctx context.Context, in *SuperfluidDelegationsByDelegatorRequest, opts ...grpc.CallOption) (*SuperfluidDelegationsByDelegatorResponse, error)
-	// Returns all the undelegating superfluid poistions for a specific delegator.
+	// Returns all the undelegating superfluid positions for a specific delegator.
 	SuperfluidUndelegationsByDelegator(ctx context.Context, in *SuperfluidUndelegationsByDelegatorRequest, opts ...grpc.CallOption) (*SuperfluidUndelegationsByDelegatorResponse, error)
 	// Returns all the superfluid positions of a specific denom delegated to one
 	// validator
@@ -2285,9 +2285,9 @@ type QueryServer interface {
 	// Returns the coins superfluid delegated for the delegator, validator, denom
 	// triplet
 	SuperfluidDelegationAmount(context.Context, *SuperfluidDelegationAmountRequest) (*SuperfluidDelegationAmountResponse, error)
-	// Returns all the delegated superfluid poistions for a specific delegator.
+	// Returns all the delegated superfluid positions for a specific delegator.
 	SuperfluidDelegationsByDelegator(context.Context, *SuperfluidDelegationsByDelegatorRequest) (*SuperfluidDelegationsByDelegatorResponse, error)
-	// Returns all the undelegating superfluid poistions for a specific delegator.
+	// Returns all the undelegating superfluid positions for a specific delegator.
 	SuperfluidUndelegationsByDelegator(context.Context, *SuperfluidUndelegationsByDelegatorRequest) (*SuperfluidUndelegationsByDelegatorResponse, error)
 	// Returns all the superfluid positions of a specific denom delegated to one
 	// validator

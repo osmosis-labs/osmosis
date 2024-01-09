@@ -133,7 +133,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	// Suppose we increase the supply of x by x', so we want to solve for `k'/k`.
 	// This is `(x + x')^{weight} * old_terms / (x^{weight} * old_terms) = (x + x')^{weight} / (x^{weight})`
 	// The number of new shares we need to make is then `old_shares * ((k'/k) - 1)`
-	// Whats very cool, is that this turns out to be the exact same `solveConstantFunctionInvariant` code
+	// What very cool, is that this turns out to be the exact same `solveConstantFunctionInvariant` code
 	// with the answer's sign reversed.
 	poolAmountOut := solveConstantFunctionInvariant(
 		tokenBalanceIn.Add(tokenAmountInAfterFee),

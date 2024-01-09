@@ -9,7 +9,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types
 
 // GenesisState defines the pool incentives module's genesis state.
 message GenesisState {
-  // params defines all the paramaters of the module.
+  // params defines all the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
   repeated google.protobuf.Duration lockable_durations = 2 [
     (gogoproto.nullable) = false,

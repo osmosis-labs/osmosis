@@ -11,7 +11,7 @@ message GenesisState {
   // minter is an abstraction for holding current rewards information.
   Minter minter = 1 [ (gogoproto.nullable) = false ];
 
-  // params defines all the paramaters of the mint module.
+  // params defines all the parameters of the mint module.
   Params params = 2 [ (gogoproto.nullable) = false ];
 
   // reduction_started_epoch is the first epoch in which the reduction of mint

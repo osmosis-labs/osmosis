@@ -39,7 +39,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	// Psuedo collect cyclic arb profits
+	// Pseudo collect cyclic arb profits
 	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
 	err := s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
@@ -50,11 +50,11 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Check all accounting start heights should be the same height as the upgrade
 	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.CyclicArbTracker.HeightAccountingStartsFrom)
 	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TakerFeesTracker.HeightAccountingStartsFrom)
-	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
+	// s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
 	// All values should be nill except for the cyclic arb profits, which should start at the value it was at time of upgrade
 	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
 	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
-	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
+	// s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
 	s.Require().Equal(cyclicArbProfits, allProtocolRevenue.CyclicArbTracker.CyclicArb)
 
 }

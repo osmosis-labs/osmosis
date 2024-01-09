@@ -26,7 +26,7 @@ func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
 			expectPass:    true,
 		},
 		{
-			name:          "lock Id doesnot match with delegator",
+			name:          "lock Id does not match with delegator",
 			lockID:        locks[0].ID,
 			delegatorAddr: "addr2---------------",
 			expectPass:    false,
@@ -433,7 +433,7 @@ func (s *KeeperTestSuite) TestGetValsetRatios() {
 						Weight:         sdk.OneDec(),
 					},
 				}
-			} else { // other cases, we assume we are using val set pref with mutiple validators
+			} else { // other cases, we assume we are using val set pref with multiple validators
 				valsetPrefs = []types.ValidatorPreference{
 					{
 						ValOperAddress: valAddrs[0],
@@ -498,7 +498,7 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 		expectPass       bool
 	}{
 		{
-			name: "Valid Prefernce: Check rounding",
+			name: "Valid Preference: Check rounding",
 			valSetPreference: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],

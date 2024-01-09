@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 		},
 		"StartTime in future won't get ticked on first block": {
 			initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-			// currentEpochStartHeight is 1 because thats when the timer was created on-chain
+			// currentEpochStartHeight is 1 because that's when the timer was created on-chain
 			expEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}, CurrentEpochStartHeight: 1},
 		},
 		"StartTime in past will get ticked on first block": {

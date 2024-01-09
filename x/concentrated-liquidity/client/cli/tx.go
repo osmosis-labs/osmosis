@@ -136,9 +136,6 @@ Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
 			if err != nil {
 				return err
 			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
@@ -181,9 +178,6 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
-				return err
-			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 

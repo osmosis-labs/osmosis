@@ -1,7 +1,7 @@
 # This workflow pushes new docker images to osmolabs/sqs-dev on these events:
-# 2. Every new commit to the roman/sqs-poc-v20 branch,
+# 2. Every new commit to the v20.x or v21.x,
 # tag with: sqs-v[0-9]+.[0-9]+.[0-9],
-# branch push with sqs-v[0-9]+.x
+# or manually triggered workflow_dispatch event.
 # `osmolabs/sqs-dev:{SHORT_SHA}-$(date +%s)` is pushed.
 # All the images above have support for linux/amd64 (not linux/arm64)
 # All the images are based on an alpine image for easy debugging.
@@ -10,12 +10,16 @@ name: Build and Push SQS Images
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build from'     
+        required: true
+        default: 'v20.x'
   push:
     tags:
-      - sqs-v[0-9]+.[0-9]+.[0-9]
+      - sqs-v[0-9]+.[0-9]+.[0-9]+
     branches:
-      - roman/sqs-poc-v20
-      - sqs-v[0-9]+.x
+      - "v[0-9]**"
 
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
@@ -51,16 +55,11 @@ jobs:
           GITHUB_TAG=${{ github.ref_name }}
           echo "DOCKER_IMAGE_TAG=${GITHUB_TAG#v}" >> $GITHUB_ENV
           echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-
-      - name: Create Docker Image Tag for sqs-vx.x.x branch
-        if: startsWith(github.ref, 'sqs-v')
-        run: |
-          GITHUB_TAG=${{ github.ref_name }}
-          echo "DOCKER_IMAGE_TAG=${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
-          echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-
-      - name: Create Docker Image Tag for roman/sqs-poc-v20 branch
-        if: github.ref == 'refs/heads/roman/sqs-poc-v20'
+      - name: Create Docker Image Tag for v20.x or v21.x branch or workflow_dispatch
+        if: |
+          github.ref == 'refs/heads/v20.x' ||
+          (github.ref == 'refs/heads/v21.x') ||
+          (github.event_name == 'workflow_dispatch')
         run: |
           SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
           echo "DOCKER_IMAGE_TAG=${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV

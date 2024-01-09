@@ -40,7 +40,7 @@ Scaling factors help to set the expected price ratio.
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
 1. Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
-2. Relatedly, suppose theres a token called `TwoFoo` which should trade around `1 TwoFoo = 2 Foo`
+2. Relatedly, suppose there's a token called `TwoFoo` which should trade around `1 TwoFoo = 2 Foo`
 3. For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
 
 To handle these cases, we introduce scaling factors. A scaling factor maps from "raw coin units" to "amm math units", by dividing.
@@ -91,7 +91,7 @@ Most operations we do only need to reason about two of the assets in a pool, and
 We wish to have a simpler CFMM function to work within these cases.
 Due to the CFMM equation $f$ being a symmetric function, we can without loss of generality reorder the arguments to the function. Thus we put the assets of relevance at the beginning of the function. So if two assets $x, y$, we write: $f(x,y, a_3, ... a_n) = xy * a_3 * ... a_n (x^2 + y^2 + a_3^2 + ... + a_n^2)$.
 
-We then take a more convenient expression to work with, via variable substition.
+We then take a more convenient expression to work with, via variable substitution.
 
 <!-- It took several very silly hacks to get github to compile this. Editors in the future, be aware of spacing in the equation wrt how it GH renders -->
 
@@ -375,7 +375,7 @@ We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{
 * When $y_{out} > 0$
   * Use solution set: $a > 0, b > \frac{2}{3} a, c > \frac{1}{99} (-299a^2 + 597ab - 297b^2)$
     * $a > 0$ by definition.
-    * $b > \frac{2}{3} a$, as thats equivalent to $y_0 > \frac{2}{3} y_{out}$. We already assume that $y_0 >= y_{out}$.
+    * $b > \frac{2}{3} a$, as that's equivalent to $y_0 > \frac{2}{3} y_{out}$. We already assume that $y_0 >= y_{out}$.
     * Set $y_{out} = .9y_0$, per our theorem assumption. So $b = .9a$. Take $c = x^2 + w = 0$. Then [we can show that](https://www.wolframalpha.com/input?i=0+%3E+-299a%5E2+%2B+597ab+-+297b%5E2%2C+when+b%3D+.90a) $(-299a^2 + 597ab - 297b^2) < 0$ for all $a$. This completes the constraint set.
 * When $y_{out} < 0$
   * Use solution set: $a < 0, b > \frac{2}{3} a, c > -a^2 + 3ab - 3b^2$
@@ -383,9 +383,9 @@ We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{
     * $b > \frac{2}{3} a$, as $y_0$ is positive.
     * $c > 0$ is by definition, so we just need to bound when $-a^2 + 3ab - 3b^2 < 0$. This is always the case as long as one of $a$ or $b$ is non-zero, per [here](https://www.wolframalpha.com/input?i=-a%5E2+%2B+3ab+-+3b%5E2+%3C+0).
 
-Tieing this all together, we have that $e_k > .01e_y$. Therefore $e_y < 100 e_k$, satisfying our theoerem!
+Tying this all together, we have that $e_k > .01e_y$. Therefore $e_y < 100 e_k$, satisfying our theoerem!
 
-To show the informal claims, the constraint that led to this 100x error blowup was trying to accomodate high $y_{out}$. When $y_{out}$ is smaller, the error is far lower. (Often to the case that $e_y < e_k$, you can convince yourself of this by setting the ratio to being greater than 1 in wolfram alpha) When $y_{out}$ is bigger than $.9y_0$, we can rely on x_f^2 + w being much larger to lower this error. In these cases, the $x_f$ term must be large relative to $y_0$, which would yield a far better error bound.
+To show the informal claims, the constraint that led to this 100x error blowup was trying to accommodate high $y_{out}$. When $y_{out}$ is smaller, the error is far lower. (Often to the case that $e_y < e_k$, you can convince yourself of this by setting the ratio to being greater than 1 in wolfram alpha) When $y_{out}$ is bigger than $.9y_0$, we can rely on x_f^2 + w being much larger to lower this error. In these cases, the $x_f$ term must be large relative to $y_0$, which would yield a far better error bound.
 
 TODO: Justify a_y << y_out. (This should be easy, assume its not, that leads to e_k being high. Ratio test probably easiest. Maybe just add a sentence to that effect)
 

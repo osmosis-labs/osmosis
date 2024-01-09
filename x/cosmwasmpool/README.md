@@ -85,7 +85,7 @@ Currently, all existing pool types have their own way of providing liquidity and
 
 Common interface and later be defined for the contract to implement as spec and/or create a separated crate for that purpose.
 
-It's important to note that the _**contract itselfs hold tokens that are provided by users**_.
+It's important to note that the _**contract itself hold tokens that are provided by users**_.
 
 
 ## Swap
@@ -160,7 +160,7 @@ And the reason why the sequence is a little bit different for `SwapExactAmountIn
 
 ## Deactivating
 
-On contract's sudo enpoint, `SetActive` can be called to deactivate the pool. This will prevent the pool from being used for swap, and also prevent users from providing liquidity to the pool. Contract needs to check if the pool is active before performing any state mutating operation except `SetActive`.
+On contract's sudo endpoint, `SetActive` can be called to deactivate the pool. This will prevent the pool from being used for swap, and also prevent users from providing liquidity to the pool. Contract needs to check if the pool is active before performing any state mutating operation except `SetActive`.
 
 ```rs
 SetActive {

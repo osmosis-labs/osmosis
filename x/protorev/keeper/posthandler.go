@@ -58,7 +58,6 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// Attempt to execute arbitrage trades
 	if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(cacheCtx, swappedPools); err == nil {
 		write()
-		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	} else {
 		ctx.Logger().Error("ProtoRevTrade failed with error: " + err.Error())
 	}

@@ -42,7 +42,7 @@ var (
 //
 // For the second group set the volume so that the spread is even.
 //
-// Call AfterEpochEnd for muliple epochs.
+// Call AfterEpochEnd for multiple epochs.
 //
 // Ensure that the correct amount of rewards are distributed to the correct pool gauges. No panics occur.
 //
@@ -495,7 +495,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 }
 
 // increase volume in the given pool by swapping in the given amount of coins.
-// validates that the final volume is incerased by the expected amount.
+// validates that the final volume is increased by the expected amount.
 func (s *KeeperTestSuite) increaseVolumeBySwap(poolID uint64, tokeInCoin sdk.Coin, expectedVolumeAmtIncrease osmomath.Int, denomOut string) {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokeInCoin))
 
@@ -524,7 +524,7 @@ func (s *KeeperTestSuite) validateDistributionForGroup(groupPoolIDs []uint64, po
 		fmt.Printf("poolID %d gauge %d %s\n", poolID, gaugeID, gauge.Coins)
 
 		// Note that to avoid leaving dust in the gauge, we distribute
-		// all remaning coins to the last gauge.
+		// all remaining coins to the last gauge.
 		// As a result, we allow error tolerance of 1.
 		if i == len(groupPoolIDs)-1 {
 			// 10 because it accumulates for multi-epoch tests.

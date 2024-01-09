@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,61 @@ func (s *KeeperTestSuite) TestBaseDenom() {
 	converted, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 	s.Require().True(converted.IsEqual(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestCalcFeeSpotPrice() {
+	s.SetupTest(false)
+
+	tests := []struct {
+		name       string
+		inputDenom string
+		expectPass bool
+		expectedSp osmomath.BigDec
+	}{
+		{
+			"calc spot price from balancer pool",
+			"foo",
+			true,
+			osmomath.NewBigDec(1),
+		},
+		{
+			"calc spot price from cl pool",
+			"eth",
+			true,
+			osmomath.NewBigDec(1),
+		},
+		{
+			"invalid denom",
+			"invalid-denom",
+			false,
+			osmomath.BigDec{},
+		},
+	}
+
+	for _, tc := range tests {
+		// we set up two pools here, one Balancer pool, one CL Pool
+		// then use different denoms for each pool to test
+		balancerPoolId := s.PrepareBalancerPoolWithCoins(
+			sdk.NewCoin("foo", osmomath.NewInt(10000000)),
+			sdk.NewCoin("stake", osmomath.NewInt(10000000)),
+		)
+		clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("eth", "stake")
+		clPoolId := clPool.GetId()
+
+		// register both denoms
+		err := s.ExecuteUpgradeFeeTokenProposal("foo", balancerPoolId)
+		s.Require().NoError(err)
+		err = s.ExecuteUpgradeFeeTokenProposal("eth", clPoolId)
+		s.Require().NoError(err)
+
+		sp, err := s.App.TxFeesKeeper.CalcFeeSpotPrice(s.Ctx, tc.inputDenom)
+		if tc.expectPass {
+			s.Require().NoError(err)
+			s.Require().True(sp.Equal(tc.expectedSp))
+		} else {
+			s.Require().Error(err)
+		}
+	}
 }
 
 func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
@@ -65,7 +121,7 @@ func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 		{
 			name:       "proposal with non-existent pool",
 			feeToken:   "foo",
-			poolId:     100000000000,
+			poolId:     10000000,
 			expectPass: false,
 		},
 		{
@@ -117,7 +173,7 @@ func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 				if tc.poolId != 0 {
 					// Make sure the length of fee tokens is >= before
 					s.Require().GreaterOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
-					// Ensure that the fee token is convertable to base token
+					// Ensure that the fee token is convertible to base token
 					_, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
 					s.Require().NoError(err, "test: %s", tc.name)
 					// make sure the queried poolId is the same as expected
@@ -132,7 +188,7 @@ func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 					// if this proposal deleted a fee token
 					// ensure that the length of fee tokens is <= to before
 					s.Require().LessOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
-					// Ensure that the fee token is not convertable to base token
+					// Ensure that the fee token is not convertible to base token
 					_, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
 					s.Require().Error(err, "test: %s", tc.name)
 					// make sure the queried poolId errors
@@ -163,7 +219,7 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 		baseDenomPoolInput  sdk.Coin
 		feeTokenPoolInput   sdk.Coin
 		inputFee            sdk.Coin
-		expectedConvertable bool
+		expectedconvertible bool
 		expectedOutput      sdk.Coin
 	}{
 		{
@@ -172,7 +228,7 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 100),
 			inputFee:            sdk.NewInt64Coin("uion", 10),
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
-			expectedConvertable: true,
+			expectedconvertible: true,
 		},
 		{
 			name:               "unequal value",
@@ -183,7 +239,7 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 			// foo supply / stake supply =  200 / 100 = 2 foo for 1 stake
 			// 10 foo in / 2 foo for 1 stake = 5 base denom
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 5),
-			expectedConvertable: true,
+			expectedconvertible: true,
 		},
 		{
 			name:                "basedenom value",
@@ -191,7 +247,7 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
 			inputFee:            sdk.NewInt64Coin(baseDenom, 10),
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
-			expectedConvertable: true,
+			expectedconvertible: true,
 		},
 		{
 			name:                "convert non-existent",
@@ -199,7 +255,7 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 200),
 			inputFee:            sdk.NewInt64Coin("foo", 10),
 			expectedOutput:      sdk.Coin{},
-			expectedConvertable: false,
+			expectedconvertible: false,
 		},
 	}
 
@@ -216,7 +272,7 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 			s.Require().NoError(err)
 
 			converted, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, tc.inputFee)
-			if tc.expectedConvertable {
+			if tc.expectedconvertible {
 				s.Require().NoError(err, "test: %s", tc.name)
 				s.Require().Equal(tc.expectedOutput, converted)
 			} else {

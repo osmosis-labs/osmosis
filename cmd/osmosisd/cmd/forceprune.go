@@ -58,7 +58,7 @@ which would keep blockchain and state data of last 188000 blocks (approximately 
 			err = cmdr.Run()
 
 			if err == nil {
-				// continue only if throws errror
+				// continue only if throws error
 				return nil
 			}
 

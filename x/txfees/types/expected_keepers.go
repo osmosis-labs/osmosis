@@ -42,6 +42,13 @@ type PoolManager interface {
 	) (osmomath.Int, error)
 
 	GetParams(ctx sdk.Context) (params poolmanagertypes.Params)
+
+	RouteCalculateSpotPrice(
+		ctx sdk.Context,
+		poolId uint64,
+		quoteAssetDenom string,
+		baseAssetDenom string,
+	) (price osmomath.BigDec, err error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -71,7 +78,6 @@ type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
 	GetFeeToken(ctx sdk.Context, denom string) (FeeToken, error)
-	IncreaseTxFeesTracker(ctx sdk.Context, txFees sdk.Coin)
 }
 
 type ProtorevKeeper interface {

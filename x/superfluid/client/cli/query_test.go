@@ -92,7 +92,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.ConnectedIntermediaryAccountResponse{},
 		},
 		// need to adapt s.val.String() to have an intermediate account,
-		// else the response is nil and theres a panic internally.
+		// else the response is nil and there's a panic internally.
 		// {
 		// 	"Query estimate sfs delegated amount by validator & denom",
 		// 	"/osmosis.superfluid.Query/EstimateSuperfluidDelegatedAmountByValidatorDenom",

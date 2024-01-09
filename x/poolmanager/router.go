@@ -275,7 +275,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		// Chain output of current pool as the input for the next routed pool
-		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
+		// We don't need to validate the denom,
+		// as CalcOutAmtGivenIn is responsible for ensuring the denom exists in the pool.
+		tokenIn = sdk.Coin{Denom: routeStep.TokenOutDenom, Amount: tokenOutAmount}
 	}
 	return tokenOutAmount, err
 }

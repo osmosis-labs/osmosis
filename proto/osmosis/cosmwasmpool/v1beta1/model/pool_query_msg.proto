@@ -8,7 +8,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/cosmwasm
 
 // ===================== GetSwapFeeQueryMsg
 message GetSwapFeeQueryMsg {
-  // get_swap_fee is the query strcuture to get swap fee.
+  // get_swap_fee is the query structure to get swap fee.
   EmptyStruct get_swap_fee = 1 [ (gogoproto.nullable) = false ];
 }
 

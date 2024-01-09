@@ -49,7 +49,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: 🐿 Setup Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Create a file with all core Cosmos SDK pkgs
@@ -85,7 +85,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: 🐿 Setup Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Display go version
@@ -138,12 +138,9 @@ jobs:
           load: true
           context: .
           tags: osmosis:debug
-          # Use experimental Cache backend API:
-          # https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md#cache-backend-api
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             BASE_IMG_TAG=debug
+            BUILD_TAGS="netgo,muslc,excludeIncrement"
       - name: Test e2e and Upgrade
         run: make test-e2e-ci
       - name: Dump docker logs on failure

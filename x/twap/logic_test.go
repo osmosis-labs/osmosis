@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
@@ -410,7 +409,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom0:      baseRecord.Asset0Denom,
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			expectedErr: fmt.Errorf("looking for a time that's too old, not in the historical index. "+
 				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"on lexicographical order denom parameters": {
@@ -521,7 +520,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 		"call 1 second before existing record": {
 			recordsToPreSet: baseRecord,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			expectedErr: fmt.Errorf("looking for a time that's too old, not in the historical index. "+
 				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"test non lexicographical order parameter": {
@@ -1323,7 +1322,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 			s.Require().Equal(tc.poolId, poolId)
 			s.Require().NoError(err)
 
-			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denoms := tc.poolCoins.Denoms()
 			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for _, denomPair := range denomPairs {

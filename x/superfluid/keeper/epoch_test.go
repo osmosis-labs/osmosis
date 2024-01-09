@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 	changeRewardReceiverTestCases := []bool{true, false}
 	for _, tc := range distributionTestCases {
 		// run distributionTestCases two times.
-		// Once with lock reward reciver as owner,
+		// Once with lock reward receiver as owner,
 		// Second time with lock reward receiver as a different account.
 		for _, changeRewardReceiver := range changeRewardReceiverTestCases {
 			tc := tc

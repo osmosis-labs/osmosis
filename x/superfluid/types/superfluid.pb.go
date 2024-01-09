@@ -167,10 +167,10 @@ func (m *SuperfluidIntermediaryAccount) GetGaugeId() uint64 {
 // The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
 // treat an LP share as having, for all of epoch N. Eventually this is intended
 // to be set as the Time-weighted-average-osmo-backing for the entire duration
-// of epoch N-1. (Thereby locking whats in use for epoch N as based on the prior
-// epochs rewards) However for now, this is not the TWAP but instead the spot
-// price at the boundary. For different types of assets in the future, it could
-// change.
+// of epoch N-1. (Thereby locking what's in use for epoch N as based on the
+// prior epochs rewards) However for now, this is not the TWAP but instead the
+// spot price at the boundary. For different types of assets in the future, it
+// could change.
 type OsmoEquivalentMultiplierRecord struct {
 	EpochNumber int64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
 	// superfluid asset denom, can be LP token or native token

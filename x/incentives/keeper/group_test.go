@@ -194,9 +194,9 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		{
 			// This test:
 			// Performs the same validations as TestCreateGroupInternal with the exceptions:
-			// - Group is writen to start
+			// - Group is written to start
 			// - Can only be run by an incentives module account
-			// - synching volume is not attempted (initialized to zero)
+			// - syncing volume is not attempted (initialized to zero)
 			name:                "CreateGroupAsIncentivesModuleAcc",
 			systemUnderTestType: CreateGroupAsIncentivesModuleAcc,
 		},
@@ -273,7 +273,7 @@ func (s *KeeperTestSuite) runCreateGroupTests(poolInfo apptesting.SupportedPoolA
 			// Ensure we configured volumes and pools correctly
 			s.overwriteVolumes(tc.poolIDs, tc.poolVolumesToSet)
 
-			// Since we expect weight synching to occur, we update the expected weights
+			// Since we expect weight syncing to occur, we update the expected weights
 			// with the volumes we set above.
 			configureExpectedWeights(&tc)
 

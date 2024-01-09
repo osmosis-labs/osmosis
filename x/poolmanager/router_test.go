@@ -1678,7 +1678,7 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(19_936)),
 			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(29_755)),
 		},
-		"valid balancer pool - external price halfs adjusted price impact": {
+		"valid balancer pool - external price halves adjusted price impact": {
 			preCreatePoolType: types.Balancer,
 			poolId:            poolId,
 			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
@@ -2004,7 +2004,7 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(10_733)),
 			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(53_638_181)),
 		},
-		"valid concentrated pool - external price halfs adjusted price impact": {
+		"valid concentrated pool - external price halves adjusted price impact": {
 			preCreatePoolType: types.Concentrated,
 			poolId:            poolId,
 			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
@@ -2798,7 +2798,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// the swap we don't expect the price to change significantly.
 			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
-			// amount must be stricly less than the given due to price impact.
+			// amount must be strictly less than the given due to price impact.
 			multiplicativeTolerance := osmomath.OneDec()
 			if tc.checkExactOutput {
 				// We set to a small value instead of zero since zero is a special case
@@ -3016,7 +3016,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			expectedTokenInEstimate: priceImpactThreshold,
 		},
 
-		"error: price impact protection triggerred": {
+		"error: price impact protection triggered": {
 			routes: []types.SwapAmountOutSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -3107,7 +3107,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// the swap we don't expect the price to change significantly.
 			// As a result, we roughly expect the amount in to be the same
 			// as the amount out given of another token. However, the actual
-			// amount must be stricly greater than the given due to price impact.
+			// amount must be strictly greater than the given due to price impact.
 			multiplicativeTolerance := osmomath.OneDec()
 			if tc.checkExactOutput {
 				// We set to a small value instead of zero since zero is a special case
@@ -3183,7 +3183,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			expectedResult: sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo),
 		},
 		{
-			name:        "round not found because pool id doesnot exist",
+			name:        "round not found because pool id does not exist",
 			poolId:      cosmWasmPoolId + 1,
 			expectedErr: types.FailedToFindRouteError{PoolId: cosmWasmPoolId + 1},
 		},

@@ -43,7 +43,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	require.NoError(t, err)
 
 	// UNFORKING C: It seems the sender needs to be the gov module account, otherwise
-	// when the prop is executed, there cant be two signers on the message.
+	// when the prop is executed, there can't be two signers on the message.
 	msgStoreCode := wasmtypes.MsgStoreCode{Sender: addr.String(), WASMByteCode: wasmCode, InstantiatePermission: &types.AccessConfig{Permission: types.AccessTypeEverybody}}
 	msgStoreCodeSlice := []sdk.Msg{&msgStoreCode}
 

@@ -103,7 +103,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 	}
 
-	// This signifies that currrent tick is above the max initialized tick
+	// This signifies that current tick is above the max initialized tick
 	if currentTick >= previousTickIndex && currentTickLiquidity.IsZero() {
 		currentBucketIndex = int64(len(liquidityDepthsForRange))
 	}

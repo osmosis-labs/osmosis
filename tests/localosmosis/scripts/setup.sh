@@ -48,7 +48,7 @@ edit_genesis () {
     # Update crisis module
     dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'uosmo'
 
-    # Udpate gov module
+    # Update gov module
     dasel put string -f $GENESIS '.app_state.gov.voting_params.voting_period' '60s'
     dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'uosmo'
 
