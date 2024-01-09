@@ -445,3 +445,9 @@ non-empty string, leading to the pool being deprioritized from the router.
 
 - How to handle atomicity between ticks and pools? E.g. let's say a block is written between the time initial pools are read
 and the time the ticks are read. Now, we have data that is partially up-to-date.
+SQS is meant to offload the query load from the chain node to a separate server. Primarily, we use it for swap routing.
+
+## Integrator Guide
+
+Follow [this link](https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1bsqPAr6) to find a guide on how to 
+integrate with the sidecar query server.
