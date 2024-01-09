@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#7258](https://github.com/osmosis-labs/osmosis/pull/7258) Upgrade go 1.20 -> 1.21
+* [#7272](https://github.com/osmosis-labs/osmosis/pull/7272 Upgrade go 1.20 -> 1.21
 
 ### API
 
