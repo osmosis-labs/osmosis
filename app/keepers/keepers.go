@@ -400,9 +400,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.PoolManagerKeeper,
-		appKeepers.GAMMKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.ConsensusParamsKeeper,
 		dataDir,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
