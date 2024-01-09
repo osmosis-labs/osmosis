@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Breaking
+
+* [#7272](https://github.com/osmosis-labs/osmosis/pull/7272 Upgrade go 1.20 -> 1.21
+
 ### API
 
 * [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
@@ -58,8 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
 * [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172) Lower CPU overheads of the Osmosis epoch.
 * [#7203](https://github.com/osmosis-labs/osmosis/pull/7203) Make a maximum number of pools of 100 billion.
+* [#7220](https://github.com/osmosis-labs/osmosis/pull/7220) Register consensus params; Set MaxGas to 300m and MaxBytes to 5mb.
 * [#7249](https://github.com/osmosis-labs/osmosis/pull/7249) Double auth tx size cost per byte from 10 to 20
 * [#7259](https://github.com/osmosis-labs/osmosis/pull/7259) Lower gas and CPU overhead of chargeTakerFee (in every swap)
+* [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) Extended app hash logs (includes module hashes for easier debugging)
 * [#7258](https://github.com/osmosis-labs/osmosis/pull/7258) Remove an iterator call in CL swaps and spot price calls.
 
 ### Bug Fixes

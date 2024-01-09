@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/v21
 
-go 1.20
+go 1.21
 
 require (
 	cosmossdk.io/api v0.3.1
@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240108180923-ddfef98789fd
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240108180923-ddfef98789fd
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240108040604-9632b2b8af1b
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240108040604-9632b2b8af1b
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109034818-d2a4cb704d18
 	github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108192026-6ccc0a29f77d
 	github.com/pkg/errors v0.9.1
@@ -374,8 +374,8 @@ replace (
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
-	// fork of cometbft which allows for better app hash logging
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.0.0-20240103055822-28da358e3146
+	// cometbft is replaced to print custom app hash logs
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.2-v21-osmo-1
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
