@@ -66,7 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) Extended app hash logs (includes module hashes for easier debugging)
 * [#7258](https://github.com/osmosis-labs/osmosis/pull/7258) Remove an iterator call in CL swaps and spot price calls.
 
-
 ### Bug Fixes
 
 * [#7245](https://github.com/osmosis-labs/osmosis/pull/7245) fix: correcting json tag value for `SwapAmountOutSplitRouteWrapper.OutDenom`
