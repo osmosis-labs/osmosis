@@ -5,6 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	tmtypes "github.com/cometbft/cometbft/types"
+
 	"github.com/osmosis-labs/osmosis/v21/app/keepers"
 	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
 )
@@ -22,6 +24,13 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Properly register consensus params. In the process, change params as per:
+		// https://www.mintscan.io/osmosis/proposals/705
+		defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
+		defaultConsensusParams.Block.MaxBytes = 5000000 // previously 10485760
+		defaultConsensusParams.Block.MaxGas = 300000000 // previously 120000000
+		keepers.ConsensusParamsKeeper.Set(ctx, &defaultConsensusParams)
 
 		// Increase the tx size cost per byte to 20 to reduce the exploitability of bandwidth amplification problems.
 		accountParams := keepers.AccountKeeper.GetParams(ctx)
