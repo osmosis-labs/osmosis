@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 type KeeperTestSuite struct {

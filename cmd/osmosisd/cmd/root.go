@@ -21,8 +21,8 @@ import (
 	cometbftdb "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v22/app/params"
+	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -62,7 +62,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v21/app"
+	osmosis "github.com/osmosis-labs/osmosis/v22/app"
 )
 
 type AssetList struct {

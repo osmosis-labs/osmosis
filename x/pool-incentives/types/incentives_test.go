@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
 )
 
 func TestParamsMarshalUnmarshal(t *testing.T) {
