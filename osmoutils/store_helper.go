@@ -3,6 +3,7 @@ package osmoutils
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -237,7 +238,12 @@ func GetCoinArrayFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, store
 		bz := iterator.Value()
 		sdkInt := osmomath.Int{}
 		if err := sdkInt.Unmarshal(bz); err == nil {
-			coinArray = append(coinArray, sdk.NewCoin(string(iterator.Key()), sdkInt))
+			// Split the key into prefix and denom
+			keyParts := strings.Split(string(iterator.Key()), "|")
+			if len(keyParts) > 1 {
+				denom := keyParts[1]
+				coinArray = append(coinArray, sdk.NewCoin(denom, sdkInt))
+			}
 		}
 	}
 
@@ -266,7 +272,7 @@ func GetCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, sto
 // IncreaseCoinByDenomFromPrefix increases the coin from the store that has the given prefix and denom by the specified amount.
 func IncreaseCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte, denom string, increasedAmt osmomath.Int) error {
 	store := prefix.NewStore(ctx.KVStore(storeKey), storePrefix)
-	key := append(storePrefix, []byte(denom)...)
+	key := []byte(fmt.Sprintf("%s%s%s", storePrefix, "|", []byte(denom)))
 
 	coin, err := GetCoinByDenomFromPrefix(ctx, storeKey, storePrefix, denom)
 	if err != nil {

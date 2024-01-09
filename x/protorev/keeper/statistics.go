@@ -51,7 +51,21 @@ func (k Keeper) IncrementNumberOfTrades(ctx sdk.Context) error {
 
 // GetAllProfits returns all of the profits made by the ProtoRev module.
 func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
-	return osmoutils.GetCoinArrayFromPrefix(ctx, k.storeKey, types.KeyPrefixProfitByDenom)
+	profits := make([]sdk.Coin, 0)
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		bz := iterator.Value()
+		profit := sdk.Coin{}
+		if err := profit.Unmarshal(bz); err == nil {
+			profits = append(profits, profit)
+		}
+	}
+
+	return profits
 }
 
 // GetProfitsByDenom returns the profits made by the ProtoRev module for the given denom.
