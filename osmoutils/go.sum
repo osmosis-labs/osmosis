@@ -1231,8 +1231,8 @@ github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-1 h1:w9+2/qQx3qBZKvkLEzP5OWE
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-1/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109214800-856d6ce64d0c h1:GGQQ8rg29XXsBG4kpGUtq6xL7WVtnCGE2zuyjcuX9ek=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109214800-856d6ce64d0c/go.mod h1:jTk9RRqqZ+0bfNoEw9RWzPvTNiY2fhPhujFyN4HSWUk=
-github.com/osmosis-labs/osmosis/v21 v21.2.1 h1:C6bNyfhhwGmHtrb0ZzzwN8VdbV3zrgkiYwmiEg/a+QY=
-github.com/osmosis-labs/osmosis/v21 v21.2.1/go.mod h1:Tnl0TMjv9U7CfIx2ikXYyv986bSgEu6wZL5TMxAz6rA=
+github.com/osmosis-labs/osmosis/v22 v21.2.1 h1:C6bNyfhhwGmHtrb0ZzzwN8VdbV3zrgkiYwmiEg/a+QY=
+github.com/osmosis-labs/osmosis/v22 v21.2.1/go.mod h1:Tnl0TMjv9U7CfIx2ikXYyv986bSgEu6wZL5TMxAz6rA=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231220185444-78d2c6fefe94 h1:zMLkDwk0GkaeuA9WLV7YghfJ5GvV90ll4chOf7xzV6I=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231220185444-78d2c6fefe94/go.mod h1:lFy4X89dA7UUm+//XXTtIfJnq/zxkqIUOwxdMx+HD5k=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231207233718-ef61c5f32b31 h1:O8DadD418HbDouCd6CC1YLCghxjaOoIqv+zQloKwJNw=
