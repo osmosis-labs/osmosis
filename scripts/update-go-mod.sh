@@ -1,17 +1,10 @@
 #!/bin/bash
 
-# Script for checking `git diff` between two commits and updating osmoutils, osmomath, epochs or ibc-hooks if any were changed between two commits
+# Script for updating osmoutils, osmomath, epochs and ibc-hooks
 # Used by Go Mod Auto Version Update workflow
-# First argument: sha of a first commit
-# Second argument: sha of a second commit
+# Argument: sha of commit on target branch
 
-is_updated() {
-	if [ "${1}" != "" ]
-	then
-		return 1
-	fi
-	return 0
-}
+commit_after=$1
 
 # Define modules
 modules=("osmoutils" "osmomath" "x/ibc-hooks" "x/epochs")
