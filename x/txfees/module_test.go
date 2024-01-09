@@ -87,7 +87,8 @@ func TestBeginBlock(t *testing.T) {
 
 	// Run begin block again, should update target gas
 	RunBeginBlock(ctx, app)
-	require.Equal(t, newDefaultBlockMaxGas, mempool1559.TargetGas)
+	expectedNewBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newDefaultBlockMaxGas)).TruncateInt().Int64()
+	require.Equal(t, expectedNewBlockTargetGas, mempool1559.TargetGas)
 }
 
 func RunBeginBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
