@@ -11,7 +11,6 @@ The use case for this is performing certain data and computationally intensive t
 the chain node or the clients. For example, routing falls under this category because it requires
 all pool data for performing the complex routing algorithm.
 
-<<<<<<< HEAD
 ## Supported Endpoints
 
 ## Pools Resource
