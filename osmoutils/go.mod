@@ -7,12 +7,22 @@ require (
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
+<<<<<<< HEAD
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231026175343-311472e85591
 	github.com/osmosis-labs/osmosis/v21 v21.0.0-alpha
 	github.com/spf13/cobra v1.7.0
+=======
+	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/iavl v0.20.1
+	github.com/cosmos/ibc-go/v7 v7.3.1
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/v21 v21.2.1
+	github.com/spf13/cast v1.6.0
+	github.com/spf13/cobra v1.8.0
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -105,12 +115,19 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+<<<<<<< HEAD
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+=======
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
+<<<<<<< HEAD
 	github.com/onsi/gomega v1.27.10 // indirect
+=======
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -140,7 +157,11 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/net v0.17.0 // indirect
+=======
+	golang.org/x/net v0.19.0 // indirect
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
@@ -158,9 +179,25 @@ require (
 )
 
 replace (
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/cc29414c72c73d567e0c75b4a0800961a26d7af4
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo-4
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240103225327-6652b67a6ae8
+=======
+	// adds expedited proposal support and 1000MB cache default
+	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
+
+	// cometbft is replaced to print custom app hash logs
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.2-v21-osmo-1
+
+	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
+	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
+
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/7ff0763fd1f96b46dc7f6527a3ef08d47b785493
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v21-osmo-5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v21-osmo-5
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

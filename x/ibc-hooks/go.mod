@@ -11,8 +11,13 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-go/v7 v7.3.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240108040604-9632b2b8af1b
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240108040604-9632b2b8af1b
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109034818-d2a4cb704d18
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109034818-d2a4cb704d18
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
@@ -124,7 +129,11 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+<<<<<<< HEAD
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+=======
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
+>>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -196,11 +205,15 @@ replace (
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
+	// cometbft is replaced to print custom app hash logs
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.2-v21-osmo-1
+
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/cc29414c72c73d567e0c75b4a0800961a26d7af4
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-osmo-4
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240103225327-6652b67a6ae8
+
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/7ff0763fd1f96b46dc7f6527a3ef08d47b785493
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v21-osmo-5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v21-osmo-5
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
