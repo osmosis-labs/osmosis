@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/math v1.1.3-rc.1
 	github.com/cosmos/cosmos-sdk v0.47.5
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109211933-17cb7c095403
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109214800-856d6ce64d0c
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 
