@@ -25,6 +25,23 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Migrate legacy taker fee tracker to new taker fee tracker (for performance reasons)
+		oldTakerFeeTrackerForStakers := keepers.PoolManagerKeeper.GetLegacyTakerFeeTrackerForStakers(ctx)
+		for _, coin := range oldTakerFeeTrackerForStakers {
+			err := keepers.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(ctx, coin.Denom, coin.Amount)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		oldTakerFeeTrackerForCommunityPool := keepers.PoolManagerKeeper.GetLegacyTakerFeeTrackerForCommunityPool(ctx)
+		for _, coin := range oldTakerFeeTrackerForCommunityPool {
+			err := keepers.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, coin.Denom, coin.Amount)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// Properly register consensus params. In the process, change params as per:
 		// https://www.mintscan.io/osmosis/proposals/705
 		defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()

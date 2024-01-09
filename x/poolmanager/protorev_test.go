@@ -2,49 +2,30 @@ package poolmanager_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
-func (s *KeeperTestSuite) TestGetSetTakerFeeTrackerForStakersAndCommunityPool() {
+func (s *KeeperTestSuite) TestGetTakerFeeTrackerForStakersAndCommunityPool() {
 	tests := map[string]struct {
-		firstTakerFeeForStakers        sdk.Coins
-		secondTakerFeeForStakers       sdk.Coins
-		firstTakerFeeForCommunityPool  sdk.Coins
-		secondTakerFeeForCommunityPool sdk.Coins
+		firstTakerFeeForStakers        []sdk.Coin
+		secondTakerFeeForStakers       []sdk.Coin
+		firstTakerFeeForCommunityPool  []sdk.Coin
+		secondTakerFeeForCommunityPool []sdk.Coin
 	}{
-		"happy path: replace single coin with increased single coin": {
+		"happy path: get updated coin with same denom coin coin": {
 			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
 			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
 
 			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
 			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(200))),
 		},
-		"replace single coin with decreased single coin": {
+		"get updated coin with different denom coins": {
 			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(50))),
+			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(200))),
 
 			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
-			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(50))),
-		},
-		"replace single coin with different denom": {
-			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
-
-			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
-			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-		},
-		"replace single coin with multiple coins": {
-			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
-
-			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
-			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100)), sdk.NewCoin("eth", sdk.NewInt(200))),
-		},
-		"replace multiple coins with single coin": {
-			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
-			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
-
-			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100)), sdk.NewCoin("eth", sdk.NewInt(200))),
-			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(50))),
+			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
 		},
 	}
 
@@ -55,8 +36,14 @@ func (s *KeeperTestSuite) TestGetSetTakerFeeTrackerForStakersAndCommunityPool() 
 			s.Require().Empty(s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
 			s.Require().Empty(s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
 
-			s.App.PoolManagerKeeper.SetTakerFeeTrackerForStakers(s.Ctx, tc.firstTakerFeeForStakers)
-			s.App.PoolManagerKeeper.SetTakerFeeTrackerForCommunityPool(s.Ctx, tc.firstTakerFeeForCommunityPool)
+			for _, coin := range tc.firstTakerFeeForStakers {
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
+			}
+			for _, coin := range tc.firstTakerFeeForCommunityPool {
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
+			}
 
 			actualFirstTakerFeeForStakers := s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx)
 			actualFirstTakerFeeForCommunityPool := s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx)
@@ -64,14 +51,30 @@ func (s *KeeperTestSuite) TestGetSetTakerFeeTrackerForStakersAndCommunityPool() 
 			s.Require().Equal(tc.firstTakerFeeForStakers, actualFirstTakerFeeForStakers)
 			s.Require().Equal(tc.firstTakerFeeForCommunityPool, actualFirstTakerFeeForCommunityPool)
 
-			s.App.PoolManagerKeeper.SetTakerFeeTrackerForStakers(s.Ctx, tc.secondTakerFeeForStakers)
-			s.App.PoolManagerKeeper.SetTakerFeeTrackerForCommunityPool(s.Ctx, tc.secondTakerFeeForCommunityPool)
+			for _, coin := range tc.secondTakerFeeForStakers {
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
+			}
+			for _, coin := range tc.secondTakerFeeForCommunityPool {
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
+			}
+
+			expectedFinalTakerFeeForStakers := []sdk.Coin{}
+			expectedFinalTakerFeeForCommunityPool := []sdk.Coin{}
+			firstTakerFeeForStakersCoins := osmoutils.ConvertCoinArrayToCoins(actualFirstTakerFeeForStakers)
+			firstTakerFeeForCommunityPoolCoins := osmoutils.ConvertCoinArrayToCoins(actualFirstTakerFeeForCommunityPool)
+			secondTakerFeeForStakersCoins := osmoutils.ConvertCoinArrayToCoins(tc.secondTakerFeeForStakers)
+			secondTakerFeeForCommunityPoolCoins := osmoutils.ConvertCoinArrayToCoins(tc.secondTakerFeeForCommunityPool)
+
+			expectedFinalTakerFeeForStakers = firstTakerFeeForStakersCoins.Add(secondTakerFeeForStakersCoins...)
+			expectedFinalTakerFeeForCommunityPool = firstTakerFeeForCommunityPoolCoins.Add(secondTakerFeeForCommunityPoolCoins...)
 
 			actualSecondTakerFeeForStakers := s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx)
 			actualSecondTakerFeeForCommunityPool := s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx)
 
-			s.Require().Equal(tc.secondTakerFeeForStakers, actualSecondTakerFeeForStakers)
-			s.Require().Equal(tc.secondTakerFeeForCommunityPool, actualSecondTakerFeeForCommunityPool)
+			s.Require().Equal(expectedFinalTakerFeeForStakers, actualSecondTakerFeeForStakers)
+			s.Require().Equal(expectedFinalTakerFeeForCommunityPool, actualSecondTakerFeeForCommunityPool)
 		})
 	}
 }
@@ -112,10 +115,10 @@ func (s *KeeperTestSuite) TestGetSetTakerFeeTrackerStartHeight() {
 	}
 }
 
-func (s *KeeperTestSuite) TestIncreaseTakerFeeTrackerForStakersAndCommunityPool() {
+func (s *KeeperTestSuite) TestUpdateTakerFeeTrackerForStakersAndCommunityPool() {
 	tests := map[string]struct {
-		initialTakerFeeForStakers       sdk.Coins
-		initialTakerFeeForCommunityPool sdk.Coins
+		initialTakerFeeForStakers       []sdk.Coin
+		initialTakerFeeForCommunityPool []sdk.Coin
 
 		increaseTakerFeeForStakersBy       sdk.Coin
 		increaseTakerFeeForCommunityPoolBy sdk.Coin
@@ -143,8 +146,14 @@ func (s *KeeperTestSuite) TestIncreaseTakerFeeTrackerForStakersAndCommunityPool(
 			s.Require().Empty(s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
 			s.Require().Empty(s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
 
-			s.App.PoolManagerKeeper.SetTakerFeeTrackerForStakers(s.Ctx, tc.initialTakerFeeForStakers)
-			s.App.PoolManagerKeeper.SetTakerFeeTrackerForCommunityPool(s.Ctx, tc.initialTakerFeeForCommunityPool)
+			for _, coin := range tc.initialTakerFeeForStakers {
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
+			}
+			for _, coin := range tc.initialTakerFeeForCommunityPool {
+				err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, coin.Denom, coin.Amount)
+				s.Require().NoError(err)
+			}
 
 			actualInitialTakerFeeForStakers := s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx)
 			actualInitialTakerFeeForCommunityPool := s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx)
@@ -152,14 +161,24 @@ func (s *KeeperTestSuite) TestIncreaseTakerFeeTrackerForStakersAndCommunityPool(
 			s.Require().Equal(tc.initialTakerFeeForStakers, actualInitialTakerFeeForStakers)
 			s.Require().Equal(tc.initialTakerFeeForCommunityPool, actualInitialTakerFeeForCommunityPool)
 
-			s.App.PoolManagerKeeper.IncreaseTakerFeeTrackerForStakers(s.Ctx, tc.increaseTakerFeeForStakersBy)
-			s.App.PoolManagerKeeper.IncreaseTakerFeeTrackerForCommunityPool(s.Ctx, tc.increaseTakerFeeForCommunityPoolBy)
+			err := s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(s.Ctx, tc.increaseTakerFeeForStakersBy.Denom, tc.increaseTakerFeeForStakersBy.Amount)
+			s.Require().NoError(err)
+			err = s.App.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(s.Ctx, tc.increaseTakerFeeForCommunityPoolBy.Denom, tc.increaseTakerFeeForCommunityPoolBy.Amount)
+			s.Require().NoError(err)
+
+			expectedFinalTakerFeeForStakers := []sdk.Coin{}
+			expectedFinalTakerFeeForCommunityPool := []sdk.Coin{}
+			initialTakerFeeForStakersCoins := osmoutils.ConvertCoinArrayToCoins(tc.initialTakerFeeForStakers)
+			initialTakerFeeForCommunityPoolCoins := osmoutils.ConvertCoinArrayToCoins(tc.initialTakerFeeForCommunityPool)
+
+			expectedFinalTakerFeeForStakers = initialTakerFeeForStakersCoins.Add(sdk.NewCoins(tc.increaseTakerFeeForStakersBy)...)
+			expectedFinalTakerFeeForCommunityPool = initialTakerFeeForCommunityPoolCoins.Add(sdk.NewCoins(tc.increaseTakerFeeForCommunityPoolBy)...)
 
 			takerFeeForStakersAfterIncrease := s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx)
 			takerFeeForCommunityPoolAfterIncrease := s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx)
 
-			s.Require().Equal(tc.initialTakerFeeForStakers.Add(sdk.NewCoins(tc.increaseTakerFeeForStakersBy)...), takerFeeForStakersAfterIncrease)
-			s.Require().Equal(tc.initialTakerFeeForCommunityPool.Add(sdk.NewCoins(tc.increaseTakerFeeForCommunityPoolBy)...), takerFeeForCommunityPoolAfterIncrease)
+			s.Require().Equal(expectedFinalTakerFeeForStakers, takerFeeForStakersAfterIncrease)
+			s.Require().Equal(expectedFinalTakerFeeForCommunityPool, takerFeeForCommunityPoolAfterIncrease)
 		})
 	}
 }
