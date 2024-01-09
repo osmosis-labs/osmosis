@@ -11,8 +11,8 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-go/v7 v7.3.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109211933-17cb7c095403
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109211933-17cb7c095403
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109214800-856d6ce64d0c
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109214800-856d6ce64d0c
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
@@ -202,9 +202,9 @@ replace (
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/65d7acfdc2a94cc49837bb9abec462f129029540
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v21-osmo-6
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v21-osmo-6
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v22/v0.47.5, current branch: osmo-v22/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/bfa713aa3097abef67ebf3fc4b654dafc0a2ab8d
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v22-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
