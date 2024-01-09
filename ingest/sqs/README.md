@@ -1,12 +1,10 @@
-# Sidecar Query Server
+# Sidecar Query Server Ingester
 
-This is a sidecar query server that is used for performing query tasks outside of the main chain.
-The high-level architecture is that the chain reads data at the end of the block, parses it
-and then writes into a Redis instance.
+This is an implementation of the sidecar query server (SQS) ingester.
 
-The sidecar query server then reads the parsed data from Redis and serves it to the client
-via HTTP endpoints.
+Please find the sidecar query server [here](https://github.com/osmosis-labs/sqs)
 
+<<<<<<< HEAD
 The use case for this is performing certain data and computationally intensive tasks outside of
 the chain node or the clients. For example, routing falls under this category because it requires
 all pool data for performing the complex routing algorithm.
@@ -445,3 +443,6 @@ non-empty string, leading to the pool being deprioritized from the router.
 
 - How to handle atomicity between ticks and pools? E.g. let's say a block is written between the time initial pools are read
 and the time the ticks are read. Now, we have data that is partially up-to-date.
+=======
+SQS is meant to offload the query load from the chain node to a separate server. Primarily, we use it for swap routing.
+>>>>>>> ff62dbdf (refactor: sqs out-of-process (#7242))
