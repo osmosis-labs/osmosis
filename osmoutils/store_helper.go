@@ -235,9 +235,9 @@ func GetCoinArrayFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, store
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		bz := iterator.Value()
-		coin := sdk.Coin{}
-		if err := coin.Unmarshal(bz); err == nil {
-			coinArray = append(coinArray, coin)
+		sdkInt := osmomath.Int{}
+		if err := sdkInt.Unmarshal(bz); err == nil {
+			coinArray = append(coinArray, sdk.NewCoin(string(iterator.Key()), sdkInt))
 		}
 	}
 
@@ -255,12 +255,12 @@ func GetCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, sto
 		return sdk.NewCoin(denom, osmomath.ZeroInt()), nil
 	}
 
-	coin := sdk.Coin{}
-	if err := coin.Unmarshal(bz); err != nil {
+	sdkInt := osmomath.Int{}
+	if err := sdkInt.Unmarshal(bz); err != nil {
 		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
 	}
 
-	return coin, nil
+	return sdk.NewCoin(denom, sdkInt), nil
 }
 
 // IncreaseCoinByDenomFromPrefix increases the coin from the store that has the given prefix and denom by the specified amount.
@@ -274,7 +274,7 @@ func IncreaseCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey
 	}
 
 	coin.Amount = coin.Amount.Add(increasedAmt)
-	bz, err := coin.Marshal()
+	bz, err := coin.Amount.Marshal()
 	if err != nil {
 		return err
 	}
