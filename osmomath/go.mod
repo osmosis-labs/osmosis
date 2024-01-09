@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/math v1.1.3-rc.1
 	github.com/cosmos/cosmos-sdk v0.47.5
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109013044-559a74839c09
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109034818-d2a4cb704d18
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 
@@ -31,7 +31,6 @@ require (
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
