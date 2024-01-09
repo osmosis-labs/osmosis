@@ -191,6 +191,10 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 			return
 		}
 
+		if newConsensusParams.Block.MaxGas == -1 {
+			return
+		}
+
 		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		return
@@ -203,9 +207,13 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 			panic(err)
 		}
 
+		if newConsensusParams.Block.MaxGas == -1 {
+			return
+		}
+
 		// Sure, its possible that the thing that changes in consensus params was something other than the block gas limit,
 		// but just double setting it here is fine instead of doing more logic to see what actually changed.
-		newBlockMaxGas := newConsensusParams.Block.MaxGas
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		cachedConsParamBytes = consParamsBytes
 	}
