@@ -16,6 +16,7 @@ import (
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/viper"
 
 	cometbftdb "github.com/cometbft/cometbft-db"
 
@@ -92,11 +93,17 @@ type DenomUnitMap struct {
 	Exponent uint64 `json:"exponent"`
 }
 
+const (
+	consensusConfigName     = "consensus"
+	timeoutCommitConfigName = "timeout_commit"
+)
+
 var (
 	//go:embed "osmosis-1-assetlist.json" "osmo-test-5-assetlist.json"
-	assetFS   embed.FS
-	mainnetId = "osmosis-1"
-	testnetId = "osmo-test-5"
+	assetFS           embed.FS
+	mainnetId         = "osmosis-1"
+	testnetId         = "osmo-test-5"
+	fiveSecondsString = (5 * time.Second).String()
 )
 
 func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
@@ -402,7 +409,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 }
 
 // overwrites config.toml values if it exists, otherwise it writes the default config.toml
-func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error) {
+func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	// Get paths to config.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
 
@@ -412,11 +419,11 @@ func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error)
 	// Initialize default config
 	tmcConfig := tmcfg.DefaultConfig()
 
-	_, err := os.Stat(configFilePath)
+	fileInfo, err := os.Stat(configFilePath)
 	if err != nil {
 		// something besides a does not exist error
 		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+			return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
 		}
 
 		// It does not exist, so we update the default config.toml to update
@@ -426,33 +433,48 @@ func overwriteConfigTomlValues(serverCtx *server.Context) (*tmcfg.Config, error)
 	} else {
 		// config.toml exists
 
-		serverCtx.Viper.SetConfigType("toml")
-		serverCtx.Viper.SetConfigName("config")
-		serverCtx.Viper.AddConfigPath(configParentDirPath)
+		// Create a copy since the original viper from serverCtx
+		// contains app.toml config values that would get overwritten
+		// by ReadInConfig below.
+		viperCopy := viper.New()
+
+		viperCopy.SetConfigType("toml")
+		viperCopy.SetConfigName("config")
+		viperCopy.AddConfigPath(configParentDirPath)
 
 		// We read it in and modify the consensus timeout commit
 		// and write it back.
-		if err := serverCtx.Viper.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		if err := viperCopy.ReadInConfig(); err != nil {
+			return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		}
+
+		consensusValues := viperCopy.GetStringMapString(consensusConfigName)
+		timeoutCommitValue, ok := consensusValues[timeoutCommitConfigName]
+		if !ok {
+			return fmt.Errorf("failed to get %s.%s from %s: %w", consensusConfigName, timeoutCommitValue, configFilePath, err)
 		}
 
 		// The original default is 5s and is set in Cosmos SDK.
 		// We lower it to 4s for faster block times.
-		if serverCtx.Config.Consensus.TimeoutCommit == 5*time.Second {
+		if timeoutCommitValue == fiveSecondsString {
 			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
 		}
-		tmcConfig = serverCtx.Config
 
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
 			}
 		}()
-		// It will be re-read in server.InterceptConfigsPreRunHandler
-		// this may panic for permissions issues. So we catch the panic.
-		tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+
+		// Check if the file is writable
+		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+			// It will be re-read in server.InterceptConfigsPreRunHandler
+			// this may panic for permissions issues. So we catch the panic.
+			// Note that this exits with a non-zero exit code if fails to write the file.
+			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+		}
 	}
-	return tmcConfig, nil
+	return nil
 }
 
 func getHomeEnvironment() string {
@@ -537,49 +559,6 @@ is-enabled = "false"
 db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
 db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
 
-# Defines the web server configuration.
-server-address = "{{ .SidecarQueryServerConfig.ServerAddress }}"
-timeout-duration-secs = "{{ .SidecarQueryServerConfig.ServerTimeoutDurationSecs }}"
-
-# Defines the logger configuration.
-logger-filename = "{{ .SidecarQueryServerConfig.LoggerFilename }}"
-logger-is-production = "{{ .SidecarQueryServerConfig.LoggerIsProduction }}"
-logger-level = "{{ .SidecarQueryServerConfig.LoggerLevel }}"
-
-# Defines the gRPC gateway endpoint of the chain.
-grpc-gateway-endpoint = "{{ .SidecarQueryServerConfig.ChainGRPCGatewayEndpoint }}"
-
-# The list of preferred poold IDs in the router.
-# These pools will be prioritized in the candidate route selection, ignoring all other
-# heuristics such as TVL.
-preferred-pool-ids = "{{ .SidecarQueryServerConfig.Router.PreferredPoolIDs }}"
-
-# The maximum number of pools to be included in a single route.
-max-pools-per-route = "{{ .SidecarQueryServerConfig.Router.MaxPoolsPerRoute }}"
-
-# The maximum number of routes to be returned in candidate route search.
-max-routes = "{{ .SidecarQueryServerConfig.Router.MaxRoutes }}"
-
-# The maximum number of routes to be split across. Must be smaller than or
-# equal to max-routes.
-max-split-routes = "{{ .SidecarQueryServerConfig.Router.MaxSplitRoutes }}"
-
-# The maximum number of iterations to split a route across.
-max-split-iterations = "{{ .SidecarQueryServerConfig.Router.MaxSplitIterations }}"
-
-# The minimum liquidity of a pool to be included in a route.
-min-osmo-liquidity = "{{ .SidecarQueryServerConfig.Router.MinOSMOLiquidity }}"
-
-# The height interval at which the candidate routes are recomputed and updated in
-# Redis
-route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateHeightInterval }}"
-
-# Whether to enable candidate route caching in Redis.
-route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
-
-# The number of seconds to cache routes for before expiry.
-route-cache-expiry-seconds = "{{ .SidecarQueryServerConfig.Router.RouteCacheExpirySeconds }}"
-
 ###############################################################################
 ###              		       Wasm Configuration    					    ###
 ###############################################################################
@@ -635,7 +614,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 				serverCtx := server.GetServerContextFromCmd(cmd)
 
 				// overwrite config.toml values
-				_, err := overwriteConfigTomlValues(serverCtx)
+				err := overwriteConfigTomlValues(serverCtx)
 				if err != nil {
 					return err
 				}

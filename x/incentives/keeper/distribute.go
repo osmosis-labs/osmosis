@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
 	db "github.com/cometbft/cometbft-db"
@@ -14,6 +15,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 var (
@@ -670,13 +673,15 @@ func (k Keeper) distributeInternal(
 			// too expensive + verbose even in debug mode.
 			// ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
 
-			denomLockAmt := guaranteedNonzeroCoinAmountOf(lock.Coins, denom)
+			denomLockAmt := guaranteedNonzeroCoinAmountOf(lock.Coins, denom).BigIntMut()
 			for _, coin := range remainCoins {
-				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-				amtInt := coin.Amount.Mul(denomLockAmt)
+				amtInt := sdkmath.NewIntFromBigInt(denomLockAmt)
 				amtIntBi := amtInt.BigIntMut()
+				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+				amtIntBi = amtIntBi.Mul(amtIntBi, coin.Amount.BigIntMut())
+				checkBigInt(amtIntBi)
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
-				if amtInt.IsPositive() {
+				if amtInt.Sign() == 1 {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
 				}
@@ -708,8 +713,14 @@ func (k Keeper) distributeInternal(
 	return totalDistrCoins, err
 }
 
+func checkBigInt(bi *big.Int) {
+	if bi.BitLen() > sdkmath.MaxBitLen {
+		panic("overflow")
+	}
+}
+
 // faster coins.AmountOf if we know that coins must contain the denom.
-// returns a new sdk int that can be mutated.
+// returns a new big int that can be mutated.
 func guaranteedNonzeroCoinAmountOf(coins sdk.Coins, denom string) osmomath.Int {
 	if coins.Len() == 1 {
 		return coins[0].Amount
@@ -762,7 +773,7 @@ func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 }
 
 // getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
-func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []*lockuptypes.PeriodLock {
+func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock, scratchSlice *[]*lockuptypes.PeriodLock) []*lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
 	if gauge.Coins.Empty() {
 		return []*lockuptypes.PeriodLock{}
@@ -777,7 +788,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	// get this from memory instead of hitting iterators / underlying stores.
 	// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
 	allLocks := cache[distributeBaseDenom]
-	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
+	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration, scratchSlice)
 }
 
 // Distribute distributes coins from an array of gauges to all eligible locks and pools in the case of "NoLock" gauges.
@@ -788,10 +799,11 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
+	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 10000)
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
-		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
+		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache, &scratchSlice)
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
 		var err error
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {

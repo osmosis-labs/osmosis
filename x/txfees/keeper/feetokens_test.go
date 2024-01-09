@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,61 @@ func (s *KeeperTestSuite) TestBaseDenom() {
 	converted, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 	s.Require().True(converted.IsEqual(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestCalcFeeSpotPrice() {
+	s.SetupTest(false)
+
+	tests := []struct {
+		name       string
+		inputDenom string
+		expectPass bool
+		expectedSp osmomath.BigDec
+	}{
+		{
+			"calc spot price from balancer pool",
+			"foo",
+			true,
+			osmomath.NewBigDec(1),
+		},
+		{
+			"calc spot price from cl pool",
+			"eth",
+			true,
+			osmomath.NewBigDec(1),
+		},
+		{
+			"invalid denom",
+			"invalid-denom",
+			false,
+			osmomath.BigDec{},
+		},
+	}
+
+	for _, tc := range tests {
+		// we set up two pools here, one Balancer pool, one CL Pool
+		// then use different denoms for each pool to test
+		balancerPoolId := s.PrepareBalancerPoolWithCoins(
+			sdk.NewCoin("foo", osmomath.NewInt(10000000)),
+			sdk.NewCoin("stake", osmomath.NewInt(10000000)),
+		)
+		clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("eth", "stake")
+		clPoolId := clPool.GetId()
+
+		// register both denoms
+		err := s.ExecuteUpgradeFeeTokenProposal("foo", balancerPoolId)
+		s.Require().NoError(err)
+		err = s.ExecuteUpgradeFeeTokenProposal("eth", clPoolId)
+		s.Require().NoError(err)
+
+		sp, err := s.App.TxFeesKeeper.CalcFeeSpotPrice(s.Ctx, tc.inputDenom)
+		if tc.expectPass {
+			s.Require().NoError(err)
+			s.Require().True(sp.Equal(tc.expectedSp))
+		} else {
+			s.Require().Error(err)
+		}
+	}
 }
 
 func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
@@ -65,7 +121,7 @@ func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 		{
 			name:       "proposal with non-existent pool",
 			feeToken:   "foo",
-			poolId:     100000000000,
+			poolId:     10000000,
 			expectPass: false,
 		},
 		{
