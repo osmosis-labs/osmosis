@@ -29,19 +29,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231230033922-af0ba43e918a
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231230033922-af0ba43e918a
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231230033922-af0ba43e918a
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231230033922-af0ba43e918a
-=======
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109034818-d2a4cb704d18
-	github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108192026-6ccc0a29f77d
->>>>>>> ae036e8f (feat: extended app hash logs (#7253))
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.3.0
