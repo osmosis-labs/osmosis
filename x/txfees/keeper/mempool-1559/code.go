@@ -17,44 +17,46 @@ import (
 
 	 This logic does two things:
    - Maintaining data parsed from chain transaction execution and updating eipState accordingly.
-   - Resetting eipState to default every ResetInterval (3000) block height intervals to maintain consistency.
+   - Resetting eipState to default every ResetInterval (6000) block height intervals to maintain consistency.
 
    Additionally:
    - Periodically evaluating CheckTx and RecheckTx for compliance with these parameters.
 
-   Note: The reset interval is set to 3000 blocks, which is approximately 6 hours. Consider adjusting for a smaller time interval (e.g., 500 blocks = 1 hour) if necessary.
+   Note: The reset interval is set to 6000 blocks, which is approximately 8.5 hours.
 
    Challenges:
    - Transactions falling under their gas bounds are currently discarded by nodes. This behavior can be modified for CheckTx, rather than RecheckTx.
 
    Global variables stored in memory:
-   - DefaultBaseFee: Default base fee, initialized to 0.01.
+   - DefaultBaseFee: Default base fee, initialized to 0.005.
    - MinBaseFee: Minimum base fee, initialized to 0.0025.
    - MaxBaseFee: Maximum base fee, initialized to 5.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
 
    Global constants:
-   - TargetGas: Gas wanted per block, initialized to 75,000,000.
-   - ResetInterval: The interval at which eipState is reset, initialized to 3000 blocks.
+   - TargetGas: Gas wanted per block, initialized to .625 * block_gas_limt = 187.5 million.
+   - ResetInterval: The interval at which eipState is reset, initialized to 6000 blocks.
    - BackupFile: File for backup, set to "eip1559state.json".
-   - RecheckFeeConstant: A constant value for rechecking fees, initialized to 3.3.
+   - RecheckFeeConstant: A constant value for rechecking fees, initialized to 2.25.
 */
 
 var (
-	DefaultBaseFee = sdk.MustNewDecFromStr("0.01")
+	// We expect wallet multiplier * DefaultBaseFee < MinBaseFee * RecheckFeeConstant
+	// conservatively assume a wallet multiplier of at least 7%.
+	DefaultBaseFee = sdk.MustNewDecFromStr("0.0060")
 	MinBaseFee     = sdk.MustNewDecFromStr("0.0025")
 	MaxBaseFee     = sdk.MustNewDecFromStr("5")
+	ResetInterval  = int64(6000)
 
 	// Max increase per block is a factor of 1.06, max decrease is 9/10
-	// If recovering at ~30M gas per block, decrease is .94
+	// If recovering at ~30M gas per block, decrease is .916
 	MaxBlockChangeRate      = sdk.NewDec(1).Quo(sdk.NewDec(10))
 	TargetGas               = int64(187_500_000)
 	TargetBlockSpacePercent = sdk.MustNewDecFromStr("0.625")
-	// In face of continuous spam, will take ~19 blocks from base fee > spam cost, to mempool eviction
+	// In face of continuous spam, will take ~14 blocks from base fee > spam cost, to mempool eviction
 	// ceil(log_{1.06}(RecheckFeeConstant))
-	// So potentially 1.8 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
-	RecheckFeeConstant = "3.0"
-	ResetInterval      = int64(3000)
+	// So potentially 1.2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
+	RecheckFeeConstant = "2.25"
 )
 
 var RecheckFeeDec = sdk.MustNewDecFromStr(RecheckFeeConstant)
