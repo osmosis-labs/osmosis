@@ -49,27 +49,6 @@ func (k Keeper) IncrementNumberOfTrades(ctx sdk.Context) error {
 	return nil
 }
 
-// GetAllProfits returns all of the profits made by the ProtoRev module.
-func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
-	profits := make([]sdk.Coin, 0)
-
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		bz := iterator.Value()
-		profit := sdk.Coin{}
-		if err := profit.Unmarshal(bz); err == nil {
-			profits = append(profits, profit)
-		}
-	}
-
-	return profits
-}
-
-// GetProfitsByDenom returns the profits made by the ProtoRev module for the given denom.
-// If the denom is not found, a zero coin is returned.
 // GetProfitsByDenom returns the profits made by the ProtoRev module for the given denom
 func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProfitByDenom)
@@ -88,9 +67,23 @@ func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, erro
 	return profits, nil
 }
 
-// UpdateProfitsByDenom updates the profits made by the ProtoRev module for the given denom
-func (k Keeper) UpdateProfitsByDenom(ctx sdk.Context, denom string, tradeProfit osmomath.Int) error {
-	return osmoutils.IncreaseCoinByDenomFromPrefix(ctx, k.storeKey, types.KeyPrefixProfitByDenom, denom, tradeProfit)
+// GetAllProfits returns all of the profits made by the ProtoRev module.
+func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
+	profits := make([]sdk.Coin, 0)
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		bz := iterator.Value()
+		profit := sdk.Coin{}
+		if err := profit.Unmarshal(bz); err == nil {
+			profits = append(profits, profit)
+		}
+	}
+
+	return profits
 }
 
 func (k Keeper) SetCyclicArbProfitTrackerValue(ctx sdk.Context, cyclicArbProfits sdk.Coins) {
@@ -131,6 +124,22 @@ func (k Keeper) GetCyclicArbProfitTrackerStartHeight(ctx sdk.Context) int64 {
 // SetCyclicArbProfitTrackerStartHeight sets the height from which we started accounting for cyclic arb profits.
 func (k Keeper) SetCyclicArbProfitTrackerStartHeight(ctx sdk.Context, startHeight int64) {
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyCyclicArbTrackerStartHeight, &gogotypes.Int64Value{Value: startHeight})
+}
+
+// UpdateProfitsByDenom updates the profits made by the ProtoRev module for the given denom
+func (k Keeper) UpdateProfitsByDenom(ctx sdk.Context, denom string, tradeProfit osmomath.Int) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProfitByDenom)
+	key := types.GetKeyPrefixProfitByDenom(denom)
+
+	profits, _ := k.GetProfitsByDenom(ctx, denom)
+	profits.Amount = profits.Amount.Add(tradeProfit)
+	bz, err := profits.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(key, bz)
+	return nil
 }
 
 // GetAllRoutes returns all of the routes that the ProtoRev module has traded on
