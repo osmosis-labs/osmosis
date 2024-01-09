@@ -254,7 +254,7 @@ func GetCoinArrayFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, store
 // If the denom is not found, a zero coin is returned.
 func GetCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte, denom string) (sdk.Coin, error) {
 	store := prefix.NewStore(ctx.KVStore(storeKey), storePrefix)
-	key := append(storePrefix, []byte(denom)...)
+	key := []byte(fmt.Sprintf("%s%s%s", storePrefix, "|", []byte(denom)))
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
