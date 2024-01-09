@@ -31,6 +31,9 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/domain"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -96,10 +99,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v21/ingest"
 	"github.com/osmosis-labs/osmosis/v21/x/mint"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
 )
 
 const appName = "OsmosisApp"
@@ -260,7 +259,7 @@ func NewOsmosisApp(
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
-		sqsKeepers := common.SQSIngestKeepers{
+		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
 			BankKeeper:         app.BankKeeper,
