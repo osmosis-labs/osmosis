@@ -1,8 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -57,7 +55,6 @@ func (k Keeper) IterateDenomLiquidity(ctx sdk.Context, cb func(sdk.Coin) bool) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var amount osmomath.Int
-		fmt.Println(iterator.Value())
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			panic(err)
 		}
