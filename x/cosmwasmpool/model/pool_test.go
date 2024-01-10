@@ -69,7 +69,7 @@ func (s *CosmWasmPoolSuite) TestSpotPrice() {
 
 	// Make sure that gas charge before and after is not dropped
 	gasConsumed = gasConsumed - gasChargeBefore - gasChargeAfter
-	s.Require().Greater(gasConsumed, 0)
+	s.Require().Greater(gasConsumed, uint64(0))
 
 	s.Require().Equal(expectedSpotPrice, actualSpotPrice)
 
