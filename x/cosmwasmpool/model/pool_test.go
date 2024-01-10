@@ -46,14 +46,30 @@ func (s *CosmWasmPoolSuite) TestSpotPrice() {
 
 	pool := s.PrepareCosmWasmPool()
 
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1000000))
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(100000000))
+
+	const (
+		// Charge gas before the system under test method and make sure it is not dropped
+		gasChargeBefore = 1000000
+
+		// Charge gas after the system under test method and make sure it is not dropped
+		gasChargeAfter = 5555555
+	)
+
+	s.Ctx.GasMeter().ConsumeGas(gasChargeBefore, "gas charge before")
 
 	actualSpotPrice, err := pool.SpotPrice(s.Ctx, denomA, denomB)
 	s.Require().NoError(err)
 
+	s.Ctx.GasMeter().ConsumeGas(gasChargeAfter, "gas charge after")
+
 	// Validate that the gas was charged on the input context
-	endGas := s.Ctx.GasMeter().GasConsumed()
-	s.Require().NotZero(endGas)
+	gasConsumed := s.Ctx.GasMeter().GasConsumed()
+	s.Require().NotZero(gasConsumed)
+
+	// Make sure that gas charge before and after is not dropped
+	gasConsumed = gasConsumed - gasChargeBefore - gasChargeAfter
+	s.Require().NotZero(gasConsumed)
 
 	s.Require().Equal(expectedSpotPrice, actualSpotPrice)
 
