@@ -70,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7272](https://github.com/osmosis-labs/osmosis/pull/7272) Upgrade go 1.20 -> 1.21
 * [#7282](https://github.com/osmosis-labs/osmosis/pull/7282) perf:Update sdk fork to no longer utilize reverse denom mapping, reducing gas costs.
 * [#7203](https://github.com/osmosis-labs/osmosis/pull/7203) Make a maximum number of pools of 100 billion.
+* [#7282](https://github.com/osmosis-labs/osmosis/pull/7282) Update sdk fork to no longer utilize reverse denom mapping, reducing gas costs.
+* [#7291](https://github.com/osmosis-labs/osmosis/pull/7291) Raise mempool config's default max gas per tx configs.
 
 ## v21.2.2
 ### Features
