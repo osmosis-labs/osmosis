@@ -40,25 +40,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v21.2.1
-
-### API
-
-* [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
-
+## v21.2.2
 ### Features
+* [#7238](https://github.com/osmosis-labs/osmosis/pull/7238) re-add clawback vesting command
+* [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) feat: extended app hash logs 
 
-* [#6993](https://github.com/osmosis-labs/osmosis/pull/6993) feat(math): add mutative api for BigDec.BigInt()
-
-### Misc Improvements
-
-* [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
-* [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7093) Lower CPU overheads of the Osmosis epoch.
 
 ### Bug Fixes
-
 * [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values
+* [#7236](https://github.com/osmosis-labs/osmosis/pull/7236) fix: config overwrite fails with exit code 1 if wrong permissions
 * [#7246](https://github.com/osmosis-labs/osmosis/pull/7246) fix: config overwrite fails with exit code 1 if wrong permissions
+
+### Misc Improvements
+* [#7254](https://github.com/osmosis-labs/osmosis/pull/7254) chore: remove cl test modules 
+* [#7269](https://github.com/osmosis-labs/osmosis/pull/7269) chore: go mod dependency updates
+* [#7126](https://github.com/osmosis-labs/osmosis/pull/7126) refactor: using coins.Denoms() from sdk instead of osmoutils
+* [#7127](https://github.com/osmosis-labs/osmosis/pull/7127) refactor: replace MinCoins with sdk coins.Min()
+* [#7214](https://github.com/osmosis-labs/osmosis/pull/7214) Speedup more stable swap math operations
+
+## v21.2.1
+
+### Bug Fixes
+* [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values
 
 ## v21.1.5
 
