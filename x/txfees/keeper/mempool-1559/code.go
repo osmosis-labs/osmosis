@@ -65,13 +65,13 @@ var (
 	//
 	// For low base fees:
 	// In face of continuous spam, will take ~19 blocks from base fee > spam cost, to mempool eviction
-	// ceil(log_{1.06}(RecheckFeeConstantLowBaseFee)) (assumming base fee not going over threshold)
+	// ceil(log_{1.06}(RecheckFeeConstantLowBaseFee)) (assuming base fee not going over threshold)
 	// So potentially 1.2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
 	RecheckFeeConstantLowBaseFee = "3"
 	//
 	// For high base fees:
 	// In face of continuous spam, will take ~15 blocks from base fee > spam cost, to mempool eviction
-	// ceil(log_{1.06}(RecheckFeeConstantHighBaseFee)) (assumming base fee surpasses threshold)
+	// ceil(log_{1.06}(RecheckFeeConstantHighBaseFee)) (assuming base fee surpasses threshold)
 	RecheckFeeConstantHighBaseFee = "2.3"
 	// Note, the choice of 0.01 was made by observing base fee metrics on mainnet and selecting
 	// this value from Grafana dashboards. The observation is that below this threshold, we do not
@@ -190,7 +190,6 @@ func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 	// we apply a smaller recheck factor at higher base fees.
 	if baseFee.GT(RecheckFeeBaseFeeThreshold) {
 		return baseFee.QuoMut(RecheckFeeHighBaseFeeDec)
-
 	}
 
 	return baseFee.QuoMut(RecheckFeeLowBaseFeeDec)
