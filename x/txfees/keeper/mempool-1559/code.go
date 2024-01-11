@@ -53,13 +53,36 @@ var (
 	MaxBlockChangeRate      = sdk.NewDec(1).Quo(sdk.NewDec(10))
 	TargetGas               = int64(187_500_000)
 	TargetBlockSpacePercent = sdk.MustNewDecFromStr("0.625")
-	// In face of continuous spam, will take ~14 blocks from base fee > spam cost, to mempool eviction
-	// ceil(log_{1.06}(RecheckFeeConstant))
+
+	// N.B. on the reason for having two base fee constants for high and low fees:
+	//
+	// At higher base fees, we apply a smaller re-check factor.
+	// The reason for this is that the recheck factor forces the base fee to get at minimum
+	// "recheck factor" times higher than the spam rate. This leads to slow recovery
+	// and a bad UX for user transactions. We aim for spam to start getting evicted from the mempool
+	// sooner as to avoid more severe UX degradation for user transactions. Therefore,
+	// we apply a smaller recheck factor at higher base fees.
+	//
+	// For low base fees:
+	// In face of continuous spam, will take ~19 blocks from base fee > spam cost, to mempool eviction
+	// ceil(log_{1.06}(RecheckFeeConstantLowBaseFee)) (assumming base fee not going over threshold)
 	// So potentially 1.2 minutes of impaired UX from 1559 nodes on top of time to get to base fee > spam.
-	RecheckFeeConstant = "2.25"
+	RecheckFeeConstantLowBaseFee = "3"
+	//
+	// For high base fees:
+	// In face of continuous spam, will take ~15 blocks from base fee > spam cost, to mempool eviction
+	// ceil(log_{1.06}(RecheckFeeConstantHighBaseFee)) (assumming base fee surpasses threshold)
+	RecheckFeeConstantHighBaseFee = "2.3"
+	// Note, the choice of 0.01 was made by observing base fee metrics on mainnet and selecting
+	// this value from Grafana dashboards. The observation is that below this threshold, we do not
+	// observe user UX degradation. Therefore, we keep the original recheck factor.
+	RecheckFeeBaseFeeThreshold = sdk.MustNewDecFromStr("0.01")
 )
 
-var RecheckFeeDec = sdk.MustNewDecFromStr(RecheckFeeConstant)
+var (
+	RecheckFeeLowBaseFeeDec  = sdk.MustNewDecFromStr(RecheckFeeConstantLowBaseFee)
+	RecheckFeeHighBaseFeeDec = sdk.MustNewDecFromStr(RecheckFeeConstantHighBaseFee)
+)
 
 const (
 	BackupFilename = "eip1559state.json"
@@ -157,7 +180,20 @@ func (e *EipState) GetCurBaseFee() osmomath.Dec {
 // GetCurRecheckBaseFee returns a clone of the CurBaseFee / RecheckFeeConstant to account for
 // rechecked transactions in the feedecorator ante handler
 func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
-	return e.CurBaseFee.Clone().Quo(RecheckFeeDec)
+	baseFee := e.CurBaseFee.Clone()
+
+	// At higher base fees, we apply a smaller re-check factor.
+	// The reason for this is that the recheck factor forces the base fee to get at minimum
+	// "recheck factor" times higher than the spam rate. This leads to slow recovery
+	// and a bad UX for user transactions. We aim for spam to start getting evicted from the mempool
+	// sooner as to avoid more severe UX degradation for user transactions. Therefore,
+	// we apply a smaller recheck factor at higher base fees.
+	if baseFee.GT(RecheckFeeBaseFeeThreshold) {
+		return baseFee.QuoMut(RecheckFeeHighBaseFeeDec)
+
+	}
+
+	return baseFee.QuoMut(RecheckFeeLowBaseFeeDec)
 }
 
 var rwMtx = sync.Mutex{}
