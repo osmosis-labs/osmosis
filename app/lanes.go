@@ -44,13 +44,13 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		MaxTxs:          maxTxPerLane,
 	}
 
-	// Create a free configuration that accepts 1000 transactions and consumes 20% of the
+	// Create a free configuration that accepts 1000 transactions and consumes 5% of the
 	// block space.
 	freeConfig := base.LaneConfig{
 		Logger:          app.Logger(),
 		TxEncoder:       txConfig.TxEncoder(),
 		TxDecoder:       txConfig.TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
+		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.05"),
 		SignerExtractor: signerAdapter,
 		MaxTxs:          1000,
 	}
@@ -61,7 +61,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		Logger:          app.Logger(),
 		TxEncoder:       txConfig.TxEncoder(),
 		TxDecoder:       txConfig.TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.6"),
+		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.75"),
 		SignerExtractor: signerAdapter,
 		MaxTxs:          1000,
 	}
@@ -76,7 +76,8 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	// Create the final match handler for the free lane.
 	freeMatchHandler := freelane.DefaultMatchHandler()
 
-	// Create the final match handler for the default lane.
+	// Create the final match handler for the default lane. I.e this will direct all txs that are
+	// not free nor mev to this lane
 	defaultMatchHandler := base.DefaultMatchHandler()
 
 	// 4. Create the lanes.
