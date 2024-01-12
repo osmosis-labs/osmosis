@@ -336,11 +336,16 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		},
 		time.Minute,
 		10*time.Millisecond,
-		fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
-			success, command, outBuf.String(), errBuf.String(), err),
 	)
 
-	return outBuf, errBuf, nil
+	if !t.Failed() {
+		return outBuf, errBuf, nil
+	} else {
+		require.FailNow(t, fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			success, command, outBuf.String(), errBuf.String(), err))
+		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			success, command, outBuf.String(), errBuf.String(), err)
+	}
 }
 
 func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, returnAsJson bool) (bytes.Buffer, bytes.Buffer, error) {
