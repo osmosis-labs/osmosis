@@ -64,10 +64,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 * [#7120](https://github.com/osmosis-labs/osmosis/pull/7120) fix: remove duplicate `query gamm pool` subcommand
-* [#7139](https://github.com/osmosis-labs/osmosis/pull/7139) fix: add amino signing support to tokenfactory messages 
+* [#7139](https://github.com/osmosis-labs/osmosis/pull/7139) fix: add amino signing support to tokenfactory messages
 * [#7245](https://github.com/osmosis-labs/osmosis/pull/7245) fix: correcting json tag value for `SwapAmountOutSplitRouteWrapper.OutDenom`
 * [#7267](https://github.com/osmosis-labs/osmosis/pull/7267) fix: support CL pools in tx fee module
 * [#7220](https://github.com/osmosis-labs/osmosis/pull/7220) Register consensus params; Set MaxGas to 300m and MaxBytes to 5mb.
+* [#7300](https://github.com/osmosis-labs/osmosis/pull/7300) fix: update wasm vm as per CWA-2023-004
 
 ### Misc Improvements
 * [#6993](https://github.com/osmosis-labs/osmosis/pull/6993) chore: add mutative api for BigDec.BigInt()
