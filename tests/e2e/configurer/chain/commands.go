@@ -338,7 +338,7 @@ func (n *NodeConfig) SubmitProposal(cmdArgs []string, isExpedited bool, propDesc
 	proposalID, err := extractProposalIdFromResponse(resp.String())
 	require.NoError(n.t, err)
 
-	n.LogActionF("successfully submitted proposal: %s", propDescriptionForLogs)
+	n.LogActionF("successfully submitted proposal: %d. %s", proposalID, propDescriptionForLogs)
 
 	return proposalID
 }

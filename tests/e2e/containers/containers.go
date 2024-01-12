@@ -234,7 +234,10 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				User:         "root",
 				Cmd:          command,
 			})
-			require.NoError(t, err)
+			if err != nil {
+				t.Logf("Command execution error: %v", err)
+				return false
+			}
 
 			err = m.pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
