@@ -1242,8 +1242,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/cometbft v0.37.2-v21-osmo-1 h1:dAPp/n4+qqbJgPkMXcU+M0xUWWywHiOrW9RF3zLBbsI=
 github.com/osmosis-labs/cometbft v0.37.2-v21-osmo-1/go.mod h1:Y2MMMN//O5K4YKd8ze4r9jmk4Y7h0ajqILXbH5JQFVs=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-1 h1:w9+2/qQx3qBZKvkLEzP5OWEPz/CPllYLVK0yxvbCDmo=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-1/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-2 h1:Kn94XEG9pMiiFwttyt/oLayZfY9/3pIKyrK9TBIB+fU=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-2/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8 h1:jm6D5UgzQ0GQGtyFezs7tQRgwakf3cTBsE8oJIQdPZE=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8/go.mod h1:4iPfmy6R0qbImLe5urBLS0thndfLxfmHOdnYboDS1Qo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8 h1:CdRBGDP9NtrnLzeimUNjwFkMkYpfboGQK9cZW073onA=
