@@ -173,6 +173,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // Then, on every block, we check if the current consensus param bytes have changed in comparison to the cached value.
 // If they have, we unmarshal the current consensus params, update the target gas, and cache the value.
 // This is done to improve performance by not having to fetch and unmarshal the consensus params on every block.
+// TODO: Move this to EIP-1559 code
 func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 	// Check if the block gas limit has changed.
 	// If it has, update the target gas for eip1559.
