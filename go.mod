@@ -32,7 +32,7 @@ require (
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.4
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
 	github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240115211355-a4b77e29288d
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
