@@ -23,17 +23,18 @@ import (
 
 	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
+
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v22/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 )
 
 // BlockSDKAnteHandlerParams are the parameters necessary to configure the block-sdk antehandlers
 type BlockSDKAnteHandlerParams struct {
-	freeLane block.Lane
-	mevLane auctionante.MEVLane
+	freeLane      block.Lane
+	mevLane       auctionante.MEVLane
 	auctionKeeper auctionkeeper.Keeper
-	txConfig client.TxConfig
+	txConfig      client.TxConfig
 }
 
 // Link to default ante handler used by cosmos sdk:

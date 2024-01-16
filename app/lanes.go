@@ -41,7 +41,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		TxDecoder:       txConfig.TxDecoder(),
 		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
 		SignerExtractor: signerAdapter,
-		MaxTxs:          maxTxPerLane,
+		MaxTxs:          maxTxPerMEVLane,
 	}
 
 	// Create a free configuration that accepts 1000 transactions and consumes 5% of the
@@ -52,7 +52,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		TxDecoder:       txConfig.TxDecoder(),
 		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.05"),
 		SignerExtractor: signerAdapter,
-		MaxTxs:          1000,
+		MaxTxs:          maxTxPerFreeLane,
 	}
 
 	// Create a default configuration that accepts 1000 transactions and consumes 60% of the
@@ -63,7 +63,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		TxDecoder:       txConfig.TxDecoder(),
 		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.75"),
 		SignerExtractor: signerAdapter,
-		MaxTxs:          1000,
+		MaxTxs:          maxTxPerDefaultLane,
 	}
 
 	// 3. Create the match handlers for each lane. These match handlers determine whether or not
