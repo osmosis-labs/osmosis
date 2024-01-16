@@ -31,8 +31,8 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.8
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.4
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
-	github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240115211355-a4b77e29288d
+	github.com/osmosis-labs/sqs v0.0.0-20240116020611-aadf5f1ce0e8
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
@@ -77,7 +77,6 @@ require (
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
@@ -101,7 +100,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/ghostiam/protogetter v0.2.3 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
@@ -119,7 +117,6 @@ require (
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/linxGnu/grocksdb v1.7.16 // indirect
 	github.com/macabu/inamedparam v0.1.2 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
@@ -391,10 +388,9 @@ replace (
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	// We explicitly use commits from the `adam/v22.x` branch in https://github.com/osmosis-labs/sqs
-	github.com/osmosis-labs/sqs => github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4
-
+	// We explicitly use commits from the `v22.x` branch in https://github.com/osmosis-labs/sqs
+	github.com/osmosis-labs/sqs => github.com/osmosis-labs/sqs v0.0.0-20240116020611-aadf5f1ce0e8
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
