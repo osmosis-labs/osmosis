@@ -185,7 +185,7 @@ pub struct SwapExactAmountOutResponseData {
 }
 ```
 
-````rs
+```rs
 #[entry_point]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMessage) -> Result<Response, ContractError> {
     match msg {
@@ -218,7 +218,7 @@ On contract's sudo endpoint, `SetActive` can be called to deactivate the pool. T
 SetActive {
     is_active: bool,
 }
-````
+```
 
 (TBD) On how to handle the deactivation operationally.
 
