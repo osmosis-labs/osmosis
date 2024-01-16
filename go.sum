@@ -1511,10 +1511,10 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.4 h1:5c5LQpjN+XpbhXobC4VG3V6/+4O3b
 github.com/osmosis-labs/osmosis/x/epochs v0.0.4/go.mod h1:mTga2OJuy+RBhYvJUDJe9fdCZ4RBtM6ISvJrQzvFFAI=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10 h1:s4Y1ZeOmQ+iTgODCbnuge0mcBeyOtZF80Q5nmqu8Tio=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10/go.mod h1:G3FNk7hOfmKKHP5aaDShRi93i3c7s6jok+gPS7It9rI=
-github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4 h1:9eDKKZ3xmz+idc+XO/GkMSNwnFuDBg0uguvXAlPp8O0=
-github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4/go.mod h1:tvG1qt+zMgJQlO9WgXeLFRTrdAJwn+6dCP+kD++XlSc=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4 h1:4n4vQLSPO33ERyD0cfgin43wr/6xUr0OYNdJ3o7gyDw=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4/go.mod h1:7FPqvWK81ZHmOLQV+9i0YEBFMKxF8/vhAp845vdcRcU=
+github.com/osmosis-labs/sqs v0.0.0-20240116063454-00008640021a h1:eDNC4wnN7MfIX5S2JsLgQyhe4xr78pno/tjt5gjURuU=
+github.com/osmosis-labs/sqs v0.0.0-20240116063454-00008640021a/go.mod h1:NFFJDtSVAIN8sCidXx36pEzrkzsb+GPlwGrQq63r7/w=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116063454-00008640021a h1:aITzO8vyH0yLclwadWvKcFfL/fxJDVJC9z6cA15w9zA=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116063454-00008640021a/go.mod h1:DGTrubB1KaLPfskOHHmjJYbvk3VPBpnK9o24f9JRytg=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
