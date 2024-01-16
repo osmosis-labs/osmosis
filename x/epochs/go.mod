@@ -141,7 +141,6 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.8 // indirect
-	github.com/osmosis-labs/osmosis/v21 v21.2.1 // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20240109225011-e09c4d480bf0 // indirect
 	github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d // indirect
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240108192026-6ccc0a29f77d // indirect
