@@ -11,12 +11,12 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v21/app/keepers"
-	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
-	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v22/app/keepers"
+	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
+	twaptypes "github.com/osmosis-labs/osmosis/v22/x/twap/types"
 )
 
 // We set the app version to pre-upgrade because it will be incremented by one
@@ -76,11 +76,12 @@ func CreateUpgradeHandler(
 		// Initialize TWAP state
 		// N.B.: deprecation nolint
 		// nolint: staticcheck
-		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
-		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
-		if err != nil {
-			return nil, err
-		}
+		// Note: left for historic reasons.
+		// latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		// err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		// Set TWAP parameters to default values.
 		keepers.TwapKeeper.SetParams(ctx, twaptypes.DefaultParams())

@@ -1,12 +1,15 @@
 package osmoutils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 
 	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -221,4 +224,63 @@ func DeleteAllKeysFromPrefix(store store.KVStore, prefixKey []byte) {
 	for ; iter.Valid(); iter.Next() {
 		prefixStore.Delete(iter.Key())
 	}
+}
+
+// GetCoinArrayFromPrefix returns all coins from the store that has the given prefix.
+func GetCoinArrayFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte) []sdk.Coin {
+	coinArray := make([]sdk.Coin, 0)
+
+	store := ctx.KVStore(storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, storePrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		bz := iterator.Value()
+		sdkInt := osmomath.Int{}
+		if err := sdkInt.Unmarshal(bz); err == nil {
+			denom := bytes.TrimPrefix(iterator.Key(), storePrefix)
+			coinArray = append(coinArray, sdk.NewCoin(string(denom), sdkInt))
+		}
+	}
+
+	return coinArray
+}
+
+// GetCoinByDenomFromPrefix returns the coin from the store that has the given prefix and denom.
+// If the denom is not found, a zero coin is returned.
+func GetCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte, denom string) (sdk.Coin, error) {
+	store := prefix.NewStore(ctx.KVStore(storeKey), storePrefix)
+	key := []byte(denom)
+
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), nil
+	}
+
+	sdkInt := osmomath.Int{}
+	if err := sdkInt.Unmarshal(bz); err != nil {
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
+	}
+
+	return sdk.NewCoin(denom, sdkInt), nil
+}
+
+// IncreaseCoinByDenomFromPrefix increases the coin from the store that has the given prefix and denom by the specified amount.
+func IncreaseCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte, denom string, increasedAmt osmomath.Int) error {
+	store := prefix.NewStore(ctx.KVStore(storeKey), storePrefix)
+	key := []byte(denom)
+
+	coin, err := GetCoinByDenomFromPrefix(ctx, storeKey, storePrefix, denom)
+	if err != nil {
+		return err
+	}
+
+	coin.Amount = coin.Amount.Add(increasedAmt)
+	bz, err := coin.Amount.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(key, bz)
+	return nil
 }

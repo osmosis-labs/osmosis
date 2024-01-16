@@ -14,19 +14,19 @@ import (
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/app/keepers"
-	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v22/app/keepers"
+	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v22/x/tokenfactory/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v22/x/twap/types"
 
 	// SDK v47 modules
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -168,7 +168,7 @@ func CreateUpgradeHandler(
 		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
 		// that generates protocol rev.
 		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
+		// keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
 		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
 		// This will allow us to display the amount of cyclic arb profits that have been generated from a certain block height.
 		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)

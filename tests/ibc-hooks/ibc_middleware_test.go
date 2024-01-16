@@ -17,12 +17,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -33,9 +33,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v22/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v21/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v22/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {

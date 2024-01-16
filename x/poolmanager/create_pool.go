@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 // validateCreatedPool checks that the pool was created with the correct pool ID and address.
@@ -99,6 +99,9 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 
 	// Get the next pool ID and increment the pool ID counter.
 	poolId := k.getNextPoolIdAndIncrement(ctx)
+	if poolId >= types.MaxPoolId {
+		return nil, fmt.Errorf("next pool ID %d is greater than max pool ID %d", poolId, types.MaxPoolId)
+	}
 
 	poolType := msg.GetPoolType()
 

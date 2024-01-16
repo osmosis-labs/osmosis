@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	time "time"
@@ -58,13 +59,17 @@ func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 
 // TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
 func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uint64, denom1, denom2 string) []byte {
+	var buffer bytes.Buffer
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", HistoricalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
+	fmt.Fprintf(&buffer, "%s%s%s%d%s%s%s%s", HistoricalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2)
+	return buffer.Bytes()
 }
 
 func FormatHistoricalPoolIndexTWAPKey(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
+	var buffer bytes.Buffer
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS)
+	return buffer.Bytes()
 }
 
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {

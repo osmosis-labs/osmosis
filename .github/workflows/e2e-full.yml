@@ -37,7 +37,7 @@ jobs:
 
   e2e:
     needs: get_diff
-    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' && needs.get_diff.outputs.git_diff }}
+    if: needs.get_diff.outputs.git_diff
     runs-on: self-hosted
     timeout-minutes: 20
     steps:

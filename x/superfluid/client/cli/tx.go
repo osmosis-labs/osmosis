@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,8 +21,8 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -137,9 +137,6 @@ func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
@@ -177,9 +174,6 @@ func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
-				return err
-			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -338,9 +332,6 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
-				return err
-			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 

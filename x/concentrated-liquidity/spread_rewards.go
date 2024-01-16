@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 )
 
 var emptyCoins = sdk.DecCoins(nil)
@@ -193,6 +193,7 @@ func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, pos
 		sdk.NewEvent(
 			types.TypeEvtCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.GetId(), 10)),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, spreadRewardsClaimed.String()),
 		),
