@@ -393,7 +393,7 @@ replace (
 
 	// We explicitly use commits from the `osmosis-main` branch in https://github.com/osmosis-labs/sqs
 	github.com/osmosis-labs/sqs => github.com/osmosis-labs/sqs v0.0.0-20240116064048-1799b9602f25
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116064048-1799b9602f25
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240117211436-492460d701f6
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
