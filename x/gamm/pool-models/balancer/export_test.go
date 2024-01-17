@@ -3,7 +3,7 @@ package balancer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 )
 
 const (

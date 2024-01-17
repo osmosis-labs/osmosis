@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"

@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"

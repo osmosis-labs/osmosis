@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmomath "github.com/osmosis-labs/osmosis/osmomath"
+	osmomath "github.com/osmosis-labs/osmosis/v22/osmomath"
 )
 
 /*

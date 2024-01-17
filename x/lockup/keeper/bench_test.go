@@ -9,8 +9,8 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

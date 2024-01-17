@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"

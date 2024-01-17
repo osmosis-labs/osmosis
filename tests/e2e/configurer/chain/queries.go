@@ -20,7 +20,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"

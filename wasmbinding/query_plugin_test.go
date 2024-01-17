@@ -19,8 +19,8 @@ import (
 	proto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're intentionally using this deprecated package to be compatible with cosmos protos
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
 	gammv2types "github.com/osmosis-labs/osmosis/v22/x/gamm/v2types"
 

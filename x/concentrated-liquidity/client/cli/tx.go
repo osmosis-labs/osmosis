@@ -15,7 +15,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmocli"
 	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"

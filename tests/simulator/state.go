@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	osmosim "github.com/osmosis-labs/osmosis/v22/simulation/executor"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
 

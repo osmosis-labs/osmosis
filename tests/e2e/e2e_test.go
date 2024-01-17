@@ -18,7 +18,7 @@ import (
 
 	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v22/x/ibc-rate-limit/types"

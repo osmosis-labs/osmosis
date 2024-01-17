@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"

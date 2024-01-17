@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	incentivetypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v22/x/tokenfactory/types"

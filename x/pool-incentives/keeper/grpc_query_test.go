@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"

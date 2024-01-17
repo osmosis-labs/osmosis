@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"

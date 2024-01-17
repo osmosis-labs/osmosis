@@ -22,7 +22,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
 	simulation "github.com/osmosis-labs/osmosis/v22/x/tokenfactory/simulation"
 

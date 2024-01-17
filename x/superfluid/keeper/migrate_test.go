@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"

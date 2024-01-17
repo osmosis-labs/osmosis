@@ -17,7 +17,7 @@ import (
 	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

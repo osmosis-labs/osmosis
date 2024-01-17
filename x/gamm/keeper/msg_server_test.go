@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"

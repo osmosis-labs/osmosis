@@ -5,9 +5,11 @@ import (
 	fmt "fmt"
 	time "time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
@@ -138,7 +140,7 @@ func (p Pool) GetToken1() string {
 }
 
 // GetCurrentSqrtPrice returns the current sqrt price of the pool
-func (p Pool) GetCurrentSqrtPrice() osmomath.BigDec {
+func (p Pool) GetCurrentSqrtPrice() math.LegacyDec {
 	return p.CurrentSqrtPrice
 }
 

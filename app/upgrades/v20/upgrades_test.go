@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 	v20 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v20"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
 )

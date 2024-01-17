@@ -15,7 +15,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	txfeetypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"

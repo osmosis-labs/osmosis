@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/initialization"
 	txfeestypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 )

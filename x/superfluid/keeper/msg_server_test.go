@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	v8constants "github.com/osmosis-labs/osmosis/v22/app/upgrades/v8/constants"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"

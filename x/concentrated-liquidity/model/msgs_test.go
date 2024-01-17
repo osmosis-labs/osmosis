@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v22/app/params"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 )

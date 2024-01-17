@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	valPref "github.com/osmosis-labs/osmosis/v22/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v22/x/valset-pref/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v22/x/valset-pref/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 type QueryTestSuite struct {

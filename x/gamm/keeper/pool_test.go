@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"

@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"

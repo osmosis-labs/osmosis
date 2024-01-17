@@ -9,8 +9,8 @@ import (
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v22/app/params"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"

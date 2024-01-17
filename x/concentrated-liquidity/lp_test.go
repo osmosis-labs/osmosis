@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"

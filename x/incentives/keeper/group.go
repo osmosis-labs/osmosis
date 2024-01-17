@@ -7,7 +7,7 @@ import (
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"

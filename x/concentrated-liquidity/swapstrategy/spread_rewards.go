@@ -3,7 +3,7 @@ package swapstrategy
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 )
 
 // computeSpreadRewardChargePerSwapStepOutGivenIn returns the total spread factor charge per swap step given the parameters.

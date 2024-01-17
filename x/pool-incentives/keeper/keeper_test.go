@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"

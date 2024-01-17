@@ -8,7 +8,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
 )

@@ -9,7 +9,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	osmomath "github.com/osmosis-labs/osmosis/osmomath"
+	osmomath "github.com/osmosis-labs/osmosis/v22/osmomath"
 	types0 "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 

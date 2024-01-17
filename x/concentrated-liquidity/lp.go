@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"
 	types "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"

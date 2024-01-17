@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v22/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/lockup/types"

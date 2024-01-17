@@ -16,7 +16,7 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/noapptest"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"

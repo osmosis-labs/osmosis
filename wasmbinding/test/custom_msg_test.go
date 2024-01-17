@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	"github.com/stretchr/testify/require"
 

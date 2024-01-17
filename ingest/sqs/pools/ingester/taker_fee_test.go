@@ -3,8 +3,8 @@ package poolsingester_test
 import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	poolsingester "github.com/osmosis-labs/osmosis/v22/ingest/sqs/pools/ingester"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 )
 
 var (

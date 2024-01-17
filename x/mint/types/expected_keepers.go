@@ -1,7 +1,7 @@
 package types // noalias
 
 import (
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

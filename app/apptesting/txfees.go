@@ -11,7 +11,7 @@ import (
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 )

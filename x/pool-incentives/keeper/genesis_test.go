@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	simapp "github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 	pool_incentives "github.com/osmosis-labs/osmosis/v22/x/pool-incentives"
 	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"

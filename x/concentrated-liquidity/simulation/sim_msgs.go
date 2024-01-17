@@ -8,8 +8,8 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v22/app/params"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
 	sdkrand "github.com/osmosis-labs/osmosis/v22/simulation/simtypes/random"
 	clkeeper "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"

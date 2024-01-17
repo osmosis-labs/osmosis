@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	osmoapp "github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/lockup"
 	"github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 

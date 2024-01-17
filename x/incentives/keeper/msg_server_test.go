@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"

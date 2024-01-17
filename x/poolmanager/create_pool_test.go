@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	cwmodel "github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"

@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	cosmwasmutils "github.com/osmosis-labs/osmosis/v22/osmoutils/cosmwasm"
 )
 

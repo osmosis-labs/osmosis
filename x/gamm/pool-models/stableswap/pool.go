@@ -9,7 +9,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"

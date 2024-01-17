@@ -3,7 +3,7 @@ package types
 import (
 	fmt "fmt"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 )
 

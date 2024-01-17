@@ -8,7 +8,7 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 )
 
 const (

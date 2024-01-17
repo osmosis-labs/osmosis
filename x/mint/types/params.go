@@ -7,7 +7,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v22/x/valset-pref/types"
 )

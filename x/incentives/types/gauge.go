@@ -3,7 +3,7 @@ package types
 import (
 	time "time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

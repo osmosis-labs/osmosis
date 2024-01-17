@@ -13,9 +13,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 	v17 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"

@@ -23,7 +23,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/stableswap"

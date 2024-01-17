@@ -6,7 +6,7 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 

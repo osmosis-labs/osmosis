@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	poolmanagercli "github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/cli"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 

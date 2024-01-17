@@ -11,8 +11,8 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/tidwall/gjson"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )

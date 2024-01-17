@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosisapp "github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"

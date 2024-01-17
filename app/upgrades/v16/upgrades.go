@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/keepers"
 	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

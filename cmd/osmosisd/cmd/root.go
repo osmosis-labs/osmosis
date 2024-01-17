@@ -20,9 +20,9 @@ import (
 
 	cometbftdb "github.com/cometbft/cometbft-db"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/params"
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"

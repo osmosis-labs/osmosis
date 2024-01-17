@@ -31,8 +31,8 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosisApp "github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/util"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cast"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )

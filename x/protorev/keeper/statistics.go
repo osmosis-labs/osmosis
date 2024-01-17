@@ -9,7 +9,7 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"

@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
 )

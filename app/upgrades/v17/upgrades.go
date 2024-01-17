@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	errorsmod "cosmossdk.io/errors"

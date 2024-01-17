@@ -13,8 +13,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 
 	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"

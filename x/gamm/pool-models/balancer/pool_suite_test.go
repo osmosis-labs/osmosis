@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 	v10 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"

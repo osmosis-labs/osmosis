@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
