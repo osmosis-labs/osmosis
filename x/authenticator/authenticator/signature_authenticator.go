@@ -72,12 +72,15 @@ func (sva SignatureVerificationAuthenticator) Initialize(
 	return sva, nil
 }
 
+type Tx struct {
+}
+
 // SignatureData is used to package all the signature data and the tx
 // for use in the Authenticate function
 type SignatureData struct {
 	Signers    []sdk.AccAddress
 	Signatures []signing.SignatureV2
-	Tx         authsigning.Tx
+	Tx         sdk.Tx
 	Simulate   bool
 }
 

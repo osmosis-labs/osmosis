@@ -9,4 +9,6 @@ option go_package = "github.com/osmosis-labs/osmosis/v21/x/authenticator/types";
 message Params {
   uint64 maximum_unauthenticated_gas = 1
       [ (gogoproto.moretags) = "yaml:\"maximum_unauthenticated_gas\"" ];
+  string cosigner_contract = 2
+      [ (gogoproto.moretags) = "yaml:\"cosigner_contract\"" ];
 }

@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -426,9 +427,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 //	s.Require().True(authentication.IsAuthenticated())
 //}
 
-// GenTx generates a signed mock transaction.
-func GenTx(
-	gen client.TxConfig,
+func MakeTxBuilder(gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
 	gas uint64,
@@ -437,8 +436,8 @@ func GenTx(
 	accSeqs []uint64,
 	signers []cryptotypes.PrivKey,
 	signatures []cryptotypes.PrivKey,
-) (sdk.Tx, error) {
-	sigs := make([]signing.SignatureV2, len(signers))
+) (client.TxBuilder, error) {
+	sigs := make([]signing.SignatureV2, len(signatures))
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -491,6 +490,91 @@ func GenTx(
 		if err != nil {
 			panic(err)
 		}
+	}
+	return tx, nil
+}
+
+// GenTx generates a signed mock transaction.
+func GenTx(
+	gen client.TxConfig,
+	msgs []sdk.Msg,
+	feeAmt sdk.Coins,
+	gas uint64,
+	chainID string,
+	accNums,
+	accSeqs []uint64,
+	signers []cryptotypes.PrivKey,
+	signatures []cryptotypes.PrivKey,
+) (sdk.Tx, error) {
+	tx, err := MakeTxBuilder(gen, msgs, feeAmt, gas, chainID, accNums, accSeqs, signers, signatures)
+	if err != nil {
+		return nil, err
+	}
+	return tx.GetTx(), nil
+}
+
+func GenTxWithCosigner(
+	gen client.TxConfig,
+	msg sdk.Msg,
+	feeAmt sdk.Coins,
+	gas uint64,
+	chainID string,
+	accNum,
+	accSeq uint64,
+	signer cryptotypes.PrivKey,
+	signature cryptotypes.PrivKey,
+	cosigner cryptotypes.PrivKey,
+	salt []byte,
+) (sdk.Tx, error) {
+	tx, err := MakeTxBuilder(gen, []sdk.Msg{msg}, feeAmt, gas, chainID, []uint64{accNum}, []uint64{accSeq}, []cryptotypes.PrivKey{signer}, []cryptotypes.PrivKey{signature})
+	if err != nil {
+		return nil, err
+	}
+	signMode := gen.SignModeHandler().DefaultMode()
+
+	// Override signatures
+	sigs := []signing.SignatureV2{
+		signing.SignatureV2{
+			PubKey: signature.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode: signMode,
+			},
+			Sequence: accSeq,
+		},
+		signing.SignatureV2{
+			PubKey: cosigner.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode: signMode,
+			},
+			Sequence: accSeq,
+		},
+	}
+	signerData := authsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      accSeq,
+	}
+	signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+	if err != nil {
+		panic(err)
+	}
+	sig, err := signer.Sign(signBytes)
+	if err != nil {
+		panic(err)
+	}
+	sigs[0].Data.(*signing.SingleSignatureData).Signature = sig
+
+	sig2, err := cosigner.Sign(append(signBytes, salt...))
+	if err != nil {
+		panic(err)
+	}
+
+	finalSig := []byte(fmt.Sprintf(`{"salt": %s, "signature": %s}`, salt, sig2))
+
+	sigs[1].Data.(*signing.SingleSignatureData).Signature = finalSig
+	err = tx.SetSignatures(sigs...)
+	if err != nil {
+		panic(err)
 	}
 
 	return tx.GetTx(), nil
