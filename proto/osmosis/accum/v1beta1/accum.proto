@@ -4,7 +4,7 @@ package osmosis.accum.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/osmoutils/accum";
+option go_package = "github.com/osmosis-labs/osmosis/v22/osmoutils/accum";
 
 // AccumulatorContent is the state-entry for the global accumulator.
 // It contains the name of the global accumulator and the total value of
