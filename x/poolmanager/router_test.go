@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"

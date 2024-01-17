@@ -12,9 +12,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"

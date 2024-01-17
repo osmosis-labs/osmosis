@@ -10,7 +10,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
+	cosmwasmutils "github.com/osmosis-labs/osmosis/v22/osmoutils/cosmwasm"
 )
 
 // Pool encapsulates all data and behavior for interacting with a CW pool.

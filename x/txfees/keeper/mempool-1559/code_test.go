@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gotest.tools/assert"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/noapptest"
 )
 
 // TestUpdateBaseFee simulates the update of a base fee in Osmosis.

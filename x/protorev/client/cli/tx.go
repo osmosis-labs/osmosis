@@ -14,7 +14,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

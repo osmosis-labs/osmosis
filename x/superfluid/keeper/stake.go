@@ -7,7 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"

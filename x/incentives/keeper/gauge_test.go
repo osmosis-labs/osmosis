@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v22/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v22/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"

@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"

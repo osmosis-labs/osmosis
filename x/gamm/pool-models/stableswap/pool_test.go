@@ -10,7 +10,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"

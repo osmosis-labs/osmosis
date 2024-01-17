@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 )
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

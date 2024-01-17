@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )

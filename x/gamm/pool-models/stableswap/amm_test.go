@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	sdkrand "github.com/osmosis-labs/osmosis/v22/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/internal/test_helpers"

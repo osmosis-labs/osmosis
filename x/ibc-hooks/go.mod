@@ -12,7 +12,6 @@ require (
 	github.com/cosmos/ibc-go/v7 v7.3.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.8
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.8
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0

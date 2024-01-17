@@ -2,9 +2,9 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"

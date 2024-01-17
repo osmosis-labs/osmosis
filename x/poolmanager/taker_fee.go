@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v22/app/params"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
 )

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"
 	clmath "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"

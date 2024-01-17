@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
