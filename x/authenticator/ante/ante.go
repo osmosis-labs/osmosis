@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -208,7 +208,7 @@ func isCosignerMsg(msg sdk.Msg) bool {
 func (ad AuthenticatorDecorator) cosignerAuthenticator(ctx sdk.Context, account sdk.AccAddress, cosignerContract string) (types.Authenticator, error) {
 	cosmwasmAuthenticator := ad.authenticatorKeeper.AuthenticatorManager.GetAuthenticatorByType("CosmwasmAuthenticator")
 	if cosmwasmAuthenticator == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AllOfAuthenticator not found")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "CosmwasmAuthenticator not found")
 	}
 
 	acc, err := authante.GetSignerAcc(ctx, ad.accountKeeper, account)
