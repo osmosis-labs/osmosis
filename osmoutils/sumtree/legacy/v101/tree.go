@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/sumtree"
 )
 
 type Child struct {

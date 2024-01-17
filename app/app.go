@@ -34,7 +34,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"

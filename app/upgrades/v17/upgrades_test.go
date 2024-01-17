@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v22/app/keepers"
 	v17 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"

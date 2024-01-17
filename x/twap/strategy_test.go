@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v22/x/twap"
 	"github.com/osmosis-labs/osmosis/v22/x/twap/types"

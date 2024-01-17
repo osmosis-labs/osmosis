@@ -17,9 +17,9 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/noapptest"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )

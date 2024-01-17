@@ -9,7 +9,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/cosmwasm/msg/transmuter"
 	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/model"

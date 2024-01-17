@@ -12,11 +12,11 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain/mocks"
 	poolsingester "github.com/osmosis-labs/osmosis/v22/ingest/sqs/pools/ingester"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	clqueryproto "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto"
 	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"

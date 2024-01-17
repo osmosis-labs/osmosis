@@ -4,8 +4,6 @@ use .
 
 use ./osmomath
 
-use ./osmoutils
-
 use ./x/ibc-hooks
 
 use ./x/epochs

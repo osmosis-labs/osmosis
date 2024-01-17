@@ -13,11 +13,11 @@ import (
 	poolsredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/pools"
 	routerredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/router"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/ingest"
 	chaininfoingester "github.com/osmosis-labs/osmosis/v22/ingest/sqs/chaininfo/ingester"
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
 	poolsingester "github.com/osmosis-labs/osmosis/v22/ingest/sqs/pools/ingester"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 )
 
 // Config defines the config for the sidecar query server.

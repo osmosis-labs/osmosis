@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v22/app/params"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 

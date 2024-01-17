@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 )
 
 var DefaultGovAuthority = sdk.AccAddress(address.Module("gov"))

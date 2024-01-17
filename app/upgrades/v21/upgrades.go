@@ -13,9 +13,9 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/app/keepers"
 	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"

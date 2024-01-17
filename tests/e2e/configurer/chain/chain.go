@@ -12,7 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/initialization"
 )

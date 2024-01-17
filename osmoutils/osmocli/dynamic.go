@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 )
 
 type Descriptor interface {

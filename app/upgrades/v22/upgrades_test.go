@@ -10,8 +10,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	appParams "github.com/osmosis-labs/osmosis/v22/app/params"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v22/x/valset-pref/types"
 )

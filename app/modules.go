@@ -62,9 +62,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v22/app/params"
 	_ "github.com/osmosis-labs/osmosis/v22/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"

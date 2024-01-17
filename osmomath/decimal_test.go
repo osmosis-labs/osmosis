@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 )
 
 type decimalTestSuite struct {

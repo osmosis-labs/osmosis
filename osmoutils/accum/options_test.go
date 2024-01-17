@@ -1,6 +1,6 @@
 package accum_test
 
-import "github.com/osmosis-labs/osmosis/osmoutils/accum"
+import "github.com/osmosis-labs/osmosis/v22/osmoutils/accum"
 
 // TestOptionsValidate tests that the options are validated correctly.
 func (suite *AccumTestSuite) TestOptionsValidate() {

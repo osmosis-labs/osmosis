@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/accum"
 	types "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types/genesis"
 )

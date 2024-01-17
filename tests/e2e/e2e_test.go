@@ -26,7 +26,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v22/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v22/tests/e2e/initialization"
