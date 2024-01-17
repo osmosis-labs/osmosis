@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
@@ -248,6 +248,18 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	tick, err := CalculatePriceToTick(price)
 	if err != nil {
 		return 0, err
+	}
+
+	// TODO: remove this check. It is present to maintain backwards state-compatibility with
+	// v19.x and earlier major releases of Osmosis.
+	// Once https://github.com/osmosis-labs/osmosis/issues/5726 is fully complete,
+	// this should be removed.
+	//
+	// Backwards state-compatibility is maintained by having the swap and LP logic error
+	// here in case the price/tick falls below the origina minimum tick bounds that are
+	// consistent with v19.x and earlier release lines.
+	if tick < types.MinCurrentTick {
+		return 0, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
 	}
 
 	// We have a candidate bucket index `t`. We discern here if:

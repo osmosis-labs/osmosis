@@ -7,8 +7,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 //go:embed schema.sql
@@ -55,7 +55,10 @@ func (stats StatsDb) LogActionResult(header tmproto.Header, opMsg simulation.Ope
 	}
 	appHash := fmt.Sprintf("%X", header.AppHash)
 	resData := fmt.Sprintf("%X", resultData)
-	sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
-	_, err := stats.db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, resData, appHash)
+	// UNFORKINGNOTE: Is GasWanted and GasUsed getting added to simulation.OperationMsg? If so, uncomment and delete.
+	// sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
+	//_, err := stats.db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, resData, appHash)
+	sts := "INSERT INTO blocks(height,module,name,comment,passed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8);"
+	_, err := stats.db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.Msg, resData, appHash)
 	return err
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -14,19 +14,17 @@ const (
 
 // Init registers proposals to update and replace pool incentives.
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeUpdatePoolIncentives)
-	govtypes.RegisterProposalTypeCodec(&UpdatePoolIncentivesProposal{}, "osmosis/UpdatePoolIncentivesProposal")
-	govtypes.RegisterProposalType(ProposalTypeReplacePoolIncentives)
-	govtypes.RegisterProposalTypeCodec(&ReplacePoolIncentivesProposal{}, "osmosis/ReplacePoolIncentivesProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeUpdatePoolIncentives)
+	govtypesv1.RegisterProposalType(ProposalTypeReplacePoolIncentives)
 }
 
 var (
-	_ govtypes.Content = &UpdatePoolIncentivesProposal{}
-	_ govtypes.Content = &ReplacePoolIncentivesProposal{}
+	_ govtypesv1.Content = &UpdatePoolIncentivesProposal{}
+	_ govtypesv1.Content = &ReplacePoolIncentivesProposal{}
 )
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace pool incentives proposal struct.
-func NewReplacePoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
+func NewReplacePoolIncentivesProposal(title, description string, records []DistrRecord) govtypesv1.Content {
 	return &ReplacePoolIncentivesProposal{
 		Title:       title,
 		Description: description,
@@ -50,7 +48,7 @@ func (p *ReplacePoolIncentivesProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *ReplacePoolIncentivesProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -85,7 +83,7 @@ func (p ReplacePoolIncentivesProposal) String() string {
 }
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace pool incentives proposal struct.
-func NewUpdatePoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
+func NewUpdatePoolIncentivesProposal(title, description string, records []DistrRecord) govtypesv1.Content {
 	return &UpdatePoolIncentivesProposal{
 		Title:       title,
 		Description: description,
@@ -107,7 +105,7 @@ func (p *UpdatePoolIncentivesProposal) ProposalType() string { return ProposalTy
 
 // ValidateBasic validates a governance proposal's abstract and basic contents.
 func (p *UpdatePoolIncentivesProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}

@@ -10,15 +10,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v21/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v20/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v21/app"
 )
 
 type KeeperTestSuite struct {
@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Marshaler)
 
 	// Set default configuration for testing
 	s.balances = sdk.NewCoins(
@@ -733,11 +733,11 @@ func (s *KeeperTestSuite) setUpPools() {
 		{ // Pool 37
 			PoolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewCoin("Atom", osmomath.NewInt(406165719545)),
+					Token:  sdk.NewCoin("Atom", osmomath.NewInt(40616571954500000)),
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin("test/2", osmomath.NewInt(1095887931673)),
+					Token:  sdk.NewCoin("test/2", osmomath.NewInt(109588793167300000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -906,7 +906,9 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Create a cosmwasm pool for testing
 	// Pool 51
-	cwPool := s.PrepareCosmWasmPool()
+	cwPool := s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"Atom", "test/2"})
+	cwFunds := sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(1000000000000)), sdk.NewCoin("test/2", osmomath.NewInt(1000000000000)))
+	s.JoinTransmuterPool(s.TestAccs[0], cwPool.GetId(), cwFunds)
 
 	// Add the new cosmwasm pool to the pool info
 	poolInfo := types.DefaultPoolTypeInfo

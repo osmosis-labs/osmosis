@@ -3,13 +3,15 @@ package swapstrategy
 import (
 	"fmt"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // zeroForOneStrategy implements the swapStrategy interface.
@@ -20,7 +22,7 @@ import (
 // tick index and square root price.
 type zeroForOneStrategy struct {
 	sqrtPriceLimit osmomath.BigDec
-	storeKey       sdk.StoreKey
+	storeKey       storetypes.StoreKey
 	spreadFactor   osmomath.Dec
 }
 

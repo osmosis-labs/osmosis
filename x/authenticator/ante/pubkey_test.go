@@ -4,18 +4,18 @@ import (
 	"encoding/hex"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/ante"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/ante"
 )
 
 // AutherticatorSetPubKeyAnteSuite is a test suite for the authenticator and SetPubKey AnteDecorator.

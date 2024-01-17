@@ -1,6 +1,6 @@
 package iface
 
-import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+import errorsmod "cosmossdk.io/errors"
 
 type AuthenticationResult interface {
 	isAuthenticationResult()
@@ -33,7 +33,7 @@ func (r rejected) isAuthenticationResult()      {}
 func (r rejected) IsAuthenticated() bool        { return false }
 func (r rejected) IsRejected() bool             { return true }
 func (r rejected) IsAuthenticationFailed() bool { return false }
-func (r rejected) Error() error                 { return sdkerrors.Wrap(r.err, r.msg) }
+func (r rejected) Error() error                 { return errorsmod.Wrap(r.err, r.msg) }
 
 func Authenticated() AuthenticationResult {
 	return authenticated{}

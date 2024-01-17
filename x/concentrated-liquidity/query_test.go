@@ -1,27 +1,73 @@
 package concentrated_liquidity_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
 )
 
+// This test validates GetTickLiquidityForFullRange query by force-setting the tick and their net liquidity
+// values as well as the current pool tick.
+// It then checks if the returned range is as expected.
 func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 	defaultTick := withPoolId(defaultTick, defaultPoolId)
-
-	tests := []struct {
-		name        string
-		presetTicks []genesis.FullTick
+	type testcase struct {
+		name             string
+		presetTicks      []genesis.FullTick
+		currentTickIndex int64
 
 		expectedLiquidityDepthForRange []queryproto.LiquidityDepthWithRange
-	}{
+
+		// Current tick is always 0 so must be pointing to the appropriate bucket
+		// within which tick 0 is contained.
+		expectedCurrentBucketIndex int64
+	}
+
+	defaultUpperTick := int64(5)
+
+	defaultCase := testcase{
+		name: "one ranged position, testing range with greater range than initialized ticks",
+		presetTicks: []genesis.FullTick{
+			withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+			withLiquidityNetandTickIndex(defaultTick, defaultUpperTick, osmomath.NewDec(-10)),
+		},
+		expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
+			{
+				LiquidityAmount: osmomath.NewDec(10),
+				LowerTick:       DefaultMinTick,
+				UpperTick:       defaultUpperTick,
+			},
+		},
+	}
+
+	withCurrentTickAndBucketIndex := func(desiredCurrentTick, expectedCurrentBucketIndex int64, appendNameSuffix string) testcase {
+		// deep copy default case
+		test := testcase{
+			name:                           defaultCase.name,
+			presetTicks:                    make([]genesis.FullTick, len(defaultCase.presetTicks)),
+			expectedLiquidityDepthForRange: make([]queryproto.LiquidityDepthWithRange, len(defaultCase.expectedLiquidityDepthForRange)),
+		}
+		copy(test.presetTicks, defaultCase.presetTicks)
+		copy(test.expectedLiquidityDepthForRange, defaultCase.expectedLiquidityDepthForRange)
+
+		test.name = test.name + " " + appendNameSuffix
+		test.currentTickIndex = desiredCurrentTick
+		test.expectedCurrentBucketIndex = expectedCurrentBucketIndex
+		return test
+	}
+
+	tests := []testcase{
 		{
 			name: "one full range position, testing range in between",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
+			currentTickIndex: 100,
+
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: osmomath.NewDec(10),
@@ -29,21 +75,15 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 					UpperTick:       DefaultMaxTick,
 				},
 			},
+			expectedCurrentBucketIndex: 0,
 		},
-		{
-			name: "one ranged position, testing range with greater range than initialized ticks",
-			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(-10)),
-			},
-			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
-				{
-					LiquidityAmount: osmomath.NewDec(10),
-					LowerTick:       DefaultMinTick,
-					UpperTick:       5,
-				},
-			},
-		},
+		withCurrentTickAndBucketIndex(DefaultMinTick-1, -1, "current tick below min tick"),
+		withCurrentTickAndBucketIndex(DefaultMinTick, 0, "current tick at min tick"),
+		withCurrentTickAndBucketIndex(defaultUpperTick-1, 0, "current tick one below max"),
+		// Corresponds to length since the current tick is at the max tick
+		withCurrentTickAndBucketIndex(defaultUpperTick, int64(len(defaultCase.expectedLiquidityDepthForRange)), "current tick at max"),
+		// Corresponds to length since the current tick is above the max tick
+		withCurrentTickAndBucketIndex(defaultUpperTick+1, int64(len(defaultCase.expectedLiquidityDepthForRange)), "current tick above max"),
 		//  	   	10 ----------------- 30
 		//  -20 ------------- 20
 		{
@@ -54,6 +94,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(50)),
 				withLiquidityNetandTickIndex(defaultTick, 30, osmomath.NewDec(-50)),
 			},
+			currentTickIndex: 15,
+
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: osmomath.NewDec(10),
@@ -71,6 +113,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 					UpperTick:       30,
 				},
 			},
+
+			expectedCurrentBucketIndex: 1,
 		},
 		//  	   	       10 ----------------- 30
 		//  min tick --------------------------------------max tick
@@ -82,6 +126,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(50)),
 				withLiquidityNetandTickIndex(defaultTick, 30, osmomath.NewDec(-50)),
 			},
+			currentTickIndex: 30,
+
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: osmomath.NewDec(10),
@@ -99,6 +145,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 					UpperTick:       DefaultMaxTick,
 				},
 			},
+
+			expectedCurrentBucketIndex: 2,
 		},
 		//              11--13
 		//         10 ----------------- 30
@@ -113,6 +161,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 				withLiquidityNetandTickIndex(defaultTick, 11, osmomath.NewDec(100)),
 				withLiquidityNetandTickIndex(defaultTick, 13, osmomath.NewDec(-100)),
 			},
+			currentTickIndex: 30,
+
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: osmomath.NewDec(10),
@@ -140,6 +190,9 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 					UpperTick:       30,
 				},
 			},
+
+			// Equals to length since current tick is above max tick
+			expectedCurrentBucketIndex: 5,
 		},
 	}
 
@@ -149,16 +202,109 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			s.SetupTest()
 
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
-			for _, tick := range test.presetTicks {
+			concentratedPool := s.PrepareConcentratedPool()
+			// Set current tick to the configured value
+			concentratedPool.SetCurrentTick(test.currentTickIndex)
+
+			currentTickLiquidity := osmomath.ZeroDec()
+			for i, tick := range test.presetTicks {
+				if i > 0 {
+					lowerTick := test.presetTicks[i-1].TickIndex
+					upperTick := tick.TickIndex
+
+					// Set current liquidity corresponding to the appropriate bucket
+					if concentratedPool.IsCurrentTickInRange(lowerTick, upperTick) {
+						concentratedPool.UpdateLiquidity(currentTickLiquidity)
+					}
+				}
+
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
+
+				currentTickLiquidity = currentTickLiquidity.Add(tick.Info.LiquidityNet)
 			}
 
-			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
+			// Write updates pool to state
+			err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, concentratedPool)
+			s.Require().NoError(err)
+
+			liquidityForRange, currentBucketIndex, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
+
+			s.Require().Equal(test.expectedCurrentBucketIndex, currentBucketIndex)
 		})
 	}
+}
+
+// Tests GetTickLiquidityForFullRange by creating a position as opposed to directly
+// setting tick net liquidity valies
+func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange_CreatePosition() {
+	// Init suite for each test.
+	s.SetupTest()
+
+	var (
+		positionOneLowerTick   = int64(-500000)
+		posititionOneUpperTick = int64(500000)
+
+		positionTwoLowerTick = int64(-100000)
+		positionTwoUpperTick = int64(1250000)
+
+		defaultTokenAmount = osmomath.NewInt(1000000000000000000)
+		defaultToken0      = sdk.NewCoin(ETH, defaultTokenAmount)
+		defaultToken1      = sdk.NewCoin(USDC, defaultTokenAmount.MulRaw(5))
+		defaultCoins       = sdk.NewCoins(defaultToken0, defaultToken1)
+
+		expectedLiquidityDepthForRange = []queryproto.LiquidityDepthWithRange{
+			{
+				// This gets initializes after position creation
+				LiquidityAmount: osmomath.ZeroDec(),
+				LowerTick:       positionOneLowerTick,
+				UpperTick:       positionTwoLowerTick,
+			},
+			{
+				// This gets initializes after position creation
+				LiquidityAmount: osmomath.ZeroDec(),
+				LowerTick:       positionTwoLowerTick,
+				UpperTick:       posititionOneUpperTick,
+			},
+			{
+				// This gets initializes after position creation
+				LiquidityAmount: osmomath.ZeroDec(),
+				LowerTick:       posititionOneUpperTick,
+				UpperTick:       positionTwoUpperTick,
+			},
+		}
+
+		// points to the bucket between positionTwo lower tick and positionOne upper tick
+		expectedCurrentBucketIndex = int64(3)
+	)
+
+	// Create a default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+
+	// Fund account with enough tokens for both positions
+	s.FundAcc(s.TestAccs[0], defaultCoins.Add(defaultCoins...))
+
+	// Create first position
+	positionOneData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), s.TestAccs[0], defaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), positionOneLowerTick, posititionOneUpperTick)
+	s.Require().NoError(err)
+
+	// Create second position
+	positionTwoData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), s.TestAccs[0], defaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), positionTwoLowerTick, positionTwoUpperTick)
+	s.Require().NoError(err)
+
+	s.Require().Len(expectedLiquidityDepthForRange, 3)
+	// We take CreatePosition as correct since it is tested for correctness at a lower level
+	// of abstraction
+	expectedLiquidityDepthForRange[0].LiquidityAmount = positionOneData.Liquidity
+	expectedLiquidityDepthForRange[1].LiquidityAmount = positionOneData.Liquidity.Add(positionTwoData.Liquidity)
+	expectedLiquidityDepthForRange[2].LiquidityAmount = positionTwoData.Liquidity
+
+	liquidityForRange, currentBucketIndex, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+	s.Require().Equal(liquidityForRange, expectedLiquidityDepthForRange)
+
+	s.Require().Equal(expectedCurrentBucketIndex, currentBucketIndex)
 }
 
 func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {

@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -72,7 +72,8 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 	))
 
 	firstJoinGas := s.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
-	s.Assert().LessOrEqual(int(firstJoinGas), 100000)
+	// UNFORKINGNOTE: This used to be capped at LessOrEqual to 100000, but unforking increased this value.
+	s.Assert().LessOrEqual(int(firstJoinGas), 102000)
 
 	for i := 1; i < startAveragingAt; i++ {
 		_, _, err := s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})

@@ -7,9 +7,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v21/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -29,9 +29,9 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// with risk adjustment, the actual bond denom staked via superfluid would be 15_000_000 * (1 - 0.5) = 7_500_000
 			// we do an arbitrary swap to set spot price, which adjusts superfluid staked equivalent base denom 20_000_000 * (1 - 0.5) = 10_000_000 during begin block
 			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
-			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 10_000_000
-			// thus we expect 999_990 stake as rewards
-			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(999990))}},
+			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 11_000_000
+			// thus we expect 909_900 stake as rewards
+			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}},
 		},
 		{
 			"happy path with two validator and delegator each",
@@ -43,8 +43,8 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// reward for the second delegation is expected to be different. Amount superfluid staked would be equivalently 7_500_000 stake.
 			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
 			// last period cumulative reward ratio being 0
-			// Thus as rewards, we expect 999986stake, calculted using the following equation: (999_86.66684 - 0) * 7_500_000
-			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(999990))}, {sdk.NewCoin("stake", osmomath.NewInt(999986))}},
+			// Thus as rewards, we expect 999986stake, calculted using the following equation: (0.117647) * 7_500_000
+			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}, {sdk.NewCoin("stake", osmomath.NewInt(882352))}},
 		},
 	}
 
@@ -224,54 +224,54 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 		expUnslashedLockIds   []uint64
 	}{
 		{
-			"happy path with single validator and multiple superfluid delegations",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			1,
-			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			[]uint64{1},
-			[]int64{0},
-			[]uint64{1},
-			[]uint64{},
+			name:                  "happy path with single validator and multiple superfluid delegations",
+			validatorStats:        []stakingtypes.BondStatus{stakingtypes.Bonded},
+			delegatorNumber:       1,
+			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}},
+			superUnbondingLockIds: []uint64{1},
+			slashedValIndexes:     []int64{0},
+			expSlashedLockIds:     []uint64{1},
+			expUnslashedLockIds:   []uint64{},
 		},
 		{
-			"with single validator and multiple superfluid delegations",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
-			[]uint64{1, 2},
-			[]int64{0},
-			[]uint64{1, 2},
-			[]uint64{},
+			name:                  "with single validator and multiple superfluid delegations",
+			validatorStats:        []stakingtypes.BondStatus{stakingtypes.Bonded},
+			delegatorNumber:       2,
+			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
+			superUnbondingLockIds: []uint64{1, 2},
+			slashedValIndexes:     []int64{0},
+			expSlashedLockIds:     []uint64{1, 2},
+			expUnslashedLockIds:   []uint64{},
 		},
 		{
-			"with multiple validators and multiple superfluid delegations",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]uint64{1, 2},
-			[]int64{0},
-			[]uint64{1},
-			[]uint64{2},
+			name:                  "with multiple validators and multiple superfluid delegations",
+			validatorStats:        []stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			delegatorNumber:       2,
+			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			superUnbondingLockIds: []uint64{1, 2},
+			slashedValIndexes:     []int64{0},
+			expSlashedLockIds:     []uint64{1},
+			expUnslashedLockIds:   []uint64{2},
 		},
 		{
-			"add unbonding validator case",
-			[]stakingtypes.BondStatus{stakingtypes.Unbonding, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]uint64{1, 2},
-			[]int64{0},
-			[]uint64{1},
-			[]uint64{2},
+			name:                  "add unbonding validator case",
+			validatorStats:        []stakingtypes.BondStatus{stakingtypes.Unbonding, stakingtypes.Bonded},
+			delegatorNumber:       2,
+			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			superUnbondingLockIds: []uint64{1, 2},
+			slashedValIndexes:     []int64{0},
+			expSlashedLockIds:     []uint64{1},
+			expUnslashedLockIds:   []uint64{2},
 		},
 		{
-			"add unbonded validator case",
-			[]stakingtypes.BondStatus{stakingtypes.Unbonded, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]uint64{1, 2},
-			[]int64{0},
-			[]uint64{1},
-			[]uint64{2},
+			name:                  "add unbonded validator case",
+			validatorStats:        []stakingtypes.BondStatus{stakingtypes.Unbonded, stakingtypes.Bonded},
+			delegatorNumber:       2,
+			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			superUnbondingLockIds: []uint64{1, 2},
+			slashedValIndexes:     []int64{0},
+			expSlashedLockIds:     []uint64{1},
+			expUnslashedLockIds:   []uint64{2},
 		},
 	}
 

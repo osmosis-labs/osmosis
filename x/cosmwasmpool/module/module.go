@@ -5,24 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	cosmwasmpool "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
-	moduleclient "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/grpc"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	cosmwasmpool "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool"
+	moduleclient "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/client/grpc"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
 )
 
 var (
@@ -56,9 +55,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // ---------------------------------------
 // Interfaces.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-}
-
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
@@ -101,19 +97,8 @@ func NewAppModule(cdc codec.Codec, cosmwasmpoolKeeper cosmwasmpool.Keeper) AppMo
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the gamm module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// LegacyQuerierHandler returns the x/gamm module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // InitGenesis performs genesis initialization for the cosmwasmpool module.
 // no validator updates.

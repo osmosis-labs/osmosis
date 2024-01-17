@@ -4,16 +4,16 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
 )
 
 type KeeperTestSuite struct {
@@ -28,14 +28,19 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Reset()
 	s.am = authenticator.NewAuthenticatorManager()
+
 	// Register the SigVerificationAuthenticator
-	s.am.InitializeAuthenticators([]iface.Authenticator{authenticator.SignatureVerificationAuthenticator{}})
+	s.am.InitializeAuthenticators([]iface.Authenticator{
+		authenticator.SignatureVerificationAuthenticator{},
+		testutils.TestingAuthenticator{
+			Approve:        testutils.Always,
+			GasConsumption: 10,
+			Confirm:        testutils.Always,
+		},
+	})
 }
 
-// ToDo: more and better tests
-
-func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
@@ -47,20 +52,28 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	// Create a test message
-	msg := &types.MsgAddAuthenticator{
-		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
-		Data:   priv.PubKey().Bytes(),
-	}
-
-	resp, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	err := s.App.AuthenticatorKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerificationAuthenticator",
+		priv.PubKey().Bytes(),
+	)
 	s.Require().NoError(err)
-	s.Require().True(resp.Success)
+
+	err = s.App.AuthenticatorKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerificationAuthenticator",
+		priv.PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
+	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
+	s.Require().NoError(err)
+	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 }
 
-func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorsForAccount() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
@@ -72,53 +85,36 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	// Create a test message
-	msg := &types.MsgAddAuthenticator{
-		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
-		Data:   priv.PubKey().Bytes(),
-	}
-
-	key = "6cf5103c60c939a5b38e383b52239c5296c968579eec1c68a47d70fbf1d19157"
-	bz, _ = hex.DecodeString(key)
-	priv = &secp256k1.PrivKey{Key: bz}
-	accAddress = sdk.AccAddress(priv.PubKey().Address())
-	msg.Data = priv.PubKey().Bytes()
-
-	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
-	s.Require().Error(err)
-
-	msg.Type = "PassKeyAuthenticator"
-	_, err = msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
-	s.Require().Error(err)
-}
-
-func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
-	ctx := s.Ctx
-
-	// Set up account
-	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
-	bz, _ := hex.DecodeString(key)
-	priv := &secp256k1.PrivKey{Key: bz}
-	accAddress := sdk.AccAddress(priv.PubKey().Address())
-
-	// Create a test message
-	addMsg := &types.MsgAddAuthenticator{
-		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
-		Data:   priv.PubKey().Bytes(),
-	}
-	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), addMsg)
+	err := s.App.AuthenticatorKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerificationAuthenticator",
+		priv.PubKey().Bytes(),
+	)
 	s.Require().NoError(err)
 
-	// Now attempt to remove it
-	removeMsg := &types.MsgRemoveAuthenticator{
-		Sender: accAddress.String(),
-		Id:     0,
-	}
-
-	resp, err := msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)
+	err = s.App.AuthenticatorKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerificationAuthenticator",
+		priv.PubKey().Bytes(),
+	)
 	s.Require().NoError(err)
-	s.Require().True(resp.Success)
+
+	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
+	s.Require().NoError(err)
+	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
+
+	err = s.App.AuthenticatorKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerificationAuthenticator",
+		[]byte("BrokenBytes"),
+	)
+	s.Require().Error(err)
+
+	s.App.AuthenticatorManager.ResetAuthenticators()
+	authenticators, err = s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "failed to initialize")
 }

@@ -294,5 +294,47 @@
                 "-test.v"
             ],
         },
+        {
+            "name": "ingest/sqs/router",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/router",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestRouterTestSuite/TestReverse",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/router/usecase",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/router/usecase",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestRouterTestSuite/TestGetBestSplitRoutesQuote_Mainnet_ATOMUSDT",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/pools/ingester/redis",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/pools/ingester/redis",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestIngesterTestSuite/TestProcessBlock",
+                "-test.v"
+            ],
+        },
     ]
 }

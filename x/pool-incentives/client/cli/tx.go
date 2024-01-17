@@ -7,13 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
@@ -22,7 +21,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit an update to the records for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
@@ -53,37 +52,27 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				})
 			}
 
-			from := clientCtx.GetFromAddress()
+			content := types.NewUpdatePoolIncentivesProposal(proposalTitle, summary, records)
 
-			proposal, err := osmoutils.ParseProposalFlags(cmd.Flags())
-			if err != nil {
-				return fmt.Errorf("failed to parse proposal: %w", err)
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
 
-			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Description, records)
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
-	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
-	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	osmocli.AddCommonProposalFlags(cmd)
 
 	return cmd
 }
@@ -94,7 +83,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit a full replacement to the records for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
 				return err
 			}
@@ -125,37 +114,27 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				})
 			}
 
-			from := clientCtx.GetFromAddress()
+			content := types.NewReplacePoolIncentivesProposal(proposalTitle, summary, records)
 
-			proposal, err := osmoutils.ParseProposalFlags(cmd.Flags())
-			if err != nil {
-				return fmt.Errorf("failed to parse proposal: %w", err)
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			contentMsg, err := v1.NewLegacyContent(content, authority.String())
 			if err != nil {
 				return err
 			}
 
-			content := types.NewReplacePoolIncentivesProposal(proposal.Title, proposal.Description, records)
+			msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
 				return err
 			}
-
-			if err = msg.ValidateBasic(); err != nil {
+			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 		},
 	}
-
-	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
-	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
-	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	osmocli.AddCommonProposalFlags(cmd)
 
 	return cmd
 }

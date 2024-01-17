@@ -10,7 +10,7 @@ import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 import "osmosis/incentives/group.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/incentives/types";
 
 // Query defines the gRPC querier service
 service Query {

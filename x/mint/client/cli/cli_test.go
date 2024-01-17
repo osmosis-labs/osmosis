@@ -1,5 +1,3 @@
-//go:build norace
-
 package cli_test
 
 import (
@@ -7,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -30,9 +28,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-	s.network = network.New(s.T(), s.cfg)
+	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.network = net
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 

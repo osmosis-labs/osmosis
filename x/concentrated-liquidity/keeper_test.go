@@ -13,65 +13,52 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-)
-
-const (
-	OSMO                              = "uosmo"
-	migrationTestTimeBetweenSwapsSecs = 10
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 )
 
 var (
-	// TODO: switch:
-	// DefaultMinTick to tyoes.MinInitializedTickV2 and
-	// DefaultMinCurrentTick to types.MinCurrentTickV2 upon
-	// completion of https://github.com/osmosis-labs/osmosis/issues/5726
 	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
 	DefaultMinCurrentTick                = types.MinCurrentTick
-	DefaultLowerPrice                    = osmomath.NewDec(4545)
-	DefaultLowerTick                     = int64(30545000)
-	DefaultUpperPrice                    = osmomath.NewDec(5500)
-	DefaultUpperTick                     = int64(31500000)
-	DefaultCurrPrice                     = osmomath.NewDec(5000)
-	DefaultCurrTick                int64 = 31000000
-	DefaultCurrSqrtPrice                 = func() osmomath.BigDec {
-		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
-		return osmomath.BigDecFromDec(curSqrtPrice)
-	}()
+	DefaultLowerPrice                    = apptesting.DefaultLowerPrice
+	DefaultLowerTick                     = apptesting.DefaultLowerTick
+	DefaultUpperPrice                    = apptesting.DefaultUpperPrice
+	DefaultUpperTick                     = apptesting.DefaultUpperTick
+	DefaultCurrPrice                     = apptesting.DefaultCurrPrice
+	DefaultCurrTick                int64 = apptesting.DefaultCurrTick
+	DefaultCurrSqrtPrice                 = apptesting.DefaultCurrSqrtPrice
 
 	DefaultZeroSpreadFactor       = osmomath.ZeroDec()
-	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(50)))
+	DefaultSpreadRewardAccumCoins = apptesting.DefaultSpreadRewardAccumCoins
 	DefaultPositionId             = uint64(1)
 	DefaultUnderlyingLockId       = uint64(0)
 	DefaultJoinTime               = time.Unix(0, 0).UTC()
-	ETH                           = "eth"
-	DefaultAmt0                   = osmomath.NewInt(1000000)
-	DefaultAmt0Expected           = osmomath.NewInt(998976)
-	DefaultCoin0                  = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                          = "usdc"
-	DefaultAmt1                   = osmomath.NewInt(5000000000)
-	DefaultAmt1Expected           = osmomath.NewInt(5000000000)
-	DefaultCoin1                  = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultCoins                  = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	ETH                           = apptesting.ETH
+	DefaultAmt0                   = apptesting.DefaultAmt0
+	DefaultAmt0Expected           = apptesting.DefaultAmt0Expected
+	DefaultCoin0                  = apptesting.DefaultCoin0
+	USDC                          = apptesting.USDC
+	DefaultAmt1                   = apptesting.DefaultAmt1
+	DefaultAmt1Expected           = apptesting.DefaultAmt1Expected
+	DefaultCoin1                  = apptesting.DefaultCoin1
+	DefaultCoins                  = apptesting.DefaultCoins
 
 	// Both of the following liquidity values are calculated in x/concentrated-liquidity/python/swap_test.py
-	DefaultLiquidityAmt   = osmomath.MustNewDecFromStr("1517882343.751510417627556287")
-	FullRangeLiquidityAmt = osmomath.MustNewDecFromStr("70710678.118654752941000000")
+	DefaultLiquidityAmt   = apptesting.DefaultLiquidityAmt
+	FullRangeLiquidityAmt = apptesting.FullRangeLiquidityAmt
 
 	DefaultTickSpacing                             = uint64(100)
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
 	sqrt4000                                       = osmomath.MustNewDecFromStr("63.245553203367586640")
-	sqrt4994                                       = osmomath.MustNewDecFromStr("70.668238976219012614")
+	sqrt4994                                       = apptesting.Sqrt4994
 	sqrt4999                                       = osmomath.MustNewDecFromStr("70.703606697254136613")
 	sqrt5500                                       = osmomath.MustNewDecFromStr("74.161984870956629488")
 	sqrt6250                                       = osmomath.MustNewDecFromStr("79.056941504209483300")
@@ -103,30 +90,20 @@ type FuzzTestSuite struct {
 	collectedErrors []error
 }
 
+type positionAndLiquidity struct {
+	positionId   uint64
+	liquidity    osmomath.Dec
+	accountIndex int
+}
+
 type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
+	apptesting.ConcentratedKeeperTestHelper
+	clk *concentrated_liquidity.Keeper
 	FuzzTestSuite
-	clk               *concentrated_liquidity.Keeper
-	authorizedUptimes []time.Duration
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-func (s *KeeperTestSuite) SetupTest() {
-	s.Reset()
-	s.setupClGeneral()
-}
-
-func (s *KeeperTestSuite) setupClGeneral() {
-	s.clk = s.App.ConcentratedLiquidityKeeper
-
-	if s.authorizedUptimes != nil {
-		clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-		clParams.AuthorizedUptimes = s.authorizedUptimes
-		s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-	}
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
@@ -386,14 +363,14 @@ func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 // Crosses the tick and charges the fee on the global spread reward accumulator.
 // This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
 func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickIndexToCross int64) {
-	nextTickInfo, err := s.clk.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
+	nextTickInfo, err := s.Clk.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
 	s.Require().NoError(err)
 
-	feeAccum, uptimeAccums, err := s.clk.GetSwapAccumulators(s.Ctx, poolId)
+	feeAccum, uptimeAccums, err := s.Clk.GetSwapAccumulators(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Cross the tick to update it.
-	_, err = s.clk.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
+	_, err = s.Clk.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
 	s.Require().NoError(err)
 	s.AddToSpreadRewardAccumulator(poolId, DefaultSpreadRewardAccumCoins[0])
 }
@@ -452,9 +429,50 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 	}
 
 	for _, curAuthorizedUptimes := range authorizedUptimesTested {
-		s.authorizedUptimes = curAuthorizedUptimes
+		s.AuthorizedUptimes = curAuthorizedUptimes
 		tests()
 	}
+}
+
+// runFungifySetup Sets up a pool with `poolSpreadFactor`, prepares `numPositions` default positions on it (all identical), and sets
+// up the passed in incentive records such that they emit on the pool. It also sets the largest authorized uptime to be `fullChargeDuration`.
+//
+// Returns the pool, expected position ids and the total liquidity created on the pool.
+func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions int, fullChargeDuration time.Duration, poolSpreadFactor osmomath.Dec, incentiveRecords []types.IncentiveRecord) (types.ConcentratedPoolExtension, []uint64, osmomath.Dec) {
+	expectedPositionIds := make([]uint64, numPositions)
+	for i := 0; i < numPositions; i++ {
+		expectedPositionIds[i] = uint64(i + 1)
+	}
+
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+	s.SetBlockTime(defaultBlockTime)
+	totalPositionsToCreate := osmomath.NewInt(int64(numPositions))
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
+
+	// Set test authorized uptime params.
+	params := s.clk.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, fullChargeDuration}
+	s.clk.SetParams(s.Ctx, params)
+
+	// Fund account
+	s.FundAcc(address, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, poolSpreadFactor)
+
+	// Set incentives for pool to ensure accumulators work correctly
+	err := s.clk.SetMultipleIncentiveRecords(s.Ctx, incentiveRecords)
+	s.Require().NoError(err)
+
+	// Set up fully charged positions
+	totalLiquidity := osmomath.ZeroDec()
+	for i := 0; i < numPositions; i++ {
+		positionData, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		s.Require().NoError(err)
+		totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
+	}
+
+	return pool, expectedPositionIds, totalLiquidity
 }
 
 // runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
@@ -470,111 +488,4 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 
 	// Assert global invariants on final state
 	s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
-}
-
-// creates a pososition from the first test account with default coins and no slippage protection
-// for a given pool id and ticks.
-// a convinience method for testing.
-func (s *KeeperTestSuite) createDefaultPosition(poolId uint64, lowerTick, upperTick int64) cl.CreatePositionData {
-	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
-	s.Require().NoError(err)
-	return positionData
-}
-
-// sets up positions for testing the migration of the min spot price from 10^-12 to 10^-30.
-// Specifically, creates positions:
-// - original full range
-// - new extended full range
-// - position between the new min spot price and the old min spot price
-func (s *KeeperTestSuite) setupPositionsForMinSpotPriceMigration(spreadFactor osmomath.Dec) (poolId uint64, positions []cl.CreatePositionData) {
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
-	poolId = pool.GetId()
-
-	// Fund test account with tokens necessary for all positions
-	s.FundAcc(s.TestAccs[0], DefaultCoins.Add(DefaultCoins...).Add(DefaultCoins...))
-
-	// Setup an original full range position
-	position := s.createDefaultPosition(poolId, types.MinInitializedTick, types.MaxTick)
-	positions = append(positions, position)
-
-	// Setup a full range position on the new min spot price
-	position = s.createDefaultPosition(poolId, types.MinInitializedTickV2, types.MaxTick)
-	positions = append(positions, position)
-
-	// Setup a position between the new min spot price and the old min spot price
-	position = s.createDefaultPosition(poolId, types.MinInitializedTickV2+1000, types.MinInitializedTick-1000)
-	positions = append(positions, position)
-
-	return poolId, positions
-}
-
-// swaps to the lowered minimum tick of 10^-30 and back to the original tick which is in the positive range.
-// There are 3 positions setup over the swapped range (see setupPositionsForMinSpotPriceMigration for details).
-// Additionally, spread factor and incentive rewards are configurable as parameters.
-// Returns pool id position data and actual tokens swapped in (in zero for one direction and back).
-func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incentiveRewards sdk.Coins) (poolId uint64, positions []cl.CreatePositionData, actualAmountsSwappedIn sdk.Coins) {
-	poolId, positions = s.setupPositionsForMinSpotPriceMigration(spreadFactor)
-
-	// Refetch pool
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	incentiveCreator := s.TestAccs[2]
-	s.FundAcc(incentiveCreator, incentiveRewards)
-
-	// Create incentive rewards if desired
-	if !incentiveRewards.Empty() {
-		s.Require().Len(incentiveRewards, 1)
-		incentiveCoin := incentiveRewards[0]
-
-		_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(
-			s.Ctx, poolId, s.TestAccs[2],
-			incentiveCoin, incentiveCoin.Amount.ToLegacyDec().Quo(osmomath.NewDec(migrationTestTimeBetweenSwapsSecs)), s.Ctx.BlockTime(), time.Nanosecond)
-		s.Require().NoError(err)
-	}
-
-	// esimate amount in to swap left all the way until the new min initialized tick
-	amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
-
-	// Fund swapper
-	swapper := s.TestAccs[1]
-	coinZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.TruncateInt())
-	s.FundAcc(swapper, sdk.NewCoins(coinZeroIn))
-
-	// perform the swap to the new min initialized tick.
-	actualSwappedInZeroForOne, tokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-		s.Ctx, swapper, pool,
-		coinZeroIn, pool.GetToken1(),
-		spreadFactor, osmomath.ZeroBigDec(),
-	)
-	s.Require().NoError(err)
-
-	// Increase time so that incentives are collected over the current position
-	// 10 seconds
-	s.AddBlockTime(time.Second * migrationTestTimeBetweenSwapsSecs)
-
-	// Refetch pool
-	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	// Swap amount out to the end up in the original tick
-	actualSwappedInOneForZero, inverseTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-		s.Ctx, swapper, pool,
-		tokenOut, pool.GetToken0(),
-		spreadFactor, osmomath.ZeroBigDec(),
-	)
-	s.Require().NoError(err)
-
-	tolerance := multiplicativeTolerance
-	// If spread factor is set, increase tolerance to account for it.
-	if !spreadFactor.IsZero() {
-		tolerance.MultiplicativeTolerance = osmomath.MustNewDecFromStr("0.001")
-	}
-
-	// Original amount in should roughly equal the amount out when performing the inverse swap
-	osmoassert.Equal(s.T(), tolerance, coinZeroIn.Amount, inverseTokenOut.Amount)
-
-	actualAmountsSwappedIn = append(actualAmountsSwappedIn, actualSwappedInZeroForOne, actualSwappedInOneForZero)
-
-	return poolId, positions, actualAmountsSwappedIn
 }

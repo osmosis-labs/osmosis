@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -34,6 +34,19 @@ func NewAddAuthentiactorCmd() (*osmocli.TxCliDesc, *types.MsgAddAuthenticator) {
 	}, &types.MsgAddAuthenticator{}
 }
 
+func NewRemoveAuthentiactorCmd() (*osmocli.TxCliDesc, *types.MsgRemoveAuthenticator) {
+	return &osmocli.TxCliDesc{
+		Use:   "remove-authenticator",
+		Short: "add an authenticator for an address",
+		Long:  "",
+		Example: `
+			osmosisd tx authenticator remove-authenticator 1 --from val \
+			--chain-id osmosis-1 -b sync --keyring-backend test \
+			--fees 1000uosmo
+		`,
+	}, &types.MsgRemoveAuthenticator{}
+}
+
 func BuildAddAuthenticatorMsg(
 	clientCtx client.Context,
 	args []string,
@@ -52,17 +65,4 @@ func BuildAddAuthenticatorMsg(
 		Data:   pubKeyBytes,
 		Sender: clientCtx.GetFromAddress().String(),
 	}, nil
-}
-
-func NewRemoveAuthentiactorCmd() (*osmocli.TxCliDesc, *types.MsgRemoveAuthenticator) {
-	return &osmocli.TxCliDesc{
-		Use:   "remove-authenticator",
-		Short: "add an authenticator for an address",
-		Long:  "",
-		Example: `
-			osmosisd tx authenticator remove-authenticator 1 --from val \
-			--chain-id osmosis-1 -b sync --keyring-backend test \
-			--fees 1000uosmo
-		`,
-	}, &types.MsgRemoveAuthenticator{}
 }

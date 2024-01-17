@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 var (

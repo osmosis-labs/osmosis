@@ -1,0 +1,99 @@
+# This workflow pushes new docker images to osmolabs/sqs-dev on these events:
+# 2. Every new commit to the roman/sqs-poc-v20 branch,
+# tag with: sqs-v[0-9]+.[0-9]+.[0-9],
+# branch push with sqs-v[0-9]+.x
+# `osmolabs/sqs-dev:{SHORT_SHA}-$(date +%s)` is pushed.
+# All the images above have support for linux/amd64 (not linux/arm64)
+# All the images are based on an alpine image for easy debugging.
+
+name: Build and Push SQS Images
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - sqs-v[0-9]+.[0-9]+.[0-9]
+    branches:
+      - roman/sqs-poc-v20
+      - sqs-v[0-9]+.x
+
+env:
+  RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
+  SQS_DEV_IMAGE_REPOSITORY: osmolabs/sqs-dev
+  SQS_PROD_IMAGE_REPOSITORY: osmolabs/sqs
+
+jobs:
+  docker:
+    runs-on: self-hosted
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find go version
+        run: |
+          GO_VERSION=$(cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+          echo "GO_VERSION=$GO_VERSION" >> $GITHUB_ENV
+
+      - name: Create Docker Image Tag for release candidate on Tag Push
+        if: startsWith(github.ref, 'refs/tags/sqs-v')
+        run: |
+          GITHUB_TAG=${{ github.ref_name }}
+          echo "DOCKER_IMAGE_TAG=${GITHUB_TAG#v}" >> $GITHUB_ENV
+          echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Create Docker Image Tag for sqs-vx.x.x branch
+        if: startsWith(github.ref, 'sqs-v')
+        run: |
+          GITHUB_TAG=${{ github.ref_name }}
+          echo "DOCKER_IMAGE_TAG=${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
+          echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Create Docker Image Tag for roman/sqs-poc-v20 branch
+        if: github.ref == 'refs/heads/roman/sqs-poc-v20'
+        run: |
+          SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "DOCKER_IMAGE_TAG=${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
+          echo "OSMOSIS_VERSION=$SHORT_SHA" >> $GITHUB_ENV
+
+      - name: Build and Push Docker Images Dev
+        uses: docker/build-push-action@v5
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${{ env.OSMOSIS_VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.SQS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+            ${{ env.SQS_DEV_IMAGE_REPOSITORY }}:sqs-latest
+
+      - name: Build and Push Docker Images Prod
+        uses: docker/build-push-action@v5
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${{ env.OSMOSIS_VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.SQS_PROD_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+            ${{ env.SQS_PROD_IMAGE_REPOSITORY }}:sqs-latest

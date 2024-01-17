@@ -3,8 +3,9 @@ package authenticator
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -70,7 +71,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 
 	// If not all sub-authenticators are registered, return an error
 	if len(aoa.SubAuthenticators) != len(initDatas) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to initialize all sub-authenticators")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to initialize all sub-authenticators")
 	}
 
 	return aoa, nil
@@ -86,7 +87,7 @@ func (aoa AnyOfAuthenticator) GetAuthenticationData(
 	for _, auth := range aoa.SubAuthenticators {
 		data, err := auth.GetAuthenticationData(ctx, tx, messageIndex, simulate)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "a sub-authenticator failed to get authentication data")
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "a sub-authenticator failed to get authentication data")
 		}
 		authDataList = append(authDataList, data)
 	}

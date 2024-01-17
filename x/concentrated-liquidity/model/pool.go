@@ -9,9 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 const (
@@ -315,4 +315,12 @@ func (p *Pool) ApplySwap(newLiquidity osmomath.Dec, newCurrentTick int64, newCur
 
 func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 	return p
+}
+
+// GetPoolDenoms implements types.ConcentratedPoolExtension.
+func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
+	return []string{
+		p.GetToken0(),
+		p.GetToken1(),
+	}
 }

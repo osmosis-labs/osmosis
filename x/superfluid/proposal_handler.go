@@ -5,15 +5,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper/gov"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper/gov"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
-func NewSuperfluidProposalHandler(k keeper.Keeper, ek types.EpochKeeper, gk types.GammKeeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewSuperfluidProposalHandler(k keeper.Keeper, ek types.EpochKeeper, gk types.GammKeeper) govtypesv1.Handler {
+	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {
 		case *types.SetSuperfluidAssetsProposal:
 			return handleSetSuperfluidAssetsProposal(ctx, k, ek, c)

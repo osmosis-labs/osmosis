@@ -20,6 +20,7 @@ var (
 	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
 	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
 	KeyUnrestrictedPoolCreatorWhitelist   = []byte("UnrestrictedPoolCreatorWhitelist")
+	KeyHookGasLimit                       = []byte("HookGasLimit")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -29,7 +30,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string, hookGasLimit uint64) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
 		AuthorizedSpreadFactors:             authorizedSpreadFactors,
@@ -38,6 +39,7 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomat
 		AuthorizedUptimes:                   authorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
 		UnrestrictedPoolCreatorWhitelist:    unrestrictedPoolCreatorWhitelist,
+		HookGasLimit:                        hookGasLimit,
 	}
 }
 
@@ -56,6 +58,7 @@ func DefaultParams() Params {
 		AuthorizedUptimes:                   DefaultAuthorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: false,
 		UnrestrictedPoolCreatorWhitelist:    DefaultUnrestrictedPoolCreatorWhitelist,
+		HookGasLimit:                        DefaultContractHookGasLimit,
 	}
 }
 
@@ -82,6 +85,9 @@ func (p Params) Validate() error {
 	if err := osmoutils.ValidateAddressList(p.UnrestrictedPoolCreatorWhitelist); err != nil {
 		return err
 	}
+	if err := validateHookGasLimit(p.HookGasLimit); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -95,6 +101,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
 		paramtypes.NewParamSetPair(KeyUnrestrictedPoolCreatorWhitelist, &p.UnrestrictedPoolCreatorWhitelist, osmoutils.ValidateAddressList),
+		paramtypes.NewParamSetPair(KeyHookGasLimit, &p.HookGasLimit, validateHookGasLimit),
 	}
 }
 
@@ -239,6 +246,16 @@ func validateAuthorizedUptimes(i interface{}) error {
 		if !supported {
 			return UptimeNotSupportedError{Uptime: uptime}
 		}
+	}
+
+	return nil
+}
+
+// validateHookGasLimit validates that the hook gas limit is of type uint64.
+func validateHookGasLimit(i interface{}) error {
+	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type for hook gas limit: %T", i)
 	}
 
 	return nil

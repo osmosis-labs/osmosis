@@ -1,11 +1,9 @@
 package types
 
+import poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+
 // SwapMsg defines a simple interface for getting the token denoms on a swap message route.
-type SwapMsgRoute interface {
-	TokenInDenom() string
-	TokenOutDenom() string
-	TokenDenomsOnPath() []string
-}
+type SwapMsgRoute = poolmanagertypes.SwapMsgRoute
 
 var (
 	_ SwapMsgRoute = MsgSwapExactAmountOut{}

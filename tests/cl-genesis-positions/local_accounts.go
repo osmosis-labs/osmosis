@@ -53,7 +53,11 @@ func GetLocalKeyringAccounts() []sdk.AccAddress {
 		if err != nil {
 			panic(err)
 		}
-		accounts[i-1] = account.Info.GetAddress()
+		address, err := account.Record.GetAddress()
+		if err != nil {
+			panic(err)
+		}
+		accounts[i-1] = address
 	}
 
 	fmt.Println("retrieved accounts")

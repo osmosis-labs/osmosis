@@ -12,16 +12,16 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmjson "github.com/cometbft/cometbft/libs/json"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	osmosisApp "github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
 
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types/genesis"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBankGenesis *banktypes.GenesisState) {

@@ -1,14 +1,14 @@
 package balancer
 
 import (
-	types "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	types "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types

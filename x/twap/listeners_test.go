@@ -8,10 +8,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/twap"
-	"github.com/osmosis-labs/osmosis/v20/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v21/x/twap"
+	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var defaultPoolId uint64 = 1

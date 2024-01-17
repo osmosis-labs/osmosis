@@ -1,0 +1,67 @@
+syntax = "proto3";
+// this is a legacy package that requires additional migration logic
+// in order to use the correct packge. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model";
+
+message TickInfo {
+  string liquidity_gross = 1 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"liquidity_gross\"",
+    (gogoproto.nullable) = false
+  ];
+  string liquidity_net = 2 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  // Total spread rewards accumulated in the opposite direction that the tick
+  // was last crossed. i.e. if the current tick is to the right of this tick
+  // (meaning its currently a greater price), then this is the total spread
+  // rewards accumulated below the tick. If the current tick is to the left of
+  // this tick (meaning its currently at a lower price), then this is the total
+  // spread rewards accumulated above the tick.
+  //
+  // Note: the way this value is used depends on the direction of spread rewards
+  // we are calculating for. If we are calculating spread rewards below the
+  // lower tick and the lower tick is the active tick, then this is the
+  // spreadRewardGrowthGlobal - the lower tick's
+  // spreadRewardGrowthOppositeDirectionOfLastTraversal. If we are calculating
+  // spread rewards above the upper tick and the upper tick is the active tick,
+  // then this is just the tick's
+  // spreadRewardGrowthOppositeDirectionOfLastTraversal value.
+  repeated cosmos.base.v1beta1.DecCoin
+      spread_reward_growth_opposite_direction_of_last_traversal = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+  // uptime_trackers is a container encapsulating the uptime trackers.
+  // We use a container instead of a "repeated UptimeTracker" directly
+  // because we need the ability to serialize and deserialize the
+  // container easily for events when crossing a tick.
+  UptimeTrackers uptime_trackers = 4 [
+    (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message UptimeTrackers {
+  repeated UptimeTracker list = 1
+      [ (gogoproto.moretags) = "yaml:\"list\"", (gogoproto.nullable) = false ];
+}
+
+message UptimeTracker {
+  repeated cosmos.base.v1beta1.DecCoin uptime_growth_outside = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}

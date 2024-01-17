@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	sftypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	sftypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestInitializePool() {
@@ -596,7 +596,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			name:           "only non-pool coin - does not show up in result",
 			poolId:         defaultPoolId,
 			poolLiquidity:  sdk.NewCoins(nonPoolCool),
-			expectedResult: sdk.Coins(nil),
+			expectedResult: sdk.Coins{},
 		},
 		{
 			name:        "invalid pool id",

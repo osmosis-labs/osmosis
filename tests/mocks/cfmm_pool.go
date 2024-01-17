@@ -11,7 +11,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	types0 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // MockCFMMPoolI is a mock of CFMMPoolI interface.
@@ -183,6 +183,20 @@ func (m *MockCFMMPoolI) GetId() uint64 {
 func (mr *MockCFMMPoolIMockRecorder) GetId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockCFMMPoolI)(nil).GetId))
+}
+
+// GetPoolDenoms mocks base method.
+func (m *MockCFMMPoolI) GetPoolDenoms(arg0 types.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolDenoms", arg0)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetPoolDenoms indicates an expected call of GetPoolDenoms.
+func (mr *MockCFMMPoolIMockRecorder) GetPoolDenoms(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolDenoms", reflect.TypeOf((*MockCFMMPoolI)(nil).GetPoolDenoms), arg0)
 }
 
 // GetSpreadFactor mocks base method.
@@ -569,6 +583,20 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) GetId() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetId))
 }
 
+// GetPoolDenoms mocks base method.
+func (m *MockPoolAmountOutExtension) GetPoolDenoms(arg0 types.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolDenoms", arg0)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetPoolDenoms indicates an expected call of GetPoolDenoms.
+func (mr *MockPoolAmountOutExtensionMockRecorder) GetPoolDenoms(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolDenoms", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetPoolDenoms), arg0)
+}
+
 // GetSpreadFactor mocks base method.
 func (m *MockPoolAmountOutExtension) GetSpreadFactor(ctx types.Context) osmomath.Dec {
 	m.ctrl.T.Helper()
@@ -948,6 +976,20 @@ func (m *MockWeightedPoolExtension) GetId() uint64 {
 func (mr *MockWeightedPoolExtensionMockRecorder) GetId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetId))
+}
+
+// GetPoolDenoms mocks base method.
+func (m *MockWeightedPoolExtension) GetPoolDenoms(arg0 types.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolDenoms", arg0)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetPoolDenoms indicates an expected call of GetPoolDenoms.
+func (mr *MockWeightedPoolExtensionMockRecorder) GetPoolDenoms(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolDenoms", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetPoolDenoms), arg0)
 }
 
 // GetSpreadFactor mocks base method.

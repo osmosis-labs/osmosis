@@ -8,10 +8,10 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -400,7 +400,7 @@ func (s *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 
 			// Ensure that the correct coins left the module account
 			lockupModuleBalancePost := lockupKeeper.GetModuleBalance(ctx)
-			coinsRemovedFromModuleAccount := lockupModuleBalancePre.Sub(lockupModuleBalancePost)
+			coinsRemovedFromModuleAccount := lockupModuleBalancePre.Sub(lockupModuleBalancePost...)
 			s.Require().Equal(tc.coinsLocked, coinsRemovedFromModuleAccount)
 
 			// Note the supply of the coins after the lock has matured
@@ -428,7 +428,7 @@ func (s *KeeperTestSuite) TestModuleLockedCoins() {
 
 	// initial check
 	lockedCoins := s.App.LockupKeeper.GetModuleLockedCoins(s.Ctx)
-	s.Require().Equal(lockedCoins, sdk.Coins(nil))
+	s.Require().Equal(lockedCoins, sdk.Coins{})
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -986,7 +986,7 @@ func (s *KeeperTestSuite) TestSplitLock() {
 		s.Require().Equal(updatedOriginalLock.Duration, lock.Duration)
 		s.Require().Equal(updatedOriginalLock.EndTime, lock.EndTime)
 		s.Require().Equal(updatedOriginalLock.RewardReceiverAddress, lock.RewardReceiverAddress)
-		s.Require().True(updatedOriginalLock.Coins.IsEqual(lock.Coins.Sub(tc.amountToSplit)))
+		s.Require().True(updatedOriginalLock.Coins.IsEqual(lock.Coins.Sub(tc.amountToSplit...)))
 
 		// check that last lock id has incremented properly
 		lastLockId := s.App.LockupKeeper.GetLastLockID(s.Ctx)
@@ -1164,8 +1164,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 			expectedCoins = expectedCoins.Add(coin)
 		}
 	}
-	s.Require().Equal(addr1.String(), s.App.BankKeeper.GetAccountsBalances(s.Ctx)[1].Address)
-	s.Require().Equal(expectedCoins, s.App.BankKeeper.GetAccountsBalances(s.Ctx)[1].Coins)
+	s.Require().Equal(expectedCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, addr1))
 
 	s.SetupTest()
 	setupInitLocks()
@@ -1388,7 +1387,7 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 
 		// The cl pool should be missing the underlying assets that were slashed
 		clPoolBalancePostSlash := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
-		s.Require().Equal(clPoolBalancePreSlash.Sub(underlyingAssetsToSlash), clPoolBalancePostSlash)
+		s.Require().Equal(clPoolBalancePreSlash.Sub(underlyingAssetsToSlash...), clPoolBalancePostSlash)
 	}
 }
 

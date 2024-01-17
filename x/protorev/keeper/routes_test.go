@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 type TestRoute struct {

@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -29,7 +29,7 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(),
+		AppConstructor:    NewAppConstructor("osmosis-code-test"),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "osmosis-code-test",
@@ -47,13 +47,17 @@ func DefaultConfig() network.Config {
 }
 
 // NewAppConstructor returns a new Osmosis app given encoding type configs.
-func NewAppConstructor() network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+func NewAppConstructor(chainId string) network.AppConstructor {
+	return func(val network.ValidatorI) servertypes.Application {
+		valCtx := val.GetCtx()
+		appConfig := val.GetAppConfig()
+
 		return NewOsmosisApp(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			simapp.EmptyAppOptions{},
+			valCtx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), valCtx.Config.RootDir, 0,
+			sims.EmptyAppOptions{},
 			EmptyWasmOpts,
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetMinGasPrices(appConfig.MinGasPrices),
+			baseapp.SetChainID(chainId),
 		)
 	}
 }

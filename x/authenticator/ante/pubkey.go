@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +39,7 @@ func NewSetPubKeyDecorator(ak authante.AccountKeeper) SetPubKeyDecorator {
 func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
 	pubkeys, err := sigTx.GetPubKeys()
@@ -72,7 +73,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 			err = acc.SetPubKey(pk)
 			if err != nil {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 			}
 			spkd.ak.SetAccount(ctx, acc)
 		}

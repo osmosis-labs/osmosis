@@ -2,9 +2,10 @@ package authenticator
 
 import (
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 type AuthenticatorManager struct {
@@ -91,11 +92,11 @@ func (am *AuthenticatorManager) GetDefaultAuthenticator() iface.Authenticator {
 }
 
 type TransientStore struct {
-	storeKey     sdk.StoreKey
+	storeKey     storetypes.StoreKey
 	transientCtx sdk.Context
 }
 
-func NewTransientStore(storeKey sdk.StoreKey, ctx sdk.Context) *TransientStore {
+func NewTransientStore(storeKey storetypes.StoreKey, ctx sdk.Context) *TransientStore {
 	return &TransientStore{
 		storeKey:     storeKey,
 		transientCtx: ctx,

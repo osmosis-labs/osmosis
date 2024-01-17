@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 type RangeTestParams struct {
@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 		emissionRate := testParams.baseEmissionRate
 		incentiveCoin := sdk.NewCoin(fmt.Sprintf("%s%d", testParams.baseIncentiveDenom, 0), incentiveAmt)
 		s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
-		_, err := s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
+		_, err := s.Clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
 		s.Require().NoError(err)
 	}
 
@@ -216,7 +216,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 
 			// Set up position
-			positionData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, osmomath.ZeroInt(), osmomath.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
+			positionData, err := s.Clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, osmomath.ZeroInt(), osmomath.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
 
 			// Ensure position was set up correctly and didn't break global invariants
@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), positionData.Amount0), sdk.NewCoin(pool.GetToken1(), positionData.Amount1))
 			totalAssets = totalAssets.Add(actualAddedCoins...)
 			if testParams.baseSwapAmount != (osmomath.Int{}) {
-				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
+				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut)...)
 			}
 			totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
 			totalTimeElapsed = totalTimeElapsed + timeElapsed
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 
 	// If the swap we're about to execute will not generate enough input, we skip the swap.
 	if swapOutDenom == pool.GetToken1() {
-		pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+		pool, err := s.Clk.GetPoolById(s.Ctx, pool.GetId())
 		s.Require().NoError(err)
 
 		poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	}
 
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
+	swappedIn, swappedOut, _, err := s.Clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
 	s.Require().NoError(err)
 
 	return swappedIn, swappedOut
@@ -389,11 +389,11 @@ func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fu
 // CONTRACT: cumulativeTrackedIncentives has been updated immediately before each new incentive record that was created
 func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk.DecCoins, lastTrackerUpdateTime time.Time) (sdk.DecCoins, time.Time) {
 	// Fetch all incentive records across all pools
-	allPools, err := s.clk.GetPools(s.Ctx)
+	allPools, err := s.Clk.GetPools(s.Ctx)
 	s.Require().NoError(err)
 	allIncentiveRecords := make([]types.IncentiveRecord, 0)
 	for _, pool := range allPools {
-		curPoolRecords, err := s.clk.GetAllIncentiveRecordsForPool(s.Ctx, pool.GetId())
+		curPoolRecords, err := s.Clk.GetAllIncentiveRecordsForPool(s.Ctx, pool.GetId())
 		s.Require().NoError(err)
 
 		allIncentiveRecords = append(allIncentiveRecords, curPoolRecords...)

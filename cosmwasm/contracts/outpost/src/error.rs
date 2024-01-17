@@ -28,7 +28,7 @@ pub enum ContractError {
     #[error("SwapAmountTooHigh: got {received}, max allowed: {max}")]
     SwapAmountTooHigh { received: u128, max: u128 },
 
-    #[error("Invalid Crosschain Swpas Contract: {contract}")]
+    #[error("Invalid Crosschain Swaps Contract: {contract}")]
     InvalidCrosschainSwapsContract { contract: String },
 
     #[error("Custom Error val: {val:?}")]

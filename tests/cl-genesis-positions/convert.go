@@ -7,19 +7,19 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
 )
 
 type BigBangPositions struct {
@@ -77,7 +77,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	// fund all accounts
 	for _, acc := range osmosis.TestAccs {
-		err := simapp.FundAccount(osmosis.App.BankKeeper, osmosis.Ctx, acc, initAmounts)
+		err := testutil.FundAccount(osmosis.App.BankKeeper, osmosis.Ctx, acc, initAmounts)
 		if err != nil {
 			panic(err)
 		}

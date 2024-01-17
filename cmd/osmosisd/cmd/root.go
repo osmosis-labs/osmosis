@@ -13,18 +13,22 @@ import (
 	"regexp"
 	"strings"
 
+	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/params"
+	cometbftdb "github.com/cometbft/cometbft-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	tmcmds "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,7 +49,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -54,7 +60,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/config"
 
-	osmosis "github.com/osmosis-labs/osmosis/v20/app"
+	osmosis "github.com/osmosis-labs/osmosis/v21/app"
 )
 
 type AssetList struct {
@@ -275,7 +281,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync).
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
@@ -382,8 +388,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					}
 				})
 			}
-
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 		SilenceUsage: true,
 	}
@@ -420,6 +425,8 @@ func initAppConfig() (string, interface{}) {
 		serverconfig.Config
 
 		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
+
+		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -435,7 +442,9 @@ func initAppConfig() (string, interface{}) {
 
 	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg}
+	sqsConfig := sqs.DefaultConfig
+
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -454,6 +463,62 @@ arbitrage-min-gas-fee = ".005"
 # This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
 # Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
 min-gas-price-for-high-gas-tx = ".0025"
+
+# This parameter enables EIP-1559 like fee market logic in the mempool
+adaptive-fee-enabled = "true"
+
+###############################################################################
+###              Osmosis Sidecar Query Server Configuration                 ###
+###############################################################################
+
+[osmosis-sqs]
+
+# SQS service is disabled by default.
+is-enabled = "false"
+
+# The hostname and address of the sidecar query server storage.
+db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
+db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
+
+# Defines the web server configuration.
+server-address = "{{ .SidecarQueryServerConfig.ServerAddress }}"
+timeout-duration-secs = "{{ .SidecarQueryServerConfig.ServerTimeoutDurationSecs }}"
+
+# Defines the logger configuration.
+logger-filename = "{{ .SidecarQueryServerConfig.LoggerFilename }}"
+logger-is-production = "{{ .SidecarQueryServerConfig.LoggerIsProduction }}"
+logger-level = "{{ .SidecarQueryServerConfig.LoggerLevel }}"
+
+# Defines the gRPC gateway endpoint of the chain.
+grpc-gateway-endpoint = "{{ .SidecarQueryServerConfig.ChainGRPCGatewayEndpoint }}"
+
+# The list of preferred poold IDs in the router.
+# These pools will be prioritized in the candidate route selection, ignoring all other
+# heuristics such as TVL.
+preferred-pool-ids = "{{ .SidecarQueryServerConfig.Router.PreferredPoolIDs }}"
+
+# The maximum number of pools to be included in a single route.
+max-pools-per-route = "{{ .SidecarQueryServerConfig.Router.MaxPoolsPerRoute }}"
+
+# The maximum number of routes to be returned in candidate route search.
+max-routes = "{{ .SidecarQueryServerConfig.Router.MaxRoutes }}"
+
+# The maximum number of routes to be split across. Must be smaller than or
+# equal to max-routes.
+max-split-routes = "{{ .SidecarQueryServerConfig.Router.MaxSplitRoutes }}"
+
+# The maximum number of iterations to split a route across.
+max-split-iterations = "{{ .SidecarQueryServerConfig.Router.MaxSplitIterations }}"
+
+# The minimum liquidity of a pool to be included in a route.
+min-osmo-liquidity = "{{ .SidecarQueryServerConfig.Router.MinOSMOLiquidity }}"
+
+# The height interval at which the candidate routes are recomputed and updated in
+# Redis
+route-update-height-interval = "{{ .SidecarQueryServerConfig.Router.RouteUpdateHeightInterval }}"
+
+# Whether to enable candidate route caching in Redis.
+route-cache-enabled = "{{ .SidecarQueryServerConfig.Router.RouteCacheEnabled }}"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg
@@ -468,11 +533,16 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	debugCmd.AddCommand(ConvertBech32Cmd())
 	debugCmd.AddCommand(DebugProtoMarshalledBytes())
 
+	gentxModule, ok := osmosis.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+	if !ok {
+		panic(fmt.Errorf("expected %s module to be an instance of type %T", genutiltypes.ModuleName, genutil.AppModuleBasic{}))
+	}
+
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
 		forceprune(),
 		InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, gentxModule.GenTxValidator),
 		genutilcli.MigrateGenesisCmd(),
 		ExportDeriveBalancesCmd(),
 		StakedToCSVCmd(),
@@ -482,7 +552,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
-		tmcmds.RollbackStateCmd,
 		debugCmd,
 		ConfigCmd(),
 		ChangeEnvironmentCmd(),
@@ -501,7 +570,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		keys.Commands(osmosis.DefaultNodeHome),
 	)
 	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -562,7 +631,7 @@ func txCommand() *cobra.Command {
 }
 
 // newApp initializes and returns a new Osmosis app.
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
@@ -580,7 +649,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
+	snapshotDB, err := cometbftdb.NewGoLevelDB("metadata", snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -588,8 +657,24 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	if err != nil {
 		panic(err)
 	}
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
 
-	var wasmOpts []wasm.Option
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
+
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
@@ -609,13 +694,16 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)), cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
+		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
+		baseapp.SetChainID(chainID),
 	)
 }
 
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
 func createOsmosisAppAndExport(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
+	logger log.Logger, db cometbftdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.

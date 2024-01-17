@@ -12,10 +12,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	viper "github.com/spf13/viper"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 // Default constants

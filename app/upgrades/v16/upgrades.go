@@ -9,17 +9,17 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
 
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 )
 
 const (
@@ -83,15 +83,19 @@ func CreateUpgradeHandler(
 
 		// Update expedited governance param
 		// In particular, set expedited quorum to 2/3.
-		params := keepers.GovKeeper.GetTallyParams(ctx)
-		params.ExpeditedQuorum = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
-		keepers.GovKeeper.SetTallyParams(ctx, params)
+		// UNFORKINGNOTE: GetTallyParams no longer exists, keeping commented for historical purposes
+		// params := keepers.GovKeeper.GetTallyParams(ctx)
+		// params.ExpeditedQuorum = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
+		// keepers.GovKeeper.SetTallyParams(ctx, params)
 
 		// Add cosmwasmpool module address to the list of allowed addresses to upload contract code.
 		cwPoolModuleAddress := keepers.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName)
 		wasmParams := keepers.WasmKeeper.GetParams(ctx)
 		wasmParams.CodeUploadAccess.Addresses = append(wasmParams.CodeUploadAccess.Addresses, cwPoolModuleAddress.String())
-		keepers.WasmKeeper.SetParams(ctx, wasmParams)
+		err = keepers.WasmKeeper.SetParams(ctx, wasmParams)
+		if err != nil {
+			return nil, err
+		}
 
 		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
 		hostParams := keepers.ICAHostKeeper.GetParams(ctx)

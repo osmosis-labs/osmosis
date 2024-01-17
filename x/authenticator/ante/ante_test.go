@@ -10,8 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -21,13 +22,12 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/ante"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/ante"
 )
 
 type AutherticatorAnteSuite struct {
@@ -202,6 +202,23 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[0].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
+	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[0].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
+	// fee payer is authenticated
+	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -219,10 +236,6 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
-
-	// TODO: improve this test for gas consumption
-	fmt.Println("Gas Consumed: after txn gas over 20000")
-	fmt.Println(s.Ctx.GasMeter().GasConsumed())
 
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "gas")
@@ -272,7 +285,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Bad selection", s.TestPrivKeys[0], []int32{3}, false, 0},
 	}
 
-	approachingGasPerSig := 8000 // Each signature consumes at least this amount (but not much more)
+	approachingGasPerSig := 4000 // Each signature consumes at least this amount (but not much more)
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {

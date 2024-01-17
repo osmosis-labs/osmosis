@@ -1,16 +1,16 @@
 package simapp
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	db "github.com/tendermint/tm-db"
 
-	simexec "github.com/osmosis-labs/osmosis/v20/simulation/executor"
+	simexec "github.com/osmosis-labs/osmosis/v21/simulation/executor"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
 )
 
 func OsmosisAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {

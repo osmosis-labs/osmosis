@@ -10,7 +10,7 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 type CosmwasmAuthenticator struct {

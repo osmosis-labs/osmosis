@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -14,25 +15,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v20/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -200,12 +201,16 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	// initialize a genesis file
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
+		addr, err := val.keyInfo.GetAddress()
+		if err != nil {
+			return err
+		}
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA+","+DaiOsmoPoolBalances, addr, forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB+","+DaiOsmoPoolBalances, addr, forkHeight); err != nil {
 				return err
 			}
 		}
@@ -289,7 +294,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypes.GenesisState{}, updateGovGenesis(votingPeriod, expeditedVotingPeriod))
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypesv1.GenesisState{}, updateGovGenesis(votingPeriod, expeditedVotingPeriod))
 	if err != nil {
 		return err
 	}
@@ -504,12 +509,13 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = OsmoDenom
 }
 
-func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypes.GenesisState) {
-	return func(govGenState *govtypes.GenesisState) {
-		govGenState.VotingParams.VotingPeriod = votingPeriod
-		govGenState.VotingParams.ExpeditedVotingPeriod = expeditedVotingPeriod
-		govGenState.DepositParams.MinDeposit = tenOsmo
-		govGenState.DepositParams.MinExpeditedDeposit = fiftyOsmo
+//nolint:unparam
+func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypesv1.GenesisState) {
+	return func(govGenState *govtypesv1.GenesisState) {
+		govGenState.Params.VotingPeriod = &votingPeriod
+		govGenState.Params.ExpeditedVotingPeriod = &expeditedVotingPeriod
+		govGenState.Params.MinDeposit = tenOsmo
+		govGenState.Params.ExpeditedMinDeposit = fiftyOsmo
 	}
 }
 
@@ -527,18 +533,20 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 				stakeAmountCoin = StakeAmountCoinB
 			}
 			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)
+
+			const genesisSetupFailed = "genutil genesis setup failed: "
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genesisSetupFailed + err.Error())
 			}
 
 			signedTx, err := node.signMsg(createValmsg)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genesisSetupFailed + err.Error())
 			}
 
 			txRaw, err := util.Cdc.MarshalJSON(signedTx)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genesisSetupFailed + err.Error())
 			}
 			genTxs = append(genTxs, txRaw)
 		}

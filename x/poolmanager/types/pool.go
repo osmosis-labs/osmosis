@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -22,6 +22,9 @@ type PoolI interface {
 	GetSpreadFactor(ctx sdk.Context) osmomath.Dec
 	// Returns whether the pool has swaps enabled at the moment
 	IsActive(ctx sdk.Context) bool
+
+	// GetPoolDenoms returns the pool's denoms.
+	GetPoolDenoms(sdk.Context) []string
 
 	// Returns the spot price of the 'base asset' in terms of the 'quote asset' in the pool,
 	// errors if either baseAssetDenom, or quoteAssetDenom does not exist.

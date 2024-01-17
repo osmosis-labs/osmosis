@@ -4,17 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v20/app"
+	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
 
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 )
 
 var (
@@ -96,7 +97,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// create an address and fund with coins
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 20000), sdk.NewInt64Coin("uosmo", 10000000000)}
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+	err := testutil.FundAccount(app.BankKeeper, ctx, addr, coins)
 	require.NoError(t, err)
 
 	// allow pool creation
@@ -120,7 +121,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// mints LP tokens and send to address created earlier
 	// this ensures the supply exists on chain
 	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrToByDuration.Denom, 200)}
-	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
+	err = testutil.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
 	require.NoError(t, err)
 
 	// create a gauge of every type (byDuration, noLock, byGroup)

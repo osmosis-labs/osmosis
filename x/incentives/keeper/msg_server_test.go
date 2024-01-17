@@ -9,9 +9,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -132,8 +132,8 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			s.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
 		} else {
 			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.CreateGaugeFee))
-			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
-			finalAccountBalance := accountBalance.Sub(fee)
+			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition...)
+			finalAccountBalance := accountBalance.Sub(fee...)
 			s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}
 	}
@@ -248,8 +248,8 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 
 		if !tc.expectErr {
 			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.AddToGaugeFee))
-			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
-			finalAccountBalance := accountBalance.Sub(fee)
+			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition...)
+			finalAccountBalance := accountBalance.Sub(fee...)
 			s.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
 		} else if tc.expectErr && !tc.isGaugeComplete {
 			s.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
@@ -349,10 +349,10 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 			s.Require().NoError(err)
 			balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
 
-			accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds)
+			accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds...)
 			finalAccountBalance := accountBalance
 			if !tc.isModuleAccount {
-				finalAccountBalance = accountBalance.Sub(groupCreationFee)
+				finalAccountBalance = accountBalance.Sub(groupCreationFee...)
 			}
 			s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}

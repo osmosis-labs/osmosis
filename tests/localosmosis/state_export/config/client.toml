@@ -1,0 +1,15 @@
+broadcast-mode = "sync"
+chain-id = "localosmosis"
+keyring-backend = "test"
+node = "tcp://localhost:26657"
+output = "text"
+
+# Opinionated osmosis tx configuration
+gas = "auto"
+gas-prices = ""
+gas-adjustment = "1.25"
+fees = "5000uosmo"
+
+# Pretty outputs disabled
+human-readable-denoms-input = false
+human-readable-denoms-output = false

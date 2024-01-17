@@ -613,8 +613,8 @@ We communicate with various integrators if they'd like release-blocking QA testi
     * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
 
 [1]:https://github.com/cosmos/cosmos-sdk/blob/d11196aad04e57812dbc5ac6248d35375e6603af/baseapp/abci.go#L293-L303
-[2]:https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
-[3]:https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
+[2]:https://github.com/cometbft/cometbft/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
+[3]:https://github.com/cometbft/cometbft/blob/main/types/results.go#L47-L54
 [4]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
 [5]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/types/commit_info.go#L40
 

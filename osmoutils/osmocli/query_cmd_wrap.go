@@ -8,8 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

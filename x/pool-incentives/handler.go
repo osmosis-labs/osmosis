@@ -5,15 +5,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 // NewPoolIncentivesProposalHandler is a handler for governance proposals on new pool incentives.
-func NewPoolIncentivesProposalHandler(k keeper.Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewPoolIncentivesProposalHandler(k keeper.Keeper) govtypesv1.Handler {
+	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {
 		case *types.UpdatePoolIncentivesProposal:
 			return handleUpdatePoolIncentivesProposal(ctx, k, c)

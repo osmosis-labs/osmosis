@@ -11,10 +11,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var (
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 
 			// make sure sender's balance is updated correctly
 			senderBal := bankKeeper.GetAllBalances(s.Ctx, sender)
-			expectedSenderBal := senderBalBeforeNewPool.Sub(params.PoolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
+			expectedSenderBal := senderBalBeforeNewPool.Sub(params.PoolCreationFee...).Sub(expectedPoolTokens...).Add(expectedPoolShares)
 			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased
@@ -549,7 +549,7 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 			s.Require().NoError(err, "test: %v", test.name)
 			s.Require().Equal(test.sharesRequested.String(), bankKeeper.GetBalance(s.Ctx, test.txSender, "gamm/pool/1").Amount.String())
 			balancesAfter := bankKeeper.GetAllBalances(s.Ctx, test.txSender)
-			deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
+			deltaBalances, _ := balancesBefore.SafeSub(balancesAfter...)
 			// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100000000gamm/pool/1.
 			// Thus, to get the 50*OneShare gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be provided.
 			s.Require().Equal("5000", deltaBalances.AmountOf("foo").String())
@@ -664,7 +664,7 @@ func (s *KeeperTestSuite) TestExitPool() {
 				s.Require().NoError(err, "test: %v", test.name)
 				s.Require().Equal(test.sharesIn.String(), bankKeeper.GetBalance(s.Ctx, test.txSender, "gamm/pool/1").Amount.String())
 				balancesAfter := bankKeeper.GetAllBalances(s.Ctx, test.txSender)
-				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
+				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter...)
 				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100*OneShare gamm/pool/1.
 				// Thus, to refund the 50*OneShare gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be refunded.
 				s.Require().Equal("-5000", deltaBalances.AmountOf("foo").String())
@@ -761,7 +761,7 @@ func (s *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			s.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 1)
 
 			balanceAfterExit := s.App.BankKeeper.GetAllBalances(ctx, joinPoolAcc)
-			deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
+			deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit...)
 
 			// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
 			// coming from rounding in exitPool.Here we test if the difference is within rounding tolerance range

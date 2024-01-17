@@ -2,6 +2,7 @@ package executortypes
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"os"
 	"sort"
@@ -16,7 +17,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
 )
 
 // Manager defines a simulation manager that provides the high level utility
@@ -38,7 +39,7 @@ func CreateSimulationManager(
 		panic("account keeper typecast fail")
 	}
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(appCodec, *ak, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(appCodec, *ak, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 	}
 	simulationManager := newSimulationManager(app.ModuleManager(), overrideModules)
 	return simulationManager
@@ -92,18 +93,22 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 	// hardcode this one filepath for wasm.
 	// TODO: Clean this up / make a better plan
 	simState := module.SimulationState{
-		AppParams:    loadAppParamsForWasm("params.json"),
-		ParamChanges: []simulation.ParamChange{},
-		Contents:     []simulation.WeightedProposalContent{},
-		Cdc:          cdc,
+		AppParams:              loadAppParamsForWasm("params.json"),
+		LegacyParamChange:      []simulation.LegacyParamChange{},
+		LegacyProposalContents: []simulation.WeightedProposalContent{}, //nolint:staticcheck
+		Cdc:                    cdc,
 	}
 
 	r := rand.New(rand.NewSource(seed))
 	// first pass generate randomized params + proposal contents
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
-			simState.ParamChanges = append(simState.ParamChanges, simModule.RandomizedParams(r)...)
-			simState.Contents = append(simState.Contents, simModule.ProposalContents(simState)...)
+			// UNFORKINGNOTE: Figure out how to call RandomizedParams and ProposalContents if we decide to revive simulator
+			//
+			// Printing so we dont need to uncomment more, just delete the prints later
+			// simState.LegacyParamChange = append(simState.LegacyParamChange, simModule.RandomizedParams(r)...)
+			// simState.LegacyProposalContents = append(simState.LegacyProposalContents, simModule.ProposalContents(simState)...)
+			fmt.Println("simState.LegacyParamChange", simModule, r)
 		}
 	}
 	// second pass generate actions
@@ -164,9 +169,11 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *si
 			// if we define a random genesis function use it, otherwise use default genesis
 			if mod, ok := simModule.(simtypes.AppModuleSimulationGenesis); ok {
 				mod.SimulatorGenesisState(simState, sim)
-			} else {
-				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
 			}
+			// else {
+			// 	// UNFORKINGNOTE: Figure out how to call DefaultGenesis, if we decide to revive simulator
+			// 	// simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
+			// }
 		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			simModule.GenerateGenesisState(simState)

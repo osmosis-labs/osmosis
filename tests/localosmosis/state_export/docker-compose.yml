@@ -1,4 +1,4 @@
-version: "3"
+version: "4"
 
 services:
   osmosisd:
@@ -17,11 +17,22 @@ services:
     entrypoint:
       - /osmosis/start.sh
     environment:
-      - MONIKER=val
-      - CHAIN_ID=localosmosis
+      MONIKER: val
+      CHAIN_ID: localosmosis
     ports:
       - 26657:26657
       - 1317:1317
       - 9090:9090
       - 9091:9091
       - 6060:6060
+      - 9092:9092
+    links:
+      - redis
+  # Enable Redis for sidecar query server
+  redis:
+    image: redis/redis-stack:7.2.0-v3
+    ports:
+      - 6379:6379
+      - 8001:8001
+    volumes:
+      - ./redis-data:/data

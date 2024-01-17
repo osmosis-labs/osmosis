@@ -6,13 +6,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v20/app/params"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -60,12 +60,12 @@ func (sim *SimCtx) defaultTxBuilder(
 // TODO: Fix these args
 func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) {
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
-	gasInfo, results, err := sim.BaseApp().Deliver(txConfig.TxEncoder(), tx)
+	_, results, err := sim.BaseApp().SimDeliver(txConfig.TxEncoder(), tx)
 	if err != nil {
-		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), []simulation.FutureOperation{}, nil, err
+		return simulation.OperationMsg{}, nil, nil, err
 	}
 
-	opMsg := simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil)
+	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
 	opMsg.Route = msgName
 	opMsg.Name = msgName
 
@@ -131,7 +131,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 func getGas(msg sdk.Msg) uint64 {
 	_, ok := msg.(*tokenfactorytypes.MsgCreateDenom)
 	if ok {
-		return uint64(tokenfactorytypes.DefaultCreationGasFee + helpers.DefaultGenTxGas)
+		return uint64(tokenfactorytypes.DefaultCreationGasFee + sims.DefaultGenTxGas)
 	}
-	return uint64(helpers.DefaultGenTxGas)
+	return uint64(sims.DefaultGenTxGas)
 }

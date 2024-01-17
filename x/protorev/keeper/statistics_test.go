@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 // TestGetNumberOfTrades tests GetNumberOfTrades and IncrementNumberOfTrades
@@ -192,4 +192,84 @@ func (s *KeeperTestSuite) TestUpdateStatistics() {
 	routes, err = s.App.ProtoRevKeeper.GetAllRoutes(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(2, len(routes))
+}
+
+func (s *KeeperTestSuite) TestGetSetCyclicArbProfitTrackerValue() {
+	tests := map[string]struct {
+		firstCyclicArbValue  sdk.Coins
+		secondCyclicArbValue sdk.Coins
+	}{
+		"happy path: replace single coin with increased single coin": {
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
+		},
+		"replace single coin with decreased single coin": {
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(50))),
+		},
+		"replace single coin with different denom": {
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
+		},
+		"replace single coin with multiple coins": {
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
+		},
+		"replace multiple coins with single coin": {
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			s.Require().Empty(s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx))
+
+			s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(s.Ctx, tc.firstCyclicArbValue)
+			actualFirstCyclicArbValue := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx)
+			s.Require().Equal(tc.firstCyclicArbValue, actualFirstCyclicArbValue)
+
+			s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(s.Ctx, tc.secondCyclicArbValue)
+			actualSecondCyclicArbValue := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx)
+			s.Require().Equal(tc.secondCyclicArbValue, actualSecondCyclicArbValue)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetSetCyclicArbProfitTrackerStartHeight() {
+	tests := map[string]struct {
+		firstCyclicArbStartHeight  int64
+		secondCyclicArbStartHeight int64
+	}{
+		"replace tracker height with a higher height": {
+			firstCyclicArbStartHeight:  100,
+			secondCyclicArbStartHeight: 5000,
+		},
+		"replace tracker height with a lower height": {
+			firstCyclicArbStartHeight:  100,
+			secondCyclicArbStartHeight: 50,
+		},
+		"replace tracker height back to zero": {
+			firstCyclicArbStartHeight:  100,
+			secondCyclicArbStartHeight: 0,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			s.Require().Empty(s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerStartHeight(s.Ctx))
+
+			s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(s.Ctx, tc.firstCyclicArbStartHeight)
+			actualFirstCyclicArbStartHeight := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerStartHeight(s.Ctx)
+			s.Require().Equal(tc.firstCyclicArbStartHeight, actualFirstCyclicArbStartHeight)
+
+			s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(s.Ctx, tc.secondCyclicArbStartHeight)
+			actualSecondCyclicArbStartHeight := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerStartHeight(s.Ctx)
+			s.Require().Equal(tc.secondCyclicArbStartHeight, actualSecondCyclicArbStartHeight)
+		})
+	}
 }

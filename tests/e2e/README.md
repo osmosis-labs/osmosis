@@ -145,7 +145,7 @@ Please refer to `tests/e2e/initialization/README.md`
 ### To build the debug Osmosis image
 
 ```sh
-    make docker-build-debug
+    make e2e-docker-build-debug
 ```
 
 ### Environment variables

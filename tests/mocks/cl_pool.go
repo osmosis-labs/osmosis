@@ -11,7 +11,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	types0 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // MockConcentratedPoolExtension is a mock of ConcentratedPoolExtension interface.
@@ -191,6 +191,20 @@ func (m *MockConcentratedPoolExtension) GetLiquidity() osmomath.Dec {
 func (mr *MockConcentratedPoolExtensionMockRecorder) GetLiquidity() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLiquidity", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetLiquidity))
+}
+
+// GetPoolDenoms mocks base method.
+func (m *MockConcentratedPoolExtension) GetPoolDenoms(arg0 types.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolDenoms", arg0)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetPoolDenoms indicates an expected call of GetPoolDenoms.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetPoolDenoms(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolDenoms", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetPoolDenoms), arg0)
 }
 
 // GetSpreadFactor mocks base method.

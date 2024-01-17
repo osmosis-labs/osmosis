@@ -7,6 +7,10 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Basedenom: sdk.DefaultBondDenom,
 		Feetokens: []FeeToken{},
+		TxFeesTracker: &TxFeesTracker{
+			TxFees:                     sdk.NewCoins(),
+			HeightAccountingStartsFrom: 0,
+		},
 	}
 }
 

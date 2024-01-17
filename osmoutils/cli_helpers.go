@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )

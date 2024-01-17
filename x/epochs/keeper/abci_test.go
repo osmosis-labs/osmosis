@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"golang.org/x/exp/maps"
 
@@ -14,7 +15,7 @@ import (
 
 // This test is responsible for testing how epochs increment based off
 // of their initial conditions, and subsequent block height / times.
-func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
+func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	block1Time := time.Unix(1656907200, 0).UTC()
 	const defaultIdentifier = "hourly"
 	const defaultDuration = time.Hour

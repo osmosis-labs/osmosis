@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 )
 
 // Simplified multi-asset CFMM is xy(x^2 + y^2 + w) = k,
@@ -305,7 +305,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, sprea
 			return osmomath.ZeroInt(), sdk.NewCoins(), err
 		}
 
-		tokensJoined = tokensIn.Sub(remCoins)
+		tokensJoined = tokensIn.Sub(remCoins...)
 	}
 
 	p.updatePoolForJoin(tokensJoined, numShares)

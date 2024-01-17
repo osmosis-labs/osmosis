@@ -1,3 +1,5 @@
+//go:build !norace
+
 package concentrated_liquidity_test
 
 import (
@@ -11,8 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
 )
 
 const (
@@ -31,12 +33,6 @@ type swapAmountsMismatchErr struct {
 
 func (e swapAmountsMismatchErr) Error() string {
 	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
-}
-
-type positionAndLiquidity struct {
-	positionId   uint64
-	liquidity    osmomath.Dec
-	accountIndex int
 }
 
 func TestFuzz_Many(t *testing.T) {
@@ -91,7 +87,7 @@ func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int
 	s.CreateFullRangePosition(pool, defaultCoins)
 
 	// Refetch pool
-	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+	pool, err := s.Clk.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
 	fmt.Printf("SINGLE FUZZ START: %d. initialAmt0 %s initialAmt1 %s \n", fuzzNum, initialAmt0, initialAmt1)
@@ -146,7 +142,7 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 }
 
 func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool) {
-	pool, err := s.clk.GetPoolById(s.Ctx, poolId)
+	pool, err := s.Clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	updateStrategy := func() (swapStrategy int, zfo bool) {
@@ -203,6 +199,15 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 	} else {
 		targetTick += 1
 	}
+	// TODO: remove this limit upon completion of the refactor in:
+	// https://github.com/osmosis-labs/osmosis/issues/5726
+	// Due to an intermediary refactor step where we have
+	// full range positions created in the extended full range it
+	// sometimes tries to swap to the V2 MinInitializedTick that
+	// is not supported yet by the rest of the system.
+	if targetTick < types.MinInitializedTick {
+		return false, false
+	}
 	return s.swapNearTickBoundary(r, pool, targetTick, zfo)
 }
 
@@ -227,16 +232,6 @@ func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool typ
 }
 
 func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, targetTick int64, zfo bool) (didSwap bool, fatalErr bool) {
-	// TODO: remove this limit upon completion of the refactor in:
-	// https://github.com/osmosis-labs/osmosis/issues/5726
-	// Due to an intermediary refactor step where we have
-	// full range positions created in the extended full range it
-	// sometimes tries to swap to the V2 MinInitializedTick that
-	// is not supported yet by the rest of the system.
-	if targetTick < types.MinInitializedTick {
-		return false, false
-	}
-
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	// TODO: Confirm accuracy of this method.
 	amountInRequired, curLiquidity, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zfo, false)
@@ -293,7 +288,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
 	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
-	_, tokenOut, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
+	_, tokenOut, _, err := s.Clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
@@ -312,7 +307,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// We expect the returned amountIn to be roughly equal to the original swapInFunded.
 	cacheCtx, _ = s.Ctx.CacheContext()
 	fmt.Printf("swap out: %s\n", tokenOut)
-	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
+	amountInSwapResult, _, _, err := s.Clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.

@@ -8,12 +8,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -67,6 +67,7 @@ type BankKeeper interface {
 	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount osmomath.Int)
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
 // StakingKeeper expected staking keeper.

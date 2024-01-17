@@ -7,28 +7,28 @@ import (
 	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	"github.com/cometbft/cometbft/crypto/ed25519"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	proto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're intentionally using this deprecated package to be compatible with cosmos protos
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	gammv2types "github.com/osmosis-labs/osmosis/v20/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v21/x/gamm/v2types"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
-	"github.com/osmosis-labs/osmosis/v20/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v21/wasmbinding"
 )
 
 type StargateTestSuite struct {
@@ -76,7 +76,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
-				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
@@ -105,7 +105,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
-				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
@@ -146,7 +146,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
+				err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -169,7 +169,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
+				err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})

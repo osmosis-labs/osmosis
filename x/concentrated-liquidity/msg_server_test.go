@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
 			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
 			incentivesToBeSentToUsers := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
-			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers)
+			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers...)
 			totalAmountToFund := incentivesToBeSentToUsers.Add(incentivesToBeSentToCommunityPool...)
 			s.FundAcc(pool.GetIncentivesAddress(), totalAmountToFund)
 

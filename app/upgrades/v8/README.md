@@ -18,7 +18,7 @@ The implementation of 226 will introduce a new method for unpooling:
 
 `UnPoolWhitelistedPool`
 
-Let's review the states a position in a pool may be to be able to understand the unpooling process better.  Coins are pooled together to form shares of a GAMM.  These may be locked for a period of time, to receive addtional incentives.  Finally, locked tokens may enter into Superfluid Delegations.
+Let's review the states a position in a pool may be to be able to understand the unpooling process better.  Coins are pooled together to form shares of a GAMM.  These may be locked for a period of time, to receive additional incentives.  Finally, locked tokens may enter into Superfluid Delegations.
 
 ```sh
   ┌─────────────────────────┐   ┌─────────────────────────┐

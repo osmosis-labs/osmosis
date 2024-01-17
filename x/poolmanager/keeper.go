@@ -2,16 +2,17 @@ package poolmanager
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	gammKeeper           types.PoolModuleI
 	concentratedKeeper   types.PoolModuleI
@@ -35,7 +36,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -97,14 +98,73 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, poolRoute := range genState.PoolRoutes {
 		k.SetPoolRoute(ctx, poolRoute.PoolId, poolRoute.PoolType)
 	}
+
+	// We track taker fees generated in the module's KVStore.
+	// If the values were exported, we set them here.
+	// If the values were not exported, we initialize the tracker to zero and set the accounting height to the current height.
+	if !genState.TakerFeesTracker.TakerFeesToStakers.Empty() {
+		k.SetTakerFeeTrackerForStakers(ctx, genState.TakerFeesTracker.TakerFeesToStakers)
+	} else {
+		k.SetTakerFeeTrackerForStakers(ctx, sdk.NewCoins())
+	}
+	if !genState.TakerFeesTracker.TakerFeesToCommunityPool.Empty() {
+		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesTracker.TakerFeesToCommunityPool)
+	} else {
+		k.SetTakerFeeTrackerForCommunityPool(ctx, sdk.NewCoins())
+	}
+	if genState.TakerFeesTracker.HeightAccountingStartsFrom != 0 {
+		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
+	} else {
+		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
+	}
+
+	// Set the pool volumes KVStore.
+	for _, poolVolume := range genState.PoolVolumes {
+		k.SetVolume(ctx, poolVolume.PoolId, poolVolume.PoolVolume)
+	}
+
+	// Set the denom pair taker fees KVStore.
+	for _, denomPairTakerFee := range genState.DenomPairTakerFeeStore {
+		k.SetDenomPairTakerFee(ctx, denomPairTakerFee.Denom0, denomPairTakerFee.Denom1, denomPairTakerFee.TakerFee)
+	}
 }
 
 // ExportGenesis returns the poolmanager module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	pools, err := k.AllPools(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// Utilize poolVolumes struct to export pool volumes from KVStore.
+	poolVolumes := make([]*types.PoolVolume, len(pools))
+	for i, pool := range pools {
+		poolVolume := k.GetTotalVolumeForPool(ctx, pool.GetId())
+		poolVolumes[i] = &types.PoolVolume{
+			PoolId:     pool.GetId(),
+			PoolVolume: poolVolume,
+		}
+	}
+
+	// Utilize denomPairTakerFee struct to export taker fees from KVStore.
+	denomPairTakerFees, err := k.GetAllTradingPairTakerFees(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// Export KVStore values to the genesis state so they can be imported in init genesis.
+	takerFeesTracker := types.TakerFeesTracker{
+		TakerFeesToStakers:         k.GetTakerFeeTrackerForStakers(ctx),
+		TakerFeesToCommunityPool:   k.GetTakerFeeTrackerForCommunityPool(ctx),
+		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
+	}
 	return &types.GenesisState{
-		Params:     k.GetParams(ctx),
-		NextPoolId: k.GetNextPoolId(ctx),
-		PoolRoutes: k.getAllPoolRoutes(ctx),
+		Params:                 k.GetParams(ctx),
+		NextPoolId:             k.GetNextPoolId(ctx),
+		PoolRoutes:             k.getAllPoolRoutes(ctx),
+		TakerFeesTracker:       &takerFeesTracker,
+		PoolVolumes:            poolVolumes,
+		DenomPairTakerFeeStore: denomPairTakerFees,
 	}
 }
 

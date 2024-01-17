@@ -8,28 +8,29 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	tmabcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v20/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v20/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v21/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -457,7 +458,7 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (PropTallyResult, error)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var balancesResp govtypes.QueryTallyResultResponse
+	var balancesResp govtypesv1.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
 		return PropTallyResult{
 			Yes:        osmomath.ZeroInt(),
@@ -484,8 +485,9 @@ func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var propResp govtypes.QueryProposalResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
+	var propResp govtypesv1.QueryProposalResponse
+	err = util.Cdc.UnmarshalJSON(bz, &propResp)
+	if err != nil && !strings.Contains(err.Error(), "is_expedited") {
 		return "", err
 	}
 	proposalStatus := propResp.Proposal.Status
@@ -677,7 +679,7 @@ func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsse
 func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 	var result map[string][]interface{}
 	err = json.Unmarshal(out.Bytes(), &result)

@@ -3,14 +3,14 @@ package keeper_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	osmoapp "github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -63,9 +63,10 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 				Weight:  osmomath.NewDecWithPrec(217, 3),
 			},
 		}
-		maxArithmeticTolerance   = osmomath.NewDec(5)
-		expectedSupplyWithOffset = osmomath.NewDec(0)
-		expectedSupply           = osmomath.NewDec(keeper.DeveloperVestingAmount)
+		maxArithmeticTolerance = osmomath.NewDec(5)
+		// In test setup, we set a validator with a delegation equal to sdk.DefaultPowerReduction.
+		expectedSupplyWithOffset = sdk.DefaultPowerReduction.ToLegacyDec()
+		expectedSupply           = osmomath.NewDec(keeper.DeveloperVestingAmount).Add(sdk.DefaultPowerReduction.ToLegacyDec())
 	)
 
 	s.assertAddressWeightsAddUpToOne(testWeightedAddresses)
@@ -392,7 +393,10 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 
 			// Old supply
 			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
-			s.Require().Equal(osmomath.NewInt(keeper.DeveloperVestingAmount), oldSupply)
+			// We require a validator be setup in the app setup logic, or else tests wont run.
+			// This validator has a delegation equal to sdk.DefaultPowerReduction, so we add this
+			// to the expected supply.
+			s.Require().Equal(osmomath.NewInt(keeper.DeveloperVestingAmount).Add(sdk.DefaultPowerReduction), oldSupply)
 
 			if tc.expectedError {
 				s.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
@@ -527,8 +531,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 		EpochProvisions: genesisEpochProvisionsDec,
 	})
 
-	expectedSupplyWithOffset := osmomath.NewDec(0)
-	expectedSupply := osmomath.NewDec(keeper.DeveloperVestingAmount)
+	// In test setup, we set a validator with a delegation equal to sdk.DefaultPowerReduction.
+	expectedSupplyWithOffset := sdk.DefaultPowerReduction.ToLegacyDec()
+	expectedSupply := osmomath.NewDec(keeper.DeveloperVestingAmount).Add(sdk.DefaultPowerReduction.ToLegacyDec())
 
 	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
 	s.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
@@ -595,7 +600,8 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 	// Here, we add the deltas to the actual supply and compare against expected.
 	//
 	// expectedTotalProvisionedSupply = 365 * 821917808219.178082191780821917 = 299_999_999_999_999.999999999999999705
-	expectedTotalProvisionedSupply := osmomath.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
+	// In test setup, we set a validator with a delegation equal to sdk.DefaultPowerReduction.
+	expectedTotalProvisionedSupply := osmomath.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec).Add(sdk.DefaultPowerReduction.ToLegacyDec())
 	// actualTotalProvisionedSupply = 299_999_999_997_380 (off by 2619.999999999999999705)
 	// devRewardsDelta = 2555 (hard to estimate but the source is from truncating dev rewards )
 	// epochProvisionsDelta = 0.178082191780821917 * 365 = 64.999999999999999705

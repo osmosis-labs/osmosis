@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper provides a way to manage incentives module storage.
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	paramSpace paramtypes.Subspace
 	hooks      types.IncentiveHooks
 	ak         types.AccountKeeper
@@ -30,7 +31,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper, clk types.ConcentratedLiquidityKeeper, pmk types.PoolManagerKeeper, pik types.PoolIncentiveKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper, clk types.ConcentratedLiquidityKeeper, pmk types.PoolManagerKeeper, pik types.PoolIncentiveKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}

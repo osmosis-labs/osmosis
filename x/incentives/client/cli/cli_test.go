@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
 )
 
 func TestGetCmdGauges(t *testing.T) {

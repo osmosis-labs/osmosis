@@ -8,26 +8,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/testutils"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
 )
 
 type AuthenticatorSuite struct {
@@ -68,7 +68,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 	}
 
 	// Initialize a test account with the first private key
-	s.Account = s.CreateAccount(s.PrivKeys[0], 100_000)
+	s.Account = s.CreateAccount(s.PrivKeys[0], 500_000)
 }
 
 func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) authtypes.AccountI {
@@ -590,9 +590,10 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthz() {
 	s.Require().NoError(err)
 
 	// Create Grant
+	expiration := time.Now().Add(time.Hour * 24 * 10)
 	grant := authz.Grant{
 		Authorization: sendAuthAny,
-		Expiration:    time.Now().Add(time.Hour * 24 * 10),
+		Expiration:    &expiration,
 	}
 
 	// Grant Send Authorization from s.PrivKeys[0] to s.PrivKeys[1]
@@ -603,7 +604,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthz() {
 	}
 
 	// Create account for the second private key. This is needed for executing the grant
-	s.CreateAccount(s.PrivKeys[1], 50_000)
+	s.CreateAccount(s.PrivKeys[1], 200_000)
 
 	// Store the grant
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)
@@ -721,9 +722,10 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthzTableTest() {
 	s.Require().NoError(err)
 
 	// Create Grant
+	expiration := time.Now().Add(time.Hour * 24 * 10)
 	grant := authz.Grant{
 		Authorization: sendAuthAny,
-		Expiration:    time.Now().Add(time.Hour * 24 * 10),
+		Expiration:    &expiration,
 	}
 
 	// Grant Send Authorization from s.PrivKeys[0] to s.PrivKeys[1]
@@ -734,7 +736,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthzTableTest() {
 	}
 
 	// Create account for the second private key. This is needed for executing the grant
-	s.CreateAccount(s.PrivKeys[1], 100_000)
+	s.CreateAccount(s.PrivKeys[1], 500_000)
 
 	// Store the grant
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)

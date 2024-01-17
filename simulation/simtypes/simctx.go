@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 )
 
 // TODO: Contemplate name better
@@ -88,7 +89,10 @@ func (sim SimCtx) BankKeeper() BankKeeper {
 	return sim.app.GetBankKeeper()
 }
 
-func (sim SimCtx) StakingKeeper() stakingkeeper.Keeper {
+func (sim SimCtx) SDKStakingKeeper() stakingkeeper.Keeper {
+	return sim.app.GetSDKStakingKeeper()
+}
+func (sim SimCtx) StakingKeeper() ibctestingtypes.StakingKeeper {
 	return sim.app.GetStakingKeeper()
 }
 

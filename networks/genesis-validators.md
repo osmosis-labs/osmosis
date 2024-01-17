@@ -33,7 +33,7 @@ Some important notes on joining as a genesis validator:
 4. To be a genesis validator, you must have OSMO at genesis via the
     fairdrop. Every address that had ATOMs during the Stargate upgrade
     of the Cosmos Hub from `cosmoshub-3` to `cosmoshub-4` will have
-    recieve fairdrop OSMO. You can verify that a Cosmos address has
+    receive fairdrop OSMO. You can verify that a Cosmos address has
     received coins in the fairdrop by inputting an address here:
     <https://airdrop.osmosis.zone/>.
     - **Note: The airdrop URL has been deprecated.** 

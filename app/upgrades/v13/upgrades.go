@@ -11,12 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 )
 
 //go:embed rate_limiter.wasm
@@ -29,7 +29,7 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 		return err
 	}
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(keepers.WasmKeeper)
-	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeAnyOfAddresses, Addresses: []string{govModule.String()}}
 	codeID, _, err := contractKeeper.Create(ctx, govModule, code, &instantiateConfig)
 	if err != nil {
 		return err
@@ -58,6 +58,7 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	}
 	paramSpace, ok := keepers.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
 	if !ok {
+		//nolint:staticcheck
 		return sdkerrors.New("rate-limiting-upgrades", 2, "can't create paramspace")
 	}
 	paramSpace.SetParamSet(ctx, &params)

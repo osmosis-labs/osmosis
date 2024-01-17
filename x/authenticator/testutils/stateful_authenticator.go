@@ -3,9 +3,11 @@ package testutils
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -21,7 +23,7 @@ type StatefulAuthenticatorData struct {
 
 // StatefulAuthenticator is an experiment of how to write authenticators that handle state
 type StatefulAuthenticator struct {
-	KvStoreKey sdk.StoreKey
+	KvStoreKey storetypes.StoreKey
 }
 
 func (s StatefulAuthenticator) Type() string {
@@ -43,7 +45,7 @@ func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
 	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	if !ok {
-		return iface.Rejected("", sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
+		return iface.Rejected("", errorsmod.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
 	}
 	if statefulData.Value > 10 {
 		return iface.Rejected("value is too high", nil)

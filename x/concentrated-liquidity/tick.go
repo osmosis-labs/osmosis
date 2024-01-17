@@ -8,10 +8,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
@@ -186,13 +186,13 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < types.MinInitializedTickV2 || lowerTick >= types.MaxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick}
+	if lowerTick < types.MinInitializedTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > types.MaxTick || upperTick <= types.MinInitializedTickV2 {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick}
+	if upperTick > types.MaxTick || upperTick <= types.MinInitializedTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.

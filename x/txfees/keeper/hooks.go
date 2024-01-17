@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

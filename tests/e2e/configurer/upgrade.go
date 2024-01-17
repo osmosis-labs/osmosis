@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -154,7 +154,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		preUpgradePoolId[0] = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 		poolShareDenom[0] = fmt.Sprintf("gamm/pool/%d", preUpgradePoolId[0])
-		chainANode.EnableSuperfluidAsset(chainA, poolShareDenom[0])
+		chainANode.EnableSuperfluidAsset(chainA, poolShareDenom[0], false)
 	}()
 
 	go func() {
@@ -168,7 +168,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		preUpgradePoolId[1] = chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
 		poolShareDenom[1] = fmt.Sprintf("gamm/pool/%d", preUpgradePoolId[1])
-		chainBNode.EnableSuperfluidAsset(chainB, poolShareDenom[1])
+		chainBNode.EnableSuperfluidAsset(chainB, poolShareDenom[1], false)
 	}()
 
 	go func() {
@@ -190,19 +190,20 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(6)
 
+	amountToFund := "10000000000000000000"
 	// Chain A
 	go func() {
 		defer wg.Done()
 		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet[0] = chainANode.CreateWalletAndFund(config.LockupWallet[0], []string{
-			"10000000000000000000" + poolShareDenom[0],
+			amountToFund + poolShareDenom[0],
 		}, chainA)
 	}()
 
 	go func() {
 		defer wg.Done()
 		lockupWalletSuperfluid[0] = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid[0], []string{
-			"10000000000000000000" + poolShareDenom[0],
+			amountToFund + poolShareDenom[0],
 		}, chainA)
 	}()
 
@@ -218,14 +219,14 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet[1] = chainBNode.CreateWalletAndFund(config.LockupWallet[1], []string{
-			"10000000000000000000" + poolShareDenom[1],
+			amountToFund + poolShareDenom[1],
 		}, chainB)
 	}()
 
 	go func() {
 		defer wg.Done()
 		lockupWalletSuperfluid[1] = chainBNode.CreateWalletAndFund(config.LockupWalletSuperfluid[1], []string{
-			"10000000000000000000" + poolShareDenom[1],
+			amountToFund + poolShareDenom[1],
 		}, chainB)
 	}()
 
@@ -257,7 +258,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainA")
-		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
+		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA, false)
 		errCh <- err
 	}()
 
@@ -278,7 +279,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainB")
-		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
+		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB, false)
 		errCh <- err
 	}()
 
@@ -346,21 +347,11 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 			return err
 		}
 		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)))
+		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), false)
 
 		node.DepositProposal(propNumber, false)
 
-		var wg sync.WaitGroup
-
-		for _, node := range chainConfig.NodeConfigs {
-			wg.Add(1)
-			go func(nodeConfig *chain.NodeConfig) {
-				defer wg.Done()
-				nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-			}(node)
-		}
-
-		wg.Wait()
+		chain.AllValsVoteOnProposal(chainConfig, propNumber)
 	}
 
 	// wait till all chains halt at upgrade height

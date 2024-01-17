@@ -5,7 +5,7 @@ package simlogger
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 )
 
 type simLogger struct {

@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -13,9 +13,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {
@@ -36,7 +36,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 type SudoAuthorizationPolicy struct{}
 
-func (p SudoAuthorizationPolicy) CanCreateCode(chainAccesscoConfig wasmkeeper.ChainAccessConfigs, actor sdk.AccAddress, config wasmtypes.AccessConfig) bool {
+func (p SudoAuthorizationPolicy) CanCreateCode(chainAccesscoConfig wasmtypes.ChainAccessConfigs, actor sdk.AccAddress, config wasmtypes.AccessConfig) bool {
 	return true
 }
 
@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	app := s.App
 
 	// setup new next account number
-	nextAccountNumber := app.AccountKeeper.GetNextAccountNumber(s.Ctx)
+	nextAccountNumber := app.AccountKeeper.NextAccountNumber(s.Ctx)
 
 	// remove module account
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))

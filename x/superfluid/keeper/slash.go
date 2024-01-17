@@ -7,9 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -20,7 +20,7 @@ import (
 // Furthermore, if the infraction height is sufficiently old, slashes unbondings
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
 // we ignore that, and send the underliyng tokens to the community pool anyway.
-func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor osmomath.Dec) {
+func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAddress, slashFactor osmomath.Dec) {
 	// Important note: The SDK slashing for historical heights is wrong.
 	// It defines a "slash amount" off of the live staked amount.
 	// Then it charges all the unbondings & redelegations at the slash factor.

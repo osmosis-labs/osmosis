@@ -5,10 +5,11 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
+	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
 )
 
 const (
@@ -20,25 +21,21 @@ const (
 
 // Init registers proposals to update and replace migration records.
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeUpdateMigrationRecords)
-	govtypes.RegisterProposalTypeCodec(&UpdateMigrationRecordsProposal{}, "osmosis/UpdateMigrationRecordsProposal")
-	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
-	govtypes.RegisterProposalTypeCodec(&ReplaceMigrationRecordsProposal{}, "osmosis/ReplaceMigrationRecordsProposal")
-	govtypes.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPoolAndLinktoCFMM)
-	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{}, "osmosis/CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal")
-	govtypes.RegisterProposalType(ProposalTypeSetScalingFactorController)
-	govtypes.RegisterProposalTypeCodec(&SetScalingFactorControllerProposal{}, "osmosis/SetScalingFactorControllerProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeUpdateMigrationRecords)
+	govtypesv1.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
+	govtypesv1.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPoolAndLinktoCFMM)
+	govtypesv1.RegisterProposalType(ProposalTypeSetScalingFactorController)
 }
 
 var (
-	_ govtypes.Content = &UpdateMigrationRecordsProposal{}
-	_ govtypes.Content = &ReplaceMigrationRecordsProposal{}
-	_ govtypes.Content = &CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{}
-	_ govtypes.Content = &SetScalingFactorControllerProposal{}
+	_ govtypesv1.Content = &UpdateMigrationRecordsProposal{}
+	_ govtypesv1.Content = &ReplaceMigrationRecordsProposal{}
+	_ govtypesv1.Content = &CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{}
+	_ govtypesv1.Content = &SetScalingFactorControllerProposal{}
 )
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace migration record's proposal struct.
-func NewReplaceMigrationRecordsProposal(title, description string, records []gammmigration.BalancerToConcentratedPoolLink) govtypes.Content {
+func NewReplaceMigrationRecordsProposal(title, description string, records []gammmigration.BalancerToConcentratedPoolLink) govtypesv1.Content {
 	return &ReplaceMigrationRecordsProposal{
 		Title:       title,
 		Description: description,
@@ -62,7 +59,7 @@ func (p *ReplaceMigrationRecordsProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *ReplaceMigrationRecordsProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -90,7 +87,7 @@ func (p ReplaceMigrationRecordsProposal) String() string {
 }
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace migration record's proposal struct.
-func NewUpdatePoolIncentivesProposal(title, description string, records []gammmigration.BalancerToConcentratedPoolLink) govtypes.Content {
+func NewUpdatePoolIncentivesProposal(title, description string, records []gammmigration.BalancerToConcentratedPoolLink) govtypesv1.Content {
 	return &UpdateMigrationRecordsProposal{
 		Title:       title,
 		Description: description,
@@ -114,7 +111,7 @@ func (p *UpdateMigrationRecordsProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents.
 func (p *UpdateMigrationRecordsProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -142,7 +139,7 @@ func (p UpdateMigrationRecordsProposal) String() string {
 	return b.String()
 }
 
-func NewCreateConcentratedLiquidityPoolsAndLinktoCFMMProposal(title, description string, records []PoolRecordWithCFMMLink) govtypes.Content {
+func NewCreateConcentratedLiquidityPoolsAndLinktoCFMMProposal(title, description string, records []PoolRecordWithCFMMLink) govtypesv1.Content {
 	return &CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{
 		Title:                   title,
 		Description:             description,
@@ -170,7 +167,7 @@ func (p *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ProposalType() s
 
 // ValidateBasic validates a governance proposal's abstract and basic contents.
 func (p *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -221,7 +218,7 @@ Records:     %s
 }
 
 // NewSetScalingFactorControllerProposal returns a new instance of a replace migration record's proposal struct.
-func NewSetScalingFactorControllerProposal(title, description string, poolId uint64, controllerAddress string) govtypes.Content {
+func NewSetScalingFactorControllerProposal(title, description string, poolId uint64, controllerAddress string) govtypesv1.Content {
 	return &SetScalingFactorControllerProposal{
 		Title:             title,
 		Description:       description,
@@ -246,7 +243,7 @@ func (p *SetScalingFactorControllerProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *SetScalingFactorControllerProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}

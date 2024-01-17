@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 // NOTE: This should never return a pointer
@@ -15,7 +15,7 @@ func (a *AccountAuthenticator) AsAuthenticator(
 		if authenticatorCode.Type() == a.Type {
 			instance, err := authenticatorCode.Initialize(a.Data)
 			if err != nil {
-				return nil // ToDo: We should probably handle errors here
+				return nil // TODO: We should probably handle errors here
 			}
 			return instance
 		}

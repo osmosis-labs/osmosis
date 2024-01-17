@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 var (

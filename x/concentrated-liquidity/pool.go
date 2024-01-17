@@ -13,10 +13,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -210,7 +210,7 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 
 	// This is to ensure that malicious actor cannot send dust to
 	// a pool address.
-	filteredPoolBalance := poolBalance.FilterDenoms([]string{pool.GetToken0(), pool.GetToken1()})
+	filteredPoolBalance := osmoutils.FilterDenoms(poolBalance, []string{pool.GetToken0(), pool.GetToken1()})
 
 	return filteredPoolBalance, nil
 }

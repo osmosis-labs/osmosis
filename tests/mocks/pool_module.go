@@ -12,7 +12,7 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	types2 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	types2 "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // MockAccountI is a mock of AccountI interface.
@@ -417,11 +417,12 @@ func (m *MockPoolIncentivesKeeperI) EXPECT() *MockPoolIncentivesKeeperIMockRecor
 }
 
 // IsPoolIncentivized mocks base method.
-func (m *MockPoolIncentivesKeeperI) IsPoolIncentivized(ctx types.Context, poolId uint64) bool {
+func (m *MockPoolIncentivesKeeperI) IsPoolIncentivized(ctx types.Context, poolId uint64) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPoolIncentivized", ctx, poolId)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // IsPoolIncentivized indicates an expected call of IsPoolIncentivized.

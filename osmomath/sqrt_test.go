@@ -10,7 +10,7 @@ import (
 )
 
 func generateRandomDecForEachBitlenDec(r *rand.Rand, numPerBitlen int) []Dec {
-	return generateRandomDecForEachBitlen[Dec](r, numPerBitlen, NewDecFromBigIntWithPrec, DecPrecision)
+	return generateRandomDecForEachBitlen(r, numPerBitlen, NewDecFromBigIntWithPrec, DecPrecision)
 }
 
 func generateRandomDecForEachBitlen[T any](r *rand.Rand, numPerBitlen int, constructor func(*big.Int, int64) T, precision int64) []T {

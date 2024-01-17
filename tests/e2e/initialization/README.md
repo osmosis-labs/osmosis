@@ -35,7 +35,7 @@ any of these local scripts
 From root folder:
 
 ```sh
-make docker-build-e2e-init-chain
+make e2e-docker-build-e2e-init-chain
 ```
 
 This script will build a Docker image that runs a script in the `chain` package
@@ -124,7 +124,7 @@ defined in `tests/e2e/initialization/chain.go`
 ### Initializing a Node (`node`)
 
 ```sh
-make docker-build-e2e-init-node
+make e2e-docker-build-e2e-init-node
 ```
 
 This script will build a Docker image that runs a script in the `node` package

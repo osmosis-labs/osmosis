@@ -5,26 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v20/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
-	pmclient "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/grpc"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/grpcv2"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v21/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
+	pmclient "github.com/osmosis-labs/osmosis/v21/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/grpc"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/grpcv2"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var (
@@ -55,9 +54,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // ---------------------------------------
 // Interfaces.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-}
-
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
@@ -104,19 +100,8 @@ func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolMod
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the gamm module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// LegacyQuerierHandler returns the x/gamm module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // InitGenesis performs genesis initialization for the poolmanager module.
 // no validator updates.

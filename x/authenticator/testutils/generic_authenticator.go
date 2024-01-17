@@ -3,10 +3,11 @@ package testutils
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 var (
@@ -78,7 +79,7 @@ func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccA
 	if t.Confirm == Always {
 		return iface.Confirm()
 	} else {
-		return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block"))
+		return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block"))
 	}
 }
 

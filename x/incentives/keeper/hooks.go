@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,9 +42,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 		}
 
-		if len(gauges) > 10 {
-			ctx.EventManager().IncreaseCapacity(2e6)
-		}
+		// UNFORKINGTODO OQ: do we upstream this method?
+		// if len(gauges) > 10 {
+		// 	ctx.EventManager().IncreaseCapacity(2e6)
+		// }
 
 		// distribute due to epoch event
 		gauges = k.GetActiveGauges(ctx)

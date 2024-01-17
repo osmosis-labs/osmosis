@@ -5,7 +5,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
@@ -62,6 +62,8 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	SendCoins(ctx sdk.Context, from, to sdk.AccAddress, amt sdk.Coins) error
 }
 
 // TxFeesKeeper defines the expected transaction fee keeper
@@ -69,6 +71,7 @@ type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
 	GetFeeToken(ctx sdk.Context, denom string) (FeeToken, error)
+	IncreaseTxFeesTracker(ctx sdk.Context, txFees sdk.Coin)
 }
 
 type ProtorevKeeper interface {

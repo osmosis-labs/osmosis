@@ -7,16 +7,16 @@ import (
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -73,7 +73,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 	benchmarkWrapper(b, msgs, 1)
 }
 
-func (s *KeeperTestSuite) TestAnteHandle() {
+func (s *KeeperTestSuite) TestPostHandle() {
 	type param struct {
 		trades              []types.Trade
 		expectedNumOfTrades osmomath.Int
@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -234,7 +234,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -259,7 +259,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -309,7 +309,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: osmomath.NewInt(15_767_231),
+						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
@@ -317,6 +317,31 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 					},
 				},
 				expectedPoolPoints: 41,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Cosmwasm Pool Arb Route - 2 Pools",
+			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     51,
+						TokenOut: "Atom",
+						TokenIn:  "test/2",
+					},
+				},
+				expectedNumOfTrades: osmomath.NewInt(6),
+				expectedProfits: []sdk.Coin{
+					{
+						Denom:  "Atom",
+						Amount: osmomath.NewInt(19_988_248),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: osmomath.NewInt(216_132_910_493),
+					},
+				},
+				expectedPoolPoints: 49,
 			},
 			expectPass: true,
 		},
@@ -353,7 +378,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				accSeqs[0],
 			)
 
-			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
+			err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
 			s.Require().NoError(err)
 
 			var tx authsigning.Tx
@@ -394,7 +419,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			}
 
 			protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
-			posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
+			posthandlerProtoRev := sdk.ChainPostDecorators(protoRevDecorator)
 
 			// Added so we can check the gas consumed during the posthandler
 			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
@@ -407,7 +432,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			gasBefore := s.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := s.Ctx.GasMeter().Limit()
 
-			_, err = posthandlerProtoRev(s.Ctx, tx, false)
+			_, err = posthandlerProtoRev(s.Ctx, tx, false, true)
 
 			gasAfter := s.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := s.Ctx.GasMeter().Limit()
@@ -657,7 +682,7 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 		s, tx, postHandler := setUpBenchmarkSuite(msgs)
 
 		b.StartTimer()
-		_, err := postHandler(s.Ctx, tx, false)
+		_, err := postHandler(s.Ctx, tx, false, true)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -677,7 +702,7 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 
 // setUpBenchmarkSuite sets up a app test suite, tx, and post handler for benchmark tests.
 // It returns the app configured to the correct state, a valid tx, and the protorev post handler.
-func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.AnteHandler) {
+func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.PostHandler) {
 	// Create a new test suite
 	s := new(KeeperTestSuite)
 	s.SetT(&testing.T{})
@@ -692,7 +717,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
 	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
-	err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
+	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
 	s.Require().NoError(err)
 
 	// Build the tx
@@ -715,7 +740,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 
 	// Set up the post handler
 	protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
-	posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
+	posthandlerProtoRev := sdk.ChainPostDecorators(protoRevDecorator)
 
 	return s, tx, posthandlerProtoRev
 }

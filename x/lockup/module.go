@@ -16,10 +16,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,13 +27,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/client/rest"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/keeper"
 
-	simulation "github.com/osmosis-labs/osmosis/v20/x/lockup/simulation"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	simulation "github.com/osmosis-labs/osmosis/v21/x/lockup/simulation"
+	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 )
 
 var (
@@ -79,11 +77,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 	return genState.Validate()
-}
-
-// RegisterRESTRoutes registers the capability module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
@@ -133,20 +126,8 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// Route returns the capability module's message routing key.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the x/lockup module's Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

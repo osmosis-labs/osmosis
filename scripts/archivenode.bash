@@ -27,7 +27,7 @@ export OSMOSISD_P2P_LADDR=tcp://0.0.0.0:2001
 # VERSION THREE
 echo "v3 took" > howlong
 git checkout v3.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd init speedrun
@@ -38,7 +38,7 @@ git reset --hard
 # VERSION FOUR
 echo "v4 took" >> howlong
 git checkout v4.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd start --db_backend pebbledb
@@ -48,7 +48,7 @@ git reset --hard
 # VERSION SIX
 echo "v6 took" >> howlong
 git checkout v6.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd start --db_backend pebbledb
@@ -59,7 +59,7 @@ git reset --hard
 # VERSION SEVEN
 echo "v7 took" >> howlong
 git checkout v7.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd start --db_backend pebbledb
@@ -70,7 +70,7 @@ git reset --hard
 # VERSION EIGHT
 echo "v8 took" >> howlong
 git checkout v8.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd start --db_backend pebbledb
@@ -80,7 +80,7 @@ git reset --hard
 # VERSION NINE
 echo "v9 took" >> howlong
 git checkout v9.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...time osmosisd start --db_backend pebbledb
 osmosisd start --db_backend pebbledb
@@ -90,7 +90,7 @@ git reset --hard
 # VERSION TEN
 echo "v10 took" >> howlong
 git checkout v10.x
-go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@136c7b6
+go mod edit -replace github.com/cometbft/cometbft-db=github.com/notional-labs/tm-db@136c7b6
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd start --db_backend pebbledb

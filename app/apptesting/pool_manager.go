@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	poolmanager "github.com/osmosis-labs/osmosis/v20/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	poolmanager "github.com/osmosis-labs/osmosis/v21/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
@@ -31,21 +31,25 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 }
 
 // CreatePoolFromType creates a basic pool of the given type for testing.
-func (s *KeeperTestHelper) CreatePoolFromType(poolType poolmanagertypes.PoolType) {
+func (s *KeeperTestHelper) CreatePoolFromType(poolType poolmanagertypes.PoolType) uint64 {
 	switch poolType {
 	case poolmanagertypes.Balancer:
-		s.PrepareBalancerPool()
-		return
+		balancerPoolID := s.PrepareBalancerPool()
+		return balancerPoolID
 	case poolmanagertypes.Stableswap:
-		s.PrepareBasicStableswapPool()
-		return
+		stableswapPoolID := s.PrepareBasicStableswapPool()
+		return stableswapPoolID
 	case poolmanagertypes.Concentrated:
-		s.PrepareConcentratedPool()
-		return
+		concentratedPool := s.PrepareConcentratedPool()
+		return concentratedPool.GetId()
 	case poolmanagertypes.CosmWasm:
-		s.PrepareCosmWasmPool()
-		return
+		cosmwasmPool := s.PrepareCosmWasmPool()
+		return cosmwasmPool.GetId()
+	default:
+		s.FailNow(fmt.Sprintf("unsupported pool type for this operation (%s)", poolmanagertypes.PoolType_name[int32(poolType)]))
 	}
+
+	return 0
 }
 
 // CreatePoolFromTypeWithCoins creates a pool with the given type and initialized with the given coins.

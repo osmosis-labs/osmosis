@@ -8,40 +8,41 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/ed25519"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v21/app"
 
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
+	lockupkeeper "github.com/osmosis-labs/osmosis/v21/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -99,6 +100,46 @@ func (s *KeeperTestHelper) Setup() {
 	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
 	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
+
+	// Manually set validator signing info, otherwise we panic
+	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	for _, val := range vals {
+		consAddr, _ := val.GetConsAddr()
+		signingInfo := slashingtypes.NewValidatorSigningInfo(
+			consAddr,
+			s.Ctx.BlockHeight(),
+			0,
+			time.Unix(0, 0),
+			false,
+			0,
+		)
+		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+	}
+}
+
+func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
+	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
+	s.App = app.SetupWithCustomHomeAndChainId(false, dir, chainId)
+	s.setupGeneralCustomChainId(chainId)
+
+	// Manually set validator signing info, otherwise we panic
+	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	for _, val := range vals {
+		consAddr, _ := val.GetConsAddr()
+		signingInfo := slashingtypes.NewValidatorSigningInfo(
+			consAddr,
+			s.Ctx.BlockHeight(),
+			0,
+			time.Unix(0, 0),
+			false,
+			0,
+		)
+		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+	}
 }
 
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
@@ -161,6 +202,23 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 
 func (s *KeeperTestHelper) setupGeneral() {
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
+	if s.withCaching {
+		s.Ctx, _ = s.Ctx.CacheContext()
+	}
+	s.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: s.App.GRPCQueryRouter(),
+		Ctx:             s.Ctx,
+	}
+
+	s.SetEpochStartTime()
+	s.TestAccs = []sdk.AccAddress{}
+	s.TestAccs = append(s.TestAccs, baseTestAccts...)
+	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+	s.hasUsedAbci = false
+}
+
+func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: chainId, Time: defaultTestStartTime})
 	if s.withCaching {
 		s.Ctx, _ = s.Ctx.CacheContext()
 	}
@@ -239,13 +297,13 @@ func (s *KeeperTestHelper) Commit() {
 
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
 	s.Require().NoError(err)
 }
 
 // FundModuleAcc funds target modules with specified amount.
 func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
-	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	err := testutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
 	s.Require().NoError(err)
 }
 
@@ -259,16 +317,17 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 	bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
-	selfBond := sdk.NewCoins(sdk.Coin{Amount: osmomath.NewInt(100), Denom: bondDenom})
+	bondAmt := sdk.DefaultPowerReduction
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: bondAmt, Denom: bondDenom})
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
-	stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
-	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
+	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
-	res, err := stakingHandler(s.Ctx, msg)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
+	res, err := stakingMsgSvr.CreateValidator(sdk.WrapSDKContext(s.Ctx), valCreateMsg)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
 
@@ -343,7 +402,7 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
 	s.Ctx = newCtx
-	lastCommitInfo := abci.LastCommitInfo{
+	lastCommitInfo := abci.CommitInfo{
 		Votes: []abci.VoteInfo{{
 			Validator:       abci.Validator{Address: valAddr, Power: 1000},
 			SignedLastBlock: true,
@@ -383,7 +442,7 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
-	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
+	err := testutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
 	s.Require().NoError(err)
 
 	// allocate rewards to validator
@@ -574,7 +633,8 @@ func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
 
 	// Authz: Grant Msg
 	typeURL := sdk.MsgTypeURL(msg)
-	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
+	expiryTime := someDate.Add(time.Hour)
+	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), &expiryTime)
 	require.NoError(t, err)
 
 	msgGrant := authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}

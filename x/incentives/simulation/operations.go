@@ -5,19 +5,20 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -41,13 +42,13 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateGauge = simappparams.DefaultWeightMsgCreateValidator
+			weightMsgCreateGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
 		func(_ *rand.Rand) {
-			weightMsgAddToGauge = simappparams.DefaultWeightMsgCreateValidator
+			weightMsgAddToGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
 	)
 
@@ -153,7 +154,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 			NumEpochsPaidOver: numEpochsPaidOver,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txGen := testutil.MakeTestEncodingConfig().TxConfig
 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
 	}
@@ -188,7 +189,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKe
 			Rewards: rewards,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txGen := testutil.MakeTestEncodingConfig().TxConfig
 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
 		)

@@ -9,7 +9,7 @@ import "osmosis/protorev/v1beta1/protorev.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/protorev/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -112,6 +112,13 @@ service Query {
   rpc GetProtoRevPool(QueryGetProtoRevPoolRequest)
       returns (QueryGetProtoRevPoolResponse) {
     option (google.api.http).get = "/osmosis/protorev/pool";
+  }
+
+  // GetAllProtocolRevenue queries all of the protocol revenue that has been
+  // accumulated by any module
+  rpc GetAllProtocolRevenue(QueryGetAllProtocolRevenueRequest)
+      returns (QueryGetAllProtocolRevenueResponse) {
+    option (google.api.http).get = "/osmosis/protorev/all_protocol_revenue";
   }
 }
 
@@ -324,4 +331,13 @@ message QueryGetProtoRevPoolRequest {
 message QueryGetProtoRevPoolResponse {
   // pool_id is the pool_id stored for the denom pair
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message QueryGetAllProtocolRevenueRequest {}
+
+message QueryGetAllProtocolRevenueResponse {
+  AllProtocolRevenue all_protocol_revenue = 1 [
+    (gogoproto.moretags) = "yaml:\"all_protocol_revenue\"",
+    (gogoproto.nullable) = false
+  ];
 }

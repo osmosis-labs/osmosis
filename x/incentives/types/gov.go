@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -12,16 +12,15 @@ const (
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeCreateGroups)
-	govtypes.RegisterProposalTypeCodec(&CreateGroupsProposal{}, "osmosis/CreateGroupsProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeCreateGroups)
 }
 
 var (
-	_ govtypes.Content = &CreateGroupsProposal{}
+	_ govtypesv1.Content = &CreateGroupsProposal{}
 )
 
 // NewCreateGroupsProposal returns a new instance of a group creation proposal struct.
-func NewCreateGroupsProposal(title, description string, groups []CreateGroup) govtypes.Content {
+func NewCreateGroupsProposal(title, description string, groups []CreateGroup) govtypesv1.Content {
 	return &CreateGroupsProposal{
 		Title:        title,
 		Description:  description,

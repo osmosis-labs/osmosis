@@ -1,11 +1,12 @@
 package post
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 )
 
 type AuthenticatorDecorator struct {
@@ -21,11 +22,12 @@ func NewAuthenticatorDecorator(
 }
 
 // AnteHandle is the authenticator post handler
-func (ad AuthenticatorDecorator) AnteHandle(
+func (ad AuthenticatorDecorator) PostHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	simulate bool,
-	next sdk.AnteHandler,
+	simulate,
+	success bool,
+	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
 	// If this is getting called, all messages succeeded. We can now update the
 	// state of the authenticators. If a post handler returns an error, then
@@ -35,7 +37,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
 		if err != nil {
-			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "unable to get account")
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unable to get account")
 		}
 		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(ctx, account)
 		if err != nil {
@@ -50,13 +52,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 
 			// Confirm Execution
-			success := authenticator.ConfirmExecution(ctx, account, msg, authData)
+			successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
 
-			if success.IsBlock() {
-				return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
+			if successfulExecution.IsBlock() {
+				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
 			}
+
+			success = successfulExecution.IsConfirm()
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, simulate, success)
 }

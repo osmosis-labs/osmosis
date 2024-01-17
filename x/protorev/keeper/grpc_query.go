@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -245,4 +245,12 @@ func (q Querier) GetProtoRevPool(c context.Context, req *types.QueryGetProtoRevP
 	}
 
 	return &types.QueryGetProtoRevPoolResponse{PoolId: poolId}, nil
+}
+
+// GetAllProtocolRevenue queries all types of protocol revenue (txfees, taker fees, and cyclic arbitrage profits)
+func (q Querier) GetAllProtocolRevenue(c context.Context, req *types.QueryGetAllProtocolRevenueRequest) (*types.QueryGetAllProtocolRevenueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	allProtocolRevenue := q.Keeper.GetAllProtocolRevenue(ctx)
+
+	return &types.QueryGetAllProtocolRevenueResponse{AllProtocolRevenue: allProtocolRevenue}, nil
 }

@@ -6,19 +6,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
 
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app/keepers"
-	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v21/app/keepers"
+	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
 )
 
 const preUpgradeAppVersion = 8
@@ -34,16 +34,16 @@ func CreateUpgradeHandler(
 
 		// We set the app version to pre-upgrade because it will be incremented by one
 		// after the upgrade is applied by the handler.
-		if err := keepers.UpgradeKeeper.SetAppVersion(ctx, preUpgradeAppVersion); err != nil {
-			return nil, err
-		}
+		versionSetter := keepers.UpgradeKeeper.GetVersionSetter()
+		versionSetter.SetProtocolVersion(preUpgradeAppVersion)
 
 		// save oldIcaVersion, so we can skip icahost.InitModule in longer term tests.
 		oldIcaVersion := fromVM[icatypes.ModuleName]
 
 		// Add Interchain Accounts host module
 		// set the ICS27 consensus version so InitGenesis is not run
-		fromVM[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
+		// UNFORKINGNOTE: ConsensusVersion no longer exists, keeping commented for historical purposes
+		//fromVM[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
 
 		// create ICS27 Controller submodule params, controller module not enabled.
 		controllerParams := icacontrollertypes.Params{}
@@ -61,7 +61,7 @@ func CreateUpgradeHandler(
 				sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
 				sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
 				sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-				sdk.MsgTypeURL(&govtypes.MsgVote{}),
+				sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
 				sdk.MsgTypeURL(&authz.MsgExec{}),
 				sdk.MsgTypeURL(&authz.MsgGrant{}),
 				sdk.MsgTypeURL(&authz.MsgRevoke{}),

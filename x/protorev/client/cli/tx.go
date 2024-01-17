@@ -6,17 +6,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -209,20 +208,14 @@ func CmdSetProtoRevAdminAccountProposal() *cobra.Command {
 		Short:   "submit a set protorev admin account proposal to set the admin account for x/protorev",
 		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-admin-account osmo123... --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			createContent := func(title string, description string, args ...string) (govtypes.Content, error) {
+			createContent := func(title string, description string, args ...string) (govtypesv1beta1.Content, error) {
 				return types.NewSetProtoRevAdminAccountProposal(title, description, args[0]), nil
 			}
 
 			return ProposalExecute(cmd, args, createContent)
 		},
 	}
-
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(cli.FlagTitle)
-	_ = cmd.MarkFlagRequired(cli.FlagDescription)
+	osmocli.AddCommonProposalFlags(cmd)
 
 	return cmd
 }
@@ -235,7 +228,7 @@ func CmdSetProtoRevEnabledProposal() *cobra.Command {
 		Short:   "submit a set protorev enabled proposal to enable or disable the protocol",
 		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-enabled true --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			createContent := func(title string, description string, args ...string) (govtypes.Content, error) {
+			createContent := func(title string, description string, args ...string) (govtypesv1beta1.Content, error) {
 				res, err := strconv.ParseBool(args[0])
 				if err != nil {
 					return nil, err
@@ -248,59 +241,37 @@ func CmdSetProtoRevEnabledProposal() *cobra.Command {
 			return ProposalExecute(cmd, args, createContent)
 		},
 	}
-
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(cli.FlagTitle)
-	_ = cmd.MarkFlagRequired(cli.FlagDescription)
+	osmocli.AddCommonProposalFlags(cmd)
 
 	return cmd
 }
 
 // ProposalExecute is a helper function to execute a proposal command. It takes in a function to create the proposal content.
-func ProposalExecute(cmd *cobra.Command, args []string, createContent func(title string, description string, args ...string) (govtypes.Content, error)) error {
-	clientCtx, err := client.GetClientTxContext(cmd)
+func ProposalExecute(cmd *cobra.Command, args []string, createContent func(title string, description string, args ...string) (govtypesv1beta1.Content, error)) error {
+	clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 	if err != nil {
 		return err
 	}
 
-	title, err := cmd.Flags().GetString(cli.FlagTitle)
+	content, err := createContent(proposalTitle, summary, args...)
 	if err != nil {
 		return err
 	}
 
-	description, err := cmd.Flags().GetString(cli.FlagDescription)
+	contentMsg, err := v1.NewLegacyContent(content, authority.String())
 	if err != nil {
 		return err
 	}
 
-	depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+	msg := v1.NewMsgExecLegacyContent(contentMsg.Content, authority.String())
+
+	proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 	if err != nil {
 		return err
 	}
-
-	deposit, err := sdk.ParseCoinsNormalized(depositStr)
-	if err != nil {
+	if err = proposalMsg.ValidateBasic(); err != nil {
 		return err
 	}
 
-	from := clientCtx.GetFromAddress()
-
-	content, err := createContent(title, description, args...)
-	if err != nil {
-		return err
-	}
-
-	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-	if err != nil {
-		return err
-	}
-
-	if err = msg.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+	return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
 }

@@ -1,11 +1,13 @@
 package swapstrategy
 
 import (
+	dbm "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // swapStrategy defines the interface for computing a swap.
@@ -94,7 +96,7 @@ var (
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, sqrtPriceLimit osmomath.BigDec, storeKey sdk.StoreKey, spreadFactor osmomath.Dec) SwapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit osmomath.BigDec, storeKey storetypes.StoreKey, spreadFactor osmomath.Dec) SwapStrategy {
 	if zeroForOne {
 		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor}
 	}
@@ -138,9 +140,6 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 		// Truncation is fine since previous Osmosis version only supported
 		// 18 decimal price ranges.
 		sqrtPriceLimit, err := osmomath.MonotonicSqrt(priceLimit.Dec())
-		if err != nil {
-			return osmomath.BigDec{}, err
-		}
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}

@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  master:
+    image: locustio/locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    # 167.172.160.95:9092 Roman's personal set up
+    # 174.138.102.174:80 stage set up
+    command: -f /mnt/locust/locustfile.py --master -H http://167.172.160.95:9092
+  
+  worker:
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --worker --master-host master

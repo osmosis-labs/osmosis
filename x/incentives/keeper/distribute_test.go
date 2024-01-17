@@ -11,12 +11,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	appParams "github.com/osmosis-labs/osmosis/v20/app/params"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -679,7 +679,7 @@ func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 
 	// check that the sum of coins yet to be distributed is nil
 	coins := s.App.IncentivesKeeper.GetModuleToDistributeCoins(s.Ctx)
-	s.Require().Equal(coins, sdk.Coins(nil))
+	s.Require().Equal(coins, sdk.Coins{})
 
 	// setup a non perpetual lock and gauge
 	_, gaugeID, gaugeCoins, startTime := s.SetupLockAndGauge(false)
@@ -714,7 +714,7 @@ func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 
 	// check gauge changes after distribution
 	coins = s.App.IncentivesKeeper.GetModuleToDistributeCoins(s.Ctx)
-	s.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins))
+	s.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins...))
 }
 
 // TestGetModuleDistributedCoins tests that the sum of coins that have been distributed so far for all of the module is correct.
@@ -723,14 +723,14 @@ func (s *KeeperTestSuite) TestGetModuleDistributedCoins() {
 
 	// check that the sum of coins yet to be distributed is nil
 	coins := s.App.IncentivesKeeper.GetModuleDistributedCoins(s.Ctx)
-	s.Require().Equal(coins, sdk.Coins(nil))
+	s.Require().Equal(coins, sdk.Coins{})
 
 	// setup a non perpetual lock and gauge
 	_, gaugeID, _, startTime := s.SetupLockAndGauge(false)
 
 	// check that the sum of coins yet to be distributed is equal to the newly created gaugeCoins
 	coins = s.App.IncentivesKeeper.GetModuleDistributedCoins(s.Ctx)
-	s.Require().Equal(coins, sdk.Coins(nil))
+	s.Require().Equal(coins, sdk.Coins{})
 
 	// move all created gauges from upcoming to active
 	s.Ctx = s.Ctx.WithBlockTime(startTime)
@@ -788,7 +788,7 @@ func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
 	distrCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
 	s.Require().NoError(err)
-	s.Require().Equal(distrCoins, sdk.Coins(nil))
+	s.Require().Equal(distrCoins, sdk.Coins{})
 
 	// check state is same after distribution
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
@@ -838,7 +838,7 @@ func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp
 	// distribute coins to stakers
 	distrCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
 	s.Require().NoError(err)
-	s.Require().Equal(distrCoins, sdk.Coins(nil))
+	s.Require().Equal(distrCoins, sdk.Coins{})
 
 	// check state is same after distribution
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
@@ -1788,7 +1788,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// is associated with.
 	// WARNING: only use on the test configuration gauges.
 	estimateDistributedGroupCoins := func(group types.Gauge) (expecteDistributedCoins sdk.Coins) {
-		expecteDistributedCoins = group.Coins.Sub(group.DistributedCoins)
+		expecteDistributedCoins = group.Coins.Sub(group.DistributedCoins...)
 		if !group.IsPerpetual {
 			remainingEpochs := group.NumEpochsPaidOver - group.FilledEpochs
 
@@ -2123,7 +2123,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 					s.Require().Equal(groupConfig.groupGauge.FilledEpochs+1, groupGauge.FilledEpochs)
 
 					// check that the amounts distributed have updated
-					actualDistributed := groupGauge.DistributedCoins.Sub(groupConfig.groupGauge.DistributedCoins)
+					actualDistributed := groupGauge.DistributedCoins.Sub(groupConfig.groupGauge.DistributedCoins...)
 					s.Require().Equal(groupConfig.expectedTotalDistribution, actualDistributed)
 				}
 			}
@@ -2238,7 +2238,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		s.Require().ErrorIs(err, types.GaugeNotFoundError{GaugeID: groupGaugeId})
 
 		// Check remaining coins transfer to community pool.
-		expectedTransfer := totalCoins.Sub(totalDistributedCoins)
+		expectedTransfer := totalCoins.Sub(totalDistributedCoins...)
 		s.Require().Equal(emptyCoins.String(), finalIncentivesModuleBalance.String())
 
 		// Check that the community pool balance was updated if applicable

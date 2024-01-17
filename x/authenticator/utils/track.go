@@ -1,17 +1,18 @@
 package utils
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	types "github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 // GetAccount retrieves the account associated with the first signer of a transaction message.
 // It returns the account's address or an error if no signers are present.
 func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 	if len(msg.GetSigners()) != 1 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
 	}
 	return msg.GetSigners()[0], nil
 }
@@ -60,7 +61,7 @@ func ConfirmExecutionWithoutTx(ctx sdk.Context, authStorage AuthenticatorStorage
 			success := authenticator.ConfirmExecution(ctx, account, msg, types.EmptyAuthenticationData{})
 
 			if success.IsBlock() {
-				return sdkerrors.Wrap(success.Error(), "authenticator failed to confirm execution without AuthenticationData")
+				return errorsmod.Wrap(success.Error(), "authenticator failed to confirm execution without AuthenticationData")
 			}
 		}
 	}

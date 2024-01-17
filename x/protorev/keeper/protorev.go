@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -482,4 +484,33 @@ func (k Keeper) GetInfoByPoolType(ctx sdk.Context) types.InfoByPoolType {
 func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolType) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
 	osmoutils.MustSet(store, types.KeyPrefixInfoByPoolType, &poolWeights)
+}
+
+// GetAllProtocolRevenue returns all types of protocol revenue (txfees, taker fees, and cyclic arb profits), as well as the block height from which we started accounting
+// for each of these revenue sources.
+func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue {
+	currentCyclicArb := k.GetAllProfits(ctx)
+	currentCyclicArbCoins := osmoutils.ConvertCoinArrayToCoins(currentCyclicArb)
+
+	cyclicArbTracker := types.CyclicArbTracker{
+		CyclicArb:                  currentCyclicArbCoins.Sub(k.GetCyclicArbProfitTrackerValue(ctx)...),
+		HeightAccountingStartsFrom: k.GetCyclicArbProfitTrackerStartHeight(ctx),
+	}
+
+	takerFeesTracker := poolmanagertypes.TakerFeesTracker{
+		TakerFeesToStakers:         k.poolmanagerKeeper.GetTakerFeeTrackerForStakers(ctx),
+		TakerFeesToCommunityPool:   k.poolmanagerKeeper.GetTakerFeeTrackerForCommunityPool(ctx),
+		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
+	}
+
+	txFeesTracker := txfeestypes.TxFeesTracker{
+		TxFees:                     k.txfeesKeeper.GetTxFeesTrackerValue(ctx),
+		HeightAccountingStartsFrom: k.txfeesKeeper.GetTxFeesTrackerStartHeight(ctx),
+	}
+
+	return types.AllProtocolRevenue{
+		TakerFeesTracker: takerFeesTracker,
+		TxFeesTracker:    txFeesTracker,
+		CyclicArbTracker: cyclicArbTracker,
+	}
 }

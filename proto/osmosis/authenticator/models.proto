@@ -1,7 +1,7 @@
 syntax = "proto3";
 package osmosis.authenticator;
 
-option go_package = "github.com/osmosis-labs/osmosis/v20/x/authenticator/types";
+option go_package = "github.com/osmosis-labs/osmosis/v21/x/authenticator/types";
 
 // AccountAuthenticator represents a foundational model for all authenticators.
 // It provides extensibility by allowing concrete types to interpret and

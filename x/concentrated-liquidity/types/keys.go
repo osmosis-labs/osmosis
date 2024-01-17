@@ -47,7 +47,8 @@ var (
 
 	KeyNextGlobalIncentiveRecordId = []byte{0x12}
 
-	KeyTotalLiquidity = []byte{0x13}
+	KeyTotalLiquidity     = []byte{0x13}
+	KeyContractHookPrefix = []byte{0x14}
 
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
@@ -293,4 +294,11 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 
 func GetDenomPrefix(denom string) []byte {
 	return append(KeyTotalLiquidity, []byte(denom)...)
+}
+
+// CL Hook Keys
+
+// GetPoolPrefixStore returns a unique key for each combination of poolID and prefix
+func GetPoolPrefixStoreKey(poolID uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d%s", KeyContractHookPrefix, poolID, KeySeparator))
 }

@@ -8,12 +8,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
@@ -140,11 +140,14 @@ type distributionTestCase struct {
 
 var (
 	// distributed coin when there is one account receiving from one gauge
-	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19999))
+	// since val tokens is 11000000 and reward is 20000, we get 18181stake
+	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 18181))
 	// distributed coins when there is two account receiving from one gauge
-	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9999))
+	// since val tokens is 2100000 and reward is 20000, we get 9523stake
+	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9523))
 	// distributed coins when there is one account receiving from two gauge
-	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19998))
+	// two lock distribution * 2
+	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19046))
 	distributionTestCases           = []distributionTestCase{
 		{
 			"happy path with single validator and delegator",
@@ -324,8 +327,8 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 
 					if gaugeCheck.rewarded {
 						s.Require().Equal(gauge.FilledEpochs, uint64(1))
-						s.Require().Equal(gaugeCheck.expectedDistributedCoins, gauge.DistributedCoins)
-						s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins).AmountOf(bondDenom), moduleBalanceAfter.Amount)
+						s.Require().Equal(gaugeCheck.expectedDistributedCoins.String(), gauge.DistributedCoins.String())
+						s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins...).AmountOf(bondDenom), moduleBalanceAfter.Amount)
 
 						// iterate over delegator index that received incentive from this gauge and check balance
 						for _, lockIndex := range gaugeCheck.lockIndexes {

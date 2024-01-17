@@ -7,8 +7,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestMsgCreateDenom() {
@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 			postCreateBalance := bankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			if tc.valid {
 				s.Require().NoError(err)
-				s.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee))
+				s.Require().True(preCreateBalance.Sub(postCreateBalance...).IsEqual(denomCreationFee))
 
 				// Make sure that the admin is set correctly
 				queryRes, err := s.queryClient.DenomAuthorityMetadata(s.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{

@@ -3,11 +3,11 @@ package types_test
 import (
 	"testing"
 
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
 )
 
 func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {

@@ -291,3 +291,35 @@ func TestMergeCoinMaps(t *testing.T) {
 		}
 	})
 }
+
+func TestConvertCoinArrayToCoins(t *testing.T) {
+	tests := []struct {
+		name          string
+		coinArray     []sdk.Coin
+		expectedCoins sdk.Coins
+	}{
+		{
+			name:          "Empty input",
+			coinArray:     []sdk.Coin{},
+			expectedCoins: sdk.NewCoins(),
+		},
+		{
+			name:          "Single coin",
+			coinArray:     []sdk.Coin{sdk.NewCoin("atom", osmomath.NewInt(100000000))},
+			expectedCoins: sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(100000000))),
+		},
+		{
+			name:          "Multiple coins",
+			coinArray:     []sdk.Coin{sdk.NewCoin("atom", osmomath.NewInt(100000000)), sdk.NewCoin("usdc", osmomath.NewInt(500000000))},
+			expectedCoins: sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(100000000)), sdk.NewCoin("usdc", osmomath.NewInt(500000000))),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := osmoutils.ConvertCoinArrayToCoins(test.coinArray)
+			require.Equal(t, result, test.expectedCoins)
+
+		})
+	}
+}

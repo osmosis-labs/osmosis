@@ -9,9 +9,9 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	pooltypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -427,7 +427,7 @@ func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	// ensure initially querying to distribute coins returns no coins
 	res, err := s.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(s.Ctx), &types.ModuleToDistributeCoinsRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(res.Coins, sdk.Coins(nil))
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
 	// create two locks with different durations
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -471,7 +471,7 @@ func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	// check that the to distribute coins is equal to the initial gauge coin balance minus what has been distributed already (10-4=6)
 	res, err = s.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(s.Ctx), &types.ModuleToDistributeCoinsRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(res.Coins, coins.Sub(distrCoins))
+	s.Require().Equal(res.Coins, coins.Sub(distrCoins...))
 
 	// distribute second round to stakers
 	distrCoins, err = s.querier.Distribute(s.Ctx, gauges)
@@ -482,7 +482,7 @@ func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	// to distribute coins should be null
 	res, err = s.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(s.Ctx), &types.ModuleToDistributeCoinsRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(res.Coins, sdk.Coins(nil))
+	s.Require().Equal(res.Coins, sdk.Coins{})
 }
 
 // TestGRPCDistributedCoins tests querying coins that have been distributed via gRPC returns the correct response.

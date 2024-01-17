@@ -9,14 +9,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	tmdb "github.com/cometbft/cometbft-db"
+	tmstore "github.com/cometbft/cometbft/store"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	tmstore "github.com/tendermint/tendermint/store"
-	tmdb "github.com/tendermint/tm-db"
 
+	"github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/tendermint/tendermint/config"
 )
 
 const (

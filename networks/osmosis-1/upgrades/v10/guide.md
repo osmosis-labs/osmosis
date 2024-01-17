@@ -6,7 +6,7 @@ All validator nodes should upgrade to v10 prior to the network restarting. The v
 * At exactly 4:00PM UTC on June 12th, 2022, all validators start their nodes at the same time
 * Once 67% or more of the voting power gets online, block 4713065 will be reached, along with the upgrade at this height. Prior to 67 percent of validator power getting online, you will only see p2p logs. This is also an epoch block, so it will take some time to process
 * After block 4713065, three more epochs will happen back to back, one per block.
-* If the June 12th epoch time has not occured yet, blocks will be produced until the epoch time. If the epoch time has occured, the June 12th epoch will occur in conjunction with the four other epochs above.
+* If the June 12th epoch time has not occurred yet, blocks will be produced until the epoch time. If the epoch time has occurred, the June 12th epoch will occur in conjunction with the four other epochs above.
 
 The coordination of restart will happen over Discord. In the event Discord is down, validators should form a Telegram group to further coordinate the network restart.
 

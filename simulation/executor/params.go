@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"math/rand"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	markov "github.com/osmosis-labs/osmosis/v20/simulation/simtypes/transitionmatrix"
+	markov "github.com/osmosis-labs/osmosis/v21/simulation/simtypes/transitionmatrix"
 )
 
 const (
@@ -90,7 +89,7 @@ func RandomParams(r *rand.Rand) Params {
 }
 
 // DefaultRandomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func DefaultRandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
+func DefaultRandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *tmproto.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {
@@ -98,8 +97,8 @@ func DefaultRandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc co
 	}
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
-	consensusParams := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	consensusParams := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
 			MaxGas:   -1,
 		},
@@ -111,7 +110,7 @@ func DefaultRandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc co
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},
 		Version: &tmproto.VersionParams{
-			AppVersion: uint64(simulation.RandIntBetween(r, 0, 10000)),
+			App: uint64(simulation.RandIntBetween(r, 0, 10000)),
 		},
 	}
 

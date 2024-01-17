@@ -3,17 +3,17 @@ package simulation
 import (
 	"math/rand"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -113,7 +113,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk osmosimtype
 			ValAddr: validator.OperatorAddress,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txGen := testutil.MakeTestEncodingConfig().TxConfig
 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
@@ -139,7 +139,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk osmosimty
 			LockId: lock.ID,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txGen := testutil.MakeTestEncodingConfig().TxConfig
 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
@@ -175,7 +175,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk osmosimty
 // 			NewValAddr: validator.OperatorAddress,
 // 		}
 
-// 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+// 		txGen := testutil.MakeTestEncodingConfig().TxConfig
 // 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 // 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 // 	}

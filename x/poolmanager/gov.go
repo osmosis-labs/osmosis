@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 )
 
 func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomPairTakerFeeProposal) error {
@@ -17,8 +17,8 @@ func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomP
 	return nil
 }
 
-func NewPoolManagerProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewPoolManagerProposalHandler(k Keeper) govtypesv1.Handler {
+	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {
 		case *types.DenomPairTakerFeeProposal:
 			return k.HandleDenomPairTakerFeeProposal(ctx, c)

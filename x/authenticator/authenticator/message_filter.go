@@ -6,11 +6,11 @@ import (
 	"sort"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 // Compile time type assertion for the SignatureData using the
@@ -37,7 +37,7 @@ func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator
 	var jsonData json.RawMessage
 	err := json.Unmarshal(data, &jsonData)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "invalid json representation of message")
+		return nil, errorsmod.Wrap(err, "invalid json representation of message")
 	}
 	m.pattern = data
 	return m, nil
@@ -227,11 +227,11 @@ func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, account sd
 func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	err := json.Unmarshal(data, &m.pattern)
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid json representation of message")
+		return errorsmod.Wrap(err, "invalid json representation of message")
 	}
 	hasFloats, err := containsFloats(m.pattern)
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid json representation of message") // This should never happen
+		return errorsmod.Wrap(err, "invalid json representation of message") // This should never happen
 	}
 	if hasFloats {
 		return fmt.Errorf("invalid json representation of message. Numbers should be encoded as strings")

@@ -19,13 +19,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	clqueryproto "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	clqueryproto "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -115,7 +115,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
+	igniteClient.TxFactory = igniteClient.TxFactory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
@@ -140,6 +140,7 @@ func main() {
 
 	switch operation(desiredOperation) {
 	case createPositions:
+		//nolint
 		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
 		return
 	case addToPositions:
@@ -147,12 +148,12 @@ func main() {
 	case withdrawPositions:
 		withdrawPositionsOp(igniteClient)
 	case makeManySmallSwaps:
-		swapRandomSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
+		swapRandomSmallAmountsContinuously(igniteClient, numSwaps)
 		return
 	case makeManyInvertibleLargeSwaps:
-		swapGivenLargeAmountsBothDirections(igniteClient, expectedPoolId, numSwaps, largeSwapAmount)
+		swapGivenLargeAmountsBothDirections(igniteClient, numSwaps, largeSwapAmount)
 	case createExternalCLIncentives:
-		createExternalCLIncentive(igniteClient, expectedPoolId, externalGaugeCoins, expectedEpochIdentifier)
+		createExternalCLIncentive(igniteClient, externalGaugeCoins, expectedEpochIdentifier)
 	case createPoolOperation:
 		createPoolOp(igniteClient)
 	case claimSpreadRewardsOperation:
@@ -164,6 +165,7 @@ func main() {
 	}
 }
 
+// nolint
 func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (string, int64, int64, sdk.Coins, error) {
 	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
@@ -202,7 +204,7 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 	return nil
 }
 
-func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
+func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, numSwaps int) {
 	for i := 0; i < numSwaps; i++ {
 		var (
 			randAccountNum = rand.Intn(8) + 1
@@ -222,7 +224,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 		tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
 		runMessageWithRetries(func() error {
-			_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			_, err := makeSwap(igniteClient, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
 			return err
 		})
 	}
@@ -230,7 +232,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
 
-func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolId uint64, numSwaps int, largeStartAmount int64) {
+func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, numSwaps int, largeStartAmount int64) {
 	var (
 		randAccountNum = rand.Intn(8) + 1
 		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
@@ -251,7 +253,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 
 	for i := 0; i < numSwaps; i++ {
 		runMessageWithRetries(func() error {
-			tokenOut, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			tokenOut, err := makeSwap(igniteClient, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
 
 			if err == nil {
 				// Swap the resulting amount out back while accounting for spread factor.
@@ -270,7 +272,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
 
-func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, gaugeCoins sdk.Coins, expectedEpochIdentifier string) {
+func createExternalCLIncentive(igniteClient cosmosclient.Client, gaugeCoins sdk.Coins, expectedEpochIdentifier string) {
 	var (
 		randAccountNum = rand.Intn(8) + 1
 		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
@@ -301,7 +303,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 
 	//.Create gauge
 	runMessageWithRetries(func() error {
-		return createGauge(igniteClient, expectedPoolId, accountName, gaugeCoins)
+		return createGauge(igniteClient, accountName, gaugeCoins)
 	})
 
 	epochAfterGaugeCreation := int64(-1)
@@ -350,7 +352,12 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 		TickSpacing:  1,
 		SpreadFactor: defaultSpreadFactor,
 	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	ctx := context.Background()
+	account, err := igniteClient.Account(accountName)
+	if err != nil {
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
+	}
+	txResp, err := igniteClient.BroadcastTx(ctx, account, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -361,6 +368,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
+// nolint
 func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 osmomath.Int) (positionId uint64, amountCreated0, amountCreated1 osmomath.Int, liquidityCreated osmomath.Dec, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
@@ -377,7 +385,12 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	ctx := context.Background()
+	account, err := client.Account(senderKeyringAccountName)
+	if err != nil {
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", senderKeyringAccountName, err))
+	}
+	txResp, err := client.BroadcastTx(ctx, account, msg)
 	if err != nil {
 		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
 	}
@@ -431,7 +444,12 @@ func addToPositionsOp(igniteClient cosmosclient.Client) {
 			TokenMinAmount0: defaultMinAmount,
 			TokenMinAmount1: defaultMinAmount,
 		}
-		txResp, err := igniteClient.BroadcastTx(accountName, msg)
+		ctx := context.Background()
+		account, err := igniteClient.Account(accountName)
+		if err != nil {
+			log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
+		}
+		txResp, err := igniteClient.BroadcastTx(ctx, account, msg)
 		if err != nil {
 			return
 		}
@@ -477,7 +495,12 @@ func withdrawPositionsOp(igniteClient cosmosclient.Client) {
 			LiquidityAmount: position.Liquidity,
 		}
 
-		txResp, err := igniteClient.BroadcastTx(accountName, msg)
+		ctx := context.Background()
+		account, err := igniteClient.Account(accountName)
+		if err != nil {
+			log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
+		}
+		txResp, err := igniteClient.BroadcastTx(ctx, account, msg)
 		if err != nil {
 			log.Println(err)
 			return
@@ -491,7 +514,7 @@ func withdrawPositionsOp(igniteClient cosmosclient.Client) {
 	}
 }
 
-func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int) (osmomath.Int, error) {
+func makeSwap(client cosmosclient.Client, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int) (osmomath.Int, error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -509,7 +532,12 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 		TokenIn:           tokenInCoin,
 		TokenOutMinAmount: tokenOutMinAmount,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	ctx := context.Background()
+	account, err := client.Account(senderKeyringAccountName)
+	if err != nil {
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", senderKeyringAccountName, err))
+	}
+	txResp, err := client.BroadcastTx(ctx, account, msg)
 	if err != nil {
 		return osmomath.Int{}, err
 	}
@@ -522,7 +550,7 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	return resp.TokenOutAmount, nil
 }
 
-func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, gaugeCoins sdk.Coins) error {
+func createGauge(client cosmosclient.Client, senderKeyringAccountName string, gaugeCoins sdk.Coins) error {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -540,7 +568,12 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 		NumEpochsPaidOver: 5,
 		PoolId:            expectedPoolId,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	ctx := context.Background()
+	account, err := client.Account(senderKeyringAccountName)
+	if err != nil {
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", senderKeyringAccountName, err))
+	}
+	txResp, err := client.BroadcastTx(ctx, account, msg)
 	if err != nil {
 		return err
 	}
@@ -610,7 +643,12 @@ func claimSpreadRewardsOp(igniteClient cosmosclient.Client) {
 		PositionIds: positionIds,
 		Sender:      senderAddress,
 	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	ctx := context.Background()
+	account, err := igniteClient.Account(accountName)
+	if err != nil {
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
+	}
+	txResp, err := igniteClient.BroadcastTx(ctx, account, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -660,7 +698,12 @@ func claimIncentivesOp(igniteClient cosmosclient.Client) {
 		PositionIds: positionIds,
 		Sender:      senderAddress,
 	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	ctx := context.Background()
+	account, err := igniteClient.Account(accountName)
+	if err != nil {
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
+	}
+	txResp, err := igniteClient.BroadcastTx(ctx, account, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -678,7 +721,7 @@ func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName 
 		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
 	}
 
-	address := account.Address(addressPrefix)
+	address, err := account.Address(addressPrefix)
 	if err != nil {
 		log.Fatal(err)
 	}

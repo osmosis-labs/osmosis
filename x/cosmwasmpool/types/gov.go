@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -13,19 +13,17 @@ const (
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeUploadCosmWasmPoolCodeAndWhiteList)
-	govtypes.RegisterProposalTypeCodec(&UploadCosmWasmPoolCodeAndWhiteListProposal{}, "osmosis/UploadCosmWasmPoolCodeAndWhiteListProposal")
-	govtypes.RegisterProposalType(ProposalTypeMigratePoolContractsProposal)
-	govtypes.RegisterProposalTypeCodec(&MigratePoolContractsProposal{}, "osmosis/MigratePoolContractsProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeUploadCosmWasmPoolCodeAndWhiteList)
+	govtypesv1.RegisterProposalType(ProposalTypeMigratePoolContractsProposal)
 }
 
 var (
-	_ govtypes.Content = &UploadCosmWasmPoolCodeAndWhiteListProposal{}
-	_ govtypes.Content = &MigratePoolContractsProposal{}
+	_ govtypesv1.Content = &UploadCosmWasmPoolCodeAndWhiteListProposal{}
+	_ govtypesv1.Content = &MigratePoolContractsProposal{}
 )
 
 // NewUploadCosmWasmPoolCodeAndWhiteListProposal returns a new instance of an upload cosmwasm pool code and whitelist proposal struct.
-func NewUploadCosmWasmPoolCodeAndWhiteListProposal(title, description string, wasmByteCode []byte) govtypes.Content {
+func NewUploadCosmWasmPoolCodeAndWhiteListProposal(title, description string, wasmByteCode []byte) govtypesv1.Content {
 	return &UploadCosmWasmPoolCodeAndWhiteListProposal{
 		Title:        title,
 		Description:  description,
@@ -48,7 +46,7 @@ func (p *UploadCosmWasmPoolCodeAndWhiteListProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *UploadCosmWasmPoolCodeAndWhiteListProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -71,7 +69,7 @@ Description: %s
 }
 
 // NewMigratePoolContractsProposal returns a new instance of a contact code migration proposal.
-func NewMigratePoolContractsProposal(title, description string, poolCodeIds []uint64, newCodeId uint64, wasmByteCode []byte) govtypes.Content {
+func NewMigratePoolContractsProposal(title, description string, poolCodeIds []uint64, newCodeId uint64, wasmByteCode []byte) govtypesv1.Content {
 	return &MigratePoolContractsProposal{
 		Title:        title,
 		Description:  description,
@@ -96,7 +94,7 @@ func (p *MigratePoolContractsProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *MigratePoolContractsProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}

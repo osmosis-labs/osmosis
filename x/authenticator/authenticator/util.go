@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -62,7 +63,7 @@ func GetSignersAndSignatures(
 				// sanity check for runtime error: index out of range with
 				// the sigIndex can be more that the supplied signatures
 				if sigIndex >= len(suppliedSignatures) {
-					return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not enough signatures provided")
+					return nil, nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not enough signatures provided")
 				}
 				signerToSignature[signerStr] = suppliedSignatures[sigIndex]
 				sigIndex++
@@ -80,7 +81,7 @@ func GetSignersAndSignatures(
 		for signer := range signerToSignature {
 			addr, err := sdk.AccAddressFromBech32(signer)
 			if err != nil {
-				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid signer address")
+				return nil, nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "invalid signer address")
 			}
 			resultSigners = append(resultSigners, addr)
 		}
@@ -93,13 +94,13 @@ func GetSignersAndSignatures(
 		if _, exists := signerToSignature[feePayer]; !exists {
 			feePayerAddr, err := sdk.AccAddressFromBech32(feePayer)
 			if err != nil {
-				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid fee payer address")
+				return nil, nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "invalid fee payer address")
 			}
 			resultSigners = append(resultSigners, feePayerAddr)
 			// sanity check for runtime error: index out of range with
 			// the sigIndex can be more that the supplied signatures
 			if sigIndex >= len(suppliedSignatures) {
-				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not enough signatures provided for fee payer")
+				return nil, nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not enough signatures provided for fee payer")
 			}
 			signerToSignature[feePayer] = suppliedSignatures[sigIndex]
 		}
@@ -140,7 +141,7 @@ func GetCommonAuthenticationData(
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return nil, nil, nil,
-			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+			errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// Retrieve signatures from the transaction.
@@ -155,7 +156,7 @@ func GetCommonAuthenticationData(
 	// Ensure the transaction is of type sdk.FeeTx.
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return nil, nil, nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	// Parse signers and signatures from the transaction.

@@ -4,15 +4,16 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
-	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
 )
 
 type SpendLimitAuthenticatorTest struct {
@@ -65,10 +66,12 @@ func (s *SpendLimitAuthenticatorTest) TestInitialize() {
 
 func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 	// Mock an account
-	account := sdk.AccAddress([]byte("testAccount"))
+	account, err := sdk.AccAddressFromBech32("osmo1s43st0ev6zuvu8ck64jumtjsz06tzqvqqmfspg")
+	accountSet := authtypes.NewBaseAccount(account, nil, 0, 0)
+	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, accountSet)
 
 	supply := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(2_000_000_000)))
-	err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
+	err = s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
 	s.Require().NoError(err)
 	initialBalance := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1_000)))
 	err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, account, initialBalance)
@@ -121,10 +124,16 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 
 func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends() {
 	// Mock an account
-	account := sdk.AccAddress([]byte("testAccount"))
+	account, err := sdk.AccAddressFromBech32("osmo1s43st0ev6zuvu8ck64jumtjsz06tzqvqqmfspg")
+	accountSet := authtypes.NewBaseAccount(account, nil, 0, 0)
+	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, accountSet)
+
+	receiver, err := sdk.AccAddressFromBech32("osmo1f3cwcxwmpzjm56zavvv4xat43jxeyk0du4hqfj")
+	accountSet = authtypes.NewBaseAccount(receiver, nil, 0, 0)
+	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, accountSet)
 
 	supply := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(2_000_000_000)))
-	err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
+	err = s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
 	s.Require().NoError(err)
 	initialBalance := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10_000)))
 	err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, account, initialBalance)
@@ -228,7 +237,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 				s.Require().NoError(err)
 
 				// Simulate spending
-				err = s.OsmosisApp.BankKeeper.SendCoins(s.Ctx, account, sdk.AccAddress([]byte("receiver")), sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(pair.spendingAmt))))
+				err = s.OsmosisApp.BankKeeper.SendCoins(s.Ctx, account, receiver, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(pair.spendingAmt))))
 				s.Require().NoError(err)
 
 				// Execute ConfirmExecution and check if it's confirmed or blocked

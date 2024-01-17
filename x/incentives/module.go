@@ -12,12 +12,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
-	"github.com/gorilla/mux"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,12 +25,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/simulation"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/client/rest"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/simulation"
+	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
 )
 
 var (
@@ -79,11 +76,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 	return genState.Validate()
-}
-
-// RegisterRESTRoutes registers the module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
@@ -137,20 +129,8 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// Route returns the module's message routing key.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the incentive module's Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // RegisterServices registers the module's services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -196,12 +176,15 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns nil for governance proposals contents.
 // Should eventually be deleted in a future update.
+//
+//nolint:staticcheck
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
-// RandomizedParams returns nil. Should eventually be deleted in a future update.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+// UNFORKINGNOTE: Implement simulated gov proposal
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 

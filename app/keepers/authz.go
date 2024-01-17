@@ -3,11 +3,11 @@ package keepers
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
+	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -15,19 +15,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 )
 
 type AuthzKeeperInterface interface {
 	Logger(ctx sdk.Context) log.Logger
 	DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error)
-	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error
+	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
 	DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error
-	GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) []authz.Authorization
-	GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, time.Time)
+	GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error)
 	IterateGrants(ctx sdk.Context, handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool)
 	ExportGenesis(ctx sdk.Context) *authz.GenesisState
 	InitGenesis(ctx sdk.Context, data *authz.GenesisState)
@@ -85,7 +83,7 @@ func (kw *KeeperWrapper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress
 	return results, err
 }
 
-func (kw *KeeperWrapper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
+func (kw *KeeperWrapper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error {
 	return kw.K.SaveGrant(ctx, grantee, granter, authorization, expiration)
 }
 
@@ -93,12 +91,8 @@ func (kw *KeeperWrapper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, gr
 	return kw.K.DeleteGrant(ctx, grantee, granter, msgType)
 }
 
-func (kw *KeeperWrapper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) []authz.Authorization {
+func (kw *KeeperWrapper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error) {
 	return kw.K.GetAuthorizations(ctx, grantee, granter)
-}
-
-func (kw *KeeperWrapper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, time.Time) {
-	return kw.K.GetCleanAuthorization(ctx, grantee, granter, msgType)
 }
 
 func (kw *KeeperWrapper) IterateGrants(ctx sdk.Context, handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool) {
@@ -167,6 +161,12 @@ func NewAppModuleWrapper(original authzmodule.AppModule, keeperWrapper AuthzKeep
 func (amw AppModuleWrapper) RegisterServices(cfg module.Configurator) {
 	authz.RegisterQueryServer(cfg.QueryServer(), amw.keeperWrapper)
 	authz.RegisterMsgServer(cfg.MsgServer(), amw.keeperWrapper)
+
+	m := authzkeeper.NewMigrator(amw.keeperWrapper.Keeper())
+	err := cfg.RegisterMigration(authz.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", authz.ModuleName, err))
+	}
 }
 
 func (amw AppModuleWrapper) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -189,40 +189,16 @@ func (amw AppModuleWrapper) RegisterInvariants(ir sdk.InvariantRegistry) {
 	amw.AppModule.RegisterInvariants(ir)
 }
 
-func (amw AppModuleWrapper) Route() sdk.Route {
-	return amw.AppModule.Route()
-}
-
 func (amw AppModuleWrapper) NewHandler() sdk.Handler {
 	return amw.AppModule.NewHandler()
-}
-
-func (amw AppModuleWrapper) QuerierRoute() string {
-	return amw.AppModule.QuerierRoute()
-}
-
-func (amw AppModuleWrapper) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return amw.AppModule.LegacyQuerierHandler(legacyQuerierCdc)
 }
 
 func (amw AppModuleWrapper) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	amw.AppModule.BeginBlock(ctx, req)
 }
 
-func (amw AppModuleWrapper) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return amw.AppModule.EndBlock(ctx, req)
-}
-
 func (amw AppModuleWrapper) GenerateGenesisState(simState *module.SimulationState) {
 	amw.AppModule.GenerateGenesisState(simState)
-}
-
-func (amw AppModuleWrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return amw.AppModule.ProposalContents(simState)
-}
-
-func (amw AppModuleWrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return amw.AppModule.RandomizedParams(r)
 }
 
 func (amw AppModuleWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {

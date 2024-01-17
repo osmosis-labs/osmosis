@@ -2,6 +2,8 @@ package cosmwasm
 
 import (
 	"encoding/json"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,6 +28,7 @@ type ContractKeeper interface {
 // the WasmKeeper.
 type WasmKeeper interface {
 	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
+	QueryGasLimit() storetypes.Gas
 }
 
 // Query is a generic function to query a CosmWasm smart contract with the given request.
@@ -51,6 +54,7 @@ func Query[T any, K any](ctx sdk.Context, wasmKeeper WasmKeeper, contractAddress
 		return response, err
 	}
 
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(wasmKeeper.QueryGasLimit()))
 	responseBz, err := wasmKeeper.QuerySmart(ctx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err
