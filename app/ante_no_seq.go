@@ -39,8 +39,8 @@ type BlockSDKAnteHandlerParams struct {
 
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
-// N.B. There is a sister file called `ante_no_seq.go` that is used for e2e testing.
-// It leaves out the `IncrementSequenceDecorator` which is not needed for e2e testing.
+// N.B. There is a sister file called `ante_eq.go` that is used for production.
+// Opposite to this, it also chains `SigVerificationDecorator` which is not needed for e2e testing but is critical for production.
 // If you make a change here, make sure to make the same change in `ante.go`.
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
