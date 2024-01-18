@@ -25,8 +25,6 @@ var (
 
 // CreateLanes walks through the process of creating the lanes for the block sdk. In this function
 // we create three separate lanes - MEV, Free, and Default - and then return them.
-//
-// NOTE: Application Developers should closely replicate this function in their own application.
 func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *base.BaseLane, *base.BaseLane) {
 	// 1. Create the signer extractor. This is used to extract the expected signers from
 	// a transaction. Each lane can have a different signer extractor if needed.
@@ -35,11 +33,8 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	// 2. Create the configurations for each lane. These configurations determine how many
 	// transactions the lane can store, the maximum block space the lane can consume, and
 	// the signer extractor used to extract the expected signers from a transaction.
-	//
-	// IMPORTANT NOTE: If the block sdk module is utilized to store lanes, than the maximum
-	// block space will be replaced with what is in state / in the genesis file.
 
-	// Create a mev configuration that accepts 1000 transactions and consumes 20% of the
+	// Create a mev configuration that accepts maxTxPerMEVLane transactions and consumes 20% of the
 	// block space.
 	mevConfig := base.LaneConfig{
 		Logger:          app.Logger(),
@@ -50,7 +45,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		MaxTxs:          maxTxPerMEVLane,
 	}
 
-	// Create a free configuration that accepts 1000 transactions and consumes 5% of the
+	// Create a free configuration that accepts maxTxPerFreeLane transactions and consumes 5% of the
 	// block space.
 	freeConfig := base.LaneConfig{
 		Logger:          app.Logger(),
@@ -61,7 +56,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		MaxTxs:          maxTxPerFreeLane,
 	}
 
-	// Create a default configuration that accepts 1000 transactions and consumes 60% of the
+	// Create a default configuration that accepts maxTxPerDefaultLane transactions and consumes 60% of the
 	// block space.
 	defaultConfig := base.LaneConfig{
 		Logger:          app.Logger(),
