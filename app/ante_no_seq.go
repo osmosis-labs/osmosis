@@ -81,8 +81,8 @@ func NewAnteHandler(
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		// ante.NewSigVerificationDecorator(ak, signModeHandler),
-		// ante.NewIncrementSequenceDecorator(ak),
+		// ante.NewSigVerificationDecorator(ak, signModeHandler) <-- removed this to prevent failures resulting from invalid tx orders in e2e
+		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 		// auction module antehandler
 		auctionante.NewAuctionDecorator(

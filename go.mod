@@ -35,7 +35,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
-	github.com/skip-mev/block-sdk v1.3.1-0.20240116185049-02fdfd36b2cf
+	github.com/skip-mev/block-sdk v1.3.1-0.20240117203000-107ea56d4a16
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
