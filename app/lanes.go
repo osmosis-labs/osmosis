@@ -9,6 +9,8 @@ import (
 	defaultlane "github.com/skip-mev/block-sdk/lanes/base"
 	freelane "github.com/skip-mev/block-sdk/lanes/free"
 	mevlane "github.com/skip-mev/block-sdk/lanes/mev"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 const (
@@ -75,7 +77,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	mevMatchHandler := factory.MatchHandler()
 
 	// Create the final match handler for the free lane.
-	freeMatchHandler := freelane.DefaultMatchHandler()
+	freeMatchHandler := WithdrawStakingRewardsMatchHandler()
 
 	// Create the final match handler for the default lane. I.e this will direct all txs that are
 	// not free nor mev to this lane
@@ -100,4 +102,17 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	)
 
 	return mevLane, freeLane, defaultLane
+}
+
+// WithdrawStakingRewardsMatchHandler is a match handler that matches transactions that contain a withdraw staking rewards message
+func WithdrawStakingRewardsMatchHandler() base.MatchHandler {
+	return func(ctx sdk.Context, tx sdk.Tx) bool {
+		for _, msg := range tx.GetMsgs() {
+			if _, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward); ok {
+				return true
+			}
+		}
+
+		return false
+	}
 }
