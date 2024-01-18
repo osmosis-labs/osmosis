@@ -367,12 +367,12 @@ func NewOsmosisApp(
 	app.sm.RegisterStoreDecoders()
 
 	// initialize lanes + mempool
-	mevLane, defaultLane, freeLane := CreateLanes(app, txConfig)
+	mevLane, freeLane, defaultLane := CreateLanes(app, txConfig)
 
 	// create the mempool
 	lanedMempool, err := block.NewLanedMempool(
 		app.Logger(),
-		[]block.Lane{mevLane, defaultLane, freeLane},
+		[]block.Lane{mevLane, freeLane, defaultLane},
 	)
 	if err != nil {
 		panic(err)
@@ -688,7 +688,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	return app
 // CheckTx will check the transaction with the provided checkTxHandler. We override the default
 // handler so that we can verify bid transactions before they are inserted into the mempool.
-// With the POB CheckTx, we can verify the bid transaction and all of the bundled transactions
+// With the BlockSDK CheckTx, we can verify the bid transaction and all of the bundled transactions
 // before inserting the bid transaction into the mempool.
 func (app *OsmosisApp) CheckTx(req cometabci.RequestCheckTx) cometabci.ResponseCheckTx {
 	return app.checkTxHandler(req)
