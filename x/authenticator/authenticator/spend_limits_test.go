@@ -1,11 +1,11 @@
 package authenticator_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
@@ -17,11 +17,10 @@ import (
 )
 
 type SpendLimitAuthenticatorTest struct {
-	suite.Suite
-	Ctx        sdk.Context
-	OsmosisApp *app.OsmosisApp
-	Store      prefix.Store
-	SpendLimit authenticator.SpendLimitAuthenticator
+	CosmwasmAuthenticatorTest
+
+	SpendLimit   authenticator.SpendLimitAuthenticator
+	ContractAddr sdk.AccAddress
 }
 
 func TestSpendLimitAuthenticatorTest(t *testing.T) {
@@ -34,15 +33,25 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 
 	authenticatorsStoreKey := s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
-	//s.Store = prefix.NewStore(s.Ctx.KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
 	s.SpendLimit = authenticator.NewSpendLimitAuthenticator(authenticatorsStoreKey, "uosmo", authenticator.AbsoluteValue, s.OsmosisApp.BankKeeper, s.OsmosisApp.PoolManagerKeeper, s.OsmosisApp.TwapKeeper)
+	s.StoreContractCode("../testutils/contracts/spend-limit/artifacts/spend-limit-aarch64.wasm")
+	s.ContractAddr = s.InstantiateContract("{}", 1)
+
+}
+
+func (s *SpendLimitAuthenticatorTest) InitializeContract(initData authenticator.CosmwasmAuthenticatorInitData) authenticator.CosmwasmAuthenticator {
+	initDataBz, err := json.Marshal(initData)
+	s.Require().NoError(err, "Initialization failed")
+	cw, err := s.OsmosisApp.AuthenticatorManager.GetAuthenticatorByType("CosmwasmAuthenticatorV1").Initialize(initDataBz)
+	s.Require().NoError(err, "Initialization failed")
+	return cw.(authenticator.CosmwasmAuthenticator)
 }
 
 func (s *SpendLimitAuthenticatorTest) TestInitialize() {
 	tests := []struct {
-		name string // name
-		data []byte // initData
-		pass bool   // wantErr
+		name   string // name
+		params []byte // initData
+		pass   bool   // wantErr
 	}{
 		{"Valid day", []byte(`{"allowed": 100, "period": "day"}`), true},
 		{"Valid month", []byte(`{"allowed": 100, "period": "week"}`), true},
@@ -54,7 +63,9 @@ func (s *SpendLimitAuthenticatorTest) TestInitialize() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, err := s.SpendLimit.Initialize(tt.data)
+			initData := authenticator.CosmwasmAuthenticatorInitData{Contract: s.ContractAddr.String()}
+			a11r := s.InitializeContract(initData)
+			_, err := a11r.Initialize(tt.params)
 			if tt.pass {
 				s.Require().NoError(err, "Should succeed")
 			} else {

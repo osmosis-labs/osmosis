@@ -64,6 +64,7 @@ func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, e
 	}
 	cwa.contractAddr = contractAddr
 	cwa.authenticatorParams = initData.Params
+	// TODO: validate params on the contract
 	return cwa, nil
 }
 
@@ -150,7 +151,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	}
 
 	// Retrieve and build the signer data struct
-	genesis := ctx.IsGenesis() || ctx.BlockHeight() == 0
+	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
 	baseAccount := cwa.ak.GetAccount(ctx, account)
