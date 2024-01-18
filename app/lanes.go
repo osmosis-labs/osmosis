@@ -17,6 +17,12 @@ const (
 	maxTxPerDefaultLane = 3000 // all other txs
 )
 
+var (
+	freeLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.05")
+	defaultLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.85")
+	mevLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.1")
+)
+
 // CreateLanes walks through the process of creating the lanes for the block sdk. In this function
 // we create three separate lanes - MEV, Free, and Default - and then return them.
 //
@@ -39,7 +45,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		Logger:          app.Logger(),
 		TxEncoder:       txConfig.TxEncoder(),
 		TxDecoder:       txConfig.TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.2"),
+		MaxBlockSpace:   mevLaneBlockspacePercentage,
 		SignerExtractor: signerAdapter,
 		MaxTxs:          maxTxPerMEVLane,
 	}
@@ -50,7 +56,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		Logger:          app.Logger(),
 		TxEncoder:       txConfig.TxEncoder(),
 		TxDecoder:       txConfig.TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.05"),
+		MaxBlockSpace:   freeLaneBlockspacePercentage,
 		SignerExtractor: signerAdapter,
 		MaxTxs:          maxTxPerFreeLane,
 	}
@@ -61,7 +67,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		Logger:          app.Logger(),
 		TxEncoder:       txConfig.TxEncoder(),
 		TxDecoder:       txConfig.TxDecoder(),
-		MaxBlockSpace:   math.LegacyMustNewDecFromStr("0.75"),
+		MaxBlockSpace:   defaultLaneBlockspacePercentage,
 		SignerExtractor: signerAdapter,
 		MaxTxs:          maxTxPerDefaultLane,
 	}
