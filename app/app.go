@@ -104,7 +104,6 @@ import (
 
 	blocksdkabci "github.com/skip-mev/block-sdk/abci"
 	"github.com/skip-mev/block-sdk/abci/checktx"
-	cometabci "github.com/cometbft/cometbft/abci/types"
 )
 
 const appName = "OsmosisApp"
@@ -475,7 +474,7 @@ func NewOsmosisApp(
 // handler so that we can verify bid transactions before they are inserted into the mempool.
 // With the BlockSDK CheckTx, we can verify the bid transaction and all of the bundled transactions
 // before inserting the bid transaction into the mempool.
-func (app *OsmosisApp) CheckTx(req cometabci.RequestCheckTx) cometabci.ResponseCheckTx {
+func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	return app.checkTxHandler(req)
 }
 
