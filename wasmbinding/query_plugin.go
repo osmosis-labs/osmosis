@@ -21,8 +21,9 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 		if err != nil {
 			return nil, err
 		}
-		// no matter what happens after this point, but we must return
-		// the response type to the pool.
+
+		// no matter what happens after this point, we must return
+		// the response type to prevent sync.Pool from leaking.
 		defer returnStargateResponseToPool(request.Path, protoResponseType)
 
 		route := queryRouter.Route(request.Path)
