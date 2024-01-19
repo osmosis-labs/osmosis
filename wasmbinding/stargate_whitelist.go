@@ -41,7 +41,7 @@ import (
 // The query is multi-threaded so we're using a sync.Pool
 // to manage the allocation and de-allocation of newly created
 // pb objects.
-var stargateResponsePools map[string]*sync.Pool
+var stargateResponsePools = make(map[string]*sync.Pool)
 
 // Note: When adding a migration here, we should also add it to the Async ICQ params in the upgrade.
 // In the future we may want to find a better way to keep these in sync
