@@ -65,9 +65,11 @@ const (
 	routeIngestDisablePlaceholder = 0
 
 	// https://app.osmosis.zone/pool/1263
-	usdcPool  = 1263
-	usdcDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
-	oneOSMO   = 1_000_000
+	usdcPool    = 1263
+	usdcDenom   = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+	stATOMDenom = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
+	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+	oneOSMO     = 1_000_000
 )
 
 var (
@@ -83,17 +85,17 @@ var (
 // for determining TVL.
 var uosmoRoutesFromDenom map[string][]poolmanagertypes.SwapAmountOutRoute = map[string][]poolmanagertypes.SwapAmountOutRoute{
 	// stATOM
-	"ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901": {
+	stATOMDenom: {
 		{
 			PoolId: 1283,
 
 			// stAtom
-			TokenInDenom: "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901",
+			TokenInDenom: stATOMDenom,
 		},
 		{
 			PoolId: 1265,
 			// ATOM
-			TokenInDenom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			TokenInDenom: atomDenom,
 		},
 	},
 }
