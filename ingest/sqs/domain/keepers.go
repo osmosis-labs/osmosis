@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
@@ -62,6 +63,12 @@ type PoolManagerKeeper interface {
 	) (denoms []string, err error)
 
 	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error)
+
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		route []poolmanagertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin,
+	) (tokenInAmount osmomath.Int, err error)
 }
 
 // ConcentratedKeeper is an interface for the concentrated keeper.
