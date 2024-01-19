@@ -316,6 +316,13 @@ func (pi *poolIngester) convertPool(
 	// Otherwise, the CosmWasmPool model panics.
 	pool = pool.AsSerializablePool()
 
+	if pool.GetId() == uint64(1) {
+		fmt.Println("here")
+	}
+
+	// filtered balances consisting only of the pool denom balances.
+	filteredBalances := sdk.NewCoins()
+
 	var errorInTVLStr string
 	for _, balance := range balances {
 		// Note that there are edge cases where gamm shares or some random
@@ -329,6 +336,9 @@ func (pi *poolIngester) convertPool(
 		if !exists {
 			continue
 		}
+
+		// update filtered balances only with pool tokens
+		filteredBalances = filteredBalances.Add(balance)
 
 		if balance.Denom == UOSMO {
 			osmoPoolTVL = osmoPoolTVL.Add(balance.Amount)
@@ -467,7 +477,7 @@ func (pi *poolIngester) convertPool(
 		SQSModel: sqsdomain.SQSPool{
 			TotalValueLockedUSDC:  osmoPoolTVL,
 			TotalValueLockedError: errorInTVLStr,
-			Balances:              balances,
+			Balances:              filteredBalances,
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
 		},
