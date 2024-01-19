@@ -577,7 +577,10 @@ func (k Keeper) ListPoolsByDenom(
 
 		var poolsByDenom []types.PoolI
 		for _, pool := range currentModulePools {
-			poolDenoms := pool.GetPoolDenoms(ctx)
+			poolDenoms, err := poolModule.GetPoolDenoms(ctx, pool.GetId())
+			if err != nil {
+				return nil, err
+			}
 			if osmoutils.Contains(poolDenoms, denom) {
 				poolsByDenom = append(poolsByDenom, pool)
 			}
