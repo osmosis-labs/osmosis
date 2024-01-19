@@ -202,7 +202,11 @@ func getWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
 	if !isWhitelisted {
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", queryPath)}
 	}
-	return protoResponseAny.Get().(codec.ProtoMarshaler), nil
+	protoMarshaler, ok := protoResponseAny.Get().(codec.ProtoMarshaler)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type to codec.ProtoMarshaler")
+	}
+	return protoMarshaler, nil
 }
 
 type protoTypeG[T any] interface {
