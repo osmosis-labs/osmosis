@@ -69,6 +69,7 @@ const (
 	usdcDenom   = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
 	stATOMDenom = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
 	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+	usdtDenom   = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
 	oneOSMO     = 1_000_000
 )
 
@@ -104,7 +105,7 @@ var uosmoRoutesFromDenom map[string][]poolmanagertypes.SwapAmountOutRoute = map[
 // that they have the same spot price as USDC. This is sufficient for correctness of naive ranking.
 var stablesOverwrite map[string]struct{} = map[string]struct{}{
 	// Tether USD (Wormhole)
-	"ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C": {},
+	usdtDenom: {},
 }
 
 // NewPoolIngester returns a new pool ingester.
