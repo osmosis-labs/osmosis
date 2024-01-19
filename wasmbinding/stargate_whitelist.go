@@ -222,6 +222,7 @@ func setWhitelistedQuery[T any, PT protoTypeG[T]](queryPath string, _ PT) {
 	}
 }
 
+// returnStargateResponseToPool returns the provided protoMarshaler to the appropriate pool based on it's query path.
 func returnStargateResponseToPool(queryPath string, pb codec.ProtoMarshaler) {
 	stargateResponsePools[queryPath].Put(pb)
 }
