@@ -3,9 +3,9 @@ package poolsingester
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/sqs/pools/common"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
+	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
@@ -25,6 +25,6 @@ func (pi *poolIngester) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI
 	return pi.convertPool(ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 }
 
-func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper common.PoolManagerKeeper) error {
+func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper domain.PoolManagerKeeper) error {
 	return retrieveTakerFeeToMapIfNotExists(ctx, denoms, denomPairToTakerFeeMap, poolManagerKeeper)
 }
