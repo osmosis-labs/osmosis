@@ -67,8 +67,7 @@ const (
 	// https://app.osmosis.zone/pool/1263
 	usdcPool  = 1263
 	usdcDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
-	uosmoDenom
-	oneOSMO = 1_000_000
+	oneOSMO   = 1_000_000
 )
 
 var (
@@ -77,7 +76,7 @@ var (
 	oneOsmoInt    = osmomath.NewInt(oneOSMO)
 	oneOsmoBigDec = osmomath.NewBigDec(oneOSMO)
 
-	oneOsmoCoin = sdk.NewCoin(uosmoDenom, oneOsmoInt)
+	oneOsmoCoin = sdk.NewCoin(UOSMO, oneOsmoInt)
 )
 
 // These are the routes that we use for pricing certain tokens against OSMO
