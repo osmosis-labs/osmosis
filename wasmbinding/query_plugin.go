@@ -17,10 +17,13 @@ import (
 // StargateQuerier dispatches whitelisted stargate queries
 func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
-		protoResponseType, err := GetWhitelistedQuery(request.Path)
+		protoResponseType, err := getWhitelistedQuery(request.Path)
 		if err != nil {
 			return nil, err
 		}
+		// no matter what happens after this point, but we must return
+		// the response type to the pool.
+		defer returnStargateResponseToPool(request.Path, protoResponseType)
 
 		route := queryRouter.Route(request.Path)
 		if route == nil {
