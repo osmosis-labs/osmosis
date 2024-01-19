@@ -316,10 +316,6 @@ func (pi *poolIngester) convertPool(
 	// Otherwise, the CosmWasmPool model panics.
 	pool = pool.AsSerializablePool()
 
-	if pool.GetId() == uint64(1) {
-		fmt.Println("here")
-	}
-
 	// filtered balances consisting only of the pool denom balances.
 	filteredBalances := sdk.NewCoins()
 
