@@ -40,6 +40,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### State Breaking
+
+* [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
+
 ## v22.0.0
 
 ### Fee Market Parameter Updates
@@ -118,6 +124,7 @@ Epoch and CPU time optimizations
 
 * [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172),[#7174](https://github.com/osmosis-labs/osmosis/pull/7174),[#7186](https://github.com/osmosis-labs/osmosis/pull/7186), [#7192](https://github.com/osmosis-labs/osmosis/pull/7192)   Lower CPU overheads of the Osmosis epoch.
 * [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
+
 
 ## v21.1.2
 

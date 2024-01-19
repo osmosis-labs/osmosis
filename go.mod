@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.3.1
-	cosmossdk.io/errors v1.0.0
+	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
@@ -29,10 +29,11 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.8
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.8
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.4
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
-	github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4
+	github.com/osmosis-labs/sqs v0.0.0-20240108192026-6ccc0a29f77d
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116064048-1799b9602f25
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
@@ -45,7 +46,7 @@ require (
 	github.com/tidwall/gjson v1.16.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17
+	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -77,7 +78,6 @@ require (
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
@@ -100,7 +100,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/ghostiam/protogetter v0.2.3 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
@@ -118,7 +117,6 @@ require (
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/linxGnu/grocksdb v1.7.16 // indirect
 	github.com/macabu/inamedparam v0.1.2 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
@@ -129,7 +127,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.14.1 // indirect
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20240109225011-e09c4d480bf0 // indirect
+	github.com/osmosis-labs/osmosis/v21 v21.2.1 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -154,8 +152,8 @@ require (
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.153.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20231106174013-bbf56f31fb17 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
+	google.golang.org/genproto v0.0.0-20231211222908-989df2bf70f3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
@@ -391,9 +389,7 @@ replace (
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	// We explicitly use commits from the `adam/v22.x` branch in https://github.com/osmosis-labs/sqs
-	github.com/osmosis-labs/sqs => github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240109224414-786ae137f7c4
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116064048-1799b9602f25
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

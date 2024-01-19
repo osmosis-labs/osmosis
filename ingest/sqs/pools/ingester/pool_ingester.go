@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/sqs/pools/common"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 	poolsredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/pools"
@@ -35,12 +34,12 @@ type poolIngester struct {
 	poolsRepository    poolsredisrepo.PoolsRepository
 	routerRepository   routerredisrepo.RouterRepository
 	repositoryManager  repository.TxManager
-	gammKeeper         common.PoolKeeper
-	concentratedKeeper common.ConcentratedKeeper
-	cosmWasmKeeper     common.CosmWasmPoolKeeper
-	bankKeeper         common.BankKeeper
-	protorevKeeper     common.ProtorevKeeper
-	poolManagerKeeper  common.PoolManagerKeeper
+	gammKeeper         domain.PoolKeeper
+	concentratedKeeper domain.ConcentratedKeeper
+	cosmWasmKeeper     domain.CosmWasmPoolKeeper
+	protorevKeeper     domain.ProtorevKeeper
+	bankKeeper         domain.BankKeeper
+	poolManagerKeeper  domain.PoolManagerKeeper
 	assetListGetter    domain.AssetListGetter
 }
 
