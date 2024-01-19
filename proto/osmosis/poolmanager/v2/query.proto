@@ -37,7 +37,8 @@ message SpotPriceRequest {
 message SpotPriceResponse {
   // String of the BigDec. Ex) 10.203uatom
   string spot_price = 1 [
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) =
+        "github.com/osmosis-labs/osmosis/v22/osmomath.BigDec",
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
   ];

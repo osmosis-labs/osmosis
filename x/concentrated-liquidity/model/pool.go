@@ -5,8 +5,6 @@ import (
 	fmt "fmt"
 	time "time"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v22/osmomath"
@@ -140,7 +138,7 @@ func (p Pool) GetToken1() string {
 }
 
 // GetCurrentSqrtPrice returns the current sqrt price of the pool
-func (p Pool) GetCurrentSqrtPrice() math.LegacyDec {
+func (p Pool) GetCurrentSqrtPrice() osmomath.BigDec {
 	return p.CurrentSqrtPrice
 }
 

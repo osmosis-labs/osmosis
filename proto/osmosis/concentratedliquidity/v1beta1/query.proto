@@ -214,7 +214,8 @@ message LiquidityNetInDirectionResponse {
   ];
   string current_sqrt_price = 4 [
 
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) =
+        "github.com/osmosis-labs/osmosis/v22/osmomath.BigDec",
     (gogoproto.moretags) = "yaml:\"current_sqrt_price\"",
     (gogoproto.nullable) = false
   ];
