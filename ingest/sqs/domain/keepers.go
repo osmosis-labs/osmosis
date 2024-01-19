@@ -62,6 +62,12 @@ type PoolManagerKeeper interface {
 	) (denoms []string, err error)
 
 	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error)
+
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		route []poolmanagertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin,
+	) (tokenInAmount osmomath.Int, err error)
 }
 
 // ConcentratedKeeper is an interface for the concentrated keeper.
