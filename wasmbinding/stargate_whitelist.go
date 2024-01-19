@@ -214,6 +214,10 @@ type protoTypeG[T any] interface {
 	codec.ProtoMarshaler
 }
 
+// setWhitelistedQuery sets the whitelisted query at the provided path.
+// This method also creates a sync.Pool for the provided protoMarshaler.
+// We use generics so we can properly instantiate an object that the
+// queryPath expects as a response.
 func setWhitelistedQuery[T any, PT protoTypeG[T]](queryPath string, _ PT) {
 	stargateResponsePools[queryPath] = &sync.Pool{
 		New: func() any {
