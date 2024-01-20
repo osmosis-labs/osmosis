@@ -78,7 +78,7 @@ Example:
 //nolint:staticcheck
 func GetStructAndFill(queryPath, module, structName string, structArguments ...string) (interface{}, error) {
 	const ParamRequest = "QueryParamsRequest"
-	_, err := wasmbinding.GetWhitelistedQuery(queryPath)
+	err := wasmbinding.IsWhitelistedQuery(queryPath)
 	if err != nil {
 		return nil, err
 	}
