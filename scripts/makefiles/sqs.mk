@@ -2,7 +2,7 @@
 ###                                SQS                                      ###
 ###############################################################################
 
-sqs:
+sqs-help:
 	@echo "sqs subcommands"
 	@echo ""
 	@echo "Usage:"
@@ -16,6 +16,8 @@ sqs:
 	@echo "  start                              Start SQS service"
 	@echo "  update-mainnet-state               Updates go tests with the latest mainnet state and make sure that the node is running locally"
 	@echo "  validate-cl-state                  Validates that SQS concentrated liquidity pool state is consistent with the state of the chain"
+
+sqs: sqs-help
 
 redis-start:
 	docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 -v ./redis-cache/:/data redis/redis-stack:7.2.0-v3

@@ -20,6 +20,7 @@ help:
 	@echo "    make [command]"
 	@echo ""
 	@echo "  make build                 Build osmosisd binary"
+	@echo "  make build-help            Show available build commands"
 	@echo "  make deps                  Show available deps commands"
 	@echo "  make docker                Show available docker commands"
 	@echo "  make e2e                   Show available e2e commands"
