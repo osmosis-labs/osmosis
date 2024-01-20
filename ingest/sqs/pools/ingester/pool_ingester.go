@@ -402,7 +402,11 @@ func (pi *poolIngester) convertPool(
 					}
 
 					// Set base preecision to USDC
-					basePrecison = tokenPrecisionMap[usdcDenom]
+					basePrecison, ok = tokenPrecisionMap[usdcDenom]
+					if !ok {
+						errorInTVLStr = "no precision for denom " + usdcDenom
+						continue
+					}
 				} else {
 					// If there is no method to compute TVL for this denom, attach error and silently skip it.
 					errorInTVLStr = err.Error()
@@ -415,6 +419,11 @@ func (pi *poolIngester) convertPool(
 			precisionMultiplier := uosmoPrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
 
 			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
+
+			if uosmoBaseAssetSpotPrice.IsZero() {
+				errorInTVLStr = "failed to calculate spot price due to it becoming zero from truncations " + balance.Denom
+				continue
+			}
 
 			routingInfo = denomRoutingInfo{
 				PoolID: poolForDenomPair,
