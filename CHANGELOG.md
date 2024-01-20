@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
 
+### Bug Fixes
+
+* [#7346](https://github.com/osmosis-labs/osmosis/pull/7346) Prevent heavy gRPC load from app hashing nodes
+
 ## v22.0.0
 
 ### Fee Market Parameter Updates
