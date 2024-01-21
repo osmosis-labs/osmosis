@@ -1,6 +1,5 @@
 # CosmWasm Pool
 
-
 ## Overview
 
 The CosmWasm Pool Module is an extension for the Osmosis pools, aiming to create a custom module that allows users to create and manage liquidity pools backed by CosmWasm smart contracts. The feature enables developers to build and deploy custom smart contracts that can be integrated with the rest of the pool types on the Osmosis chain.
@@ -10,33 +9,34 @@ The module is built on top of the CosmWasm smart contracting platform, which pro
 Having pools in CosmWasm provides several benefits, one of which is avoiding the need for chain upgrades when introducing new functionalities or modifying existing ones related to liquidity pools. This advantage is particularly important in the context of speed of development and iteration.
 
 An example of a CosmWasm pool type:
+
 - [transmuter](https://github.com/osmosis-labs/transmuter)
 
 ## Key Components
 
 - **Keeper**: The module's keeper is responsible for managing the state of the CosmWasm pools, including creating and initializing pools,
-querying pool data, and executing privileged operations such as swaps using the CosmWasm sudo message. 
-   * `InitializePool`: Initializes a new CosmWasm pool by instantiating a Wasm contract and storing the pool model in the keeper.
-   * `Swap operations`: Swap operations like `SwapExactAmountIn` and `SwapExactAmountOut` are implemented, allowing users to perform swaps
-   within the CosmWasm pools.
-   * `Swap estimation`: Functions like CalcOutAmtGivenIn, and CalcInAmtGivenOut are provided to calculate prices and amounts for swap operations.
-   * `Pool information`: Functions like `CalculateSpotPrice`, `GetPool`, `GetPoolAssets`, `GetPoolBalances`, `GetPoolTotalShares` allow
-   for querying the state of the CosmWasm pools.
+  querying pool data, and executing privileged operations such as swaps using the CosmWasm sudo message.
 
+  - `InitializePool`: Initializes a new CosmWasm pool by instantiating a Wasm contract and storing the pool model in the keeper.
+  - `Swap operations`: Swap operations like `SwapExactAmountIn` and `SwapExactAmountOut` are implemented, allowing users to perform swaps
+    within the CosmWasm pools.
+  - `Swap estimation`: Functions like CalcOutAmtGivenIn, and CalcInAmtGivenOut are provided to calculate prices and amounts for swap operations.
+  - `Pool information`: Functions like `CalculateSpotPrice`, `GetPool`, `GetPoolAssets`, `GetPoolBalances`, `GetPoolTotalShares` allow
+    for querying the state of the CosmWasm pools.
 
 - **Query and Sudo functions**: The module includes generic functions to query CosmWasm smart contracts and execute sudo messages.
-The Query and Sudo functions are used to interact with the smart contracts, while MustQuery and MustSudo variants panic if an error
-occurs during the query or sudo call, respectively.
+  The Query and Sudo functions are used to interact with the smart contracts, while MustQuery and MustSudo variants panic if an error
+  occurs during the query or sudo call, respectively.
 
 - **`poolmanager.PoolI` Interface**: The CosmWasm Pool Model implements the PoolI interface from the Pool Manager Module to enable
-the creation and management of liquidity pools backed by CosmWasm smart contracts. By implementing the PoolI interface, the model
-ensures compatibility with the existing Pool Manager Module's structure and functionalities and integrates seamlessly with
-other modules such as `x/concentrated-liquidity` and `x/gamm`.
+  the creation and management of liquidity pools backed by CosmWasm smart contracts. By implementing the PoolI interface, the model
+  ensures compatibility with the existing Pool Manager Module's structure and functionalities and integrates seamlessly with
+  other modules such as `x/concentrated-liquidity` and `x/gamm`.
 
 - **`poolmanager.PoolModule` Interface**: To integrate the CosmWasm Pool Module with the existing Pool Manager Module,
-the module's keeper has to implement the PoolModule interface from `x/poolmanager` Module. By implementing the PoolModule interface,
-the CosmWasm Pool Keeper can register itself as an extension to the existing Pool Manager Module and handle the creation and management
-of CosmWasm-backed liquidity pools as well as receive swaps propagated from the `x/poolmanager`.
+  the module's keeper has to implement the PoolModule interface from `x/poolmanager` Module. By implementing the PoolModule interface,
+  the CosmWasm Pool Keeper can register itself as an extension to the existing Pool Manager Module and handle the creation and management
+  of CosmWasm-backed liquidity pools as well as receive swaps propagated from the `x/poolmanager`.
 
 ## Creating new CosmWasm Pool
 
@@ -52,7 +52,6 @@ graph TD;
 ```
 
 The CosmWasm contract that is to be instanitiated needs to implement [CosmWasm Pool Contract Interface](#cosmwasm-pool-contract-interface) and store it on chain first. Then new pool can be created by sending `MsgCreateCosmWasmPool`.
-
 
 `MsgCreateCosmWasmPool` contains `InstantiateMsg`, which is a message that will be passed to the CosmWasm contract when it is instantiated. The structure of the message is defined by the contract developer, and can contain any information that the contract needs to be instantiated. JSON format is used for `InstantiateMsg`.
 
@@ -78,7 +77,6 @@ sequenceDiagram
     x/cosmwasmpool -->>  Sender: MsgCreateCosmWasmPoolResponse {PoolId}
 ```
 
-
 ## Providing / Withdrawing Liquidity
 
 Currently, all existing pool types have their own way of providing liquidity and shares calculation. CosmWasm pool aims to be flexible that regards and let the contract define the way of providing liquidity. So there is no restriction here, and the contract developer can define the way of providing liquidity as they wish, potentially with execute endpoint since `MsgExecuteContract` triggers state mutating endpoint and can also attach funds to it.
@@ -86,7 +84,6 @@ Currently, all existing pool types have their own way of providing liquidity and
 Common interface and later be defined for the contract to implement as spec and/or create a separated crate for that purpose.
 
 It's important to note that the _**contract itself hold tokens that are provided by users**_.
-
 
 ## Swap
 
@@ -121,7 +118,6 @@ SwapExactAmountOut {
 
 `SwapExactAmountIn`
 
-
 ```mermaid
 graph TD;
   Sender((Sender))
@@ -133,7 +129,6 @@ graph TD;
   wasm/pool -- 6. send token_out to sender --> x/bank
 ```
 
-
 `SwapExactAmountOut`
 
 ```mermaid
@@ -142,11 +137,11 @@ graph TD;
   Sender -- 1. swap --> x/poolmanager
   x/poolmanager -- 2. route msg to --> x/cosmwasmpool
   x/cosmwasmpool -- 3. sudo execute contract --> x/wasm
- 
+
   x/cosmwasmpool -- 4. send token_in_max_amount from sender to wasm/pool --> x/bank
   x/wasm -- 5. sudo --> wasm/pool
   x/cosmwasmpool -- 6. send remaining wasm/pool to sender --> x/bank
-  
+
   wasm/pool -- 7. send token_out to sender --> x/bank
 ```
 
@@ -157,6 +152,63 @@ The reason why this needs to be sudo endpoint, which can only be called by the c
 And because sudo message can't attach funds like execute message, chain-side is required to perform sending token to the contract and ensure that `token_in` and `token_in_max_amount` is exactly the same amount of token that gets sent to the contract.
 
 And the reason why the sequence is a little bit different for `SwapExactAmountIn` and `SwapExactAmountOut` is that, for `SwapExactAmountIn`, it is known beforehand how much `token_in_amount` to be sent to the contract and let it process, but for `SwapExactAmountOut`, it isn't, so we need to sent `token_in_max_amount` to the contract and let it process, then send the remaining token back to the sender.
+
+To complete the swap, the sudo response needs to `set_data` with calculated amount in JSON so that swap router has the required value to calculate further swap operations.
+
+`SwapExactAmountIn`:
+
+```json
+{
+  "token_out_amount": "<AMOUNT>"
+}
+```
+
+`SwapExactAmountOut`:
+
+```json
+{
+  "token_in_amount": "<AMOUNT>"
+}
+```
+
+So your code might look like this:
+
+```rs
+#[cw_serde]
+pub struct SwapExactAmountInResponseData {
+    pub token_out_amount: Uint128,
+}
+
+#[cw_serde]
+pub struct SwapExactAmountOutResponseData {
+    pub token_in_amount: Uint128,
+}
+```
+
+```rs
+#[entry_point]
+pub fn sudo(deps: DepsMut, env: Env, msg: SudoMessage) -> Result<Response, ContractError> {
+    match msg {
+        SudoMessage::SwapExactAmountIn { sender, token_in, token_out_denom, token_out_min_amount, swap_fee } => {
+            let token_out_amount = todo!("calculate token_out_amount");
+
+            Response::new()
+                .set_data(to_json_binary(&SwapExactAmountInResponseData {
+                    token_out_amount
+                })?)
+        },
+        SudoMessage::SwapExactAmountOut { sender, token_in_denom, token_in_max_amount, token_out, swap_fee } => {
+            let token_in_amount = todo!("calculate token_in_amount");
+
+            Response::new()
+                .set_data(to_json_binary(&SwapExactAmountOutResponseData {
+                    token_in_amount
+                })?)
+        },
+        _ => todo!(),
+    }
+}
+```
 
 ## Deactivating
 
@@ -177,6 +229,7 @@ The contract interface is defined so that `cosmwasmpool` can delegate `PoolI` an
 The following are the messages that the contract needs to implement. (If you have trouble interpreting this, please read [Rust de/serialization](#rust-deserialization))
 
 ### Query
+
 ```rs
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -337,9 +390,11 @@ pub enum CreatePoolGauges {
 ```
 
 ---
+
 ## Appendix
 
 ### TWAP
+
 `x/twap` is not implemented for cosmwasm pools but can be in the future if there is a need.
 
 ### Rust de/serialization
@@ -365,7 +420,7 @@ struct SpotPriceResponse {
 }
 ```
 
-[Decimal](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Decimal.html)  and [Uint128](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Uint128.html) are represented as string in JSON.
+[Decimal](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Decimal.html) and [Uint128](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Uint128.html) are represented as string in JSON.
 
 [Coin](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Coin.html) is:
 
@@ -412,7 +467,8 @@ No address will be able to maliciously upload a new code id and instantiate a po
 governance approval.
 
 Inputs
- - `uploadByteCode` - `[]byte` - the raw wasm bytecode
+
+- `uploadByteCode` - `[]byte` - the raw wasm bytecode
 
 The created code id is emitted via `TypeEvtUploadedCosmwasmPoolCode` event.
 
@@ -437,21 +493,23 @@ The reason for having `poolID`s be a slice of ids is to account for the potentia
 The proposal fails if more. Note that 20 was chosen arbitrarily to have a constant bound on the number of pools migrated at once.
 
 Inputs
- - `poolIDs`        - `[]uint64`
- - `codeID`         - `uint64`
- - `uploadByteCode` - `[]byte`
 
- If the code is uploaded via proposal, the resulting code id is emitted via `TypeEvtMigratedCosmwasmPoolCode`.
+- `poolIDs` - `[]uint64`
+- `codeID` - `uint64`
+- `uploadByteCode` - `[]byte`
+
+If the code is uploaded via proposal, the resulting code id is emitted via `TypeEvtMigratedCosmwasmPoolCode`.
 
 ##### Analysis of the Parameter Choice
 
 - Pros
-   * The flexibility is maximized as each pool id can be migrated individually either by uploading a new contract code or migrating to a pre-added one.
-   * There is still an ability to migrate all pools belonging to a list of code ids. The max number of pools migrated at once is bounded by a constant parameter.
+
+  - The flexibility is maximized as each pool id can be migrated individually either by uploading a new contract code or migrating to a pre-added one.
+  - There is still an ability to migrate all pools belonging to a list of code ids. The max number of pools migrated at once is bounded by a constant parameter.
 
 - Cons
-   * If there are multiple iterations of the same type, It might become cumbersome to keep track of which pool is on which code id, why one is migrated and the other one is not
-   * Some conditionality with proposal parameters. For example, if `codeId` is zero, byte code must be empty.
+  - If there are multiple iterations of the same type, It might become cumbersome to keep track of which pool is on which code id, why one is migrated and the other one is not
+  - Some conditionality with proposal parameters. For example, if `codeId` is zero, byte code must be empty.
 
 Overall, we concluded that pros outweigh the cons, and this is the best approach out of the other alternatives considered.
 
@@ -475,6 +533,7 @@ can tweak it by changing the `PoolMigrationLimit` parameter.
 ## Pool Model
 
 Note: CW Pool has 2 pool models:
+
 - CosmWasmPool which is a proto-generated store model used for serialization into state.
 - Pool struct that encapsulates the CosmWasmPool and wasmKeeper for calling the contract.
 

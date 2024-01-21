@@ -37,8 +37,8 @@ type poolIngester struct {
 	gammKeeper         domain.PoolKeeper
 	concentratedKeeper domain.ConcentratedKeeper
 	cosmWasmKeeper     domain.CosmWasmPoolKeeper
-	protorevKeeper     domain.ProtorevKeeper
 	bankKeeper         domain.BankKeeper
+	protorevKeeper     domain.ProtorevKeeper
 	poolManagerKeeper  domain.PoolManagerKeeper
 	assetListGetter    domain.AssetListGetter
 }
@@ -55,15 +55,58 @@ const (
 	UOSMO          = "uosmo"
 	uosmoPrecision = 6
 
-	noTokenPrecisionErrorFmtStr = "error getting token precision %s"
-	spotPriceErrorFmtStr        = "error calculating spot price for denom %s, %s"
+	noTokenPrecisionErrorFmtStr   = "error getting token precision %s"
+	spotPriceErrorFmtStr          = "error calculating spot price for denom %s, %s"
+	spotPricePrecisionErrorFmtStr = "error calculating spot price from route overwrites due to precision for denom %s"
+	multiHopSpotPriceErrorFmtStr  = "error calculating spot price via multihop swap, %s"
 
 	// placeholder value to disable route updates at the end of every block.
 	// nolint: unused
 	routeIngestDisablePlaceholder = 0
+
+	// https://app.osmosis.zone/pool/1263
+	usdcPool    = 1263
+	usdcDenom   = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+	stATOMDenom = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
+	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+	usdtDenom   = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
+	oneOSMO     = 1_000_000
 )
 
-var uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
+var (
+	uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
+
+	oneOsmoInt    = osmomath.NewInt(oneOSMO)
+	oneOsmoBigDec = osmomath.NewBigDec(oneOSMO)
+
+	oneOsmoCoin = sdk.NewCoin(UOSMO, oneOsmoInt)
+)
+
+// These are the routes that we use for pricing certain tokens against OSMO
+// for determining TVL.
+var uosmoRoutesFromDenom map[string][]poolmanagertypes.SwapAmountOutRoute = map[string][]poolmanagertypes.SwapAmountOutRoute{
+	// stATOM
+	stATOMDenom: {
+		{
+			PoolId: 1283,
+
+			// stAtom
+			TokenInDenom: stATOMDenom,
+		},
+		{
+			PoolId: 1265,
+			// ATOM
+			TokenInDenom: atomDenom,
+		},
+	},
+}
+
+// For stablecoin denoms that we do not have routes set for calculating TVL, we simply assume
+// that they have the same spot price as USDC. This is sufficient for correctness of naive ranking.
+var stablesOverwrite map[string]struct{} = map[string]struct{}{
+	// Tether USD (Wormhole)
+	usdtDenom: {},
+}
 
 // NewPoolIngester returns a new pool ingester.
 func NewPoolIngester(poolsRepository poolsredisrepo.PoolsRepository, routerRepository routerredisrepo.RouterRepository, repositoryManager repository.TxManager, assetListGetter domain.AssetListGetter, keepers domain.SQSIngestKeepers) domain.AtomicIngester {
@@ -246,7 +289,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 // set to true in the pool model.
 // Note:
 // - TVL is calculated using spot price. TODO: use TWAP (https://app.clickup.com/t/86a182835)
-// - TVL does not account for token precision. TODO: use assetlist for pulling token precision data
+// - TVL does not account for token precision.
 // (https://app.clickup.com/t/86a18287v)
 func (pi *poolIngester) convertPool(
 	ctx sdk.Context,
@@ -273,6 +316,9 @@ func (pi *poolIngester) convertPool(
 	// Otherwise, the CosmWasmPool model panics.
 	pool = pool.AsSerializablePool()
 
+	// filtered balances consisting only of the pool denom balances.
+	filteredBalances := sdk.NewCoins()
+
 	var errorInTVLStr string
 	for _, balance := range balances {
 		// Note that there are edge cases where gamm shares or some random
@@ -287,21 +333,20 @@ func (pi *poolIngester) convertPool(
 			continue
 		}
 
+		// update filtered balances only with pool tokens
+		filteredBalances = filteredBalances.Add(balance)
+
 		if balance.Denom == UOSMO {
 			osmoPoolTVL = osmoPoolTVL.Add(balance.Amount)
 			continue
 		}
 
+		// Spot price with uosmo as base asset.
+		var uosmoBaseAssetSpotPrice osmomath.BigDec
+
 		// Check if routable poolID already exists for the denom
 		routingInfo, ok := denomToRoutingInfoMap[balance.Denom]
 		if !ok {
-			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
-			if err != nil {
-				ctx.Logger().Debug("error getting OSMO-based pool", "denom", balance.Denom, "error", err)
-				errorInTVLStr = err.Error()
-				continue
-			}
-
 			basePrecison, ok := tokenPrecisionMap[balance.Denom]
 			if !ok {
 				errorInTVLStr = fmt.Sprintf(noTokenPrecisionErrorFmtStr, balance.Denom)
@@ -309,17 +354,76 @@ func (pi *poolIngester) convertPool(
 				continue
 			}
 
-			uosmoBaseAssetSpotPrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
-			if err != nil {
-				errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
-				ctx.Logger().Debug(errorInTVLStr)
-				continue
+			// Attempt to get a single-hop pool from on-chain routes.
+			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
+			if err == nil {
+				// If on-chain route is present, calculate spot price with uosmo.
+				uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
+				if err != nil {
+					errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
+					ctx.Logger().Debug(errorInTVLStr)
+					continue
+				}
+			} else {
+				ctx.Logger().Debug("error getting OSMO-based pool from Skip route", "denom", balance.Denom, "error", err)
+
+				// Check if there exists a route from current denom to uosmo.
+				routes, hasRouteOverwrite := uosmoRoutesFromDenom[balance.Denom]
+
+				// Check if this is a stablecoin
+				_, isStableCoin := stablesOverwrite[balance.Denom]
+
+				if hasRouteOverwrite {
+					ctx.Logger().Debug("uosmo routes are present", "denom", balance.Denom)
+
+					// Estimate how many tokens in we get for 1 OSMO
+					denomAmtIn, err := pi.poolManagerKeeper.MultihopEstimateInGivenExactAmountOut(ctx, routes, oneOsmoCoin)
+					if err != nil {
+						ctx.Logger().Debug("error computing multihop from route overwrite", "denom", balance.Denom, "error", err)
+						errorInTVLStr = fmt.Sprintf(multiHopSpotPriceErrorFmtStr, err)
+						continue
+					}
+
+					denomBigDecAmtIn := osmomath.BigDecFromSDKInt(denomAmtIn)
+					if denomBigDecAmtIn.IsZero() {
+						ctx.Logger().Info("error inverting price from route overwrite", "denom", balance.Denom)
+						errorInTVLStr = "error inverting price from route overwrite"
+						continue
+					}
+
+					uosmoBaseAssetSpotPrice = oneOsmoBigDec.QuoMut(denomBigDecAmtIn)
+				} else if isStableCoin {
+					// We (very) naively assume that stablecoin has the same price as USDC for TVL ranking of pools in the router.
+					uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, usdcPool, usdcDenom, UOSMO)
+					if err != nil {
+						errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
+						ctx.Logger().Debug(errorInTVLStr)
+						continue
+					}
+
+					// Set base preecision to USDC
+					basePrecison, ok = tokenPrecisionMap[usdcDenom]
+					if !ok {
+						errorInTVLStr = "no precision for denom " + usdcDenom
+						continue
+					}
+				} else {
+					// If there is no method to compute TVL for this denom, attach error and silently skip it.
+					errorInTVLStr = err.Error()
+					ctx.Logger().Debug("no overwrite present", "denom", balance.Denom)
+					continue
+				}
 			}
 
 			// Scale on-chain spot price to the correct token precision.
 			precisionMultiplier := uosmoPrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
 
 			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
+
+			if uosmoBaseAssetSpotPrice.IsZero() {
+				errorInTVLStr = "failed to calculate spot price due to it becoming zero from truncations " + balance.Denom
+				continue
+			}
 
 			routingInfo = denomRoutingInfo{
 				PoolID: poolForDenomPair,
@@ -378,7 +482,7 @@ func (pi *poolIngester) convertPool(
 		SQSModel: sqsdomain.SQSPool{
 			TotalValueLockedUSDC:  osmoPoolTVL,
 			TotalValueLockedError: errorInTVLStr,
-			Balances:              balances,
+			Balances:              filteredBalances,
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
 		},
