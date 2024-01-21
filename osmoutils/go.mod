@@ -5,14 +5,14 @@ go 1.21
 require (
 	cosmossdk.io/math v1.1.3-rc.1
 	github.com/CosmWasm/wasmvm v1.5.1
-	github.com/cometbft/cometbft v0.38.0
+	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ibc-go/v7 v7.3.1
 	github.com/osmosis-labs/osmosis/osmomath v0.0.8
-	github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0
+	github.com/osmosis-labs/osmosis/v22 v22.0.0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -188,3 +188,5 @@ replace (
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath
 // github.com/osmosis-labs/osmosis/v22 => ./../
 )
+
+exclude github.com/cometbft/cometbft v0.38.0
