@@ -202,7 +202,7 @@ replace (
 
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/osmosis/v22 => github.com/osmosis-labs/osmosis/v22 v22.0.0-testnet.0.20240119161422-17cf4902a36b
+	github.com/osmosis-labs/osmosis/v22 => github.com/osmosis-labs/osmosis/v22 v22.0.0-testnet.0.20240122081146-9ea6dbe2b1af
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
