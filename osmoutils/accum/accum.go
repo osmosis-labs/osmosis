@@ -292,7 +292,7 @@ func (accum *AccumulatorObject) UpdatePosition(name string, numShares osmomath.D
 // old accumulator value associated with the position.
 func (accum *AccumulatorObject) UpdatePositionIntervalAccumulation(name string, numShares osmomath.Dec, intervalAccumulationPerShare sdk.DecCoins) error {
 	if numShares.IsZero() {
-		return ZeroSharesError
+		return ErrZeroShares
 	}
 
 	if numShares.IsNegative() {

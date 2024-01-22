@@ -14,6 +14,7 @@ import (
 // ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
 // panics. If expectPanic is false, asserts that sut does not panic.
 // returns true if sut panics and false it it does not
+// nolint: thelper
 func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) {
 	if expectPanic {
 		require.Panics(t, sut)
@@ -24,6 +25,7 @@ func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) {
 
 // ConditionalError checks if expectError is true, asserts that err is an error
 // If expectError is false, asserts that err is nil
+// nolint: thelper
 func ConditionalError(t *testing.T, expectError bool, err error) {
 	if expectError {
 		require.Error(t, err)
@@ -35,6 +37,7 @@ func ConditionalError(t *testing.T, expectError bool, err error) {
 // DecApproxEq is a helper function to compare two decimals.
 // It validates the two decimal are within a certain tolerance.
 // If not, it fails with a message.
+// nolint: thelper
 func DecApproxEq(t *testing.T, d1 osmomath.Dec, d2 osmomath.Dec, tol osmomath.Dec, msgAndArgs ...interface{}) {
 	diff := d1.Sub(d2).Abs()
 	msg := messageFromMsgAndArgs(msgAndArgs...)
@@ -67,6 +70,7 @@ type Stringer interface {
 }
 
 // Equal compares A with B and asserts that they are equal within tolerance error tolerance
+// nolint: thelper
 func Equal[T Stringer](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 	errMsg := fmt.Sprintf("expected %s, actual %s", A.String(), B.String())
 	switch a := any(A).(type) {

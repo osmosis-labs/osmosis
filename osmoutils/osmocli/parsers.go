@@ -403,6 +403,7 @@ func ParseUint64SliceToString(values []uint64) string {
 	return strings.Join(strs, ", ")
 }
 
+// nolint: revive
 func GetProposalInfo(cmd *cobra.Command) (client.Context, string, string, sdk.Coins, bool, sdk.AccAddress, error) {
 	clientCtx, err := client.GetClientTxContext(cmd)
 	if err != nil {

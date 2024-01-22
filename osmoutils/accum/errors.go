@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ZeroSharesError = errors.New("shares must be non-zero")
+	ErrZeroShares = errors.New("shares must be non-zero")
 )
 
 type NoPositionError struct {

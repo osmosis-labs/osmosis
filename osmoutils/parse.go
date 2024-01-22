@@ -32,6 +32,7 @@ func (p Proposal) validate() error {
 	return nil
 }
 
+// nolint: staticcheck
 func ParseProposalFlags(fs *pflag.FlagSet) (*Proposal, error) {
 	proposal := &Proposal{}
 	proposalFile, _ := fs.GetString(cli.FlagProposal)

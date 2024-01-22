@@ -209,6 +209,7 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // exact: leaf with key = provided key
 // right: all leaves under nodePointer with key > provided key
 // Note that the equalities here are _exclusive_.
+// nolint: nakedret
 func (ptr *ptr) accumulationSplit(key []byte) (left osmomath.Int, exact osmomath.Int, right osmomath.Int) {
 	left, exact, right = osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt()
 	if ptr.isLeaf() {

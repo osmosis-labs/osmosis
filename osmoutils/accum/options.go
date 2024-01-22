@@ -2,6 +2,7 @@ package accum
 
 import "github.com/osmosis-labs/osmosis/v22/osmomath"
 
+// nolint: unused
 var one = osmomath.OneDec()
 
 // validate returns nil if Options are valid.

@@ -1299,7 +1299,7 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 			name:      testAddressOne,
 			numShares: osmomath.ZeroDec(),
 
-			expectError: accumPackage.ZeroSharesError,
+			expectError: accumPackage.ErrZeroShares,
 		},
 	}
 

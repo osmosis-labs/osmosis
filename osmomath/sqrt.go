@@ -5,6 +5,7 @@ import (
 	"math/big"
 )
 
+// nolint: unused
 var smallestDec = SmallestDec()
 var tenTo18 = big.NewInt(1e18)
 var tenTo36 = big.NewInt(0).Mul(tenTo18, tenTo18)
