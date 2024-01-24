@@ -67,69 +67,25 @@ func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, e
 	return cwa, nil
 }
 
+type BaseData struct {
+	Tx           sdk.Tx
+	MessageIndex int
+	Simulate     bool
+}
+
+var _ iface.AuthenticatorData = BaseData{}
+
 func (cwa CosmwasmAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	messageIndex int,
 	simulate bool,
 ) (iface.AuthenticatorData, error) {
-	// We ignore message index here as we want all signers and signatures to be passed to the contract
-	signers, signatures, signingTx, err := GetCommonAuthenticationData(ctx, tx, -1, simulate)
-	if err != nil {
-		return SignatureData{}, err
-	}
-
-	return SignatureData{
-		Signers:    signers,
-		Signatures: signatures,
-		Tx:         signingTx,
-		Simulate:   simulate,
+	return BaseData{
+		Tx:           tx,
+		MessageIndex: messageIndex,
+		Simulate:     simulate,
 	}, nil
-}
-
-type SignModeData struct {
-	Direct  []byte `json:"sign_mode_direct"`
-	Textual string `json:"sign_mode_textual"`
-}
-
-type LocalAny struct {
-	TypeURL string `json:"type_url"`
-	Value   []byte `json:"value"`
-}
-
-type ExplicitTxData struct {
-	ChainID       string     `json:"chain_id"`
-	AccountNumber uint64     `json:"account_number"`
-	Sequence      uint64     `json:"sequence"`
-	TimeoutHeight uint64     `json:"timeout_height"`
-	Msgs          []LocalAny `json:"msgs"`
-	Memo          string     `json:"memo"`
-}
-
-type simplifiedSignatureData struct {
-	Signers    []sdk.AccAddress `json:"signers"`
-	Signatures [][]byte         `json:"signatures"`
-}
-
-type AuthenticationRequest struct {
-	Account             sdk.AccAddress          `json:"account"`
-	Msg                 LocalAny                `json:"msg"`
-	Signature           []byte                  `json:"signature"` // Only allowing messages with a single signer
-	SignModeTxData      SignModeData            `json:"sign_mode_tx_data"`
-	TxData              ExplicitTxData          `json:"tx_data"`
-	SignatureData       simplifiedSignatureData `json:"signature_data"`
-	Simulate            bool                    `json:"simulate"`
-	AuthenticatorParams []byte                  `json:"authenticator_params,omitempty"`
-}
-
-type TrackRequest struct {
-	Account sdk.AccAddress `json:"account"`
-	Msg     LocalAny       `json:"msg"`
-}
-
-type ConfirmExecutionRequest struct {
-	Account sdk.AccAddress `json:"account"`
-	Msg     LocalAny       `json:"msg"`
 }
 
 type SudoMsg struct {
@@ -140,20 +96,46 @@ type SudoMsg struct {
 
 // TODO: decide when we want to reject and when to just not authenticate
 func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	if len(msg.GetSigners()) != 1 {
-		return iface.Rejected("only messages with a single signer are supported", sdkerrors.ErrInvalidType)
+	bd := authenticationData.(BaseData)
+	authRequest, err := GenerateAuthenticationData(ctx, cwa.ak, cwa.sigModeHandler, account, msg, bd.Tx, bd.MessageIndex, bd.Simulate)
+	if err != nil {
+		return iface.Rejected("failed to generate authentication data", err)
+	}
+	// Add the authenticator params set for this authenticator in Initialize()
+	authRequest.AuthenticatorParams = cwa.authenticatorParams
+
+	bz, err := json.Marshal(SudoMsg{Authenticate: &authRequest})
+	if err != nil {
+		return iface.Rejected("failed to marshall AuthenticationRequest", err)
 	}
 
-	signatureData, ok := authenticationData.(SignatureData)
-	if !ok {
-		return iface.Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
+	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
+	if err != nil {
+		return iface.Rejected("failed to sudo", err)
+	}
+
+	authResult, err := UnmarshalAuthenticationResult(result)
+	if err != nil {
+		return iface.Rejected("failed to unmarshal authentication result", err)
+	}
+	return authResult
+}
+
+func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, messageIndex int, simulate bool) (AuthenticationRequest, error) {
+	signers, txSignatures, _, err := GetCommonAuthenticationData(ctx, tx, -1, simulate)
+	if err != nil {
+		return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signes and signatures")
+	}
+
+	if len(msg.GetSigners()) != 1 {
+		return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
 	}
 
 	// Retrieve and build the signer data struct
-	genesis := ctx.IsGenesis() || ctx.BlockHeight() == 0
+	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
-	baseAccount := cwa.ak.GetAccount(ctx, account)
+	baseAccount := ak.GetAccount(ctx, account)
 	if !genesis {
 		accNum = baseAccount.GetAccountNumber()
 	}
@@ -164,30 +146,30 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 		Sequence:      baseAccount.GetSequence(),
 	}
 
-	signBytes, err := cwa.sigModeHandler.GetSignBytes(txsigning.SignMode_SIGN_MODE_DIRECT, signerData, signatureData.Tx)
+	signBytes, err := sigModeHandler.GetSignBytes(txsigning.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
-		return iface.Rejected("failed to get signBytes", err)
+		return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signBytes")
 	}
 
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return iface.Rejected("failed to encode msg", err)
+		return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
 	}
 
-	timeoutTx, ok := signatureData.Tx.(sdk.TxWithTimeoutHeight)
+	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
-		return iface.Rejected("failed to cast tx to TxWithTimeoutHeight", sdkerrors.ErrInvalidType)
+		return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
 	}
-	memoTx, ok := signatureData.Tx.(sdk.TxWithMemo)
+	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return iface.Rejected("failed to cast tx to TxWithMemo", sdkerrors.ErrInvalidType)
+		return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
 	}
 
-	msgs := make([]LocalAny, len(signatureData.Tx.GetMsgs()))
-	for i, msg := range signatureData.Tx.GetMsgs() {
+	msgs := make([]LocalAny, len(tx.GetMsgs()))
+	for i, msg := range tx.GetMsgs() {
 		encodedMsg, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
-			return iface.Rejected("failed to encode msg", err)
+			return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
 		}
 		msgs[i] = LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
@@ -207,17 +189,19 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	signer := msg.GetSigners()[0]
 	var signatures [][]byte
 	var msgSignature []byte
-	for i, signature := range signatureData.Signatures {
+	for i, signature := range txSignatures {
+		// ToDo: deal with other signature types
 		single, ok := signature.Data.(*txsigning.SingleSignatureData)
 		if !ok {
-			return iface.Rejected("failed to cast signature to SingleSignatureData", sdkerrors.ErrInvalidType)
+			return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
 		}
 		signatures = append(signatures, single.Signature)
-		if signatureData.Signers[i].Equals(signer) {
+		if signers[i].Equals(signer) {
 			msgSignature = single.Signature
 		}
 	}
-	// should we pass ctx.IsReCheckTx() here?
+
+	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
 	authRequest := AuthenticationRequest{
 		Account: account,
 		Msg: LocalAny{
@@ -229,28 +213,14 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
 			Direct: signBytes,
 		},
-		SignatureData: simplifiedSignatureData{
-			Signers:    signatureData.Signers,
+		SignatureData: SimplifiedSignatureData{
+			Signers:    signers,
 			Signatures: signatures,
 		},
-		Simulate:            signatureData.Simulate,
-		AuthenticatorParams: cwa.authenticatorParams,
+		Simulate:            simulate,
+		AuthenticatorParams: nil,
 	}
-	bz, err := json.Marshal(SudoMsg{Authenticate: &authRequest})
-	if err != nil {
-		return iface.Rejected("failed to marshall AuthenticationRequest", err)
-	}
-
-	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
-	if err != nil {
-		return iface.Rejected("failed to sudo", err)
-	}
-
-	authResult, err := UnmarshalAuthenticationResult(result)
-	if err != nil {
-		return iface.Rejected("failed to unmarshal authentication result", err)
-	}
-	return authResult
+	return authRequest, nil
 }
 
 func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {

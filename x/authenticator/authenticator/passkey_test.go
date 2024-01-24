@@ -213,6 +213,7 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 				true,
 			},
 		},
+		// TODO: This is failing because of the tx builder. Need to fix the test helper
 		{
 			Description: "Test: unsuccessful signature authentication not enough signers: FAIL",
 			TestData: PassKeyAuthenticatorTestData{
