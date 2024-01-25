@@ -486,6 +486,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 //
 // Currently, overwrites arbitrage-min-gas-fee value in app.toml if it is set to 0.005. Similarly,
 // overwrites the given viper config value.
+// Silently handles and skips any error/panic due to write permission issues.
 // No-op otherwise.
 func overwriteAppTomlValues(serverCtx *server.Context) error {
 	// Get paths to config.toml and config parent directory
