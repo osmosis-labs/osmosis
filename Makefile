@@ -32,6 +32,7 @@ help:
 	@echo "  make release               Show available release commands"
 	@echo "  make release-help          Show available release commands"
 	@echo "  make run-querygen          Generating GRPC queries, and queryproto logic"
+	@echo "  make setup-pre-commit      Set pre-commit git hook"
 	@echo "  make sqs                   Show available sqs commands"
 	@echo "  make test                  Show available test commands"
 	@echo ""
@@ -197,3 +198,9 @@ endif
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark \
 	release release-dry-run release-snapshot
+
+setup-pre-commit:
+	@cp .git/hooks/pre-commit .git/hooks/pre-commit.bak 2>/dev/null || true
+	@echo "Installing pre-commit hook..."
+	@ln -sf ../../scripts/hooks/pre-commit.sh .git/hooks/pre-commit
+	@echo "Pre-commit hook installed successfully"
