@@ -169,3 +169,13 @@ pub enum SudoMsg {
 Each message corresponds to steps 3, 5 and 7 of the [transaction authentication process](#transaction-authentication-overview).
 
 Request types are defined [here](https://docs.rs/osmosis-authenticators/latest/osmosis_authenticators).
+
+For `Authenticate` and `ConfirmExecution` handler, their `Response` needs to be associated data indicating its result.
+
+For example:
+
+```rs
+Response::new().set_data(AuthenticationResult::Authenticated)
+```
+
+See [`AuthenticationResult`](https://docs.rs/osmosis-authenticators/latest/osmosis_authenticators/enum.AuthenticationResult.html) and [`ConfirmationResult`](https://docs.rs/osmosis-authenticators/latest/osmosis_authenticators/enum.ConfirmationResult.html) for more details.
