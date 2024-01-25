@@ -93,20 +93,6 @@ type DenomUnitMap struct {
 	Exponent uint64 `json:"exponent"`
 }
 
-type OsmosisMempoolConfig struct {
-	ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
-}
-
-type CustomAppConfig struct {
-	serverconfig.Config
-
-	OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
-
-	SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
-
-	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
-}
-
 const (
 	mempoolConfigName            = "osmosis-mempool"
 	arbitrageMinGasFeeConfigName = "arbitrage-min-gas-fee"
@@ -583,6 +569,20 @@ func getHomeEnvironment() string {
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
+	type OsmosisMempoolConfig struct {
+		ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
+	}
+
+	type CustomAppConfig struct {
+		serverconfig.Config
+
+		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
+
+		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
+
+		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+	}
+
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
