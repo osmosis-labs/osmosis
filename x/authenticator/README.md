@@ -148,8 +148,8 @@ data: json_bytes({
 })
 ```
 
-The `params` field is for configuring any additional parameters for the authenticator and is _encouraged over using contract storage_ when possible
-since the field is standardized and must be json bytes. It can be easily parsed and displayed by clients, which makes them more human-friendly.
+The `params` field is for configuring any additional parameters for the authenticator and can be used to pass user specific information to the contract instead of keeping it in contract storage. This allows for contract reuse even even when user specific information is needed. 
+This field is standardized and must be json bytes. This way it can be easily parsed and displayed by clients, which makes them more human-friendly.
 
 Contract storage should be used only when the authenticator needs to track any dynamic information required.
 
