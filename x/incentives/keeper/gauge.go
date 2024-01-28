@@ -131,20 +131,22 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	// the gauge "lock" duration is an authorized uptime.
 	isConcentratedPoolGauge := distrTo.LockQueryType == lockuptypes.NoLock
 
-	// If the gauge is being created by the pool incentives module, it is for an internal
-	// gauge and should not be blocked on creation here.
+	// If the gauge has an internal gauge denpom, it is an internal gauge
+	// and should be run through different validation logic (see below).
 	//
-	// Two important reminders:
+	// Two important reminders/assumptions:
 	// 1. `NoLock` gauges are required to have empty denoms in `ValidateBasic`, so this
-	// check cannot be controlled by user input
+	// check cannot be controlled by user input.
 	// 2. The safety of this leans on the special-casing of internal gauge logic during
 	// distributions, which should be using the internal incentive duration gov param instead of the duration value.
 	isInternalConcentratedPoolGauge := distrTo.Denom == types.NoLockInternalGaugeDenom(poolId)
 	isExternalConcentratedPoolGauge := isConcentratedPoolGauge && !isInternalConcentratedPoolGauge
 
 	// Ensure that this gauge's duration is one of the allowed durations on chain
-	// Concentrated pool gauges (excluding internal) check against authorized uptimes,
-	// while all other gauges check against the default set of lockable durations.
+	// Concentrated pool gauges check against authorized uptimes (if external) or
+	// epoch duration (if internal).
+	//
+	// All other gauges check against the default set of lockable durations.
 	var durations []time.Duration
 	if isExternalConcentratedPoolGauge {
 		durations = k.clk.GetParams(ctx).AuthorizedUptimes
@@ -157,7 +159,8 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		durations = k.GetLockableDurations(ctx)
 	}
 
-	// We check durations if the gauge is a regular duration based gauge, or if it is an external CL gauge.
+	// We check durations if the gauge is a regular duration based gauge or if it is a
+	// CL gauge. Note that this excludes time-based gauges and group gauges.
 	if distrTo.LockQueryType == lockuptypes.ByDuration || isConcentratedPoolGauge {
 		durationOk := false
 		for _, duration := range durations {

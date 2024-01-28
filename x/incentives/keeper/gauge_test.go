@@ -521,8 +521,6 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is internal
-				// We intentionally do not set a gauge duration as it should make no
-				// difference for internal gauges.
 				Denom:    types.NoLockInternalGaugeDenom(concentratedPoolId),
 				Duration: s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration,
 			},
@@ -579,7 +577,20 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is external
-				Denom:    "",
+				Denom: "",
+				// 1h is a supported uptime that is not authorized
+				Duration: time.Hour,
+			},
+			poolId:    concentratedPoolId,
+			expectErr: true,
+		},
+		{
+			name: "fail to create external no lock gauge due to entirely invalid uptime",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom: "",
+				// 2ns is an uptime that isn't supported at all (i.e. can't even be authorized)
 				Duration: 2 * time.Nanosecond,
 			},
 			poolId:    concentratedPoolId,
@@ -590,8 +601,6 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is internal
-				// We intentionally do not set a gauge duration as it should make no
-				// difference for internal gauges.
 				Denom:    types.NoLockInternalGaugeDenom(concentratedPoolId),
 				Duration: time.Nanosecond,
 			},
