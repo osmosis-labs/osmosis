@@ -25,6 +25,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -604,6 +606,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
+	server.AddTestnetCreatorCommand(rootCmd, osmosis.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
 
 	for i, cmd := range rootCmd.Commands() {
 		if cmd.Name() == "start" {
@@ -764,6 +767,20 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 		baseapp.SetChainID(chainID),
 	)
+}
+
+// newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
+// for a testnet to be created from the provided app.
+func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress string, appOpts servertypes.AppOptions) servertypes.Application {
+	// Create an app and type cast to an OsmosisApp
+	app := newApp(logger, db, traceStore, appOpts)
+	osmosisApp, ok := app.(*osmosis.OsmosisApp)
+	if !ok {
+		panic("app created from newApp is not of type osmosisApp")
+	}
+
+	// Make modifications to the normal OsmosisApp required to run the network locally
+	return osmosis.InitOsmosisAppForTestnet(osmosisApp, newValAddr, newValPubKey, newOperatorAddress)
 }
 
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
