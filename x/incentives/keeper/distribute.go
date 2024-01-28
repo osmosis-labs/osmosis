@@ -589,6 +589,7 @@ func (k Keeper) distributeInternal(
 	if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
 		ctx.Logger().Debug("distributeInternal NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, gauge.DistributeTo.Duration)
+
 		if err != nil {
 			return nil, err
 		}
@@ -731,7 +732,6 @@ func guaranteedNonzeroCoinAmountOf(coins sdk.Coins, denom string) osmomath.Int {
 // Also adds the coins that were just distributed to the gauge's distributed coins field.
 func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, newlyDistributedCoins sdk.Coins) error {
 	gauge.FilledEpochs += 1
-	fmt.Println(fmt.Sprintf("Filled epoch on gauge %d. New filled epochs: %d", gauge.Id, gauge.FilledEpochs))
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(newlyDistributedCoins...)
 	if err := k.setGauge(ctx, &gauge); err != nil {
 		return err
@@ -802,7 +802,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 10000)
 
 	for _, gauge := range gauges {
-		fmt.Println("Distributing from gauge: ", gauge.Id)
 		var gaugeDistributedCoins sdk.Coins
 		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache, &scratchSlice)
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups

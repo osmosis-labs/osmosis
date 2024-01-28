@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -65,7 +64,6 @@ func (s *KeeperTestSuite) ValidateDistributedGauge(gaugeID uint64, expectedFille
 	// Check that filled epcohs is not updated
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
 	s.Require().NoError(err)
-	fmt.Println("Shown filled epocs in validation for gauge ID (ID, num filled): ", gaugeID, gauge.FilledEpochs)
 	s.Require().Equal(expectedFilledEpoch, gauge.FilledEpochs)
 	// Check that distributed coins is not updated
 

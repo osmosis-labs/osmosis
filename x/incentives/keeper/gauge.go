@@ -247,7 +247,6 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, err
 	}
 	k.SetLastGaugeID(ctx, gauge.Id)
-	fmt.Println("Created gauge with ID (is internal CL): ", nextGaugeId, isInternalConcentratedPoolGauge)
 
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 
