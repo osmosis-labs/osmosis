@@ -131,7 +131,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	// the gauge "lock" duration is an authorized uptime.
 	isConcentratedPoolGauge := distrTo.LockQueryType == lockuptypes.NoLock
 
-	// If the gauge has an internal gauge denpom, it is an internal gauge
+	// If the gauge has an internal gauge denom, it is an internal gauge
 	// and should be run through different validation logic (see below).
 	//
 	// Two important reminders/assumptions:
@@ -156,6 +156,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		// determined by the gov param for internal incentive uptimes.
 		durations = []time.Duration{k.GetEpochInfo(ctx).Duration}
 	} else {
+		// This branch is applicable to CFMM pool types such as balancer and stableswap.
 		durations = k.GetLockableDurations(ctx)
 	}
 

@@ -546,7 +546,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with balancer pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
-				Duration:      time.Nanosecond,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: balancerPoolId,
 
@@ -556,7 +556,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with non-existent pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
-				Duration:      time.Nanosecond,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: invalidPool,
 
@@ -566,7 +566,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with zero pool id",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
-				Duration:      time.Nanosecond,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: zeroPoolId,
 
