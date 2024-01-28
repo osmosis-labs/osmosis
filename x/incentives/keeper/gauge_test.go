@@ -507,7 +507,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is external
-				Denom: "",
+				Denom:    "",
+				Duration: time.Nanosecond,
 			},
 			poolId: concentratedPoolId,
 
@@ -520,6 +521,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is internal
+				// We intentionally do not set a gauge duration as it should make no
+				// difference for internal gauges.
 				Denom: types.NoLockInternalGaugeDenom(concentratedPoolId),
 			},
 			poolId: concentratedPoolId,
@@ -533,7 +536,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this is invalid for NoLock gauges
-				Denom: "uosmo",
+				Denom:    "uosmo",
+				Duration: time.Nanosecond,
 			},
 			poolId: concentratedPoolId,
 
@@ -543,6 +547,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with balancer pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      time.Nanosecond,
 			},
 			poolId: balancerPoolId,
 
@@ -552,6 +557,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with non-existent pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      time.Nanosecond,
 			},
 			poolId: invalidPool,
 
@@ -561,6 +567,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with zero pool id",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      time.Nanosecond,
 			},
 			poolId: zeroPoolId,
 
@@ -774,7 +781,7 @@ func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.
 	}
 
 	if poolID != 0 {
-		s.App.PoolIncentivesKeeper.SetPoolGaugeIdNoLock(s.Ctx, poolID, nextGaugeID)
+		s.App.PoolIncentivesKeeper.SetPoolGaugeIdNoLock(s.Ctx, poolID, nextGaugeID, distrTo.Duration)
 	}
 
 	err := s.App.IncentivesKeeper.SetGauge(s.Ctx, &gauge)

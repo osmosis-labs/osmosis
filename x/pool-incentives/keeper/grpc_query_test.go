@@ -443,6 +443,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
 		defaultNoLockGaugeConfig = gaugeConfig{
 			distributeTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      time.Nanosecond,
 			},
 			poolId: concentratedPoolId,
 		}
