@@ -148,13 +148,17 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	var durations []time.Duration
 	if isExternalConcentratedPoolGauge {
 		durations = k.clk.GetParams(ctx).AuthorizedUptimes
-		fmt.Println("AUTHORIZED UPTIMES: ", durations)
+	} else if isInternalConcentratedPoolGauge {
+		// Internal CL gauges use epoch time as their duration. This is a legacy
+		// property that does not affect the uptime on created records, which is
+		// determined by the gov param for internal incentive uptimes.
+		durations = []time.Duration{k.GetEpochInfo(ctx).Duration}
 	} else {
 		durations = k.GetLockableDurations(ctx)
 	}
 
 	// We check durations if the gauge is a regular duration based gauge, or if it is an external CL gauge.
-	if distrTo.LockQueryType == lockuptypes.ByDuration || isExternalConcentratedPoolGauge {
+	if distrTo.LockQueryType == lockuptypes.ByDuration || isConcentratedPoolGauge {
 		durationOk := false
 		for _, duration := range durations {
 			if duration == distrTo.Duration {
@@ -180,7 +184,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		// and get overwritten with the external prefix + pool id
 		// for internal query purposes.
 		distrToDenom := distrTo.Denom
-		if distrToDenom != types.NoLockInternalGaugeDenom(poolId) {
+		if !isInternalConcentratedPoolGauge {
 			// If denom is set, then fails.
 			if distrToDenom != "" {
 				return 0, fmt.Errorf("'no lock' type external gauges must have an empty denom set, was %s", distrToDenom)

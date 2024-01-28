@@ -523,7 +523,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 				// Note: this assumes the gauge is internal
 				// We intentionally do not set a gauge duration as it should make no
 				// difference for internal gauges.
-				Denom: types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Denom:    types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Duration: s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration,
 			},
 			poolId: concentratedPoolId,
 
@@ -573,6 +574,31 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 			expectErr: true,
 		},
+		{
+			name: "fail to create external no lock gauge due to unauthorized uptime",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom:    "",
+				Duration: 2 * time.Nanosecond,
+			},
+			poolId:    concentratedPoolId,
+			expectErr: true,
+		},
+		{
+			name: "fail to create an internal gauge with an unexpected duration",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is internal
+				// We intentionally do not set a gauge duration as it should make no
+				// difference for internal gauges.
+				Denom:    types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Duration: time.Nanosecond,
+			},
+			poolId: concentratedPoolId,
+
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -595,10 +621,6 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
-
-				// Assert that pool id and gauge id link meant for internally incentivized gauges is unset.
-				_, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
-				s.Require().Error(err)
 
 				// Confirm that the general pool id to gauge id link is set.
 				gaugeIds, err := s.App.PoolIncentivesKeeper.GetNoLockGaugeIdsFromPool(s.Ctx, tc.poolId)
