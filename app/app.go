@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -40,6 +41,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
@@ -47,6 +49,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/bytes"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
@@ -66,12 +70,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
+	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v22/app/keepers"
@@ -398,6 +404,217 @@ func NewOsmosisApp(
 		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
+	}
+
+	return app
+}
+
+// InitOsmosisAppForTestnet is broken down into two sections:
+// Required Changes: Changes that, if not made, will cause the testnet to halt or panic
+// Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
+func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress string) *OsmosisApp {
+	//
+	// Required Changes:
+	//
+
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	pubkey := &ed25519.PubKey{Key: newValPubKey.Bytes()}
+	pubkeyAny, err := types.NewAnyWithValue(pubkey)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// STAKING
+	//
+
+	// Create Validator struct for our new validator.
+	_, bz, err := bech32.DecodeAndConvert(newOperatorAddress)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	bech32Addr, err := bech32.ConvertAndEncode("osmovaloper", bz)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	newVal := stakingtypes.Validator{
+		OperatorAddress: bech32Addr,
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          false,
+		Status:          stakingtypes.Bonded,
+		Tokens:          sdk.NewInt(900000000000000),
+		DelegatorShares: sdk.MustNewDecFromStr("10000000"),
+		Description: stakingtypes.Description{
+			Moniker: "Testnet Validator",
+		},
+		Commission: stakingtypes.Commission{
+			CommissionRates: stakingtypes.CommissionRates{
+				Rate:          sdk.MustNewDecFromStr("0.05"),
+				MaxRate:       sdk.MustNewDecFromStr("0.1"),
+				MaxChangeRate: sdk.MustNewDecFromStr("0.05"),
+			},
+		},
+		MinSelfDelegation: sdk.OneInt(),
+	}
+
+	// Remove all validators from power store
+	stakingKey := app.GetKey(stakingtypes.ModuleName)
+	stakingStore := ctx.KVStore(stakingKey)
+	iterator := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all valdiators from last validators store
+	iterator = app.StakingKeeper.LastValidatorsIterator(ctx)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Add our validator to power and last validators store
+	app.StakingKeeper.SetValidator(ctx, newVal)
+	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
+	app.StakingKeeper.SetLastValidatorPower(ctx, newVal.GetOperator(), 0)
+	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, newVal.GetOperator()); err != nil {
+		panic(err)
+	}
+
+	// DISTRIBUTION
+	//
+
+	// Initialize records for this validator across all distribution stores
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, newVal.GetOperator(), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorCurrentRewards(ctx, newVal.GetOperator(), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, newVal.GetOperator(), distrtypes.InitialValidatorAccumulatedCommission())
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, newVal.GetOperator(), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+
+	// SLASHING
+	//
+
+	// Set validator signing info for our new validator.
+	newConsAddr := sdk.ConsAddress(newValAddr.Bytes())
+	newValidatorSigningInfo := slashingtypes.ValidatorSigningInfo{
+		Address:     newConsAddr.String(),
+		StartHeight: app.LastBlockHeight() - 1,
+		Tombstoned:  false,
+	}
+	app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+
+	//
+	// Optional Changes:
+	//
+
+	// GOV
+	//
+
+	newExpeditedVotingPeriod := time.Minute
+	newVotingPeriod := time.Minute * 2
+
+	govParams := app.GovKeeper.GetParams(ctx)
+	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
+	govParams.VotingPeriod = &newVotingPeriod
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 100000000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 150000000))
+
+	err = app.GovKeeper.SetParams(ctx, govParams)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// EPOCHS
+	//
+
+	dayEpochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "day")
+	dayEpochInfo.Duration = time.Hour * 6
+	// Prevents epochs from running back to back
+	dayEpochInfo.CurrentEpochStartTime = time.Now().UTC()
+	dayEpochInfo.CurrentEpochStartHeight = app.LastBlockHeight()
+	app.EpochsKeeper.DeleteEpochInfo(ctx, "day")
+	err = app.EpochsKeeper.AddEpochInfo(ctx, dayEpochInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	weekEpochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "week")
+	weekEpochInfo.Duration = time.Hour * 12
+	// Prevents epochs from running back to back
+	weekEpochInfo.CurrentEpochStartTime = time.Now().UTC()
+	weekEpochInfo.CurrentEpochStartHeight = app.LastBlockHeight()
+	app.EpochsKeeper.DeleteEpochInfo(ctx, "week")
+	err = app.EpochsKeeper.AddEpochInfo(ctx, weekEpochInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// BANK
+	//
+
+	defaultCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
+		sdk.NewInt64Coin("uosmo", 1000000000000),
+		sdk.NewInt64Coin("uion", 1000000000))
+
+	localOsmosisAccounts := []sdk.AccAddress{
+		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
+		sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
+		sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
+		sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
+		sdk.MustAccAddressFromBech32("osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
+		sdk.MustAccAddressFromBech32("osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
+		sdk.MustAccAddressFromBech32("osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
+		sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
+		sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
+		sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
+		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+
+	// Fund localosmosis accounts
+	for _, account := range localOsmosisAccounts {
+		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
+		if err != nil {
+			tmos.Exit(err.Error())
+		}
+		err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account, defaultCoins)
+		if err != nil {
+			tmos.Exit(err.Error())
+		}
+	}
+
+	// Fund edgenet faucet
+	faucetCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
+		sdk.NewInt64Coin("uosmo", 1000000000000000),
+		sdk.NewInt64Coin("uion", 1000000000000))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1rqgf207csps822qwmd3k2n6k6k4e99w502e79t"), faucetCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// Mars bank account
+	marsCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("uosmo", 10000000000000),
+		sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
+		sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
+		sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),
+		sdk.NewInt64Coin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", 700000000000),
+		sdk.NewInt64Coin("ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", 2000000000),
+		sdk.NewInt64Coin("ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", 3000000000000000000))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, marsCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
 	}
 
 	return app
