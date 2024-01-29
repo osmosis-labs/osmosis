@@ -373,7 +373,6 @@ func NewOsmosisApp(
 	// set the mempool
 	app.SetMempool(lanedMempool)
 
-
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())

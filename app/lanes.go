@@ -36,7 +36,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	// transactions the lane can store, the maximum block space the lane can consume, and
 	// the signer extractor used to extract the expected signers from a transaction.
 
-	// Create a mev configuration that accepts maxTxPerMEVLane transactions and consumes 20% of the
+	// Create a mev configuration that accepts maxTxPerMEVLane transactions and consumes mevLaneBlockspacePercentage of the
 	// block space.
 	mevConfig := base.LaneConfig{
 		Logger:          app.Logger(),
@@ -47,7 +47,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		MaxTxs:          maxTxPerMEVLane,
 	}
 
-	// Create a free configuration that accepts maxTxPerFreeLane transactions and consumes 5% of the
+	// Create a free configuration that accepts maxTxPerFreeLane transactions and consumes freeLaneBlockspacePercentage of the
 	// block space.
 	freeConfig := base.LaneConfig{
 		Logger:          app.Logger(),
@@ -58,7 +58,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		MaxTxs:          maxTxPerFreeLane,
 	}
 
-	// Create a default configuration that accepts maxTxPerDefaultLane transactions and consumes 60% of the
+	// Create a default configuration that accepts maxTxPerDefaultLane transactions and consumes defaultLaneBlockspacePercentage of the
 	// block space.
 	defaultConfig := base.LaneConfig{
 		Logger:          app.Logger(),
