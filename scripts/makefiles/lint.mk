@@ -8,14 +8,6 @@ lint-help:
 	@echo "  make lint-[command]"
 	@echo ""
 	@echo "Available Commands:"
-<<<<<<< HEAD
-	@echo "  all          Run all linters"
-	@echo "  format       Run linters with auto-fix"
-	@echo "  mdlint       Run markdown linter"
-	@echo "  markdown     Run markdown linter with auto-fix"
-	@echo "  typo         Run codespell to check typos"
-	@echo "  fix-typo     Run codespell to fix typos"
-=======
 	@echo "  all                   Run all linters"
 	@echo "  fix-typo              Run codespell to fix typos"
 	@echo "  format                Run linters with auto-fix"
@@ -23,7 +15,6 @@ lint-help:
 	@echo "  mdlint                Run markdown linter"
 	@echo "  setup-pre-commit      Set pre-commit git hook"
 	@echo "  typo                  Run codespell to check typos"
->>>>>>> 5c59147d (chore(Makefile): add `setup-pre-commit` target to init git hook (#7365))
 lint: lint-help
 
 lint-all:
@@ -54,4 +45,3 @@ lint-setup-pre-commit:
 	@echo "Installing pre-commit hook..."
 	@ln -sf ../../scripts/hooks/pre-commit.sh .git/hooks/pre-commit
 	@echo "Pre-commit hook installed successfully"
-	
