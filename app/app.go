@@ -41,8 +41,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 
