@@ -547,6 +547,8 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 				if err != nil {
 					return err
 				}
+			} else {
+				fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue)
 			}
 		}
 	}
