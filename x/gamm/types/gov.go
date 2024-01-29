@@ -238,7 +238,7 @@ func (p *SetScalingFactorControllerProposal) ProposalRoute() string { return Rou
 
 // ProposalType returns the type of the proposal
 func (p *SetScalingFactorControllerProposal) ProposalType() string {
-	return ProposalTypeReplaceMigrationRecords
+	return ProposalTypeSetScalingFactorController
 }
 
 // ValidateBasic validates a governance proposal's abstract and basic contents

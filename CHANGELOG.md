@@ -48,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
+* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
+
+## v22.0.1
+
+### Bug Fixes
+
 * [#7346](https://github.com/osmosis-labs/osmosis/pull/7346) Prevent heavy gRPC load from app hashing nodes
 
 ### Config
@@ -100,15 +106,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v21.2.2
 ### Features
 * [#7238](https://github.com/osmosis-labs/osmosis/pull/7238) re-add clawback vesting command
-* [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) feat: extended app hash logs 
-
+* [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) feat: extended app hash logs
 
 ### Bug Fixes
 * [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values
 * [#7246](https://github.com/osmosis-labs/osmosis/pull/7246) fix: config overwrite fails with exit code 1 if wrong permissions
 
 ### Misc Improvements
-* [#7254](https://github.com/osmosis-labs/osmosis/pull/7254) chore: remove cl test modules 
+* [#7254](https://github.com/osmosis-labs/osmosis/pull/7254) chore: remove cl test modules
 * [#7269](https://github.com/osmosis-labs/osmosis/pull/7269) chore: go mod dependency updates
 * [#7126](https://github.com/osmosis-labs/osmosis/pull/7126) refactor: using coins.Denoms() from sdk instead of osmoutils
 * [#7127](https://github.com/osmosis-labs/osmosis/pull/7127) refactor: replace MinCoins with sdk coins.Min()
@@ -132,7 +137,6 @@ Epoch and CPU time optimizations
 
 * [#7093](https://github.com/osmosis-labs/osmosis/pull/7093),[#7100](https://github.com/osmosis-labs/osmosis/pull/7100),[#7172](https://github.com/osmosis-labs/osmosis/pull/7172),[#7174](https://github.com/osmosis-labs/osmosis/pull/7174),[#7186](https://github.com/osmosis-labs/osmosis/pull/7186), [#7192](https://github.com/osmosis-labs/osmosis/pull/7192)   Lower CPU overheads of the Osmosis epoch.
 * [#7106](https://github.com/osmosis-labs/osmosis/pull/7106) Halve the time of log2 calculation (speeds up TWAP code)
-
 
 ## v21.1.2
 
@@ -189,7 +193,6 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
 * [#6530](https://github.com/osmosis-labs/osmosis/pull/6530) Improve error message when CL LP fails due to slippage bound hit.
-
 
 ### Bug Fixes
 
@@ -286,7 +289,6 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 * [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
 * [#6511](https://github.com/osmosis-labs/osmosis/pull/6511) remove redundant param from CreateGaugeRefKeys in incentives
 * [#6510](https://github.com/osmosis-labs/osmosis/pull/6510) remove redundant ctx param from DeleteAllKeysFromPrefix in osmoutils
-
 
 ## v19.1.0
 
