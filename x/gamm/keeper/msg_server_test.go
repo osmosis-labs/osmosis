@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 const (
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			},
 			tokenIn:               sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenIn)),
 			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
-			expectedMessageEvents: 2, // 2 event gets triggered prior to failure.
+			expectedMessageEvents: 1,
 			expectError:           true,
 		},
 	}
@@ -87,6 +87,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		s.Run(name, func() {
 			s.Setup()
 			ctx := s.Ctx
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()
@@ -186,6 +190,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		s.Run(name, func() {
 			s.Reset()
 			ctx := s.Ctx
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()

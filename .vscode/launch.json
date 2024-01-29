@@ -8,8 +8,7 @@
             "mode": "debug",
             "program": "cmd/osmosisd/main.go",
             "args": [
-                "init",
-                "test",
+                "start"
             ],
         },
         

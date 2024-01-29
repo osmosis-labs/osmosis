@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v21/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v22/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 var (
@@ -79,6 +79,10 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 		s.Run(name, func() {
 			s.Setup()
 			ctx := s.Ctx
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()
@@ -166,6 +170,10 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 		s.Run(name, func() {
 			s.Setup()
 			ctx := s.Ctx
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
 			s.PrepareBalancerPool()

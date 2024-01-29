@@ -1,4 +1,6 @@
-go 1.20
+go 1.21
+
+use .
 
 use ./osmomath
 
@@ -6,10 +8,6 @@ use ./osmoutils
 
 use ./x/ibc-hooks
 
-use ./tests/cl-go-client
-
-use ./tests/cl-genesis-positions
-
-use .
-
 use ./x/epochs
+
+replace github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5

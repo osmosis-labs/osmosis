@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
 )
 
 // validates that the pool manager keeper can charge taker fees correctly.
@@ -157,19 +157,19 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 				}
 				return d.TruncateInt()
 			}
-			expectedTakerFeeToStakers := sdk.NewCoin(tc.expectedResult.Denom, roundup(expectedTakerFeeToStakersAmount))
-			expectedTakerFeeToCommunityPool := sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())
+			expectedTakerFeeToStakers := []sdk.Coin{sdk.NewCoin(tc.expectedResult.Denom, roundup(expectedTakerFeeToStakersAmount))}
+			expectedTakerFeeToCommunityPool := []sdk.Coin{sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())}
 
 			// Validate results.
 			s.Require().Equal(tc.expectedResult.String(), tokenInAfterTakerFee.String())
-			expectedTakerFeeTrackerForStakersAfter := takerFeeTrackerForStakersBefore.Add(expectedTakerFeeToStakers)
-			if expectedTakerFeeTrackerForStakersAfter.Empty() {
-				expectedTakerFeeTrackerForStakersAfter = sdk.Coins(nil)
+			expectedTakerFeeTrackerForStakersAfter := []sdk.Coin{}
+			if !expectedTakerFeeToStakers[0].IsZero() {
+				expectedTakerFeeTrackerForStakersAfter = expectedTakerFeeToStakers
 			}
 			s.Require().Equal(expectedTakerFeeTrackerForStakersAfter, takerFeeTrackerForStakersAfter)
-			expectedTakerFeeTrackerForCommunityPoolAfter := takerFeeTrackerForCommunityPoolBefore.Add(expectedTakerFeeToCommunityPool)
-			if expectedTakerFeeTrackerForCommunityPoolAfter.Empty() {
-				expectedTakerFeeTrackerForCommunityPoolAfter = sdk.Coins(nil)
+			expectedTakerFeeTrackerForCommunityPoolAfter := []sdk.Coin{}
+			if !expectedTakerFeeToCommunityPool[0].IsZero() {
+				expectedTakerFeeTrackerForCommunityPoolAfter = expectedTakerFeeToCommunityPool
 			}
 			s.Require().Equal(expectedTakerFeeTrackerForCommunityPoolAfter, takerFeeTrackerForCommunityPoolAfter)
 		})

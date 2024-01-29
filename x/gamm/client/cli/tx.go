@@ -14,11 +14,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"

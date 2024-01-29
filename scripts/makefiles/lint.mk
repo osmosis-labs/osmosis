@@ -9,11 +9,11 @@ lint-help:
 	@echo ""
 	@echo "Available Commands:"
 	@echo "  all          Run all linters"
-	@echo "  format       Run linters with auto-fix"
-	@echo "  mdlint       Run markdown linter"
-	@echo "  markdown     Run markdown linter with auto-fix"
-	@echo "  typo         Run codespell to check typos"
 	@echo "  fix-typo     Run codespell to fix typos"
+	@echo "  format       Run linters with auto-fix"
+	@echo "  markdown     Run markdown linter with auto-fix"
+	@echo "  mdlint       Run markdown linter"
+	@echo "  typo         Run codespell to check typos"
 lint: lint-help
 
 lint-all:

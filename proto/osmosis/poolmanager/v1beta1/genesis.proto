@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
 import "osmosis/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {
@@ -126,14 +126,10 @@ message TakerFeeDistributionPercentage {
 }
 
 message TakerFeesTracker {
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2
+      [ (gogoproto.nullable) = false ];
   int64 height_accounting_starts_from = 3
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }
