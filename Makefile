@@ -9,6 +9,7 @@ include scripts/makefiles/lint.mk
 include scripts/makefiles/localnet.mk
 include scripts/makefiles/proto.mk
 include scripts/makefiles/release.mk
+include scripts/makefiles/sqs.mk
 include scripts/makefiles/tests.mk
 
 .DEFAULT_GOAL := help
@@ -18,18 +19,21 @@ help:
 	@echo "Usage:"
 	@echo "    make [command]"
 	@echo ""
-	@echo "  make build        	        Build osmosisd binary"
-	@echo "  make install        	    Install osmosisd binary"
+	@echo "  make build                 Build osmosisd binary"
+	@echo "  make build-help            Show available build commands"
 	@echo "  make deps                  Show available deps commands"
+	@echo "  make docker                Show available docker commands"
+	@echo "  make e2e                   Show available e2e commands"
+	@echo "  make go-mock-update        Generate mock files"
+	@echo "  make install               Install osmosisd binary"
+	@echo "  make lint                  Show available lint commands"
+	@echo "  make localnet              Show available localnet commands"
 	@echo "  make proto                 Show available proto commands"
 	@echo "  make release               Show available release commands"
-	@echo "  make e2e                   Show available e2e commands"
-	@echo "  make docker                Show available docker commands"
-	@echo "  make lint                  Show available lint commands"
-	@echo "  make test                  Show available test commands"
-	@echo "  make test                  Show available test commands"
-	@echo "  make localnet              Show available localnet commands"
 	@echo "  make release-help          Show available release commands"
+	@echo "  make run-querygen          Generating GRPC queries, and queryproto logic"
+	@echo "  make sqs                   Show available sqs commands"
+	@echo "  make test                  Show available test commands"
 	@echo ""
 	@echo "Run 'make [subcommand]' to see the available commands for each subcommand."
 
@@ -165,48 +169,6 @@ go-mock-update:
 	mockgen -source=x/gamm/types/pool.go -destination=tests/mocks/cfmm_pool.go -package=mocks
 	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
 	mockgen -source=ingest/sqs/domain/pools.go -destination=tests/mocks/sqs_pool.go -package=mocks -mock_names=PoolI=MockSQSPoolI
-
-###############################################################################
-###                                SQS                                      ###
-###############################################################################
-
-redis-start:
-	docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 -v ./redis-cache/:/data redis/redis-stack:7.2.0-v3
-
-redis-stop:
-	docker container rm -f redis-stack
-
-sqs-start:
-	./scripts/debug_builder.sh
-	build/osmosisd start
-
-sqs-load-test-ui:
-	docker compose -f ingest/sqs/locust/docker-compose.yml up --scale worker=4
-
-sqs-profile:
-	go tool pprof -http=:8080 http://localhost:9092/debug/pprof/profile?seconds=15
-
-# Validates that SQS concentrated liquidity pool state is
-# consistent with the state of the chain.
-sqs-validate-cl-state:
-	ingest/sqs/scripts/validate-cl-state.sh "http://localhost:9092"
-
-# Compares the quotes between SQS and chain over pool 1136
-# which is concentrated.
-sqs-quote-compare:
-	ingest/sqs/scripts/quote.sh "http://localhost:9092"
-
-sqs-quote-compare-stage:
-	ingest/sqs/scripts/quote.sh "http://165.227.168.61"
-
-# Updates go tests with the latest mainnet state
-# Make sure that the node is running locally
-sqs-update-mainnet-state:
-	curl -X POST "http:/localhost:9092/router/store-state"
-	mv pools.json ingest/sqs/router/usecase/routertesting/parsing/pools.json
-	mv taker_fees.json ingest/sqs/router/usecase/routertesting/parsing/taker_fees.json
-
-
 
 ###############################################################################
 ###                                Release                                  ###
