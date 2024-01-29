@@ -3,6 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -150,7 +151,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	}
 
 	// Retrieve and build the signer data struct
-	genesis := ctx.IsGenesis() || ctx.BlockHeight() == 0
+	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
 	baseAccount := cwa.ak.GetAccount(ctx, account)
