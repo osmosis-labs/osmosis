@@ -3,6 +3,8 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,7 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
@@ -50,20 +53,12 @@ type CosmwasmAuthenticatorInitData struct {
 }
 
 func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
-	var initData CosmwasmAuthenticatorInitData
-	err := json.Unmarshal(data, &initData)
-	if err != nil {
-		return nil, err
-	}
-	if len(initData.Contract) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing contract address")
-	}
-	contractAddr, err := sdk.AccAddressFromBech32(initData.Contract)
+	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return nil, err
 	}
 	cwa.contractAddr = contractAddr
-	cwa.authenticatorParams = initData.Params
+	cwa.authenticatorParams = params
 	return cwa, nil
 }
 
@@ -150,7 +145,10 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	}
 
 	// Retrieve and build the signer data struct
-	genesis := ctx.IsGenesis() || ctx.BlockHeight() == 0
+
+	// TODO: ctx.isGenesis() replacement?
+	// old: genesis := ctx.isGenesis() || ctx.BlockHeight() == 0
+	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
 	baseAccount := cwa.ak.GetAccount(ctx, account)
@@ -309,7 +307,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.A
 }
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
-	_, err := sdk.AccAddressFromBech32(string(data))
+	_, _, err := parseInitData(data)
 	if err != nil {
 		return err
 	}
@@ -319,6 +317,14 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	return nil
+}
+
+func (cwa CosmwasmAuthenticator) ContractAddress() sdk.AccAddress {
+	return cwa.contractAddr
+}
+
+func (cwa CosmwasmAuthenticator) Params() []byte {
+	return cwa.authenticatorParams
 }
 
 func UnmarshalAuthenticationResult(data []byte) (iface.AuthenticationResult, error) {
@@ -370,4 +376,37 @@ func UnmarshalConfirmationResult(data []byte) (iface.ConfirmationResult, error) 
 	default:
 		return nil, fmt.Errorf("invalid confirmation result type: %s", rawType.Type)
 	}
+}
+
+func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
+	var initData CosmwasmAuthenticatorInitData
+	err := json.Unmarshal(data, &initData)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check if contract address is empty
+	if len(initData.Contract) == 0 {
+		return nil, nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing contract address")
+	}
+
+	// check if contract address is valid
+	contractAddr, err := sdk.AccAddressFromBech32(initData.Contract)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// params are optional, early return if they are not present
+	if initData.Params == nil || len(initData.Params) == 0 {
+		return contractAddr, nil, nil
+	}
+
+	// check if initData.Params is valid json bytes
+	var jsonTest map[string]interface{}
+	err = json.Unmarshal(initData.Params, &jsonTest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return contractAddr, initData.Params, nil
 }

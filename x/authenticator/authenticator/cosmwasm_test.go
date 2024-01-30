@@ -3,8 +3,13 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"testing"
+	"time"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -12,16 +17,13 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v21/app"
 	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v21/app/params"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"os"
-	"testing"
-	"time"
 )
 
 type CosmwasmAuthenticatorTest struct {
@@ -46,21 +48,85 @@ func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
 }
 
-func (s *CosmwasmAuthenticatorTest) TestInitialize() {
+func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 	tests := []struct {
 		name string // name
 		data []byte // initData
 		pass bool   // wantErr
 	}{
 		{"Valid Contract", []byte(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69"}`), true},
+		{"Valid Contract, valid params", []byte(fmt.Sprintf(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69", "params": %s }`, toBytesString(`{ "p1": "v1", "p2": { "p21": "v21" } }`))), true},
+		{"Valid Contract, invalid params", []byte(fmt.Sprintf(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69", "params": %s }`, toBytesString(`{ "p1": "v1", "p2": { "p21" "v21" } }`))), false},
 		{"Missing Contract", []byte(`{}`), false},
 		{"Invalid Contract", []byte(`{"contract": "invalid_address"}`), false},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, err := s.CosmwasmAuth.Initialize(tt.data)
+			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, tt.data)
 			if tt.pass {
+				s.Require().NoError(err, "Should succeed")
+			} else {
+				s.Require().Error(err, "Should fail")
+			}
+		})
+	}
+}
+
+func (s *CosmwasmAuthenticatorTest) TestInitialize() {
+	tests := []struct {
+		name         string // name
+		data         []byte // initData
+		contractAddr string // expected address
+		params       []byte // expected params
+		pass         bool   // wantErr
+	}{
+		{
+			"Valid Contract",
+			[]byte(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69"}`),
+			"osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69",
+			nil,
+			true,
+		},
+		{
+			"Valid Contract, valid params",
+			[]byte(fmt.Sprintf(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69", "params": %s }`, toBytesString(`{ "p1": "v1", "p2": { "p21": "v21" } }`))),
+			"osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69",
+			[]byte(`{ "p1": "v1", "p2": { "p21": "v21" } }`),
+			true,
+		},
+		{
+			"Valid Contract, invalid params",
+			[]byte(fmt.Sprintf(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69", "params": %s }`, toBytesString(`{ "p1": "v1", "p2": { "p21" "v21" } }`))),
+			"osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69",
+			[]byte(`{ "p1": "v1", "p2": { "p21" "v21" } }`),
+			false,
+		},
+		{
+			"Missing Contract",
+			[]byte(`{}`),
+			"",
+			nil,
+			false,
+		},
+		{
+			"Invalid Contract",
+			[]byte(`{"contract": "invalid_address"}`),
+			"",
+			nil,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			auth, err := s.CosmwasmAuth.Initialize(tt.data)
+			cwa, ok := auth.(authenticator.CosmwasmAuthenticator)
+
+			if tt.pass {
+				s.Require().True(ok, "Should create valid CosmwasmAuthenticator")
+				s.Require().Equal(tt.contractAddr, cwa.ContractAddress().String(), "Contract address must be initialized")
+				s.Require().Equal(tt.params, cwa.Params(), "Params must be initialized")
 				s.Require().NoError(err, "Should succeed")
 			} else {
 				s.Require().Error(err, "Should fail")
@@ -238,4 +304,18 @@ func (s *CosmwasmAuthenticatorTest) InstantiateContract(msg string, codeID uint6
 	addr, _, err := contractKeeper.Instantiate(s.Ctx.WithBlockTime(time.Now()), codeID, creator, creator, []byte(msg), "contract", nil)
 	s.Require().NoError(err)
 	return addr
+}
+
+func toBytesString(s string) string {
+	bytes := []byte(s)
+	bytesString := "["
+	for i, b := range bytes {
+		if i != 0 {
+			bytesString += ","
+		}
+		bytesString += fmt.Sprintf("%d", b)
+	}
+	bytesString += "]"
+
+	return bytesString
 }
