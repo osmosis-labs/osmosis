@@ -27,6 +27,7 @@ var (
 
 	distrToNoLock = lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.NoLock,
+		Duration:      defaultNoLockDuration,
 	}
 
 	distrToNoLockPool1 = lockuptypes.QueryCondition{

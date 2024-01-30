@@ -28,7 +28,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 	if genState.ConcentratedPoolToNoLockGauges != nil {
 		for _, record := range genState.ConcentratedPoolToNoLockGauges.PoolToGauge {
-			k.SetPoolGaugeIdNoLock(ctx, record.PoolId, record.GaugeId)
+			k.SetPoolGaugeIdNoLock(ctx, record.PoolId, record.GaugeId, record.Duration)
 		}
 	}
 }

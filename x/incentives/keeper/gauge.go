@@ -127,9 +127,42 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, types.ErrZeroNumEpochsPaidOver
 	}
 
-	// Ensure that this gauge's duration is one of the allowed durations on chain
-	durations := k.GetLockableDurations(ctx)
-	if distrTo.LockQueryType == lockuptypes.ByDuration {
+	// If the gauge has no lock, then we currently assume it is a concentrated pool
+	// and ensure the gauge "lock" duration is an authorized uptime.
+	isNoLockGauge := distrTo.LockQueryType == lockuptypes.NoLock
+
+	// If the gauge has an internal gauge denom, it is an internal gauge
+	// and should be run through different validation logic (see below).
+	//
+	// Two important reminders/assumptions:
+	// 1. `NoLock` gauges are required to have empty denoms in `ValidateBasic`, so this
+	// check cannot be controlled by user input.
+	// 2. The safety of this leans on the special-casing of internal gauge logic during
+	// distributions, which should be using the internal incentive duration gov param instead of the duration value.
+	isInternalNoLockGauge := isNoLockGauge && distrTo.Denom == types.NoLockInternalGaugeDenom(poolId)
+	isExternalNoLockGauge := isNoLockGauge && !isInternalNoLockGauge
+
+	// We check durations if the gauge is a regular duration based gauge or if it is a
+	// CL gauge. Note that this excludes time-based gauges and group gauges.
+	if isNoLockGauge || distrTo.LockQueryType == lockuptypes.ByDuration {
+		// Ensure that this gauge's duration is one of the allowed durations on chain
+		// Concentrated pool gauges check against authorized uptimes (if external) or
+		// epoch duration (if internal).
+		//
+		// All other gauges check against the default set of lockable durations.
+		var durations []time.Duration
+		if isExternalNoLockGauge {
+			durations = k.clk.GetParams(ctx).AuthorizedUptimes
+		} else if isInternalNoLockGauge {
+			// Internal CL gauges use epoch time as their duration. This is a legacy
+			// property that does not affect the uptime on created records, which is
+			// determined by the gov param for internal incentive uptimes.
+			durations = []time.Duration{k.GetEpochInfo(ctx).Duration}
+		} else {
+			// This branch is applicable to CFMM pool types such as balancer and stableswap.
+			durations = k.GetLockableDurations(ctx)
+		}
+
 		durationOk := false
 		for _, duration := range durations {
 			if duration == distrTo.Duration {
@@ -146,7 +179,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 	// For no lock gauges, a pool id must be set.
 	// A pool with such id must exist and be a concentrated pool.
-	if distrTo.LockQueryType == lockuptypes.NoLock {
+	if isNoLockGauge {
 		if poolId == 0 {
 			return 0, fmt.Errorf("'no lock' type gauges must have a pool id")
 		}
@@ -155,7 +188,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		// and get overwritten with the external prefix + pool id
 		// for internal query purposes.
 		distrToDenom := distrTo.Denom
-		if distrToDenom != types.NoLockInternalGaugeDenom(poolId) {
+		if !isInternalNoLockGauge {
 			// If denom is set, then fails.
 			if distrToDenom != "" {
 				return 0, fmt.Errorf("'no lock' type external gauges must have an empty denom set, was %s", distrToDenom)
@@ -177,7 +210,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		// That being said, internal gauges have an additional linking
 		// by duration where duration is the incentives epoch duration.
 		// The internal incentive linking is set in x/pool-incentives CreateConcentratedLiquidityPoolGauge.
-		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId)
+		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId, distrTo.Duration)
 	} else {
 		// For all other gauges, pool id must be 0.
 		if poolId != 0 {
