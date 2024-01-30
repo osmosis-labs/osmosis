@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom1:                   USDC,
 			tickSpacing:              DefaultTickSpacing,
 			expectedPoolCreatedEvent: 1,
-			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
+			expectedMessageEvents:    3, // 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
 		"error: tickSpacing zero": {
 			denom0:        ETH,
@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 				response, err := msgServer.CreatePosition(sdk.WrapSDKContext(ctx), msg)
 				s.NoError(err)
 				s.NotNil(response)
-				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, 2)
+				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, 1)
 			} else {
 				s.Require().ErrorContains(msg.ValidateBasic(), tc.expectedError.Error())
 			}
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 	}{
 		"happy path": {
 			expectedAddedToPositionEvent: 1,
-			expectedMessageEvents:        4,
+			expectedMessageEvents:        3,
 		},
 		"error: last position in pool": {
 			lastPositionInPool:           true,
@@ -239,7 +239,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			numPositionsToCreate:                   1,
 			expectedTotalCollectSpreadRewardsEvent: 1,
 			expectedCollectSpreadRewardsEvent:      1,
-			expectedMessageEvents:                  2, // 1 for collect fees, 1 for send message
+			expectedMessageEvents:                  1, // 1 for send message
 		},
 		"two position IDs": {
 			upperTick:                              DefaultUpperTick,
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			numPositionsToCreate:                   2,
 			expectedTotalCollectSpreadRewardsEvent: 1,
 			expectedCollectSpreadRewardsEvent:      2,
-			expectedMessageEvents:                  3, // 1 for collect fees, 2 for send messages
+			expectedMessageEvents:                  2, // 2 for send messages
 		},
 		"three position IDs": {
 			upperTick:                              DefaultUpperTick,
@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			numPositionsToCreate:                   3,
 			expectedTotalCollectSpreadRewardsEvent: 1,
 			expectedCollectSpreadRewardsEvent:      3,
-			expectedMessageEvents:                  4, // 1 for collect fees, 3 for send messages
+			expectedMessageEvents:                  3, // 3 for send messages
 		},
 		"error: attempt to claim fees with different owner": {
 			upperTick:                              DefaultUpperTick,
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               3, // 1 for collect incentives, 1 for collect send, 1 for forfeit send
+			expectedMessageEvents:               2, // 1 for collect send, 1 for forfeit send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               5, // 1 for collect incentives, 2 for collect send, 2 for forfeit send
+			expectedMessageEvents:               4, // 2 for collect send, 2 for forfeit send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               7, // 1 for collect incentives, 3 for collect send, 3 for forfeit send
+			expectedMessageEvents:               6, // 3 for collect send, 3 for forfeit send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
@@ -566,21 +566,20 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			positionIds:                    []uint64{DefaultPositionId},
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"single position ID with claimable incentives": {
 			positionIds:                    []uint64{DefaultPositionId},
 			hasIncentivesToClaim:           true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          3, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send
+			expectedMessageEvents:          2, // 1 for collect incentives claim send, 1 for collect incentives forfeit send
 		},
 		"single position ID with claimable spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          2, // 1 for transfer, 1 for collect spread rewards claim send
+			expectedMessageEvents:          1, // 1 for collect spread rewards claim send
 		},
 		"single position ID with claimable incentives and spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
@@ -588,19 +587,17 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          4, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
+			expectedMessageEvents:          3, // 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
 		},
 		"two position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
 			numPositionsToCreate:           2,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"three position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"three position IDs with claimable incentives and spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
@@ -608,7 +605,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          10, // 1 for transfer, 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
+			expectedMessageEvents:          9, // 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
 		},
 		"two position IDs, second ID does not exist": {
 			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
