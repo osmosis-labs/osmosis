@@ -3,7 +3,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{from_json, Addr, Binary, DepsMut, Env, MessageInfo, Response, StdError};
 use cw_storage_plus::Item;
-use osmosis_authenticators::AuthenticationResult;
+use osmosis_authenticators::{AuthenticationResult, TrackRequest};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -27,6 +27,7 @@ pub enum SudoMsg {
     OnAuthenticatorAdded(OnAuthenticatorAddedRequest),
     OnAuthenticatorRemoved(OnAuthenticatorRemovedRequest),
     Authenticate(osmosis_authenticators::AuthenticationRequest),
+    Track(TrackRequest),
 }
 
 // State
@@ -53,6 +54,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
             on_authenticator_removed(deps, on_authenticator_removed_request)
         }
         SudoMsg::Authenticate(auth_request) => authenticate(deps, auth_request),
+        SudoMsg::Track(track_request) => track(deps, track_request),
     }
 }
 
@@ -126,6 +128,13 @@ fn authenticate(
     Ok(Response::new().set_data(AuthenticationResult::Authenticated {}))
 }
 
+// Track is a no-op
+fn track(
+    _deps: DepsMut,
+    _track_request: osmosis_authenticators::TrackRequest,
+) -> Result<Response, StdError> {
+    Ok(Response::new())
+}
 // Test that SudoMsg can be deserialized from an expected json
 #[cfg(test)]
 mod tests {

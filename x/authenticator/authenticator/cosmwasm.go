@@ -118,8 +118,9 @@ type AuthenticationRequest struct {
 }
 
 type TrackRequest struct {
-	Account sdk.AccAddress `json:"account"`
-	Msg     LocalAny       `json:"msg"`
+	Account             sdk.AccAddress `json:"account"`
+	Msg                 LocalAny       `json:"msg"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
 
 type ConfirmExecutionRequest struct {
@@ -266,7 +267,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
 	}
 	trackRequest := TrackRequest{
 		Account: account,
@@ -274,10 +275,11 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
+		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{Track: &trackRequest})
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall AuthenticationRequest")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall TrackRequest")
 	}
 
 	_, err = cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
@@ -304,7 +306,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.A
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
 	if err != nil {
-		return iface.Block(fmt.Errorf("failed to marshall AuthenticationRequest: %w", err))
+		return iface.Block(fmt.Errorf("failed to marshall ConfirmExecutionRequest: %w", err))
 	}
 
 	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
@@ -329,7 +331,7 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 		AuthenticatorParams: params,
 	}})
 	if err != nil {
-		return err
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall OnAuthenticatorAddedRequest")
 	}
 
 	_, err = cwa.contractKeeper.Sudo(ctx, contractAddr, bz)
@@ -351,7 +353,7 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account
 		AuthenticatorParams: params,
 	}})
 	if err != nil {
-		return err
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall OnAuthenticatorRemovedRequest")
 	}
 
 	_, err = cwa.contractKeeper.Sudo(ctx, contractAddr, bz)

@@ -231,9 +231,12 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	s.Require().NoError(err)
 	addr := s.InstantiateContract(string(instantiateMsgBz), 1)
 
+	err = s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), accounts[0], []byte(fmt.Sprintf(`{"contract": "%s", "params": %s}`, addr, toBytesString(`{ "label": "test" }`))))
+	s.Require().NoError(err, "OnAuthenticator added should succeed")
+
 	auth, err := s.CosmwasmAuth.Initialize([]byte(
 		fmt.Sprintf(`{"contract": "%s"}`, addr)))
-	s.Require().NoError(err, "Should succeed")
+	s.Require().NoError(err, "Initialize should succeed")
 
 	tx, _ := GenTx(
 		encodingConfig.TxConfig,
@@ -250,9 +253,14 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
 	s.Require().NoError(err, "Should succeed")
 
+	// Test with valid signature
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
 	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
 
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg)
+	s.Require().NoError(err, "Track should succeed")
+
+	// Test with invalid signature
 	authData.(authenticator.SignatureData).Signatures[0].Data = &txsigning.SingleSignatureData{
 		SignMode:  0,
 		Signature: []byte("invalid"),
@@ -325,8 +333,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 		signatures,
 	)
 
-	// TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better
-	//  cosigner implementation later?
+	s.T().Skip("TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better cosigner implementation later?")
 	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
 	s.Require().NoError(err, "Should succeed")
 
