@@ -50,6 +50,7 @@ type TxFeesKeeper interface {
 type ConcentratedLiquidityKeeper interface {
 	CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate osmomath.Dec, startTime time.Time, minUptime time.Duration) (cltypes.IncentiveRecord, error)
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
+	GetParams(ctx sdk.Context) (params cltypes.Params)
 }
 
 type AccountKeeper interface {
@@ -59,7 +60,7 @@ type AccountKeeper interface {
 type PoolIncentiveKeeper interface {
 	GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDuration time.Duration) (uint64, error)
 	GetInternalGaugeIDForPool(ctx sdk.Context, poolID uint64) (uint64, error)
-	SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64)
+	SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64, uptime time.Duration)
 	GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error)
 }
 

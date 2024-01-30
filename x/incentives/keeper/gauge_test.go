@@ -507,7 +507,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is external
-				Denom: "",
+				Denom:    "",
+				Duration: time.Nanosecond,
 			},
 			poolId: concentratedPoolId,
 
@@ -520,7 +521,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is internal
-				Denom: types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Denom:    types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Duration: s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration,
 			},
 			poolId: concentratedPoolId,
 
@@ -533,7 +535,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this is invalid for NoLock gauges
-				Denom: "uosmo",
+				Denom:    "uosmo",
+				Duration: time.Nanosecond,
 			},
 			poolId: concentratedPoolId,
 
@@ -543,6 +546,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with balancer pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: balancerPoolId,
 
@@ -552,6 +556,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with non-existent pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: invalidPool,
 
@@ -561,8 +566,45 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			name: "fail to create no lock gauge with zero pool id",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: zeroPoolId,
+
+			expectErr: true,
+		},
+		{
+			name: "fail to create external no lock gauge due to unauthorized uptime",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom: "",
+				// 1h is a supported uptime that is not authorized
+				Duration: time.Hour,
+			},
+			poolId:    concentratedPoolId,
+			expectErr: true,
+		},
+		{
+			name: "fail to create external no lock gauge due to entirely invalid uptime",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom: "",
+				// 2ns is an uptime that isn't supported at all (i.e. can't even be authorized)
+				Duration: 2 * time.Nanosecond,
+			},
+			poolId:    concentratedPoolId,
+			expectErr: true,
+		},
+		{
+			name: "fail to create an internal gauge with an unexpected duration",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is internal
+				Denom:    types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Duration: time.Nanosecond,
+			},
+			poolId: concentratedPoolId,
 
 			expectErr: true,
 		},
@@ -588,10 +630,6 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
-
-				// Assert that pool id and gauge id link meant for internally incentivized gauges is unset.
-				_, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
-				s.Require().Error(err)
 
 				// Confirm that the general pool id to gauge id link is set.
 				gaugeIds, err := s.App.PoolIncentivesKeeper.GetNoLockGaugeIdsFromPool(s.Ctx, tc.poolId)
@@ -774,7 +812,7 @@ func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.
 	}
 
 	if poolID != 0 {
-		s.App.PoolIncentivesKeeper.SetPoolGaugeIdNoLock(s.Ctx, poolID, nextGaugeID)
+		s.App.PoolIncentivesKeeper.SetPoolGaugeIdNoLock(s.Ctx, poolID, nextGaugeID, distrTo.Duration)
 	}
 
 	err := s.App.IncentivesKeeper.SetGauge(s.Ctx, &gauge)
