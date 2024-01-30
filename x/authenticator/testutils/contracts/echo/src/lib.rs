@@ -17,8 +17,15 @@ pub struct OnAuthenticatorAddedRequest {
 }
 
 #[cw_serde]
+pub struct OnAuthenticatorRemovedRequest {
+    account: Addr,
+    authenticator_params: Option<Binary>,
+}
+
+#[cw_serde]
 pub enum SudoMsg {
     OnAuthenticatorAdded(OnAuthenticatorAddedRequest),
+    OnAuthenticatorRemoved(OnAuthenticatorRemovedRequest),
     Authenticate(osmosis_authenticators::AuthenticationRequest),
 }
 
@@ -42,6 +49,9 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
         SudoMsg::OnAuthenticatorAdded(on_authenticator_added_request) => {
             on_authenticator_added(deps, on_authenticator_added_request)
         }
+        SudoMsg::OnAuthenticatorRemoved(on_authenticator_removed_request) => {
+            on_authenticator_removed(deps, on_authenticator_removed_request)
+        }
         SudoMsg::Authenticate(auth_request) => authenticate(deps, auth_request),
     }
 }
@@ -57,6 +67,23 @@ fn on_authenticator_added(
         account: _,
         authenticator_params,
     }: OnAuthenticatorAddedRequest,
+) -> Result<Response, StdError> {
+    // validate params structure
+    let _params: Params = from_json(
+        authenticator_params
+            .ok_or_else(|| StdError::generic_err("missing authenticator_params"))?
+            .as_slice(),
+    )?;
+
+    Ok(Response::new())
+}
+
+fn on_authenticator_removed(
+    _deps: DepsMut,
+    OnAuthenticatorRemovedRequest {
+        account: _,
+        authenticator_params,
+    }: OnAuthenticatorRemovedRequest,
 ) -> Result<Response, StdError> {
     // validate params structure
     let _params: Params = from_json(

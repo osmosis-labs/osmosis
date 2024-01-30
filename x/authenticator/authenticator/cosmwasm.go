@@ -132,11 +132,17 @@ type OnAuthenticatorAddedRequest struct {
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
 
+type OnAuthenticatorRemovedRequest struct {
+	Account             sdk.AccAddress `json:"account"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+}
+
 type SudoMsg struct {
-	Authenticate         *AuthenticationRequest       `json:"authenticate,omitempty"`
-	Track                *TrackRequest                `json:"track,omitempty"`
-	ConfirmExecution     *ConfirmExecutionRequest     `json:"confirm_execution,omitempty"`
-	OnAuthenticatorAdded *OnAuthenticatorAddedRequest `json:"on_authenticator_added,omitempty"`
+	Authenticate           *AuthenticationRequest         `json:"authenticate,omitempty"`
+	Track                  *TrackRequest                  `json:"track,omitempty"`
+	ConfirmExecution       *ConfirmExecutionRequest       `json:"confirm_execution,omitempty"`
+	OnAuthenticatorAdded   *OnAuthenticatorAddedRequest   `json:"on_authenticator_added,omitempty"`
+	OnAuthenticatorRemoved *OnAuthenticatorRemovedRequest `json:"on_authenticator_removed,omitempty"`
 }
 
 // TODO: decide when we want to reject and when to just not authenticate
@@ -335,6 +341,24 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 }
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	contractAddr, params, err := parseInitData(data)
+	if err != nil {
+		return err
+	}
+
+	bz, err := json.Marshal(SudoMsg{OnAuthenticatorRemoved: &OnAuthenticatorRemovedRequest{
+		Account:             account,
+		AuthenticatorParams: params,
+	}})
+	if err != nil {
+		return err
+	}
+
+	_, err = cwa.contractKeeper.Sudo(ctx, contractAddr, bz)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

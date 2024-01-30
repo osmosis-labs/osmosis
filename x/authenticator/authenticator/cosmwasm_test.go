@@ -86,6 +86,44 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 	}
 }
 
+func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
+
+	// Generate a private key for signing
+	priv := secp256k1.GenPrivKey()
+
+	// Set up the contract
+	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo.wasm")
+	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
+	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	s.Require().NoError(err)
+	contractAddr := s.InstantiateContract(string(instantiateMsgBz), 1)
+
+	tests := []struct {
+		name string // name
+		data []byte // initData
+		pass bool   // wantErr
+	}{
+		{"Valid Contract, valid params", []byte(fmt.Sprintf(`{"contract": "%s", "params": %s }`, contractAddr, toBytesString(`{ "label": "test" }`))), true},
+		{"Valid Contract, unexpected params", []byte(fmt.Sprintf(`{"contract": "%s", "params": %s }`, contractAddr, toBytesString(`{ "unexpected": "json" }`))), false},
+		{"Valid Contract, malform json params", []byte(fmt.Sprintf(`{"contract": "%s", "params": %s }`, contractAddr, toBytesString(`{ malform json }`))), false},
+		{"Valid Contract, missing authenticator params (required by contract)", []byte(fmt.Sprintf(`{"contract": "%s"}`, contractAddr)), false},
+		{"Missing Contract", []byte(`{}`), false},
+		{"Invalid Contract Address", []byte(`{"contract": "invalid_address"}`), false},
+		{"Valid address but non-existing contract", []byte(`{"contract": "osmo175dck737jmvr9mw34pqs7y5fv0umnak3vrsj3mjxg75cnkmyulfs0c3sxr"}`), false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			err := s.CosmwasmAuth.OnAuthenticatorRemoved(s.Ctx.WithBlockTime(time.Now()), sdk.AccAddress{}, tt.data)
+			if tt.pass {
+				s.Require().NoError(err, "Should succeed")
+			} else {
+				s.Require().Error(err, "Should fail")
+			}
+		})
+	}
+}
+
 func (s *CosmwasmAuthenticatorTest) TestInitialize() {
 	tests := []struct {
 		name         string // name
