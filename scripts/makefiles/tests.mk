@@ -15,20 +15,20 @@ test-help:
 	@echo ""
 	@echo "Available Commands:"
 	@echo "  all                Run all tests"
-	@echo "  unit               Run unit tests"
-	@echo "  race               Run race tests"
+	@echo "  benchmark          Run benchmark tests"
 	@echo "  cover              Run coverage tests"
-	@echo "  sim-suite          Run sim suite tests"
-	@echo "  sim-app            Run sim app tests"
-	@echo "  sim-determinism    Run sim determinism tests"
-	@echo "  sim-bench          Run sim benchmark tests"
 	@echo "  e2e                Run e2e tests"
 	@echo "  e2e-ci             Run e2e CI tests"
 	@echo "  e2e-ci-scheduled   Run e2e CI scheduled tests"
 	@echo "  e2e-debug          Run e2e debug tests"
 	@echo "  e2e-short          Run e2e short tests"
 	@echo "  mutation           Run mutation tests"
-	@echo "  benchmark          Run benchmark tests"
+	@echo "  race               Run race tests"
+	@echo "  sim-app            Run sim app tests"
+	@echo "  sim-bench          Run sim benchmark tests"
+	@echo "  sim-determinism    Run sim determinism tests"
+	@echo "  sim-suite          Run sim suite tests"
+	@echo "  unit               Run unit tests"
 
 test: test-help
 
@@ -62,11 +62,16 @@ test-sim-bench:
 # Utilizes Go cache.
 test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
+test-e2e-no-cleanup: e2e-setup test-e2e-ci-no-cleanup
+
 # test-e2e-ci runs a majority of e2e tests, only skipping the ones that are marked as scheduled tests
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
 	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
+
+test-e2e-ci-no-cleanup:
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_SKIP_CLEANUP=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
 # test-e2e-ci-scheduled runs every e2e test available, and is only run on a scheduled basis
 test-e2e-ci-scheduled:

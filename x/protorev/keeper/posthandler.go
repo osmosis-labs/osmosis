@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -58,7 +60,6 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// Attempt to execute arbitrage trades
 	if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(cacheCtx, swappedPools); err == nil {
 		write()
-		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	} else {
 		ctx.Logger().Error("ProtoRevTrade failed with error: " + err.Error())
 	}
@@ -114,7 +115,11 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 	// recover from panic
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("Protorev failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("protorev failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("protorev failed due to internal reason: %v", r)
+			}
 		}
 	}()
 

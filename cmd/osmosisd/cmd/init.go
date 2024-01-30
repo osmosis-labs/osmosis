@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 
-	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v22/app"
 )
 
 const (
@@ -107,6 +107,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.P2P.MaxNumOutboundPeers = 60
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
+
+			// The original default is 5s and is set in Cosmos SDK.
+			// We lower it to 4s for faster block times.
+			config.Consensus.TimeoutCommit = 4 * time.Second
 
 			config.SetRoot(clientCtx.HomeDir)
 

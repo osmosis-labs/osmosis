@@ -11,11 +11,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/twap"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types/twapmock"
+	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/twap"
+	"github.com/osmosis-labs/osmosis/v22/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v22/x/twap/types/twapmock"
 )
 
 var (

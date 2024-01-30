@@ -23,12 +23,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
-	simulation "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/simulation"
+	"github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
+	simulation "github.com/osmosis-labs/osmosis/v22/x/tokenfactory/simulation"
 
-	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v22/x/tokenfactory/client/cli"
+	"github.com/osmosis-labs/osmosis/v22/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v22/x/tokenfactory/types"
 )
 
 var (
@@ -53,7 +53,7 @@ func (AppModuleBasic) Name() string {
 }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the module's interface types

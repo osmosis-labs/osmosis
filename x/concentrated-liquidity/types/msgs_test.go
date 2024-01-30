@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
+	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v22/app/params"
 
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 )
 
 type extMsg interface {

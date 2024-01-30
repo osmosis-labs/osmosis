@@ -32,8 +32,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisApp "github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v22/tests/e2e/util"
 )
 
 type internalNode struct {
@@ -124,6 +124,8 @@ func (n *internalNode) createAppConfig(nodeConfig *NodeConfig) {
 	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
 	appConfig.StateSync.SnapshotInterval = nodeConfig.SnapshotInterval
 	appConfig.StateSync.SnapshotKeepRecent = nodeConfig.SnapshotKeepRecent
+	appConfig.GRPC.Address = "0.0.0.0:9090"
+	appConfig.API.Address = "tcp://0.0.0.0:1317"
 
 	srvconfig.WriteConfigFile(appCfgPath, appConfig)
 }

@@ -32,17 +32,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v22/app"
 
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v21/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v22/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -145,6 +145,13 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
 // Additionally, attaches an internal gauge ID for each pool.
 func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
+	return s.PrepareAllSupportedPoolsCustomProject(osmosisRepository, osmosisRepoTransmuterPath)
+}
+
+// PrepareAllSupportedPoolsCustomProject creates all supported pools and returns their IDs.
+// Additionally, attaches an internal gauge ID for each pool.
+// Allows the flexibility of being used from outside the Osmosis repository by providing custom project name and transmuter bytecode path.
+func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, transmuterPath string) SupportedPoolAndGaugeInfo {
 	// This is the ID of the first gauge created next (concentrated).
 	nextGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
 
@@ -156,7 +163,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo 
 		concentratedPoolID = concentratedPool.GetId()
 		balancerPoolID     = s.PrepareBalancerPool()
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
-		cosmWasmPool       = s.PrepareCosmWasmPool()
+		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, transmuterPath)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
 	)
 	return SupportedPoolAndGaugeInfo{

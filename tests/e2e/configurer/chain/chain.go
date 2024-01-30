@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v22/tests/e2e/configurer/config"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v22/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v22/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -54,8 +54,8 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 			Id: id,
 		},
 		ValidatorInitConfigs:  initValidatorConfigs,
-		VotingPeriod:          numVal*config.PropVoteBlocks + config.PropBufferBlocks,
-		ExpeditedVotingPeriod: numVal*config.PropVoteBlocks + config.PropBufferBlocks - 3,
+		VotingPeriod:          numVal*config.PropVoteBlocks + config.PropBufferBlocksVotePeriod,
+		ExpeditedVotingPeriod: numVal*config.PropVoteBlocks + config.PropBufferBlocksVotePeriod - 3,
 		t:                     t,
 		containerManager:      containerManager,
 	}

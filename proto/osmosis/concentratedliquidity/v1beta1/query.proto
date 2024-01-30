@@ -16,7 +16,7 @@ import "google/protobuf/duration.proto";
 import "osmosis/concentratedliquidity/v1beta1/position.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto";
 
 service Query {
   // Pools returns all concentrated liquidity pools

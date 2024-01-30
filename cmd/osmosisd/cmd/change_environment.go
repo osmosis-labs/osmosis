@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v22/app"
 )
 
 const (
@@ -149,15 +149,16 @@ func changeEnvironment(args []string) error {
 	currentEnvironment := getHomeEnvironment()
 	fmt.Println("Current environment: ", currentEnvironment)
 
-	if _, err := environmentNameToPath(newEnv); err != nil {
+	path, err := environmentNameToPath(newEnv)
+	if err != nil {
 		return err
 	}
 
 	fmt.Println("New environment: ", newEnv)
 
 	envMap := make(map[string]string)
-	envMap[EnvVariable] = newEnv
-	err := godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
+	envMap[EnvVariable] = path
+	err = godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
 	if err != nil {
 		return err
 	}

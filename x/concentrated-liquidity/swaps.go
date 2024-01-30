@@ -8,12 +8,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	events "github.com/osmosis-labs/osmosis/v21/x/poolmanager/events"
+	events "github.com/osmosis-labs/osmosis/v22/x/poolmanager/events"
 
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 // SwapState defines the state of a swap.
@@ -787,10 +787,7 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.Concentrat
 	if err != nil {
 		return p, err
 	}
-	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
-	if err != nil {
-		return p, err
-	}
+	hasPositionInPool := k.PoolHasPosition(ctx, p)
 	if !hasPositionInPool {
 		return p, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}

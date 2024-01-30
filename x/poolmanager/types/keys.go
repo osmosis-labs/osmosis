@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,18 +33,35 @@ var (
 	DenomTradePairPrefix = []byte{0x04}
 
 	// KeyTakerFeeStakersProtoRev defines key to store the taker fee for stakers tracker.
+	// Deprecated: Now utilizes KeyTakerFeeStakersProtoRevArray.
 	KeyTakerFeeStakersProtoRev = []byte{0x05}
 
 	// KeyTakerFeeCommunityPoolProtoRev defines key to store the taker fee for community pool tracker.
+	// Deprecated: Now utilizes KeyTakerFeeCommunityPoolProtoRevArray.
 	KeyTakerFeeCommunityPoolProtoRev = []byte{0x06}
 
 	// KeyTakerFeeProtoRevAccountingHeight defines key to store the accounting height for the above taker fee trackers.
 	KeyTakerFeeProtoRevAccountingHeight = []byte{0x07}
+
+	// KeyTakerFeeStakersProtoRevArray defines key to store the taker fee for stakers tracker coin array.
+	KeyTakerFeeStakersProtoRevArray = []byte{0x08}
+
+	// KeyTakerFeeCommunityPoolProtoRevArray defines key to store the taker fee for community pool tracker coin array.
+	KeyTakerFeeCommunityPoolProtoRevArray = []byte{0x09}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
 func FormatModuleRouteKey(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
+	// Estimate the length of the string representation of poolId
+	// 11 is a very safe upper bound, (99,999,999,999) pools, and is a 12 byte allocation
+	length := 11
+	result := make([]byte, 1, 1+length)
+	result[0] = SwapModuleRouterPrefix[0]
+	// Write poolId into the byte slice starting after the prefix
+	written := strconv.AppendUint(result[1:], poolId, 10)
+
+	// Slice result to the actual length used
+	return result[:1+len(written)]
 }
 
 // FormatDenomTradePairKey serializes denom trade pair to bytes.

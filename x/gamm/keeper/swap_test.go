@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -464,6 +464,20 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			}
 		}
 	}
+}
+
+func (s *KeeperTestSuite) TestOutOfGasError() {
+	s.SetupTest()
+	poolId := s.PrepareBalancerPool()
+
+	pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
+	s.Require().NoError(err)
+	foocoin := sdk.NewCoin("foo", osmomath.NewInt(10))
+	spreadFactor := pool.GetSpreadFactor(s.Ctx)
+	ctx := s.Ctx.WithGasMeter(sdk.NewGasMeter(10))
+	_, err = s.App.GAMMKeeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, foocoin, "bar", osmomath.ZeroInt(), spreadFactor)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "lack of gas")
 }
 
 // UNFORKINGNOTE: This test really wasn't testing anything important

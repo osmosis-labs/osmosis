@@ -3,14 +3,16 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -142,7 +144,11 @@ func (k Keeper) JoinPoolNoSwap(
 		if r := recover(); r != nil {
 			tokenIn = sdk.Coins{}
 			sharesOut = osmomath.Int{}
-			err = fmt.Errorf("function JoinPoolNoSwap failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function JoinPoolNoSwap failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function JoinPoolNoSwap failed due to internal reason: %v", r)
+			}
 		}
 	}()
 	// all pools handled within this method are pointer references, `JoinPool` directly updates the pools
@@ -234,7 +240,11 @@ func (k Keeper) JoinSwapExactAmountIn(
 	defer func() {
 		if r := recover(); r != nil {
 			sharesOut = osmomath.Int{}
-			err = fmt.Errorf("function JoinSwapExactAmountIn failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function JoinSwapExactAmountIn failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function JoinSwapExactAmountIn failed due to internal reason: %v", r)
+			}
 		}
 	}()
 
@@ -278,7 +288,11 @@ func (k Keeper) JoinSwapShareAmountOut(
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = osmomath.Int{}
-			err = fmt.Errorf("function JoinSwapShareAmountOut failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function JoinSwapShareAmountOut failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function JoinSwapShareAmountOut failed due to internal reason: %v", r)
+			}
 		}
 	}()
 
