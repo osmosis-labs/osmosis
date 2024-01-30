@@ -566,21 +566,20 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			positionIds:                    []uint64{DefaultPositionId},
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"single position ID with claimable incentives": {
 			positionIds:                    []uint64{DefaultPositionId},
 			hasIncentivesToClaim:           true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          3, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send
+			expectedMessageEvents:          2, // 1 for collect incentives claim send, 1 for collect incentives forfeit send
 		},
 		"single position ID with claimable spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          2, // 1 for transfer, 1 for collect spread rewards claim send
+			expectedMessageEvents:          1, // 1 for collect spread rewards claim send
 		},
 		"single position ID with claimable incentives and spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
@@ -588,19 +587,17 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          4, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
+			expectedMessageEvents:          3, // 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
 		},
 		"two position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
 			numPositionsToCreate:           2,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"three position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"three position IDs with claimable incentives and spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
@@ -608,7 +605,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          10, // 1 for transfer, 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
+			expectedMessageEvents:          9, // 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
 		},
 		"two position IDs, second ID does not exist": {
 			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
