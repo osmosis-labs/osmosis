@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 			tokenoutMinAmount: min_amount,
 
 			expectedSplitRouteSwapEvent: 1,
-			expectedMessageEvents:       16, // 4 pool creation + 12 events in SplitRouteExactAmountIn keeper methods
+			expectedMessageEvents:       15, // 4 pool creation + 11 events in SplitRouteExactAmountIn keeper methods
 		},
 		"error: empty route": {
 			routes:            []types.SwapAmountInSplitRoute{},
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 			tokenoutMaxAmount: max_amount,
 
 			expectedSplitRouteSwapEvent: 1,
-			expectedMessageEvents:       17, // 4 pool creation + 13 events in SplitRouteExactAmountOut keeper methods
+			expectedMessageEvents:       16, // 4 pool creation + 12 events in SplitRouteExactAmountOut keeper methods
 		},
 		"error: empty route": {
 			routes:            []types.SwapAmountOutSplitRoute{},
@@ -289,7 +289,7 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 			} else {
 				s.Require().NoError(err)
 				s.AssertEventEmitted(s.Ctx, types.TypeMsgSetDenomPairTakerFee, tc.expectedSetDenomPairTakerFeeEvent)
-				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, 1)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, 0)
 			}
 		})
 	}

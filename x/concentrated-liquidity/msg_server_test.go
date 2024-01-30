@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 				response, err := msgServer.CreatePosition(sdk.WrapSDKContext(ctx), msg)
 				s.NoError(err)
 				s.NotNil(response)
-				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, 2)
+				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, 1)
 			} else {
 				s.Require().ErrorContains(msg.ValidateBasic(), tc.expectedError.Error())
 			}
