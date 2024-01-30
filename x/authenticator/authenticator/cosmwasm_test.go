@@ -49,21 +49,34 @@ func (s *CosmwasmAuthenticatorTest) SetupTest() {
 }
 
 func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
+
+	// Generate a private key for signing
+	priv := secp256k1.GenPrivKey()
+
+	// Set up the contract
+	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo.wasm")
+	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
+	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	s.Require().NoError(err)
+	contractAddr := s.InstantiateContract(string(instantiateMsgBz), 1)
+
 	tests := []struct {
 		name string // name
 		data []byte // initData
 		pass bool   // wantErr
 	}{
-		{"Valid Contract", []byte(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69"}`), true},
-		{"Valid Contract, valid params", []byte(fmt.Sprintf(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69", "params": %s }`, toBytesString(`{ "p1": "v1", "p2": { "p21": "v21" } }`))), true},
-		{"Valid Contract, invalid params", []byte(fmt.Sprintf(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69", "params": %s }`, toBytesString(`{ "p1": "v1", "p2": { "p21" "v21" } }`))), false},
+		{"Valid Contract, valid params", []byte(fmt.Sprintf(`{"contract": "%s", "params": %s }`, contractAddr, toBytesString(`{ "label": "test" }`))), true},
+		{"Valid Contract, unexpected params", []byte(fmt.Sprintf(`{"contract": "%s", "params": %s }`, contractAddr, toBytesString(`{ "unexpected": "json" }`))), false},
+		{"Valid Contract, malform json params", []byte(fmt.Sprintf(`{"contract": "%s", "params": %s }`, contractAddr, toBytesString(`{ malform json }`))), false},
+		{"Valid Contract, missing authenticator params (required by contract)", []byte(fmt.Sprintf(`{"contract": "%s"}`, contractAddr)), false},
 		{"Missing Contract", []byte(`{}`), false},
-		{"Invalid Contract", []byte(`{"contract": "invalid_address"}`), false},
+		{"Invalid Contract Address", []byte(`{"contract": "invalid_address"}`), false},
+		{"Valid address but non-existing contract", []byte(`{"contract": "osmo175dck737jmvr9mw34pqs7y5fv0umnak3vrsj3mjxg75cnkmyulfs0c3sxr"}`), false},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, tt.data)
+			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), sdk.AccAddress{}, tt.data)
 			if tt.pass {
 				s.Require().NoError(err, "Should succeed")
 			} else {

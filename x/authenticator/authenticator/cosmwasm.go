@@ -127,10 +127,16 @@ type ConfirmExecutionRequest struct {
 	Msg     LocalAny       `json:"msg"`
 }
 
+type OnAuthenticatorAddedRequest struct {
+	Account             sdk.AccAddress `json:"account"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+}
+
 type SudoMsg struct {
-	Authenticate     *AuthenticationRequest   `json:"authenticate,omitempty"`
-	Track            *TrackRequest            `json:"track,omitempty"`
-	ConfirmExecution *ConfirmExecutionRequest `json:"confirm_execution,omitempty"`
+	Authenticate         *AuthenticationRequest       `json:"authenticate,omitempty"`
+	Track                *TrackRequest                `json:"track,omitempty"`
+	ConfirmExecution     *ConfirmExecutionRequest     `json:"confirm_execution,omitempty"`
+	OnAuthenticatorAdded *OnAuthenticatorAddedRequest `json:"on_authenticator_added,omitempty"`
 }
 
 // TODO: decide when we want to reject and when to just not authenticate
@@ -307,11 +313,24 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.A
 }
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
-	_, _, err := parseInitData(data)
+	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return err
 	}
-	// TODO: check contract address length. Check contract exists?
+
+	bz, err := json.Marshal(SudoMsg{OnAuthenticatorAdded: &OnAuthenticatorAddedRequest{
+		Account:             account,
+		AuthenticatorParams: params,
+	}})
+	if err != nil {
+		return err
+	}
+
+	_, err = cwa.contractKeeper.Sudo(ctx, contractAddr, bz)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
