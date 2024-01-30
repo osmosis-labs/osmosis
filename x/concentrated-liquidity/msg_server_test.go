@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom1:                   USDC,
 			tickSpacing:              DefaultTickSpacing,
 			expectedPoolCreatedEvent: 1,
-			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
+			expectedMessageEvents:    3, // 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
 		"error: tickSpacing zero": {
 			denom0:        ETH,
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 	}{
 		"happy path": {
 			expectedAddedToPositionEvent: 1,
-			expectedMessageEvents:        4,
+			expectedMessageEvents:        3,
 		},
 		"error: last position in pool": {
 			lastPositionInPool:           true,
@@ -239,7 +239,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			numPositionsToCreate:                   1,
 			expectedTotalCollectSpreadRewardsEvent: 1,
 			expectedCollectSpreadRewardsEvent:      1,
-			expectedMessageEvents:                  2, // 1 for collect fees, 1 for send message
+			expectedMessageEvents:                  1, // 1 for send message
 		},
 		"two position IDs": {
 			upperTick:                              DefaultUpperTick,
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			numPositionsToCreate:                   2,
 			expectedTotalCollectSpreadRewardsEvent: 1,
 			expectedCollectSpreadRewardsEvent:      2,
-			expectedMessageEvents:                  3, // 1 for collect fees, 2 for send messages
+			expectedMessageEvents:                  2, // 2 for send messages
 		},
 		"three position IDs": {
 			upperTick:                              DefaultUpperTick,
@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			numPositionsToCreate:                   3,
 			expectedTotalCollectSpreadRewardsEvent: 1,
 			expectedCollectSpreadRewardsEvent:      3,
-			expectedMessageEvents:                  4, // 1 for collect fees, 3 for send messages
+			expectedMessageEvents:                  3, // 3 for send messages
 		},
 		"error: attempt to claim fees with different owner": {
 			upperTick:                              DefaultUpperTick,
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               3, // 1 for collect incentives, 1 for collect send, 1 for forfeit send
+			expectedMessageEvents:               2, // 1 for collect send, 1 for forfeit send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               5, // 1 for collect incentives, 2 for collect send, 2 for forfeit send
+			expectedMessageEvents:               4, // 2 for collect send, 2 for forfeit send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               7, // 1 for collect incentives, 3 for collect send, 3 for forfeit send
+			expectedMessageEvents:               6, // 3 for collect send, 3 for forfeit send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
