@@ -106,6 +106,15 @@ type simplifiedSignatureData struct {
 	Signatures [][]byte         `json:"signatures"`
 }
 
+type OnAuthenticatorAddedRequest struct {
+	Account             sdk.AccAddress `json:"account"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+}
+
+type OnAuthenticatorRemovedRequest struct {
+	Account             sdk.AccAddress `json:"account"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+}
 type AuthenticationRequest struct {
 	Account             sdk.AccAddress          `json:"account"`
 	Msg                 LocalAny                `json:"msg"`
@@ -128,22 +137,12 @@ type ConfirmExecutionRequest struct {
 	Msg     LocalAny       `json:"msg"`
 }
 
-type OnAuthenticatorAddedRequest struct {
-	Account             sdk.AccAddress `json:"account"`
-	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
-}
-
-type OnAuthenticatorRemovedRequest struct {
-	Account             sdk.AccAddress `json:"account"`
-	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
-}
-
 type SudoMsg struct {
+	OnAuthenticatorAdded   *OnAuthenticatorAddedRequest   `json:"on_authenticator_added,omitempty"`
+	OnAuthenticatorRemoved *OnAuthenticatorRemovedRequest `json:"on_authenticator_removed,omitempty"`
 	Authenticate           *AuthenticationRequest         `json:"authenticate,omitempty"`
 	Track                  *TrackRequest                  `json:"track,omitempty"`
 	ConfirmExecution       *ConfirmExecutionRequest       `json:"confirm_execution,omitempty"`
-	OnAuthenticatorAdded   *OnAuthenticatorAddedRequest   `json:"on_authenticator_added,omitempty"`
-	OnAuthenticatorRemoved *OnAuthenticatorRemovedRequest `json:"on_authenticator_removed,omitempty"`
 }
 
 // TODO: decide when we want to reject and when to just not authenticate
