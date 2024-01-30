@@ -174,7 +174,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
 
 	// Set up the contract
-	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo-aarch64.wasm")
+	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo.wasm")
 	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
@@ -252,7 +252,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
 
 	// Set up the contract
-	s.StoreContractCode("../testutils/contracts/cosigner-authenticator/artifacts/cosigner_authenticator-aarch64.wasm")
+	s.StoreContractCode("../testutils/contracts/cosigner-authenticator/artifacts/cosigner_authenticator.wasm")
 	instantiateMsg := CosignerInstantiateMsg{PubKeys: [][]byte{priv.PubKey().Bytes()}}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
