@@ -40,7 +40,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -82,6 +81,8 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/osmosis-labs/osmosis/v22/app/keepers"
 	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
 	v10 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v10"
@@ -97,6 +98,7 @@ import (
 	v20 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v20"
 	v21 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v21"
 	v22 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v23"
 	v3 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v5"
@@ -147,7 +149,7 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
