@@ -379,7 +379,6 @@ func NewOsmosisApp(
 	// set the mempool
 	app.SetMempool(lanedMempool)
 
-
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())
@@ -397,10 +396,10 @@ func NewOsmosisApp(
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
 		BlockSDKAnteHandlerParams{
-			freeLane:   freeLane,
-			mevLane:    mevLane,
+			freeLane:      freeLane,
+			mevLane:       mevLane,
 			auctionKeeper: *app.AppKeepers.AuctionKeeper,
-			txConfig: txConfig,
+			txConfig:      txConfig,
 		},
 	)
 
@@ -689,6 +688,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	}
 
 	return app
+}
+
 // CheckTx will check the transaction with the provided checkTxHandler. We override the default
 // handler so that we can verify bid transactions before they are inserted into the mempool.
 // With the BlockSDK CheckTx, we can verify the bid transaction and all of the bundled transactions
