@@ -679,7 +679,7 @@ FAQ
 ## Testnets
 
 ### Useful Notes
-For out in-place testnet command (`osmosisd in-place-testnet ...`), if you rely on setting up a testnet from mainnet state,
+For our in-place testnet command (`osmosisd in-place-testnet ...`), if you rely on setting up a testnet from mainnet state,
 where future module stores have not been added yet, hardcode the following in `NewOsmosisApp` in `app.go`:
 
 ```go
