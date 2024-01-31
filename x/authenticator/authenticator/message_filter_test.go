@@ -1,6 +1,7 @@
 package authenticator_test
 
 import (
+	"github.com/osmosis-labs/osmosis/v21/app/params"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -15,8 +16,10 @@ import (
 
 type MessageFilterAuthenticatorTest struct {
 	suite.Suite
-	Ctx                        sdk.Context
-	OsmosisApp                 *app.OsmosisApp
+	Ctx            sdk.Context
+	OsmosisApp     *app.OsmosisApp
+	EncodingConfig params.EncodingConfig
+
 	MessageFilterAuthenticator authenticator.MessageFilterAuthenticator
 }
 
@@ -28,6 +31,7 @@ func (s *MessageFilterAuthenticatorTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
 	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.EncodingConfig = app.MakeEncodingConfig()
 	s.MessageFilterAuthenticator = authenticator.NewMessageFilterAuthenticator()
 }
 
@@ -127,7 +131,14 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 		s.Run(tt.name, func() {
 			filter, err := s.MessageFilterAuthenticator.Initialize([]byte(tt.pattern))
 			s.Require().NoError(err)
-			result := filter.Authenticate(s.Ctx, sdk.AccAddress{}, tt.msg, nil)
+
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			var tx sdk.Tx
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, tt.msg, tx, 0, false)
+			s.Require().NoError(err)
+
+			result := filter.Authenticate(s.Ctx, request)
 			if tt.match {
 				s.Require().True(result.IsAuthenticated())
 			} else {
@@ -219,7 +230,14 @@ func (s *MessageFilterAuthenticatorTest) TestPoolManagerSwapExactAmountIn() {
 		s.Run(tt.name, func() {
 			filter, err := s.MessageFilterAuthenticator.Initialize([]byte(tt.pattern))
 			s.Require().NoError(err)
-			result := filter.Authenticate(s.Ctx, sdk.AccAddress{}, tt.msg, nil)
+
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			var tx sdk.Tx
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, tt.msg, tx, 0, false)
+			s.Require().NoError(err)
+
+			result := filter.Authenticate(s.Ctx, request)
 			if tt.match {
 				s.Require().True(result.IsAuthenticated())
 			} else {

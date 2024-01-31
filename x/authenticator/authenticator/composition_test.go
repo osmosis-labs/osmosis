@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v21/app"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
@@ -17,8 +18,10 @@ import (
 
 type AggregatedAuthenticatorsTest struct {
 	suite.Suite
-	Ctx              sdk.Context
-	OsmosisApp       *app.OsmosisApp
+	Ctx            sdk.Context
+	OsmosisApp     *app.OsmosisApp
+	EncodingConfig params.EncodingConfig
+
 	AnyOfAuth        authenticator.AnyOfAuthenticator
 	AllOfAuth        authenticator.AllOfAuthenticator
 	alwaysApprove    testutils.TestingAuthenticator
@@ -33,6 +36,7 @@ func TestAggregatedAuthenticatorsTest(t *testing.T) {
 
 func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
+	s.EncodingConfig = app.MakeEncodingConfig()
 	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 	am := authenticator.NewAuthenticatorManager()
@@ -173,14 +177,17 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			initializedAuth, err := s.AnyOfAuth.Initialize(data)
 			s.Require().NoError(err)
 
-			// Attempt to authenticate using initialized authenticator
-			authData, err := initializedAuth.GetAuthenticationData(s.Ctx, tx, -1, false)
+			// Generate authentication request
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false)
 			s.Require().NoError(err)
 
-			success := initializedAuth.Authenticate(s.Ctx, nil, nil, authData)
+			// Attempt to authenticate using initialized authenticator
+			success := initializedAuth.Authenticate(s.Ctx, request)
 			s.Require().Equal(tc.expectSuccessful, success.IsAuthenticated())
 
-			result := initializedAuth.ConfirmExecution(s.Ctx, nil, nil, authData)
+			result := initializedAuth.ConfirmExecution(s.Ctx, request)
 			s.Require().Equal(tc.expectConfirm, result.IsConfirm())
 		})
 	}
@@ -290,14 +297,17 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			initializedAuth, err := s.AllOfAuth.Initialize(data)
 			s.Require().NoError(err)
 
-			// Attempt to authenticate using initialized authenticator
-			authData, err := initializedAuth.GetAuthenticationData(s.Ctx, tx, -1, false)
+			// Generate authentication request
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false)
 			s.Require().NoError(err)
 
-			success := initializedAuth.Authenticate(s.Ctx, nil, nil, authData)
+			// Attempt to authenticate using initialized authenticator
+			success := initializedAuth.Authenticate(s.Ctx, request)
 			s.Require().Equal(tc.expectSuccessful, success.IsAuthenticated())
 
-			result := initializedAuth.ConfirmExecution(s.Ctx, nil, nil, authData)
+			result := initializedAuth.ConfirmExecution(s.Ctx, request)
 			s.Require().Equal(tc.expectConfirm, result.IsConfirm())
 		})
 	}
@@ -376,11 +386,14 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			initializedTop, err := tc.auth.authenticator.Initialize(data)
 			s.Require().NoError(err)
 
+			// Generate authentication request
 			var tx sdk.Tx
-			authData, err := initializedTop.GetAuthenticationData(s.Ctx, tx, -1, false)
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false)
 			s.Require().NoError(err)
 
-			success := initializedTop.Authenticate(s.Ctx, nil, nil, authData)
+			success := initializedTop.Authenticate(s.Ctx, request)
 			s.Require().Equal(tc.success, success.IsAuthenticated())
 		})
 	}

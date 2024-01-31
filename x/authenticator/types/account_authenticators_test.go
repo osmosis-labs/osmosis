@@ -37,7 +37,7 @@ func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, mes
 	return "mock", nil
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	return iface.Authenticated()
 }
 
@@ -147,7 +147,7 @@ func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 	return "mock-fail", nil
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	return iface.NotAuthenticated()
 }
 
@@ -179,11 +179,11 @@ func TestMockAuthenticators(t *testing.T) {
 
 	// Testing mockPass
 	dataPass, _ := mockPass.GetAuthenticationData(mockCtx, mockTx, 0, false)
-	isAuthenticatedPass := mockPass.Authenticate(mockCtx, nil, mockMsg, dataPass)
+	isAuthenticatedPass := mockPass.Authenticate(mockCtx)
 	require.True(t, isAuthenticatedPass.IsAuthenticated())
 
 	// Testing mockFail
 	dataFail, _ := mockFail.GetAuthenticationData(mockCtx, mockTx, 0, false)
-	isAuthenticatedFail := mockFail.Authenticate(mockCtx, nil, mockMsg, dataFail)
+	isAuthenticatedFail := mockFail.Authenticate(mockCtx)
 	require.False(t, isAuthenticatedFail.IsAuthenticated())
 }

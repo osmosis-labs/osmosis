@@ -67,44 +67,18 @@ func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, e
 	return cwa, nil
 }
 
-type BaseData struct {
-	Tx           sdk.Tx
-	MessageIndex int
-	Simulate     bool
-}
-
-var _ iface.AuthenticatorData = BaseData{}
-
-func (cwa CosmwasmAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
-	return BaseData{
-		Tx:           tx,
-		MessageIndex: messageIndex,
-		Simulate:     simulate,
-	}, nil
-}
-
 type SudoMsg struct {
-	Authenticate     *AuthenticationRequest   `json:"authenticate,omitempty"`
-	Track            *TrackRequest            `json:"track,omitempty"`
-	ConfirmExecution *ConfirmExecutionRequest `json:"confirm_execution,omitempty"`
+	Authenticate     *iface.AuthenticationRequest `json:"authenticate,omitempty"`
+	Track            *TrackRequest                `json:"track,omitempty"`
+	ConfirmExecution *ConfirmExecutionRequest     `json:"confirm_execution,omitempty"`
 }
 
 // TODO: decide when we want to reject and when to just not authenticate
-func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	bd := authenticationData.(BaseData)
-	authRequest, err := GenerateAuthenticationData(ctx, cwa.ak, cwa.sigModeHandler, account, msg, bd.Tx, bd.MessageIndex, bd.Simulate)
-	if err != nil {
-		return iface.Rejected("failed to generate authentication data", err)
-	}
+func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	// Add the authenticator params set for this authenticator in Initialize()
-	authRequest.AuthenticatorParams = cwa.authenticatorParams
+	request.AuthenticatorParams = cwa.authenticatorParams
 
-	bz, err := json.Marshal(SudoMsg{Authenticate: &authRequest})
+	bz, err := json.Marshal(SudoMsg{Authenticate: &request})
 	if err != nil {
 		return iface.Rejected("failed to marshall AuthenticationRequest", err)
 	}
@@ -121,14 +95,15 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAd
 	return authResult
 }
 
-func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, messageIndex int, simulate bool) (AuthenticationRequest, error) {
+func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticationRequest, error) {
+	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	signers, txSignatures, _, err := GetCommonAuthenticationData(ctx, tx, -1, simulate)
 	if err != nil {
-		return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signes and signatures")
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signes and signatures")
 	}
 
 	if len(msg.GetSigners()) != 1 {
-		return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
 	}
 
 	// Retrieve and build the signer data struct
@@ -146,38 +121,39 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		Sequence:      baseAccount.GetSequence(),
 	}
 
+	// This can also be extracted
 	signBytes, err := sigModeHandler.GetSignBytes(txsigning.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
-		return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signBytes")
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signBytes")
 	}
 
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
 	}
 
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
-		return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
 	}
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
 	}
 
-	msgs := make([]LocalAny, len(tx.GetMsgs()))
+	msgs := make([]iface.LocalAny, len(tx.GetMsgs()))
 	for i, msg := range tx.GetMsgs() {
 		encodedMsg, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
-			return AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
+			return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
 		}
-		msgs[i] = LocalAny{
+		msgs[i] = iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		}
 	}
 
-	txData := ExplicitTxData{
+	txData := iface.ExplicitTxData{
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      baseAccount.GetSequence(),
@@ -189,31 +165,38 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 	signer := msg.GetSigners()[0]
 	var signatures [][]byte
 	var msgSignature []byte
+	var sequences []uint64
 	for i, signature := range txSignatures {
 		// ToDo: deal with other signature types
 		single, ok := signature.Data.(*txsigning.SingleSignatureData)
 		if !ok {
-			return AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
+			return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
 		}
 		signatures = append(signatures, single.Signature)
+		sequences = append(sequences, signature.Sequence)
 		if signers[i].Equals(signer) {
 			msgSignature = single.Signature
+			if signature.Sequence != baseAccount.GetSequence() {
+				// TODO: Do we really want to do this here? I think we should delegate sequencing to a separate function
+				return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", baseAccount.GetSequence(), signature.Sequence))
+			}
+
 		}
 	}
 
 	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
-	authRequest := AuthenticationRequest{
+	authRequest := iface.AuthenticationRequest{
 		Account: account,
-		Msg: LocalAny{
+		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
 		Signature: msgSignature, // currently only allowing one signer per message.
 		TxData:    txData,
-		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
+		SignModeTxData: iface.SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
 			Direct: signBytes,
 		},
-		SignatureData: SimplifiedSignatureData{
+		SignatureData: iface.SimplifiedSignatureData{
 			Signers:    signers,
 			Signatures: signatures,
 		},
@@ -230,7 +213,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	}
 	trackRequest := TrackRequest{
 		Account: account,
-		Msg: LocalAny{
+		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
@@ -248,19 +231,12 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
-	encodedMsg, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return iface.Block(fmt.Errorf("failed to encode msg: %w", err))
-	}
+func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 
 	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
-		Account: account,
-		Msg: LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
-		},
+		Account: request.Account,
+		Msg:     request.Msg,
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
 	if err != nil {

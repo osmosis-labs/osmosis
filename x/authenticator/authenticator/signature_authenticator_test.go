@@ -290,44 +290,37 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				tc.TestData.Signers,
 				tc.TestData.Signatures,
 			)
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 
 			if tc.TestData.ShouldSucceedGettingData {
-				// Test GetAuthenticationData
-				authData, err := s.SigVerificationAuthenticator.GetAuthenticationData(s.Ctx, tx, -1, false)
+				// request for the first message
+				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false)
 				s.Require().NoError(err)
-
-				// cast the interface as a concrete struct
-				sigData := authData.(authenticator.SignatureData)
-
-				// the signer data should contain x signers
-				s.Require().Equal(tc.TestData.NumberOfExpectedSigners, len(sigData.Signers))
-
-				// the signature data should contain x signatures
-				s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
 
 				// Test Authenticate method
 				if tc.TestData.ShouldSucceedSignatureVerification {
-					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, nil, authData)
+					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
 					s.Require().NoError(err)
 					s.Require().True(success.IsAuthenticated())
 
 				} else {
-					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, nil, authData)
+					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
 					s.Require().False(success.IsAuthenticated())
 				}
 			} else {
-				authData, err := s.SigVerificationAuthenticator.GetAuthenticationData(s.Ctx, tx, -1, false)
+				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false)
 				s.Require().Error(err)
 
-				// cast the interface as a concrete struct
-				sigData := authData.(authenticator.SignatureData)
-
-				// the signer data should contain x signers
-				s.Require().Equal(tc.TestData.NumberOfExpectedSigners, len(sigData.Signers))
-
-				// the signature data should contain x signatures
-				s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
-
+				//// cast the interface as a concrete struct
+				//sigData := authData.(authenticator.SignatureData)
+				//
+				//// the signer data should contain x signers
+				//s.Require().Equal(tc.TestData.NumberOfExpectedSigners, len(sigData.Signers))
+				//
+				//// the signature data should contain x signatures
+				//s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
+				//
 			}
 		})
 	}

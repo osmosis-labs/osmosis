@@ -129,10 +129,12 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		signatures,
 	)
 
-	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
-	s.Require().NoError(err, "Should succeed")
+	ak := s.OsmosisApp.AccountKeeper
+	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false)
+	s.Require().NoError(err)
 
-	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
+	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
 
 	// TODO: replace this when the interfaces have changed
@@ -210,10 +212,12 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 
 	// TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better
 	//  cosigner implementation later?
-	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
-	s.Require().NoError(err, "Should succeed")
+	ak := s.OsmosisApp.AccountKeeper
+	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false)
+	s.Require().NoError(err)
 
-	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
+	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	fmt.Println(status)
 	//TODO: review this after full refactor
 	//s.Require().True(status.IsAuthenticated(), "Should be authenticated")

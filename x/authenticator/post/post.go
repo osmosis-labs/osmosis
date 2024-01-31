@@ -4,6 +4,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
@@ -11,13 +14,19 @@ import (
 
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
+	accountKeeper       *authkeeper.AccountKeeper
+	sigModeHandler      authsigning.SignModeHandler
 }
 
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper,
+	sigModeHandler authsigning.SignModeHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
+		accountKeeper:       accountKeeper,
+		sigModeHandler:      sigModeHandler,
 	}
 }
 
@@ -44,15 +53,11 @@ func (ad AuthenticatorDecorator) PostHandle(
 			return sdk.Context{}, err
 		}
 
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate)
 		for _, authenticator := range authenticators { // This should execute on *all* authenticators so they can update their state
-			// Get the authentication data for the transaction
-			authData, err := authenticator.GetAuthenticationData(ctx, tx, msgIndex, simulate)
-			if err != nil {
-				return ctx, err
-			}
 
 			// Confirm Execution
-			successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
+			successfulExecution := authenticator.ConfirmExecution(ctx, authenticationRequest)
 
 			if successfulExecution.IsBlock() {
 				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")

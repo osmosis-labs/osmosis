@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
@@ -41,10 +40,6 @@ func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator
 	}
 	m.pattern = data
 	return m, nil
-}
-
-func (m MessageFilterAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return iface.EmptyAuthenticationData{}, nil
 }
 
 func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
@@ -185,21 +180,8 @@ func IsJsonSuperset(a, b []byte) error {
 	return isSuperset(av, bv)
 }
 
-func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	jsonMsg, err := json.Marshal(msg)
-	if err != nil {
-		return iface.NotAuthenticated()
-	}
-
-	msgAsAny, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return iface.NotAuthenticated()
-	}
-
-	encodedMsg, err := json.Marshal(EncodedMsg{
-		MsgType: msgAsAny.TypeUrl,
-		Value:   jsonMsg,
-	})
+func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+	encodedMsg, err := json.Marshal(request.Msg)
 	if err != nil {
 		return iface.NotAuthenticated()
 	}
@@ -220,7 +202,7 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.Ac
 	return iface.Authenticated()
 }
 
-func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	return iface.Confirm()
 }
 

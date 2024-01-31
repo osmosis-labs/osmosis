@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
@@ -15,7 +16,6 @@ import (
 
 // This is a very naive implementation of an authenticator that tracks sends and blocks if the total amount sent is greater than 3_000
 var _ iface.Authenticator = &MaxAmountAuthenticator{}
-var _ iface.AuthenticatorData = &MaxAmountAuthenticatorData{}
 
 type MaxAmountAuthenticatorData struct {
 	Amount osmomath.Int
@@ -36,13 +36,14 @@ func (m MaxAmountAuthenticator) Initialize(data []byte) (iface.Authenticator, er
 	return m, nil
 }
 
-func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return MaxAmountAuthenticatorData{}, nil
-}
-
-func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	send, ok := msg.(*banktypes.MsgSend)
-	if !ok {
+func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.Msg/Send" {
+		return iface.NotAuthenticated()
+	}
+	// unmarshal the message.value into the bank.MsgSend struct
+	var send banktypes.MsgSend
+	err := proto.Unmarshal(request.Msg.Value, &send)
+	if err != nil {
 		return iface.NotAuthenticated()
 	}
 	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
@@ -56,9 +57,14 @@ func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, m
 	return nil
 }
 
-func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
-	send, ok := msg.(*banktypes.MsgSend)
-	if !ok {
+func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.Msg/Send" {
+		return iface.Confirm()
+	}
+	// unmarshal the message.value into the bank.MsgSend struct
+	var send banktypes.MsgSend
+	err := proto.Unmarshal(request.Msg.Value, &send)
+	if err != nil {
 		return iface.Confirm()
 	}
 	m.SetAmount(ctx, m.GetAmount(ctx).Add(send.Amount[0].Amount))

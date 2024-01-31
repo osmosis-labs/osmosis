@@ -3,6 +3,8 @@ package ante
 import (
 	"encoding/json"
 	"fmt"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
@@ -22,16 +24,19 @@ import (
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       authante.AccountKeeper
+	sigModeHandler      authsigning.SignModeHandler
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
+	sigModeHandler authsigning.SignModeHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
 		accountKeeper:       accountKeeper,
+		sigModeHandler:      sigModeHandler,
 	}
 }
 
@@ -105,12 +110,21 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	cosignerActive, cosignerContract := ad.isCosignerActive(cacheCtx)
-	//
+
+	ak, ok := ad.accountKeeper.(*authkeeper.AccountKeeper)
+	if !ok {
+		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid account keeper type"))
+	}
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		// By default, the first signer is the account
 		account, err := utils.GetAccount(msg)
+		if err != nil {
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
+		}
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ak, ad.sigModeHandler, account, msg, tx, msgIndex, simulate)
+		fmt.Println("authenticationRequest", authenticationRequest)
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
@@ -146,14 +160,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
-			// Get the authentication data for the transaction
-			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
-			authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, msgIndex, simulate)
-			if err != nil {
-				return ctx, err
-			}
-
-			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
+			authentication := authenticator.Authenticate(cacheCtx, authenticationRequest)
 			if authentication.IsRejected() {
 				return ctx, authentication.Error()
 			}
