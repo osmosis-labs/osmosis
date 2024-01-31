@@ -420,8 +420,12 @@ func NewOsmosisApp(
 		txConfig.TxEncoder(),
 		lanedMempool,
 	)
+	// we use the block-sdk's PrepareProposal logic to build blocks
 	app.SetPrepareProposal(proposalHandler.PrepareProposalHandler())
-	app.SetProcessProposal(proposalHandler.ProcessProposalHandler())
+	// we use a no-op ProcessProposal, this way, we accept all proposals in avoidance
+	// of liveness failures due to Prepare / Process inconsistency. In other words,
+	// this ProcessProposal always returns ACCEPT.
+	app.SetProcessProposal(baseapp.NoOpProcessProposal())
 
 	// check-tx
 	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
