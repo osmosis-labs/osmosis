@@ -675,3 +675,15 @@ What it does:
 FAQ
 - Can this be used with localosmosis or inside Docker?
   * Not currently but possible. Would need to run the delve server inside the container and expose the debug port
+
+## Testnets
+
+### Useful Notes
+For out in-place testnet command (`osmosisd in-place-testnet ...`), if you rely on setting up a testnet from mainnet state,
+where future module stores have not been added yet, hardcode the following in `NewOsmosisApp` in `app.go`:
+
+```go
+// One height above the latest mainnet snapshot height.
+app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(13553474, &v23.Upgrade.StoreUpgrades))
+```
+This allows creating a testnet from mainnet state where the new module store is properly registered.
