@@ -133,8 +133,9 @@ type TrackRequest struct {
 }
 
 type ConfirmExecutionRequest struct {
-	Account sdk.AccAddress `json:"account"`
-	Msg     LocalAny       `json:"msg"`
+	Account             sdk.AccAddress `json:"account"`
+	Msg                 LocalAny       `json:"msg"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
 
 type SudoMsg struct {
@@ -268,6 +269,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
 	}
+
 	trackRequest := TrackRequest{
 		Account: account,
 		Msg: LocalAny{
@@ -302,6 +304,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.A
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
+		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
 	if err != nil {

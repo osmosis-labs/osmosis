@@ -1,9 +1,11 @@
 use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{from_json, Addr, Binary, DepsMut, Env, MessageInfo, Response, StdError};
+use cosmwasm_std::{
+    from_json, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+};
 use cw_storage_plus::Item;
-use osmosis_authenticators::{AuthenticationResult, TrackRequest};
+use osmosis_authenticators::{Any, AuthenticationResult, SignModeTxData, SignatureData, TxData};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -23,15 +25,41 @@ pub struct OnAuthenticatorRemovedRequest {
 }
 
 #[cw_serde]
+pub struct AuthenticationRequest {
+    pub account: Addr,
+    pub msg: Any,
+    pub signature: Binary,
+    pub sign_mode_tx_data: SignModeTxData,
+    pub tx_data: TxData,
+    pub signature_data: SignatureData,
+    pub simulate: bool,
+    pub authenticator_params: Option<Binary>,
+}
+#[cw_serde]
+pub struct TrackRequest {
+    pub account: Addr,
+    pub msg: Any,
+    pub authenticator_params: Option<Binary>,
+}
+
+#[cw_serde]
 pub enum SudoMsg {
     OnAuthenticatorAdded(OnAuthenticatorAddedRequest),
     OnAuthenticatorRemoved(OnAuthenticatorRemovedRequest),
-    Authenticate(osmosis_authenticators::AuthenticationRequest),
+    Authenticate(AuthenticationRequest),
     Track(TrackRequest),
+}
+
+#[cw_serde]
+pub enum QueryMsg {
+    LatestSudoCall {},
 }
 
 // State
 pub const PUBKEY: Item<Binary> = Item::new("pubkey");
+
+// Tracking latest sudo call for testing purposes, acting like spy test double
+pub const LATEST_SUDO_CALL: Item<SudoMsg> = Item::new("latest_sudo_call");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -46,6 +74,9 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError> {
+    // track latest sudo call for testing purposes
+    LATEST_SUDO_CALL.save(deps.storage, &msg)?;
+
     match msg {
         SudoMsg::OnAuthenticatorAdded(on_authenticator_added_request) => {
             on_authenticator_added(deps, on_authenticator_added_request)
@@ -56,6 +87,16 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
         SudoMsg::Authenticate(auth_request) => authenticate(deps, auth_request),
         SudoMsg::Track(track_request) => track(deps, track_request),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(
+    deps: Deps,
+    _env: Env,
+    QueryMsg::LatestSudoCall {}: QueryMsg,
+) -> Result<Binary, StdError> {
+    let sudo_msg: SudoMsg = LATEST_SUDO_CALL.load(deps.storage)?;
+    to_json_binary(&sudo_msg)
 }
 
 #[cw_serde]
@@ -97,10 +138,7 @@ fn on_authenticator_removed(
     Ok(Response::new())
 }
 
-fn authenticate(
-    deps: DepsMut,
-    auth_request: osmosis_authenticators::AuthenticationRequest,
-) -> Result<Response, StdError> {
+fn authenticate(deps: DepsMut, auth_request: AuthenticationRequest) -> Result<Response, StdError> {
     deps.api.debug(&format!("auth_request {:?}", auth_request));
     if auth_request.msg.type_url == "/cosmos.bank.v1beta1.MsgSend" {
         let send: osmosis_std::types::cosmos::bank::v1beta1::MsgSend =
@@ -129,10 +167,7 @@ fn authenticate(
 }
 
 // Track is a no-op
-fn track(
-    _deps: DepsMut,
-    _track_request: osmosis_authenticators::TrackRequest,
-) -> Result<Response, StdError> {
+fn track(_deps: DepsMut, _track_request: TrackRequest) -> Result<Response, StdError> {
     Ok(Response::new())
 }
 // Test that SudoMsg can be deserialized from an expected json

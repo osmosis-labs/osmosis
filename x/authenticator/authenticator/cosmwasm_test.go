@@ -10,6 +10,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -60,6 +61,9 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 	s.Require().NoError(err)
 	contractAddr := s.InstantiateContract(string(instantiateMsgBz), 1)
 
+	// create new account
+	acc := apptesting.CreateRandomAccounts(1)[0]
+
 	tests := []struct {
 		name string // name
 		data []byte // initData
@@ -76,9 +80,26 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), sdk.AccAddress{}, tt.data)
+			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), acc, tt.data)
+
 			if tt.pass {
 				s.Require().NoError(err, "Should succeed")
+
+				msg := s.QueryLatestSudoCall(contractAddr)
+
+				// unmashal the initData as CosmWasmAuthenticatorInitData
+				var initData authenticator.CosmwasmAuthenticatorInitData
+				err = json.Unmarshal(tt.data, &initData)
+				s.Require().NoError(err, "Should unmarshall data successfully")
+
+				expectedMsg := authenticator.SudoMsg{
+					OnAuthenticatorAdded: &authenticator.OnAuthenticatorAddedRequest{
+						Account:             acc,
+						AuthenticatorParams: initData.Params,
+					},
+				}
+
+				s.Require().Equal(expectedMsg, msg, "Should match latest sudo msg")
 			} else {
 				s.Require().Error(err, "Should fail")
 			}
@@ -98,6 +119,9 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
 	s.Require().NoError(err)
 	contractAddr := s.InstantiateContract(string(instantiateMsgBz), 1)
 
+	// create new account
+	acc := apptesting.CreateRandomAccounts(1)[0]
+
 	tests := []struct {
 		name string // name
 		data []byte // initData
@@ -114,9 +138,25 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.CosmwasmAuth.OnAuthenticatorRemoved(s.Ctx.WithBlockTime(time.Now()), sdk.AccAddress{}, tt.data)
+			err := s.CosmwasmAuth.OnAuthenticatorRemoved(s.Ctx.WithBlockTime(time.Now()), acc, tt.data)
 			if tt.pass {
 				s.Require().NoError(err, "Should succeed")
+
+				msg := s.QueryLatestSudoCall(contractAddr)
+
+				// unmashal the initData as CosmWasmAuthenticatorInitData
+				var initData authenticator.CosmwasmAuthenticatorInitData
+				err = json.Unmarshal(tt.data, &initData)
+				s.Require().NoError(err, "Should unmarshall data successfully")
+
+				expectedMsg := authenticator.SudoMsg{
+					OnAuthenticatorRemoved: &authenticator.OnAuthenticatorRemovedRequest{
+						Account:             acc,
+						AuthenticatorParams: initData.Params,
+					},
+				}
+
+				s.Require().Equal(expectedMsg, msg, "Should match latest sudo msg")
 			} else {
 				s.Require().Error(err, "Should fail")
 			}
@@ -231,11 +271,20 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	s.Require().NoError(err)
 	addr := s.InstantiateContract(string(instantiateMsgBz), 1)
 
-	err = s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), accounts[0], []byte(fmt.Sprintf(`{"contract": "%s", "params": %s}`, addr, toBytesString(`{ "label": "test" }`))))
+	params := `{ "label": "test" }`
+	initData := []byte(fmt.Sprintf(`{"contract": "%s", "params": %s}`, addr, toBytesString(params)))
+	err = s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), accounts[0], initData)
 	s.Require().NoError(err, "OnAuthenticator added should succeed")
 
-	auth, err := s.CosmwasmAuth.Initialize([]byte(
-		fmt.Sprintf(`{"contract": "%s"}`, addr)))
+	msg := s.QueryLatestSudoCall(addr)
+	s.Require().Equal(authenticator.SudoMsg{
+		OnAuthenticatorAdded: &authenticator.OnAuthenticatorAddedRequest{
+			Account:             accounts[0],
+			AuthenticatorParams: []byte(params),
+		},
+	}, msg, "Should match latest sudo msg ")
+
+	auth, err := s.CosmwasmAuth.Initialize(initData)
 	s.Require().NoError(err, "Initialize should succeed")
 
 	tx, _ := GenTx(
@@ -259,6 +308,21 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg)
 	s.Require().NoError(err, "Track should succeed")
+
+	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
+	s.Require().NoError(err, "Should encode Any value successfully")
+
+	msg = s.QueryLatestSudoCall(addr)
+	s.Require().Equal(authenticator.SudoMsg{
+		Track: &authenticator.TrackRequest{
+			Account: accounts[0],
+			Msg: authenticator.LocalAny{
+				TypeURL: encodedMsg.TypeUrl,
+				Value:   encodedMsg.Value,
+			},
+			AuthenticatorParams: []byte(params),
+		},
+	}, msg, "Should match latest sudo msg")
 
 	// Test with invalid signature
 	authData.(authenticator.SignatureData).Signatures[0].Data = &txsigning.SingleSignatureData{
@@ -362,6 +426,29 @@ func (s *CosmwasmAuthenticatorTest) InstantiateContract(msg string, codeID uint6
 	addr, _, err := contractKeeper.Instantiate(s.Ctx.WithBlockTime(time.Now()), codeID, creator, creator, []byte(msg), "contract", nil)
 	s.Require().NoError(err)
 	return addr
+}
+
+func (s *CosmwasmAuthenticatorTest) QueryContract(msg string, contractAddr sdk.AccAddress) []byte {
+	// Query the contract
+	osmosisApp := s.OsmosisApp
+	res, err := osmosisApp.WasmKeeper.QuerySmart(s.Ctx.WithBlockTime(time.Now()), contractAddr, []byte(msg))
+	s.Require().NoError(err)
+
+	return res
+}
+
+func (s *CosmwasmAuthenticatorTest) QueryLatestSudoCall(contractAddr sdk.AccAddress) authenticator.SudoMsg {
+	// Query the contract
+	osmosisApp := s.OsmosisApp
+	res, err := osmosisApp.WasmKeeper.QuerySmart(s.Ctx.WithBlockTime(time.Now()), contractAddr, []byte(`{"latest_sudo_call": {}}`))
+	s.Require().NoError(err)
+
+	// unmarshal the call as SudoMsg
+	msg := authenticator.SudoMsg{}
+	err = json.Unmarshal(res, &msg)
+	s.Require().NoError(err, "Should unmarshall latest sudo msg successfully")
+
+	return msg
 }
 
 func toBytesString(s string) string {
