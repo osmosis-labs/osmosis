@@ -2,44 +2,17 @@ use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    from_json, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
 };
 use cw_storage_plus::Item;
-use osmosis_authenticators::{Any, AuthenticationResult, SignModeTxData, SignatureData, TxData};
+use osmosis_authenticators::{
+    AuthenticationRequest, AuthenticationResult, ConfirmExecutionRequest, ConfirmationResult,
+    OnAuthenticatorAddedRequest, OnAuthenticatorRemovedRequest, TrackRequest,
+};
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pubkey: Binary,
-}
-
-#[cw_serde]
-pub struct OnAuthenticatorAddedRequest {
-    account: Addr,
-    authenticator_params: Option<Binary>,
-}
-
-#[cw_serde]
-pub struct OnAuthenticatorRemovedRequest {
-    account: Addr,
-    authenticator_params: Option<Binary>,
-}
-
-#[cw_serde]
-pub struct AuthenticationRequest {
-    pub account: Addr,
-    pub msg: Any,
-    pub signature: Binary,
-    pub sign_mode_tx_data: SignModeTxData,
-    pub tx_data: TxData,
-    pub signature_data: SignatureData,
-    pub simulate: bool,
-    pub authenticator_params: Option<Binary>,
-}
-#[cw_serde]
-pub struct TrackRequest {
-    pub account: Addr,
-    pub msg: Any,
-    pub authenticator_params: Option<Binary>,
 }
 
 #[cw_serde]
@@ -48,6 +21,7 @@ pub enum SudoMsg {
     OnAuthenticatorRemoved(OnAuthenticatorRemovedRequest),
     Authenticate(AuthenticationRequest),
     Track(TrackRequest),
+    ConfirmExecution(ConfirmExecutionRequest),
 }
 
 #[cw_serde]
@@ -86,6 +60,9 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
         }
         SudoMsg::Authenticate(auth_request) => authenticate(deps, auth_request),
         SudoMsg::Track(track_request) => track(deps, track_request),
+        SudoMsg::ConfirmExecution(_) => {
+            Ok(Response::new().set_data(ConfirmationResult::Confirm {}))
+        }
     }
 }
 

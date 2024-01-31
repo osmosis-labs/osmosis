@@ -324,6 +324,21 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		},
 	}, msg, "Should match latest sudo msg")
 
+	res := auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
+	s.Require().True(res.IsConfirm(), "Execution should be confirmed")
+
+	msg = s.QueryLatestSudoCall(addr)
+	s.Require().Equal(authenticator.SudoMsg{
+		ConfirmExecution: &authenticator.ConfirmExecutionRequest{
+			Account: accounts[0],
+			Msg: authenticator.LocalAny{
+				TypeURL: encodedMsg.TypeUrl,
+				Value:   encodedMsg.Value,
+			},
+			AuthenticatorParams: []byte(params),
+		},
+	}, msg, "Should match latest sudo msg")
+
 	// Test with invalid signature
 	authData.(authenticator.SignatureData).Signatures[0].Data = &txsigning.SingleSignatureData{
 		SignMode:  0,
