@@ -1,19 +1,21 @@
 package ibc_rate_limit
 
 import (
+	"encoding/json"
+
 	errorsmod "cosmossdk.io/errors"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
-
 	"github.com/osmosis-labs/osmosis/v22/x/ibc-rate-limit/types"
 )
 
@@ -57,6 +59,13 @@ func NewICS4Middleware(
 // If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
 // used, transfers are not prevented and handled by the wrapped IBC app
 func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error) {
+	var packetdata transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(data, &packetdata); err != nil {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	}
+	if packetdata.Denom == "" || packetdata.Amount == "" {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	}
 	contract := i.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
