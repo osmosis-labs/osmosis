@@ -74,6 +74,7 @@ var (
 	}
 
 	defaultZeroWeightGaugeRecord = types.InternalGaugeRecord{GaugeId: 1, CurrentWeight: osmomath.ZeroInt(), CumulativeWeight: osmomath.ZeroInt()}
+	defaultNoLockDuration        = time.Nanosecond
 )
 
 type GroupCreationFields struct {
@@ -1139,6 +1140,7 @@ func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGa
 	clPoolExternalGaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, numEpochsPaidOver == 1, gaugeCreator, externalGaugeCoins,
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.NoLock,
+			Duration:      defaultNoLockDuration,
 		},
 		s.Ctx.BlockTime(),
 		numEpochsPaidOver,
