@@ -687,3 +687,5 @@ where future module stores have not been added yet, hardcode the following in `N
 app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(13553474, &v23.Upgrade.StoreUpgrades))
 ```
 This allows creating a testnet from mainnet state where the new module store is properly registered.
+
+Note that this is only necessary only when there is a new module store being registered in the upcoming major upgrade
