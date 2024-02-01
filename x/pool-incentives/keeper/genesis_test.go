@@ -151,6 +151,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis_ExternalNoLock() {
 	// Create external non-perpetual gauge
 	externalGaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, s.TestAccs[0], defaultCoins.Add(defaultCoins...), lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.NoLock,
+		Duration:      defaultNoLockDuration,
 	}, s.Ctx.BlockTime(), 2, clPool.GetId())
 	s.Require().NoError(err)
 

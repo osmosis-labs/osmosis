@@ -9,12 +9,12 @@ e2e-help:
 	@echo ""
 	@echo "Available Commands:"
 	@echo "  build-script                          Build e2e script"
+	@echo "  check-image-sha                       Check e2e image SHA"
 	@echo "  docker-build-debug                    Build e2e debug Docker image"
 	@echo "  docker-build-e2e-init-chain           Build e2e init chain Docker image"
 	@echo "  docker-build-e2e-init-node            Build e2e init node Docker image"
-	@echo "  setup                                 Set up e2e environment"
-	@echo "  check-image-sha                       Check e2e image SHA"
 	@echo "  remove-resources                      Remove e2e resources"
+	@echo "  setup                                 Set up e2e environment"
 e2e: e2e-help
 
 e2e-build-script:

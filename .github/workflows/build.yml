@@ -22,9 +22,6 @@ on:
       - "v[0-9]**"
   workflow_dispatch:
 
-env:
-  GO_VERSION: "1.20.5"
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
@@ -43,9 +40,11 @@ jobs:
             arch: arm64
 
     steps:
-      - name: Check out repository code
+      -
+        name: Check out repository code
         uses: actions/checkout@v4
-      - name: Get git diff
+      -
+        name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -56,22 +55,26 @@ jobs:
             go.sum
             Makefile
             .github/workflows/build.yml
-      - name: 🐿 Setup Golang
+      -
+        name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         if: env.GIT_DIFF
         with:
-          go-version: ${{env.GO_VERSION}}
+          go-version-file: go.mod
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
-      - name: Download Dependencies
+      -
+        name: Download Dependencies
         if: env.GIT_DIFF
         run: go mod download
-      - name: Build osmosisd
+      -
+        name: Build osmosisd
         if: env.GIT_DIFF
         run: |
           GOWRK=off go build cmd/osmosisd/main.go
-      - name: Upload osmosisd artifact
+      -
+        name: Upload osmosisd artifact
         if: env.GIT_DIFF
         uses: actions/upload-artifact@v3
         with:

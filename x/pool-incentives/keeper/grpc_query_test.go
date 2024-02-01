@@ -16,6 +16,8 @@ import (
 var (
 	isPerpetual  = true
 	notPerpetual = false
+
+	defaultNoLockDuration = time.Nanosecond
 )
 
 func (s *KeeperTestSuite) TestGaugeIds() {
@@ -443,6 +445,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
 		defaultNoLockGaugeConfig = gaugeConfig{
 			distributeTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: concentratedPoolId,
 		}

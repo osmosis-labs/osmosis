@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
 			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 4, // 1 gamm + 3 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
 			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 9, // 1 gamm + 8 events emitted by other keeper methods.
+			expectedMessageEvents: 8, // 1 gamm + 7 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
 			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 4, // 1 gamm + 3 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -167,7 +167,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
 			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 9, // 1 gamm + 8 events emitted by other keeper methods.
+			expectedMessageEvents: 8, // 1 gamm + 7 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestJoinPool_Events() {
 				sdk.NewCoin("uosmo", osmomath.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
-			expectedMessageEvents:      3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents:      2, // 1 gamm + 1 event emitted by other keeper methods.
 		},
 		"tokenInMaxs do not match all tokens in pool - invalid join": {
 			poolId:         1,
@@ -310,7 +310,7 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 			shareInAmount:                 osmomath.NewInt(shareIn),
 			tokenOutMins:                  sdk.NewCoins(),
 			expectedRemoveLiquidityEvents: 1,
-			expectedMessageEvents:         3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents:         2, // 1 gamm + 1 event emitted by other keeper methods.
 		},
 		"invalid tokenOutMins": {
 			poolId:        1,
