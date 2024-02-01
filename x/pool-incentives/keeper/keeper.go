@@ -160,7 +160,7 @@ func (k Keeper) SetPoolGaugeIdInternalIncentive(ctx sdk.Context, poolId uint64, 
 
 // SetPoolGaugeIdNoLock sets the link between pool id and gauge id for "NoLock" gauges.
 // CONTRACT: the gauge of the given id must be "NoLock" gauge.
-func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64) {
+func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64, incentivizedUptime time.Duration) {
 	store := ctx.KVStore(k.storeKey)
 	// maps pool id and gauge id to gauge id.
 	// Note: this could be pool id and gauge id to empty byte array,
@@ -170,10 +170,7 @@ func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uin
 	store.Set(key, sdk.Uint64ToBigEndian(gaugeId))
 
 	// Note: this index is used for general linking.
-	// We supply zero for incentivized duration as "NoLock" gauges are not
-	// associated with any lockable duration. Instead, they incentivize
-	// pools directly.
-	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, 0)
+	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, incentivizedUptime)
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 

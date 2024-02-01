@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"strconv"
 	"strings"
 	"testing"
@@ -541,4 +542,24 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	suite.Require().True(ok)
 	// N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+}
+
+// Test rate limits are reverted if a "send" fails
+func (suite *MiddlewareTestSuite) TestNonICS20() {
+	suite.initializeEscrow()
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	data := []byte("{}")
+	_, err := osmosisApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+
+	suite.Require().Error(err)
+	// This will error out, but not because of rate limiting
+	suite.Require().NotContains(err.Error(), "rate limit")
+	suite.Require().Contains(err.Error(), "channel not found")
 }
