@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"golang.org/x/exp/slices"
@@ -189,7 +190,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		for uptimeIndex := range uptimeAccums {
 			// Get relevant uptime-level values
 			curUptimeDuration := types.SupportedUptimes[uptimeIndex]
-			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
+			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords, poolId)
 			if err != nil {
 				return err
 			}
@@ -222,7 +223,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
-func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, liquidityInAccum osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
+func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, liquidityInAccum osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord, poolID uint64) (sdk.DecCoins, []types.IncentiveRecord, error) {
 	if !liquidityInAccum.IsPositive() || !timeElapsed.IsPositive() {
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, types.QualifyingLiquidityOrTimeElapsedNotPositiveError{QualifyingLiquidity: liquidityInAccum, TimeElapsed: timeElapsed}
 	}
@@ -244,6 +245,21 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
 		// Note that we truncate to ensure we do not overdistribute incentives
 		incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
+
+		// If truncation occurs, we emit events to alert us of the issue.
+		if incentivesPerLiquidity.IsZero() && !totalEmittedAmount.IsZero() {
+			ctx.EventManager().EmitEvent(sdk.NewEvent(
+				types.IncentiveTruncationPlaceholderName,
+				sdk.NewAttribute("pool_id", strconv.FormatUint(poolID, 10)),
+				sdk.NewAttribute("total_liq", liquidityInAccum.String()),
+				sdk.NewAttribute("per_unit_liq", incentivesPerLiquidity.String()),
+				sdk.NewAttribute("total_amt", totalEmittedAmount.String()),
+			))
+
+			telemetry.IncrCounter(1, types.IncentiveTruncationPlaceholderName)
+			ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", totalEmittedAmount)
+		}
+
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
 		// Ensure that we only emit if there are enough incentives remaining to be emitted
