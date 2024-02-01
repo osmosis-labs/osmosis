@@ -48,4 +48,6 @@ const (
 	AttributeKeySpreadRewardGrowthOppositeDirectionOfLastTraversal = "spread_reward_growth"
 	AttributeKeyUptimeGrowthOppositeDirectionOfLastTraversal       = "uptime_growth"
 	AttributeNewOwner                                              = "new_owner"
+
+	IncentiveTruncationPlaceholderName = "concentrated_liquidity_incentive_truncation"
 )
