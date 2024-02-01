@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 * [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
+* [#7341](https://github.com/osmosis-labs/osmosis/pull/7341) fix: support CosmWasm pools in ListPoolsByDenom method
 
 ### Misc Improvements
 
