@@ -58,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7346](https://github.com/osmosis-labs/osmosis/pull/7346) Prevent heavy gRPC load from app hashing nodes
 
+### Misc Improvements
+* [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
+
 ## v22.0.0
 
 ### Fee Market Parameter Updates
