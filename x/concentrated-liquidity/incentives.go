@@ -248,14 +248,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 		// If truncation occurs, we emit events to alert us of the issue.
 		if incentivesPerLiquidity.IsZero() && !totalEmittedAmount.IsZero() {
-			ctx.EventManager().EmitEvent(sdk.NewEvent(
-				types.IncentiveTruncationPlaceholderName,
-				sdk.NewAttribute("pool_id", strconv.FormatUint(poolID, 10)),
-				sdk.NewAttribute("total_liq", liquidityInAccum.String()),
-				sdk.NewAttribute("per_unit_liq", incentivesPerLiquidity.String()),
-				sdk.NewAttribute("total_amt", totalEmittedAmount.String()),
-			))
-
 			telemetry.IncrCounter(1, types.IncentiveTruncationPlaceholderName)
 			ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", totalEmittedAmount)
 		}
