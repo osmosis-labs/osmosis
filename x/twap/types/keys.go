@@ -92,6 +92,12 @@ func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecor
 	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 
+func GetMostRecentTwapForPool(store sdk.KVStore, poolId uint64, denom1, denom2 string) (TwapRecord, error) {
+	key := FormatMostRecentTWAPKey(poolId, denom1, denom2)
+	bz := store.Get(key)
+	return ParseTwapFromBz(bz)
+}
+
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 	if len(bz) == 0 {
 		return TwapRecord{}, errors.New("twap not found")

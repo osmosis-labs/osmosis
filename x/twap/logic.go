@@ -127,13 +127,13 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 //   - the number of records does not match expected relative to the
 //     number of denoms in the pool.
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
-	// Will only err if pool doesn't have most recent entry set
-	records, err := k.GetAllMostRecentRecordsForPool(ctx, poolId)
+	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
+	// Will only err if pool doesn't have most recent entry set
+	records, err := k.GetAllMostRecentRecordsForPoolWithDenoms(ctx, poolId, denoms)
 	if err != nil {
 		return err
 	}
