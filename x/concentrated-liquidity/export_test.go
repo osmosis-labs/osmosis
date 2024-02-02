@@ -18,11 +18,12 @@ const (
 )
 
 var (
-	EmptyCoins         = emptyCoins
-	HundredFooCoins    = sdk.NewDecCoin("foo", osmomath.NewInt(100))
-	HundredBarCoins    = sdk.NewDecCoin("bar", osmomath.NewInt(100))
-	TwoHundredFooCoins = sdk.NewDecCoin("foo", osmomath.NewInt(200))
-	TwoHundredBarCoins = sdk.NewDecCoin("bar", osmomath.NewInt(200))
+	EmptyCoins              = emptyCoins
+	HundredFooCoins         = sdk.NewDecCoin("foo", osmomath.NewInt(100))
+	HundredBarCoins         = sdk.NewDecCoin("bar", osmomath.NewInt(100))
+	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
+	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
+	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {

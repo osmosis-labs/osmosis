@@ -19,6 +19,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 )
 
+var perUnitLiqScalingFactor = osmomath.NewDec(1e18)
+
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
 // The accumulators are initialized with the default (zero) values.
 func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
@@ -240,16 +242,19 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		}
 
 		// Total amount emitted = time elapsed * emission
-		totalEmittedAmount := timeElapsed.Mul(incentiveRecordBody.EmissionRate)
+		totalEmittedAmount := timeElapsed.MulTruncate(incentiveRecordBody.EmissionRate)
+		// We scale up the remaining rewards to avoid truncation to zero
+		// when dividing by the liquidity in the accumulator.
+		scaledTotalEmittedAmount := totalEmittedAmount.MulTruncate(perUnitLiqScalingFactor)
 
 		// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
 		// Note that we truncate to ensure we do not overdistribute incentives
-		incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
+		incentivesPerLiquidity := scaledTotalEmittedAmount.QuoTruncate(liquidityInAccum)
 
 		// If truncation occurs, we emit events to alert us of the issue.
-		if incentivesPerLiquidity.IsZero() && !totalEmittedAmount.IsZero() {
+		if incentivesPerLiquidity.IsZero() && !scaledTotalEmittedAmount.IsZero() {
 			telemetry.IncrCounter(1, types.IncentiveTruncationPlaceholderName)
-			ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", totalEmittedAmount)
+			ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", totalEmittedAmount, "total_amt_scaled", scaledTotalEmittedAmount)
 		}
 
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
@@ -269,7 +274,18 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		} else {
 			// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
 			// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
-			remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
+
+			// We scale up the remaining rewards to avoid truncation to zero
+			// when dividing by the liquidity in the accumulator.
+			remainingRewardsScaled := remainingRewards.MulTruncate(perUnitLiqScalingFactor)
+			remainingIncentivesPerLiquidity := remainingRewardsScaled.QuoTruncateMut(liquidityInAccum)
+
+			// Detect truncation and emit telemetry to alert us of the issue.
+			if remainingIncentivesPerLiquidity.IsZero() && !remainingRewardsScaled.IsZero() {
+				telemetry.IncrCounter(1, types.IncentiveTruncationPlaceholderName)
+				ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", remainingRewards, "total_amt_scaled", remainingRewardsScaled)
+			}
+
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
@@ -704,9 +720,20 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
-			collectedIncentivesForUptime, _, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+			collectedIncentivesForUptimeScaled, _, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
 				return sdk.Coins{}, sdk.Coins{}, err
+			}
+
+			// We scale the uptime per-unit of liquidity accumulator up to avoid truncation to zero.
+			// However, once we compute the total for the liquidity entitlement, we must scale it back down.
+			// We always truncate down in the pool's favor.
+			collectedIncentivesForUptime := sdk.NewCoins()
+			for _, incentiveCoin := range collectedIncentivesForUptimeScaled {
+				incentiveCoin.Amount = incentiveCoin.Amount.ToLegacyDec().QuoTruncateMut(perUnitLiqScalingFactor).TruncateInt()
+				if incentiveCoin.Amount.IsPositive() {
+					collectedIncentivesForUptime = append(collectedIncentivesForUptime, incentiveCoin)
+				}
 			}
 
 			if positionAge < supportedUptimes[uptimeIndex] {
