@@ -114,11 +114,15 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 	if !genesis {
 		accNum = baseAccount.GetAccountNumber()
 	}
+	var sequence uint64
+	if baseAccount != nil {
+		sequence = baseAccount.GetSequence()
+	}
 
 	signerData := authsigning.SignerData{
 		ChainID:       chainID,
 		AccountNumber: accNum,
-		Sequence:      baseAccount.GetSequence(),
+		Sequence:      sequence,
 	}
 
 	// This can also be extracted
@@ -156,7 +160,7 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 	txData := iface.ExplicitTxData{
 		ChainID:       chainID,
 		AccountNumber: accNum,
-		Sequence:      baseAccount.GetSequence(),
+		Sequence:      sequence,
 		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
 		Msgs:          msgs,
 		Memo:          memoTx.GetMemo(),
@@ -176,7 +180,7 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		sequences = append(sequences, signature.Sequence)
 		if signers[i].Equals(signer) {
 			msgSignature = single.Signature
-			if signature.Sequence != baseAccount.GetSequence() {
+			if signature.Sequence != sequence {
 				// TODO: Do we really want to do this here? I think we should delegate sequencing to a separate function
 				return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", baseAccount.GetSequence(), signature.Sequence))
 			}
@@ -184,12 +188,17 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		}
 	}
 
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal msg")
+	}
 	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
 	authRequest := iface.AuthenticationRequest{
 		Account: account,
 		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
+			Value:   jsonMsg,
+			Bytes:   encodedMsg.Value,
 		},
 		Signature: msgSignature, // currently only allowing one signer per message.
 		TxData:    txData,

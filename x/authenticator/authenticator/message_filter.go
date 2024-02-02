@@ -1,13 +1,11 @@
 package authenticator
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"encoding/json"
 	"fmt"
-	"sort"
-	"strconv"
-
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"sort"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
@@ -74,10 +72,8 @@ func checkForFloats(v interface{}) bool {
 				return true
 			}
 		}
-	case string:
-		if _, err := strconv.ParseFloat(vv, 64); err == nil {
-			return true
-		}
+	case float64:
+		return true
 	}
 	return false
 }
@@ -180,12 +176,19 @@ func IsJsonSuperset(a, b []byte) error {
 	return isSuperset(av, bv)
 }
 
+type SimplifiedMsg struct {
+	MsgType string          `json:"type"`
+	Value   json.RawMessage `json:"value"`
+}
+
 func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	encodedMsg, err := json.Marshal(request.Msg)
+	encodedMsg, err := json.Marshal(SimplifiedMsg{
+		MsgType: request.Msg.TypeURL,
+		Value:   request.Msg.Value,
+	})
 	if err != nil {
 		return iface.NotAuthenticated()
 	}
-
 	// Check that the encoding is a superset of the pattern
 	err = IsJsonSuperset(m.pattern, encodedMsg)
 	if err != nil {
@@ -207,11 +210,12 @@ func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request if
 }
 
 func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
-	err := json.Unmarshal(data, &m.pattern)
+	var jsonData json.RawMessage
+	err := json.Unmarshal(data, &jsonData)
 	if err != nil {
 		return errorsmod.Wrap(err, "invalid json representation of message")
 	}
-	hasFloats, err := containsFloats(m.pattern)
+	hasFloats, err := containsFloats(data)
 	if err != nil {
 		return errorsmod.Wrap(err, "invalid json representation of message") // This should never happen
 	}

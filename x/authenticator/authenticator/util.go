@@ -153,17 +153,24 @@ func GetCommonAuthenticationData(
 	// Retrieve messages from the transaction.
 	msgs := sigTx.GetMsgs()
 
+	// TODO: We should find a better way to get the fee payer si that it doesn't iterate over all the messages.
+
 	// Ensure the transaction is of type sdk.FeeTx.
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
+	//feeTx, ok := tx.(sdk.FeeTx)
+	//if !ok {
+	//	return nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	//}
+	//feePayerStr := ""
+	//feePayer := feeTx.FeePayer()
+	//if feePayer != nil {
+	//	feePayerStr = feePayer.String()
+	//}
 
 	// Parse signers and signatures from the transaction.
 	signers, signatures, err = GetSignersAndSignatures(
 		msgs,
 		signatures,
-		feeTx.FeePayer().String(),
+		"",
 		messageIndex,
 	)
 	if err != nil {

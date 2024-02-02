@@ -37,14 +37,16 @@ func (s *MessageFilterAuthenticatorTest) SetupTest() {
 
 func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 	tests := []struct {
-		name    string // name
-		pattern string
-		msg     sdk.Msg
-		match   bool
+		name           string // name
+		pattern        string
+		msg            sdk.Msg
+		passvalidation bool
+		match          bool
 	}{
 		{"bank send",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": "100"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			true,
 			true,
 		},
 
@@ -52,11 +54,13 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to"}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
+			true,
 		},
 
 		{"bank send. bad sender",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"someoneElse","to_address":"to"}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			true,
 			false,
 		},
 
@@ -64,17 +68,20 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
+			true,
 		},
 
 		{"bank send. bad amount",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": "50"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			true,
 			false,
 		},
 
 		{"bank send. amount as number",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": 100}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			false,
 			false, // This fails because of floats. Should be prevented by validation
 		},
 
@@ -82,11 +89,13 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": "100"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
+			true,
 		},
 
 		{"bank send. amount as mix string number but bad",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": "50"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			true,
 			false,
 		},
 
@@ -94,17 +103,20 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
+			true,
 		},
 
 		{"bank send. just denom",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))},
 			true,
+			true,
 		},
 
 		{"bank send. bad denom",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
+			true,
 			false,
 		},
 
@@ -112,11 +124,13 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			`{}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
 			true,
+			true,
 		},
 
 		{"bank send. using map as generic",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
+			true,
 			true,
 		},
 
@@ -124,17 +138,25 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": []}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))},
 			true,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			err := s.MessageFilterAuthenticator.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.pattern))
+			if tt.passvalidation {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+				return
+			}
 			filter, err := s.MessageFilterAuthenticator.Initialize([]byte(tt.pattern))
 			s.Require().NoError(err)
 
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			var tx sdk.Tx
+			tx := GenEmptyTx()
 			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, tt.msg, tx, 0, false)
 			s.Require().NoError(err)
 

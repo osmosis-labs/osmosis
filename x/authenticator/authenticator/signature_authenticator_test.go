@@ -506,6 +506,12 @@ func GenTx(
 	return tx.GetTx(), nil
 }
 
+func GenEmptyTx() sdk.Tx {
+	txconfig := app.MakeEncodingConfig().TxConfig
+	tx, _ := MakeTxBuilder(txconfig, nil, nil, 0, "", nil, nil, nil, nil)
+	return tx.GetTx()
+}
+
 func GenTxWithCosigner(
 	gen client.TxConfig,
 	msg sdk.Msg,
