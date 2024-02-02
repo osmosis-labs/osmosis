@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	db "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -112,15 +113,20 @@ var (
 // between the ticks. This is possible when there are only 2 positions with no overlapping ranges.
 // As a result, the range from the end of position one to the beginning of position
 // two has no liquidity and can be skipped.
-func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) {
+//
+// Returbs the spread factors accrued per unit of liquidity.
+func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) osmomath.Dec {
 	ss.globalSpreadRewardGrowth = ss.globalSpreadRewardGrowth.Add(spreadRewardChargeTotal)
 	if ss.liquidity.IsZero() {
-		return
+		return osmomath.ZeroDec()
 	}
 	// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
 	// the total spread factors that will be accrued to the spread factor accumulator)
 	spreadFactorsAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+
 	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(spreadFactorsAccruedPerUnitOfLiquidity)
+
+	return spreadFactorsAccruedPerUnitOfLiquidity
 }
 
 func (k Keeper) SwapExactAmountIn(
@@ -429,7 +435,13 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 
 		// Update the spread reward growth for the entire swap using the total spread factors charged.
-		swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
+		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
+
+		// If truncation occurs, we emit telemetry to alert us of the issue.
+		if spreadFactorsAccruedPerUnitOfLiquidity.IsZero() && !spreadRewardCharge.IsZero() {
+			telemetry.IncrCounter(1, types.SpreadFactorTruncationPlaceholderName)
+			ctx.Logger().Error(types.SpreadFactorTruncationPlaceholderName, "pool_id", poolId, "total_liq", swapState.liquidity, "per_unit_liq", spreadFactorsAccruedPerUnitOfLiquidity, "total_amt", spreadRewardCharge, "is_out_given_in", true)
+		}
 
 		ctx.Logger().Debug("cl calc out given in")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardCharge)
@@ -554,7 +566,13 @@ func (k Keeper) computeInAmtGivenOut(
 			return SwapResult{}, PoolUpdates{}, err
 		}
 
-		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+
+		// If truncation occurs, we emit telemetry to alert us of the issue.
+		if spreadFactorsAccruedPerUnitOfLiquidity.IsZero() && !spreadRewardChargeTotal.IsZero() {
+			telemetry.IncrCounter(1, types.SpreadFactorTruncationPlaceholderName)
+			ctx.Logger().Error(types.SpreadFactorTruncationPlaceholderName, "pool_id", poolId, "total_liq", swapState.liquidity, "per_unit_liq", spreadFactorsAccruedPerUnitOfLiquidity, "total_amt", spreadRewardChargeTotal, "is_out_given_in", false)
+		}
 
 		ctx.Logger().Debug("cl calc in given out")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)
