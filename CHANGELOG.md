@@ -40,6 +40,88 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## Unreleased
+
+### State Breaking
+
+* [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
+* [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
+* [#7357](https://github.com/osmosis-labs/osmosis/pull/7357) Fix: Ensure rate limits are not applied to packets that aren't ics20s
+
+### Bug Fixes
+
+* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
+
+### Misc Improvements
+
+* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
+* [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
+
+### Config
+
+* [#7368](https://github.com/osmosis-labs/osmosis/pull/7368) Overwrite ArbitrageMinGasPriceconfig from .005 to 0.1.
+
+## v22.0.2
+
+### Logging
+
+* [#7395](https://github.com/osmosis-labs/osmosis/pull/7395) Adds logging to track incentive accumulator truncation.
+
+## v22.0.1
+
+### Bug Fixes
+
+* [#7346](https://github.com/osmosis-labs/osmosis/pull/7346) Prevent heavy gRPC load from app hashing nodes
+
+### Misc Improvements
+* [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
+
+## v22.0.0
+
+### Fee Market Parameter Updates
+* [#7285](https://github.com/osmosis-labs/osmosis/pull/7285) The following updates are applied:
+   * Dynamic recheck factor based on current base fee value. Under 0.01, the recheck factor is 3.
+    In face of continuous spam, will take ~19 blocks from base fee > spam cost, to mempool eviction.
+    Above 0.01, the recheck factor is 2.3. In face of continuous spam, will take ~15 blocks from base fee > spam cost, to mempool eviction.
+   * Reset interval set to 6000 which is approximately 8.5 hours.
+   * Default base fee is reduced by 2 to 0.005.
+   * Set target gas to .625 * block_gas_limt = 187.5 million
+
+### State Breaking
+
+### API
+* [#6991](https://github.com/osmosis-labs/osmosis/pull/6991) Fix: total liquidity poolmanager grpc gateway query
+* [#7237](https://github.com/osmosis-labs/osmosis/pull/7237) Removes tx_fee_tracker from the proto rev tracker, no longer tracks in state.
+* [#7240](https://github.com/osmosis-labs/osmosis/pull/7240) Protorev tracker now tracks a coin array to improve gas efficiency.
+
+### Features
+* [#6847](https://github.com/osmosis-labs/osmosis/pull/6847) feat: allow sending denoms with URL encoding
+* [#7270](https://github.com/osmosis-labs/osmosis/pull/7270) feat: eip target gas from consensus params
+
+### Bug Fixes
+* [#7120](https://github.com/osmosis-labs/osmosis/pull/7120) fix: remove duplicate `query gamm pool` subcommand
+* [#7139](https://github.com/osmosis-labs/osmosis/pull/7139) fix: add amino signing support to tokenfactory messages
+* [#7245](https://github.com/osmosis-labs/osmosis/pull/7245) fix: correcting json tag value for `SwapAmountOutSplitRouteWrapper.OutDenom`
+* [#7267](https://github.com/osmosis-labs/osmosis/pull/7267) fix: support CL pools in tx fee module
+* [#7220](https://github.com/osmosis-labs/osmosis/pull/7220) Register consensus params; Set MaxGas to 300m and MaxBytes to 5mb.
+* [#7300](https://github.com/osmosis-labs/osmosis/pull/7300) fix: update wasm vm as per CWA-2023-004
+
+### Misc Improvements
+* [#6993](https://github.com/osmosis-labs/osmosis/pull/6993) chore: add mutative api for BigDec.BigInt()
+* [#7074](https://github.com/osmosis-labs/osmosis/pull/7074) perf: don't load all poolmanager params every swap
+* [#7243](https://github.com/osmosis-labs/osmosis/pull/7243) chore: update gov metadata length from 256 to 10200
+* [#7258](https://github.com/osmosis-labs/osmosis/pull/7258) Remove an iterator call in CL swaps and spot price calls.
+* [#7259](https://github.com/osmosis-labs/osmosis/pull/7259) Lower gas and CPU overhead of chargeTakerFee (in every swap)
+* [#7249](https://github.com/osmosis-labs/osmosis/pull/7249) Double auth tx size cost per byte from 10 to 20
+* [#7272](https://github.com/osmosis-labs/osmosis/pull/7272) Upgrade go 1.20 -> 1.21
+* [#7282](https://github.com/osmosis-labs/osmosis/pull/7282) perf:Update sdk fork to no longer utilize reverse denom mapping, reducing gas costs.
+* [#7203](https://github.com/osmosis-labs/osmosis/pull/7203) Make a maximum number of pools of 100 billion.
+* [#7282](https://github.com/osmosis-labs/osmosis/pull/7282) Update sdk fork to no longer utilize reverse denom mapping, reducing gas costs.
+* [#7291](https://github.com/osmosis-labs/osmosis/pull/7291) Raise mempool config's default max gas per tx configs.
+
+>>>>>>> 9193ee48 (Remove using an iterator from updating TWAP records (#7266))
 ## v21.2.2
 ### Features
 * [#7238](https://github.com/osmosis-labs/osmosis/pull/7238) re-add clawback vesting command

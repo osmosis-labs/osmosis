@@ -148,6 +148,77 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 	}
 }
 
+func (s *TestSuite) TestGetAllMostRecentRecordsForPoolWithDenoms() {
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
+
+	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denom0, denom1)
+	tests := map[string]struct {
+		recordsToSet    []types.TwapRecord
+		poolId          uint64
+		denoms          []string
+		expectedRecords []types.TwapRecord
+		expectedError   bool
+	}{
+		"single record: provide denom, fetch store with key": {
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          1,
+			denoms:          []string{denom0, denom1},
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"single record: do not provide denom, fetch state using iterator": {
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"single record: query invalid denoms": {
+			recordsToSet:  []types.TwapRecord{baseRecord},
+			poolId:        1,
+			denoms:        []string{"foo", "bar"},
+			expectedError: true,
+		},
+		"query non-existent pool": {
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{},
+		},
+		"set two records with different time": {
+			recordsToSet:    []types.TwapRecord{baseRecord, tPlusOneRecord},
+			poolId:          1,
+			denoms:          []string{denom0, denom1},
+			expectedRecords: []types.TwapRecord{tPlusOneRecord},
+		},
+		"set multi-asset pool record - reverse order": {
+			recordsToSet: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+			},
+			poolId: 1,
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			for _, record := range test.recordsToSet {
+				s.twapkeeper.StoreNewRecord(s.Ctx, record)
+			}
+			actualRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPoolWithDenoms(s.Ctx, test.poolId, test.denoms)
+			if test.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedRecords, actualRecords)
+			}
+		})
+	}
+}
+
 // TestGetRecordAtOrBeforeTime takes a list of records as test cases,
 // and runs storeNewRecord for everything in sequence.
 // Then it runs GetRecordAtOrBeforeTime, and sees if its equal to expected
