@@ -95,7 +95,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 	return authResult
 }
 
-func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticationRequest, error) {
+func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool) (iface.AuthenticationRequest, error) {
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	signers, txSignatures, _, err := GetCommonAuthenticationData(ctx, tx, -1, simulate)
 	if err != nil {
@@ -131,11 +131,6 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signBytes")
 	}
 
-	encodedMsg, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
-	}
-
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
 		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
@@ -146,14 +141,19 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 	}
 
 	msgs := make([]iface.LocalAny, len(tx.GetMsgs()))
-	for i, msg := range tx.GetMsgs() {
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
+	for i, txMsg := range tx.GetMsgs() {
+		encodedMsg, err := codectypes.NewAnyWithValue(txMsg)
 		if err != nil {
 			return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
 		}
+		jsonMsg, err := json.Marshal(msg)
+		if err != nil {
+			return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal msg")
+		}
 		msgs[i] = iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
+			Value:   jsonMsg,
+			Bytes:   encodedMsg.Value,
 		}
 	}
 
@@ -180,26 +180,20 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		sequences = append(sequences, signature.Sequence)
 		if signers[i].Equals(signer) {
 			msgSignature = single.Signature
-			if signature.Sequence != sequence {
-				// TODO: Do we really want to do this here? I think we should delegate sequencing to a separate function
-				return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", baseAccount.GetSequence(), signature.Sequence))
-			}
+			// TODO: Important!! Figure this out. We need to check the sequence somewhere. Here would make sense,
+			//       but why are we using the signature sequence? that won't work if theyre are many messages for with the same signer
+			//if baseAccount != nil && signature.Sequence != baseAccount.GetSequence() {
+			//	// TODO: Do we really want to do this here? I think we should delegate sequencing to a separate function
+			//	return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", baseAccount.GetSequence(), signature.Sequence))
+			//}
 
 		}
 	}
 
-	jsonMsg, err := json.Marshal(msg)
-	if err != nil {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal msg")
-	}
 	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
 	authRequest := iface.AuthenticationRequest{
-		Account: account,
-		Msg: iface.LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   jsonMsg,
-			Bytes:   encodedMsg.Value,
-		},
+		Account:   account,
+		Msg:       txData.Msgs[msgIndex],
 		Signature: msgSignature, // currently only allowing one signer per message.
 		TxData:    txData,
 		SignModeTxData: iface.SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available

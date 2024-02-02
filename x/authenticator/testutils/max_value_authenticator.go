@@ -37,12 +37,12 @@ func (m MaxAmountAuthenticator) Initialize(data []byte) (iface.Authenticator, er
 }
 
 func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.Msg/Send" {
+	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.MsgSend" {
 		return iface.NotAuthenticated()
 	}
 	// unmarshal the message.value into the bank.MsgSend struct
 	var send banktypes.MsgSend
-	err := proto.Unmarshal(request.Msg.Value, &send)
+	err := proto.Unmarshal(request.Msg.Bytes, &send)
 	if err != nil {
 		return iface.NotAuthenticated()
 	}
@@ -58,12 +58,12 @@ func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, m
 }
 
 func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.Msg/Send" {
+	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.MsgSend" {
 		return iface.Confirm()
 	}
 	// unmarshal the message.value into the bank.MsgSend struct
 	var send banktypes.MsgSend
-	err := proto.Unmarshal(request.Msg.Value, &send)
+	err := proto.Unmarshal(request.Msg.Bytes, &send)
 	if err != nil {
 		return iface.Confirm()
 	}
