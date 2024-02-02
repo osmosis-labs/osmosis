@@ -22,6 +22,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v23" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -57,6 +58,7 @@ import (
 	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -831,12 +833,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
-	return osmosis.NewOsmosisApp(
-		logger, db, traceStore, true, skipUpgradeHeights,
-		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		appOpts,
-		wasmOpts,
+	baseAppOptions := []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -850,6 +847,22 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 		baseapp.SetChainID(chainID),
+	}
+
+	// If this is an in place testnet, set any new stores that may exist
+	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
+		version := store.NewCommitMultiStore(db).LatestVersion() + 1
+		fmt.Println("version", version)
+		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
+	}
+
+	return osmosis.NewOsmosisApp(
+		logger, db, traceStore, true, skipUpgradeHeights,
+		cast.ToString(appOpts.Get(flags.FlagHome)),
+		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		appOpts,
+		wasmOpts,
+		baseAppOptions...,
 	)
 }
 
@@ -875,9 +888,13 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 	if !ok {
 		panic("newOperatorAddress is not of type string")
 	}
+	upgradeToTrigger, ok := appOpts.Get(server.KeyTriggerTestnetUpgrade).(string)
+	if !ok {
+		panic("upgradeToTrigger is not of type string")
+	}
 
 	// Make modifications to the normal OsmosisApp required to run the network locally
-	return osmosis.InitOsmosisAppForTestnet(osmosisApp, newValAddr, newValPubKey, newOperatorAddress)
+	return osmosis.InitOsmosisAppForTestnet(osmosisApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
 }
 
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.

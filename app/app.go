@@ -413,7 +413,7 @@ func NewOsmosisApp(
 // InitOsmosisAppForTestnet is broken down into two sections:
 // Required Changes: Changes that, if not made, will cause the testnet to halt or panic
 // Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
-func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress string) *OsmosisApp {
+func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *OsmosisApp {
 	//
 	// Required Changes:
 	//
@@ -616,6 +616,20 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
 	if err != nil {
 		tmos.Exit(err.Error())
+	}
+
+	// UPGRADE
+	//
+
+	if upgradeToTrigger != "" {
+		upgradePlan := upgradetypes.Plan{
+			Name:   upgradeToTrigger,
+			Height: app.LastBlockHeight(),
+		}
+		err = app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradePlan)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return app
