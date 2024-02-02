@@ -3,6 +3,8 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
 	"time"
@@ -563,7 +565,8 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	suite.Require().NoError(err)
 
 	if strings.Contains(string(ack), "error") {
-		errorCtx := gjson.Get(receiveResult.Log, "0.events.#(type==ibc-acknowledgement-error)#.attributes.#(key==error-context)#.value")
+		fmt.Println(receiveResult.Events)
+		errorCtx := gjson.Get(receiveResult.Log, "0.events.#(type==ibccallbackerror-ibc-acknowledgement-error)#.attributes.#(key==ibccallbackerror-error-context)#.value")
 		fmt.Println("ibc-ack-error:", errorCtx)
 	}
 
@@ -1211,7 +1214,9 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	// "Relay the packet" by executing the receive on chain B
 	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
-	_, ack2 := suite.RelayPacket(packet, AtoB)
+	receiveResult, ack2 := suite.RelayPacket(packet, AtoB)
+	index := slices.IndexFunc(receiveResult.Events, func(e abcitypes.Event) bool { return e.Type == "ibccallbackerror-ibc-acknowledgement-error" })
+	suite.Require().Contains(receiveResult.Events[index].Attributes[1].Value, "wasm metadata is not a valid JSON map object")
 	fmt.Println(string(ack2))
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)

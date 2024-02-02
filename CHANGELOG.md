@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Compatible
+
+ * [#7400](https://github.com/osmosis-labs/osmosis/pull/7400) Update CometBFT to v0.37.4 and IBC to v7.3.2
+
 ### State Breaking
 
 * [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
