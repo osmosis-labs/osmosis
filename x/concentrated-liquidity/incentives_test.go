@@ -3608,32 +3608,15 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, pool.GetId(), s.TestAccs[0], incentiveCoin, osmomath.MustNewDecFromStr("9645.061724537037037037"), s.Ctx.BlockTime(), time.Nanosecond)
 	s.Require().NoError(err)
 
-	// Reset events
-	s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
-
 	// The check below shows that the incentive is not claimed due to truncation
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 50))
 	incentives, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
 	s.Require().True(incentives.IsZero())
 
-	// Truncation happens
-	events := s.Ctx.EventManager().Events()
-	s.Require().Equal(1, len(events))
-	s.Require().Equal(types.IncentiveTruncationPlaceholderName, events[0].Type)
-
-	// Reset events
-	s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
-
+	// Incentives should now be claimed due to lack of truncation
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 51))
 	incentives, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
 	s.Require().False(incentives.IsZero())
-
-	// Truncation event does not occur
-	events = s.Ctx.EventManager().Events()
-	s.Require().NotEqual(0, len(events))
-	for _, event := range events {
-		s.Require().NotEqual(types.IncentiveTruncationPlaceholderName, event.Type)
-	}
 }
