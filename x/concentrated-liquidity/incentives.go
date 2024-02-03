@@ -246,11 +246,8 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Note that we truncate to ensure we do not overdistribute incentives
 		incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
 
-		// If truncation occurs, we emit events to alert us of the issue.
-		if incentivesPerLiquidity.IsZero() && !totalEmittedAmount.IsZero() {
-			telemetry.IncrCounter(1, types.IncentiveTruncationPlaceholderName)
-			ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", totalEmittedAmount)
-		}
+		// Emit telemetry for accumulator updates
+		emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
 
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
@@ -271,6 +268,10 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 			// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
 			remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
+
+			// Emit telemetry for accumulator updates
+			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
+
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
 			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = osmomath.ZeroDec()
@@ -278,6 +279,22 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	}
 
 	return incentivesToAddToCurAccum, copyPoolIncentiveRecords, nil
+}
+
+// emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates
+// It detects whether an accumulator update does not occur when expected due to truncation or does occur and emits the appropriate telemetry
+func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder, emittedPlaceholder string, remainingIncentivesPerLiquidity, remainingRewards osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec) {
+	// If truncation occurs, we emit events to alert us of the issue.
+	if remainingIncentivesPerLiquidity.IsZero() && !remainingRewards.IsZero() {
+		telemetry.IncrCounter(1, truncatedPlaceholder)
+		ctx.Logger().Error(truncatedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", remainingIncentivesPerLiquidity, "total_amt", remainingRewards)
+
+		// We emit events for these pools specifically as they are at the border of truncation in terms of liquidity
+		// TODO: remove these after scaling factor approach is implemented
+	} else if poolID == (1423) || poolID == (1213) {
+		telemetry.IncrCounter(1, emittedPlaceholder)
+		ctx.Logger().Info(emittedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", remainingIncentivesPerLiquidity, "total_amt", remainingRewards)
+	}
 }
 
 // findUptimeIndex finds the uptime index for the passed in min uptime.

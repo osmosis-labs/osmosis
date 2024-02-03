@@ -49,6 +49,8 @@ const (
 	AttributeKeyUptimeGrowthOppositeDirectionOfLastTraversal       = "uptime_growth"
 	AttributeNewOwner                                              = "new_owner"
 
+	IncentiveEmissionPlaceholderName = "concentrated_liquidity_incentive_emission"
+
 	IncentiveTruncationPlaceholderName    = "concentrated_liquidity_incentive_truncation"
 	SpreadFactorTruncationPlaceholderName = "concentrated_liquidity_sptread_factor_truncation"
 )
