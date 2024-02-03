@@ -40,6 +40,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Misc Improvements
+* [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
+
 ## v21.2.2
 ### Features
 * [#7238](https://github.com/osmosis-labs/osmosis/pull/7238) re-add clawback vesting command
