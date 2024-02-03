@@ -281,22 +281,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	return incentivesToAddToCurAccum, copyPoolIncentiveRecords, nil
 }
 
-// emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates
-// It detects whether an accumulator update does not occur when expected due to truncation or does occur and emits the appropriate telemetry
-func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder, emittedPlaceholder string, remainingIncentivesPerLiquidity, remainingRewards osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec) {
-	// If truncation occurs, we emit events to alert us of the issue.
-	if remainingIncentivesPerLiquidity.IsZero() && !remainingRewards.IsZero() {
-		telemetry.IncrCounter(1, truncatedPlaceholder)
-		ctx.Logger().Error(truncatedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", remainingIncentivesPerLiquidity, "total_amt", remainingRewards)
-
-		// We emit events for these pools specifically as they are at the border of truncation in terms of liquidity
-		// TODO: remove these after scaling factor approach is implemented
-	} else if poolID == (1423) || poolID == (1213) {
-		telemetry.IncrCounter(1, emittedPlaceholder)
-		ctx.Logger().Info(emittedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", remainingIncentivesPerLiquidity, "total_amt", remainingRewards)
-	}
-}
-
 // findUptimeIndex finds the uptime index for the passed in min uptime.
 // Returns error if uptime index cannot be found.
 func findUptimeIndex(uptime time.Duration) (int, error) {
@@ -941,4 +925,20 @@ func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 // getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
 func (k Keeper) getLargestSupportedUptimeDuration() time.Duration {
 	return getLargestDuration(types.SupportedUptimes)
+}
+
+// emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates
+// It detects whether an accumulator update does not occur when expected due to truncation or does occur and emits the appropriate telemetry
+func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder, emittedPlaceholder string, rewardsPerUnitOfLiquidity, rewardsTotal osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec, extraKeyVals ...interface{}) {
+	// If truncation occurs, we emit events to alert us of the issue.
+	if rewardsPerUnitOfLiquidity.IsZero() && !rewardsTotal.IsZero() {
+		telemetry.IncrCounter(1, truncatedPlaceholder)
+		ctx.Logger().Error(truncatedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", rewardsPerUnitOfLiquidity, "total_amt", rewardsTotal, extraKeyVals)
+
+		// We emit events for these pools specifically as they are at the border of truncation in terms of liquidity
+		// TODO: remove these after scaling factor approach is implemented
+	} else if poolID == (1423) || poolID == (1213) {
+		telemetry.IncrCounter(1, emittedPlaceholder)
+		ctx.Logger().Info(emittedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", rewardsPerUnitOfLiquidity, "total_amt", rewardsTotal, extraKeyVals)
+	}
 }

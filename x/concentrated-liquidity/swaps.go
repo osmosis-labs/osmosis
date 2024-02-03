@@ -4,7 +4,6 @@ import (
 	fmt "fmt"
 
 	db "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -437,11 +436,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		// Update the spread reward growth for the entire swap using the total spread factors charged.
 		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
 
-		// If truncation occurs, we emit telemetry to alert us of the issue.
-		if spreadFactorsAccruedPerUnitOfLiquidity.IsZero() && !spreadRewardCharge.IsZero() {
-			telemetry.IncrCounter(1, types.SpreadFactorTruncationPlaceholderName)
-			ctx.Logger().Error(types.SpreadFactorTruncationPlaceholderName, "pool_id", poolId, "total_liq", swapState.liquidity, "per_unit_liq", spreadFactorsAccruedPerUnitOfLiquidity, "total_amt", spreadRewardCharge, "is_out_given_in", true)
-		}
+		// Emit telemetry to detect spread reward truncation.
+		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationPlaceholderName, types.SpreadRewardEmissionPlaceholderName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", true)
 
 		ctx.Logger().Debug("cl calc out given in")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardCharge)
@@ -568,11 +564,8 @@ func (k Keeper) computeInAmtGivenOut(
 
 		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
-		// If truncation occurs, we emit telemetry to alert us of the issue.
-		if spreadFactorsAccruedPerUnitOfLiquidity.IsZero() && !spreadRewardChargeTotal.IsZero() {
-			telemetry.IncrCounter(1, types.SpreadFactorTruncationPlaceholderName)
-			ctx.Logger().Error(types.SpreadFactorTruncationPlaceholderName, "pool_id", poolId, "total_liq", swapState.liquidity, "per_unit_liq", spreadFactorsAccruedPerUnitOfLiquidity, "total_amt", spreadRewardChargeTotal, "is_out_given_in", false)
-		}
+		// Emit telemetry to detect spread reward truncation.
+		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationPlaceholderName, types.SpreadRewardEmissionPlaceholderName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", false)
 
 		ctx.Logger().Debug("cl calc in given out")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)
