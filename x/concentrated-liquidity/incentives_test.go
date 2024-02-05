@@ -592,7 +592,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				withEmissionRate(incentiveRecordOne, oneE60Dec),
-				// We only charge the second incentive record since the first silently errored due to oveflow.
+				// We only charge the second incentive record since the first silently errored due to overflow.
 				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
 			},
 			expectedPass: true,
