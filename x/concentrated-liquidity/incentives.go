@@ -252,11 +252,15 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Total amount emitted = time elapsed * emission
 		totalEmittedAmount := timeElapsed.MulTruncate(incentiveRecordBody.EmissionRate)
 
-		// TODO: somehow handle possiblity of overflow here.
-
 		// We scale up the remaining rewards to avoid truncation to zero
 		// when dividing by the liquidity in the accumulator.
-		scaledTotalEmittedAmount := totalEmittedAmount.MulTruncate(perUnitLiqScalingFactor)
+		scaledTotalEmittedAmount, err := scaleUpTotalEmittedAmount(totalEmittedAmount)
+		if err != nil {
+			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update
+			// Continue to the next incentive record.
+			continue
+		}
 
 		// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
 		// Note that we truncate to ensure we do not overdistribute incentives
@@ -306,6 +310,23 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	}
 
 	return incentivesToAddToCurAccum, copyPoolIncentiveRecords, nil
+}
+
+// scaleUpTotalEmittedAmount scales up the total emitted amount to avoid truncation to zero.
+// Returns error if the total emitted amount is too high and causes overflow when applying scaling factor.
+func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
+			err = types.IncentiveOverflowError{
+				PanicMessage: fmt.Sprintf("%v", r),
+			}
+		}
+	}()
+
+	return totalEmittedAmount.MulTruncate(perUnitLiqScalingFactor), nil
 }
 
 // findUptimeIndex finds the uptime index for the passed in min uptime.

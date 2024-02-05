@@ -115,6 +115,9 @@ var (
 	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(100)))
 	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: osmomath.NewDec(0), ExitFee: osmomath.NewDec(0)}
 	invalidPoolId             = uint64(10)
+
+	// 10^60
+	oneE60Dec = osmomath.MustNewDecFromStr("1000000000000000000000000000000000000000000000000000000000000")
 )
 
 type ExpectedUptimes struct {
@@ -574,6 +577,25 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			// Incentive record should have zero remaining amountosmomath.ZeroDec
 			expectedIncentiveRecords: []types.IncentiveRecord{withAmount(withEmissionRate(incentiveRecordOne, osmomath.NewDec(2<<60)), osmomath.ZeroDec())},
 			expectedPass:             true,
+		},
+
+		"two incentive records, first overflows, second still succeeds": {
+			poolId:               defaultPoolId,
+			accumUptime:          types.SupportedUptimes[0],
+			qualifyingLiquidity:  osmomath.NewDec(100),
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{withEmissionRate(incentiveRecordOne, oneE60Dec), incentiveRecordOne},
+
+			expectedResult: sdk.DecCoins{
+				// We only expect the first incentive record to qualify
+				expectedIncentivesFromRate(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, osmomath.NewDec(100)),
+			},
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				withEmissionRate(incentiveRecordOne, oneE60Dec),
+				// We only charge the second incentive record since the first silently errored due to oveflow.
+				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
+			},
+			expectedPass: true,
 		},
 
 		// error catching
@@ -3640,7 +3662,7 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(incentiveCoin))
 
 	// Set incentives for pool to ensure accumulators work correctly
-	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, pool.GetId(), s.TestAccs[0], incentiveCoin, osmomath.MustNewDecFromStr("9645.061724537037037037"), s.Ctx.BlockTime(), time.Nanosecond)
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, pool.GetId(), s.TestAccs[0], incentiveCoin, osmomath.MustNewDecFromStr("9645122512251251251255125125125125125125215125125125112512512521521512112.061724537037037037"), s.Ctx.BlockTime(), time.Nanosecond)
 	s.Require().NoError(err)
 
 	// The check below shows that the incentive is not claimed due to truncation
@@ -3654,6 +3676,18 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	incentives, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
 	s.Require().False(incentives.IsZero())
+}
+
+// This test shows that the scaling factor is applied correctly to the total incentive amount.
+// If overflow occurs, the function returns error as opposed to panicking.
+func (s *KeeperTestSuite) TestScaledUpTotalIncentiveAmount() {
+	scaledIncentiveAmount, err := cl.ScaleUpTotalEmittedAmount(osmomath.NewDec(1))
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewDec(1).Mul(cl.PerUnitLiqScalingFactor), scaledIncentiveAmount)
+
+	_, err = cl.ScaleUpTotalEmittedAmount(oneE60Dec)
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "overflow")
 }
 
 // scaleUptimeAccumulators scales the uptime accumulators by the scaling factor.

@@ -345,3 +345,7 @@ func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
 	return k.getPoolHookContract(ctx, poolId, actionPrefix)
 }
+
+func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
+	return scaleUpTotalEmittedAmount(totalEmittedAmount)
+}

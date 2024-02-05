@@ -930,3 +930,11 @@ type InvalidActionPrefixError struct {
 func (e InvalidActionPrefixError) Error() string {
 	return fmt.Sprintf("invalid action prefix (%s). Valid actions: %s", e.ActionPrefix, e.ValidActions)
 }
+
+type IncentiveOverflowError struct {
+	PanicMessage string
+}
+
+func (e IncentiveOverflowError) Error() string {
+	return fmt.Sprintf("totalEmittedAmount is too high, causing overflow when applying scaling factor: %s", e.PanicMessage)
+}
