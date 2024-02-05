@@ -61,6 +61,7 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 }
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []types.SuperfluidIntermediaryAccount) {
+	bondDenom := k.sk.BondDenom(ctx)
 	for _, acc := range accs {
 		addr := acc.GetAccAddress()
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
@@ -84,7 +85,6 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []t
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			// Note! We only send the bond denom (osmo), to avoid attack vectors where people
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
-			bondDenom := k.sk.BondDenom(cacheCtx)
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
 			if balance.IsZero() {
 				return nil
