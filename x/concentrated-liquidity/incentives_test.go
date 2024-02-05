@@ -3581,8 +3581,18 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 // It has been determined that no funds are at risk. The incentives are eventually distributed if either:
 // a) Long time without an update to the pool state occurs (at least 51 minute with the current configuration)
 // b) current tick liquidity becomes smaller
+//
+// As a solution, we used a scaling factor to reduce the likelihood of truncation.
+// This test shows that the scaling factor is effective in reducing the likelihood of truncation.
+// However, the scaling factor does not eliminate the possibility of truncation.
 func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	s.SetupTest()
+
+	// We multiply the current tick liqudity by this factor
+	// To bring the current tick liquidity to be at the border line of truncating.
+	// Then, we choose values on each side of the threshold to show that truncation is still possible
+	// but, with the scaling factor, it is less likely to occur due to more room for liquidity to grow.
+	currentTickLiquidityIncreaseFactor := osmomath.BigDecFromDec(cl.PerUnitLiqScalingFactor)
 
 	// Create a pool
 	pool := s.PrepareConcentratedPool()
@@ -3607,8 +3617,9 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 
 	// Create a pool state simulating pool 1423. The only difference is that we force the pool state given 1 position as
 	// opposed to many.
-	// osmosisd q poolmanager pool 1423 --height 13559864 --node https://osmosis-rpc.polkachu.com:443
-	desiredLiquidity := osmomath.MustNewBigDecFromStr("28968940108516957474488782.253893404842148631")
+	// Liquidity around height 13,607,920 in pool 1423
+	// We multiply by 10^17 as a sanity check that no truncation occurs within our 10^18 scaling factor choice.
+	desiredLiquidity := osmomath.MustNewBigDecFromStr("180566277759640622277799341.480727726620927100").MulMut(currentTickLiquidityIncreaseFactor)
 	desiredCurrentTick := int64(596)
 	desiredCurrentSqrtPrice, err := math.TickToSqrtPrice(desiredCurrentTick)
 	s.Require().NoError(err)
@@ -3636,10 +3647,10 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 50))
 	incentives, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
-	s.Require().False(incentives.IsZero())
+	s.Require().True(incentives.IsZero())
 
 	// Incentives should now be claimed due to lack of truncation
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 51))
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 6))
 	incentives, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
 	s.Require().False(incentives.IsZero())

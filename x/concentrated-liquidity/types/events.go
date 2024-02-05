@@ -50,4 +50,5 @@ const (
 	AttributeNewOwner                                              = "new_owner"
 
 	IncentiveTruncationPlaceholderName = "concentrated_liquidity_incentive_truncation"
+	IncentiveOverflowPlaceholderName   = "concentrated_liquidity_incentive_overflow"
 )

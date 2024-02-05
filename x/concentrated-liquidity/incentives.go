@@ -19,7 +19,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 )
 
-var perUnitLiqScalingFactor = osmomath.NewDec(1e18)
+// We choose 10^27 to allow sufficient buffer before the accumulator starts getting truncated again.
+// We do not go higher to allow for enough room before hitting the maximum integer value of 2^256.
+// We multiply the number of seconds passed since the last liquidity update by the emission rate per second
+// Then, we scale that value by 10^27 to avoid truncation to zero when dividing by the liquidity in the accumulator.
+// https://hackmd.io/o3oqT8VhSPKAiqNl_mlxXQ
+var perUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
 // The accumulators are initialized with the default (zero) values.
@@ -243,6 +248,9 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 		// Total amount emitted = time elapsed * emission
 		totalEmittedAmount := timeElapsed.MulTruncate(incentiveRecordBody.EmissionRate)
+
+		// TODO: somehow handle possiblity of overflow here.
+
 		// We scale up the remaining rewards to avoid truncation to zero
 		// when dividing by the liquidity in the accumulator.
 		scaledTotalEmittedAmount := totalEmittedAmount.MulTruncate(perUnitLiqScalingFactor)
