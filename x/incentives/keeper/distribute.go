@@ -799,7 +799,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
-	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 10000)
+	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 50000)
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
