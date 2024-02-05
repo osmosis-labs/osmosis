@@ -22,8 +22,8 @@ import (
 // We choose 10^27 to allow sufficient buffer before the accumulator starts getting truncated again.
 // Internally, we multiply the number of seconds passed since the last liquidity update by the emission rate per second
 // Then, we scale that value by 10^27 to avoid truncation to zero when dividing by the liquidity in the accumulator.
-// We do not go for a higher scaling factor to allow for enough room before hitting the maximum integer value of 2^256.
-// In the intermediary multiplications.
+// We do not go for a higher scaling factor to allow for enough room before hitting the maximum integer value of 2^256
+// in the intermediary multiplications.
 //
 // More analysis on the choice of scaling factor can be found here:
 // https://hackmd.io/o3oqT8VhSPKAiqNl_mlxXQ

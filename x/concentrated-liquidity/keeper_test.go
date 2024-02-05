@@ -332,7 +332,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 
 	// In all cases, global uptime accums need to be updated. If currentTick < lowerTick,
 	// nothing more needs to be done.
-	// We do not provide scaled growth here as addToUptimeAccums will scale the growth by the scaling factor.
+	// Note that addToUptimeAccums(...) applies the scaling factor to the input before writing to the accumulator.
 	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
 	s.Require().NoError(err)
 }
