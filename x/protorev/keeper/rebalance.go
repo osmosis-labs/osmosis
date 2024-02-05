@@ -27,7 +27,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 		// Find the max profit for the route if it exists
 		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], remainingTxPoolPoints, remainingBlockPoolPoints)
 		if err != nil {
-			k.Logger(ctx).Error("Error finding max profit for route: " + err.Error())
+			k.Logger(ctx).Debug("Error finding max profit for route: " + err.Error())
 			continue
 		}
 
