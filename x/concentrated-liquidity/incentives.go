@@ -20,9 +20,9 @@ import (
 )
 
 // We choose 10^27 to allow sufficient buffer before the accumulator starts getting truncated again.
-// Internally, multiply the number of seconds passed since the last liquidity update by the emission rate per second
+// Internally, we multiply the number of seconds passed since the last liquidity update by the emission rate per second
 // Then, we scale that value by 10^27 to avoid truncation to zero when dividing by the liquidity in the accumulator.
-// As a result, we do not go for a higher scaling factor to allow for enough room before hitting the maximum integer value of 2^256.
+// We do not go for a higher scaling factor to allow for enough room before hitting the maximum integer value of 2^256.
 // In the intermediary multiplications.
 //
 // More analysis on the choice of scaling factor can be found here:
@@ -257,7 +257,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		scaledTotalEmittedAmount, err := scaleUpTotalEmittedAmount(totalEmittedAmount)
 		if err != nil {
 			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
-			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update
+			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
 			// Continue to the next incentive record.
 			continue
 		}
