@@ -292,12 +292,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 			remainingRewardsScaled := remainingRewards.MulTruncate(perUnitLiqScalingFactor)
 			remainingIncentivesPerLiquidity := remainingRewardsScaled.QuoTruncateMut(liquidityInAccum)
 
-			// Detect truncation and emit telemetry to alert us of the issue.
-			if remainingIncentivesPerLiquidity.IsZero() && !remainingRewardsScaled.IsZero() {
-				telemetry.IncrCounter(1, types.IncentiveTruncationPlaceholderName)
-				ctx.Logger().Error(types.IncentiveTruncationPlaceholderName, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", incentivesPerLiquidity, "total_amt", remainingRewards, "total_amt_scaled", remainingRewardsScaled)
-			}
-
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 
 			// Emit telemetry for accumulator updates
