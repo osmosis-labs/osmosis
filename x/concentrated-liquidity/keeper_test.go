@@ -288,14 +288,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 	s.Require().True(lowerTick <= upperTick)
 
 	// Add spread rewards and incentives to the pool
-	growthCopy := make([]sdk.DecCoins, len(uptimeGrowthToAdd))
-	for i, growth := range uptimeGrowthToAdd {
-		growthCopy[i] = make(sdk.DecCoins, len(growth))
-		for j, coin := range growth {
-			growthCopy[i][j].Denom = coin.Denom
-			growthCopy[i][j].Amount = coin.Amount.MulTruncate(cl.PerUnitLiqScalingFactor)
-		}
-	}
+	growthCopy := s.scaleUptimeAccumulators(uptimeGrowthToAdd)
 
 	// Note that we process adds to global accums at the end to ensure that they don't affect the behavior of uninitialized ticks.
 	if currentTick < lowerTick || upperTick <= currentTick {

@@ -3662,7 +3662,7 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(incentiveCoin))
 
 	// Set incentives for pool to ensure accumulators work correctly
-	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, pool.GetId(), s.TestAccs[0], incentiveCoin, osmomath.MustNewDecFromStr("9645122512251251251255125125125125125125215125125125112512512521521512112.061724537037037037"), s.Ctx.BlockTime(), time.Nanosecond)
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, pool.GetId(), s.TestAccs[0], incentiveCoin, osmomath.MustNewDecFromStr("9645.061724537037037037"), s.Ctx.BlockTime(), time.Nanosecond)
 	s.Require().NoError(err)
 
 	// The check below shows that the incentive is not claimed due to truncation
