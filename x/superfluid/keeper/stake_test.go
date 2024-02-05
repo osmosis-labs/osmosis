@@ -975,7 +975,8 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, 2, denom, multiplier)
 			}
 
-			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx)
+			accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx, accs)
 
 			originalMultiplier := osmomath.NewDec(20)
 			for interAccIndex, intermediaryAcc := range intermediaryAccs {
@@ -1022,7 +1023,8 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			}
 
 			// refresh intermediary account delegations
-			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx)
+			accs = s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx, accs)
 
 			for _, intermediaryAcc := range intermediaryAccs {
 				// check unbonded amount is removed after refresh operation

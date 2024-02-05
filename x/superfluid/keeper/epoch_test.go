@@ -215,7 +215,8 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			}
 
 			// move intermediary account delegation rewards to gauges
-			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+			accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx, accs)
 
 			// check invariant is fine
 			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
@@ -292,7 +293,8 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 				}
 
 				// move intermediary account delegation rewards to gauges
-				s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+				accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+				s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx, accs)
 
 				// move gauges to active gauge by declaring epoch end
 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
