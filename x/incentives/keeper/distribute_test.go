@@ -378,7 +378,6 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 
 			// System under test: Distribute tokens from the gauge
 			totalDistributedCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
-
 			s.Require().NoError(err)
 
 			// check that gauge is not empty
