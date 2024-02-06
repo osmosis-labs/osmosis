@@ -314,7 +314,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
 					if timeElapsedSec.IsPositive() {
-						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
+						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords, cl.OneDecScalingFactor)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
 					}

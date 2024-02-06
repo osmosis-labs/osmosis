@@ -734,7 +734,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				s.PrepareConcentratedPool()
 
 				// system under test
-				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, osmomath.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords)
+				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, osmomath.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords, cl.OneDecScalingFactor)
 				if tc.expectedPass {
 					s.Require().NoError(err)
 
@@ -3682,11 +3682,11 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 // This test shows that the scaling factor is applied correctly to the total incentive amount.
 // If overflow occurs, the function returns error as opposed to panicking.
 func (s *KeeperTestSuite) TestScaledUpTotalIncentiveAmount() {
-	scaledIncentiveAmount, err := cl.ScaleUpTotalEmittedAmount(osmomath.NewDec(1))
+	scaledIncentiveAmount, err := cl.ScaleUpTotalEmittedAmount(osmomath.NewDec(1), cl.PerUnitLiqScalingFactor)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewDec(1).Mul(cl.PerUnitLiqScalingFactor), scaledIncentiveAmount)
 
-	_, err = cl.ScaleUpTotalEmittedAmount(oneE60Dec)
+	_, err = cl.ScaleUpTotalEmittedAmount(oneE60Dec, cl.PerUnitLiqScalingFactor)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "overflow")
 }

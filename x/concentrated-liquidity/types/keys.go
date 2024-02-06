@@ -50,6 +50,8 @@ var (
 	KeyTotalLiquidity     = []byte{0x13}
 	KeyContractHookPrefix = []byte{0x14}
 
+	KeyIncentiveAccumulatorMigrationThreshold = []byte{0x15}
+
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
 	// TickPrefix + pool id + sign byte(negative / positive prefix) + tick index: 18bytes in total

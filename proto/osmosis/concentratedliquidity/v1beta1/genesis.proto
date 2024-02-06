@@ -71,6 +71,10 @@ message GenesisState {
 
   uint64 next_incentive_record_id = 5
       [ (gogoproto.moretags) = "yaml:\"next_incentive_record_id\"" ];
+
+  uint64 incentives_accumulator_pool_id_migration_threshold = 6
+      [ (gogoproto.moretags) =
+            "yaml:\"incentives_accumulator_pool_id_migration_threshold\"" ];
 }
 
 message AccumObject {
