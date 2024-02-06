@@ -734,7 +734,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				s.PrepareConcentratedPool()
 
 				// system under test
-				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, osmomath.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords, cl.OneDecScalingFactor)
+				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, osmomath.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords, cl.PerUnitLiqScalingFactor)
 				if tc.expectedPass {
 					s.Require().NoError(err)
 
