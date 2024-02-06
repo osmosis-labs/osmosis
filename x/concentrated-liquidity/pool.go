@@ -444,7 +444,6 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		// For each position ID, multiply the value by the per-unit liquidity scaling factor
 		// and overwrite the accumulator with the new value.
 		for _, positionID := range positionIDs {
-
 			positionPrefix := types.KeyPositionId(positionID)
 
 			if !uptimeAccum.HasPosition(string(positionPrefix)) {
