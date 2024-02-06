@@ -250,7 +250,13 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		}
 
 		// Total amount emitted = time elapsed * emission
-		totalEmittedAmount := timeElapsed.MulTruncate(incentiveRecordBody.EmissionRate)
+		totalEmittedAmount, err := computeTotalIncentivesToEmit(timeElapsed, incentiveRecordBody.EmissionRate)
+		if err != nil {
+			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
+			// Continue to the next incentive record.
+			continue
+		}
 
 		// We scale up the remaining rewards to avoid truncation to zero
 		// when dividing by the liquidity in the accumulator.
@@ -289,7 +295,13 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 			// We scale up the remaining rewards to avoid truncation to zero
 			// when dividing by the liquidity in the accumulator.
-			remainingRewardsScaled := remainingRewards.MulTruncate(perUnitLiqScalingFactor)
+			remainingRewardsScaled, err := scaleUpTotalEmittedAmount(remainingRewards)
+			if err != nil {
+				ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+				// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
+				// Continue to the next incentive record.
+				continue
+			}
 			remainingIncentivesPerLiquidity := remainingRewardsScaled.QuoTruncateMut(liquidityInAccum)
 
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
@@ -314,13 +326,38 @@ func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmit
 
 		if r != nil {
 			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
-			err = types.IncentiveOverflowError{
+			err = types.IncentiveScalingFactorOverflowError{
 				PanicMessage: fmt.Sprintf("%v", r),
 			}
 		}
 	}()
 
 	return totalEmittedAmount.MulTruncate(perUnitLiqScalingFactor), nil
+}
+
+// computeTotalIncentivesToEmit computes the total incentives to emit based on the time elapsed and emission rate.
+// Returns error if timeElapsed or emissionRate are too high, causing overflow during multiplicaiton.
+func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
+			err = types.IncentiveEmissionOvrflowError{
+				PanicMessage: fmt.Sprintf("%v", r),
+			}
+		}
+	}()
+
+	// This may panic if emissionRate is too high and causes overflow during multiplication
+	// We are unlikely to see an overflow due to too much time elapsing since
+	// 100 years in seconds is roughly
+	// 3.15576e9 * 100 = 3.15576e11
+	// 60 * 60 * 24 * 365 * 100 = 3153600000 seconds
+	// The bit decimal bit length is 2^256 which is arond 10^77
+	// However, it is possible for an attacker to try and create incentives with a very high emission rate
+	// consisting of cheap token in the USD denomination. This is why we have the panic recovery above.
+	return timeElapsedSeconds.MulTruncate(emissionRate), nil
 }
 
 // findUptimeIndex finds the uptime index for the passed in min uptime.

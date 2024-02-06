@@ -349,3 +349,7 @@ func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix
 func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
 	return scaleUpTotalEmittedAmount(totalEmittedAmount)
 }
+
+func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
+	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
+}

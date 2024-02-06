@@ -3690,6 +3690,23 @@ func (s *KeeperTestSuite) TestScaledUpTotalIncentiveAmount() {
 	s.Require().ErrorContains(err, "overflow")
 }
 
+// This test shows that it is possible to compute the total incentives to emit without overflow.
+// An error is returned if overflow occurs but no panic.
+func (s *KeeperTestSuite) TestComputeTotalIncentivesToEmit() {
+
+	oneHundredYearsSecs := osmomath.NewDec(int64((time.Hour * 24 * 365 * 100).Seconds()))
+
+	totalIncentiveAmount, err := cl.ComputeTotalIncentivesToEmit(oneHundredYearsSecs, osmomath.NewDec(1))
+	s.Require().NoError(err)
+	s.Require().Equal(osmomath.NewDec(1).Mul(oneHundredYearsSecs), totalIncentiveAmount)
+
+	// The value of 1_000_000_000_000 is hand-picked to be close to the max of 2^256 so that
+	// when multiplied by 100 years, it overflows.
+	_, err = cl.ComputeTotalIncentivesToEmit(oneHundredYearsSecs, oneE60Dec.MulInt64(1_000_000_000_000))
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "overflow")
+}
+
 // scaleUptimeAccumulators scales the uptime accumulators by the scaling factor.
 // This is to avoid truncation to zero in core logic when the liquidity is large.
 func (s *KeeperTestSuite) scaleUptimeAccumulators(uptimeAccumulatorsToScale []sdk.DecCoins) []sdk.DecCoins {
