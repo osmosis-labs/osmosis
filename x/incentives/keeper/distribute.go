@@ -602,6 +602,27 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
+		// Validate that the gauge's corresponding uptime is authorized.
+		authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
+		gaugeUptime := gauge.DistributeTo.Duration
+		isUptimeAuthorized := false
+		for _, authorizedUptime := range authorizedUptimes {
+			if gaugeUptime == authorizedUptime {
+				isUptimeAuthorized = true
+			}
+		}
+
+		// If the gauge's uptime is not authorized, we fall back to a default instead of erroring.
+		//
+		// This is for two reasons:
+		// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
+		// 2. To avoid having to do a state migration on existing gauges at time of adding
+		// this change, since prior to this, CL gauges were not required to associate with
+		// an uptime that was authorized.
+		if !isUptimeAuthorized {
+			gaugeUptime = types.DefaultConcentratedUptime
+		}
+
 		// For every coin in the gauge, calculate the remaining reward per epoch
 		// and create a concentrated liquidity incentive record for it that
 		// is supposed to distribute over that epoch.
@@ -625,8 +646,9 @@ func (k Keeper) distributeInternal(
 				// Gauge start time should be checked whenever moving between active
 				// and inactive gauges. By the time we get here, the gauge should be active.
 				ctx.BlockTime(),
-				// Only default uptime is supported at launch.
-				types.DefaultConcentratedUptime,
+				// The uptime for each distribution is determined by the gauge's duration field.
+				// If it is unauthorized, we fall back to a default above.
+				gaugeUptime,
 			)
 
 			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
