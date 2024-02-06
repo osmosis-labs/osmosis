@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
+* [#7374](https://github.com/osmosis-labs/osmosis/pull/7374) In place testnet creation CLI
 * [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
 
 ### Config
