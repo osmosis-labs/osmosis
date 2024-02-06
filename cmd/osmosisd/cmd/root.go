@@ -22,7 +22,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v22/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	v22 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v22" // TODO: should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -852,8 +852,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	// If this is an in place testnet, set any new stores that may exist
 	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
 		version := store.NewCommitMultiStore(db).LatestVersion() + 1
-		fmt.Println("version", version)
-		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
+		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v22.Upgrade.StoreUpgrades)))
 	}
 
 	return osmosis.NewOsmosisApp(
