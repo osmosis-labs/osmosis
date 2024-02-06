@@ -230,7 +230,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 			"uosmo",
 			authenticator.AbsoluteValue,
 			appKeepers.BankKeeper, appKeepers.PoolManagerKeeper, appKeepers.TwapKeeper),
-		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler(), appCodec),
+		// delay registering cosmwasm authenticator until after contract keeper is created
 	})
 	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 
@@ -549,6 +549,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetContractKeeper(appKeepers.ContractKeeper)
+
+	// register CosmWasm authenticator
+	appKeepers.AuthenticatorManager.RegisterAuthenticator(
+		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler(), appCodec))
 
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
