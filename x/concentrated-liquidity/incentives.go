@@ -340,7 +340,7 @@ func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor os
 		}
 	}()
 
-	return totalEmittedAmount.MulTruncate(perUnitLiqScalingFactor), nil
+	return totalEmittedAmount.MulTruncate(scalingFactor), nil
 }
 
 // computeTotalIncentivesToEmit computes the total incentives to emit based on the time elapsed and emission rate.
@@ -1062,7 +1062,6 @@ func (k Keeper) getIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64)
 
 // SetIncentivePoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID.
 func (k Keeper) SetIncentivePoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
-
 	// Set the pool ID migration threshold to the last pool ID
 	store := ctx.KVStore(k.storeKey)
 
