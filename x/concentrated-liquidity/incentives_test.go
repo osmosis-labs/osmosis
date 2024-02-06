@@ -3597,7 +3597,7 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 	}
 }
 
-// This PR shows that there is a chance of incentives being truncated due to large liquidity value.
+// This test shows that there is a chance of incentives being truncated due to large liquidity value.
 // We observed this in pool 1423 where both tokens have 18 decimal precision.
 //
 // It has been determined that no funds are at risk. The incentives are eventually distributed if either:
@@ -3640,7 +3640,7 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	// Create a pool state simulating pool 1423. The only difference is that we force the pool state given 1 position as
 	// opposed to many.
 	// Liquidity around height 13,607,920 in pool 1423
-	// We multiply by 10^17 as a sanity check that no truncation occurs within our 10^18 scaling factor choice.
+	// We multiply by the scaling factor value as a sanity check that no truncation occurs within our 10^27 scaling factor choice.
 	desiredLiquidity := osmomath.MustNewBigDecFromStr("180566277759640622277799341.480727726620927100").MulMut(currentTickLiquidityIncreaseFactor)
 	desiredCurrentTick := int64(596)
 	desiredCurrentSqrtPrice, err := math.TickToSqrtPrice(desiredCurrentTick)
