@@ -5,6 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
+
 	"github.com/osmosis-labs/osmosis/v22/app/keepers"
 	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
 )
@@ -22,6 +24,8 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyInternalUptime, incentivestypes.DefaultConcentratedUptime)
 
 		return migrations, nil
 	}
