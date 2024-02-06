@@ -94,15 +94,16 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 	seenPoolAssetTriplets := map[uniqueTriplet]struct{}{}
 
 	for ; iter.Valid(); iter.Next() {
-		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
+		timeIndexKey := iter.Key()
+		timeS, poolId, asset0, asset1, err := types.ParseFieldsFromHistoricalTimeKey(timeIndexKey)
 		if err != nil {
 			return err
 		}
 
 		poolKey := uniqueTriplet{
-			poolId: twapToRemove.PoolId,
-			asset0: twapToRemove.Asset0Denom,
-			asset1: twapToRemove.Asset1Denom,
+			poolId,
+			asset0,
+			asset1,
 		}
 		_, hasSeenPoolRecord := seenPoolAssetTriplets[poolKey]
 		if !hasSeenPoolRecord {
@@ -110,7 +111,12 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 			continue
 		}
 
-		k.DeleteHistoricalRecord(ctx, twapToRemove)
+		// Now we need to delete the historical record, formatted by both historical time and pool index.
+		// We already are iterating over the historical time index, so we delete that key. Then we
+		// reformat the key to delete the historical pool index key.
+		store.Delete(timeIndexKey)
+		poolIndexKey := types.FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId, asset0, asset1, timeS)
+		store.Delete(poolIndexKey)
 	}
 	return nil
 }
