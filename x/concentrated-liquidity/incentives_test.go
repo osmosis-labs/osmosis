@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
@@ -3547,4 +3549,74 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 			s.Require().Equal(test.expectedNumberOfRecords, len(incRecords))
 		})
 	}
+}
+
+// This PR shows that there is a chance of incentives being truncated due to large liquidity value.
+// We observed this in pool 1423 where both tokens have 18 decimal precision.
+//
+// It has been determined that no funds are at risk. The incentives are eventually distributed if either:
+// a) Long time without an update to the pool state occurs (at least 51 minute with the current configuration)
+// b) current tick liquidity becomes smaller
+func (s *KeeperTestSuite) TestIncentiveTruncation() {
+	s.SetupTest()
+
+	// Create a pool
+	pool := s.PrepareConcentratedPool()
+
+	// 	osmosisd q concentratedliquidity incentive-records 1423 --node https://osmosis-rpc.polkachu.com:443
+	// incentive_records:
+	// - incentive_id: "5833"
+	//   incentive_record_body:
+	//     emission_rate: "9645.061724537037037037"
+	//     remaining_coin:
+	//       amount: "518549443.513510006462246574"
+	//       denom: ibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4
+	//     start_time: "2024-01-31T17:16:11.187417702Z"
+	//   min_uptime: 0.000000001s
+	//   pool_id: "1423"
+	// pagination:
+	//   next_key: null
+	//   total: "0"
+	// 24 * 60 * 60 * 9645.061724537037037037
+	// 833333333.0        -<------ Initial incentives in recorrd
+	incentiveCoin := sdk.NewCoin("ibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", sdk.NewInt(833333333))
+
+	// Create a pool state simulating pool 1423. The only difference is that we force the pool state given 1 position as
+	// opposed to many.
+	// osmosisd q poolmanager pool 1423 --height 13559864 --node https://osmosis-rpc.polkachu.com:443
+	desiredLiquidity := osmomath.MustNewBigDecFromStr("28968940108516957474488782.253893404842148631")
+	desiredCurrentTick := int64(596)
+	desiredCurrentSqrtPrice, err := math.TickToSqrtPrice(desiredCurrentTick)
+	s.Require().NoError(err)
+
+	amount0 := math.CalcAmount0Delta(desiredLiquidity, desiredCurrentSqrtPrice, types.MaxSqrtPriceBigDec, true).Dec().TruncateInt()
+	amount1 := math.CalcAmount1Delta(desiredLiquidity, types.MinSqrtPriceBigDec, desiredCurrentSqrtPrice, true).Dec().TruncateInt()
+
+	lpCoins := sdk.NewCoins(sdk.NewCoin(ETH, amount0), sdk.NewCoin(USDC, amount1))
+	s.FundAcc(s.TestAccs[0], lpCoins)
+
+	// LP
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], lpCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	s.Require().NoError(err)
+
+	fmt.Println("initial liquidity", positionData.Liquidity)
+
+	// Fund the account with the incentive coin
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(incentiveCoin))
+
+	// Set incentives for pool to ensure accumulators work correctly
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, pool.GetId(), s.TestAccs[0], incentiveCoin, osmomath.MustNewDecFromStr("9645.061724537037037037"), s.Ctx.BlockTime(), time.Nanosecond)
+	s.Require().NoError(err)
+
+	// The check below shows that the incentive is not claimed due to truncation
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 50))
+	incentives, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
+	s.Require().NoError(err)
+	s.Require().True(incentives.IsZero())
+
+	// Incentives should now be claimed due to lack of truncation
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 51))
+	incentives, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
+	s.Require().NoError(err)
+	s.Require().False(incentives.IsZero())
 }

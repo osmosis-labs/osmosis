@@ -204,8 +204,8 @@ func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
-func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) {
-	ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) osmomath.Dec {
+	return ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 }
 
 // Test helpers.
@@ -232,7 +232,7 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 }
 
 func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
-	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
+	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords, 0)
 }
 
 func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []*accum.AccumulatorObject) error {
