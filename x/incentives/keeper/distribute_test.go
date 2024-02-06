@@ -251,6 +251,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 		tokensToAddToGauge sdk.Coins
 		gaugeStartTime     time.Time
 		gaugeCoins         sdk.Coins
+		internalUptime     time.Duration
 
 		// expected
 		expectErr             bool
@@ -260,6 +261,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			numPools:              1,
 			gaugeStartTime:        defaultGaugeStartTime,
 			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+			internalUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
 			expectErr:             false,
 		},
@@ -267,6 +269,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			numPools:              1,
 			gaugeStartTime:        defaultGaugeStartTime,
 			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
+			internalUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
 			expectErr:             false,
 		},
@@ -274,6 +277,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			numPools:              3,
 			gaugeStartTime:        defaultGaugeStartTime,
 			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+			internalUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
 			expectErr:             false,
 		},
@@ -281,6 +285,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			numPools:              1,
 			gaugeStartTime:        defaultGaugeStartTime,
 			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+			internalUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
 			expectErr:             false,
 		},
@@ -288,9 +293,12 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			numPools:              1,
 			gaugeStartTime:        defaultGaugeStartTime.Add(-5 * time.Hour),
 			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+			internalUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
 			expectErr:             false,
 		},
+
+		// 1d authorized, 7d internal
 	}
 
 	for name, tc := range tests {
@@ -300,6 +308,9 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			s.SetupTest()
 			// We fix blocktime to ensure tests are deterministic
 			s.Ctx = s.Ctx.WithBlockTime(defaultGaugeStartTime)
+
+			// Set internal uptime module param as defined in test case
+			s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyInternalUptime, tc.internalUptime)
 
 			var gauges []types.Gauge
 

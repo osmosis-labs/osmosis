@@ -602,25 +602,33 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
-		// Validate that the gauge's corresponding uptime is authorized.
-		authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
+		// If internal gauge, use InternalUptime param as the gauge's uptime.
+		// If external gauge, validate that the gauge's corresponding uptime is authorized.
+		isInternalGauge := gauge.DistributeTo.Denom == types.NoLockInternalGaugeDenom(pool.GetId())
 		gaugeUptime := gauge.DistributeTo.Duration
-		isUptimeAuthorized := false
-		for _, authorizedUptime := range authorizedUptimes {
-			if gaugeUptime == authorizedUptime {
-				isUptimeAuthorized = true
+		if isInternalGauge {
+			// CONTRACT: InternalUptime is a supported (but not necessarily authorized) uptime in the CL module.
+			gaugeUptime = k.GetParams(ctx).InternalUptime
+		} else {
+			// Validate that the gauge's corresponding uptime is authorized.
+			authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
+			isUptimeAuthorized := false
+			for _, authorizedUptime := range authorizedUptimes {
+				if gaugeUptime == authorizedUptime {
+					isUptimeAuthorized = true
+				}
 			}
-		}
 
-		// If the gauge's uptime is not authorized, we fall back to a default instead of erroring.
-		//
-		// This is for two reasons:
-		// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
-		// 2. To avoid having to do a state migration on existing gauges at time of adding
-		// this change, since prior to this, CL gauges were not required to associate with
-		// an uptime that was authorized.
-		if !isUptimeAuthorized {
-			gaugeUptime = types.DefaultConcentratedUptime
+			// If the gauge's uptime is not authorized, we fall back to a default instead of erroring.
+			//
+			// This is for two reasons:
+			// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
+			// 2. To avoid having to do a state migration on existing gauges at time of adding
+			// this change, since prior to this, CL gauges were not required to associate with
+			// an uptime that was authorized.
+			if !isUptimeAuthorized {
+				gaugeUptime = types.DefaultConcentratedUptime
+			}
 		}
 
 		// For every coin in the gauge, calculate the remaining reward per epoch
