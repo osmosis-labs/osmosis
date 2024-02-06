@@ -13,6 +13,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
@@ -417,4 +419,55 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 		})
 	}
 	return userPositionsWithPeriodLocks, nil
+}
+
+func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+	// Get pool-global incentive accumulator
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Get all position IDs belonging to the pool
+	positionIDs, err := k.GetAllPositionIdsForPoolId(ctx, types.KeyPoolPosition(poolId), poolId)
+	if err != nil {
+		return err
+	}
+
+	// For each uptime accimulator, multiply the value by the per-unit liquidity scaling factor
+	// and overwrite the accumulator with the new value.
+	for uptimeIndex, uptimeAccum := range uptimeAccums {
+		value := uptimeAccum.GetValue().MulDecTruncate(perUnitLiqScalingFactor)
+		if err := accum.OverwriteAccumulatorUnsafe(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)), value, uptimeAccum.GetTotalShares()); err != nil {
+			return err
+		}
+
+		// For each position ID, multiply the value by the per-unit liquidity scaling factor
+		// and overwrite the accumulator with the new value.
+		for _, positionID := range positionIDs {
+
+			positionPrefix := types.KeyPositionId(positionID)
+
+			if !uptimeAccum.HasPosition(string(positionPrefix)) {
+				return fmt.Errorf("position ID %d not found in uptime accumulator %d in pool %d", positionID, uptimeIndex, poolId)
+			}
+
+			positionSnapshot, err := uptimeAccum.GetPosition(string(positionPrefix))
+			if err != nil {
+				return err
+			}
+
+			positionSnapshotValue := positionSnapshot.GetAccumValuePerShare()
+
+			// Multiply the value by the per-unit liquidity scaling factor
+			newValue := positionSnapshotValue.MulDecTruncate(perUnitLiqScalingFactor)
+
+			// Overwrite the position accumulator with the new value
+			if err := uptimeAccum.SetPositionIntervalAccumulation(string(positionPrefix), newValue); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
