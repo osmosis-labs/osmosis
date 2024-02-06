@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7395](https://github.com/osmosis-labs/osmosis/pull/7395) Adds logging to track incentive accumulator truncation.
 
+### Misc Improvements
+
+* [#7374](https://github.com/osmosis-labs/osmosis/pull/7374) In place testnet creation CLI.
+
 ## v22.0.1
 
 ### Bug Fixes
