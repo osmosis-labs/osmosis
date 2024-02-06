@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Compatible
+
+ * [#7400](https://github.com/osmosis-labs/osmosis/pull/7400) Update CometBFT to v0.37.4 and IBC to v7.3.2
+
 ### State Breaking
 
 * [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
@@ -61,11 +65,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7368](https://github.com/osmosis-labs/osmosis/pull/7368) Overwrite ArbitrageMinGasPriceconfig from .005 to 0.1.
 
+### Logging
+
+* [#7395](https://github.com/osmosis-labs/osmosis/pull/7395) Adds logging to track incentive accumulator truncation.
+
 ## v22.0.1
 
 ### Bug Fixes
 
 * [#7346](https://github.com/osmosis-labs/osmosis/pull/7346) Prevent heavy gRPC load from app hashing nodes
+
+### Misc Improvements
+* [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
 
 ## v22.0.0
 

@@ -112,15 +112,20 @@ var (
 // between the ticks. This is possible when there are only 2 positions with no overlapping ranges.
 // As a result, the range from the end of position one to the beginning of position
 // two has no liquidity and can be skipped.
-func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) {
+//
+// Returbs the spread factors accrued per unit of liquidity.
+func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) osmomath.Dec {
 	ss.globalSpreadRewardGrowth = ss.globalSpreadRewardGrowth.Add(spreadRewardChargeTotal)
 	if ss.liquidity.IsZero() {
-		return
+		return osmomath.ZeroDec()
 	}
 	// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
 	// the total spread factors that will be accrued to the spread factor accumulator)
 	spreadFactorsAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+
 	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(spreadFactorsAccruedPerUnitOfLiquidity)
+
+	return spreadFactorsAccruedPerUnitOfLiquidity
 }
 
 func (k Keeper) SwapExactAmountIn(
@@ -429,7 +434,10 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 
 		// Update the spread reward growth for the entire swap using the total spread factors charged.
-		swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
+		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
+
+		// Emit telemetry to detect spread reward truncation.
+		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationPlaceholderName, types.SpreadRewardEmissionPlaceholderName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", true)
 
 		ctx.Logger().Debug("cl calc out given in")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardCharge)
@@ -554,7 +562,10 @@ func (k Keeper) computeInAmtGivenOut(
 			return SwapResult{}, PoolUpdates{}, err
 		}
 
-		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+
+		// Emit telemetry to detect spread reward truncation.
+		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationPlaceholderName, types.SpreadRewardEmissionPlaceholderName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", false)
 
 		ctx.Logger().Debug("cl calc in given out")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)

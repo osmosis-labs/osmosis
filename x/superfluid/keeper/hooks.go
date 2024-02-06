@@ -115,5 +115,6 @@ func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, in
 	if slashFactor.IsZero() {
 		return
 	}
-	h.k.RefreshIntermediaryDelegationAmounts(ctx)
+	accs := h.k.GetAllIntermediaryAccounts(ctx)
+	h.k.RefreshIntermediaryDelegationAmounts(ctx, accs)
 }
