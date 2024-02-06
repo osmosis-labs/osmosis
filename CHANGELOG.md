@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
 * [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
+* [#7417](https://github.com/osmosis-labs/osmosis/pull/7417) Update CL gauges to use gauge duration as uptime, falling back to default if unauthorized or invalid
 
 ### Bug Fixes
 
