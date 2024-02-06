@@ -254,80 +254,81 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 		internalUptime     time.Duration
 
 		// expected
-		expectErr             bool
+		// Note: internal gauge distributions should never error, so we don't expect any errors here.
 		expectedDistributions sdk.Coins
 		expectedUptime        time.Duration
 	}{
-		"valid case: one poolId and gaugeId": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
-			internalUptime:        types.DefaultConcentratedUptime,
+		"one poolId and gaugeId": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: gauge with multiple coins": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
-			internalUptime:        types.DefaultConcentratedUptime,
+		"gauge with multiple coins": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
+			internalUptime: types.DefaultConcentratedUptime,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
-			expectErr:             false,
 		},
-		"valid case: multiple gaugeId and poolId": {
-			numPools:              3,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
-			internalUptime:        types.DefaultConcentratedUptime,
+		"multiple gaugeId and poolId": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: one poolId and gaugeId, five 5000 coins": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
-			internalUptime:        types.DefaultConcentratedUptime,
+		"one poolId and gaugeId, five 5000 coins": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: attempt to createIncentiveRecord with start time < currentBlockTime - gets set to block time in incentive record": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime.Add(-5 * time.Hour),
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
-			internalUptime:        types.DefaultConcentratedUptime,
+		"attempt to createIncentiveRecord with start time < currentBlockTime - gets set to block time in incentive record": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime.Add(-5 * time.Hour),
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-			expectErr:             false,
 		},
 		// We expect incentive record to fall back to the default uptime, since the internal uptime is unauthorized.
-		"valid case: unauthorized internal uptime": {
-			numPools:              3,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
-			internalUptime:        time.Hour * 24 * 7,
+		"unauthorized internal uptime": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: time.Hour * 24 * 7,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
 		},
-		"valid case: invalid internal uptime": {
-			numPools:              3,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
-			internalUptime:        time.Hour * 4,
+		"invalid internal uptime": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: time.Hour * 4,
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: nil internal uptime": {
-			numPools:              3,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+		"nil internal uptime": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+
 			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
-			expectErr:             false,
 		},
 	}
 
@@ -375,35 +376,8 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 				gauges = append(gauges, *gauge)
 			}
 
-			// Distribute tokens from the gauge
+			// System under test: Distribute tokens from the gauge
 			totalDistributedCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
-			if tc.expectErr {
-				s.Require().Error(err)
-
-				// module account amount must stay the same
-				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				s.Require().Equal(coinsToMint, balance)
-
-				for i, gauge := range gauges {
-					for j := range gauge.Coins {
-						incentiveId := i*len(gauge.Coins) + j + 1
-
-						// get poolId from GaugeId
-						poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gauge.GetId(), currentEpoch.Duration)
-						s.Require().NoError(err)
-
-						// check that incentive record wasn't created on any viable uptime
-						_, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, types.DefaultConcentratedUptime, uint64(incentiveId))
-						s.Require().Error(err)
-						_, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, tc.internalUptime, uint64(incentiveId))
-						s.Require().Error(err)
-						_, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, currentEpoch.Duration, uint64(incentiveId))
-						s.Require().Error(err)
-					}
-				}
-
-				return
-			}
 
 			s.Require().NoError(err)
 
