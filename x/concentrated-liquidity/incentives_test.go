@@ -587,7 +587,8 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			poolIncentiveRecords: []types.IncentiveRecord{withEmissionRate(incentiveRecordOne, oneE60Dec), incentiveRecordOne},
 
 			expectedResult: sdk.DecCoins{
-				// We only expect the first incentive record to qualify
+				// We expect both incentives to qualify. However, only the second one emits because
+				// the first one is truncated.
 				expectedIncentivesFromRate(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, osmomath.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
