@@ -336,7 +336,7 @@ func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmit
 }
 
 // computeTotalIncentivesToEmit computes the total incentives to emit based on the time elapsed and emission rate.
-// Returns error if timeElapsed or emissionRate are too high, causing overflow during multiplicaiton.
+// Returns error if timeElapsed or emissionRate are too high, causing overflow during multiplication.
 func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
 	defer func() {
 		r := recover()
