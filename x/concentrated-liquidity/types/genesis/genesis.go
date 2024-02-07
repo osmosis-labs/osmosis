@@ -11,7 +11,7 @@ func DefaultGenesis() *GenesisState {
 		Params:                types.DefaultParams(),
 		NextPositionId:        1,
 		NextIncentiveRecordId: 1,
-		// By default, the migration threshold is set to 0, which means no pools are migrated.
+		// By default, the migration threshold is set to 0, which means all pools are migrated.
 		IncentivesAccumulatorPoolIdMigrationThreshold: 0,
 	}
 }
