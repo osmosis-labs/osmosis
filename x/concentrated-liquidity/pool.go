@@ -445,8 +445,8 @@ func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
 	return positionID, nil
 }
 
-// MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator and respective position accumulators
-// by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
+// MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
+// and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
 func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
 	// Get pool-global incentive accumulator
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
