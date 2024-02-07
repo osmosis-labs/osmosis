@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 )
 
@@ -34,8 +35,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 	// all state changes are reverted anyway
 	ad.authenticatorKeeper.TransientStore.WriteInto(ctx)
 
-	// collect all the authenticators that are not ready
-	nonReadyAccountAuthenticatorIds := make(map[string][]uint64)
+	// collect all the keys for authenticators that are not ready
+	nonReadyAccountAuthenticatorKeys := make(map[string]struct{})
 
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
@@ -56,11 +57,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 			// so Authenticate & Track on newly added authenticator has not been called yet
 			// which means the authenticator is not ready to confirm execution
 			if !accountAuthenticator.IsReady {
-				ids := nonReadyAccountAuthenticatorIds[string(account)]
-				if ids == nil {
-					ids = make([]uint64, 0)
-				}
-				nonReadyAccountAuthenticatorIds[string(account)] = append(ids, accountAuthenticator.Id)
+				key := string(types.KeyAccountId(account, accountAuthenticator.Id))
+				nonReadyAccountAuthenticatorKeys[key] = struct{}{}
 				continue
 			}
 
@@ -84,11 +82,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 	}
 
 	// All non-ready authenticators should be ready now
-	for account, ids := range nonReadyAccountAuthenticatorIds {
-		account := sdk.MustAccAddressFromBech32(account)
-		for _, id := range ids {
-			ad.authenticatorKeeper.MarkAsReady(ctx, account, id)
-		}
+	for key := range nonReadyAccountAuthenticatorKeys {
+		ad.authenticatorKeeper.MarkAsReady(ctx, []byte(key))
 	}
 
 	return next(ctx, tx, simulate, success)

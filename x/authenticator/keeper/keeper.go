@@ -177,15 +177,14 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 }
 
 // MarkAsReady sets an authenticator to be ready
-func (k Keeper) MarkAsReady(ctx sdk.Context, account sdk.AccAddress, authenticatorId uint64) error {
+func (k Keeper) MarkAsReady(ctx sdk.Context, keyAccountId []byte) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyAccountId(account, authenticatorId)
 
 	var auth types.AccountAuthenticator
-	osmoutils.MustGet(store, key, &auth)
+	osmoutils.MustGet(store, keyAccountId, &auth)
 
 	auth.IsReady = true
-	osmoutils.MustSet(store, key, &auth)
+	osmoutils.MustSet(store, keyAccountId, &auth)
 	return nil
 }
 
