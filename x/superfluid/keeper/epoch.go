@@ -74,15 +74,14 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []t
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.ck.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
 			if errors.Is(err, distributiontypes.ErrEmptyDelegationDistInfo) {
-				ctx.Logger().Debug("no swaps occurred in this pool between last epoch and this epoch")
+				ctx.Logger().Debug("no delegations for this (pool, validator) pair, skipping...")
+				// TODO: Remove this account from IntermediaryAccounts that we iterate over
+				return nil
 			} else if err != nil {
 				return err
 			}
-			return err
-		})
 
-		// Send delegation rewards to gauges
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			// Send delegation rewards to gauges
 			// Note! We only send the bond denom (osmo), to avoid attack vectors where people
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
