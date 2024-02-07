@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
@@ -855,16 +854,4 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 
 	// Ensure that position 2 cannot claim any incentives
 	s.validateClaimableIncentives(positionTwoID, sdk.NewCoins())
-}
-
-func (s *KeeperTestSuite) validateClaimableIncentives(positionID uint64, expectedClaimableIncentives sdk.Coins) {
-	claimableIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionID)
-	s.Require().NoError(err)
-	s.Require().Equal(expectedClaimableIncentives.String(), claimableIncentives.String())
-}
-
-func (s *KeeperTestSuite) validateUptimePositionAccumulator(uptimeAccumulator *accum.AccumulatorObject, positionID uint64, expectedAccumulatorGrowth sdk.DecCoins) {
-	positionAcc, err := uptimeAccumulator.GetPosition(string(types.KeyPositionId(positionID)))
-	s.Require().NoError(err)
-	s.Require().Equal(expectedAccumulatorGrowth.String(), positionAcc.GetAccumValuePerShare().String())
 }
