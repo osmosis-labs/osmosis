@@ -852,7 +852,6 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	// If this is an in place testnet, set any new stores that may exist
 	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
 		version := store.NewCommitMultiStore(db).LatestVersion() + 1
-		fmt.Println("version", version)
 		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
 	}
 
