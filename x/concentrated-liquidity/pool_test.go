@@ -855,3 +855,40 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	// Ensure that position 2 cannot claim any incentives
 	s.validateClaimableIncentives(positionTwoID, sdk.NewCoins())
 }
+
+// Basic test to validate that positions are correctly returned for a pool
+func (s *KeeperTestSuite) TestGetPositionIDsByPoolID() {
+	s.SetupTest()
+
+	const numPositionsToCreateFirstPool = 3
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+	poolID := concentratedPool.GetId()
+
+	// Create second pool
+	secondPool := s.PrepareConcentratedPool()
+
+	positionIDs, err := s.App.ConcentratedLiquidityKeeper.GetPositionIDsByPoolID(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	s.Require().Equal([]uint64{}, positionIDs)
+
+	// Create three positions
+	for i := 0; i < numPositionsToCreateFirstPool; i++ {
+		s.CreateFullRangePosition(concentratedPool, DefaultCoins)
+	}
+
+	// Create one position in second pool
+	s.CreateFullRangePosition(secondPool, DefaultCoins)
+
+	positionIDs, err = s.App.ConcentratedLiquidityKeeper.GetPositionIDsByPoolID(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	s.Require().Equal([]uint64{1, 2, 3}, positionIDs)
+
+	positionIDs, err = s.App.ConcentratedLiquidityKeeper.GetPositionIDsByPoolID(s.Ctx, secondPool.GetId())
+	s.Require().NoError(err)
+
+	s.Require().Equal([]uint64{numPositionsToCreateFirstPool + 1}, positionIDs)
+}

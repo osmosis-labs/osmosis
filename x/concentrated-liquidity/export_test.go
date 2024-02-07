@@ -355,3 +355,7 @@ func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor os
 func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
 	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
 }
+
+func (k Keeper) GetPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
+	return k.getPositionIDsByPoolID(ctx, poolID)
+}
