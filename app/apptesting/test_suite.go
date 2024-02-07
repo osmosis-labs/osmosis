@@ -697,8 +697,8 @@ func (s *KeeperTestHelper) IncreaseVolumeForPools(poolIDs []uint64, volumesForEa
 	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
 }
 
-// CompareDecCoinsSlice compares two slices of DecCoins
-func (s *KeeperTestHelper) CompareDecCoinsSlice(expected, actual []sdk.DecCoins) {
+// RequireDecCoinsSlice compares two slices of DecCoins
+func (s *KeeperTestHelper) RequireDecCoinsSlice(expected, actual []sdk.DecCoins) {
 	s.Require().Equal(len(expected), len(actual))
 	for i := range actual {
 		s.Require().Equal(expected[i].String(), actual[i].String())

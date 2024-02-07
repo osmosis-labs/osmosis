@@ -1417,13 +1417,13 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 				s.Require().NoError(err)
 
 				// check if returned uptime growth inside has correct value
-				s.CompareDecCoinsSlice(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
+				s.RequireDecCoinsSlice(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
 
 				uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, pool.GetId(), tc.lowerTick, tc.upperTick)
 				s.Require().NoError(err)
 
 				// check if returned uptime growth inside has correct value
-				s.CompareDecCoinsSlice(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
+				s.RequireDecCoinsSlice(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
 			})
 		}
 	})
