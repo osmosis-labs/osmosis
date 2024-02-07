@@ -359,3 +359,7 @@ func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate 
 func (k Keeper) GetPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
 	return k.getPositionIDsByPoolID(ctx, poolID)
 }
+
+func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	return k.getIncentiveScalingFactorForPool(ctx, poolID)
+}
