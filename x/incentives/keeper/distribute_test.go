@@ -570,6 +570,13 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		"non-perpetual, 2 coins, paid over 3 epochs, unauthorized and invalid uptime": withUnauthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*3),
 		"perpetual, 2 coins, unauthorized and invalid uptime":                         withUnauthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), time.Hour*3),
 
+		// Gauges with zero duration should be handled without error and fall back to default uptime.
+		// This is required for maintaining backwards compatibility with existing gauges at time of
+		// introducing the usage of gauge duration as uptime.
+		"non-perpetual, 1 coin, paid over 1 epoch, zero uptime":   withUnauthorizedUptime(defaultTest, 0),
+		"non-perpetual, 2 coins, paid over 3 epochs, zero uptime": withUnauthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), 0),
+		"perpetual, 2 coins, zero uptime":                         withUnauthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), 0),
+
 		"error: balancer pool id": withError(withPoolId(defaultTest, defaultBalancerPool)),
 		"error: inactive gauge":   withError(withNumEpochs(defaultTest, 0)),
 	}
