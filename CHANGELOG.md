@@ -40,29 +40,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
-<<<<<<< HEAD
-=======
-### State Compatible
-
- * [#7400](https://github.com/osmosis-labs/osmosis/pull/7400) Update CometBFT to v0.37.4 and IBC to v7.3.2
-
-### State Breaking
-
-* [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
-* [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
-* [#7357](https://github.com/osmosis-labs/osmosis/pull/7357) Fix: Ensure rate limits are not applied to packets that aren't ics20s
-
-### Bug Fixes
-
-* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
-
-### Misc Improvements
-
-* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
-* [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
-
 ## v22.0.5
 
 ### Logging
@@ -77,7 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v22.0.3
 
->>>>>>> 149f5526 (changelog v22.0.5 (#7425))
 ### Config
 
 * [#7368](https://github.com/osmosis-labs/osmosis/pull/7368) Overwrite ArbitrageMinGasPriceconfig from .005 to 0.1.
