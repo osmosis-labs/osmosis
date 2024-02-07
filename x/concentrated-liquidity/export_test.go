@@ -18,11 +18,12 @@ const (
 )
 
 var (
-	EmptyCoins         = emptyCoins
-	HundredFooCoins    = sdk.NewDecCoin("foo", osmomath.NewInt(100))
-	HundredBarCoins    = sdk.NewDecCoin("bar", osmomath.NewInt(100))
-	TwoHundredFooCoins = sdk.NewDecCoin("foo", osmomath.NewInt(200))
-	TwoHundredBarCoins = sdk.NewDecCoin("bar", osmomath.NewInt(200))
+	EmptyCoins              = emptyCoins
+	HundredFooCoins         = sdk.NewDecCoin("foo", osmomath.NewInt(100))
+	HundredBarCoins         = sdk.NewDecCoin("bar", osmomath.NewInt(100))
+	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
+	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
+	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -343,4 +344,12 @@ func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 
 func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
 	return k.getPoolHookContract(ctx, poolId, actionPrefix)
+}
+
+func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
+	return scaleUpTotalEmittedAmount(totalEmittedAmount)
+}
+
+func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
+	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
 }
