@@ -97,3 +97,7 @@ func (k Keeper) CreateGroupInternal(ctx sdk.Context, coins sdk.Coins, numEpochPa
 func (k Keeper) CalculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
 	return k.calculateGroupWeights(ctx, group)
 }
+
+func (k Keeper) GetNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	return k.getNoLockGaugeUptime(ctx, gauge, poolId)
+}
