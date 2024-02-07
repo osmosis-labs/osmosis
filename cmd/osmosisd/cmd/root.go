@@ -852,11 +852,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	// If this is an in place testnet, set any new stores that may exist
 	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
 		version := store.NewCommitMultiStore(db).LatestVersion() + 1
-<<<<<<< HEAD
 		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v22.Upgrade.StoreUpgrades)))
-=======
-		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
->>>>>>> 149f5526 (changelog v22.0.5 (#7425))
 	}
 
 	return osmosis.NewOsmosisApp(
