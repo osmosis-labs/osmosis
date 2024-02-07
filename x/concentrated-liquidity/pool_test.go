@@ -774,9 +774,13 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 // - Creates a pool to migration
 // - Creates two positions at different block times
 //   - Position 1: Zero accumulator and expected to receive incentives
-//   - Position 2: Non-zero accumulator and not expected to receive incentives
+//   - Position 2: Narrow position. Non-zero accumulator and not expected to receive incentives
 //
-// - Migrates the pool
+// # For second position, perform a swap to cross one of the initialized ticks
+//
+// System under test: Migrates the pool
+//
+// - Ensures that the pool accumulator trackers are updated.
 // - Ensure that the pool accumulator is updates
 // - Ensure that the position accumulators are updated
 // - Ensures that the position 1 receives incentives  but not position 2
@@ -807,9 +811,25 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	// Increate block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
 
-	// Create position two
+	// Refetch pool
+	concentratedPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolID)
+	s.Require().NoError(err)
+	currentTick := concentratedPool.GetCurrentTick()
+
+	// Create position two (narrow)
 	// It has non-zero position accumulator snapshot
-	positionTwoID, _ := s.CreateFullRangePosition(concentratedPool, DefaultCoins)
+	s.FundAcc(s.TestAccs[0], DefaultCoins)
+	positionDataTwo, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolID, s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), currentTick-100, currentTick+100)
+	s.Require().NoError(err)
+	positionTwoID := positionDataTwo.ID
+
+	// Refetch pool
+	concentratedPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Cross next right tick to update the tick accumulator by swapping
+	amtIn, _, _ := s.computeSwapAmounts(poolID, concentratedPool.GetCurrentSqrtPrice(), currentTick+100, false, false)
+	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()))
 
 	// Sync acccumulator
 	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, poolID)
@@ -823,6 +843,10 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	expectedInitialAccumulatorGrowth := sdk.NewDecCoins(sdk.NewDecCoinFromDec(incentiveDenom, osmomath.NewDec(60).QuoTruncate(positionOneLiquidity)))
 	s.Require().Equal(len(types.SupportedUptimes), len(uptimeAcc))
 	s.Require().Equal(expectedInitialAccumulatorGrowth.String(), uptimeAcc[0].GetValue().String())
+
+	// Get ticks before migration
+	ticksBeforeMigration, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(s.Ctx, poolID)
+	s.Require().NoError(err)
 
 	// Get claimable amount for position one before the migration
 	claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
@@ -843,11 +867,19 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	incentivizedUpdatedAccumulator := updatedUptimeAcc[0]
 	s.Require().Equal(expectedMigratedAccumulatorGrowth.String(), incentivizedUpdatedAccumulator.GetValue().String())
 
+	// Ensure that the ticks have been migrated
+	ticksAfterMigration, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	s.Require().NotEmpty(ticksBeforeMigration)
+	s.Require().Equal(len(ticksBeforeMigration), len(ticksAfterMigration))
+	for i := range ticksBeforeMigration {
+		// Validate that the tick uptime accumulator has been properly migrated
+		s.Require().Equal(ticksBeforeMigration[i].Info.UptimeTrackers.List[0].UptimeGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor), ticksAfterMigration[i].Info.UptimeTrackers.List[0].UptimeGrowthOutside)
+	}
+
 	// Ensure that position 1 accumulator is not updated (zero)
 	s.validateUptimePositionAccumulator(incentivizedUpdatedAccumulator, positionOneID, cl.EmptyCoins)
-
-	// Ensure that position 2 accumulator is updated
-	s.validateUptimePositionAccumulator(incentivizedUpdatedAccumulator, positionTwoID, expectedMigratedAccumulatorGrowth)
 
 	// Ensure that position 1 can claim the same amount as before the migration
 	s.validateClaimableIncentives(positionOneID, claimableIncentivesOneBeforeMigration)
