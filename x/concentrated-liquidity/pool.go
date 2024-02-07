@@ -421,6 +421,30 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 	return userPositionsWithPeriodLocks, nil
 }
 
+// getPositionIDsByPoolID returns all position IDs for a given pool ID.
+func (k Keeper) getPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
+	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolID), parsePositionIDFromPoolLink)
+	if err != nil {
+		return nil, err
+	}
+
+	return positionIDs, nil
+}
+
+// parsePositionIDFromPoolLink parses the position ID from the pool link key.
+func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
+	keys := strings.Split(string(key), types.KeySeparator)
+
+	// Pool ID and position ID.
+	if len(keys) != 2 {
+		return 0, fmt.Errorf("invalid key format when parsing pool/position ID index: %s", string(key))
+	}
+
+	positionID := sdk.BigEndianToUint64([]byte(keys[1]))
+
+	return positionID, nil
+}
+
 // MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator and respective position accumulators
 // by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
 func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
@@ -430,31 +454,11 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		return err
 	}
 
-	parse := func(key []byte, value []byte) (uint64, error) {
-		keyStr := string(key)
-
-		keys := strings.Split(keyStr, types.KeySeparator)
-
-		//
-		if len(keys) != 2 {
-			return 0, fmt.Errorf("invalid key format when parsing pool/position ID index: %s", keyStr)
-		}
-
-		positionID := sdk.BigEndianToUint64([]byte(keys[1]))
-
-		return positionID, nil
-	}
-
-	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolId), parse)
+	// Get all position IDs for the pool.
+	positionIDs, err := k.getPositionIDsByPoolID(ctx, poolId)
 	if err != nil {
 		return err
 	}
-
-	// // Get all position IDs belonging to the pool
-	// positionIDs, err := k.GetAllPositionIdsForPoolId(ctx, []byte(key), poolId)
-	// if err != nil {
-	// 	return err
-	// }
 
 	// For each uptime accimulator, multiply the value by the per-unit liquidity scaling factor
 	// and overwrite the accumulator with the new value.
