@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 )
 
@@ -45,26 +44,22 @@ func (ad AuthenticatorDecorator) PostHandle(
 			return sdk.Context{}, err
 		}
 
-		_, isMsgAddAuthenticator := msg.(*types.MsgAddAuthenticator)
-		if !isMsgAddAuthenticator {
-			for _, authenticator := range authenticators { // This should execute on *all* authenticators so they can update their state
-				// Get the authentication data for the transaction
-				authData, err := authenticator.GetAuthenticationData(ctx, tx, msgIndex, simulate)
-				if err != nil {
-					return ctx, err
-				}
-
-				// Confirm Execution
-				successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
-
-				if successfulExecution.IsBlock() {
-					return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
-				}
-
-				success = successfulExecution.IsConfirm()
+		for _, authenticator := range authenticators { // This should execute on *all* authenticators so they can update their state
+			// Get the authentication data for the transaction
+			authData, err := authenticator.GetAuthenticationData(ctx, tx, msgIndex, simulate)
+			if err != nil {
+				return ctx, err
 			}
-		}
 
+			// Confirm Execution
+			successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
+
+			if successfulExecution.IsBlock() {
+				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
+			}
+
+			success = successfulExecution.IsConfirm()
+		}
 	}
 
 	return next(ctx, tx, simulate, success)
