@@ -2478,3 +2478,73 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		validateLastEpochNonPerpetualPruning(currentGauge.Id, currentGauge.DistributedCoins.Add(defaultCoins...), initialDistributionCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName)))
 	})
 }
+
+func (s *KeeperTestSuite) TestGetNoLockGaugeUptime() {
+	defaultPoolId := uint64(1)
+	tests := map[string]struct {
+		gauge             types.Gauge
+		authorizedUptimes []time.Duration
+		internalUptime    time.Duration
+		expectedUptime    time.Duration
+	}{
+		"external gauge with authorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{Duration: time.Hour},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime, time.Hour},
+			expectedUptime:    time.Hour,
+		},
+		"external gauge with unauthorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{Duration: time.Minute},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime},
+			expectedUptime:    types.DefaultConcentratedUptime,
+		},
+		"internal gauge with authorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{
+					Denom:    types.NoLockInternalGaugeDenom(defaultPoolId),
+					Duration: time.Hour,
+				},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime, time.Hour},
+			internalUptime:    time.Hour,
+			expectedUptime:    time.Hour,
+		},
+		"internal gauge with unauthorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{
+					Denom:    types.NoLockInternalGaugeDenom(defaultPoolId),
+					Duration: time.Hour,
+				},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime},
+			internalUptime:    time.Hour,
+			expectedUptime:    types.DefaultConcentratedUptime,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// Prepare CL pool
+			clPool := s.PrepareConcentratedPool()
+
+			// Setup CL params with authorized uptimes
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.AuthorizedUptimes = tc.authorizedUptimes
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+
+			// Set internal uptime module param if applicable
+			if tc.internalUptime != time.Duration(0) {
+				s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyInternalUptime, tc.internalUptime)
+			}
+
+			// System under test
+			actualUptime := s.App.IncentivesKeeper.GetNoLockGaugeUptime(s.Ctx, tc.gauge, clPool.GetId())
+
+			// Ensure correct uptime was returned
+			s.Require().Equal(tc.expectedUptime, actualUptime)
+		})
+	}
+}
