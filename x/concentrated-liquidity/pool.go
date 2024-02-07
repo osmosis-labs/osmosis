@@ -494,5 +494,23 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		}
 	}
 
+	// Retrieve all ticks for the pool
+	ticks, err := k.GetAllInitializedTicksForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// For each tick, multiply the value of the uptime accumulator tracker.
+	for _, tick := range ticks {
+		// Get the tick's accumulator
+		uptimeTrackers := tick.Info.UptimeTrackers
+		for i, uptimeTracker := range uptimeTrackers.List {
+			uptimeTrackers.List[i].UptimeGrowthOutside = uptimeTracker.UptimeGrowthOutside.MulDecTruncate(perUnitLiqScalingFactor)
+		}
+
+		// Overwrite the tick's accumulator with the new value
+		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
+	}
+
 	return nil
 }
