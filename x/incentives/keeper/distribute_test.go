@@ -2451,3 +2451,41 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		validateLastEpochNonPerpetualPruning(currentGauge.Id, currentGauge.DistributedCoins.Add(defaultCoins...), initialDistributionCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName)))
 	})
 }
+
+func (s *KeeperTestSuite) TestGetNoLockGaugeUptime() {
+	tests := map[string]struct {
+		gauge             types.Gauge
+		authorizedUptimes []time.Duration
+		expectedUptime    time.Duration
+	}{
+		"external gauge with authorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{Duration: time.Hour},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime, time.Hour},
+			expectedUptime:    time.Hour,
+		},
+		"external gauge with unauthorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{Duration: time.Minute},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime},
+			expectedUptime:    types.DefaultConcentratedUptime,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// Setup CL params with authorized uptimes
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.AuthorizedUptimes = tc.authorizedUptimes
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+
+			// System under test
+			actualUptime := s.App.IncentivesKeeper.GetNoLockGaugeUptime(s.Ctx, tc.gauge)
+
+			// Ensure correct uptime was returned
+			s.Require().Equal(tc.expectedUptime, actualUptime)
+		})
+	}
+}
