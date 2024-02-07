@@ -550,6 +550,42 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
+// getNoLockGaugeUptime retrieves the uptime corresponding to the passed in gauge.
+// For external gauges, it returns the uptime specified in the gauge.
+// For internal gauges, it returns the module param for internal gauge uptime.
+//
+// In either case, if the fetched uptime is invalid or unauthorized, it falls back to a default uptime.
+func (k Keeper) getNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	// If internal gauge, use InternalUptime param as the gauge's uptime.
+	// Otherwise, use the gauge's duration.
+	gaugeUptime := gauge.DistributeTo.Duration
+	if gauge.DistributeTo.Denom == types.NoLockInternalGaugeDenom(poolId) {
+		gaugeUptime = k.GetParams(ctx).InternalUptime
+	}
+
+	// Validate that the gauge's corresponding uptime is authorized.
+	authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
+	isUptimeAuthorized := false
+	for _, authorizedUptime := range authorizedUptimes {
+		if gaugeUptime == authorizedUptime {
+			isUptimeAuthorized = true
+		}
+	}
+
+	// If the gauge's uptime is not authorized, we fall back to a default instead of erroring.
+	//
+	// This is for two reasons:
+	// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
+	// 2. To avoid having to do a state migration on existing gauges at time of adding
+	// this change, since prior to this, CL gauges were not required to associate with
+	// an uptime that was authorized.
+	if !isUptimeAuthorized {
+		gaugeUptime = types.DefaultConcentratedUptime
+	}
+
+	return gaugeUptime
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -602,6 +638,10 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
+		// Get the uptime for the gauge. Note that if the gauge's uptime is not authorized,
+		// this falls back to a default value of 1ns.
+		gaugeUptime := k.getNoLockGaugeUptime(ctx, gauge, pool.GetId())
+
 		// For every coin in the gauge, calculate the remaining reward per epoch
 		// and create a concentrated liquidity incentive record for it that
 		// is supposed to distribute over that epoch.
@@ -625,8 +665,9 @@ func (k Keeper) distributeInternal(
 				// Gauge start time should be checked whenever moving between active
 				// and inactive gauges. By the time we get here, the gauge should be active.
 				ctx.BlockTime(),
-				// Only default uptime is supported at launch.
-				types.DefaultConcentratedUptime,
+				// The uptime for each distribution is determined by the gauge's duration field.
+				// If it is unauthorized, we fall back to a default above.
+				gaugeUptime,
 			)
 
 			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
