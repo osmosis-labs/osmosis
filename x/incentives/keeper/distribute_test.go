@@ -436,6 +436,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		startTime          time.Time
 		numEpochsPaidOver  uint64
 		poolId             uint64
+		authorizedUptime   bool
 
 		// expected
 		expectErr                              bool
@@ -451,6 +452,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		startTime:         oneHourAfterDefault,
 		numEpochsPaidOver: 1,
 		poolId:            defaultCLPool,
+		authorizedUptime:  false,
 		expectErr:         false,
 
 		expectedDistributions:                  sdk.NewCoins(fiveKRewardCoins),
@@ -508,6 +510,18 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		return tc
 	}
 
+	withAuthorizedUptime := func(tc test, duration time.Duration) test {
+		tc.distrTo.Duration = duration
+		tc.authorizedUptime = true
+		return tc
+	}
+
+	withUnauthorizedUptime := func(tc test, duration time.Duration) test {
+		tc.distrTo.Duration = duration
+		tc.authorizedUptime = false
+		return tc
+	}
+
 	withError := func(tc test) test {
 		tc.expectErr = true
 		return tc
@@ -520,8 +534,24 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		"perpetual, 2 coins, paid over 1 epoch":      withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true),
 		"non-perpetual, 1 coin, paid over 2 epochs":  withNumEpochs(defaultTest, 2),
 		"non-perpetual, 2 coins, paid over 3 epochs": withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3),
-		"error: balancer pool id":                    withError(withPoolId(defaultTest, defaultBalancerPool)),
-		"error: inactive gauge":                      withError(withNumEpochs(defaultTest, 0)),
+
+		// We expect incentives with the set uptime to be created
+		"non-perpetual, 1 coin, paid over 1 epoch, authorized 1d uptime":   withAuthorizedUptime(defaultTest, time.Hour*24),
+		"non-perpetual, 2 coins, paid over 3 epochs, authorized 7d uptime": withAuthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*24*7),
+		"perpetual, 2 coins, authorized 1h uptime":                         withAuthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), time.Hour),
+
+		// We expect incentives to fall back to default uptime of 1ns
+		"non-perpetual, 1 coin, paid over 1 epoch, unauthorized 1d uptime":   withUnauthorizedUptime(defaultTest, time.Hour*24),
+		"non-perpetual, 2 coins, paid over 3 epochs, unauthorized 7d uptime": withUnauthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*24*7),
+		"perpetual, 2 coins, unauthorized 1h uptime":                         withUnauthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), time.Hour),
+
+		// 3h is not a valid uptime, so we expect this to fall back to 1ns
+		"non-perpetual, 1 coin, paid over 1 epoch, unauthorized and invalid uptime":   withUnauthorizedUptime(defaultTest, time.Hour*3),
+		"non-perpetual, 2 coins, paid over 3 epochs, unauthorized and invalid uptime": withUnauthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*3),
+		"perpetual, 2 coins, unauthorized and invalid uptime":                         withUnauthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), time.Hour*3),
+
+		"error: balancer pool id": withError(withPoolId(defaultTest, defaultBalancerPool)),
+		"error: inactive gauge":   withError(withNumEpochs(defaultTest, 0)),
 	}
 
 	for name, tc := range tests {
@@ -539,6 +569,13 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 			// Set block time one hour after block creation so that incentives logic
 			// can function properly.
 			s.Ctx = s.Ctx.WithBlockTime(oneHourAfterDefault)
+
+			// If applicable, authorize gauge's uptime in CL module
+			if tc.authorizedUptime {
+				clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				clParams.AuthorizedUptimes = append(clParams.AuthorizedUptimes, tc.distrTo.Duration)
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+			}
 
 			// Create gauge and get it from state
 			externalGauge := s.createGaugeNoRestrictions(tc.isPerpertual, tc.gaugeCoins, tc.distrTo, tc.startTime, tc.numEpochsPaidOver, defaultCLPool)
@@ -569,9 +606,15 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 				incentivesEpochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 				incentivesEpochDurationSeconds := osmomath.NewDec(incentivesEpochDuration.Milliseconds()).QuoInt(osmomath.NewInt(1000))
 
+				// If uptime is not authorized, we expect to fall back to default
+				expectedUptime := types.DefaultConcentratedUptime
+				if tc.authorizedUptime {
+					expectedUptime = tc.distrTo.Duration
+				}
+
 				// Check that incentive records were created
 				for i, coin := range tc.expectedDistributions {
-					incentiveRecords, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, time.Nanosecond, uint64(i+1))
+					incentiveRecords, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, expectedUptime, uint64(i+1))
 					s.Require().NoError(err)
 
 					expectedEmissionRatePerEpoch := coin.Amount.ToLegacyDec().QuoTruncate(incentivesEpochDurationSeconds)
@@ -580,7 +623,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 					s.Require().Equal(coin.Denom, incentiveRecords.IncentiveRecordBody.RemainingCoin.Denom)
 					s.Require().Equal(tc.expectedRemainingAmountIncentiveRecord[i], incentiveRecords.IncentiveRecordBody.RemainingCoin.Amount)
 					s.Require().Equal(expectedEmissionRatePerEpoch, incentiveRecords.IncentiveRecordBody.EmissionRate)
-					s.Require().Equal(time.Nanosecond, incentiveRecords.MinUptime)
+					s.Require().Equal(expectedUptime, incentiveRecords.MinUptime)
 				}
 
 				// Check that the gauge's distribution state was updated
@@ -2407,4 +2450,42 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		// Expected to not have any dust and transferred nothing to community pool.
 		validateLastEpochNonPerpetualPruning(currentGauge.Id, currentGauge.DistributedCoins.Add(defaultCoins...), initialDistributionCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName)))
 	})
+}
+
+func (s *KeeperTestSuite) TestGetNoLockGaugeUptime() {
+	tests := map[string]struct {
+		gauge             types.Gauge
+		authorizedUptimes []time.Duration
+		expectedUptime    time.Duration
+	}{
+		"external gauge with authorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{Duration: time.Hour},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime, time.Hour},
+			expectedUptime:    time.Hour,
+		},
+		"external gauge with unauthorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{Duration: time.Minute},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime},
+			expectedUptime:    types.DefaultConcentratedUptime,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// Setup CL params with authorized uptimes
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.AuthorizedUptimes = tc.authorizedUptimes
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+
+			// System under test
+			actualUptime := s.App.IncentivesKeeper.GetNoLockGaugeUptime(s.Ctx, tc.gauge)
+
+			// Ensure correct uptime was returned
+			s.Require().Equal(tc.expectedUptime, actualUptime)
+		})
+	}
 }
