@@ -98,6 +98,6 @@ func (k Keeper) CalculateGroupWeights(ctx sdk.Context, group types.Group) (types
 	return k.calculateGroupWeights(ctx, group)
 }
 
-func (k Keeper) GetNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge) time.Duration {
-	return k.getNoLockGaugeUptime(ctx, gauge)
+func (k Keeper) GetNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	return k.getNoLockGaugeUptime(ctx, gauge, poolId)
 }

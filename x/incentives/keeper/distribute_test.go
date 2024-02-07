@@ -251,45 +251,84 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 		tokensToAddToGauge sdk.Coins
 		gaugeStartTime     time.Time
 		gaugeCoins         sdk.Coins
+		internalUptime     time.Duration
 
 		// expected
-		expectErr             bool
+		// Note: internal gauge distributions should never error, so we don't expect any errors here.
 		expectedDistributions sdk.Coins
+		expectedUptime        time.Duration
 	}{
-		"valid case: one poolId and gaugeId": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+		"one poolId and gaugeId": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: gauge with multiple coins": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
+		"gauge with multiple coins": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
+			internalUptime: types.DefaultConcentratedUptime,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
-			expectErr:             false,
 		},
-		"valid case: multiple gaugeId and poolId": {
-			numPools:              3,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+		"multiple gaugeId and poolId": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: one poolId and gaugeId, five 5000 coins": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime,
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+		"one poolId and gaugeId, five 5000 coins": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-			expectErr:             false,
 		},
-		"valid case: attempt to createIncentiveRecord with start time < currentBlockTime - gets set to block time in incentive record": {
-			numPools:              1,
-			gaugeStartTime:        defaultGaugeStartTime.Add(-5 * time.Hour),
-			gaugeCoins:            sdk.NewCoins(fiveKRewardCoins),
+		"attempt to createIncentiveRecord with start time < currentBlockTime - gets set to block time in incentive record": {
+			numPools:       1,
+			gaugeStartTime: defaultGaugeStartTime.Add(-5 * time.Hour),
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: types.DefaultConcentratedUptime,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-			expectErr:             false,
+		},
+		// We expect incentive record to fall back to the default uptime, since the internal uptime is unauthorized.
+		"unauthorized internal uptime": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: time.Hour * 24 * 7,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
+			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
+		},
+		"invalid internal uptime": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+			internalUptime: time.Hour * 4,
+
+			expectedUptime:        types.DefaultConcentratedUptime,
+			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
+		},
+		"nil internal uptime": {
+			numPools:       3,
+			gaugeStartTime: defaultGaugeStartTime,
+			gaugeCoins:     sdk.NewCoins(fiveKRewardCoins),
+
+			expectedUptime:        types.DefaultConcentratedUptime,
+			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
 		},
 	}
 
@@ -300,6 +339,9 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 			s.SetupTest()
 			// We fix blocktime to ensure tests are deterministic
 			s.Ctx = s.Ctx.WithBlockTime(defaultGaugeStartTime)
+
+			// Set internal uptime module param as defined in test case
+			s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyInternalUptime, tc.internalUptime)
 
 			var gauges []types.Gauge
 
@@ -334,73 +376,51 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 				gauges = append(gauges, *gauge)
 			}
 
-			// Distribute tokens from the gauge
+			// System under test: Distribute tokens from the gauge
 			totalDistributedCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
-			if tc.expectErr {
-				s.Require().Error(err)
+			s.Require().NoError(err)
 
-				// module account amount must stay the same
-				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				s.Require().Equal(coinsToMint, balance)
+			// check that gauge is not empty
+			s.Require().NotEqual(len(gauges), 0)
 
-				for i, gauge := range gauges {
-					for j := range gauge.Coins {
-						incentiveId := i*len(gauge.Coins) + j + 1
-
-						// get poolId from GaugeId
-						poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gauge.GetId(), currentEpoch.Duration)
-						s.Require().NoError(err)
-
-						// check that incentive record wasn't created
-						_, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, currentEpoch.Duration, uint64(incentiveId))
-						s.Require().Error(err)
-					}
-				}
-			} else {
-				s.Require().NoError(err)
-
-				// check that gauge is not empty
-				s.Require().NotEqual(len(gauges), 0)
-
-				// check if module amount got deducted correctly
-				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				for _, coin := range balance {
-					actualbalanceAfterDistribution := coinsToMint.AmountOf(coin.Denom).Sub(coin.Amount)
-					s.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(osmomath.ZeroInt()), actualbalanceAfterDistribution.Add(osmomath.ZeroInt()))
-				}
-
-				for i, gauge := range gauges {
-					for j, coin := range gauge.Coins {
-						incentiveId := i*len(gauge.Coins) + j + 1
-
-						gaugeId := gauge.GetId()
-
-						// get poolId from GaugeId
-						poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, currentEpoch.Duration)
-						s.Require().NoError(err)
-
-						// GetIncentiveRecord to see if pools received incentives properly
-						incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, types.DefaultConcentratedUptime, uint64(incentiveId))
-						s.Require().NoError(err)
-
-						expectedEmissionRate := osmomath.NewDecFromInt(coin.Amount).QuoTruncate(osmomath.NewDec(int64(currentEpoch.Duration.Seconds())))
-
-						// Check that gauge distribution state is updated.
-						s.ValidateDistributedGauge(gaugeId, 1, tc.gaugeCoins)
-
-						// check every parameter in incentiveRecord so that it matches what we created
-						incentiveRecordBody := incentiveRecord.GetIncentiveRecordBody()
-						s.Require().Equal(poolId, incentiveRecord.PoolId)
-						s.Require().Equal(expectedEmissionRate, incentiveRecordBody.EmissionRate)
-						s.Require().Equal(s.Ctx.BlockTime().UTC().String(), incentiveRecordBody.StartTime.UTC().String())
-						s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
-						s.Require().Equal(coin.Amount, incentiveRecordBody.RemainingCoin.Amount.TruncateInt())
-						s.Require().Equal(coin.Denom, incentiveRecordBody.RemainingCoin.Denom)
-					}
-				}
-				// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
-				s.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
+			// check if module amount got deducted correctly
+			balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+			for _, coin := range balance {
+				actualbalanceAfterDistribution := coinsToMint.AmountOf(coin.Denom).Sub(coin.Amount)
+				s.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(osmomath.ZeroInt()), actualbalanceAfterDistribution.Add(osmomath.ZeroInt()))
 			}
+
+			for i, gauge := range gauges {
+				for j, coin := range gauge.Coins {
+					incentiveId := i*len(gauge.Coins) + j + 1
+
+					gaugeId := gauge.GetId()
+
+					// get poolId from GaugeId
+					poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, currentEpoch.Duration)
+					s.Require().NoError(err)
+
+					// GetIncentiveRecord to see if pools received incentives properly
+					incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, tc.expectedUptime, uint64(incentiveId))
+					s.Require().NoError(err)
+
+					expectedEmissionRate := osmomath.NewDecFromInt(coin.Amount).QuoTruncate(osmomath.NewDec(int64(currentEpoch.Duration.Seconds())))
+
+					// Check that gauge distribution state is updated.
+					s.ValidateDistributedGauge(gaugeId, 1, tc.gaugeCoins)
+
+					// check every parameter in incentiveRecord so that it matches what we created
+					incentiveRecordBody := incentiveRecord.GetIncentiveRecordBody()
+					s.Require().Equal(poolId, incentiveRecord.PoolId)
+					s.Require().Equal(expectedEmissionRate, incentiveRecordBody.EmissionRate)
+					s.Require().Equal(s.Ctx.BlockTime().UTC().String(), incentiveRecordBody.StartTime.UTC().String())
+					s.Require().Equal(tc.expectedUptime, incentiveRecord.MinUptime)
+					s.Require().Equal(coin.Amount, incentiveRecordBody.RemainingCoin.Amount.TruncateInt())
+					s.Require().Equal(coin.Denom, incentiveRecordBody.RemainingCoin.Denom)
+				}
+			}
+			// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
+			s.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
 		})
 	}
 }
@@ -2453,9 +2473,11 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 }
 
 func (s *KeeperTestSuite) TestGetNoLockGaugeUptime() {
+	defaultPoolId := uint64(1)
 	tests := map[string]struct {
 		gauge             types.Gauge
 		authorizedUptimes []time.Duration
+		internalUptime    time.Duration
 		expectedUptime    time.Duration
 	}{
 		"external gauge with authorized uptime": {
@@ -2472,17 +2494,47 @@ func (s *KeeperTestSuite) TestGetNoLockGaugeUptime() {
 			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime},
 			expectedUptime:    types.DefaultConcentratedUptime,
 		},
+		"internal gauge with authorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{
+					Denom:    types.NoLockInternalGaugeDenom(defaultPoolId),
+					Duration: time.Hour,
+				},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime, time.Hour},
+			internalUptime:    time.Hour,
+			expectedUptime:    time.Hour,
+		},
+		"internal gauge with unauthorized uptime": {
+			gauge: types.Gauge{
+				DistributeTo: lockuptypes.QueryCondition{
+					Denom:    types.NoLockInternalGaugeDenom(defaultPoolId),
+					Duration: time.Hour,
+				},
+			},
+			authorizedUptimes: []time.Duration{types.DefaultConcentratedUptime},
+			internalUptime:    time.Hour,
+			expectedUptime:    types.DefaultConcentratedUptime,
+		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
+			// Prepare CL pool
+			clPool := s.PrepareConcentratedPool()
+
 			// Setup CL params with authorized uptimes
 			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 			clParams.AuthorizedUptimes = tc.authorizedUptimes
 			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
 
+			// Set internal uptime module param if applicable
+			if tc.internalUptime != time.Duration(0) {
+				s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyInternalUptime, tc.internalUptime)
+			}
+
 			// System under test
-			actualUptime := s.App.IncentivesKeeper.GetNoLockGaugeUptime(s.Ctx, tc.gauge)
+			actualUptime := s.App.IncentivesKeeper.GetNoLockGaugeUptime(s.Ctx, tc.gauge, clPool.GetId())
 
 			// Ensure correct uptime was returned
 			s.Require().Equal(tc.expectedUptime, actualUptime)
