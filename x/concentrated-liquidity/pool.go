@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -420,6 +421,8 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 	return userPositionsWithPeriodLocks, nil
 }
 
+// MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator and respective position accumulators
+// by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
 func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
 	// Get pool-global incentive accumulator
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
@@ -427,11 +430,31 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		return err
 	}
 
-	// Get all position IDs belonging to the pool
-	positionIDs, err := k.GetAllPositionIdsForPoolId(ctx, types.KeyPoolPosition(poolId), poolId)
+	parse := func(key []byte, value []byte) (uint64, error) {
+		keyStr := string(key)
+
+		keys := strings.Split(keyStr, types.KeySeparator)
+
+		//
+		if len(keys) != 2 {
+			return 0, fmt.Errorf("invalid key format when parsing pool/position ID index: %s", keyStr)
+		}
+
+		positionID := sdk.BigEndianToUint64([]byte(keys[1]))
+
+		return positionID, nil
+	}
+
+	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolId), parse)
 	if err != nil {
 		return err
 	}
+
+	// // Get all position IDs belonging to the pool
+	// positionIDs, err := k.GetAllPositionIdsForPoolId(ctx, []byte(key), poolId)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// For each uptime accimulator, multiply the value by the per-unit liquidity scaling factor
 	// and overwrite the accumulator with the new value.

@@ -784,6 +784,11 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 
 	supportedUptimes := types.SupportedUptimes
 
+	incentiveScalingFactor, err := k.getIncentiveScalingFactorForPool(ctx, position.PoolId)
+	if err != nil {
+		return sdk.Coins{}, sdk.Coins{}, err
+	}
+
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		// Check if the accumulator contains the position.
@@ -802,7 +807,7 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 			// We always truncate down in the pool's favor.
 			collectedIncentivesForUptime := sdk.NewCoins()
 			for _, incentiveCoin := range collectedIncentivesForUptimeScaled {
-				incentiveCoin.Amount = incentiveCoin.Amount.ToLegacyDec().QuoTruncateMut(perUnitLiqScalingFactor).TruncateInt()
+				incentiveCoin.Amount = incentiveCoin.Amount.ToLegacyDec().QuoTruncateMut(incentiveScalingFactor).TruncateInt()
 				if incentiveCoin.Amount.IsPositive() {
 					collectedIncentivesForUptime = append(collectedIncentivesForUptime, incentiveCoin)
 				}
