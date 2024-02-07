@@ -42,13 +42,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Config
+<<<<<<< HEAD
+=======
+### State Compatible
 
-* [#7368](https://github.com/osmosis-labs/osmosis/pull/7368) Overwrite ArbitrageMinGasPriceconfig from .005 to 0.1.
+ * [#7400](https://github.com/osmosis-labs/osmosis/pull/7400) Update CometBFT to v0.37.4 and IBC to v7.3.2
+
+### State Breaking
+
+* [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
+* [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
+* [#7357](https://github.com/osmosis-labs/osmosis/pull/7357) Fix: Ensure rate limits are not applied to packets that aren't ics20s
+
+### Bug Fixes
+
+* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
+
+### Misc Improvements
+
+* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
+* [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
+
+## v22.0.5
 
 ### Logging
 
 * [#7395](https://github.com/osmosis-labs/osmosis/pull/7395) Adds logging to track incentive accumulator truncation.
+
+### Misc Improvements
+
+* [#7374](https://github.com/osmosis-labs/osmosis/pull/7374) In place testnet creation CLI
+* [#7411](https://github.com/osmosis-labs/osmosis/pull/7411) De-duplicate fetching intermediate accounts in epoch.
+* [#7415](https://github.com/osmosis-labs/osmosis/pull/7415) Speed up TWAP pruning logic.
+
+## v22.0.3
+
+>>>>>>> 149f5526 (changelog v22.0.5 (#7425))
+### Config
+
+* [#7368](https://github.com/osmosis-labs/osmosis/pull/7368) Overwrite ArbitrageMinGasPriceconfig from .005 to 0.1.
+
+### Misc Improvements
+
+* [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
 
 ### Misc Improvements
 
@@ -59,9 +95,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 * [#7346](https://github.com/osmosis-labs/osmosis/pull/7346) Prevent heavy gRPC load from app hashing nodes
-
-### Misc Improvements
-* [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
 
 ## v22.0.0
 
