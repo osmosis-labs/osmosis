@@ -555,13 +555,16 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 // For internal gauges, it returns the module param for internal gauge uptime.
 //
 // In either case, if the fetched uptime is invalid or unauthorized, it falls back to a default uptime.
-func (k Keeper) getNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge) time.Duration {
-	// TODO: use module param as uptime for internal gauges once it is implemented.
-	// (Ref: https://github.com/osmosis-labs/osmosis/issues/7371)
+func (k Keeper) getNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	// If internal gauge, use InternalUptime param as the gauge's uptime.
+	// Otherwise, use the gauge's duration.
+	gaugeUptime := gauge.DistributeTo.Duration
+	if gauge.DistributeTo.Denom == types.NoLockInternalGaugeDenom(poolId) {
+		gaugeUptime = k.GetParams(ctx).InternalUptime
+	}
 
 	// Validate that the gauge's corresponding uptime is authorized.
 	authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
-	gaugeUptime := gauge.DistributeTo.Duration
 	isUptimeAuthorized := false
 	for _, authorizedUptime := range authorizedUptimes {
 		if gaugeUptime == authorizedUptime {
@@ -637,7 +640,7 @@ func (k Keeper) distributeInternal(
 
 		// Get the uptime for the gauge. Note that if the gauge's uptime is not authorized,
 		// this falls back to a default value of 1ns.
-		gaugeUptime := k.getNoLockGaugeUptime(ctx, gauge)
+		gaugeUptime := k.getNoLockGaugeUptime(ctx, gauge, pool.GetId())
 
 		// For every coin in the gauge, calculate the remaining reward per epoch
 		// and create a concentrated liquidity incentive record for it that
