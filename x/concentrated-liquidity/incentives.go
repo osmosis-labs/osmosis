@@ -1046,22 +1046,27 @@ func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder, emitt
 	}
 }
 
+// getIncentiveScalingFactorForPool returns the scaling factor for the given pool.
+// It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
+// It returns oneDecScalingFactor otherwise.
 func (k Keeper) getIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
 	migrationThreshold, err := k.GetIncentivePoolIDMigrationThreshold(ctx)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}
 
+	// If the given pool ID is greater than the migration threshold, we return the perUnitLiqScalingFactor.
 	if poolID > migrationThreshold {
 		return perUnitLiqScalingFactor, nil
 	}
 
+	// If the given pool ID is in the migrated incentive accumulator pool IDs, we return the perUnitLiqScalingFactor.
 	_, isMigrated := types.MigratedIncentiveAccumulatorPoolIDs[poolID]
-
 	if isMigrated {
 		return perUnitLiqScalingFactor, nil
 	}
 
+	// Otherwise, we return the oneDecScalingFactor.
 	return oneDecScalingFactor, nil
 }
 
