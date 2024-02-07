@@ -41,6 +41,7 @@ var (
 		PoolData:              []genesis.PoolData{},
 		NextIncentiveRecordId: 2,
 		NextPositionId:        3,
+		IncentivesAccumulatorPoolIdMigrationThreshold: 3,
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -595,6 +596,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			}
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
+
+			// Validate incentive migration threshold
+			incentiveMigrationThreshold, err := clKeeper.GetIncentivePoolIDMigrationThreshold(ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, incentiveMigrationThreshold)
 		})
 	}
 }
@@ -814,6 +820,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
+
+			// Validate incentive migration threshold
+			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, actualExported.IncentivesAccumulatorPoolIdMigrationThreshold)
 		})
 	}
 }
