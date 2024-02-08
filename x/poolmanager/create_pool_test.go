@@ -7,13 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	cwmodel "github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
-	stableswap "github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	cwmodel "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	stableswap "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestPoolCreationFee() {

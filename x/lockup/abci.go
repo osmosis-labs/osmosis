@@ -3,7 +3,7 @@ package lockup
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v22/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

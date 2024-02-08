@@ -16,10 +16,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v22/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v22/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

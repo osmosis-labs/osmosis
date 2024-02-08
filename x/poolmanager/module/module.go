@@ -14,16 +14,16 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v22/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager"
-	pmclient "github.com/osmosis-labs/osmosis/v22/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/grpc"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/grpcv2"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v23/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
+	pmclient "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/grpc"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/grpcv2"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var (

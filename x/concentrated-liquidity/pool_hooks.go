@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	types "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 // --- Pool Hooks ---
