@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	clqueryproto "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
+	clqueryproto "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 // test-specific helper descriptor
