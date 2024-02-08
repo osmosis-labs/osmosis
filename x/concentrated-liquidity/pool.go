@@ -20,11 +20,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
-var (
-	// expected st
-	keySeparatorPrefixStartIndex = len(types.PoolPositionPrefix) + types.Uint64ByteSize
-)
-
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
 // It validates tick spacing, spread factor, and authorized quote denominations before creating and setting
 // the pool's fee and uptime accumulators. If the pool is successfully created, it calls the AfterConcentratedPoolCreated
@@ -440,7 +435,7 @@ func (k Keeper) getPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64
 // parsePositionIDFromPoolLink parses the position ID from the pool link key.
 func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
 	if len(key) != types.PoolPositionIDFullPrefixLen {
-		return 0, fmt.Errorf("length of key (%v) of (%d) is not equal to expected (%d)", key, len(key), types.PoolPositionIDFullPrefixLen)
+		return 0, fmt.Errorf("length (%d) of key (%v) is not equal to expected (%d)", len(key), key, types.PoolPositionIDFullPrefixLen)
 	}
 
 	if key[types.PoolPositionIDKeySeparatorIndex] != types.KeySeparator[0] {

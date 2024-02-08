@@ -55,7 +55,7 @@ func CreateUpgradeHandler(
 
 		after := time.Now()
 
-		ctx.Logger().Info("migration time", "duration_secs", after.Sub(before).Seconds())
+		ctx.Logger().Info("migration time", "duration_ms", after.Sub(before).Milliseconds())
 
 		return migrations, nil
 	}
