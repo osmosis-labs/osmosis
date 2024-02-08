@@ -128,7 +128,7 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 		store.Delete(poolIndexKey)
 
 		// Increment the number of records pruned by 2, since we delete two records per iteration.
-		numPruned = numPruned + 2
+		numPruned += 2
 
 		if numPruned >= NumRecordsToPrunePerBlock {
 			// We have hit the limit, so we stop pruning.
