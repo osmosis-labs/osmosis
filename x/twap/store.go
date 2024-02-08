@@ -127,7 +127,9 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 		poolIndexKey := types.FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId, asset0, asset1, timeS)
 		store.Delete(poolIndexKey)
 
-		numPruned++
+		// Increment the number of records pruned by 2, since we delete two records per iteration.
+		numPruned = numPruned + 2
+
 		if numPruned >= NumRecordsToPrunePerBlock {
 			// We have hit the limit, so we stop pruning.
 			break
