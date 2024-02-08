@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
-	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/cosmwasm/msg/transmuter"
-	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/cosmwasm/msg/transmuter"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 )
 
 const (

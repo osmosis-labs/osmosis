@@ -10,9 +10,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v22/x/twap"
-	"github.com/osmosis-labs/osmosis/v22/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/twap"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere

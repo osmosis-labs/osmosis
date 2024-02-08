@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.

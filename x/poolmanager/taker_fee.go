@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v22/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 )
 
 func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {

@@ -16,9 +16,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/client/cli"
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/client/cli"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
 var (

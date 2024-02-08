@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 type MigrationType int

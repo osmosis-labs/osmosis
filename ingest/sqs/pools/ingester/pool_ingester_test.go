@@ -13,14 +13,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain/mocks"
-	poolsingester "github.com/osmosis-labs/osmosis/v22/ingest/sqs/pools/ingester"
-	clqueryproto "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain/mocks"
+	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
+	clqueryproto "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
 type IngesterTestSuite struct {

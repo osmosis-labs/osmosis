@@ -2,7 +2,7 @@ package stableswap
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 )
 
 func (params PoolParams) Validate() error {

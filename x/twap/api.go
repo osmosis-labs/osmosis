@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
