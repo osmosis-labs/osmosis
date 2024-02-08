@@ -80,6 +80,13 @@ func (k Keeper) StoreHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // So, in order to have correct behavior for the desired guarantee,
 // we keep the newest record that is older than the pruning time.
 // This is why we would keep the -50 hour and -1hour twaps despite a 48hr pruning period
+//
+// If we reach the per block pruning limit, we store the last key seen in the pruning state.
+// This is so that we can continue pruning from where we left off in the next block.
+// If we have pruned all records, we set the pruning state to not pruning.
+// There is a small bug here where we store more seenPoolAssetTriplets than we need to.
+// Issue added here: https://github.com/osmosis-labs/osmosis/issues/7435
+// The bloat is minimal though, and is not at risk of getting out of hand.
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.PruningState) error {
 	store := ctx.KVStore(k.storeKey)
 

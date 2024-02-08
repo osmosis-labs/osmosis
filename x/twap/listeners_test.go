@@ -275,8 +275,6 @@ func (s *TestSuite) TestAfterEpochEnd() {
 		err = s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
 		s.Require().NoError(err)
 
-		//recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
-
 		lastKeptTime := s.Ctx.BlockTime().Add(-s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx))
 		pruneState := s.twapkeeper.GetPruningState(s.Ctx)
 
