@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/vv23/x/protorev/types"
 )
 
 func TestGenesisStateValidate(t *testing.T) {

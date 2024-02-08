@@ -11,7 +11,7 @@ import "osmosis/concentratedliquidity/v1beta1/position.proto";
 import "osmosis/concentratedliquidity/v1beta1/tickInfo.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types/genesis";
+option go_package = "github.com/osmosis-labs/osmosis/vv23/x/concentrated-liquidity/types/genesis";
 
 // FullTick contains tick index and pool id along with other tick model
 // information.
