@@ -3,7 +3,6 @@ package concentrated_liquidity
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -20,6 +19,11 @@ import (
 	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+)
+
+var (
+	// expected st
+	keySeparatorPrefixStartIndex = len(types.PoolPositionPrefix) + types.Uint64ByteSize
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -424,7 +428,9 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 
 // getPositionIDsByPoolID returns all position IDs for a given pool ID.
 func (k Keeper) getPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
-	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolID), parsePositionIDFromPoolLink)
+	key := types.KeyPoolPosition(poolID)
+	key = append(key, types.KeySeparator...)
+	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), key, parsePositionIDFromPoolLink)
 	if err != nil {
 		return nil, err
 	}
@@ -434,14 +440,15 @@ func (k Keeper) getPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64
 
 // parsePositionIDFromPoolLink parses the position ID from the pool link key.
 func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
-	keys := strings.Split(string(key), types.KeySeparator)
-
-	// Pool ID and position ID.
-	if len(keys) != 2 {
-		return 0, fmt.Errorf("invalid key format when parsing pool/position ID index: %s", string(key))
+	if len(key) != types.PoolPositionIDFullPrefixLen {
+		return 0, fmt.Errorf("length of key (%v) of (%d) is not equal to expected (%d)", key, len(key), types.PoolPositionIDFullPrefixLen)
 	}
 
-	positionID := sdk.BigEndianToUint64([]byte(keys[1]))
+	if key[types.PoolPositionIDKeySeparatorIndex] != types.KeySeparator[0] {
+		return 0, fmt.Errorf("key (%v) is expected to have key separator (%v) at index (%d)", key, types.KeySeparator, types.PoolPositionIDKeySeparatorIndex)
+	}
+
+	positionID := sdk.BigEndianToUint64(key[types.PoolPositionIDKeySeparatorIndex+len(types.KeySeparator):])
 
 	return positionID, nil
 }
@@ -449,6 +456,7 @@ func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
 // MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
 // and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
 func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+	ctx.Logger().Info("migration start", "pool_id", poolId)
 	// Get pool-global incentive accumulator
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
@@ -460,6 +468,8 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 	if err != nil {
 		return err
 	}
+
+	ctx.Logger().Info("num_positions", "count", len(positionIDs))
 
 	// For each uptime accimulator, multiply the value by the per-unit liquidity scaling factor
 	// and overwrite the accumulator with the new value.
@@ -501,6 +511,8 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		return err
 	}
 
+	ctx.Logger().Info("num_ticks", "count", len(ticks))
+
 	// For each tick, multiply the value of the uptime accumulator tracker.
 	for _, tick := range ticks {
 		// Get the tick's accumulator
@@ -513,5 +525,6 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 	}
 
+	ctx.Logger().Info("migration end", "pool_id", poolId)
 	return nil
 }
