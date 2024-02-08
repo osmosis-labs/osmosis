@@ -21,15 +21,9 @@ import (
 	cometbftdb "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/v22/app/params"
-	v22 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v22" // TODO: should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
-=======
 	"github.com/osmosis-labs/osmosis/v23/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
->>>>>>> b029dfed (auto: update Go import paths to v23 on branch main (#7429))
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
