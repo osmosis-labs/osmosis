@@ -4,7 +4,7 @@ import (
 	fmt "fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 var (

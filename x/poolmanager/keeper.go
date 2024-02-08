@@ -5,7 +5,7 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"

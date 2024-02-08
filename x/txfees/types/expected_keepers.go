@@ -7,7 +7,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator

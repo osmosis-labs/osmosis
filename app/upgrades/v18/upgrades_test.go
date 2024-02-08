@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
-	v17 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	v17 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v17"
 
-	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v22/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 type UpgradeTestSuite struct {

@@ -2,8 +2,8 @@ package swapstrategy_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 func (suite *StrategyTestSuite) setupNewZeroForOneSwapStrategy(sqrtPriceLimit osmomath.Dec, spread osmomath.Dec) swapstrategy.SwapStrategy {

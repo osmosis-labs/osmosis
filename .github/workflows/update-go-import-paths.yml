@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Current Version that we want to change'
+        description: 'Current Version that we want to change (without v prefix)'
         default: '10'
         required: true
       target-branch:

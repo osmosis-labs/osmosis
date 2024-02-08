@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v22/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v22/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v23/wasmbinding/bindings"
 
 	"github.com/stretchr/testify/require"
 )

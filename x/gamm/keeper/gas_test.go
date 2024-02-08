@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
