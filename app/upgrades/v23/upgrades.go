@@ -2,6 +2,7 @@ package v23
 
 import (
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -24,6 +25,8 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		before := time.Now()
+
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
@@ -49,6 +52,10 @@ func CreateUpgradeHandler(
 				return nil, err
 			}
 		}
+
+		after := time.Now()
+
+		ctx.Logger().Info("migration time", "duration_secs", after.Sub(before).Seconds())
 
 		return migrations, nil
 	}
