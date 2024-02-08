@@ -5,7 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

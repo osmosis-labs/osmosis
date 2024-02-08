@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
-	sftypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	sftypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestInitializePool() {

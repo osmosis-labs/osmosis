@@ -8,10 +8,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

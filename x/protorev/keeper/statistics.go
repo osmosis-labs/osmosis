@@ -11,8 +11,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v22/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //

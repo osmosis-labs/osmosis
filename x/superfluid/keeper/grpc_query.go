@@ -16,15 +16,15 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v22/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}

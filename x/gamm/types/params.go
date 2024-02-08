@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	appparams "github.com/osmosis-labs/osmosis/v22/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"

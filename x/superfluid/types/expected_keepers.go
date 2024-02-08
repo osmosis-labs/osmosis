@@ -8,12 +8,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"
-	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

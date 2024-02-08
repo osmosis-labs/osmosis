@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v22/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)

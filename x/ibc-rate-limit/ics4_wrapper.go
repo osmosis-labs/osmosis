@@ -13,8 +13,12 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+<<<<<<< HEAD
 
 	"github.com/osmosis-labs/osmosis/v22/x/ibc-rate-limit/types"
+=======
+	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
+>>>>>>> b029dfed (auto: update Go import paths to v23 on branch main (#7429))
 )
 
 var (

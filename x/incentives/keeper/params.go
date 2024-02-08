@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v22/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

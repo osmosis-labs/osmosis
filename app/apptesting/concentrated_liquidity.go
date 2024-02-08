@@ -6,12 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clmath "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	clmath "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 )
 
 type ConcentratedKeeperTestHelper struct {

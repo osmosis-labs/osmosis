@@ -8,8 +8,8 @@ import (
 
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
-	types "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	types "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types

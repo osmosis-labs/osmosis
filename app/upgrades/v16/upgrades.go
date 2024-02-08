@@ -9,17 +9,17 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/app/keepers"
-	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
 
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v22/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v22/x/tokenfactory/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 )
 
 const (
