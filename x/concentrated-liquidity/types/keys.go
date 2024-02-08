@@ -57,7 +57,7 @@ var (
 	// TickPrefix + pool id + sign byte(negative / positive prefix) + tick index: 18bytes in total
 	KeyTickLengthBytes = KeyTickPrefixByPoolIdLengthBytes + 1 + Uint64ByteSize
 
-	// the full lenght of the pool <> position id key link
+	// the full length of the pool <> position id key link
 	PoolPositionIDFullPrefixLen = len(PoolPositionPrefix) + Uint64ByteSize + len(KeySeparator) + Uint64ByteSize
 	// the index of the key separator in the pool <> position id key link.
 	PoolPositionIDKeySeparatorIndex = len(PoolPositionPrefix) + Uint64ByteSize
