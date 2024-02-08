@@ -540,7 +540,13 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				twap.NumRecordsToPrunePerBlock = tc.overwriteLimit
 			}
 
-			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.lastKeptTime)
+			state := types.PruningState{
+				IsPruning:    true,
+				LastKeptTime: tc.lastKeptTime,
+				LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(tc.lastKeptTime, 0, "", ""),
+			}
+
+			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, state)
 			s.Require().NoError(err)
 
 			s.validateExpectedRecords(tc.expectedKeptRecords)

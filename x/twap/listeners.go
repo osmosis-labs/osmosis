@@ -29,6 +29,7 @@ func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, ep
 		hook.k.SetPruningState(ctx, types.PruningState{
 			IsPruning:    true,
 			LastKeptTime: lastKeptTime,
+			LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""),
 		})
 	}
 	return nil

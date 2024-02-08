@@ -75,7 +75,7 @@ func (k Keeper) StoreHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // So, in order to have correct behavior for the desired guarantee,
 // we keep the newest record that is older than the pruning time.
 // This is why we would keep the -50 hour and -1hour twaps despite a 48hr pruning period
-func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
+func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.PruningState) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// Reverse iterator guarantees that we iterate through the newest per pool first.
@@ -83,7 +83,7 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 	// lastKeptTime exclusively down to the oldest record.
 	iter := store.ReverseIterator(
 		[]byte(types.HistoricalTWAPTimeIndexPrefix),
-		types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
+		state.LastKeySeen)
 	defer iter.Close()
 
 	// We mark what (pool id, asset 0, asset 1) triplets we've seen.
@@ -131,8 +131,11 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 
 	if !iter.Valid() {
 		// The iterator is exhausted, so we have pruned all records.
-		state := k.GetPruningState(ctx)
 		state.IsPruning = false
+		k.SetPruningState(ctx, state)
+	} else {
+		// We have not pruned all records, so we update the last key seen.
+		state.LastKeySeen = iter.Key()
 		k.SetPruningState(ctx, state)
 	}
 	return nil

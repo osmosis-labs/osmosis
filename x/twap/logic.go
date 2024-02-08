@@ -118,7 +118,7 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 
 	state := k.GetPruningState(ctx)
 	if state.IsPruning {
-		err := k.pruneRecordsBeforeTimeButNewest(ctx, state.LastKeptTime)
+		err := k.pruneRecordsBeforeTimeButNewest(ctx, state)
 		if err != nil {
 			ctx.Logger().Error("Error pruning old twaps at the end block", err)
 		}

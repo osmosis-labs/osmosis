@@ -90,4 +90,7 @@ message PruningState {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"last_kept_time\""
   ];
+  // last_key_seen is the last key of the TWAP records that were pruned
+  // before reaching the block's prune limit
+  bytes last_key_seen = 3;
 }
