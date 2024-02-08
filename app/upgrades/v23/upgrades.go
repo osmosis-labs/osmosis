@@ -15,7 +15,7 @@ import (
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
-const mainnetChainID = "osmosis-1-test"
+const mainnetChainID = "osmo-test-6"
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
