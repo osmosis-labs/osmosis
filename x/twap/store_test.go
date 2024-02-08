@@ -359,6 +359,8 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 		lastKeptTime time.Time
 
 		expectedKeptRecords []types.TwapRecord
+
+		overwriteLimit uint16
 	}{
 		"base time; across pool 3; 4 records; 3 before lastKeptTime; 2 deleted and newest kept": {
 			recordsToPreSet: []types.TwapRecord{
@@ -507,6 +509,20 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 			expectedKeptRecords: []types.TwapRecord{},
 		},
+		"base time; across pool 3; 4 records; 3 before lastKeptTime; only 1 deleted due to limit set to 1": {
+			recordsToPreSet: []types.TwapRecord{
+				pool3BaseSecMin1Ms, // base time - 1ms; kept since newest before lastKeptTime
+				pool3BaseSecBaseMs, // base time; kept since at lastKeptTime
+				pool3BaseSecMin3Ms, // base time - 3ms; in queue for deletion
+				pool3BaseSecMin2Ms, // base time - 2ms; deleted
+			},
+
+			lastKeptTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{pool3BaseSecMin3Ms, pool3BaseSecMin1Ms, pool3BaseSecBaseMs},
+
+			overwriteLimit: 1,
+		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -515,6 +531,14 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 			ctx := s.Ctx
 			twapKeeper := s.twapkeeper
+
+			if tc.overwriteLimit != 0 {
+				originalLimit := twap.NumRecordsToPrunePerBlock
+				defer func() {
+					twap.NumRecordsToPrunePerBlock = originalLimit
+				}()
+				twap.NumRecordsToPrunePerBlock = tc.overwriteLimit
+			}
 
 			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.lastKeptTime)
 			s.Require().NoError(err)

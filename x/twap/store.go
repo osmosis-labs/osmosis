@@ -11,6 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v22/x/twap/types"
 )
 
+var NumRecordsToPrunePerBlock uint16 = 1000
+
 type timeTooOldError struct {
 	Time time.Time
 }
@@ -93,6 +95,8 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 	}
 	seenPoolAssetTriplets := map[uniqueTriplet]struct{}{}
 
+	var numPruned uint16
+
 	for ; iter.Valid(); iter.Next() {
 		timeIndexKey := iter.Key()
 		timeS, poolId, asset0, asset1, err := types.ParseFieldsFromHistoricalTimeKey(timeIndexKey)
@@ -117,6 +121,19 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 		store.Delete(timeIndexKey)
 		poolIndexKey := types.FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId, asset0, asset1, timeS)
 		store.Delete(poolIndexKey)
+
+		numPruned++
+		if numPruned >= NumRecordsToPrunePerBlock {
+			// We have hit the limit, so we stop pruning.
+			break
+		}
+	}
+
+	if !iter.Valid() {
+		// The iterator is exhausted, so we have pruned all records.
+		state := k.GetPruningState(ctx)
+		state.IsPruning = false
+		k.SetPruningState(ctx, state)
 	}
 	return nil
 }

@@ -74,3 +74,20 @@ message TwapRecord {
     (gogoproto.moretags) = "yaml:\"last_error_time\""
   ];
 }
+
+// PruningState allows us to spread out the pruning of TWAP records over time,
+// instead of pruning all at once at the end of the epoch.
+message PruningState {
+  // is_pruning is true if the pruning process is ongoing.
+  // This tells the module to continue pruning the TWAP records
+  // at the EndBlock.
+  bool is_pruning = 1;
+  // last_kept_time is the time of the last kept TWAP record.
+  // This is used to determine all TWAP records that are older than
+  // last_kept_time and should be pruned.
+  google.protobuf.Timestamp last_kept_time = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_kept_time\""
+  ];
+}
