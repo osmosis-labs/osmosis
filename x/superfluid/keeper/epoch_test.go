@@ -8,12 +8,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
@@ -215,7 +215,8 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			}
 
 			// move intermediary account delegation rewards to gauges
-			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+			accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx, accs)
 
 			// check invariant is fine
 			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
@@ -292,7 +293,8 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 				}
 
 				// move intermediary account delegation rewards to gauges
-				s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+				accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+				s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx, accs)
 
 				// move gauges to active gauge by declaring epoch end
 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))

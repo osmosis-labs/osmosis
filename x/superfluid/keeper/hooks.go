@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper/internal/events"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,5 +115,6 @@ func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, in
 	if slashFactor.IsZero() {
 		return
 	}
-	h.k.RefreshIntermediaryDelegationAmounts(ctx)
+	accs := h.k.GetAllIntermediaryAccounts(ctx)
+	h.k.RefreshIntermediaryDelegationAmounts(ctx, accs)
 }

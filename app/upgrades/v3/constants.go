@@ -1,6 +1,6 @@
 package v3
 
-import "github.com/osmosis-labs/osmosis/v22/app/upgrades"
+import "github.com/osmosis-labs/osmosis/v23/app/upgrades"
 
 const (
 	// UpgradeName defines the on-chain upgrade name for the Osmosis v3 upgrade.

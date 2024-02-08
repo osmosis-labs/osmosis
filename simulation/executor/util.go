@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v22/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 )
 
 //nolint:unparam

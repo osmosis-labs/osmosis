@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 )
 
 var ByGroupQueryCondition = byGroupQueryCondition
@@ -96,4 +96,8 @@ func (k Keeper) CreateGroupInternal(ctx sdk.Context, coins sdk.Coins, numEpochPa
 
 func (k Keeper) CalculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
 	return k.calculateGroupWeights(ctx, group)
+}
+
+func (k Keeper) GetNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	return k.getNoLockGaugeUptime(ctx, gauge, poolId)
 }

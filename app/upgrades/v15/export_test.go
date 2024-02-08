@@ -6,12 +6,12 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper"
 
-	ibcratelimit "github.com/osmosis-labs/osmosis/v22/x/ibc-rate-limit"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v22/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager"
+	gammkeeper "github.com/osmosis-labs/osmosis/v23/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
 )
 
 func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanager *poolmanager.Keeper) {

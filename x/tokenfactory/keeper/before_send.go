@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v22/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
 )

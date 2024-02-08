@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
 
-	"github.com/osmosis-labs/osmosis/v22/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v22/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v23/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes/simlogger"
 )
 
 const SimAppChainID = "osmosis-test"

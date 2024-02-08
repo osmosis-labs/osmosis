@@ -3,8 +3,9 @@ package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v22/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/incentives/types";
 
 // Params holds parameters for the incentives module
 message Params {
@@ -31,4 +32,16 @@ message Params {
   // other users.
   repeated string unrestricted_creator_whitelist = 3
       [ (gogoproto.moretags) = "yaml:\"unrestricted_creator_whitelist\"" ];
+
+  // internal_uptime is the uptime used for internal incentives on pools that
+  // use NoLock gauges (currently only Concentrated Liquidity pools).
+  //
+  // Since Group gauges route through internal gauges, this parameter affects
+  // the uptime of those incentives as well (i.e. distributions through volume
+  // splitting incentives will use this uptime).
+  google.protobuf.Duration internal_uptime = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"internal_uptime\""
+  ];
 }

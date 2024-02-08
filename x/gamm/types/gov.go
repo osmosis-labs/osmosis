@@ -9,7 +9,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammmigration "github.com/osmosis-labs/osmosis/v22/x/gamm/types/migration"
+	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
 )
 
 const (
@@ -238,7 +238,7 @@ func (p *SetScalingFactorControllerProposal) ProposalRoute() string { return Rou
 
 // ProposalType returns the type of the proposal
 func (p *SetScalingFactorControllerProposal) ProposalType() string {
-	return ProposalTypeReplaceMigrationRecords
+	return ProposalTypeSetScalingFactorController
 }
 
 // ValidateBasic validates a governance proposal's abstract and basic contents

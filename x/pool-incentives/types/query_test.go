@@ -7,7 +7,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 )
 
 func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {

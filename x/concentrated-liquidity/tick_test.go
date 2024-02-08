@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types/genesis"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
 )
 
 const validPoolId = 1
@@ -373,12 +373,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
-		preInitializedTickIndex     = DefaultCurrTick + 2
-		expectedUptimes             = getExpectedUptimes()
-		emptyUptimeTrackers         = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		emptyUptimeTrackersModel    = model.UptimeTrackers{List: emptyUptimeTrackers}
-		varyingTokensAndDenoms      = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
-		varyingTokensAndDenomsModel = model.UptimeTrackers{List: varyingTokensAndDenoms}
+		preInitializedTickIndex           = DefaultCurrTick + 2
+		expectedUptimes                   = getExpectedUptimes()
+		emptyUptimeTrackers               = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
+		emptyUptimeTrackersModel          = model.UptimeTrackers{List: emptyUptimeTrackers}
+		scaledVaryingTokensAndDenomsModel = model.UptimeTrackers{List: wrapUptimeTrackers(s.scaleUptimeAccumulators(expectedUptimes.varyingTokensMultiDenom))}
 	)
 
 	tests := []struct {
@@ -412,7 +411,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that both SpreadRewardGrowthOutside and UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to global accums since tick <= active tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
+			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: scaledVaryingTokensAndDenomsModel},
 		},
 		{
 			name:                     "Get tick info for active tick on existing pool with existing tick",
@@ -420,7 +419,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			tickToGet:                DefaultCurrTick,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Both spread reward growth and uptime trackers are set to global since tickToGet <= current tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
+			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: scaledVaryingTokensAndDenomsModel},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
@@ -518,7 +517,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be new global - init global
 			// This is because we init them to twoHundredTokensMultiDenom and then add hundredTokensMultiDenom,
 			// so when we cross the tick and "flip" it, we expect threeHundredTokensMultiDenom - twoHundredTokensMultiDenom
-			expectedUptimeTrackers: wrapUptimeTrackers(expectedUptimes.hundredTokensMultiDenom),
+			// Note that initGlobalUptimeAccumValues and globalUptimeAccumDelta get scaled by the addToUptimeAccums(...) helper
+			// As a result, we also need to scale the expectedUptimeTrackers
+			expectedUptimeTrackers: wrapUptimeTrackers(s.scaleUptimeAccumulators(expectedUptimes.hundredTokensMultiDenom)),
 			expectedLiquidityDelta: DefaultLiquidityAmt.Neg(),
 			expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins.Add(defaultAdditiveSpreadFactor),
 		},
@@ -544,7 +545,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be equal to new global
 			// This is because we init them to zero (since target tick is above current tick),
 			// so when we cross the tick and "flip" it, we expect it to be the global value - 0 = global value.
-			expectedUptimeTrackers: wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
+			// Note that initGlobalUptimeAccumValues and globalUptimeAccumDelta get scaled by the addToUptimeAccums(...) helper
+			// As a result, we also need to scale the expectedUptimeTrackers
+			expectedUptimeTrackers: wrapUptimeTrackers(s.scaleUptimeAccumulators(expectedUptimes.threeHundredTokensMultiDenom)),
 			expectedLiquidityDelta: DefaultLiquidityAmt.Neg(),
 			expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins.Add(defaultAdditiveSpreadFactor).Add(DefaultSpreadRewardAccumCoins...),
 		},
@@ -560,7 +563,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be equal to new global
 			// This is because we init them to zero (since target tick is above current tick),
 			// so when we cross the tick and "flip" it, we expect it to be the global value - 0 = global value.
-			expectedUptimeTrackers: wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
+			// Note that initGlobalUptimeAccumValues and globalUptimeAccumDelta get scaled by the addToUptimeAccums(...) helper
+			// As a result, we also need to scale the expectedUptimeTrackers
+			expectedUptimeTrackers: wrapUptimeTrackers(s.scaleUptimeAccumulators(expectedUptimes.threeHundredTokensMultiDenom)),
 			expectedLiquidityDelta: osmomath.ZeroDec(),
 			expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins.Add(defaultAdditiveSpreadFactor).Add(DefaultSpreadRewardAccumCoins...),
 		},
@@ -577,7 +582,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be new global - init global
 			// This is because we init them to twoHundredTokensMultiDenom and then add hundredTokensMultiDenom,
 			// so when we cross the tick and "flip" it, we expect threeHundredTokensMultiDenom - twoHundredTokensMultiDenom
-			expectedUptimeTrackers: wrapUptimeTrackers(expectedUptimes.hundredTokensMultiDenom),
+			// Note that initGlobalUptimeAccumValues and globalUptimeAccumDelta get scaled by the addToUptimeAccums(...) helper
+			// As a result, we also need to scale the expectedUptimeTrackers
+			expectedUptimeTrackers: wrapUptimeTrackers(s.scaleUptimeAccumulators(expectedUptimes.hundredTokensMultiDenom)),
 			expectedLiquidityDelta: DefaultLiquidityAmt.Neg(),
 			expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins.Add(defaultAdditiveSpreadFactor),
 		},

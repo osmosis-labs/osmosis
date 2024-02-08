@@ -8,14 +8,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v22/x/pool-incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 )
 
 var (
 	isPerpetual  = true
 	notPerpetual = false
+
+	defaultNoLockDuration = time.Nanosecond
 )
 
 func (s *KeeperTestSuite) TestGaugeIds() {
@@ -443,6 +445,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
 		defaultNoLockGaugeConfig = gaugeConfig{
 			distributeTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				Duration:      defaultNoLockDuration,
 			},
 			poolId: concentratedPoolId,
 		}

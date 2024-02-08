@@ -9,13 +9,13 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
@@ -27,9 +27,10 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	// the supplied epoch number is wrong at time of commit. hence we get from the info.
 	curEpoch := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).CurrentEpoch
 
+	accs := k.GetAllIntermediaryAccounts(ctx)
 	// Move delegation rewards to perpetual gauge
 	ctx.Logger().Info("Move delegation rewards to gauges")
-	k.MoveSuperfluidDelegationRewardToGauges(ctx)
+	k.MoveSuperfluidDelegationRewardToGauges(ctx, accs)
 
 	ctx.Logger().Info("Distribute Superfluid gauges")
 	//nolint:errcheck
@@ -56,11 +57,11 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	// Refresh intermediary accounts' delegation amounts,
 	// making staking rewards follow the updated multiplier numbers.
 	ctx.Logger().Info("Refresh all superfluid delegation amounts")
-	k.RefreshIntermediaryDelegationAmounts(ctx)
+	k.RefreshIntermediaryDelegationAmounts(ctx, accs)
 }
 
-func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
-	accs := k.GetAllIntermediaryAccounts(ctx)
+func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []types.SuperfluidIntermediaryAccount) {
+	bondDenom := k.sk.BondDenom(ctx)
 	for _, acc := range accs {
 		addr := acc.GetAccAddress()
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
@@ -73,17 +74,16 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.ck.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
 			if errors.Is(err, distributiontypes.ErrEmptyDelegationDistInfo) {
-				ctx.Logger().Debug("no swaps occurred in this pool between last epoch and this epoch")
+				ctx.Logger().Debug("no delegations for this (pool, validator) pair, skipping...")
+				// TODO: Remove this account from IntermediaryAccounts that we iterate over
 				return nil
+			} else if err != nil {
+				return err
 			}
-			return err
-		})
 
-		// Send delegation rewards to gauges
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			// Send delegation rewards to gauges
 			// Note! We only send the bond denom (osmo), to avoid attack vectors where people
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
-			bondDenom := k.sk.BondDenom(cacheCtx)
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
 			if balance.IsZero() {
 				return nil

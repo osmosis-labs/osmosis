@@ -32,17 +32,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v23/app"
 
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v22/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v22/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -695,4 +695,12 @@ func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachP
 // initializes or increases the volumes for the given pools
 func (s *KeeperTestHelper) IncreaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
 	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
+}
+
+// RequireDecCoinsSlice compares two slices of DecCoins
+func (s *KeeperTestHelper) RequireDecCoinsSlice(expected, actual []sdk.DecCoins) {
+	s.Require().Equal(len(expected), len(actual))
+	for i := range actual {
+		s.Require().Equal(expected[i].String(), actual[i].String())
+	}
 }

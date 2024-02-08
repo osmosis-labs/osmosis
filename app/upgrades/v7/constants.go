@@ -3,8 +3,8 @@ package v7
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v22/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
