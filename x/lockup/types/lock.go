@@ -97,7 +97,7 @@ func SumLocksByDenom(locks []*PeriodLock, denom string) (osmomath.Int, error) {
 // This is predicated on MaxBitLen being divisible by 64
 var maxWordLen = sdkmath.MaxBitLen / 64
 
-// check if a bigInt would overflow max sdk.Int. If it does, panic.
+// check if a bigInt would overflow max sdk.Int. If it does, return an error.
 func checkBigInt(bi *big.Int) error {
 	if len(bi.Bits()) > maxWordLen {
 		return fmt.Errorf("bigInt overflow")

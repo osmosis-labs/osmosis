@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
 	db "github.com/cometbft/cometbft-db"
@@ -724,10 +723,6 @@ func (k Keeper) distributeInternal(
 				// We should check overflow as we switch back to sdk.Int representation.
 				// However we know the final result will not be larger than the gauge size,
 				// which is bounded to an Int. So we can safely skip this.
-				err := checkBigInt(amtIntBi)
-				if err != nil {
-					continue
-				}
 
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
 				if amtInt.Sign() == 1 {
@@ -760,18 +755,6 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
-}
-
-// Max number of words a sdk.Int's big.Int can contain.
-// This is predicated on MaxBitLen being divisible by 64
-var maxWordLen = sdkmath.MaxBitLen / 64
-
-// check if a bigInt would overflow max sdk.Int. If it does, panic.
-func checkBigInt(bi *big.Int) error {
-	if len(bi.Bits()) > maxWordLen {
-		return fmt.Errorf("bigInt overflow")
-	}
-	return nil
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.
