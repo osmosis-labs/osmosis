@@ -11,8 +11,8 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v22/app"
-	v4 "github.com/osmosis-labs/osmosis/v22/app/upgrades/v4"
+	"github.com/osmosis-labs/osmosis/v23/app"
+	v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"

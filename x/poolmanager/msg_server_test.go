@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v22/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
+	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v23/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var (

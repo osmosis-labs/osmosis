@@ -7,12 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v22/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v22/app/keepers"
-	"github.com/osmosis-labs/osmosis/v22/app/upgrades"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 const mainnetChainID = "osmosis-1"

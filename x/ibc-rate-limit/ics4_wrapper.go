@@ -16,7 +16,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v22/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
 )
 
 var (

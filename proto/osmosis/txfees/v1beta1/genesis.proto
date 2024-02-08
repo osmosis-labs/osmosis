@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/txfees/v1beta1/feetoken.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v22/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/txfees/types";
 
 // GenesisState defines the txfees module's genesis state.
 message GenesisState {

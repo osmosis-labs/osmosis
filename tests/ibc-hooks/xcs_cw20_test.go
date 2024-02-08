@@ -11,7 +11,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v22/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
 )
 
 // Instantiate the cw20 and cw20-ics20 contract

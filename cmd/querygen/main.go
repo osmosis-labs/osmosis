@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/osmosis-labs/osmosis/v22/cmd/querygen/templates"
+	"github.com/osmosis-labs/osmosis/v23/cmd/querygen/templates"
 )
 
 const V2 = "v2"
