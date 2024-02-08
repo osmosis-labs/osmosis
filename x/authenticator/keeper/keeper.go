@@ -176,8 +176,8 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	return nil
 }
 
-// MarkAsReady sets an authenticator to be ready
-func (k Keeper) MarkAsReady(ctx sdk.Context, keyAccountId []byte) error {
+// MarkAuthenticatorAsReady sets an authenticator to be ready
+func (k Keeper) MarkAuthenticatorAsReady(ctx sdk.Context, keyAccountId []byte) error {
 	store := ctx.KVStore(k.storeKey)
 
 	var auth types.AccountAuthenticator

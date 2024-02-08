@@ -83,7 +83,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 	// All non-ready authenticators should be ready now
 	for key := range nonReadyAccountAuthenticatorKeys {
-		ad.authenticatorKeeper.MarkAsReady(ctx, []byte(key))
+		ad.authenticatorKeeper.MarkAuthenticatorAsReady(ctx, []byte(key))
 	}
 
 	return next(ctx, tx, simulate, success)
