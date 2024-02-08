@@ -7,12 +7,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/vv23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/vv23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/vv23/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/vv23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/vv23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/vv23/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"

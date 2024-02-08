@@ -5,10 +5,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/vv23/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/vv23/app/keepers"
-	"github.com/osmosis-labs/osmosis/vv23/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
 )
 
 func CreateUpgradeHandler(

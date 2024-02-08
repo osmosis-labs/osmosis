@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/vv23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 func TestFormatDenomTradePairKey(t *testing.T) {

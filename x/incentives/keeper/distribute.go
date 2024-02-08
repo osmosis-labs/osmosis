@@ -12,9 +12,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/vv23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/vv23/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/vv23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	sdkmath "cosmossdk.io/math"
 )

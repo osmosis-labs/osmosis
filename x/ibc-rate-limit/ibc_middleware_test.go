@@ -2,11 +2,12 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
@@ -17,11 +18,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/vv23/x/txfees/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/vv23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/vv23/tests/osmosisibctesting"
-	"github.com/osmosis-labs/osmosis/vv23/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {
