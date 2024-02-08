@@ -31,7 +31,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240208032851-f1ac90db9b63
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240208032851-f1ac90db9b63
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
@@ -127,7 +127,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.14.1 // indirect
-	github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
