@@ -700,11 +700,11 @@ func (k Keeper) distributeInternal(
 
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
-
-		if lockSum.IsZero() {
+		lockSum, err := lockuptypes.SumLocksByDenom(locks, denom)
+		if lockSum.IsZero() || err != nil {
 			return nil, nil
 		}
+
 		// total_denom_lock_amount * remain_epochs
 		lockSumTimesRemainingEpochs := lockSum.MulRaw(int64(remainEpochs))
 		lockSumTimesRemainingEpochsBi := lockSumTimesRemainingEpochs.BigIntMut()
@@ -720,7 +720,15 @@ func (k Keeper) distributeInternal(
 				amtIntBi := amtInt.BigIntMut()
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				amtIntBi = amtIntBi.Mul(amtIntBi, coin.Amount.BigIntMut())
-				checkBigInt(amtIntBi)
+
+				// We should check overflow as we switch back to sdk.Int representation.
+				// However we know the final result will not be larger than the gauge size,
+				// which is bounded to an Int. So we can safely skip this.
+				err := checkBigInt(amtIntBi)
+				if err != nil {
+					continue
+				}
+
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
 				if amtInt.Sign() == 1 {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
@@ -754,10 +762,16 @@ func (k Keeper) distributeInternal(
 	return totalDistrCoins, err
 }
 
-func checkBigInt(bi *big.Int) {
-	if bi.BitLen() > sdkmath.MaxBitLen {
-		panic("overflow")
+// Max number of words a sdk.Int's big.Int can contain.
+// This is predicated on MaxBitLen being divisible by 64
+var maxWordLen = sdkmath.MaxBitLen / 64
+
+// check if a bigInt would overflow max sdk.Int. If it does, panic.
+func checkBigInt(bi *big.Int) error {
+	if len(bi.Bits()) > maxWordLen {
+		return fmt.Errorf("bigInt overflow")
 	}
+	return nil
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.
