@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v22/x/mint/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 )
 
 type Hooks struct {

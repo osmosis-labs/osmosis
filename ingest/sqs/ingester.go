@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
-	"github.com/osmosis-labs/osmosis/v22/ingest"
-	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v23/ingest"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 )
 
 const sqsIngesterName = "sidecar-query-server"

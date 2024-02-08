@@ -12,10 +12,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	sdkrand "github.com/osmosis-labs/osmosis/v22/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v22/x/gamm/pool-models/internal/test_helpers"
-	types "github.com/osmosis-labs/osmosis/v22/x/gamm/types"
+	sdkrand "github.com/osmosis-labs/osmosis/v23/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/test_helpers"
+	types "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 )
 
 var (

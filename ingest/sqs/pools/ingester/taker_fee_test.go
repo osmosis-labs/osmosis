@@ -4,7 +4,7 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolsingester "github.com/osmosis-labs/osmosis/v22/ingest/sqs/pools/ingester"
+	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
 )
 
 var (
