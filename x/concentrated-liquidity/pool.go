@@ -421,7 +421,7 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 }
 
 // getPositionIDsByPoolID returns all position IDs for a given pool ID.
-func (k Keeper) getPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
+func (k Keeper) GetPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
 	key := types.KeyPoolPosition(poolID)
 	key = append(key, types.KeySeparator...)
 	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), key, parsePositionIDFromPoolLink)
@@ -458,7 +458,7 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 	}
 
 	// Get all position IDs for the pool.
-	positionIDs, err := k.getPositionIDsByPoolID(ctx, poolId)
+	positionIDs, err := k.GetPositionIDsByPoolID(ctx, poolId)
 	if err != nil {
 		return err
 	}
