@@ -465,7 +465,7 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 
 	ctx.Logger().Info("num_positions", "count", len(positionIDs))
 
-	// For each uptime accimulator, multiply the value by the per-unit liquidity scaling factor
+	// For each uptime accumulator, multiply the value by the per-unit liquidity scaling factor
 	// and overwrite the accumulator with the new value.
 	for uptimeIndex, uptimeAccum := range uptimeAccums {
 		value := uptimeAccum.GetValue().MulDecTruncate(perUnitLiqScalingFactor)
