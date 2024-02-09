@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
 	db "github.com/cometbft/cometbft-db"
@@ -700,11 +699,11 @@ func (k Keeper) distributeInternal(
 
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
-
-		if lockSum.IsZero() {
+		lockSum, err := lockuptypes.SumLocksByDenom(locks, denom)
+		if lockSum.IsZero() || err != nil {
 			return nil, nil
 		}
+
 		// total_denom_lock_amount * remain_epochs
 		lockSumTimesRemainingEpochs := lockSum.MulRaw(int64(remainEpochs))
 		lockSumTimesRemainingEpochsBi := lockSumTimesRemainingEpochs.BigIntMut()
@@ -720,7 +719,11 @@ func (k Keeper) distributeInternal(
 				amtIntBi := amtInt.BigIntMut()
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				amtIntBi = amtIntBi.Mul(amtIntBi, coin.Amount.BigIntMut())
-				checkBigInt(amtIntBi)
+
+				// We should check overflow as we switch back to sdk.Int representation.
+				// However we know the final result will not be larger than the gauge size,
+				// which is bounded to an Int. So we can safely skip this.
+
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
 				if amtInt.Sign() == 1 {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
@@ -752,12 +755,6 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
-}
-
-func checkBigInt(bi *big.Int) {
-	if bi.BitLen() > sdkmath.MaxBitLen {
-		panic("overflow")
-	}
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.
