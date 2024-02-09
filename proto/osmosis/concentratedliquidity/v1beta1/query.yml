@@ -74,3 +74,8 @@ queries:
       query_func: "k.NumNextInitializedTicks"
     cli:
       cmd: "NumNextInitializedTicks"
+  NumPoolPositions:
+    proto_wrapper:
+      query_func: "k.NumPoolPositions"
+    cli:
+      cmd: "NumPoolPositions"

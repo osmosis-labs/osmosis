@@ -91,6 +91,16 @@ func (q Querier) Params(grpcCtx context.Context,
 	return q.Q.Params(ctx, *req)
 }
 
+func (q Querier) NumPoolPositions(grpcCtx context.Context,
+	req *queryproto.NumPoolPositionsRequest,
+) (*queryproto.NumPoolPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.NumPoolPositions(ctx, *req)
+}
+
 func (q Querier) NumNextInitializedTicks(grpcCtx context.Context,
 	req *queryproto.NumNextInitializedTicksRequest,
 ) (*queryproto.NumNextInitializedTicksResponse, error) {

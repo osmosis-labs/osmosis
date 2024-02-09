@@ -734,7 +734,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				s.PrepareConcentratedPool()
 
 				// system under test
-				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, osmomath.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords)
+				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, osmomath.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords, cl.PerUnitLiqScalingFactor)
 				if tc.expectedPass {
 					s.Require().NoError(err)
 
@@ -3682,11 +3682,11 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 // This test shows that the scaling factor is applied correctly to the total incentive amount.
 // If overflow occurs, the function returns error as opposed to panicking.
 func (s *KeeperTestSuite) TestScaledUpTotalIncentiveAmount() {
-	scaledIncentiveAmount, err := cl.ScaleUpTotalEmittedAmount(osmomath.NewDec(1))
+	scaledIncentiveAmount, err := cl.ScaleUpTotalEmittedAmount(osmomath.NewDec(1), cl.PerUnitLiqScalingFactor)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewDec(1).Mul(cl.PerUnitLiqScalingFactor), scaledIncentiveAmount)
 
-	_, err = cl.ScaleUpTotalEmittedAmount(oneE60Dec)
+	_, err = cl.ScaleUpTotalEmittedAmount(oneE60Dec, cl.PerUnitLiqScalingFactor)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "overflow")
 }
@@ -3706,6 +3706,51 @@ func (s *KeeperTestSuite) TestComputeTotalIncentivesToEmit() {
 	_, err = cl.ComputeTotalIncentivesToEmit(oneHundredYearsSecs, oneE60Dec.MulInt64(1_000_000_000_000))
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "overflow")
+}
+
+// This test shows that the scaling factor is applied correctly based on the pool ID.
+// If the pool ID is below or at the migration threshold, the scaling factor is 1.
+// If the pool ID is above the migration threshold, the scaling factor is the per unit liquidity scaling factor.
+// If he pool ID is in the overwrite map, the scaling factor is the per unit liquidity scaling factor.
+func (s *KeeperTestSuite) TestGetIncentiveScalingFactorForPool() {
+	// Grab an example of the overwrite pool from map
+	s.Require().NotZero(len(types.MigratedIncentiveAccumulatorPoolIDs))
+	var exampleOverwritePoolID uint64
+	for poolID := range types.MigratedIncentiveAccumulatorPoolIDs {
+		exampleOverwritePoolID = poolID
+		break
+	}
+
+	var (
+		oneDec = osmomath.OneDec()
+
+		// Make migration threshold 1000 pool IDs higher
+		migrationThreshold = exampleOverwritePoolID + 1000
+	)
+
+	s.SetupTest()
+
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, migrationThreshold)
+
+	// One below the threshold has scaling factor of 1 (non-migrated)
+	scalingFactor, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold-1)
+	s.Require().NoError(err)
+	s.Require().Equal(oneDec, scalingFactor)
+
+	// At threshold, scaling factor is 1 (non-migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold)
+	s.Require().NoError(err)
+	s.Require().Equal(oneDec, scalingFactor)
+
+	// One above the threshold has non-1 scaling factor (migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold+1)
+	s.Require().NoError(err)
+	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
+
+	// Overwrite pool ID has non-1 scaling factor (migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, exampleOverwritePoolID)
+	s.Require().NoError(err)
+	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
 }
 
 // scaleUptimeAccumulators scales the uptime accumulators by the scaling factor.
