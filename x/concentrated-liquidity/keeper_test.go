@@ -497,3 +497,17 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 	// Assert global invariants on final state
 	s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 }
+
+// validates that the given position ID is eligible for claiming given expected incentives.
+func (s *KeeperTestSuite) validateClaimableIncentives(positionID uint64, expectedClaimableIncentives sdk.Coins) {
+	claimableIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionID)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedClaimableIncentives.String(), claimableIncentives.String())
+}
+
+// validates that the given position ID has the given expected accumulator growth in the pool accumulator.
+func (s *KeeperTestSuite) validateUptimePositionAccumulator(uptimeAccumulator *accum.AccumulatorObject, positionID uint64, expectedAccumulatorGrowth sdk.DecCoins) {
+	positionAcc, err := uptimeAccumulator.GetPosition(string(types.KeyPositionId(positionID)))
+	s.Require().NoError(err)
+	s.Require().Equal(expectedAccumulatorGrowth.String(), positionAcc.GetAccumValuePerShare().String())
+}
