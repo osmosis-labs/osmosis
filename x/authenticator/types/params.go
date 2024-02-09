@@ -17,6 +17,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams() Params {
 	return Params{
 		MaximumUnauthenticatedGas: 20000,
+		CosignerContract:          "",
 	}
 }
 
@@ -29,6 +30,7 @@ func DefaultParams() Params {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMaximumUnauthenticatedGas, &p.MaximumUnauthenticatedGas, validateMaximumUnauthenticatedGas),
+		paramtypes.NewParamSetPair(KeyCosignerContract, &p.CosignerContract, validateCosignerContract),
 	}
 }
 
@@ -41,6 +43,17 @@ func (p Params) Validate() error {
 func validateMaximumUnauthenticatedGas(i interface{}) error {
 	// Convert the given parameter to a uint64.
 	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+// Validate CosignerContract
+func validateCosignerContract(i interface{}) error {
+	// Convert the given parameter to a uint64.
+	_, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

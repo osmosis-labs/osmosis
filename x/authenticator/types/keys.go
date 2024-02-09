@@ -25,6 +25,7 @@ var (
 	KeyNextAccountAuthenticatorIdPrefix = []byte{0x01}
 	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
 	KeyMaximumUnauthenticatedGas        = []byte("MaximumUnauthenticatedGas")
+	KeyCosignerContract                 = []byte("CosignerContract")
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {

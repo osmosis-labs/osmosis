@@ -31,7 +31,16 @@ func (msg *MsgAddAuthenticator) ValidateBasic() error {
 }
 
 func (msg *MsgAddAuthenticator) GetSigners() []sdk.AccAddress {
-	return getSender(msg.Sender)
+	senders := getSender(msg.Sender)
+
+	if msg.Cosigner != "" {
+		cosigner, err := sdk.AccAddressFromBech32(msg.Cosigner)
+		if err != nil {
+			panic(err)
+		}
+		senders = append(senders, cosigner)
+	}
+	return senders
 }
 
 var _ sdk.Msg = &MsgRemoveAuthenticator{}

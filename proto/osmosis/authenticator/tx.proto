@@ -16,6 +16,7 @@ message MsgAddAuthenticator {
   string sender = 1;
   string type = 2;
   bytes data = 3;
+  string cosigner = 4;
 }
 
 // MsgAddAuthenticatorResponse defines the Msg/AddAuthenticator response type.
