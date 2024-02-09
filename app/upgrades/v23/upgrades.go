@@ -25,6 +25,9 @@ const (
 	// Testnet will have its own state. Contrary to mainnet, we would
 	// like to migrate all testnet pools at once.
 	testnetChainID = "osmo-test-5"
+	// E2E chain IDs which we expect to migrate all pools similar to testnet.
+	e2eChaInIDA = "osmo-test-a"
+	e2eChaInIDB = "osmo-test-b"
 )
 
 func CreateUpgradeHandler(
@@ -61,7 +64,7 @@ func CreateUpgradeHandler(
 			if err := migrateMainnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
 				return nil, err
 			}
-		} else if chainID == testnetChainID {
+		} else if chainID == testnetChainID || chainID == e2eChaInIDA || chainID == e2eChaInIDB {
 			if err := migrateAllTestnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
 				return nil, err
 			}
