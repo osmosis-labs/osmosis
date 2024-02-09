@@ -318,3 +318,20 @@ func (q Querier) NumNextInitializedTicks(ctx sdk.Context, req clquery.NumNextIni
 
 	return &clquery.NumNextInitializedTicksResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }
+
+// NumPoolPositions returns the number of positions in a pool.
+func (q Querier) NumPoolPositions(ctx sdk.Context, req clquery.NumPoolPositionsRequest) (*clquery.NumPoolPositionsResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
+	}
+
+	// Get all position IDs for the pool
+	positionIDs, err := q.Keeper.GetPositionIDsByPoolID(ctx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.NumPoolPositionsResponse{
+		PositionCount: uint64(len(positionIDs)),
+	}, nil
+}
