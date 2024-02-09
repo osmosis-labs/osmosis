@@ -769,3 +769,158 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 		})
 	}
 }
+
+// This test validates scaling factor migration
+// - Creates a pool to migration
+// - Creates two positions at different block times
+//   - Position 1: Zero accumulator and expected to receive incentives
+//   - Position 2: Narrow position. Non-zero accumulator and not expected to receive incentives
+//
+// # For second position, perform a swap to cross one of the initialized ticks
+//
+// System under test: Migrates the pool
+//
+// - Ensures that the pool accumulator trackers are updated.
+// - Ensure that the pool accumulator is updates
+// - Ensure that the position accumulators are updated
+// - Ensures that the position 1 receives incentives  but not position 2
+func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
+	const incentiveDenom = "uosmo"
+
+	var emissionRatePerSecDec = osmomath.OneDec()
+
+	s.SetupTest()
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+	poolID := concentratedPool.GetId()
+
+	// Setup migration threshold above the pool ID so that we do not apply scaling factor before migration.
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, poolID)
+
+	// Create position one
+	// It has position accumulator snapshot of zero
+	positionOneID, positionOneLiquidity := s.CreateFullRangePosition(concentratedPool, DefaultCoins)
+
+	// Create incentive
+	totalIncentiveAmount := sdk.NewCoin(incentiveDenom, osmomath.NewInt(1000000))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(totalIncentiveAmount))
+	_, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, poolID, s.TestAccs[0], totalIncentiveAmount, emissionRatePerSecDec, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Increate block time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	// Refetch pool
+	concentratedPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolID)
+	s.Require().NoError(err)
+	currentTick := concentratedPool.GetCurrentTick()
+
+	// Create position two (narrow)
+	// It has non-zero position accumulator snapshot
+	s.FundAcc(s.TestAccs[0], DefaultCoins)
+	positionDataTwo, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolID, s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), currentTick-100, currentTick+100)
+	s.Require().NoError(err)
+	positionTwoID := positionDataTwo.ID
+
+	// Refetch pool
+	concentratedPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Cross next right tick to update the tick accumulator by swapping
+	amtIn, _, _ := s.computeSwapAmounts(poolID, concentratedPool.GetCurrentSqrtPrice(), currentTick+100, false, false)
+	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()))
+
+	// Sync acccumulator
+	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Retrieve pool uptime accumulator
+	uptimeAcc, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Ensure that the accumulator has been properly initialized
+	expectedInitialAccumulatorGrowth := sdk.NewDecCoins(sdk.NewDecCoinFromDec(incentiveDenom, osmomath.NewDec(60).QuoTruncate(positionOneLiquidity)))
+	s.Require().Equal(len(types.SupportedUptimes), len(uptimeAcc))
+	s.Require().Equal(expectedInitialAccumulatorGrowth.String(), uptimeAcc[0].GetValue().String())
+
+	// Get ticks before migration
+	ticksBeforeMigration, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Get claimable amount for position one before the migration
+	claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
+	s.Require().NoError(err)
+
+	// System under test.
+	err = s.App.ConcentratedLiquidityKeeper.MigrateAccumulatorToScalingFactor(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Note: we must now reset the migration threshold so that a scaling factor is chosen appropriately for this pool.
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, poolID-1)
+
+	// Ensure that the pool accumulator has been properly migrated
+	expectedMigratedAccumulatorGrowth := expectedInitialAccumulatorGrowth.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+	updatedUptimeAcc, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolID)
+	s.Require().NoError(err)
+	s.Require().Equal(len(types.SupportedUptimes), len(updatedUptimeAcc))
+	incentivizedUpdatedAccumulator := updatedUptimeAcc[0]
+	s.Require().Equal(expectedMigratedAccumulatorGrowth.String(), incentivizedUpdatedAccumulator.GetValue().String())
+
+	// Ensure that the ticks have been migrated
+	ticksAfterMigration, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	s.Require().NotEmpty(ticksBeforeMigration)
+	s.Require().Equal(len(ticksBeforeMigration), len(ticksAfterMigration))
+	for i := range ticksBeforeMigration {
+		// Validate that the tick uptime accumulator has been properly migrated
+		s.Require().Equal(ticksBeforeMigration[i].Info.UptimeTrackers.List[0].UptimeGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor), ticksAfterMigration[i].Info.UptimeTrackers.List[0].UptimeGrowthOutside)
+	}
+
+	// Ensure that position 1 accumulator is not updated (zero)
+	s.validateUptimePositionAccumulator(incentivizedUpdatedAccumulator, positionOneID, cl.EmptyCoins)
+
+	// Ensure that position 1 can claim the same amount as before the migration
+	s.validateClaimableIncentives(positionOneID, claimableIncentivesOneBeforeMigration)
+
+	// Ensure that position 2 cannot claim any incentives
+	s.validateClaimableIncentives(positionTwoID, sdk.NewCoins())
+}
+
+// Basic test to validate that positions are correctly returned for a pool
+func (s *KeeperTestSuite) TestGetPositionIDsByPoolID() {
+	s.SetupTest()
+
+	const numPositionsToCreateFirstPool = 3
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+	poolID := concentratedPool.GetId()
+
+	// Create second pool
+	secondPool := s.PrepareConcentratedPool()
+
+	positionIDs, err := s.App.ConcentratedLiquidityKeeper.GetPositionIDsByPoolID(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	s.Require().Equal([]uint64{}, positionIDs)
+
+	// Create three positions
+	for i := 0; i < numPositionsToCreateFirstPool; i++ {
+		s.CreateFullRangePosition(concentratedPool, DefaultCoins)
+	}
+
+	// Create one position in second pool
+	s.CreateFullRangePosition(secondPool, DefaultCoins)
+
+	positionIDs, err = s.App.ConcentratedLiquidityKeeper.GetPositionIDsByPoolID(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	s.Require().Equal([]uint64{1, 2, 3}, positionIDs)
+
+	positionIDs, err = s.App.ConcentratedLiquidityKeeper.GetPositionIDsByPoolID(s.Ctx, secondPool.GetId())
+	s.Require().NoError(err)
+
+	s.Require().Equal([]uint64{numPositionsToCreateFirstPool + 1}, positionIDs)
+}
