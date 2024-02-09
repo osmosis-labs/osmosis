@@ -24,6 +24,8 @@ var (
 	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
 	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
 	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
+
+	OneDecScalingFactor = oneDecScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -232,8 +234,8 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
 }
 
-func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
-	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords, 0)
+func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord, scalingFactorForPool osmomath.Dec) (sdk.DecCoins, []types.IncentiveRecord, error) {
+	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords, 0, scalingFactorForPool)
 }
 
 func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []*accum.AccumulatorObject) error {
@@ -346,10 +348,14 @@ func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix
 	return k.getPoolHookContract(ctx, poolId, actionPrefix)
 }
 
-func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
-	return scaleUpTotalEmittedAmount(totalEmittedAmount)
+func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
+	return scaleUpTotalEmittedAmount(totalEmittedAmount, scalingFactor)
 }
 
 func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
 	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
+}
+
+func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	return k.getIncentiveScalingFactorForPool(ctx, poolID)
 }

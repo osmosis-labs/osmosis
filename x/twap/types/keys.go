@@ -27,6 +27,7 @@ const (
 )
 
 var (
+	PruningStateKey                    = []byte{0x01}
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"

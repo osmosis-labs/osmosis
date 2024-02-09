@@ -40,12 +40,8 @@ func (k Keeper) UpdateRecords(ctx sdk.Context, poolId uint64) error {
 	return k.updateRecords(ctx, poolId)
 }
 
-func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
-	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
-}
-
-func (k Keeper) PruneRecords(ctx sdk.Context) error {
-	return k.pruneRecords(ctx)
+func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.PruningState) error {
+	return k.pruneRecordsBeforeTimeButNewest(ctx, state)
 }
 
 func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string, t time.Time) (types.TwapRecord, error) {

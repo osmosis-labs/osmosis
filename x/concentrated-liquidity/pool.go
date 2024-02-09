@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
@@ -417,4 +418,107 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 		})
 	}
 	return userPositionsWithPeriodLocks, nil
+}
+
+// getPositionIDsByPoolID returns all position IDs for a given pool ID.
+func (k Keeper) GetPositionIDsByPoolID(ctx sdk.Context, poolID uint64) ([]uint64, error) {
+	key := types.KeyPoolPosition(poolID)
+	key = append(key, types.KeySeparator...)
+	positionIDs, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), key, parsePositionIDFromPoolLink)
+	if err != nil {
+		return nil, err
+	}
+
+	return positionIDs, nil
+}
+
+// parsePositionIDFromPoolLink parses the position ID from the pool link key.
+func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
+	if len(key) != types.PoolPositionIDFullPrefixLen {
+		return 0, fmt.Errorf("length (%d) of key (%v) is not equal to expected (%d)", len(key), key, types.PoolPositionIDFullPrefixLen)
+	}
+
+	if key[types.PoolPositionIDKeySeparatorIndex] != types.KeySeparator[0] {
+		return 0, fmt.Errorf("key (%v) is expected to have key separator (%v) at index (%d)", key, types.KeySeparator, types.PoolPositionIDKeySeparatorIndex)
+	}
+
+	positionID := sdk.BigEndianToUint64(key[types.PoolPositionIDKeySeparatorIndex+len(types.KeySeparator):])
+
+	return positionID, nil
+}
+
+// MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
+// and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
+func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+	ctx.Logger().Info("migration start", "pool_id", poolId)
+	// Get pool-global incentive accumulator
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Get all position IDs for the pool.
+	positionIDs, err := k.GetPositionIDsByPoolID(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("num_positions", "count", len(positionIDs))
+
+	// For each uptime accumulator, multiply the value by the per-unit liquidity scaling factor
+	// and overwrite the accumulator with the new value.
+	for uptimeIndex, uptimeAccum := range uptimeAccums {
+		value := uptimeAccum.GetValue().MulDecTruncate(perUnitLiqScalingFactor)
+		if err := accum.OverwriteAccumulatorUnsafe(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)), value, uptimeAccum.GetTotalShares()); err != nil {
+			return err
+		}
+
+		// For each position ID, multiply the value by the per-unit liquidity scaling factor
+		// and overwrite the accumulator with the new value.
+		for _, positionID := range positionIDs {
+			positionPrefix := types.KeyPositionId(positionID)
+
+			if !uptimeAccum.HasPosition(string(positionPrefix)) {
+				return fmt.Errorf("position ID %d not found in uptime accumulator %d in pool %d", positionID, uptimeIndex, poolId)
+			}
+
+			positionSnapshot, err := uptimeAccum.GetPosition(string(positionPrefix))
+			if err != nil {
+				return err
+			}
+
+			positionSnapshotValue := positionSnapshot.GetAccumValuePerShare()
+
+			// Multiply the value by the per-unit liquidity scaling factor
+			newValue := positionSnapshotValue.MulDecTruncate(perUnitLiqScalingFactor)
+
+			// Overwrite the position accumulator with the new value
+			if err := uptimeAccum.SetPositionIntervalAccumulation(string(positionPrefix), newValue); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Retrieve all ticks for the pool
+	ticks, err := k.GetAllInitializedTicksForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("num_ticks", "count", len(ticks))
+
+	// For each tick, multiply the value of the uptime accumulator tracker.
+	for _, tick := range ticks {
+		// Get the tick's accumulator
+		uptimeTrackers := tick.Info.UptimeTrackers
+		for i, uptimeTracker := range uptimeTrackers.List {
+			uptimeTrackers.List[i].UptimeGrowthOutside = uptimeTracker.UptimeGrowthOutside.MulDecTruncate(perUnitLiqScalingFactor)
+		}
+
+		// Overwrite the tick's accumulator with the new value
+		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
+	}
+
+	ctx.Logger().Info("migration end", "pool_id", poolId)
+	return nil
 }

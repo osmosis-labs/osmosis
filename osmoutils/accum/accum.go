@@ -65,6 +65,19 @@ func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string
 	return setAccumulator(&newAccum, accumValue, totalShares)
 }
 
+// OverwriteAccumulatorUnsafe overwrites the accumulator with the given name in accumStore.
+// Use with caution as this method is only meant for use in migrations.
+func OverwriteAccumulatorUnsafe(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares osmomath.Dec) error {
+	if !accumStore.Has(formatAccumPrefixKey(accumName)) {
+		return errors.New("Accumulator with given name does not exist in store")
+	}
+
+	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
+
+	// Stores accumulator in state
+	return setAccumulator(&newAccum, accumValue, totalShares)
+}
+
 // Gets the current value of the accumulator corresponding to accumName in accumStore
 func GetAccumulator(accumStore store.KVStore, accumName string) (*AccumulatorObject, error) {
 	accumContent := AccumulatorContent{}
