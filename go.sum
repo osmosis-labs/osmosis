@@ -946,8 +946,7 @@ github.com/go-playground/locales v0.13.0/go.mod h1:taPMhCMXrRLJO55olJkUXHZBHCxTM
 github.com/go-playground/locales v0.14.1 h1:EWaQ/wswjilfKLTECiXz7Rh+3BjFhfDFKv/oXslEjJA=
 github.com/go-playground/locales v0.14.1/go.mod h1:hxrqLVvrK65+Rwrd5Fc6F2O76J/NuW9t0sjnWqG1slY=
 github.com/go-playground/universal-translator v0.17.0/go.mod h1:UkSxE5sNxxRwHyU+Scu5vgOQjsIJAF8j9muTVoKLVtA=
-github.com/go-playground/universal-translator v0.18.0 h1:82dyy6p4OuJq4/CByFNOn/jYrnRPArHwAcmLoJZxyho=
-github.com/go-playground/universal-translator v0.18.0/go.mod h1:UvRDBj+xPUEGrFYl+lu/H90nyDXpg0fqeB/AQUGNTVA=
+github.com/go-playground/universal-translator v0.18.1 h1:Bcnm0ZwsGyWbCzImXv+pAJnYK9S473LQFuzCbDbfSFY=
 github.com/go-playground/validator/v10 v10.2.0/go.mod h1:uOYAAleCW8F/7oMFd6aG0GOhaH6EGOAJShg8Id5JGkI=
 github.com/go-playground/validator/v10 v10.14.0 h1:vgvQWe3XCz3gIeFDm/HnTIbj6UGmg/+t63MyGU2n5js=
 github.com/go-playground/validator/v10 v10.14.0/go.mod h1:9iXMNT7sEkjXb0I+enO7QXmzG6QCsPWY4zveKFVRSyU=
@@ -1340,8 +1339,7 @@ github.com/ldez/gomoddirectives v0.2.3/go.mod h1:cpgBogWITnCfRq2qGoDkKMEVSaarhdB
 github.com/ldez/tagliatelle v0.5.0 h1:epgfuYt9v0CG3fms0pEgIMNPuFf/LpPIfjk4kyqSioo=
 github.com/ldez/tagliatelle v0.5.0/go.mod h1:rj1HmWiL1MiKQuOONhd09iySTEkUuE/8+5jtPYz9xa4=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
-github.com/leodido/go-urn v1.2.1 h1:BqpAaACuzVSgi/VLzGZIobT2z4v53pjosyNd9Yv6n/w=
-github.com/leodido/go-urn v1.2.1/go.mod h1:zt4jvISO2HfUBqxjfIshjdMTYS56ZS/qv49ictyFfxY=
+github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leonklingele/grouper v1.1.1 h1:suWXRU57D4/Enn6pXR0QVqqWWrnJ9Osrz+5rjt8ivzU=
 github.com/leonklingele/grouper v1.1.1/go.mod h1:uk3I3uDfi9B6PeUjsCKi6ndcf63Uy7snXgR4yDYQVDY=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
@@ -1505,10 +1503,9 @@ github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:Ylmch
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240208032851-f1ac90db9b63 h1:/4rGafgR6LP7cWkLecC/tWV0Jf/K0PGzic74bFeKBuI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240208032851-f1ac90db9b63/go.mod h1:TpdBTKq8Nkudajo1YBDts2Gqzn1bwY0qdXn9qSurSG0=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240208032851-f1ac90db9b63 h1:nIYUNe2TkBjqgywol9M3NVkK5kbqAscFfQM60HFJNx4=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240208032851-f1ac90db9b63/go.mod h1:YMDId5bnCkkLEomgpWwi6LTyGtvcnRNfxF5xzEhHi1c=
-github.com/osmosis-labs/osmosis/v22 v22.0.0-alpha0 h1:pVUT1U8PpL+dBQmsmCaoY3P9BCPZO+wH8hs9kpw8v6A=
-github.com/osmosis-labs/osmosis/v22 v22.0.0-alpha0/go.mod h1:z6OG3nlY9vfBxEbLMNZBZdFWDVoIOQVclT7ZkuTkjx4=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240209052453-533ab18ccd0e h1:CYBE3ux9t7Q8qBdbPXbv44OMYa1Hll8ZZASZUWWg1Bw=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240209052453-533ab18ccd0e/go.mod h1:YMDId5bnCkkLEomgpWwi6LTyGtvcnRNfxF5xzEhHi1c=
+github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0 h1:HNmPE7IN3dRzu/1UlAI0ymio39VHdqRikP+xRLBFmXY=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240208032851-f1ac90db9b63 h1:zOJkl9a7xcDr3HDoc0NqHWi1Roff/VboS7dGYDI2fdU=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240208032851-f1ac90db9b63/go.mod h1:xKn9J3Z2oYU5/1S1B2/54L4ShMNqdeGLflQD39sd3a0=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10 h1:s4Y1ZeOmQ+iTgODCbnuge0mcBeyOtZF80Q5nmqu8Tio=
