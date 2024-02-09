@@ -62,8 +62,6 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
             BUILD_TAGS="netgo,muslc,excludeIncrement"
-          cache-from: type=registry,ref=osmosis:debug
-          cache-to: type=inline
       -
         name: Test e2e and Upgrade
         run: make test-e2e-ci-scheduled
