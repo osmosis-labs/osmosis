@@ -343,6 +343,11 @@ func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor os
 	return totalEmittedAmount.MulTruncate(scalingFactor), nil
 }
 
+// scaleDownIncentiveAmount scales down the incentive amount by the scaling factor.
+func scaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return incentiveAmount.ToLegacyDec().QuoTruncateMut(scalingFactor).TruncateInt()
+}
+
 // computeTotalIncentivesToEmit computes the total incentives to emit based on the time elapsed and emission rate.
 // Returns error if timeElapsed or emissionRate are too high, causing overflow during multiplication.
 func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
@@ -807,7 +812,7 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 			// We always truncate down in the pool's favor.
 			collectedIncentivesForUptime := sdk.NewCoins()
 			for _, incentiveCoin := range collectedIncentivesForUptimeScaled {
-				incentiveCoin.Amount = incentiveCoin.Amount.ToLegacyDec().QuoTruncateMut(incentiveScalingFactor).TruncateInt()
+				incentiveCoin.Amount = scaleDownIncentiveAmount(incentiveCoin.Amount, incentiveScalingFactor)
 				if incentiveCoin.Amount.IsPositive() {
 					collectedIncentivesForUptime = append(collectedIncentivesForUptime, incentiveCoin)
 				}
