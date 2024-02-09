@@ -1,7 +1,9 @@
 package v23
 
 import (
+	"errors"
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -15,7 +17,18 @@ import (
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
-const mainnetChainID = "osmosis-1"
+const (
+	mainnetChainID = "osmosis-1"
+	// Edgenet is to function exactly the samas mainnet, and expected
+	// to be state-exported from mainnet state.
+	edgenetChainID = "edgenet"
+	// Testnet will have its own state. Contrary to mainnet, we would
+	// like to migrate all testnet pools at once.
+	testnetChainID = "osmo-test-5"
+	// E2E chain IDs which we expect to migrate all pools similar to testnet.
+	e2eChainIDA = "osmo-test-a"
+	e2eChainIDB = "osmo-test-b"
+)
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
@@ -24,6 +37,8 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		before := time.Now()
+
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
@@ -41,14 +56,25 @@ func CreateUpgradeHandler(
 
 		keepers.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(ctx, lastPoolID)
 
+		chainID := ctx.ChainID()
 		// We only perform the migration on mainnet pools since we hard-coded the pool IDs to migrate
 		// in the types package. To ensure correctness, we will spin up a state-exported mainnet testnet
 		// with the same chain ID.
-		if ctx.ChainID() == mainnetChainID {
+		if chainID == mainnetChainID || chainID == edgenetChainID {
 			if err := migrateMainnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
 				return nil, err
 			}
+		} else if chainID == testnetChainID || chainID == e2eChainIDA || chainID == e2eChainIDB {
+			if err := migrateAllTestnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, errors.New("unsupported chain ID")
 		}
+
+		after := time.Now()
+
+		ctx.Logger().Info("migration time", "duration_ms", after.Sub(before).Milliseconds())
 
 		return migrations, nil
 	}
@@ -72,6 +98,28 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 			return err
 		}
 	}
+
+	return nil
+}
+
+// migrates all pools. This is only for testnet.
+// CONTRACT: called after setting the pool ID migration threshold since this overwrites the threshold to zero.
+func migrateAllTestnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
+	// Get all pools
+	pools, err := concentratedKeeper.GetPools(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Migrate each pool
+	for _, pool := range pools {
+		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
+			return err
+		}
+	}
+
+	// Set to pool ID zero because all pools are migrated.
+	concentratedKeeper.SetIncentivePoolIDMigrationThreshold(ctx, 0)
 
 	return nil
 }
