@@ -1505,7 +1505,10 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240208032851-f1ac90db9b63 h1
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240208032851-f1ac90db9b63/go.mod h1:TpdBTKq8Nkudajo1YBDts2Gqzn1bwY0qdXn9qSurSG0=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240209052453-533ab18ccd0e h1:CYBE3ux9t7Q8qBdbPXbv44OMYa1Hll8ZZASZUWWg1Bw=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240209052453-533ab18ccd0e/go.mod h1:YMDId5bnCkkLEomgpWwi6LTyGtvcnRNfxF5xzEhHi1c=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240209052747-5d22d695e1a8 h1:juQo8S4St30HZwYs89UBCXxbIIWrB4jmxdOwAUZMS4w=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240209052747-5d22d695e1a8/go.mod h1:YMDId5bnCkkLEomgpWwi6LTyGtvcnRNfxF5xzEhHi1c=
 github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0 h1:HNmPE7IN3dRzu/1UlAI0ymio39VHdqRikP+xRLBFmXY=
+github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0/go.mod h1:+pcbJEj6kt6ZNOPlYTxAMajuzEGBwgXLUoeTSvprQBg=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240208032851-f1ac90db9b63 h1:zOJkl9a7xcDr3HDoc0NqHWi1Roff/VboS7dGYDI2fdU=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240208032851-f1ac90db9b63/go.mod h1:xKn9J3Z2oYU5/1S1B2/54L4ShMNqdeGLflQD39sd3a0=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10 h1:s4Y1ZeOmQ+iTgODCbnuge0mcBeyOtZF80Q5nmqu8Tio=
