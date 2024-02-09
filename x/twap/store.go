@@ -16,6 +16,9 @@ import (
 // 1. by time index
 // 2. by pool index
 // Therefore, setting this to 1000 means 500 complete incentive records are deleted per block.
+// The choice is somewhat arbitrary
+// However, th intuition is that the number should be low enough to not make blocks take longer but
+// not too small where it would take all the way to the next epoch.
 var NumRecordsToPrunePerBlock uint16 = 1000
 
 type timeTooOldError struct {
