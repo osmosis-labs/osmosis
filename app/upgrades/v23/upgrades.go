@@ -115,7 +115,7 @@ func migrateAllTestnetPools(ctx sdk.Context, concentratedKeeper concentratedliqu
 		}
 	}
 
-	// Set to pool ID zero becase all pools are migrated.
+	// Set to pool ID zero becuase all pools are migrated.
 	concentratedKeeper.SetIncentivePoolIDMigrationThreshold(ctx, 0)
 
 	return nil
