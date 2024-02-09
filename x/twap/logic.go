@@ -115,6 +115,14 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 					" Skipping record update. Underlying err: %w", id, err).Error())
 		}
 	}
+
+	state := k.GetPruningState(ctx)
+	if state.IsPruning {
+		err := k.pruneRecordsBeforeTimeButNewest(ctx, state)
+		if err != nil {
+			ctx.Logger().Error("Error pruning old twaps at the end block", err)
+		}
+	}
 }
 
 // updateRecords updates all records for a given pool id.
@@ -193,18 +201,6 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	newRecord.LastErrorTime = lastErrorTime
 
 	return newRecord, nil
-}
-
-// pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
-// before current block time while preserving the most recent record before the threshold.
-// Such record is preserved for each pool.
-// See TWAP keeper's `pruneRecordsBeforeTimeButNewest(...)` for more details about the reasons for
-// keeping this record.
-func (k Keeper) pruneRecords(ctx sdk.Context) error {
-	recordHistoryKeepPeriod := k.RecordHistoryKeepPeriod(ctx)
-
-	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
-	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
 // recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime,
