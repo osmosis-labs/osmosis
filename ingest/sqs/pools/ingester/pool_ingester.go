@@ -193,6 +193,10 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 	}
 
 	for _, pool := range cosmWasmPools {
+		if pool.GetId() == uint64(1461) {
+			continue
+		}
+
 		// Parse cosmwasm pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
