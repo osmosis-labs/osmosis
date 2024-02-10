@@ -2478,6 +2478,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		validateLastEpochNonPerpetualPruning(currentGauge.Id, currentGauge.DistributedCoins.Add(defaultCoins...), initialDistributionCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName)))
 	})
 }
+
 func (s *KeeperTestSuite) TestGetNoLockGaugeUptime() {
 	defaultPoolId := uint64(1)
 	tests := map[string]struct {
