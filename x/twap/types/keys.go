@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strconv"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +27,7 @@ const (
 )
 
 var (
+	PruningStateKey                    = []byte{0x01}
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
@@ -66,10 +68,31 @@ func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uin
 }
 
 func FormatHistoricalPoolIndexTWAPKey(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
-	var buffer bytes.Buffer
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS)
+	return FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId, denom1, denom2, timeS)
+}
+
+func FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId uint64, denom1, denom2 string, accumulatorWriteTimeString string) []byte {
+	var buffer bytes.Buffer
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, accumulatorWriteTimeString)
 	return buffer.Bytes()
+}
+
+// returns timeString, poolIdString, denom1, denom2, error
+// nolint: revive
+func ParseFieldsFromHistoricalTimeKey(bz []byte) (string, uint64, string, string, error) {
+	split := bytes.Split(bz, []byte(KeySeparator))
+	if len(split) != 5 {
+		return "", 0, "", "", errors.New("invalid key")
+	}
+	timeS := string(split[1])
+	poolId, err := strconv.Atoi(string(split[2]))
+	if err != nil {
+		return "", 0, "", "", err
+	}
+	denom1 := string(split[3])
+	denom2 := string(split[4])
+	return timeS, uint64(poolId), denom1, denom2, err
 }
 
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {
@@ -90,6 +113,12 @@ func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecor
 	startPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator)
 	endPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdPlusOneS, KeySeparator)
 	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
+}
+
+func GetMostRecentTwapForPool(store sdk.KVStore, poolId uint64, denom1, denom2 string) (TwapRecord, error) {
+	key := FormatMostRecentTWAPKey(poolId, denom1, denom2)
+	bz := store.Get(key)
+	return ParseTwapFromBz(bz)
 }
 
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {

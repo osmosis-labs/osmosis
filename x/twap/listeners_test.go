@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/twap"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var defaultPoolId uint64 = 1
@@ -275,20 +275,20 @@ func (s *TestSuite) TestAfterEpochEnd() {
 		err = s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
 		s.Require().NoError(err)
 
-		recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
+		lastKeptTime := s.Ctx.BlockTime().Add(-s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx))
+		pruneState := s.twapkeeper.GetPruningState(s.Ctx)
 
-		// old record should have been pruned here
-		// however, the newest younger than the prune threshold
-		// is kept.
+		// state entry should be set for pruning state
 		if allEpochs[i].Identifier == pruneEpochIdentifier {
-			s.Require().Equal(1, len(recordsAfterEpoch))
-			s.Require().Equal(newestRecord, recordsAfterEpoch[0])
+			s.Require().Equal(true, pruneState.IsPruning)
+			s.Require().Equal(lastKeptTime, pruneState.LastKeptTime)
 
-			// quit test once the record has been pruned
-			return
+			// reset pruning state to make sure other epochs do not modify it
+			s.twapkeeper.SetPruningState(s.Ctx, types.PruningState{})
 		} else { // pruning should not be triggered at first, not pruning epoch
 			s.Require().NoError(err)
-			s.Require().Equal(twapsBeforeEpoch, recordsAfterEpoch)
+			s.Require().Equal(false, pruneState.IsPruning)
+			s.Require().Equal(time.Time{}, pruneState.LastKeptTime)
 		}
 	}
 }

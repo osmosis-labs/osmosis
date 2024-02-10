@@ -10,8 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	types "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
+	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
 )
 
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
@@ -103,6 +103,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 
 	// set total liquidity
 	k.setTotalLiquidity(ctx, totalLiquidity)
+
+	k.SetIncentivePoolIDMigrationThreshold(ctx, genState.IncentivesAccumulatorPoolIdMigrationThreshold)
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
@@ -230,12 +232,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		})
 	}
 
+	// Get the incentive pool ID migration threshold
+	incentivesAccumulatorPoolIDMigrationThreshold, err := k.GetIncentivePoolIDMigrationThreshold(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &genesis.GenesisState{
 		Params:                k.GetParams(ctx),
 		PoolData:              poolData,
 		PositionData:          positionData,
 		NextPositionId:        k.GetNextPositionId(ctx),
 		NextIncentiveRecordId: k.GetNextIncentiveRecordId(ctx),
+		IncentivesAccumulatorPoolIdMigrationThreshold: incentivesAccumulatorPoolIDMigrationThreshold,
 	}
 }
 

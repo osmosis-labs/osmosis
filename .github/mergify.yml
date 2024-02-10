@@ -150,3 +150,19 @@ pull_request_rules:
       backport:
         branches:
           - v21.x
+  - name: backport patches to v22.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v22.x
+    actions:
+      backport:
+        branches:
+          - v22.x
+  - name: backport patches to v23.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v23.x
+    actions:
+      backport:
+        branches:
+          - v23.x

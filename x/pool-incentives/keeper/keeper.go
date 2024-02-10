@@ -7,17 +7,17 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -160,7 +160,7 @@ func (k Keeper) SetPoolGaugeIdInternalIncentive(ctx sdk.Context, poolId uint64, 
 
 // SetPoolGaugeIdNoLock sets the link between pool id and gauge id for "NoLock" gauges.
 // CONTRACT: the gauge of the given id must be "NoLock" gauge.
-func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64) {
+func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64, incentivizedUptime time.Duration) {
 	store := ctx.KVStore(k.storeKey)
 	// maps pool id and gauge id to gauge id.
 	// Note: this could be pool id and gauge id to empty byte array,
@@ -170,10 +170,7 @@ func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uin
 	store.Set(key, sdk.Uint64ToBigEndian(gaugeId))
 
 	// Note: this index is used for general linking.
-	// We supply zero for incentivized duration as "NoLock" gauges are not
-	// associated with any lockable duration. Instead, they incentivize
-	// pools directly.
-	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, 0)
+	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, incentivizedUptime)
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 

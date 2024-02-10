@@ -21,10 +21,13 @@ import (
 	cometbftdb "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v23/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -55,6 +58,7 @@ import (
 	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -62,7 +66,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v21/app"
+	osmosis "github.com/osmosis-labs/osmosis/v23/app"
 )
 
 type AssetList struct {
@@ -94,6 +98,11 @@ type DenomUnitMap struct {
 }
 
 const (
+	mempoolConfigName            = "osmosis-mempool"
+	arbitrageMinGasFeeConfigName = "arbitrage-min-gas-fee"
+	oldArbitrageMinGasFeeValue   = ".005"
+	newArbitrageMinGasFeeValue   = "0.1"
+
 	consensusConfigName     = "consensus"
 	timeoutCommitConfigName = "timeout_commit"
 )
@@ -477,6 +486,79 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	return nil
 }
 
+// overwrites app.toml values. Returns error if app.toml does not exist
+//
+// Currently, overwrites arbitrage-min-gas-fee value in app.toml if it is set to 0.005. Similarly,
+// overwrites the given viper config value.
+// Silently handles and skips any error/panic due to write permission issues.
+// No-op otherwise.
+func overwriteAppTomlValues(serverCtx *server.Context) error {
+	// Get paths to config.toml and config parent directory
+	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
+
+	configParentDirPath := filepath.Join(rootDir, "config")
+	configFilePath := filepath.Join(configParentDirPath, "app.toml")
+
+	fileInfo, err := os.Stat(configFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+	} else {
+		// app.toml exists
+
+		// Get setting
+		currentArbitrageMinGasFeeValue := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
+
+		// .x format at 0.x format are both valid.
+		if currentArbitrageMinGasFeeValue == oldArbitrageMinGasFeeValue || currentArbitrageMinGasFeeValue == "0"+oldArbitrageMinGasFeeValue {
+			// Set new value in viper
+			serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, newArbitrageMinGasFeeValue)
+
+			defer func() {
+				if err := recover(); err != nil {
+					fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
+				}
+			}()
+
+			// Check if the file is writable
+			if fileInfo.Mode()&os.FileMode(0200) != 0 {
+				// Read the entire content of the file
+				content, err := os.ReadFile(configFilePath)
+				if err != nil {
+					return err
+				}
+
+				// Convert the content to a string
+				fileContent := string(content)
+
+				// Find the index of the search line
+				index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
+				if index == -1 {
+					return fmt.Errorf("search line not found in the file")
+				}
+
+				// Find the opening and closing quotes
+				openQuoteIndex := strings.Index(fileContent[index:], "\"")
+				openQuoteIndex += index
+
+				closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
+				closingQuoteIndex += openQuoteIndex + 1
+
+				// Replace the old value with the new value
+				newFileContent := fileContent[:openQuoteIndex+1] + newArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
+
+				// Write the modified content back to the file
+				err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
+				if err != nil {
+					return err
+				}
+			} else {
+				fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue)
+			}
+		}
+	}
+	return nil
+}
+
 func getHomeEnvironment() string {
 	envPath := filepath.Join(osmosis.DefaultNodeHome, ".env")
 
@@ -519,7 +601,7 @@ func initAppConfig() (string, interface{}) {
 	// 128MB IAVL cache
 	srvCfg.IAVLCacheSize = 781250
 
-	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
+	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.1"}
 
 	sqsConfig := sqs.DefaultConfig
 
@@ -536,8 +618,8 @@ func initAppConfig() (string, interface{}) {
 max-gas-wanted-per-tx = "25000000"
 
 # This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
-# Default value of ".005" then means that a tx with 1 million gas costs (.005 uosmo/gas) * 1_000_000 gas = .005 osmo
-arbitrage-min-gas-fee = ".005"
+# Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
+arbitrage-min-gas-fee = ".1"
 
 # This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
 # Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
@@ -604,6 +686,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
+	server.AddTestnetCreatorCommand(rootCmd, osmosis.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
 
 	for i, cmd := range rootCmd.Commands() {
 		if cmd.Name() == "start" {
@@ -615,6 +698,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 				// overwrite config.toml values
 				err := overwriteConfigTomlValues(serverCtx)
+				if err != nil {
+					return err
+				}
+
+				// overwrite app.toml values
+				err = overwriteAppTomlValues(serverCtx)
 				if err != nil {
 					return err
 				}
@@ -744,12 +833,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
-	return osmosis.NewOsmosisApp(
-		logger, db, traceStore, true, skipUpgradeHeights,
-		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		appOpts,
-		wasmOpts,
+	baseAppOptions := []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -763,7 +847,53 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 		baseapp.SetChainID(chainID),
+	}
+
+	// If this is an in place testnet, set any new stores that may exist
+	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
+		version := store.NewCommitMultiStore(db).LatestVersion() + 1
+		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
+	}
+
+	return osmosis.NewOsmosisApp(
+		logger, db, traceStore, true, skipUpgradeHeights,
+		cast.ToString(appOpts.Get(flags.FlagHome)),
+		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		appOpts,
+		wasmOpts,
+		baseAppOptions...,
 	)
+}
+
+// newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
+// for a testnet to be created from the provided app.
+func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	// Create an app and type cast to an OsmosisApp
+	app := newApp(logger, db, traceStore, appOpts)
+	osmosisApp, ok := app.(*osmosis.OsmosisApp)
+	if !ok {
+		panic("app created from newApp is not of type osmosisApp")
+	}
+
+	newValAddr, ok := appOpts.Get(server.KeyNewValAddr).(bytes.HexBytes)
+	if !ok {
+		panic("newValAddr is not of type bytes.HexBytes")
+	}
+	newValPubKey, ok := appOpts.Get(server.KeyUserPubKey).(crypto.PubKey)
+	if !ok {
+		panic("newValPubKey is not of type crypto.PubKey")
+	}
+	newOperatorAddress, ok := appOpts.Get(server.KeyNewOpAddr).(string)
+	if !ok {
+		panic("newOperatorAddress is not of type string")
+	}
+	upgradeToTrigger, ok := appOpts.Get(server.KeyTriggerTestnetUpgrade).(string)
+	if !ok {
+		panic("upgradeToTrigger is not of type string")
+	}
+
+	// Make modifications to the normal OsmosisApp required to run the network locally
+	return osmosis.InitOsmosisAppForTestnet(osmosisApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
 }
 
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.

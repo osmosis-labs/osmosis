@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
 	db "github.com/cometbft/cometbft-db"
@@ -12,9 +11,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	sdkmath "cosmossdk.io/math"
 )
@@ -550,6 +549,42 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
+// getNoLockGaugeUptime retrieves the uptime corresponding to the passed in gauge.
+// For external gauges, it returns the uptime specified in the gauge.
+// For internal gauges, it returns the module param for internal gauge uptime.
+//
+// In either case, if the fetched uptime is invalid or unauthorized, it falls back to a default uptime.
+func (k Keeper) getNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	// If internal gauge, use InternalUptime param as the gauge's uptime.
+	// Otherwise, use the gauge's duration.
+	gaugeUptime := gauge.DistributeTo.Duration
+	if gauge.DistributeTo.Denom == types.NoLockInternalGaugeDenom(poolId) {
+		gaugeUptime = k.GetParams(ctx).InternalUptime
+	}
+
+	// Validate that the gauge's corresponding uptime is authorized.
+	authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
+	isUptimeAuthorized := false
+	for _, authorizedUptime := range authorizedUptimes {
+		if gaugeUptime == authorizedUptime {
+			isUptimeAuthorized = true
+		}
+	}
+
+	// If the gauge's uptime is not authorized, we fall back to a default instead of erroring.
+	//
+	// This is for two reasons:
+	// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
+	// 2. To avoid having to do a state migration on existing gauges at time of adding
+	// this change, since prior to this, CL gauges were not required to associate with
+	// an uptime that was authorized.
+	if !isUptimeAuthorized {
+		gaugeUptime = types.DefaultConcentratedUptime
+	}
+
+	return gaugeUptime
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -602,6 +637,10 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
+		// Get the uptime for the gauge. Note that if the gauge's uptime is not authorized,
+		// this falls back to a default value of 1ns.
+		gaugeUptime := k.getNoLockGaugeUptime(ctx, gauge, pool.GetId())
+
 		// For every coin in the gauge, calculate the remaining reward per epoch
 		// and create a concentrated liquidity incentive record for it that
 		// is supposed to distribute over that epoch.
@@ -625,8 +664,9 @@ func (k Keeper) distributeInternal(
 				// Gauge start time should be checked whenever moving between active
 				// and inactive gauges. By the time we get here, the gauge should be active.
 				ctx.BlockTime(),
-				// Only default uptime is supported at launch.
-				types.DefaultConcentratedUptime,
+				// The uptime for each distribution is determined by the gauge's duration field.
+				// If it is unauthorized, we fall back to a default above.
+				gaugeUptime,
 			)
 
 			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
@@ -644,11 +684,11 @@ func (k Keeper) distributeInternal(
 
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
-
-		if lockSum.IsZero() {
+		lockSum, err := lockuptypes.SumLocksByDenom(locks, denom)
+		if lockSum.IsZero() || err != nil {
 			return nil, nil
 		}
+
 		// total_denom_lock_amount * remain_epochs
 		lockSumTimesRemainingEpochs := lockSum.MulRaw(int64(remainEpochs))
 		lockSumTimesRemainingEpochsBi := lockSumTimesRemainingEpochs.BigIntMut()
@@ -664,7 +704,11 @@ func (k Keeper) distributeInternal(
 				amtIntBi := amtInt.BigIntMut()
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				amtIntBi = amtIntBi.Mul(amtIntBi, coin.Amount.BigIntMut())
-				checkBigInt(amtIntBi)
+
+				// We should check overflow as we switch back to sdk.Int representation.
+				// However we know the final result will not be larger than the gauge size,
+				// which is bounded to an Int. So we can safely skip this.
+
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
 				if amtInt.Sign() == 1 {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
@@ -718,12 +762,6 @@ func (k Keeper) skipSpamGaugeDistribute(ctx sdk.Context, locks []*lockuptypes.Pe
 		return true, totalDistrCoins, err
 	}
 	return false, totalDistrCoins, nil
-}
-
-func checkBigInt(bi *big.Int) {
-	if bi.BitLen() > sdkmath.MaxBitLen {
-		panic("overflow")
-	}
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.
@@ -806,7 +844,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
-	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 10000)
+	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 50000)
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins

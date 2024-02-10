@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
+	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
 
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 var (
@@ -27,6 +27,7 @@ var (
 
 	distrToNoLock = lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.NoLock,
+		Duration:      defaultNoLockDuration,
 	}
 
 	distrToNoLockPool1 = lockuptypes.QueryCondition{
@@ -186,6 +187,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	app.IncentivesKeeper.InitGenesis(ctx, types.GenesisState{
 		Params: types.Params{
 			DistrEpochIdentifier: "week",
+			InternalUptime:       types.DefaultConcentratedUptime,
 		},
 		Gauges: expectedGauges,
 		LockableDurations: []time.Duration{

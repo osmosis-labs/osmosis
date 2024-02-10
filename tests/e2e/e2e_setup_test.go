@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	configurer "github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer"
+	configurer "github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer"
 )
 
 const (
@@ -18,8 +18,6 @@ const (
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
-	// Environment variable name to skip state sync testing
-	skipStateSyncEnv = "OSMOSIS_E2E_SKIP_STATE_SYNC" //nolint:unused // this is used in the code
 	// Environment variable name to determine if this upgrade is a fork
 	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
 	// Environment variable name to skip cleaning up Docker resources in teardown

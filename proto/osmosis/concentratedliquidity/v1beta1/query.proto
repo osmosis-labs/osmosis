@@ -16,7 +16,7 @@ import "google/protobuf/duration.proto";
 import "osmosis/concentratedliquidity/v1beta1/position.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto";
 
 service Query {
   // Pools returns all concentrated liquidity pools
@@ -153,6 +153,15 @@ message PositionByIdRequest {
 
 message PositionByIdResponse {
   FullPositionBreakdown position = 1 [ (gogoproto.nullable) = false ];
+}
+
+message NumPoolPositionsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message NumPoolPositionsResponse {
+  uint64 position_count = 1
+      [ (gogoproto.moretags) = "yaml:\"position_count\"" ];
 }
 
 //=============================== Pools
