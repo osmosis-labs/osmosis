@@ -198,7 +198,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 			continue
 		}
 
-		cwPool, ok := pool.(*model.CosmWasmPool)
+		cwPool, ok := pool.(*model.Pool)
 		if !ok {
 			return errors.New("fail to cast cw pool")
 		}
