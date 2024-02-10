@@ -241,8 +241,8 @@ github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAl
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
 github.com/onsi/gomega v1.20.0 h1:8W0cWlwFkflGPLltQvLRB7ZVD5HuP6ng320w2IS245Q=
 github.com/onsi/gomega v1.20.0/go.mod h1:DtrZpjmvpn2mPm4YWQa0/ALMDj9v4YxLgojwPeREyVo=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-2 h1:Kn94XEG9pMiiFwttyt/oLayZfY9/3pIKyrK9TBIB+fU=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v22-osmo-2/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1 h1:UYiiBscq1prLXTG785ra9EbYSZr+byG7PLaq4q2qm14=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8 h1:CdRBGDP9NtrnLzeimUNjwFkMkYpfboGQK9cZW073onA=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8/go.mod h1:/8dLv13+yB97YNAxpKsaF0Kd+KFARGcm709Xv7Ix0cU=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
