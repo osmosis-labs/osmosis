@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
@@ -16,6 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
@@ -71,6 +74,9 @@ const (
 	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	usdtDenom   = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
 	oneOSMO     = 1_000_000
+
+	// code ID of the broken WhiteWhale cosmwasm pools on mainnet.
+	whiteWhalePoolCodeID = uint64(503)
 )
 
 var (
@@ -176,7 +182,8 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 		// Parse CFMM pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
-			return err
+			// Silently skip pools on error to avoid breaking ingest of all other pools.
+			continue
 		}
 
 		allPoolsParsed = append(allPoolsParsed, pool)
@@ -186,17 +193,31 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 		// Parse concentrated pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
-			return err
+			// Silently skip pools on error to avoid breaking ingest of all other pools.
+			continue
 		}
 
 		allPoolsParsed = append(allPoolsParsed, pool)
 	}
 
 	for _, pool := range cosmWasmPools {
+		// The logic below is to skip mainnet WhiteWhale pools that were instantiated while
+		// borne
+		cwPool, ok := pool.(*model.Pool)
+		if !ok {
+			return errors.New("fail to cast cw pool")
+		}
+
+		// White whale pool code ID
+		if cwPool.CodeId == whiteWhalePoolCodeID {
+			continue
+		}
+
 		// Parse cosmwasm pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
-			return err
+			// Silently skip pools on error to avoid breaking ingest of all other pools.
+			continue
 		}
 
 		allPoolsParsed = append(allPoolsParsed, pool)
@@ -297,7 +318,17 @@ func (pi *poolIngester) convertPool(
 	denomToRoutingInfoMap map[string]denomRoutingInfo,
 	denomPairToTakerFeeMap sqsdomain.TakerFeeMap,
 	tokenPrecisionMap map[string]int,
-) (sqsdomain.PoolI, error) {
+) (sqsPool sqsdomain.PoolI, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			telemetry.IncrCounter(1, "sqs_ingest", "convert_pool", "panic", strconv.FormatUint(pool.GetId(), 10))
+
+			err = fmt.Errorf("sqs ingest pool (%d) conversion panicked: %v", pool.GetId(), r)
+			ctx.Logger().Error(err.Error())
+		}
+	}()
+
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
 	osmoPoolTVL := osmomath.ZeroInt()
