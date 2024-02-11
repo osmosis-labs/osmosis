@@ -16,6 +16,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v22/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v22/x/cosmwasmpool/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v22/x/poolmanager/types"
 )
 
@@ -193,7 +194,16 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 	}
 
 	for _, pool := range cosmWasmPools {
-		if pool.GetId() == uint64(1461) {
+		if pool.GetId() == uint64(1461) || pool.GetId() == uint64(1462) || pool.GetId() == uint64(1463) {
+			continue
+		}
+
+		cwPool, ok := pool.(*model.Pool)
+		if !ok {
+			return errors.New("fail to cast cw pool")
+		}
+
+		if cwPool.CodeId == 503 {
 			continue
 		}
 
