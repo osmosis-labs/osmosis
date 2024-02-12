@@ -1,12 +1,10 @@
 package authenticator_test
 
 import (
-	"encoding/hex"
 	"math/rand"
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,21 +12,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 )
 
 type SigVerifyAuthenticationSuite struct {
-	suite.Suite
-	OsmosisApp                   *app.OsmosisApp
-	Ctx                          sdk.Context
-	EncodingConfig               params.EncodingConfig
+	BaseAuthenticatorSuite
+
 	SigVerificationAuthenticator authenticator.SignatureVerificationAuthenticator
 	TestKeys                     []string
 	TestAccAddress               []sdk.AccAddress
@@ -40,37 +34,12 @@ func TestSigVerifyAuthenticationSuite(t *testing.T) {
 }
 
 func (s *SigVerifyAuthenticationSuite) SetupTest() {
-	// Test data for authenticator signature verification
-	TestKeys := []string{
-		"6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159",
-		"0dd4d1506e18a5712080708c338eb51ecf2afdceae01e8162e890b126ac190fe",
-		"49006a359803f0602a7ec521df88bf5527579da79112bb71f285dd3e7d438033",
-	}
+	s.SetupKeys()
+
 	s.EncodingConfig = app.MakeEncodingConfig()
 	txConfig := s.EncodingConfig.TxConfig
 	signModeHandler := txConfig.SignModeHandler()
-
-	s.OsmosisApp = app.Setup(false)
-
 	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
-
-	// Set up test accounts
-	for _, key := range TestKeys {
-		bz, _ := hex.DecodeString(key)
-		priv := &secp256k1.PrivKey{Key: bz}
-
-		// add the test private keys to array for later use
-		s.TestPrivKeys = append(s.TestPrivKeys, priv)
-
-		accAddress := sdk.AccAddress(priv.PubKey().Address())
-		account := authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
-		ak.SetAccount(s.Ctx, account)
-
-		// add the test accounts to array for later use
-		s.TestAccAddress = append(s.TestAccAddress, accAddress)
-	}
 
 	// Create a new Secp256k1SignatureAuthenticator for testing
 	s.SigVerificationAuthenticator = authenticator.NewSignatureVerificationAuthenticator(
@@ -260,12 +229,12 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				[]uint64{0, 0},
 				[]uint64{0, 0},
 				[]cryptotypes.PrivKey{
-					s.TestPrivKeys[0],
 					s.TestPrivKeys[1],
+					s.TestPrivKeys[0],
 				},
 				[]cryptotypes.PrivKey{
-					s.TestPrivKeys[0],
 					s.TestPrivKeys[2],
+					s.TestPrivKeys[0],
 				},
 				2,
 				2,
