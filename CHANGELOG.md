@@ -42,25 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v23.0.0
 
-### State Breaking
+### State Compatible
 
-<<<<<<< HEAD
-=======
-* [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
-* [#7357](https://github.com/osmosis-labs/osmosis/pull/7357) Fix: Ensure rate limits are not applied to packets that aren't ics20s
-
-### Bug Fixes
-
-* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
-
-### Misc Improvements
-
-* [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
-* [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
-* [#7427](https://github.com/osmosis-labs/osmosis/pull/7427) Prune TWAP records over multiple blocks, instead of all at once at epoch
-
->>>>>>> 1c9e4918 (feat(twap): prune records over multiple blocks (#7427))
-## v23.0.0
+ * [#7400](https://github.com/osmosis-labs/osmosis/pull/7400) Update CometBFT to v0.37.4 and IBC to v7.3.2
 
 * [#7409](https://github.com/osmosis-labs/osmosis/pull/7409) Scaling factor for pool uptime accumulator to avoid truncation
 * [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
