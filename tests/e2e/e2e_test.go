@@ -42,16 +42,19 @@ var (
 func (s *IntegrationTestSuite) TestPrepE2E() {
 	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
 	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
+		t.Parallel()
 		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
 		s.SetDefaultTakerFeeChainB()
 	})
 
 	s.T().Run("SetExpeditedVotingPeriodChainA", func(t *testing.T) {
+		t.Parallel()
 		s.T().Log("setting the expedited voting period to 7 seconds on chain A")
 		s.SetExpeditedVotingPeriodChainA()
 	})
 
 	s.T().Run("SetExpeditedVotingPeriodChainB", func(t *testing.T) {
+		t.Parallel()
 		s.T().Log("setting the expedited voting period to 7 seconds on chain B")
 		s.SetExpeditedVotingPeriodChainB()
 	})
@@ -61,38 +64,47 @@ func (s *IntegrationTestSuite) TestPrepE2E() {
 func (s *IntegrationTestSuite) TestStartE2E() {
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
+		t.Parallel()
 		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
 	})
 
 	s.T().Run("ProtoRev", func(t *testing.T) {
+		t.Parallel()
 		s.ProtoRev()
 	})
 
 	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+		t.Parallel()
 		s.ConcentratedLiquidity()
 	})
 
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
+		t.Parallel()
 		s.SuperfluidVoting()
 	})
 
 	s.T().Run("AddToExistingLock", func(t *testing.T) {
+		t.Parallel()
 		s.AddToExistingLock()
 	})
 
 	s.T().Run("ExpeditedProposals", func(t *testing.T) {
+		t.Parallel()
 		s.ExpeditedProposals()
 	})
 
 	s.T().Run("GeometricTWAP", func(t *testing.T) {
+		t.Parallel()
 		s.GeometricTWAP()
 	})
 
 	s.T().Run("LargeWasmUpload", func(t *testing.T) {
+		t.Parallel()
 		s.LargeWasmUpload()
 	})
 
 	s.T().Run("StableSwap", func(t *testing.T) {
+		t.Parallel()
 		s.StableSwap()
 	})
 
@@ -108,6 +120,7 @@ func (s *IntegrationTestSuite) TestStartE2E() {
 		s.T().Skip()
 	} else {
 		s.T().Run("StateSync", func(t *testing.T) {
+			t.Parallel()
 			s.StateSync()
 		})
 	}
@@ -118,6 +131,7 @@ func (s *IntegrationTestSuite) TestStartE2E() {
 		s.T().Skip("Skipping GeometricTwapMigration test")
 	} else {
 		s.T().Run("GeometricTwapMigration", func(t *testing.T) {
+			t.Parallel()
 			s.GeometricTwapMigration()
 		})
 	}
@@ -126,6 +140,7 @@ func (s *IntegrationTestSuite) TestStartE2E() {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	} else {
 		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
+			t.Parallel()
 			s.AddToExistingLockPostUpgrade()
 		})
 	}
@@ -136,18 +151,22 @@ func (s *IntegrationTestSuite) TestStartE2E() {
 		s.T().Skip("Skipping IBC tests")
 	} else {
 		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
+			t.Parallel()
 			s.IBCTokenTransferRateLimiting()
 		})
 
 		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
+			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
 
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
+			t.Parallel()
 			s.IBCWasmHooks()
 		})
 
 		s.T().Run("PacketForwarding", func(t *testing.T) {
+			t.Parallel()
 			s.PacketForwarding()
 		})
 	}
