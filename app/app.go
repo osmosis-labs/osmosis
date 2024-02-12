@@ -473,6 +473,20 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	}
 	iterator.Close()
 
+	// Remove all validators from validators store
+	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all validators from unbonding queue
+	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
 	// Add our validator to power and last validators store
 	app.StakingKeeper.SetValidator(ctx, newVal)
 	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
@@ -534,6 +548,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	dayEpochInfo.Duration = time.Hour * 6
 	// Prevents epochs from running back to back
 	dayEpochInfo.CurrentEpochStartTime = time.Now().UTC()
+	// If you want epoch to run a minute after starting the chain, uncomment the line below and comment the line above
+	// dayEpochInfo.CurrentEpochStartTime = time.Now().UTC().Add(-dayEpochInfo.Duration).Add(time.Minute)
 	dayEpochInfo.CurrentEpochStartHeight = app.LastBlockHeight()
 	app.EpochsKeeper.DeleteEpochInfo(ctx, "day")
 	err = app.EpochsKeeper.AddEpochInfo(ctx, dayEpochInfo)
