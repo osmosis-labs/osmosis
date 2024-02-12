@@ -2,7 +2,6 @@ package authenticator_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -295,7 +294,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false)
+				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().NoError(err)
 
 				// Test Authenticate method
@@ -309,7 +308,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().False(success.IsAuthenticated())
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false)
+				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().Error(err)
 
 				//// cast the interface as a concrete struct
@@ -503,79 +502,6 @@ func GenTx(
 	if err != nil {
 		return nil, err
 	}
-	return tx.GetTx(), nil
-}
-
-func GenEmptyTx() sdk.Tx {
-	txconfig := app.MakeEncodingConfig().TxConfig
-	tx, _ := MakeTxBuilder(txconfig, nil, nil, 0, "", nil, nil, nil, nil)
-	return tx.GetTx()
-}
-
-func GenTxWithCosigner(
-	gen client.TxConfig,
-	msg sdk.Msg,
-	feeAmt sdk.Coins,
-	gas uint64,
-	chainID string,
-	accNum,
-	accSeq uint64,
-	signer cryptotypes.PrivKey,
-	signature cryptotypes.PrivKey,
-	cosigner cryptotypes.PrivKey,
-	salt []byte,
-) (sdk.Tx, error) {
-	tx, err := MakeTxBuilder(gen, []sdk.Msg{msg}, feeAmt, gas, chainID, []uint64{accNum}, []uint64{accSeq}, []cryptotypes.PrivKey{signer}, []cryptotypes.PrivKey{signature})
-	if err != nil {
-		return nil, err
-	}
-	signMode := gen.SignModeHandler().DefaultMode()
-
-	// Override signatures
-	sigs := []signing.SignatureV2{
-		signing.SignatureV2{
-			PubKey: signature.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
-			},
-			Sequence: accSeq,
-		},
-		signing.SignatureV2{
-			PubKey: cosigner.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
-			},
-			Sequence: accSeq,
-		},
-	}
-	signerData := authsigning.SignerData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      accSeq,
-	}
-	signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
-	if err != nil {
-		panic(err)
-	}
-	sig, err := signer.Sign(signBytes)
-	if err != nil {
-		panic(err)
-	}
-	sigs[0].Data.(*signing.SingleSignatureData).Signature = sig
-
-	sig2, err := cosigner.Sign(append(signBytes, salt...))
-	if err != nil {
-		panic(err)
-	}
-
-	finalSig := []byte(fmt.Sprintf(`{"salt": %s, "signature": %s}`, salt, sig2))
-
-	sigs[1].Data.(*signing.SingleSignatureData).Signature = finalSig
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		panic(err)
-	}
-
 	return tx.GetTx(), nil
 }
 

@@ -17,8 +17,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// Compile time type assertion for the SignatureData using the
-// PassKeyAuthenticator struct
+// Compile time type assertion for the  PassKeyAuthenticator struct
 var _ iface.Authenticator = &PassKeyAuthenticator{}
 
 const (
@@ -81,10 +80,6 @@ func (sva PassKeyAuthenticator) Initialize(
 	}
 	return sva, nil
 }
-
-// PassKeySignatureData is used to package all the signature data and the tx
-// for use in the Authenticate function
-type PassKeySignatureData = SignatureData
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification

@@ -110,7 +110,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 			var tx sdk.Tx
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, account, nil, tx, 0, false)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, account, nil, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Set initial time
@@ -244,7 +244,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 				ak := s.OsmosisApp.AccountKeeper
 				sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 				var tx sdk.Tx
-				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, account, nil, tx, 0, false)
+				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, account, nil, tx, 0, false, authenticator.SequenceMatch)
 				s.Require().NoError(err)
 
 				spendLimit.Authenticate(s.Ctx, request)

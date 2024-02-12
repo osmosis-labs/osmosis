@@ -53,7 +53,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 			return sdk.Context{}, err
 		}
 
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate)
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
 		for _, authenticator := range authenticators { // This should execute on *all* authenticators so they can update their state
 
 			// Confirm Execution

@@ -180,7 +180,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			// Generate authentication request
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -300,7 +300,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			// Generate authentication request
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -390,7 +390,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			var tx sdk.Tx
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			success := initializedTop.Authenticate(s.Ctx, request)

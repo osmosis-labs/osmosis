@@ -10,8 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
-// Compile time type assertion for the SignatureData using the
-// MessageFilterAuthenticator struct
 var _ iface.Authenticator = &MessageFilterAuthenticator{}
 
 type MessageFilterAuthenticator struct {

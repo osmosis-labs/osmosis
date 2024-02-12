@@ -95,7 +95,17 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 	return authResult
 }
 
-func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool) (iface.AuthenticationRequest, error) {
+// make replay protection into an interface. SequenceMatch is a default implementation
+type ReplayProtection func(txData *iface.ExplicitTxData, signature *txsigning.SignatureV2) error
+
+func SequenceMatch(txData *iface.ExplicitTxData, signature *txsigning.SignatureV2) error {
+	if signature.Sequence != txData.Sequence {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
+	}
+	return nil
+}
+
+func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	signers, txSignatures, _, err := GetCommonAuthenticationData(ctx, tx, -1, simulate)
 	if err != nil {
@@ -146,6 +156,7 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		if err != nil {
 			return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
 		}
+		// TODO: Can we get this to not print an error every time?
 		jsonMsg, err := json.Marshal(msg)
 		if err != nil {
 			// Messages with Anys cannot be marshalled to JSON. It's ok for these to be empty. The consumer should be able to parse the byte value
@@ -183,13 +194,10 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, s
 		sequences = append(sequences, signature.Sequence)
 		if signers[i].Equals(signer) {
 			msgSignature = single.Signature
-			// TODO: Important!! Figure this out. We need to check the sequence somewhere. Here would make sense,
-			//       but why are we using the signature sequence? that won't work if theyre are many messages for with the same signer
-			//if baseAccount != nil && signature.Sequence != baseAccount.GetSequence() {
-			//	// TODO: Do we really want to do this here? I think we should delegate sequencing to a separate function
-			//	return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", baseAccount.GetSequence(), signature.Sequence))
-			//}
-
+			err := replayProtection(&txData, &signature)
+			if err != nil {
+				return iface.AuthenticationRequest{}, err
+			}
 		}
 	}
 

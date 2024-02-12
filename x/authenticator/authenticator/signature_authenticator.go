@@ -10,8 +10,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
@@ -72,15 +70,6 @@ func (sva SignatureVerificationAuthenticator) Initialize(
 }
 
 type Tx struct {
-}
-
-// SignatureData is used to package all the signature data and the tx
-// for use in the Authenticate function
-type SignatureData struct {
-	Signers    []sdk.AccAddress
-	Signatures []signing.SignatureV2
-	Tx         sdk.Tx
-	Simulate   bool
 }
 
 // Authenticate takes a SignaturesVerificationData struct and validates

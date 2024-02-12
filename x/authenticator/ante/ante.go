@@ -123,8 +123,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ak, ad.sigModeHandler, account, msg, tx, msgIndex, simulate)
-		fmt.Println("authenticationRequest", authenticationRequest)
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ak, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}

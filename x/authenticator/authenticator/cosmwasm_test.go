@@ -131,7 +131,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false)
+	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
@@ -214,7 +214,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	//  cosigner implementation later?
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false)
+	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)

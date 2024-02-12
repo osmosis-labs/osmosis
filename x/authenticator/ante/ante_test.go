@@ -78,6 +78,7 @@ func (s *AutherticatorAnteSuite) SetupTest() {
 	s.AuthenticatorDecorator = ante.NewAuthenticatorDecorator(
 		s.OsmosisApp.AuthenticatorKeeper,
 		s.OsmosisApp.AccountKeeper,
+		s.EncodingConfig.TxConfig.SignModeHandler(),
 	)
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 }
