@@ -2,25 +2,21 @@ package authenticator_test
 
 import (
 	"encoding/json"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"strings"
 	"testing"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
 )
 
 type AggregatedAuthenticatorsTest struct {
-	suite.Suite
-	Ctx            sdk.Context
-	OsmosisApp     *app.OsmosisApp
-	EncodingConfig params.EncodingConfig
+	BaseAuthenticatorSuite
 
 	AnyOfAuth        authenticator.AnyOfAuthenticator
 	AllOfAuth        authenticator.AllOfAuthenticator
@@ -35,10 +31,7 @@ func TestAggregatedAuthenticatorsTest(t *testing.T) {
 }
 
 func (s *AggregatedAuthenticatorsTest) SetupTest() {
-	s.OsmosisApp = app.Setup(false)
-	s.EncodingConfig = app.MakeEncodingConfig()
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.SetupKeys()
 	am := authenticator.NewAuthenticatorManager()
 
 	// Define authenticators
@@ -161,7 +154,6 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 	}
 
 	// Simulating a transaction
-	var tx sdk.Tx
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
@@ -180,7 +172,12 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			// Generate authentication request
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false, authenticator.SequenceMatch)
+			// sample msg
+			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+			// sample tx
+			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+			s.Require().NoError(err)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -280,8 +277,6 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 		},
 	}
 
-	// Simulating a transaction
-	var tx sdk.Tx
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
@@ -300,7 +295,13 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			// Generate authentication request
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false, authenticator.SequenceMatch)
+
+			// sample msg
+			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+			// sample tx
+			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+			s.Require().NoError(err)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -387,10 +388,14 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			s.Require().NoError(err)
 
 			// Generate authentication request
-			var tx sdk.Tx
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, nil, nil, tx, -1, false, authenticator.SequenceMatch)
+			// sample msg
+			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+			// sample tx
+			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+			s.Require().NoError(err)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			success := initializedTop.Authenticate(s.Ctx, request)
