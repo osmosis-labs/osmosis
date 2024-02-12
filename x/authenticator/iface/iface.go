@@ -28,7 +28,6 @@ type ExplicitTxData struct {
 type SimplifiedSignatureData struct {
 	Signers    []sdk.AccAddress `json:"signers"`
 	Signatures [][]byte         `json:"signatures"`
-	Sequences  []uint64         `json:"sequences"`
 }
 
 type AuthenticationRequest struct {
