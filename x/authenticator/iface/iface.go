@@ -1,7 +1,6 @@
 package iface
 
 import (
-	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,9 +10,9 @@ type SignModeData struct {
 }
 
 type LocalAny struct {
-	TypeURL string          `json:"type_url"`
-	Value   json.RawMessage `json:"value"`
-	Bytes   []byte          `json:"bytes"`
+	TypeURL string `json:"type_url"`
+	Value   []byte `json:"value"`
+	Bytes   []byte `json:"bytes"`
 }
 
 type ExplicitTxData struct {
