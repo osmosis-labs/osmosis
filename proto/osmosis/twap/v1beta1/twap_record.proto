@@ -2,9 +2,6 @@ syntax = "proto3";
 package osmosis.twap.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
-import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/twap/types";
@@ -90,7 +87,11 @@ message PruningState {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"last_kept_time\""
   ];
-  // last_key_seen is the last key of the TWAP records that were pruned
-  // before reaching the block's prune limit
-  bytes last_key_seen = 3;
+  // Deprecated: This field is deprecated.
+  bytes last_key_seen = 3 [ deprecated = true ];
+  // last_seen_pool_id is the pool_id that we will begin pruning in the next
+  // block. This value starts at the highest pool_id at time of epoch, and
+  // decreases until it reaches 1. When it reaches 1, the pruning
+  // process is complete.
+  uint64 last_seen_pool_id = 4;
 }
