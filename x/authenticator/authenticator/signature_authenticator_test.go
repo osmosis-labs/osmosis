@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -24,9 +23,6 @@ type SigVerifyAuthenticationSuite struct {
 	BaseAuthenticatorSuite
 
 	SigVerificationAuthenticator authenticator.SignatureVerificationAuthenticator
-	TestKeys                     []string
-	TestAccAddress               []sdk.AccAddress
-	TestPrivKeys                 []*secp256k1.PrivKey
 }
 
 func TestSigVerifyAuthenticationSuite(t *testing.T) {
