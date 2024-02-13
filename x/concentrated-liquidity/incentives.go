@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slices"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -738,6 +740,9 @@ func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.
 // - position with the given id does not exist
 // - other internal database or math errors.
 func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+	goCtx := sdk.WrapSDKContext(ctx)
+	span := trace.SpanFromContext(goCtx)
+
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -781,6 +786,16 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		if err != nil {
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
+	}
+
+	if span.IsRecording() {
+		span.SetAttributes(
+			attribute.Int64("position_id", int64(positionId)),
+			attribute.String("owner", sender.String()),
+			attribute.Int64("pool_id", int64(pool.GetId())),
+			attribute.String("collected", collectedIncentivesForPosition.String()),
+			attribute.String("forfeited", forfeitedIncentivesForPosition.String()),
+		)
 	}
 
 	// Emit an event indicating that incentives were collected.

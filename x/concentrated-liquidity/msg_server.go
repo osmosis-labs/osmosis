@@ -4,6 +4,8 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
@@ -14,6 +16,8 @@ import (
 type msgServer struct {
 	keeper *Keeper
 }
+
+var tracer = otel.Tracer(types.ModuleName)
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
@@ -167,7 +171,11 @@ func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.M
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender
 func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
+	goCtx, span := tracer.Start(goCtx, "msg-collect-incentives")
+	goCtx = trace.ContextWithSpan(goCtx, span)
+	defer span.End()
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx = ctx.WithContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

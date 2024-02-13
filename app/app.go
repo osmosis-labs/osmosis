@@ -31,6 +31,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	"github.com/uptrace/uptrace-go/uptrace"
 
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v22/ingest/sqs/domain"
@@ -282,6 +283,12 @@ func NewOsmosisApp(
 		// Set the sidecar query server ingester to the ingest manager.
 		app.IngestManager.RegisterIngester(sqsIngester)
 	}
+
+	uptrace.ConfigureOpentelemetry(
+		// copy your project DSN here or use UPTRACE_DSN env var
+		uptrace.WithDSN("https://OZUYkMnH3l5QpezkFWh7dQ@api.uptrace.dev?grpc=4317"),
+		uptrace.WithServiceName("osmosis"),
+	)
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
