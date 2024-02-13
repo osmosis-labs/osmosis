@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
@@ -38,6 +39,9 @@ func (ad AuthenticatorDecorator) PostHandle(
 	// collect all the keys for authenticators that are not ready
 	nonReadyAccountAuthenticatorKeys := make(map[string]struct{})
 
+	// collect all the contract address that has been updated from transient store
+	transientStoreUpdatedContracts := make(map[string]struct{})
+
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
 		if err != nil {
@@ -62,22 +66,43 @@ func (ad AuthenticatorDecorator) PostHandle(
 				continue
 			}
 
-			authenticator := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
+			a := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
+
+			// If the authenticator is a cosmwasm authenticator, we need to state from the transient store
+			// to the contract state
+			//
+			// TODO: Note that this is a temporary solution. There are issues with the current design:
+			// - This will overwrite `runMsgs` changes to the contract state
+			// - Any othere contract that is used by this contract on `Track` will not be updated
+			//   since we only sync the cosmwasm authenticator contract state
+			cosmwasmAuthenticator, ok := a.(authenticator.CosmwasmAuthenticator)
+			contractAddr := cosmwasmAuthenticator.ContractAddress().String()
+			_, isUpdated := transientStoreUpdatedContracts[contractAddr]
+
+			if ok && !isUpdated {
+
+				// sync the transient store state to the committing contract state
+				ad.authenticatorKeeper.TransientStore.WriteCosmWasmAuthenticatorStateInto(ctx, &cosmwasmAuthenticator)
+
+				// mark contract as updated
+				transientStoreUpdatedContracts[contractAddr] = struct{}{}
+			}
 
 			// Get the authentication data for the transaction
-			authData, err := authenticator.GetAuthenticationData(ctx, tx, msgIndex, simulate)
+			authData, err := a.GetAuthenticationData(ctx, tx, msgIndex, simulate)
 			if err != nil {
 				return ctx, err
 			}
 
 			// Confirm Execution
-			successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
+			res := a.ConfirmExecution(ctx, account, msg, authData)
 
-			if successfulExecution.IsBlock() {
-				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
+			if res.IsBlock() {
+				err = errorsmod.Wrap(sdkerrors.ErrUnauthorized, "execution blocked by authenticator")
+				return sdk.Context{}, errorsmod.Wrap(err, res.Error().Error())
 			}
 
-			success = successfulExecution.IsConfirm()
+			success = res.IsConfirm()
 		}
 	}
 

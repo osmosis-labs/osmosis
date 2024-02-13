@@ -6,7 +6,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -18,6 +21,7 @@ import (
 
 type CosmwasmAuthenticator struct {
 	contractKeeper *keeper.PermissionedKeeper
+	wasmStoreKey   storetypes.StoreKey
 	ak             *authkeeper.AccountKeeper
 	cdc            codectypes.AnyUnpacker
 	sigModeHandler authsigning.SignModeHandler
@@ -30,9 +34,10 @@ var (
 	_ iface.Authenticator = &CosmwasmAuthenticator{}
 )
 
-func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
+func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, wasmStoreKey storetypes.StoreKey, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
 	return CosmwasmAuthenticator{
 		contractKeeper: contractKeeper,
+		wasmStoreKey:   wasmStoreKey,
 		sigModeHandler: sigModeHandler,
 		ak:             accountKeeper,
 		cdc:            cdc,
@@ -456,4 +461,9 @@ func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
 	}
 
 	return contractAddr, initData.Params, nil
+}
+
+func (cwa CosmwasmAuthenticator) GetContractPrefixStore(ctx sdk.Context) storetypes.KVStore {
+	prefixStoreKey := wasmtypes.GetContractStorePrefix(cwa.contractAddr)
+	return prefix.NewStore(ctx.KVStore(cwa.wasmStoreKey), prefixStoreKey)
 }
