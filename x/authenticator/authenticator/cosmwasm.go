@@ -72,23 +72,25 @@ type SudoMsg struct {
 	ConfirmExecution *ConfirmExecutionRequest     `json:"confirm_execution,omitempty"`
 }
 
-// TODO: decide when we want to reject and when to just not authenticate
 func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	// Add the authenticator params set for this authenticator in Initialize()
 	request.AuthenticatorParams = cwa.authenticatorParams
 
 	bz, err := json.Marshal(SudoMsg{Authenticate: &request})
 	if err != nil {
+		// REVIEW Q: Should this be reject or just not authenticated?
 		return iface.Rejected("failed to marshall AuthenticationRequest", err)
 	}
 
 	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
 	if err != nil {
+		// REVIEW Q: Should this be reject or just not authenticated?
 		return iface.Rejected("failed to sudo", err)
 	}
 
 	authResult, err := UnmarshalAuthenticationResult(result)
 	if err != nil {
+		// REVIEW Q: Should this be reject or just not authenticated?
 		return iface.Rejected("failed to unmarshal authentication result", err)
 	}
 	return authResult
@@ -120,7 +122,6 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 }
 
 func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-
 	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		Account: request.Account,
