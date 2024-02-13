@@ -1253,8 +1253,8 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/cometbft v0.0.0-20240201155058-95b5f9262e1d h1:1XEh8vYZ2+oWJGOEU+61Dgeg7MnEGQdlQkkprfZeXxI=
-github.com/osmosis-labs/cometbft v0.0.0-20240201155058-95b5f9262e1d/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
+github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1 h1:ht8ux1+IxJS1CsTgnzl4CHvl7ojuM7IxfKpXJjInqZc=
+github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1 h1:UYiiBscq1prLXTG785ra9EbYSZr+byG7PLaq4q2qm14=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8 h1:jm6D5UgzQ0GQGtyFezs7tQRgwakf3cTBsE8oJIQdPZE=
