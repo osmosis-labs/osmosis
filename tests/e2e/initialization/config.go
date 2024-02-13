@@ -390,9 +390,8 @@ func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 		time.Second * 120,
 		time.Second * 240,
 	}
-	incentivesGenState.Params = incentivestypes.Params{
-		DistrEpochIdentifier: "day",
-	}
+	incentivesGenState = incentivestypes.DefaultGenesis()
+	incentivesGenState.Params.DistrEpochIdentifier = "day"
 }
 
 func updateMintGenesis(mintGenState *minttypes.GenesisState) {
