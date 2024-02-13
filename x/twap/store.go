@@ -267,3 +267,16 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 
 	return twap, nil
 }
+
+// DeleteAllHistoricalTimeIndexedTWAPs deletes every historical twap record indexed by time.
+// This is to be used in the upgrade handler, to clear out the now-obsolete historical twap records
+// that were indexed by time.
+func (k Keeper) DeleteAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
+	defer iter.Close()
+	for iter.Valid() {
+		store.Delete(iter.Key())
+		iter.Next()
+	}
+}
