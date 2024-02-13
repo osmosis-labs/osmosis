@@ -80,12 +80,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	// TWAP records indexed by time should be pruned.
+	// TWAP records indexed by time should be completely removed.
 	twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
 	s.Require().Len(twapRecords, 0)
 
-	// TWAP records indexed by pool ID should not be pruned.
+	// TWAP records indexed by pool ID should be untouched.
 	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twap.PoolId)
 	s.Require().NoError(err)
 	s.Require().Len(twapRecords, 1)

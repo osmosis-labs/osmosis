@@ -61,7 +61,7 @@ func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
 	return alteredPoolIds
 }
 
-// storeHistoricalTWAP writes a twap to the store, in all needed indexing.
+// storeHistoricalTWAP writes a twap to the store, indexed by pool id.
 func (k Keeper) StoreHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
