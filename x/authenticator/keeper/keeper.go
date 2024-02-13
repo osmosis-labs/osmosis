@@ -169,7 +169,22 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 			Id:   nextId,
 			Type: authenticatorType,
 			Data: data,
+			// set this to false to skip the `ConfirmExecution` call on MsgAddAuthenticator for itself
+			// it will be ready after `ConfirmExecution` on the aforementioned message is called.
+			IsReady: false,
 		})
+	return nil
+}
+
+// MarkAuthenticatorAsReady sets an authenticator to be ready
+func (k Keeper) MarkAuthenticatorAsReady(ctx sdk.Context, keyAccountId []byte) error {
+	store := ctx.KVStore(k.storeKey)
+
+	var auth types.AccountAuthenticator
+	osmoutils.MustGet(store, keyAccountId, &auth)
+
+	auth.IsReady = true
+	osmoutils.MustSet(store, keyAccountId, &auth)
 	return nil
 }
 

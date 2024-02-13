@@ -6,11 +6,13 @@ import (
 )
 
 type TrackRequest struct {
-	Account sdk.AccAddress `json:"account"`
-	Msg     iface.LocalAny `json:"msg"`
+	Account             sdk.AccAddress `json:"account"`
+	Msg                 iface.LocalAny `json:"msg"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
 
 type ConfirmExecutionRequest struct {
-	Account sdk.AccAddress `json:"account"`
-	Msg     iface.LocalAny `json:"msg"`
+	Account             sdk.AccAddress `json:"account"`
+	Msg                 iface.LocalAny `json:"msg"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }

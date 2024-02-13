@@ -3,12 +3,15 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
@@ -49,27 +52,31 @@ type CosmwasmAuthenticatorInitData struct {
 }
 
 func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
-	var initData CosmwasmAuthenticatorInitData
-	err := json.Unmarshal(data, &initData)
-	if err != nil {
-		return nil, err
-	}
-	if len(initData.Contract) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing contract address")
-	}
-	contractAddr, err := sdk.AccAddressFromBech32(initData.Contract)
+	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return nil, err
 	}
 	cwa.contractAddr = contractAddr
-	cwa.authenticatorParams = initData.Params
+	cwa.authenticatorParams = params
 	return cwa, nil
 }
 
+type OnAuthenticatorAddedRequest struct {
+	Account             sdk.AccAddress `json:"account"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+}
+
+type OnAuthenticatorRemovedRequest struct {
+	Account             sdk.AccAddress `json:"account"`
+	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+}
+
 type SudoMsg struct {
-	Authenticate     *iface.AuthenticationRequest `json:"authenticate,omitempty"`
-	Track            *TrackRequest                `json:"track,omitempty"`
-	ConfirmExecution *ConfirmExecutionRequest     `json:"confirm_execution,omitempty"`
+	OnAuthenticatorAdded   *OnAuthenticatorAddedRequest   `json:"on_authenticator_added,omitempty"`
+	OnAuthenticatorRemoved *OnAuthenticatorRemovedRequest `json:"on_authenticator_removed,omitempty"`
+	Authenticate           *iface.AuthenticationRequest         `json:"authenticate,omitempty"`
+	Track                  *TrackRequest                  `json:"track,omitempty"`
+	ConfirmExecution       *ConfirmExecutionRequest       `json:"confirm_execution,omitempty"`
 }
 
 func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
@@ -99,18 +106,20 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
 	}
+
 	trackRequest := TrackRequest{
 		Account: account,
 		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
+		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{Track: &trackRequest})
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall AuthenticationRequest")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall TrackRequest")
 	}
 
 	_, err = cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
@@ -126,10 +135,11 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		Account: request.Account,
 		Msg:     request.Msg,
+		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
 	if err != nil {
-		return iface.Block(fmt.Errorf("failed to marshall AuthenticationRequest: %w", err))
+		return iface.Block(fmt.Errorf("failed to marshall ConfirmExecutionRequest: %w", err))
 	}
 
 	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
@@ -144,16 +154,55 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 }
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
-	_, err := sdk.AccAddressFromBech32(string(data))
+	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return err
 	}
-	// TODO: check contract address length. Check contract exists?
+
+	bz, err := json.Marshal(SudoMsg{OnAuthenticatorAdded: &OnAuthenticatorAddedRequest{
+		Account:             account,
+		AuthenticatorParams: params,
+	}})
+	if err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall OnAuthenticatorAddedRequest")
+	}
+
+	_, err = cwa.contractKeeper.Sudo(ctx, contractAddr, bz)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	contractAddr, params, err := parseInitData(data)
+	if err != nil {
+		return err
+	}
+
+	bz, err := json.Marshal(SudoMsg{OnAuthenticatorRemoved: &OnAuthenticatorRemovedRequest{
+		Account:             account,
+		AuthenticatorParams: params,
+	}})
+	if err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall OnAuthenticatorRemovedRequest")
+	}
+
+	_, err = cwa.contractKeeper.Sudo(ctx, contractAddr, bz)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (cwa CosmwasmAuthenticator) ContractAddress() sdk.AccAddress {
+	return cwa.contractAddr
+}
+
+func (cwa CosmwasmAuthenticator) Params() []byte {
+	return cwa.authenticatorParams
 }
 
 func UnmarshalAuthenticationResult(data []byte) (iface.AuthenticationResult, error) {
@@ -205,4 +254,37 @@ func UnmarshalConfirmationResult(data []byte) (iface.ConfirmationResult, error) 
 	default:
 		return nil, fmt.Errorf("invalid confirmation result type: %s", rawType.Type)
 	}
+}
+
+func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
+	var initData CosmwasmAuthenticatorInitData
+	err := json.Unmarshal(data, &initData)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check if contract address is empty
+	if len(initData.Contract) == 0 {
+		return nil, nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing contract address")
+	}
+
+	// check if contract address is valid
+	contractAddr, err := sdk.AccAddressFromBech32(initData.Contract)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// params are optional, early return if they are not present
+	if initData.Params == nil || len(initData.Params) == 0 {
+		return contractAddr, nil, nil
+	}
+
+	// check if initData.Params is valid json bytes
+	var jsonTest map[string]interface{}
+	err = json.Unmarshal(initData.Params, &jsonTest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return contractAddr, initData.Params, nil
 }

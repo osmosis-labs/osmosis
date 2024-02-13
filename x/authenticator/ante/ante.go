@@ -214,7 +214,7 @@ func isCosignerMsg(msg sdk.Msg) bool {
 func (ad AuthenticatorDecorator) cosignerAuthenticator(ctx sdk.Context, account sdk.AccAddress, cosignerContract string) (types.Authenticator, error) {
 	cosmwasmAuthenticator := ad.authenticatorKeeper.AuthenticatorManager.GetAuthenticatorByType("CosmwasmAuthenticator")
 	if cosmwasmAuthenticator == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "CosmwasmAuthenticator not found")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "CosmwasmAuthenticator not found")
 	}
 
 	acc, err := authante.GetSignerAcc(ctx, ad.accountKeeper, account)

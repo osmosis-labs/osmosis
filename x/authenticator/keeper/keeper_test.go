@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -117,4 +118,40 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorsForAccount() {
 	authenticators, err = s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "failed to initialize")
+}
+
+func (s *KeeperTestSuite) TestKeeper_MarkAuthenticatorAsReady() {
+	ctx := s.Ctx
+
+	// Add new authenticator
+	// Ensure the SigVerificationAuthenticator type is registered
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+
+	// Set up account
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+	accAddress := sdk.AccAddress(priv.PubKey().Address())
+
+	err := s.App.AuthenticatorKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerificationAuthenticator",
+		priv.PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
+	// Authenticator should not be ready when newly added
+	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
+	s.Require().NoError(err)
+	s.Require().False(authenticators[0].IsReady)
+
+	// Mark authenticator as ready
+	key = string(types.KeyAccountId(accAddress, authenticators[0].Id))
+	s.App.AuthenticatorKeeper.MarkAuthenticatorAsReady(ctx, []byte(key))
+
+	// Authenticator should be ready now
+	authenticators, err = s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
+	s.Require().NoError(err)
+	s.Require().True(authenticators[0].IsReady)
 }
