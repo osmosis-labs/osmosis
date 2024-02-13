@@ -517,20 +517,23 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 			expectedKeptRecords: []types.TwapRecord{},
 		},
-		"base time; across pool 3 and pool 5; pool 3: 4 total records; 3 before lastKeptTime; all 4 kept due to pool with larger ID hitting limit. pool 5: 24 total records; 12 before lastKeptTime; 12 deleted and 12 kept": {
+		"base time; across pool 3 and pool 5; pool 3: 4 total records; 3 before lastKeptTime; 2 in queue due to pool with larger ID hitting limit. pool 5: 24 total records; 12 before lastKeptTime; 9 deleted and 15 kept, 3 in queue due to prune limit": {
 			recordsToPreSet: []types.TwapRecord{
 				pool3BaseSecMin3Ms, // base time - 3ms; in queue for deletion
 				pool3BaseSecMin2Ms, // base time - 2ms; in queue for deletion
 				pool3BaseSecMin1Ms, // base time - 1ms; kept since newest before lastKeptTime
 				pool3BaseSecBaseMs, // base time; kept since at lastKeptTime
 
-				pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC, // base time - 2s; deleted
+				pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, // base time - 2s; deleted
+				pool5Min2SBaseMsBC,                                         // base time - 2s; in queue for deletion
 				pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC, // base time - 1s; ; deleted
 				pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC, // base time; kept since at lastKeptTime
 				pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC, // base time + 1s; kept since older than lastKeptTime
 
-				pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, pool5Min2SMin1MsBC, // base time - 2s - 1ms; deleted
-				pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC, // base time - 1s - 1ms; deleted
+				pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, // base time - 2s - 1ms; deleted
+				pool5Min2SMin1MsBC,                     // base time - 2s - 1ms; in queue for deletion
+				pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, // base time - 1s - 1ms; deleted
+				pool5Min1SMin1MsBC,                                               // base time - 1s - 1ms; in queue for deletion
 				pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC, // base time - 1ms; kept since newest before lastKeptTime
 				pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC, // base time + 1s - 1ms; kept since older than lastKeptTime
 			},
@@ -538,17 +541,20 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 			lastKeptTime: baseTime,
 
 			expectedKeptRecords: []types.TwapRecord{
-				pool3BaseSecMin3Ms,
-				pool3BaseSecMin2Ms,
+				pool3BaseSecMin3Ms, // in queue for deletion
+				pool3BaseSecMin2Ms, // in queue for deletion
 				pool3BaseSecMin1Ms,
 				pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC,
 				pool3BaseSecBaseMs,
 				pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC,
 				pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC,
 				pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC,
+				pool5Min2SMin1MsBC, // in queue for deletion
+				pool5Min2SBaseMsBC, // in queue for deletion
+				pool5Min1SMin1MsBC, // in queue for deletion
 			},
 
-			overwriteLimit: 5, // notice that despite this being set to 5, we delete all 12 entries for pool 5. We always complete a pool's pruning once we start it for sake of simplicity.
+			overwriteLimit: 9, // 5 total records in queue to be deleted due to limit
 		},
 	}
 	for name, tc := range tests {

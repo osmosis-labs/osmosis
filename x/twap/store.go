@@ -100,11 +100,8 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 			return err
 		}
 
-		// Notice, even if ranging over denomPairs takes us over the prune per block limit,
-		// we still continue to iterate over all denom pairs of the pool.
-		// This simplifies logic so that we can consider a pool "done" once we start it.
-		// It also prevents choosing between keeping more records for a pool than we need to,
-		// and having to store more state in the pruning state.
+		// Notice, if we hit the prune limit in the middle of a pool, we will re-iterate over the completed pruned pool records.
+		// This is acceptable overhead for the simplification this provides.
 		denomPairs := types.GetAllUniqueDenomPairs(denoms)
 		for _, denomPair := range denomPairs {
 			// Reverse iterator guarantees that we iterate through the newest per pool first.
@@ -122,6 +119,15 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 					timeIndexKey := iter.Key()
 					store.Delete(timeIndexKey)
 					numPruned += 1
+
+					if numPruned >= NumRecordsToPrunePerBlock {
+						// We have hit the limit in the middle of a pool.
+						// We store this pool as the last seen pool in the pruning state.
+						// We accept re-iterating over denomPairs as acceptable overhead.
+						state.LastSeenPoolId = poolId
+						k.SetPruningState(ctx, state)
+						return nil
+					}
 				} else {
 					// If this is the first iteration after we have gotten through the records after lastKeptTime, we
 					// still keep the record in order to allow interpolation (see function description for more details).
@@ -130,20 +136,11 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 			}
 		}
 		lastPoolIdCompleted = poolId
-
-		if numPruned >= NumRecordsToPrunePerBlock {
-			// We have hit the limit, so we stop pruning.
-			break
-		}
 	}
 
 	if lastPoolIdCompleted == 1 {
 		// We have pruned all records.
 		state.IsPruning = false
-		k.SetPruningState(ctx, state)
-	} else {
-		// We have not pruned all records, so we update the last seen pool id as the pool ID after the last completed pool.
-		state.LastSeenPoolId = lastPoolIdCompleted - 1
 		k.SetPruningState(ctx, state)
 	}
 	return nil
