@@ -69,9 +69,6 @@ func (sva SignatureVerificationAuthenticator) Initialize(
 	return sva, nil
 }
 
-type Tx struct {
-}
-
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
 func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {

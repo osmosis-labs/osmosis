@@ -124,10 +124,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ak, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
-		if err != nil {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
-		}
 
 		// Get all authenticators for the executing account
 		// If no authenticators are found, use the default authenticator
@@ -153,6 +149,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 			// TODO: is it better to wrap the authenticators as [AllOf(cosigner, i) for i in authenticators] instead?
 			authenticators = []types.Authenticator{cosignerAuthenticator}
+		}
+
+		// Generate the authentication request data
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ak, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
+		if err != nil {
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
 
 		msgAuthenticated := false
