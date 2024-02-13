@@ -3,6 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -181,7 +182,7 @@ type ReplayProtection func(txData *iface.ExplicitTxData, signature *signing.Sign
 
 func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
 	if signature.Sequence != txData.Sequence {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
+		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
 	}
 	return nil
 }
@@ -190,11 +191,11 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	signers, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
 	if err != nil {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signes and signatures")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signes and signatures")
 	}
 
 	if len(msg.GetSigners()) != 1 {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
 	}
 
 	// Retrieve and build the signer data struct
@@ -219,30 +220,30 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	// This can also be extracted
 	signBytes, err := sigModeHandler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signBytes")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
 
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
 	}
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
 	}
 
 	msgs := make([]iface.LocalAny, len(tx.GetMsgs()))
 	for i, txMsg := range tx.GetMsgs() {
 		encodedMsg, err := types.NewAnyWithValue(txMsg)
 		if err != nil {
-			return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
+			return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to encode msg")
 		}
 		// TODO: Can we get this to not print an error every time?
 		jsonMsg, err := json.Marshal(msg)
 		if err != nil {
 			// Messages with Anys cannot be marshalled to JSON. It's ok for these to be empty. The consumer should be able to parse the byte value
 			// Example error:
-			//JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
+			// JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
 			ctx.Logger().Error("failed to marshal msg", "msg", msg)
 		}
 		msgs[i] = iface.LocalAny{
@@ -264,15 +265,13 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	signer := msg.GetSigners()[0]
 	var signatures [][]byte
 	var msgSignature []byte
-	var sequences []uint64
 	for i, signature := range txSignatures {
 		// ToDo: deal with other signature types
 		single, ok := signature.Data.(*signing.SingleSignatureData)
 		if !ok {
-			return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
+			return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
 		}
 		signatures = append(signatures, single.Signature)
-		sequences = append(sequences, signature.Sequence)
 		if signers[i].Equals(signer) {
 			msgSignature = single.Signature
 			err := replayProtection(&txData, &signature)

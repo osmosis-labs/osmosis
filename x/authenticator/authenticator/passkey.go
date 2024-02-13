@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+
 	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"

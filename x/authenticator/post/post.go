@@ -1,7 +1,10 @@
 package post
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -54,14 +57,15 @@ func (ad AuthenticatorDecorator) PostHandle(
 		}
 
 		accountAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorDataForAccount(ctx, account)
-
 		if err != nil {
 			return sdk.Context{}, err
 		}
 
 		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
+		if err != nil {
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
+		}
 		for _, accountAuthenticator := range accountAuthenticators { // This should execute on *all* "ready" authenticators so that they can update their state
-
 			// We want to skip `ConfirmExecution` if the authenticator is newly added
 			// since Authenticate & Track are called on antehandler but newly added authenticator
 			// so Authenticate & Track on newly added authenticator has not been called yet
@@ -71,7 +75,6 @@ func (ad AuthenticatorDecorator) PostHandle(
 				nonReadyAccountAuthenticatorKeys[key] = struct{}{}
 				continue
 			}
-
 
 			authenticator := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 

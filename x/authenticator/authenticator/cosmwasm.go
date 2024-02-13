@@ -25,9 +25,7 @@ type CosmwasmAuthenticator struct {
 	authenticatorParams []byte
 }
 
-var (
-	_ iface.Authenticator = &CosmwasmAuthenticator{}
-)
+var _ iface.Authenticator = &CosmwasmAuthenticator{}
 
 func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
 	return CosmwasmAuthenticator{
@@ -113,7 +111,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	if err != nil {
 		// Messages with Anys cannot be marshalled to JSON. It's ok for these to be empty. The consumer should be able to parse the byte value
 		// Example error:
-		//JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
+		// JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
 		ctx.Logger().Error("failed to marshal msg", "msg", msg)
 	}
 
