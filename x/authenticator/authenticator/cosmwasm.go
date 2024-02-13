@@ -7,7 +7,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
@@ -93,131 +92,6 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 		return iface.Rejected("failed to unmarshal authentication result", err)
 	}
 	return authResult
-}
-
-// make replay protection into an interface. SequenceMatch is a default implementation
-type ReplayProtection func(txData *iface.ExplicitTxData, signature *txsigning.SignatureV2) error
-
-func SequenceMatch(txData *iface.ExplicitTxData, signature *txsigning.SignatureV2) error {
-	if signature.Sequence != txData.Sequence {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
-	}
-	return nil
-}
-
-func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
-	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
-	signers, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
-	if err != nil {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signes and signatures")
-	}
-
-	if len(msg.GetSigners()) != 1 {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
-	}
-
-	// Retrieve and build the signer data struct
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	baseAccount := ak.GetAccount(ctx, account)
-	if !genesis {
-		accNum = baseAccount.GetAccountNumber()
-	}
-	var sequence uint64
-	if baseAccount != nil {
-		sequence = baseAccount.GetSequence()
-	}
-
-	signerData := authsigning.SignerData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      sequence,
-	}
-
-	// This can also be extracted
-	signBytes, err := sigModeHandler.GetSignBytes(txsigning.SignMode_SIGN_MODE_DIRECT, signerData, tx)
-	if err != nil {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signBytes")
-	}
-
-	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
-	if !ok {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
-	}
-	memoTx, ok := tx.(sdk.TxWithMemo)
-	if !ok {
-		return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
-	}
-
-	msgs := make([]iface.LocalAny, len(tx.GetMsgs()))
-	for i, txMsg := range tx.GetMsgs() {
-		encodedMsg, err := codectypes.NewAnyWithValue(txMsg)
-		if err != nil {
-			return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to encode msg")
-		}
-		// TODO: Can we get this to not print an error every time?
-		jsonMsg, err := json.Marshal(msg)
-		if err != nil {
-			// Messages with Anys cannot be marshalled to JSON. It's ok for these to be empty. The consumer should be able to parse the byte value
-			// Example error:
-			//JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
-			ctx.Logger().Error("failed to marshal msg", "msg", msg)
-		}
-		msgs[i] = iface.LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   jsonMsg,
-			Bytes:   encodedMsg.Value,
-		}
-	}
-
-	txData := iface.ExplicitTxData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      sequence,
-		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
-		Msgs:          msgs,
-		Memo:          memoTx.GetMemo(),
-	}
-
-	signer := msg.GetSigners()[0]
-	var signatures [][]byte
-	var msgSignature []byte
-	var sequences []uint64
-	for i, signature := range txSignatures {
-		// ToDo: deal with other signature types
-		single, ok := signature.Data.(*txsigning.SingleSignatureData)
-		if !ok {
-			return iface.AuthenticationRequest{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
-		}
-		signatures = append(signatures, single.Signature)
-		sequences = append(sequences, signature.Sequence)
-		if signers[i].Equals(signer) {
-			msgSignature = single.Signature
-			err := replayProtection(&txData, &signature)
-			if err != nil {
-				return iface.AuthenticationRequest{}, err
-			}
-		}
-	}
-
-	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
-	authRequest := iface.AuthenticationRequest{
-		Account:   account,
-		Msg:       txData.Msgs[msgIndex],
-		Signature: msgSignature, // currently only allowing one signer per message.
-		TxData:    txData,
-		SignModeTxData: iface.SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
-			Direct: signBytes,
-		},
-		SignatureData: iface.SimplifiedSignatureData{
-			Signers:    signers,
-			Signatures: signatures,
-		},
-		Simulate:            simulate,
-		AuthenticatorParams: nil,
-	}
-	return authRequest, nil
 }
 
 func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
