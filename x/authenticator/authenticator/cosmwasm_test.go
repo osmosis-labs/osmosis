@@ -53,7 +53,7 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 	priv := secp256k1.GenPrivKey()
 
 	// Set up the contract
-	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo.wasm")
+	s.StoreContractCode("../testutils/bytecode/echo.wasm")
 	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
@@ -111,7 +111,7 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
 	priv := secp256k1.GenPrivKey()
 
 	// Set up the contract
-	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo.wasm")
+	s.StoreContractCode("../testutils/bytecode/echo.wasm")
 	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
@@ -263,7 +263,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
 
 	// Set up the contract
-	s.StoreContractCode("../testutils/contracts/echo/artifacts/echo.wasm")
+	s.StoreContractCode("../testutils/bytecode/echo.wasm")
 	instantiateMsg := EchoInstantiateMsg{PubKey: priv.PubKey().Bytes()}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
@@ -400,7 +400,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
 
 	// Set up the contract
-	s.StoreContractCode("../testutils/contracts/cosigner-authenticator/artifacts/cosigner_authenticator.wasm")
+	s.StoreContractCode("../testutils/bytecode/cosigner_authenticator.wasm")
 	instantiateMsg := CosignerInstantiateMsg{PubKeys: [][]byte{priv.PubKey().Bytes()}}
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
 	s.Require().NoError(err)
