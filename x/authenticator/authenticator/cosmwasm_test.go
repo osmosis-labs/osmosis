@@ -3,6 +3,8 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 	"os"
 	"testing"
 	"time"
@@ -306,56 +308,47 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
 
-	// TODO: replace this when the interfaces have changed
-	//authData.(authenticator.SignatureData).Signatures[0].Data = &txsigning.SingleSignatureData{
-	//	SignMode:  0,
-	//	Signature: []byte("invalid"),
-	//}
-	//status = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
-	//s.Require().False(status.IsAuthenticated(), "Should not be authenticated")
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg)
+	s.Require().NoError(err, "Track should succeed")
 
-	// MERGE TODO: Fix this test so that it works within the refactor
-	//err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg)
-	//s.Require().NoError(err, "Track should succeed")
-	//
-	//encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
-	//s.Require().NoError(err, "Should encode Any value successfully")
-	//
-	//msg = s.QueryLatestSudoCall(addr)
-	//s.Require().Equal(authenticator.SudoMsg{
-	//	Track: &authenticator.TrackRequest{
-	//		Account: accounts[0],
-	//		Msg: authenticator.LocalAny{
-	//			TypeURL: encodedMsg.TypeUrl,
-	//			Value:   encodedMsg.Value,
-	//		},
-	//		AuthenticatorParams: []byte(params),
-	//	},
-	//}, msg, "Should match latest sudo msg")
-	//
-	//res := auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
-	//s.Require().True(res.IsConfirm(), "Execution should be confirmed")
-	//
-	//msg = s.QueryLatestSudoCall(addr)
-	//s.Require().Equal(authenticator.SudoMsg{
-	//	ConfirmExecution: &authenticator.ConfirmExecutionRequest{
-	//		Account: accounts[0],
-	//		Msg: authenticator.LocalAny{
-	//			TypeURL: encodedMsg.TypeUrl,
-	//			Value:   encodedMsg.Value,
-	//		},
-	//		AuthenticatorParams: []byte(params),
-	//	},
-	//}, msg, "Should match latest sudo msg")
-	//
-	//// Test with invalid signature
-	//authData.(authenticator.SignatureData).Signatures[0].Data = &txsigning.SingleSignatureData{
-	//	SignMode:  0,
-	//	Signature: []byte("invalid"),
-	//}
-	//status = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, authData)
-	//s.Require().False(status.IsAuthenticated(), "Should not be authenticated")
+	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
+	s.Require().NoError(err, "Should encode Any value successfully")
 
+	jsonMsg, _ := json.Marshal(testMsg)
+
+	msg = s.QueryLatestSudoCall(addr)
+	s.Require().Equal(authenticator.SudoMsg{
+		Track: &authenticator.TrackRequest{
+			Account: accounts[0],
+			Msg: iface.LocalAny{
+				TypeURL: encodedMsg.TypeUrl,
+				Value:   jsonMsg,
+				Bytes:   encodedMsg.Value,
+			},
+			AuthenticatorParams: []byte(params),
+		},
+	}, msg, "Should match latest sudo msg")
+
+	res := auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), request)
+	s.Require().True(res.IsConfirm(), "Execution should be confirmed")
+
+	msg = s.QueryLatestSudoCall(addr)
+	s.Require().Equal(authenticator.SudoMsg{
+		ConfirmExecution: &authenticator.ConfirmExecutionRequest{
+			Account: accounts[0],
+			Msg: iface.LocalAny{
+				TypeURL: encodedMsg.TypeUrl,
+				Value:   jsonMsg,
+				Bytes:   encodedMsg.Value,
+			},
+			AuthenticatorParams: []byte(params),
+		},
+	}, msg, "Should match latest sudo msg")
+
+	// Test with an invalid signature
+	request.Signature = []byte("invalid")
+	status = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
+	s.Require().False(status.IsAuthenticated(), "Should not be authenticated")
 }
 
 type CosignerInstantiateMsg struct {

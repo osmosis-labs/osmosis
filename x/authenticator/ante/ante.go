@@ -113,7 +113,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	ak, ok := ad.accountKeeper.(*authkeeper.AccountKeeper)
 	if !ok {
-		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid account keeper type"))
+		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
 	}
 
 	// Authenticate the accounts of all messages

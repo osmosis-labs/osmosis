@@ -74,7 +74,7 @@ type OnAuthenticatorRemovedRequest struct {
 type SudoMsg struct {
 	OnAuthenticatorAdded   *OnAuthenticatorAddedRequest   `json:"on_authenticator_added,omitempty"`
 	OnAuthenticatorRemoved *OnAuthenticatorRemovedRequest `json:"on_authenticator_removed,omitempty"`
-	Authenticate           *iface.AuthenticationRequest         `json:"authenticate,omitempty"`
+	Authenticate           *iface.AuthenticationRequest   `json:"authenticate,omitempty"`
 	Track                  *TrackRequest                  `json:"track,omitempty"`
 	ConfirmExecution       *ConfirmExecutionRequest       `json:"confirm_execution,omitempty"`
 }
@@ -109,11 +109,20 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
 	}
 
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		// Messages with Anys cannot be marshalled to JSON. It's ok for these to be empty. The consumer should be able to parse the byte value
+		// Example error:
+		//JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
+		ctx.Logger().Error("failed to marshal msg", "msg", msg)
+	}
+
 	trackRequest := TrackRequest{
 		Account: account,
 		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
+			Value:   jsonMsg,
+			Bytes:   encodedMsg.Value,
 		},
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
@@ -133,8 +142,8 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
-		Account: request.Account,
-		Msg:     request.Msg,
+		Account:             request.Account,
+		Msg:                 request.Msg,
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
