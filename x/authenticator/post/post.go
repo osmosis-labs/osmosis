@@ -61,9 +61,11 @@ func (ad AuthenticatorDecorator) PostHandle(
 			return sdk.Context{}, err
 		}
 
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
+		// We skip replay protection here as it was already checked on authenticate.
+		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.NoReplayProtection)
 		if err != nil {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
 		for _, accountAuthenticator := range accountAuthenticators { // This should execute on *all* "ready" authenticators so that they can update their state
 			// We want to skip `ConfirmExecution` if the authenticator is newly added

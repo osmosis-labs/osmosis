@@ -359,7 +359,9 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	// check account balances
+	// mark the authenticator as ready
+	key := string(authenticatortypes.KeyAccountId(s.Account.GetAddress(), 0))
+	s.app.AuthenticatorKeeper.MarkAuthenticatorAsReady(s.chainA.GetContext(), []byte(key))
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, failSendMsg)
 	fmt.Println("err: ", err)
@@ -395,9 +397,10 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
 
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "MaxAmountAuthenticator", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
-	//err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
-	//s.Require().NoError(err, "Failed to add authenticator")
-	// check account balances
+
+	// mark the authenticator as ready
+	key := string(authenticatortypes.KeyAccountId(s.Account.GetAddress(), 0))
+	s.app.AuthenticatorKeeper.MarkAuthenticatorAsReady(s.chainA.GetContext(), []byte(key))
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg, successSendMsg)
 	fmt.Println("err: ", err)
@@ -576,6 +579,10 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	// Add a SigVerificationAuthenticator to the account
 	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[0].PubKey().Bytes())
 	s.Require().NoError(err, "Failed to add authenticator")
+
+	// mark the authenticator as ready
+	key := string(authenticatortypes.KeyAccountId(s.Account.GetAddress(), 0))
+	s.app.AuthenticatorKeeper.MarkAuthenticatorAsReady(s.chainA.GetContext(), []byte(key))
 
 	// sending 500 ok
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)

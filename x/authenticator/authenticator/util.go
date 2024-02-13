@@ -187,6 +187,10 @@ func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2)
 	return nil
 }
 
+func NoReplayProtection(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
+	return nil
+}
+
 func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	signers, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
