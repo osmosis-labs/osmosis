@@ -87,8 +87,6 @@ func GetSignersAndSignatures(
 		}
 	}
 
-	// TODO: This strips any extra signatures. We should include all signatures
-
 	// Handle the feePayer.
 	if feePayer != "" {
 		if _, exists := signerToSignature[feePayer]; !exists {
@@ -121,22 +119,15 @@ func GetSignersAndSignatures(
 // It is used in both the PassKeyAuthenticator and the SignatureVerificationAuthenticator
 //
 // Parameters:
-// - ctx: The context of the current operation.
 // - tx: The transaction to extract authentication data from.
 // - messageIndex: The index of the message within the transaction.
-// - simulate: A boolean indicating whether to simulate the transaction.
 //
 // Returns:
 // - signers: A list of account addresses that signed the transaction.
 // - signatures: A list of signature objects.
 // - sigTx: The transaction with signature information.
 // - err: An error if any issues are encountered during the extraction.
-func GetCommonAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (signers []sdk.AccAddress, signatures []signing.SignatureV2, sigTx authsigning.Tx, err error) {
+func GetCommonAuthenticationData(tx sdk.Tx, messageIndex int) (signers []sdk.AccAddress, signatures []signing.SignatureV2, sigTx authsigning.Tx, err error) {
 	// Attempt to cast the provided transaction to an authsigning.Tx.
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
@@ -153,24 +144,23 @@ func GetCommonAuthenticationData(
 	// Retrieve messages from the transaction.
 	msgs := sigTx.GetMsgs()
 
-	// TODO: We should find a better way to get the fee payer si that it doesn't iterate over all the messages.
-
 	// Ensure the transaction is of type sdk.FeeTx.
-	//feeTx, ok := tx.(sdk.FeeTx)
-	//if !ok {
-	//	return nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	//}
-	//feePayerStr := ""
-	//feePayer := feeTx.FeePayer()
-	//if feePayer != nil {
-	//	feePayerStr = feePayer.String()
-	//}
+	// TODO: We should find a better way to get the fee payer si that it doesn't iterate over all the messages.
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+	feePayerStr := ""
+	feePayer := feeTx.FeePayer()
+	if feePayer != nil {
+		feePayerStr = feePayer.String()
+	}
 
 	// Parse signers and signatures from the transaction.
 	signers, signatures, err = GetSignersAndSignatures(
 		msgs,
 		signatures,
-		"",
+		feePayerStr,
 		messageIndex,
 	)
 	if err != nil {

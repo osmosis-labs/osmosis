@@ -107,7 +107,7 @@ func SequenceMatch(txData *iface.ExplicitTxData, signature *txsigning.SignatureV
 
 func GenerateAuthenticationData(ctx sdk.Context, ak *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
-	signers, txSignatures, _, err := GetCommonAuthenticationData(ctx, tx, -1, simulate)
+	signers, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
 	if err != nil {
 		return iface.AuthenticationRequest{}, sdkerrors.Wrap(err, "failed to get signes and signatures")
 	}
