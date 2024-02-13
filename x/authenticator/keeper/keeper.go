@@ -157,8 +157,9 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	if impl == nil {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
-	cacheCtx, _ := ctx.CacheContext()
-	err := impl.OnAuthenticatorAdded(cacheCtx, account, data)
+
+	err := impl.OnAuthenticatorAdded(ctx, account, data)
+
 	if err != nil {
 		return err
 	}
