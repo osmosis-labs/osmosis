@@ -1,6 +1,8 @@
 package post
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -98,8 +100,9 @@ func (ad AuthenticatorDecorator) PostHandle(
 			res := a.ConfirmExecution(ctx, account, msg, authData)
 
 			if res.IsBlock() {
-				err = errorsmod.Wrap(sdkerrors.ErrUnauthorized, "execution blocked by authenticator")
-				return sdk.Context{}, errorsmod.Wrap(err, res.Error().Error())
+				err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "execution blocked by authenticator (account = %s, id = %d)", account, accountAuthenticator.Id)
+				err = errorsmod.Wrap(err, fmt.Sprintf("%s", res.Error()))
+				return sdk.Context{}, err
 			}
 
 			success = res.IsConfirm()

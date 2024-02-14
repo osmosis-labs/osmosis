@@ -394,13 +394,15 @@ func UnmarshalAuthenticationResult(data []byte) (iface.AuthenticationResult, err
 	case "not_authenticated":
 		return iface.NotAuthenticated(), nil
 	case "rejected":
-		var content struct {
-			Msg string `json:"msg"`
+		var rawContent struct {
+			Content struct {
+				Msg string `json:"msg"`
+			} `json:"content"`
 		}
-		if err := json.Unmarshal(data, &content); err != nil {
+		if err := json.Unmarshal(data, &rawContent); err != nil {
 			return nil, err
 		}
-		return iface.Rejected(content.Msg, fmt.Errorf("cosmwasm contract error")), nil
+		return iface.Rejected(rawContent.Content.Msg, fmt.Errorf("cosmwasm contract error")), nil
 	default:
 		return nil, fmt.Errorf("invalid authentication result type: %s", rawType.Type)
 	}
@@ -418,13 +420,16 @@ func UnmarshalConfirmationResult(data []byte) (iface.ConfirmationResult, error) 
 	case "confirm":
 		return iface.Confirm(), nil
 	case "block":
-		var content struct {
-			Msg string `json:"msg"`
+		var rawContent struct {
+			Content struct {
+				Msg string `json:"msg"`
+			} `json:"content"`
 		}
-		if err := json.Unmarshal(data, &content); err != nil {
+		if err := json.Unmarshal(data, &rawContent); err != nil {
 			return nil, err
 		}
-		return iface.Block(fmt.Errorf("cosmwasm contract error: %s", content.Msg)), nil
+
+		return iface.Block(fmt.Errorf("cosmwasm contract error: %s", rawContent.Content.Msg)), nil
 	default:
 		return nil, fmt.Errorf("invalid confirmation result type: %s", rawType.Type)
 	}
