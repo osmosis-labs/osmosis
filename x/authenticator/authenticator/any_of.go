@@ -107,6 +107,7 @@ func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
 	}
+	// TODO: Consume extra gas for each sub authenticator to avoid spam? (same on allOf)
 	if err := validateSubAuthenticatorData(initDatas, aoa.am); err != nil {
 		return err
 	}

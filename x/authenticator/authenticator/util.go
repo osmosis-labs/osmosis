@@ -193,7 +193,7 @@ func NoReplayProtection(txData *iface.ExplicitTxData, signature *signing.Signatu
 
 func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
-	signers, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
+	txSigners, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
 	if err != nil {
 		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signes and signatures")
 	}
@@ -266,7 +266,9 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 		Memo:          memoTx.GetMemo(),
 	}
 
-	signer := msg.GetSigners()[0]
+	// TODO: Do we want to support multiple signers per message?
+	// At least enforce it
+	signer := msg.GetSigners()[0] // We're only supporting one signer per message.
 	var signatures [][]byte
 	var msgSignature []byte
 	for i, signature := range txSignatures {
@@ -276,7 +278,8 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 			return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
 		}
 		signatures = append(signatures, single.Signature)
-		if signers[i].Equals(signer) {
+
+		if txSigners[i].Equals(signer) { // We're only supporting one signer per message.
 			msgSignature = single.Signature
 			err := replayProtection(&txData, &signature)
 			if err != nil {
@@ -295,7 +298,7 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 			Direct: signBytes,
 		},
 		SignatureData: iface.SimplifiedSignatureData{
-			Signers:    signers,
+			Signers:    txSigners,
 			Signatures: signatures,
 		},
 		Simulate:            simulate,

@@ -186,6 +186,7 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.
 		MsgType: request.Msg.TypeURL,
 		Value:   request.Msg.Value,
 	})
+
 	if err != nil {
 		return iface.NotAuthenticated()
 	}

@@ -11,14 +11,14 @@ type SignModeData struct {
 
 type LocalAny struct {
 	TypeURL string `json:"type_url"`
-	Value   []byte `json:"value"`
-	Bytes   []byte `json:"bytes"`
+	Value   []byte `json:"value"` // TODO: use this field for the bytes
+	Bytes   []byte `json:"bytes"` // TODO: remove this field
 }
 
 type ExplicitTxData struct {
 	ChainID       string     `json:"chain_id"`
 	AccountNumber uint64     `json:"account_number"`
-	Sequence      uint64     `json:"sequence"`
+	Sequence      uint64     `json:"sequence"` // TODO: rename to account_sequence
 	TimeoutHeight uint64     `json:"timeout_height"`
 	Msgs          []LocalAny `json:"msgs"`
 	Memo          string     `json:"memo"`
@@ -29,7 +29,7 @@ type SimplifiedSignatureData struct {
 	Signatures [][]byte         `json:"signatures"`
 }
 
-type AuthenticationRequest struct {
+type AuthenticationRequest struct { // TODO: Add authenticator id
 	Account             sdk.AccAddress          `json:"account"`
 	Msg                 LocalAny                `json:"msg"`
 	Signature           []byte                  `json:"signature"` // Only allowing messages with a single signer
