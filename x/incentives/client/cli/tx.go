@@ -112,6 +112,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 			} else if poolId > 0 {
 				distributeTo = lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.NoLock,
+					Duration:      duration,
 				}
 			}
 
