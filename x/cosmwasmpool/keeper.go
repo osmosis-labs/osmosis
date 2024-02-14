@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.opentelemetry.io/otel"
 
 	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
@@ -25,6 +26,8 @@ type Keeper struct {
 	contractKeeper    types.ContractKeeper
 	wasmKeeper        types.WasmKeeper
 }
+
+var tracer = otel.Tracer(types.ModuleName)
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper) *Keeper {
 	// set KeyTable if it has not already been set

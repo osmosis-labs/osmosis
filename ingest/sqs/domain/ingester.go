@@ -2,6 +2,7 @@ package domain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.opentelemetry.io/otel"
 
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 )
@@ -15,3 +16,5 @@ type AtomicIngester interface {
 	// It does not flush data to sink. The caller must call Exec on the transaction
 	ProcessBlock(ctx sdk.Context, tx repository.Tx) error
 }
+
+var SQSTracer = otel.Tracer("sqs_ingester")

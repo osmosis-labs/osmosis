@@ -10,11 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slices"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
@@ -246,6 +249,8 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, types.QualifyingLiquidityOrTimeElapsedNotPositiveError{QualifyingLiquidity: liquidityInAccum, TimeElapsed: timeElapsed}
 	}
 
+	span := observability.GetSpanFromSDKContext(ctx)
+
 	copyPoolIncentiveRecords := make([]types.IncentiveRecord, len(poolIncentiveRecords))
 	copy(copyPoolIncentiveRecords, poolIncentiveRecords)
 	incentivesToAddToCurAccum := sdk.NewDecCoins()
@@ -280,9 +285,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Note that we truncate to ensure we do not overdistribute incentives
 		incentivesPerLiquidity := scaledTotalEmittedAmount.QuoTruncate(liquidityInAccum)
 
-		// Emit telemetry for accumulator updates
-		emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
-
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
 		// Ensure that we only emit if there are enough incentives remaining to be emitted
@@ -297,6 +299,10 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 			// Each incentive record should only be modified once
 			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = remainingRewards
+
+			// Emit telemetry for accumulator updates
+			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
+			emitAccumulatorUpdateEvent(span, incentiveRecord.IncentiveId, accumUptime, incentivesPerLiquidity, totalEmittedAmount, remainingRewards, poolID, liquidityInAccum)
 		} else {
 			// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
 			// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
@@ -314,12 +320,14 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 
-			// Emit telemetry for accumulator updates
-			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
-
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
-			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = osmomath.ZeroDec()
+			zeroRemaining := osmomath.ZeroDec()
+			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = zeroRemaining
+
+			// Emit telemetry for accumulator updates
+			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
+			emitAccumulatorUpdateEvent(span, incentiveRecord.IncentiveId, accumUptime, remainingIncentivesPerLiquidity, remainingRewards, zeroRemaining, poolID, liquidityInAccum)
 		}
 	}
 
@@ -846,6 +854,8 @@ func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.
 // - position with the given id does not exist
 // - other internal database or math errors.
 func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+	span := observability.GetSpanFromSDKContext(ctx)
+
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -891,6 +901,14 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		}
 	}
 
+	span.SetAttributes(
+		attribute.Int64("position_id", int64(positionId)),
+		attribute.String("owner", sender.String()),
+		attribute.Int64("pool_id", int64(pool.GetId())),
+		attribute.String("collected", collectedIncentivesForPosition.String()),
+		attribute.String("forfeited", forfeitedIncentivesForPosition.String()),
+	)
+
 	// Emit an event indicating that incentives were collected.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -918,6 +936,8 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 // - other internal database or math errors.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate osmomath.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
+	span := observability.GetSpanFromSDKContext(ctx)
+
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return types.IncentiveRecord{}, err
@@ -1006,6 +1026,17 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetIncentivesAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
 		return types.IncentiveRecord{}, err
 	}
+
+	// Create tracing event.
+	span.AddEvent(
+		"cl_create_incentive",
+		trace.WithAttributes(
+			attribute.Int64("pool_id", int64(pool.GetId())),
+			attribute.Stringer("remaining_coin", incentiveCoin),
+			attribute.Int64("min_uptime_ns", minUptime.Nanoseconds()),
+			attribute.Int64("incentive_id", int64(incentiveRecord.IncentiveId)),
+		),
+	)
 
 	return incentiveRecord, nil
 }
@@ -1096,4 +1127,16 @@ func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, e
 	threshold := sdk.BigEndianToUint64(bz)
 
 	return threshold, nil
+}
+
+func emitAccumulatorUpdateEvent(span trace.Span, incentiveRecordID uint64, accumUptime time.Duration, rewardsPerUnitOfLiquidity, rewardsTotal, remainingTotal osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec) {
+	span.AddEvent("cl_incentive_records_uptime_acc_update", trace.WithAttributes(
+		attribute.Int64("incentive_record_id", int64(incentiveRecordID)),
+		attribute.Int64("uptme_duration_ns", accumUptime.Nanoseconds()),
+		attribute.Int64("pool_id", int64(poolID)),
+		attribute.Stringer("total_emitted", rewardsTotal),
+		attribute.Stringer("liq", liquidityInAccum),
+		attribute.Stringer("per_liq", rewardsPerUnitOfLiquidity),
+		attribute.Stringer("remaining_rewards", remainingTotal),
+	))
 }

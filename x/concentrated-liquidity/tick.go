@@ -4,14 +4,19 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
+
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
+
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
@@ -79,6 +84,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []*accum.AccumulatorObject) (liquidityDelta osmomath.Dec, err error) {
+	span := observability.GetSpanFromSDKContext(ctx)
 	if tickInfo == nil {
 		return osmomath.Dec{}, types.ErrNextTickInfoNil
 	}
@@ -94,6 +100,13 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickI
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
+	span.AddEvent("cl_cross_tick", trace.WithAttributes(
+		attribute.Int64("tick_index", tickIndex),
+		attribute.Stringer("liquidity_net", tickInfo.LiquidityNet),
+		attribute.Stringer("spread_reward_growth", tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal),
+		attribute.Stringer("uptime_growth", &tickInfo.UptimeTrackers),
+	))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

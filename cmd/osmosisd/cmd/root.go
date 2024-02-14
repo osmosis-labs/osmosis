@@ -580,6 +580,10 @@ func initAppConfig() (string, interface{}) {
 		ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
 	}
 
+	type ObservabilityConfig struct {
+		UptraceDSN string `mapstructure:"uptrace-dsn"`
+	}
+
 	type CustomAppConfig struct {
 		serverconfig.Config
 
@@ -588,6 +592,8 @@ func initAppConfig() (string, interface{}) {
 		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 
 		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+
+		ObservabilityConfig ObservabilityConfig `mapstructure:"observability"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -605,7 +611,7 @@ func initAppConfig() (string, interface{}) {
 
 	sqsConfig := sqs.DefaultConfig
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig()}
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig(), ObservabilityConfig: ObservabilityConfig{UptraceDSN: ""}}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -640,6 +646,16 @@ is-enabled = "false"
 # The hostname and address of the sidecar query server storage.
 db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
 db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
+
+###############################################################################
+###                    Observability Configuration                          ###
+###############################################################################
+
+[observability]
+
+# The token to enable tracing and injest into the Uptrace moniroting tool.
+# https://uptrace.dev/
+uptrace-dsn = "{{ .ObservabilityConfig.UptraceDSN }}"
 
 ###############################################################################
 ###              		       Wasm Configuration    					    ###

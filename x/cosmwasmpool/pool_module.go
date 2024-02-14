@@ -12,6 +12,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 )
 
 var (
@@ -223,6 +224,9 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutMinAmount osmomath.Int,
 	swapFee osmomath.Dec,
 ) (osmomath.Int, error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), tracer, "cw_swap_out_given_in")
+	defer span.End()
+
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
 		return osmomath.Int{}, err
@@ -241,6 +245,8 @@ func (k Keeper) SwapExactAmountIn(
 	if err != nil {
 		return osmomath.Int{}, err
 	}
+
+	observability.EmitSwapEvent(span, pool.GetId(), tokenIn, sdk.NewCoin(tokenOutDenom, response.TokenOutAmount))
 
 	return response.TokenOutAmount, nil
 }
@@ -301,6 +307,9 @@ func (k Keeper) SwapExactAmountOut(
 	tokenOut sdk.Coin,
 	swapFee osmomath.Dec,
 ) (tokenInAmount osmomath.Int, err error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), tracer, "cw_swap_in_given_out")
+	defer span.End()
+
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
 		return osmomath.Int{}, err
@@ -322,6 +331,8 @@ func (k Keeper) SwapExactAmountOut(
 	if err != nil {
 		return osmomath.Int{}, err
 	}
+
+	observability.EmitSwapEvent(span, pool.GetId(), sdk.NewCoin(tokenInDenom, response.TokenInAmount), tokenOut)
 
 	tokenInExcessiveAmount := tokenInMaxAmount.Sub(response.TokenInAmount)
 

@@ -4,8 +4,10 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.opentelemetry.io/otel"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
@@ -14,6 +16,8 @@ import (
 type msgServer struct {
 	keeper *Keeper
 }
+
+var tracer = otel.Tracer(types.ModuleName)
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
@@ -35,7 +39,8 @@ var (
 // CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
 // The pool creation fee is used to fund the community pool. It will also create a dedicated module account for the pool.
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_create_concentrated_pool")
+	defer span.End()
 
 	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
@@ -46,7 +51,8 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 }
 
 func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCreatePosition) (*types.MsgCreatePositionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_create_position")
+	defer span.End()
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -64,7 +70,8 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 }
 
 func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddToPosition) (*types.MsgAddToPositionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_add_to_position")
+	defer span.End()
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -88,7 +95,8 @@ func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddTo
 
 // TODO: tests, including events
 func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWithdrawPosition) (*types.MsgWithdrawPositionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_withdraw_position")
+	defer span.End()
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -108,7 +116,8 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 // CollectSpreadRewards collects the fees earned by each position ID provided and sends them to the owner's account.
 // Returns error if one of the provided position IDs do not exist or if the function fails to get the fee accumulator.
 func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.MsgCollectSpreadRewards) (*types.MsgCollectSpreadRewardsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_collect_spread_rewards")
+	defer span.End()
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -138,7 +147,8 @@ func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.M
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender
 func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_collect_incentives")
+	defer span.End()
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -169,7 +179,8 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 }
 
 func (server msgServer) TransferPositions(goCtx context.Context, msg *types.MsgTransferPositions) (*types.MsgTransferPositionsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx, span := observability.InitSDKCtxWithSpan(goCtx, tracer, "msg_transfer_position")
+	defer span.End()
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

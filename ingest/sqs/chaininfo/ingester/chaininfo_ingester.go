@@ -7,6 +7,7 @@ import (
 	chaininforedisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/chaininfo"
 
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 )
 
 // chainInfoIngester is an ingester for blockchain information.
@@ -28,6 +29,9 @@ func New(chainInfoRepo chaininforedisrepo.ChainInfoRepository, repositoryManager
 // ProcessBlock implements ingest.Ingester.
 // It reads the latest blockchain height and stores it in Redis.
 func (ci *chainInfoIngester) ProcessBlock(ctx sdk.Context, tx repository.Tx) error {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), domain.SQSTracer, "chainfoIngester.ProcessBlock")
+	defer span.End()
+
 	height := ctx.BlockHeight()
 
 	ctx.Logger().Info("ingesting latest blockchain height", "height", height)

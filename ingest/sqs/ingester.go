@@ -6,6 +6,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/ingest"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 )
 
 const sqsIngesterName = "sidecar-query-server"
@@ -33,6 +34,9 @@ func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester domain.Atomi
 
 // ProcessBlock implements ingest.Ingester.
 func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), domain.SQSTracer, "ProcessBlock")
+	defer span.End()
+
 	// Start atomic transaction
 	tx := i.txManager.StartTx()
 

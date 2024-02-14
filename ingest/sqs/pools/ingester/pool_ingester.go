@@ -15,6 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
@@ -139,7 +140,8 @@ var _ domain.AtomicIngester = &poolIngester{}
 
 // processPoolState processes the pool state. an
 func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) error {
-	goCtx := sdk.WrapSDKContext(ctx)
+	goCtx, span := domain.SQSTracer.Start(sdk.WrapSDKContext(ctx), "processPoolState")
+	defer span.End()
 
 	// TODO: can be cached
 	tokenPrecisionMap, err := pi.assetListGetter.GetDenomPrecisions(goCtx)
@@ -319,6 +321,9 @@ func (pi *poolIngester) convertPool(
 	denomPairToTakerFeeMap sqsdomain.TakerFeeMap,
 	tokenPrecisionMap map[string]int,
 ) (sqsPool sqsdomain.PoolI, err error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), domain.SQSTracer, "convert_pool")
+	defer span.End()
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -523,6 +528,9 @@ func (pi *poolIngester) convertPool(
 
 // persistTakerFees persists all taker fees to the router repository.
 func (pi *poolIngester) persistTakerFees(ctx sdk.Context, tx repository.Tx, takerFeeMap sqsdomain.TakerFeeMap) error {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), domain.SQSTracer, "persistTakerFees")
+	defer span.End()
+
 	for denomPair, takerFee := range takerFeeMap {
 		err := pi.routerRepository.SetTakerFee(sdk.WrapSDKContext(ctx), tx, denomPair.Denom0, denomPair.Denom1, takerFee)
 		if err != nil {

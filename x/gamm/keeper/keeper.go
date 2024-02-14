@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"go.opentelemetry.io/otel"
+
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +13,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
+
+var tracer = otel.Tracer(types.ModuleName)
 
 func permContains(perms []string, perm string) bool {
 	for _, v := range perms {

@@ -10,9 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
+
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/events"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
@@ -30,6 +33,9 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutMinAmount osmomath.Int,
 	spreadFactor osmomath.Dec,
 ) (tokenOutAmount osmomath.Int, err error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), tracer, "cfmm_swap_in_given_out")
+	defer span.End()
+
 	if tokenIn.Denom == tokenOutDenom {
 		return osmomath.Int{}, errors.New("cannot trade same denomination in and out")
 	}
@@ -64,6 +70,8 @@ func (k Keeper) SwapExactAmountIn(
 
 	tokenOutAmount = tokenOutCoin.Amount
 
+	observability.EmitSwapEvent(span, pool.GetId(), tokenIn, tokenOutCoin)
+
 	if !tokenOutAmount.IsPositive() {
 		return osmomath.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
@@ -94,6 +102,9 @@ func (k Keeper) SwapExactAmountOut(
 	tokenOut sdk.Coin,
 	spreadFactor osmomath.Dec,
 ) (tokenInAmount osmomath.Int, err error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), tracer, "cfmm_swap_out_given_in")
+	defer span.End()
+
 	if tokenInDenom == tokenOut.Denom {
 		return osmomath.Int{}, errors.New("cannot trade same denomination in and out")
 	}
@@ -129,6 +140,8 @@ func (k Keeper) SwapExactAmountOut(
 		return osmomath.Int{}, err
 	}
 	tokenInAmount = tokenIn.Amount
+
+	observability.EmitSwapEvent(span, pool.GetId(), tokenIn, tokenOut)
 
 	if tokenInAmount.LTE(osmomath.ZeroInt()) {
 		return osmomath.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")

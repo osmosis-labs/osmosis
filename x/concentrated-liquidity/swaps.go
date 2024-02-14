@@ -5,10 +5,14 @@ import (
 
 	db "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	events "github.com/osmosis-labs/osmosis/v23/x/poolmanager/events"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/observability"
 
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
@@ -250,12 +254,17 @@ func (k Keeper) swapOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), tracer, "cl_swap_out_given_in")
+	defer span.End()
+
 	swapResult, poolUpdates, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 	tokenIn = sdk.NewCoin(tokenIn.Denom, swapResult.AmountIn)
 	tokenOut := sdk.NewCoin(tokenOutDenom, swapResult.AmountOut)
+
+	observability.EmitSwapEvent(span, pool.GetId(), tokenIn, tokenOut)
 
 	if !tokenOut.Amount.IsPositive() {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, types.InvalidAmountCalculatedError{Amount: tokenOut.Amount}
@@ -281,12 +290,17 @@ func (k *Keeper) swapInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	ctx, span := observability.InitSDKCtxWithSpan(sdk.WrapSDKContext(ctx), tracer, "cl_swap_in_given_out")
+	defer span.End()
+
 	swapResult, poolUpdates, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 	tokenIn := sdk.NewCoin(tokenInDenom, swapResult.AmountIn)
 	tokenOut := sdk.NewCoin(desiredTokenOut.Denom, swapResult.AmountOut)
+
+	observability.EmitSwapEvent(span, pool.GetId(), tokenIn, tokenOut)
 
 	// check that the tokenOut calculated is both valid and less than specified limit
 	if !tokenIn.Amount.IsPositive() {
@@ -388,6 +402,8 @@ func (k Keeper) computeOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
+	span := observability.GetSpanFromSDKContext(ctx)
+
 	p, spreadRewardAccumulator, uptimeAccums, err := k.swapSetup(ctx, poolId, tokenInMin.Denom, tokenOutDenom)
 	if err != nil {
 		return SwapResult{}, PoolUpdates{}, err
@@ -448,6 +464,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(spreadRewardCharge))
 		// We add the amount of tokens we received (amountOut) from the ComputeSwapWithinBucketOutGivenIn(...) above to the amountCalculated accumulator
 		swapState.amountCalculated.AddMut(amountOut)
+
+		emitSwapStepSpanEvent(span, sqrtPriceStart, computedSqrtPrice, amountIn, amountOut, spreadRewardCharge)
 
 		// If ComputeSwapWithinBucketOutGivenIn(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket to complete the swap
@@ -519,6 +537,8 @@ func (k Keeper) computeInAmtGivenOut(
 	priceLimit osmomath.BigDec,
 	poolId uint64,
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
+	span := observability.GetSpanFromSDKContext(ctx)
+
 	p, spreadRewardAccumulator, uptimeAccums, err := k.swapSetup(ctx, poolId, tokenInDenom, desiredTokenOut.Denom)
 	if err != nil {
 		return SwapResult{}, PoolUpdates{}, err
@@ -569,6 +589,8 @@ func (k Keeper) computeInAmtGivenOut(
 
 		ctx.Logger().Debug("cl calc in given out")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)
+
+		emitSwapStepSpanEvent(span, sqrtPriceStart, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)
 
 		// Update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = computedSqrtPrice
@@ -639,6 +661,16 @@ func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice osmoma
 	ctx.Logger().Debug("amountIn", amountIn)
 	ctx.Logger().Debug("amountOut", amountOut)
 	ctx.Logger().Debug("spreadRewardChargeTotal", spreadCharge)
+}
+
+func emitSwapStepSpanEvent(span trace.Span, sqrtPriceStart, computedSqrtPrice osmomath.BigDec, amountIn, amountOut, spreadRewardChargeTotal osmomath.Dec) {
+	span.AddEvent("cl_swap_step", trace.WithAttributes(
+		attribute.Stringer("start_sqrt_price", sqrtPriceStart),
+		attribute.Stringer("reached_sqrt_price", computedSqrtPrice),
+		attribute.Stringer("amount_in", amountIn),
+		attribute.Stringer("amountOut", amountOut),
+		attribute.Stringer("spreadRewardChargeTotal", spreadRewardChargeTotal),
+	))
 }
 
 // logic for crossing a tick during a swap

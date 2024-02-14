@@ -6,6 +6,8 @@ import (
 	"time"
 
 	db "github.com/cometbft/cometbft-db"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -20,6 +22,8 @@ import (
 
 var (
 	millisecondsInSecDec = osmomath.NewDec(1000)
+
+	tracer = otel.Tracer(types.ModuleName)
 )
 
 // AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
@@ -653,6 +657,12 @@ func (k Keeper) distributeInternal(
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncateMut(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoMut(millisecondsInSecDec))
+
+			goCtx, span := tracer.Start(ctx.Context(), "distribute_cl_create_incentive")
+			goCtx = trace.ContextWithSpan(goCtx, span)
+			defer span.End()
+			ctx := sdk.UnwrapSDKContext(goCtx)
+			ctx = ctx.WithContext(goCtx)
 
 			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
