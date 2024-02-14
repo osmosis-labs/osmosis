@@ -15,7 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/events"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens

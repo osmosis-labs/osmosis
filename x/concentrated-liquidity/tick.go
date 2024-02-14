@@ -16,7 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
-
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.

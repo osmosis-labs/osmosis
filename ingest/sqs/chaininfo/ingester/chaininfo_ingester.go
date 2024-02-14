@@ -6,8 +6,8 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 	chaininforedisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/chaininfo"
 
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/osmoutils/observability"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 )
 
 // chainInfoIngester is an ingester for blockchain information.

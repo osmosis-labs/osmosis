@@ -91,8 +91,6 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 }
 
 func (server msgServer) SplitRouteSwapExactAmountIn(goCtx context.Context, msg *types.MsgSplitRouteSwapExactAmountIn) (*types.MsgSplitRouteSwapExactAmountInResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
@@ -123,8 +121,6 @@ func (server msgServer) SplitRouteSwapExactAmountIn(goCtx context.Context, msg *
 }
 
 func (server msgServer) SplitRouteSwapExactAmountOut(goCtx context.Context, msg *types.MsgSplitRouteSwapExactAmountOut) (*types.MsgSplitRouteSwapExactAmountOutResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err

@@ -14,8 +14,8 @@ import (
 	routerredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/router"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/osmoutils/observability"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
