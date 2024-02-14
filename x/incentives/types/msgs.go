@@ -73,9 +73,9 @@ func (m MsgCreateGauge) ValidateBasic() error {
 			 format internally, allowing for querying the gauges by denom with this prefix`)
 		}
 
-		if m.DistributeTo.Duration != 0 {
-			return fmt.Errorf("'no lock' gauge must have duration set to 0, was (%d)", m.DistributeTo.Duration)
-		}
+		// if m.DistributeTo.Duration != 0 {
+		// 	return fmt.Errorf("'no lock' gauge must have duration set to 0, was (%d)", m.DistributeTo.Duration)
+		// }
 	} else {
 		if m.PoolId != 0 {
 			return errors.New("pool id should not be set for duration distr condition")
