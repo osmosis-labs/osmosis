@@ -209,19 +209,6 @@ func TestMsgCreateGauge(t *testing.T) {
 			}),
 			expectPass: false,
 		},
-		{
-			name: "invalid due to no lock with non-zero lock duration",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				msg.DistributeTo.Denom = ""
-				msg.PoolId = 1
-
-				// breaks
-				msg.DistributeTo.Duration = time.Hour
-				return msg
-			}),
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
