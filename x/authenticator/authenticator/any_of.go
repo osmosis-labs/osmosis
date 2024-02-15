@@ -15,13 +15,8 @@ type AnyOfAuthenticator struct {
 	am                *AuthenticatorManager
 }
 
-type AnyOfAuthenticatorData struct {
-	Data []iface.AuthenticatorData
-}
-
 var (
-	_ iface.Authenticator     = &AnyOfAuthenticator{}
-	_ iface.AuthenticatorData = &AnyOfAuthenticatorData{}
+	_ iface.Authenticator = &AnyOfAuthenticator{}
 )
 
 func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
@@ -77,32 +72,9 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return aoa, nil
 }
 
-func (aoa AnyOfAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
-	var authDataList []iface.AuthenticatorData
+func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	for _, auth := range aoa.SubAuthenticators {
-		data, err := auth.GetAuthenticationData(ctx, tx, messageIndex, simulate)
-		if err != nil {
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "a sub-authenticator failed to get authentication data")
-		}
-		authDataList = append(authDataList, data)
-	}
-
-	return AnyOfAuthenticatorData{Data: authDataList}, nil
-}
-
-func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	anyOfData, ok := authenticationData.(AnyOfAuthenticatorData)
-	if !ok {
-		return iface.Rejected("invalid authentication data for AnyOfAuthenticator", nil)
-	}
-
-	for idx, auth := range aoa.SubAuthenticators {
-		result := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
+		result := auth.Authenticate(ctx, request)
 		if result.IsAuthenticated() || result.IsRejected() {
 			return result
 		}
@@ -120,9 +92,9 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	for _, auth := range aoa.SubAuthenticators {
-		result := auth.ConfirmExecution(ctx, account, msg, authenticationData)
+		result := auth.ConfirmExecution(ctx, request)
 		if result.IsBlock() {
 			return result
 		}
@@ -135,6 +107,7 @@ func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
 	}
+	// TODO: Consume extra gas for each sub authenticator to avoid spam? (same on allOf)
 	if err := validateSubAuthenticatorData(initDatas, aoa.am); err != nil {
 		return err
 	}

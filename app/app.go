@@ -375,7 +375,7 @@ func NewOsmosisApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
-	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper, app.AuthenticatorKeeper))
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper, app.AuthenticatorKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.

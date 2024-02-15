@@ -1,9 +1,15 @@
 package post
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
@@ -12,13 +18,19 @@ import (
 
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
+	accountKeeper       *authkeeper.AccountKeeper
+	sigModeHandler      authsigning.SignModeHandler
 }
 
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper,
+	sigModeHandler authsigning.SignModeHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
+		accountKeeper:       accountKeeper,
+		sigModeHandler:      sigModeHandler,
 	}
 }
 
@@ -45,13 +57,17 @@ func (ad AuthenticatorDecorator) PostHandle(
 		}
 
 		accountAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorDataForAccount(ctx, account)
-
 		if err != nil {
 			return sdk.Context{}, err
 		}
 
-		for _, accountAuthenticator := range accountAuthenticators { // This should execute on *all* readied authenticators so they can update their state
-
+		// We skip replay protection here as it was already checked on authenticate.
+		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.NoReplayProtection)
+		if err != nil {
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
+		}
+		for _, accountAuthenticator := range accountAuthenticators { // This should execute on *all* "ready" authenticators so that they can update their state
 			// We want to skip `ConfirmExecution` if the authenticator is newly added
 			// since Authenticate & Track are called on antehandler but newly added authenticator
 			// so Authenticate & Track on newly added authenticator has not been called yet
@@ -64,14 +80,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 			authenticator := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 
-			// Get the authentication data for the transaction
-			authData, err := authenticator.GetAuthenticationData(ctx, tx, msgIndex, simulate)
-			if err != nil {
-				return ctx, err
-			}
-
 			// Confirm Execution
-			successfulExecution := authenticator.ConfirmExecution(ctx, account, msg, authData)
+			successfulExecution := authenticator.ConfirmExecution(ctx, authenticationRequest)
 
 			if successfulExecution.IsBlock() {
 				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")

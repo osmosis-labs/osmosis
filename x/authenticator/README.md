@@ -139,7 +139,7 @@ The contract needs to be instantiated before being added as an authenticator, si
 
 `MsgAddAuthenticator` arguments:
 
-```
+```text
 sender: <bech32_address>
 type: "CosmwasmAuthenticatorV1"
 data: json_bytes({

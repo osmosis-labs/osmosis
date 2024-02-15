@@ -15,13 +15,8 @@ type AllOfAuthenticator struct {
 	am                *AuthenticatorManager
 }
 
-type AllOfAuthenticatorData struct {
-	Data []iface.AuthenticatorData
-}
-
 var (
-	_ iface.Authenticator     = &AllOfAuthenticator{}
-	_ iface.AuthenticatorData = &AllOfAuthenticatorData{}
+	_ iface.Authenticator = &AllOfAuthenticator{}
 )
 
 func NewAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
@@ -74,36 +69,13 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return aoa, nil
 }
 
-func (aoa AllOfAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
-	var authDataList []iface.AuthenticatorData
-	for _, auth := range aoa.SubAuthenticators {
-		data, err := auth.GetAuthenticationData(ctx, tx, messageIndex, simulate)
-		if err != nil {
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "a sub-authenticator failed to get authentication data")
-		}
-		authDataList = append(authDataList, data)
-	}
-
-	return AllOfAuthenticatorData{Data: authDataList}, nil
-}
-
-func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	allOfData, ok := authenticationData.(AllOfAuthenticatorData)
-	if !ok {
-		return iface.Rejected("invalid authentication data for AllOfAuthenticator", nil)
-	}
-
+func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	if len(aoa.SubAuthenticators) == 0 {
 		return iface.NotAuthenticated()
 	}
 
-	for idx, auth := range aoa.SubAuthenticators {
-		result := auth.Authenticate(ctx, account, msg, allOfData.Data[idx])
+	for _, auth := range aoa.SubAuthenticators {
+		result := auth.Authenticate(ctx, request)
 		if !result.IsAuthenticated() {
 			return result
 		}
@@ -122,9 +94,9 @@ func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	for _, auth := range aoa.SubAuthenticators {
-		result := auth.ConfirmExecution(ctx, account, msg, authenticationData)
+		result := auth.ConfirmExecution(ctx, request)
 		if result.IsBlock() {
 			return result
 		}

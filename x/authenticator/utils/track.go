@@ -52,13 +52,19 @@ func ConfirmExecutionWithoutTx(ctx sdk.Context, authStorage AuthenticatorStorage
 			return err
 		}
 
+		request := types.AuthenticationRequest{
+			Account: account,
+			// TODO: build this (we may want to split some of the generation of the request struct into helpers)
+			//Msg:     msg,
+		}
+
 		allAuthenticators, err := authStorage.GetAuthenticatorsForAccountOrDefault(ctx, account)
 		if err != nil {
 			return err
 		}
 		for _, authenticator := range allAuthenticators {
 			// Confirm Execution
-			success := authenticator.ConfirmExecution(ctx, account, msg, types.EmptyAuthenticationData{})
+			success := authenticator.ConfirmExecution(ctx, request)
 
 			if success.IsBlock() {
 				return errorsmod.Wrap(success.Error(), "authenticator failed to confirm execution without AuthenticationData")
