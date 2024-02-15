@@ -10,9 +10,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var (

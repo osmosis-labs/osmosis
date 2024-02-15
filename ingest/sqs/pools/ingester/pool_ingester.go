@@ -168,7 +168,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 
 	// CosmWasm pools
 
-	cosmWasmPools, err := pi.cosmWasmKeeper.GetPoolsWithWasmKeeper(ctx)
+	cosmWasmPools, err := pi.cosmWasmKeeper.GetPools(ctx)
 	if err != nil {
 		return err
 	}

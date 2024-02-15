@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 // Manually define a graph so we can test the getters
