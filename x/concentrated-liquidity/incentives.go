@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"golang.org/x/exp/slices"
@@ -14,8 +15,21 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+)
+
+// We choose 10^27 to allow sufficient buffer before the accumulator starts getting truncated again.
+// Internally, we multiply the number of seconds passed since the last liquidity update by the emission rate per second
+// Then, we scale that value by 10^27 to avoid truncation to zero when dividing by the liquidity in the accumulator.
+// We do not go for a higher scaling factor to allow for enough room before hitting the maximum integer value of 2^256
+// in the intermediary multiplications.
+//
+// More analysis on the choice of scaling factor can be found here:
+// https://hackmd.io/o3oqT8VhSPKAiqNl_mlxXQ
+var (
+	perUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
+	oneDecScalingFactor     = osmomath.OneDec()
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
@@ -180,6 +194,11 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		return err
 	}
 
+	incentiveScalingFactorForPool, err := k.getIncentiveScalingFactorForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
 	// We optimistically assume that all liquidity on the active tick qualifies and handle
 	// uptime-related checks in forfeiting logic.
 
@@ -189,7 +208,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		for uptimeIndex := range uptimeAccums {
 			// Get relevant uptime-level values
 			curUptimeDuration := types.SupportedUptimes[uptimeIndex]
-			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
+			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords, poolId, incentiveScalingFactorForPool)
 			if err != nil {
 				return err
 			}
@@ -222,7 +241,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
-func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, liquidityInAccum osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
+func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, liquidityInAccum osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord, poolID uint64, incentiveScalingFactorForPool osmomath.Dec) (sdk.DecCoins, []types.IncentiveRecord, error) {
 	if !liquidityInAccum.IsPositive() || !timeElapsed.IsPositive() {
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, types.QualifyingLiquidityOrTimeElapsedNotPositiveError{QualifyingLiquidity: liquidityInAccum, TimeElapsed: timeElapsed}
 	}
@@ -239,11 +258,31 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		}
 
 		// Total amount emitted = time elapsed * emission
-		totalEmittedAmount := timeElapsed.Mul(incentiveRecordBody.EmissionRate)
+		totalEmittedAmount, err := computeTotalIncentivesToEmit(timeElapsed, incentiveRecordBody.EmissionRate)
+		if err != nil {
+			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
+			// Continue to the next incentive record.
+			continue
+		}
+
+		// We scale up the remaining rewards to avoid truncation to zero
+		// when dividing by the liquidity in the accumulator.
+		scaledTotalEmittedAmount, err := scaleUpTotalEmittedAmount(totalEmittedAmount, incentiveScalingFactorForPool)
+		if err != nil {
+			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
+			// Continue to the next incentive record.
+			continue
+		}
 
 		// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
 		// Note that we truncate to ensure we do not overdistribute incentives
-		incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
+		incentivesPerLiquidity := scaledTotalEmittedAmount.QuoTruncate(liquidityInAccum)
+
+		// Emit telemetry for accumulator updates
+		emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
+
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
 		// Ensure that we only emit if there are enough incentives remaining to be emitted
@@ -261,8 +300,23 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		} else {
 			// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
 			// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
-			remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
+
+			// We scale up the remaining rewards to avoid truncation to zero
+			// when dividing by the liquidity in the accumulator.
+			remainingRewardsScaled, err := scaleUpTotalEmittedAmount(remainingRewards, incentiveScalingFactorForPool)
+			if err != nil {
+				ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+				// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
+				// Continue to the next incentive record.
+				continue
+			}
+			remainingIncentivesPerLiquidity := remainingRewardsScaled.QuoTruncateMut(liquidityInAccum)
+
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
+
+			// Emit telemetry for accumulator updates
+			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
+
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
 			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = osmomath.ZeroDec()
@@ -270,6 +324,53 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	}
 
 	return incentivesToAddToCurAccum, copyPoolIncentiveRecords, nil
+}
+
+// scaleUpTotalEmittedAmount scales up the total emitted amount to avoid truncation to zero.
+// Returns error if the total emitted amount is too high and causes overflow when applying scaling factor.
+func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
+			err = types.IncentiveScalingFactorOverflowError{
+				PanicMessage: fmt.Sprintf("%v", r),
+			}
+		}
+	}()
+
+	return totalEmittedAmount.MulTruncate(scalingFactor), nil
+}
+
+// scaleDownIncentiveAmount scales down the incentive amount by the scaling factor.
+func scaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return incentiveAmount.ToLegacyDec().QuoTruncateMut(scalingFactor).TruncateInt()
+}
+
+// computeTotalIncentivesToEmit computes the total incentives to emit based on the time elapsed and emission rate.
+// Returns error if timeElapsed or emissionRate are too high, causing overflow during multiplication.
+func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
+			err = types.IncentiveEmissionOvrflowError{
+				PanicMessage: fmt.Sprintf("%v", r),
+			}
+		}
+	}()
+
+	// This may panic if emissionRate is too high and causes overflow during multiplication
+	// We are unlikely to see an overflow due to too much time elapsing since
+	// 100 years in seconds is roughly
+	// 3.15576e9 * 100 = 3.15576e11
+	// 60 * 60 * 24 * 365 * 100 = 3153600000 seconds
+	// The bit decimal bit length is 2^256 which is arond 10^77
+	// However, it is possible for an attacker to try and create incentives with a very high emission rate
+	// consisting of cheap token in the USD denomination. This is why we have the panic recovery above.
+	return timeElapsedSeconds.MulTruncate(emissionRate), nil
 }
 
 // findUptimeIndex finds the uptime index for the passed in min uptime.
@@ -406,8 +507,8 @@ func (k Keeper) getAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 }
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes.
-// UptimeGrowthInside tracks the incentives accured by a specific LP within a pool. It keeps track of the cumulative amount of incentives
-// collected by a specific LP within a pool. This function also measures the growth of incentives accured by a particular LP since the last
+// UptimeGrowthInside tracks the incentives accrued by a specific LP within a pool. It keeps track of the cumulative amount of incentives
+// collected by a specific LP within a pool. This function also measures the growth of incentives accrued by a particular LP since the last
 // time incentives were collected.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // The mutation occurs in the call to GetTickInfo().
@@ -467,8 +568,8 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 }
 
 // GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes.
-// UptimeGrowthOutside tracks the incentive accured by the entire pool. It keeps track of the cumulative amount of incentives collected
-// by a specific pool since the last time incentives were accured.
+// UptimeGrowthOutside tracks the incentive accrued by the entire pool. It keeps track of the cumulative amount of incentives collected
+// by a specific pool since the last time incentives were accrued.
 // We use this function to calculate the total amount of incentives owed to the LPs when they withdraw their liquidity or when they
 // attempt to claim their incentives.
 // When LPs are ready to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - uptimeGrowthInside)
@@ -688,6 +789,11 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 
 	supportedUptimes := types.SupportedUptimes
 
+	incentiveScalingFactor, err := k.getIncentiveScalingFactorForPool(ctx, position.PoolId)
+	if err != nil {
+		return sdk.Coins{}, sdk.Coins{}, err
+	}
+
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		// Check if the accumulator contains the position.
@@ -696,9 +802,20 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
-			collectedIncentivesForUptime, _, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+			collectedIncentivesForUptimeScaled, _, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
 				return sdk.Coins{}, sdk.Coins{}, err
+			}
+
+			// We scale the uptime per-unit of liquidity accumulator up to avoid truncation to zero.
+			// However, once we compute the total for the liquidity entitlement, we must scale it back down.
+			// We always truncate down in the pool's favor.
+			collectedIncentivesForUptime := sdk.NewCoins()
+			for _, incentiveCoin := range collectedIncentivesForUptimeScaled {
+				incentiveCoin.Amount = scaleDownIncentiveAmount(incentiveCoin.Amount, incentiveScalingFactor)
+				if incentiveCoin.Amount.IsPositive() {
+					collectedIncentivesForUptime = append(collectedIncentivesForUptime, incentiveCoin)
+				}
 			}
 
 			if positionAge < supportedUptimes[uptimeIndex] {
@@ -779,6 +896,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		sdk.NewEvent(
 			types.TypeEvtCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.GetId(), 10)),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentivesForPosition.String()),
 			sdk.NewAttribute(types.AttributeKeyForfeitedTokens, forfeitedIncentivesForPosition.String()),
@@ -915,4 +1033,67 @@ func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 // getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
 func (k Keeper) getLargestSupportedUptimeDuration() time.Duration {
 	return getLargestDuration(types.SupportedUptimes)
+}
+
+// emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates
+// It detects whether an accumulator update does not occur when expected due to truncation or does occur and emits the appropriate telemetry
+func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder, emittedPlaceholder string, rewardsPerUnitOfLiquidity, rewardsTotal osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec, extraKeyVals ...interface{}) {
+	// If truncation occurs, we emit events to alert us of the issue.
+	if rewardsPerUnitOfLiquidity.IsZero() && !rewardsTotal.IsZero() {
+		telemetry.IncrCounter(1, truncatedPlaceholder)
+		ctx.Logger().Error(truncatedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", rewardsPerUnitOfLiquidity, "total_amt", rewardsTotal, extraKeyVals)
+
+		// We emit events for these pools specifically as they are at the border of truncation in terms of liquidity
+		// TODO: remove these after scaling factor approach is implemented
+	} else if poolID == (1423) || poolID == (1213) {
+		telemetry.IncrCounter(1, emittedPlaceholder)
+		ctx.Logger().Info(emittedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", rewardsPerUnitOfLiquidity, "total_amt", rewardsTotal, extraKeyVals)
+	}
+}
+
+// getIncentiveScalingFactorForPool returns the scaling factor for the given pool.
+// It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
+// It returns oneDecScalingFactor otherwise.
+func (k Keeper) getIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	migrationThreshold, err := k.GetIncentivePoolIDMigrationThreshold(ctx)
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+
+	// If the given pool ID is greater than the migration threshold, we return the perUnitLiqScalingFactor.
+	if poolID > migrationThreshold {
+		return perUnitLiqScalingFactor, nil
+	}
+
+	// If the given pool ID is in the migrated incentive accumulator pool IDs, we return the perUnitLiqScalingFactor.
+	_, isMigrated := types.MigratedIncentiveAccumulatorPoolIDs[poolID]
+	if isMigrated {
+		return perUnitLiqScalingFactor, nil
+	}
+
+	// Otherwise, we return the oneDecScalingFactor.
+	return oneDecScalingFactor, nil
+}
+
+// SetIncentivePoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID.
+func (k Keeper) SetIncentivePoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
+	// Set the pool ID migration threshold to the last pool ID
+	store := ctx.KVStore(k.storeKey)
+
+	store.Set(types.KeyIncentiveAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
+}
+
+// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold.
+func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.KeyIncentiveAccumulatorMigrationThreshold)
+
+	if bz == nil {
+		return 0, fmt.Errorf("incentive accumulator migration threshold not found")
+	}
+
+	threshold := sdk.BigEndianToUint64(bz)
+
+	return threshold, nil
 }

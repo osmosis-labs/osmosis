@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types";
 
 message Params {
   // authorized_tick_spacing is an array of uint64s that represents the tick
@@ -34,7 +34,7 @@ message Params {
   ];
   // authorized_quote_denoms is a list of quote denoms that can be used as
   // token1 when creating a pool. We limit the quote assets to a small set for
-  // the purposes of having convinient price increments stemming from tick to
+  // the purposes of having convenient price increments stemming from tick to
   // price conversion. These increments are in a human readable magnitude only
   // for token1 as a quote. For limit orders in the future, this will be a
   // desirable property in terms of UX as to allow users to set limit orders at

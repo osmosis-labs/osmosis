@@ -13,9 +13,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var (
@@ -235,7 +235,11 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	defer func() {
 		if r := recover(); r != nil {
 			tokenOutAmount = osmomath.Int{}
-			err = fmt.Errorf("function MultihopEstimateOutGivenExactAmountIn failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function MultihopEstimateOutGivenExactAmountIn failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function MultihopEstimateOutGivenExactAmountIn failed due to internal reason: %v", r)
+			}
 		}
 	}()
 
@@ -275,7 +279,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		// Chain output of current pool as the input for the next routed pool
-		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
+		// We don't need to validate the denom,
+		// as CalcOutAmtGivenIn is responsible for ensuring the denom exists in the pool.
+		tokenIn = sdk.Coin{Denom: routeStep.TokenOutDenom, Amount: tokenOutAmount}
 	}
 	return tokenOutAmount, err
 }
@@ -301,7 +307,11 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = osmomath.Int{}
-			err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function RouteExactAmountOut failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
+			}
 		}
 	}()
 
@@ -493,7 +503,11 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	defer func() {
 		if r := recover(); r != nil {
 			insExpected = []osmomath.Int{}
-			err = fmt.Errorf("function MultihopEstimateInGivenExactAmountOut failed due to internal reason: %v", r)
+			if isErr, d := osmoutils.IsOutOfGasError(r); isErr {
+				err = fmt.Errorf("function MultihopEstimateInGivenExactAmountOut failed due to lack of gas: %v", d)
+			} else {
+				err = fmt.Errorf("function MultihopEstimateInGivenExactAmountOut failed due to internal reason: %v", r)
+			}
 		}
 	}()
 

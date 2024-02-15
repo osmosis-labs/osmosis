@@ -66,7 +66,7 @@ Conceptually, we can split the e2e setup into 2 parts:
     ```
 
     The caller (e2e setup logic), does not need to be concerned about what type of
-    configurations is hapenning in the background. The appropriate logic is selected
+    configurations is happening in the background. The appropriate logic is selected
     depending on what the values of the arguments to `configurer.New(...)` are.
 
     `CurrentBranchConfigurer` configures chains from current Git branch.

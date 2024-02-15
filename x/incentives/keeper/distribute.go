@@ -11,9 +11,15 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+
+	sdkmath "cosmossdk.io/math"
+)
+
+var (
+	millisecondsInSecDec = osmomath.NewDec(1000)
 )
 
 // AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
@@ -370,7 +376,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // the distrInfo struct. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeSyntheticInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
 
@@ -394,12 +400,17 @@ func (k Keeper) distributeSyntheticInternal(
 		}
 	}
 
-	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
+	sortedAndTrimmedQualifiedLocks := make([]*lockuptypes.PeriodLock, curIndex)
+	// This is not an issue because we directly
+	// use v.index and &v.locks. However, we must be careful not to
+	// take the address of &v.
+	// nolint: exportloopref
 	for _, v := range qualifiedLocksMap {
+		v := v
 		if v.index < 0 {
 			continue
 		}
-		sortedAndTrimmedQualifiedLocks[v.index] = v.lock
+		sortedAndTrimmedQualifiedLocks[v.index] = &v.lock
 	}
 
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
@@ -538,6 +549,42 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
+// getNoLockGaugeUptime retrieves the uptime corresponding to the passed in gauge.
+// For external gauges, it returns the uptime specified in the gauge.
+// For internal gauges, it returns the module param for internal gauge uptime.
+//
+// In either case, if the fetched uptime is invalid or unauthorized, it falls back to a default uptime.
+func (k Keeper) getNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId uint64) time.Duration {
+	// If internal gauge, use InternalUptime param as the gauge's uptime.
+	// Otherwise, use the gauge's duration.
+	gaugeUptime := gauge.DistributeTo.Duration
+	if gauge.DistributeTo.Denom == types.NoLockInternalGaugeDenom(poolId) {
+		gaugeUptime = k.GetParams(ctx).InternalUptime
+	}
+
+	// Validate that the gauge's corresponding uptime is authorized.
+	authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
+	isUptimeAuthorized := false
+	for _, authorizedUptime := range authorizedUptimes {
+		if gaugeUptime == authorizedUptime {
+			isUptimeAuthorized = true
+		}
+	}
+
+	// If the gauge's uptime is not authorized, we fall back to a default instead of erroring.
+	//
+	// This is for two reasons:
+	// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
+	// 2. To avoid having to do a state migration on existing gauges at time of adding
+	// this change, since prior to this, CL gauges were not required to associate with
+	// an uptime that was authorized.
+	if !isUptimeAuthorized {
+		gaugeUptime = types.DefaultConcentratedUptime
+	}
+
+	return gaugeUptime
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -552,7 +599,7 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 //
 // CONTRACT: gauge passed in as argument must be an active gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
@@ -590,6 +637,10 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
+		// Get the uptime for the gauge. Note that if the gauge's uptime is not authorized,
+		// this falls back to a default value of 1ns.
+		gaugeUptime := k.getNoLockGaugeUptime(ctx, gauge, pool.GetId())
+
 		// For every coin in the gauge, calculate the remaining reward per epoch
 		// and create a concentrated liquidity incentive record for it that
 		// is supposed to distribute over that epoch.
@@ -601,7 +652,7 @@ func (k Keeper) distributeInternal(
 			// emissionRate calculates amount of tokens to emit per second
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
+			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncateMut(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoMut(millisecondsInSecDec))
 
 			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
@@ -613,8 +664,9 @@ func (k Keeper) distributeInternal(
 				// Gauge start time should be checked whenever moving between active
 				// and inactive gauges. By the time we get here, the gauge should be active.
 				ctx.BlockTime(),
-				// Only default uptime is supported at launch.
-				types.DefaultConcentratedUptime,
+				// The uptime for each distribution is determined by the gauge's duration field.
+				// If it is unauthorized, we fall back to a default above.
+				gaugeUptime,
 			)
 
 			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
@@ -625,47 +677,48 @@ func (k Keeper) distributeInternal(
 		}
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
-		if len(locks) == 0 {
-			return nil, nil
-		}
-
-		// In this case, remove redundant cases.
-		// Namely: gauge empty OR gauge coins undistributable.
-		if remainCoins.Empty() {
-			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
-			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
-			return totalDistrCoins, err
-		}
-
-		// Remove some spam gauges, is state compatible.
-		// If they're to pool 1 they can't distr at this small of a quantity.
-		if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(osmomath.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "uosmo" {
-			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
-			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
-			return totalDistrCoins, err
+		isSpam, totaltotalDistrCoins, err := k.skipSpamGaugeDistribute(ctx, locks, gauge, totalDistrCoins, remainCoins)
+		if isSpam {
+			return totaltotalDistrCoins, err
 		}
 
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
-
-		if lockSum.IsZero() {
+		lockSum, err := lockuptypes.SumLocksByDenom(locks, denom)
+		if lockSum.IsZero() || err != nil {
 			return nil, nil
 		}
 
+		// total_denom_lock_amount * remain_epochs
+		lockSumTimesRemainingEpochs := lockSum.MulRaw(int64(remainEpochs))
+		lockSumTimesRemainingEpochsBi := lockSumTimesRemainingEpochs.BigIntMut()
+
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
-			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+			// too expensive + verbose even in debug mode.
+			// ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+
+			denomLockAmt := guaranteedNonzeroCoinAmountOf(lock.Coins, denom).BigIntMut()
 			for _, coin := range remainCoins {
+				amtInt := sdkmath.NewIntFromBigInt(denomLockAmt)
+				amtIntBi := amtInt.BigIntMut()
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(osmomath.NewInt(int64(remainEpochs))))
-				if amt.IsPositive() {
-					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
+				amtIntBi = amtIntBi.Mul(amtIntBi, coin.Amount.BigIntMut())
+
+				// We should check overflow as we switch back to sdk.Int representation.
+				// However we know the final result will not be larger than the gauge size,
+				// which is bounded to an Int. So we can safely skip this.
+
+				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
+				if amtInt.Sign() == 1 {
+					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
 				}
 			}
-			distrCoins = distrCoins.Sort()
+			if distrCoins.Len() > 1 {
+				// Sort makes a runtime copy, due to some interesting golang details.
+				distrCoins = distrCoins.Sort()
+			}
 			if distrCoins.Empty() {
 				continue
 			}
@@ -687,6 +740,37 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
+}
+
+func (k Keeper) skipSpamGaugeDistribute(ctx sdk.Context, locks []*lockuptypes.PeriodLock, gauge types.Gauge, totalDistrCoins sdk.Coins, remainCoins sdk.Coins) (bool, sdk.Coins, error) {
+	if len(locks) == 0 {
+		return true, nil, nil
+	}
+
+	// In this case, remove redundant cases.
+	// Namely: gauge empty OR gauge coins undistributable.
+	if remainCoins.Empty() {
+		ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
+		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+		return true, totalDistrCoins, err
+	}
+
+	// Remove some spam gauges that are not worth distributing. (We ignore the denom stake because of tests.)
+	if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(osmomath.NewInt(100)) && remainCoins[0].Denom != "stake" {
+		ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
+		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+		return true, totalDistrCoins, err
+	}
+	return false, totalDistrCoins, nil
+}
+
+// faster coins.AmountOf if we know that coins must contain the denom.
+// returns a new big int that can be mutated.
+func guaranteedNonzeroCoinAmountOf(coins sdk.Coins, denom string) osmomath.Int {
+	if coins.Len() == 1 {
+		return coins[0].Amount
+	}
+	return coins.AmountOfNoDenomValidation(denom)
 }
 
 // updateGaugePostDistribute increments the gauge's filled epochs field.
@@ -734,10 +818,10 @@ func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 }
 
 // getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
-func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
+func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock, scratchSlice *[]*lockuptypes.PeriodLock) []*lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
 	if gauge.Coins.Empty() {
-		return []lockuptypes.PeriodLock{}
+		return []*lockuptypes.PeriodLock{}
 	}
 	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 	// All gauges have a precondition of being ByDuration.
@@ -749,7 +833,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	// get this from memory instead of hitting iterators / underlying stores.
 	// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
 	allLocks := cache[distributeBaseDenom]
-	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
+	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration, scratchSlice)
 }
 
 // Distribute distributes coins from an array of gauges to all eligible locks and pools in the case of "NoLock" gauges.
@@ -760,10 +844,11 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
+	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 50000)
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
-		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
+		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache, &scratchSlice)
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
 		var err error
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {

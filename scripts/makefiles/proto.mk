@@ -10,8 +10,8 @@ proto-help:
 	@echo ""
 	@echo "Available Commands:"
 	@echo "  all        Run proto-format and proto-gen"
-	@echo "  gen        Generate Protobuf files"
 	@echo "  format     Format Protobuf files"
+	@echo "  gen        Generate Protobuf files"
 	@echo "  image-build  Build the protobuf Docker image"
 	@echo "  image-push  Push the protobuf Docker image"
 

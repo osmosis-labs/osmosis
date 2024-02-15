@@ -3,8 +3,8 @@ package keeper
 import (
 	"github.com/cosmos/gogoproto/proto"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,7 +88,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	k.SetIntermediaryAccount(ctx, intermediaryAcct)
 
 	// If the intermediary account's address doesn't already have an auth account associated with it,
-	// create a new account. We use base accounts, as this is whats done for cosmwasm smart contract accounts.
+	// create a new account. We use base accounts, as this is what's done for cosmwasm smart contract accounts.
 	// and in the off-chance someone manages to find a bug that forces the account's creation.
 	if !k.ak.HasAccount(ctx, intermediaryAcct.GetAccAddress()) {
 		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))

@@ -33,7 +33,7 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw-multi-test = "0.16.1"
 osmosis-test-tube = "17.0.0-rc0"
-serde-json-wasm = "0.5.0"
+serde-json-wasm = "0.5.2"
 serde-cw-value = "0.7.0"
 bech32 = "0.9.1"
 cw-utils = "1.0.0"

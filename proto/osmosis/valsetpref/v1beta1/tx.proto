@@ -7,9 +7,9 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valsetpref/v1beta1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/valset-pref/types";
 
-// Msg defines the valset-pref modules's gRPC message service.
+// Msg defines the valset-pref module's gRPC message service.
 service Msg {
   // SetValidatorSetPreference creates a set of validator preference.
   // This message will process both create + update request.
@@ -106,7 +106,7 @@ message MsgUndelegateFromValidatorSet {
 message MsgUndelegateFromValidatorSetResponse {}
 
 message MsgUndelegateFromRebalancedValidatorSet {
-  option (amino.name) = "osmosis/MsgUndelegateFromRebalancedValidatorSet";
+  option (amino.name) = "osmosis/MsgUndelegateFromRebalValset";
 
   // delegator is the user who is trying to undelegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];

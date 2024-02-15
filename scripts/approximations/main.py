@@ -13,10 +13,10 @@ x_start = 0
 # end of the interval to calculate the approximation on
 x_end = 1
 
-# number of paramters to use for the approximations.
+# number of parameters to use for the approximations.
 num_parameters = 13
 
-# number of paramters to use for plotting error deltas.
+# number of parameters to use for plotting error deltas.
 num_parameters_errors = 30
 
 # number of (x,y) coordinates used to plot the resulting approximation.
@@ -173,7 +173,7 @@ def main():
         plt.show()
 
 # This script isolates the 13-parameter Chebyshev Rational approximation of e^x
-# We are planning to use it in production. Therefore, we need to peform coefficient
+# We are planning to use it in production. Therefore, we need to perform coefficient
 # truncations to 36 decimal points (the max osmomath supported precision).
 def exponent_approximation_choice():
     # Equispaced x coordinates to be used for plotting every approximation.

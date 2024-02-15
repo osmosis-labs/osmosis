@@ -21,9 +21,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v21/simulation/executor/internal/executortypes"
-	"github.com/osmosis-labs/osmosis/v21/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v23/simulation/executor/internal/executortypes"
+	"github.com/osmosis-labs/osmosis/v23/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 )
 
 const AverageBlockTime = 6 * time.Second
@@ -213,7 +213,7 @@ func printPanicRecoveryError(recoveryError interface{}) {
 type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int, err error)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
-// parameters being passed everytime, to minimize memory overhead.
+// parameters being passed every time, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
 	simState *simState, config Config, stats stats.StatsDb,
 ) blockSimFn {
@@ -290,7 +290,7 @@ Comment: %s`, opMsg.Route, actionErr, opMsg.Comment)
 	return nil
 }
 
-// TODO: We need to cleanup queued operations, to instead make it queued action + have code re-use with prior code
+// TODO: We need to cleanup queued operations, to instead make it queued action + have code reuse with prior code
 func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int, err error) {
 	height := int(simState.header.Height)
 	queuedOp, ok := simState.operationQueue[height]

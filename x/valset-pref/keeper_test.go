@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
 
-	valPref "github.com/osmosis-labs/osmosis/v21/x/valset-pref"
+	valPref "github.com/osmosis-labs/osmosis/v23/x/valset-pref"
 )
 
 type KeeperTestSuite struct {
@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddr
 	s.Require().NotZero(rewardsAfterAllocation[0].Amount)
 }
 
-// Pres *KeeperTestSuites sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
+// PrepareExistingDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
 func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt osmomath.Int) error {
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])

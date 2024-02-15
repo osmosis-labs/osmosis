@@ -12,7 +12,7 @@ import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "osmosis/gamm/v1beta1/shared.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/gamm/types";
 
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
@@ -272,7 +272,7 @@ message QuerySpotPriceRequest {
 //=============================== PoolsWithFilter
 
 message QueryPoolsWithFilterRequest {
-  // String of the coins in single string seperated by comma. Ex)
+  // String of the coins in single string separated by comma. Ex)
   // 10uatom,100uosmo
   string min_liquidity = 1 [ (gogoproto.moretags) = "yaml:\"min_liquidity\"" ];
   string pool_type = 2;

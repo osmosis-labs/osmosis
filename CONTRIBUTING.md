@@ -16,6 +16,8 @@ If you have a feature request, please use the [feature-request repo](https://git
 
 Once you find an existing issue that you want to work on or if you have a new issue to create, continue below.
 
+Important note to contributors: We deeply value your contributions. However, due to a large influx of airdrop hunters, we are currently unable to accept small lint changes from first-time contributors. We encourage you to look for issues that offer more substantial contributions to the project or issues from the **good first issue** label. This helps us maintain the quality and integrity of the codebase, and provides a more meaningful experience for you as a contributor.
+
 ## Proposing changes
 
 To contribute a change proposal, use the following workflow:
@@ -333,7 +335,7 @@ For v6.x, and v4.x, most PRs to them should go to main and get a "backport" labe
 
 ### How to build proto files. (rm -rf vendor/ && make build-reproducible once docker is installed)
 
-You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmosis. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes ure you have docker installed.
+You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmosis. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes sure you have docker installed.
 
 If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that.
 

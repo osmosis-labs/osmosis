@@ -7,17 +7,17 @@ import (
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
+	v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 const (
@@ -45,12 +45,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	// The route map should be populated after the upgrade
-	routeMap, err := s.App.PoolManagerKeeper.GetRouteMap(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().NotNil(routeMap)
-
-	// Psuedo collect cyclic arb profits
+	// Pseudo collect cyclic arb profits
 	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
@@ -61,12 +56,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Check all accounting start heights should be the same height as the upgrade
 	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.CyclicArbTracker.HeightAccountingStartsFrom)
 	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TakerFeesTracker.HeightAccountingStartsFrom)
-	s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
+	// s.Require().Equal(v21UpgradeHeight, allProtocolRevenue.TxFeesTracker.HeightAccountingStartsFrom)
 	// All values should be nill except for the cyclic arb profits, which should start at the value it was at time of upgrade
-	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
-	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
-	s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
-	s.Require().Equal(cyclicArbProfits, allProtocolRevenue.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
+	// s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfits), allProtocolRevenue.CyclicArbTracker.CyclicArb)
 
 }
 

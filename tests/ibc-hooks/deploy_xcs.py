@@ -354,7 +354,7 @@ async def setup_swaprouter(moniker, owner, gov, pools, dry_run=False):
     #                              f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
     # if not isinstance(result, dict) or result['code'] != 0:
     #     print(result)
-    #     raise Exception("Error transfering swaprouter ownership")
+    #     raise Exception("Error transferring swaprouter ownership")
     return swaprouter_addr
 
 

@@ -12,7 +12,7 @@ import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -74,14 +74,14 @@ service Query {
         "/osmosis/superfluid/v1beta1/superfluid_delegation_amount";
   }
 
-  // Returns all the delegated superfluid poistions for a specific delegator.
+  // Returns all the delegated superfluid positions for a specific delegator.
   rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest)
       returns (SuperfluidDelegationsByDelegatorResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                    "superfluid_delegations/{delegator_address}";
   }
 
-  // Returns all the undelegating superfluid poistions for a specific delegator.
+  // Returns all the undelegating superfluid positions for a specific delegator.
   rpc SuperfluidUndelegationsByDelegator(
       SuperfluidUndelegationsByDelegatorRequest)
       returns (SuperfluidUndelegationsByDelegatorResponse) {

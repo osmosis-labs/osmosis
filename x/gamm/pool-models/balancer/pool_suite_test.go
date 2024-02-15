@@ -13,19 +13,19 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	v10 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	v10 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 )
 
 const (
 	// allowedErrRatio is the maximal multiplicative difference in either
 	// direction (positive or negative) that we accept to tolerate in
-	// unit tests for calcuating the number of shares to be returned by
+	// unit tests for calculating the number of shares to be returned by
 	// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
 	allowedErrRatio = "0.0000001"
-	// doesNotExistDenom denom name assummed to be used in test cases where the provided
+	// doesNotExistDenom denom name assumed to be used in test cases where the provided
 	// denom does not exist in pool
 	doesNotExistDenom = "doesnotexist"
 )
@@ -548,7 +548,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 	{
 		// For uosmos and uatom
 		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
-		// then we perfrom single asset deposit for the remaining 25,000 uatom with the equation below
+		// then we perform single asset deposit for the remaining 25,000 uatom with the equation below
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		// 1_249_999_960_937 = (1e20 + 2.5e12) * (( 1 + (25000 * 1 / 1000000025000))^0.5 - 1) (without fee)
@@ -576,7 +576,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 	{
 		// For uosmos and uatom
 		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
-		// then we perfrom single asset deposit for the remaining 25,000 uatom with the equation below
+		// then we perform single asset deposit for the remaining 25,000 uatom with the equation below
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		// 1_243_750_000_000 = (1e20 + 2.5e12)*  (( 1 + (25000 * (1 - (1 - 0.5) * 0.01) / 1000000025000))^0.5 - 1)
@@ -603,7 +603,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 	{
 		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 12,500 uatom.
 		// the minimal total share resulted here would be 1,250,000,000,000 =  2500 / 2,000,000,000,000 * 100,000,000,000,000,000,000
-		// then we perfrom single asset deposit for the remaining 37,500 uatom with the equation below
+		// then we perform single asset deposit for the remaining 37,500 uatom with the equation below
 		//
 		// For uatom:
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -1032,7 +1032,7 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 }
 
 // Tests selecting a random amount of coins to LP, and then that ExitPool(JoinPool(tokens))
-// preserves the pools number of LP shares, and returns fewer coins to the acter than they started with.
+// preserves the pools number of LP shares, and returns fewer coins to the actor than they started with.
 func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	type testCase struct {
 		initialTokensDenomIn  int64

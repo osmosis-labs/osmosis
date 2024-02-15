@@ -21,15 +21,15 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
 )
 
 var (
@@ -234,7 +234,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	swapPoolId2 := chainANode.CreateBalancerPool(poolFile2, initialization.ValidatorWalletName)
 	swapPoolId3 := chainANode.CreateBalancerPool(poolFile3, initialization.ValidatorWalletName)
 
-	// Wait for the creation to be propogated to the other nodes + for the protorev module to
+	// Wait for the creation to be propagated to the other nodes + for the protorev module to
 	// correctly update the highest liquidity pools.
 	s.T().Logf("waiting for the protorev module to update the highest liquidity pools (wait %.f sec) after the week epoch duration", initialization.EpochDayDuration.Seconds())
 	chainA.WaitForNumEpochs(1, epochIdentifier)
@@ -317,7 +317,7 @@ func (s *IntegrationTestSuite) StableSwap() {
 // TestGeometricTwapMigration tests that the geometric twap record
 // migration runs successfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
-// pre-upgrade, twap records are initialized for a pool. By runnning
+// pre-upgrade, twap records are initialized for a pool. By running
 // a swap post-upgrade, we confirm that the geometric twap was initialized
 // correctly and does not cause a chain halt. This test was created
 // in-response to a testnet incident when performing the geometric twap
@@ -957,7 +957,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
 	// At pool creation time, the twap should be:
-	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	// quote asset supply / base asset supply = 2_000_000 / 1_000_000 = 2
 	curBlockTime := chainANode.QueryLatestBlockTime().Unix()
 	s.T().Log("geometric twap, end time ", curBlockTime)
 
@@ -967,7 +967,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Assume base = stake, quote = uosmo
 	// At pool creation time, the twap should be:
-	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	// quote asset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewDecWithPrec(5, 1), initialTwapAOverB)
@@ -1001,12 +1001,12 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Assume base = uosmo, quote = stake
 	// At pool creation, we had:
-	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	// quote asset supply / base asset supply = 2_000_000 / 1_000_000 = 2
 	// Next, we swapped 1_000_000 uosmo for stake.
 	// Now, we roughly have
 	// uatom = 1_000_000
 	// uosmo = 2_000_000
-	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	// quote asset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), osmomath.NewDecWithPrec(5, 1), afterSwapTwapBOverA, osmomath.NewDecWithPrec(1, 2))
 }
 

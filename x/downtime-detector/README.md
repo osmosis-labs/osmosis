@@ -5,7 +5,7 @@ For several use cases, we need a module that can detect when the chain is recove
 So for instance, you'd want to know if it has been at least 10 minutes, since the chain was down for > 30 minutes. Since you assume in such an event that it may take ~10 minutes for price oracles to be arb'd to correct.
 Suggested Design
 
-Theres a couple designs, such as:
+There's a couple designs, such as:
 
 * Iterating over block times from the last N blocks (with a heuristic filter based on average block time)
     * Implies bounds on recovery time

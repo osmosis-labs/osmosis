@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v21/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v23/wasmbinding/bindings"
 
 	"github.com/stretchr/testify/require"
 )
@@ -49,7 +49,7 @@ func TestCreateDenom(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, actor, spec.createDenom)
+			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -144,7 +144,7 @@ func TestChangeAdmin(t *testing.T) {
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
 
-			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
+			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
 			require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestMint(t *testing.T) {
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper
@@ -269,7 +269,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, spec.mint)
+			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -289,7 +289,7 @@ func TestBurn(t *testing.T) {
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper
@@ -387,7 +387,7 @@ func TestBurn(t *testing.T) {
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, mintBinding)
+			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
 			require.NoError(t, err)
 
 			// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper

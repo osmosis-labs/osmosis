@@ -13,16 +13,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 )
 
 var (
@@ -238,14 +238,17 @@ func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, pool
 func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
+	// Add spread rewards and incentives to the pool
+	scaledGrowth := s.scaleUptimeAccumulators(uptimeGrowthToAdd)
+
 	// Note that we process adds to global accums at the end to ensure that they don't affect the behavior of uninitialized ticks.
 	if currentTick < lowerTick {
 		// Add to lower tick's uptime trackers
 		lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, lowerTick)
 		s.Require().NoError(err)
-		s.Require().Equal(len(lowerTickInfo.UptimeTrackers.List), len(uptimeGrowthToAdd))
+		s.Require().Equal(len(lowerTickInfo.UptimeTrackers.List), len(scaledGrowth))
 
-		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), uptimeGrowthToAdd)
+		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), scaledGrowth)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
@@ -253,9 +256,9 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 		// Add to upper tick uptime trackers
 		upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, upperTick)
 		s.Require().NoError(err)
-		s.Require().Equal(len(upperTickInfo.UptimeTrackers.List), len(uptimeGrowthToAdd))
+		s.Require().Equal(len(upperTickInfo.UptimeTrackers.List), len(scaledGrowth))
 
-		newUpperUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers.List), uptimeGrowthToAdd)
+		newUpperUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers.List), scaledGrowth)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
@@ -263,6 +266,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 
 	// In all cases, global uptime accums need to be updated. If lowerTick <= currentTick < upperTick,
 	// nothing more needs to be done.
+	// We do not provide scaled growth here as addToUptimeAccums will scale the growth by the scaling factor.
 	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
 	s.Require().NoError(err)
 }
@@ -283,14 +287,17 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
+	// Add spread rewards and incentives to the pool
+	growthCopy := s.scaleUptimeAccumulators(uptimeGrowthToAdd)
+
 	// Note that we process adds to global accums at the end to ensure that they don't affect the behavior of uninitialized ticks.
 	if currentTick < lowerTick || upperTick <= currentTick {
 		// Add to lower tick uptime trackers
 		lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, lowerTick)
 		s.Require().NoError(err)
-		s.Require().Equal(len(lowerTickInfo.UptimeTrackers.List), len(uptimeGrowthToAdd))
+		s.Require().Equal(len(lowerTickInfo.UptimeTrackers.List), len(growthCopy))
 
-		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), uptimeGrowthToAdd)
+		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), growthCopy)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
@@ -298,9 +305,9 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		// Add to upper tick uptime trackers
 		upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, upperTick)
 		s.Require().NoError(err)
-		s.Require().Equal(len(upperTickInfo.UptimeTrackers.List), len(uptimeGrowthToAdd))
+		s.Require().Equal(len(upperTickInfo.UptimeTrackers.List), len(growthCopy))
 
-		newUpperUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers.List), uptimeGrowthToAdd)
+		newUpperUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers.List), growthCopy)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
@@ -308,9 +315,9 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		// Add to lower tick's uptime trackers
 		lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, lowerTick)
 		s.Require().NoError(err)
-		s.Require().Equal(len(lowerTickInfo.UptimeTrackers.List), len(uptimeGrowthToAdd))
+		s.Require().Equal(len(lowerTickInfo.UptimeTrackers.List), len(growthCopy))
 
-		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), uptimeGrowthToAdd)
+		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), growthCopy)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
@@ -318,6 +325,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 
 	// In all cases, global uptime accums need to be updated. If currentTick < lowerTick,
 	// nothing more needs to be done.
+	// Note that addToUptimeAccums(...) applies the scaling factor to the input before writing to the accumulator.
 	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
 	s.Require().NoError(err)
 }
@@ -488,4 +496,18 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 
 	// Assert global invariants on final state
 	s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
+}
+
+// validates that the given position ID is eligible for claiming given expected incentives.
+func (s *KeeperTestSuite) validateClaimableIncentives(positionID uint64, expectedClaimableIncentives sdk.Coins) {
+	claimableIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionID)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedClaimableIncentives.String(), claimableIncentives.String())
+}
+
+// validates that the given position ID has the given expected accumulator growth in the pool accumulator.
+func (s *KeeperTestSuite) validateUptimePositionAccumulator(uptimeAccumulator *accum.AccumulatorObject, positionID uint64, expectedAccumulatorGrowth sdk.DecCoins) {
+	positionAcc, err := uptimeAccumulator.GetPosition(string(types.KeyPositionId(positionID)))
+	s.Require().NoError(err)
+	s.Require().Equal(expectedAccumulatorGrowth.String(), positionAcc.GetAccumValuePerShare().String())
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
@@ -26,8 +27,8 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
-	downtimemodule "github.com/osmosis-labs/osmosis/v21/x/downtime-detector/module"
-	downtimetypes "github.com/osmosis-labs/osmosis/v21/x/downtime-detector/types"
+	downtimemodule "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/types"
 
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
@@ -62,39 +63,39 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
-	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/clmodule"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	cwpoolmodule "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/module"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/ibcratelimitmodule"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v21/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v21/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
-	poolmanager "github.com/osmosis-labs/osmosis/v21/x/poolmanager/module"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/protorev"
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	superfluid "github.com/osmosis-labs/osmosis/v21/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/twapmodule"
-	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v21/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v21/x/valset-pref/types"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v21/x/valset-pref/valpref-module"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	cwpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v23/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	superfluid "github.com/osmosis-labs/osmosis/v23/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v23/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -146,7 +147,7 @@ func appModules(
 		),
 		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		gov.NewAppModule(appCodec, app.GovKeeper, *app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
@@ -161,6 +162,7 @@ func appModules(
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
+		consensus.NewAppModule(appCodec, *app.AppKeepers.ConsensusParamsKeeper),
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
@@ -205,7 +207,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// TODO: Perhaps this can be relaxed, left to future work to analyze.
 	ord.Sequence(distrtypes.ModuleName, slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName)
 	// superfluid must come after distribution & epochs.
-	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
+	// TODO: we actually set it to come after staking, since that's what happened before, and want to minimize chance of break.
 	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
 	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
 	// IBChost came after staking, before superfluid.
@@ -231,7 +233,7 @@ func OrderEndBlockers(allModuleNames []string) []string {
 
 // OrderInitGenesis returns module names in order for init genesis calls.
 func OrderInitGenesis(allModuleNames []string) []string {
-	// NOTE: The genutils moodule must occur after staking so that pools are
+	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain

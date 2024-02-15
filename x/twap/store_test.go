@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/twap"
+	"github.com/osmosis-labs/osmosis/v23/x/twap"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.
@@ -144,6 +144,77 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			actualRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, test.poolId)
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedRecords, actualRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestGetAllMostRecentRecordsForPoolWithDenoms() {
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
+
+	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denom0, denom1)
+	tests := map[string]struct {
+		recordsToSet    []types.TwapRecord
+		poolId          uint64
+		denoms          []string
+		expectedRecords []types.TwapRecord
+		expectedError   bool
+	}{
+		"single record: provide denom, fetch store with key": {
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          1,
+			denoms:          []string{denom0, denom1},
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"single record: do not provide denom, fetch state using iterator": {
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"single record: query invalid denoms": {
+			recordsToSet:  []types.TwapRecord{baseRecord},
+			poolId:        1,
+			denoms:        []string{"foo", "bar"},
+			expectedError: true,
+		},
+		"query non-existent pool": {
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{},
+		},
+		"set two records with different time": {
+			recordsToSet:    []types.TwapRecord{baseRecord, tPlusOneRecord},
+			poolId:          1,
+			denoms:          []string{denom0, denom1},
+			expectedRecords: []types.TwapRecord{tPlusOneRecord},
+		},
+		"set multi-asset pool record - reverse order": {
+			recordsToSet: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+			},
+			poolId: 1,
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			for _, record := range test.recordsToSet {
+				s.twapkeeper.StoreNewRecord(s.Ctx, record)
+			}
+			actualRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPoolWithDenoms(s.Ctx, test.poolId, test.denoms)
+			if test.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedRecords, actualRecords)
+			}
 		})
 	}
 }
@@ -288,6 +359,8 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 		lastKeptTime time.Time
 
 		expectedKeptRecords []types.TwapRecord
+
+		overwriteLimit uint16
 	}{
 		"base time; across pool 3; 4 records; 3 before lastKeptTime; 2 deleted and newest kept": {
 			recordsToPreSet: []types.TwapRecord{
@@ -436,6 +509,20 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 			expectedKeptRecords: []types.TwapRecord{},
 		},
+		"base time; across pool 3; 4 records; 3 before lastKeptTime; only 1 deleted due to limit set to 1": {
+			recordsToPreSet: []types.TwapRecord{
+				pool3BaseSecMin1Ms, // base time - 1ms; kept since newest before lastKeptTime
+				pool3BaseSecBaseMs, // base time; kept since at lastKeptTime
+				pool3BaseSecMin3Ms, // base time - 3ms; in queue for deletion
+				pool3BaseSecMin2Ms, // base time - 2ms; deleted
+			},
+
+			lastKeptTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{pool3BaseSecMin3Ms, pool3BaseSecMin1Ms, pool3BaseSecBaseMs},
+
+			overwriteLimit: 1,
+		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -445,12 +532,180 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 			ctx := s.Ctx
 			twapKeeper := s.twapkeeper
 
-			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.lastKeptTime)
+			if tc.overwriteLimit != 0 {
+				originalLimit := twap.NumRecordsToPrunePerBlock
+				defer func() {
+					twap.NumRecordsToPrunePerBlock = originalLimit
+				}()
+				twap.NumRecordsToPrunePerBlock = tc.overwriteLimit
+			}
+
+			state := types.PruningState{
+				IsPruning:    true,
+				LastKeptTime: tc.lastKeptTime,
+				LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(tc.lastKeptTime, 0, "", ""),
+			}
+
+			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, state)
 			s.Require().NoError(err)
 
 			s.validateExpectedRecords(tc.expectedKeptRecords)
 		})
 	}
+}
+
+// TestPruneRecordsBeforeTimeButNewestPerBlock tests TWAP record pruning logic over multiple blocks.
+func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
+	// N.B.: the records follow the following naming convention:
+	// <pool id><delta from base time in seconds><delta from base time in milliseconds>
+	// These are manually created to be able to refer to them by name
+	// for convenience.
+
+	// Create 6 records of 4 pools from base time, each in different pool with the difference of 1 second between them. Pool 2 is a 3 asset pool.
+	pool1Min2SBaseMs, pool2Min1SBaseMsAB, pool2Min1SBaseMsAC, pool2Min1SBaseMsBC, pool3BaseSecBaseMs, pool4Plus1SBaseMs := s.createTestRecordsFromTime(baseTime)
+
+	// Create 6 records of 4 pools from base time - 1 ms, each in different pool with the difference of 1 second between them. Pool 2 is a 3 asset pool.
+	pool1Min2SMin1Ms, pool2Min1SMin1MsAB, pool2Min1SMin1MsAC, pool2Min1SMin1MsBC, pool3BaseSecMin1Ms, pool4Plus1SMin1Ms := s.createTestRecordsFromTime(baseTime.Add(-time.Millisecond))
+
+	// Create 6 records of 4 pools from base time - 2 ms, each in different pool with the difference of 1 second between them. Pool 2 is a 3 asset pool.
+	pool1Min2SMin2Ms, pool2Min1SMin2MsAB, pool2Min1SMin2MsAC, pool2Min1SMin2MsBC, pool3BaseSecMin2Ms, pool4Plus1SMin2Ms := s.createTestRecordsFromTime(baseTime.Add(2 * -time.Millisecond))
+
+	// Create 6 records of 4 pools from base time - 3 ms, each in different pool with the difference of 1 second between them. Pool 2 is a 3 asset pool.
+	pool1Min2SMin3Ms, pool2Min1SMin3MsAB, pool2Min1SMin3MsAC, pool2Min1SMin3MsBC, pool3BaseSecMin3Ms, pool4Plus1SMin3Ms := s.createTestRecordsFromTime(baseTime.Add(3 * -time.Millisecond))
+
+	// Create 12 records in the same pool from base time , each record with the difference of 1 second between them.
+	pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC,
+		pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC,
+		pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC,
+		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC := s.CreateTestRecordsFromTimeInPool(baseTime, 5)
+
+	// Create 12 records in the same pool from base time - 1 ms, each record with the difference of 1 second between them
+	pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, pool5Min2SMin1MsBC,
+		pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC,
+		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC,
+		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC := s.CreateTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
+
+	s.SetupTest()
+
+	recordsToPreSet := []types.TwapRecord{
+		pool3BaseSecMin3Ms, // base time - 3ms; kept since older
+		pool3BaseSecMin2Ms, // base time - 2ms; kept since older
+		pool3BaseSecMin1Ms, // base time - 1ms; kept since older
+		pool3BaseSecBaseMs, // base time; kept since older
+
+		pool2Min1SMin3MsAB, pool2Min1SMin3MsAC, pool2Min1SMin3MsBC, // base time - 1s - 3ms; kept since newest before lastKeptTime
+		pool2Min1SMin2MsAB, pool2Min1SMin2MsAC, pool2Min1SMin2MsBC, // base time - 1s - 2ms; kept since at lastKeptTime
+		pool2Min1SMin1MsAB, pool2Min1SMin1MsAC, pool2Min1SMin1MsBC, // base time - 1s - 1ms; kept since older
+		pool2Min1SBaseMsAB, pool2Min1SBaseMsAC, pool2Min1SBaseMsBC, // base time - 1s; kept since older
+
+		pool1Min2SMin3Ms, // base time - 2s - 3ms; will be deleted in block 2
+		pool1Min2SMin2Ms, // base time - 2s - 2ms; will be deleted in block 2
+		pool1Min2SMin1Ms, // base time - 2s - 1ms; should be deleted, but will be kept due to bug
+		pool1Min2SBaseMs, // base time - 2s; kept since newest before lastKeptTime
+
+		pool4Plus1SMin3Ms, // base time + 1s - 3ms; kept since older
+		pool4Plus1SMin2Ms, // base time + 1s - 2ms; kept since older
+		pool4Plus1SMin1Ms, // base time + 1s -1ms; kept since older
+		pool4Plus1SBaseMs, // base time + 1s; kept since older
+
+		pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC, // base time - 2s; kept since newest before lastKeptTime
+		pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC, // base time - 1s; kept since older
+		pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC, // base time; kept since older
+		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC, // base time + 1s; kept since older
+
+		pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, pool5Min2SMin1MsBC, // base time - 2s - 1ms; will be deleted in block 1
+		pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC, // base time - 1s - 1ms; kept since older
+		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC, // base time - 1ms; kept since older
+		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC, // base time + 1s - 1ms; kept since older
+	}
+	s.preSetRecords(recordsToPreSet)
+
+	twap.NumRecordsToPrunePerBlock = 6 // 3 records max will be pruned per block
+	lastKeptTime := baseTime.Add(-time.Second).Add(2 * -time.Millisecond)
+
+	state := types.PruningState{
+		IsPruning:    true,
+		LastKeptTime: lastKeptTime,
+		LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""),
+	}
+
+	// Block 1
+	err := s.twapkeeper.PruneRecordsBeforeTimeButNewest(s.Ctx, state)
+	s.Require().NoError(err)
+
+	// Pruning state should show pruning is still true, lastKeptTime is the same, and the last key seen is the last key we deleted.
+	newPruningState := s.twapkeeper.GetPruningState(s.Ctx)
+	s.Require().Equal(true, newPruningState.IsPruning)
+	s.Require().Equal(lastKeptTime, newPruningState.LastKeptTime)
+	timeS, poolId, asset0, asset1, err := types.ParseFieldsFromHistoricalTimeKey(newPruningState.LastKeySeen)
+	s.Require().NoError(err)
+
+	// The last key seen is the third record we delete, since we prune 3 records per block.
+	s.Require().Equal(pool5Min2SMin1MsAB.Time.Format("2006-01-02T15:04:05.000000000"), timeS)
+	s.Require().Equal(pool5Min2SMin1MsAB.PoolId, poolId)
+	s.Require().Equal(pool5Min2SMin1MsAB.Asset0Denom, asset0)
+	s.Require().Equal(pool5Min2SMin1MsAB.Asset1Denom, asset1)
+
+	expectedKeptRecords := []types.TwapRecord{
+		pool1Min2SMin3Ms,                                           // base time - 2s - 3ms; in queue to be deleted
+		pool1Min2SMin2Ms,                                           // base time - 2s - 2ms; in queue to be deleted
+		pool1Min2SMin1Ms,                                           // base time - 2s - 1ms; in queue to be deleted
+		pool1Min2SBaseMs,                                           // base time - 2s; kept since newest before lastKeptTime
+		pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC, // base time - 2s; kept since newest before lastKeptTime
+		pool2Min1SMin3MsAB, pool2Min1SMin3MsAC, pool2Min1SMin3MsBC, // base time - 1s - 3ms; kept since newest before lastKeptTime
+		pool2Min1SMin2MsAB, pool2Min1SMin2MsAC, pool2Min1SMin2MsBC, // base time - 1s - 2ms; kept since at lastKeptTime
+		pool2Min1SMin1MsAB, pool2Min1SMin1MsAC, pool2Min1SMin1MsBC, // base time - 1s - 1ms; kept since older
+		pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC, // base time - 1s - 1ms; kept since older
+		pool2Min1SBaseMsAB, pool2Min1SBaseMsAC, pool2Min1SBaseMsBC, // base time - 1s; kept since older
+		pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC, // base time - 1s; kept since older
+		pool3BaseSecMin3Ms,                                               // base time - 3ms; kept since older
+		pool3BaseSecMin2Ms,                                               // base time - 2ms; kept since older
+		pool3BaseSecMin1Ms,                                               // base time - 1ms; kept since older
+		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC, // base time - 1ms; kept since older
+		pool3BaseSecBaseMs,                                               // base time; kept since older
+		pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC, // base time; kept since older
+		pool4Plus1SMin3Ms,                                             // base time + 1s - 3ms; kept since older
+		pool4Plus1SMin2Ms,                                             // base time + 1s - 2ms; kept since older
+		pool4Plus1SMin1Ms,                                             // base time + 1s -1ms; kept since older
+		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC, // base time + 1s - 1ms; kept since older
+		pool4Plus1SBaseMs,                                             // base time + 1s; kept since older
+		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC, // base time + 1s; kept since older
+	}
+	s.validateExpectedRecords(expectedKeptRecords)
+
+	// Block 2
+	err = s.twapkeeper.PruneRecordsBeforeTimeButNewest(s.Ctx, newPruningState)
+	s.Require().NoError(err)
+
+	// Pruning state should show now show pruning is false
+	newPruningState = s.twapkeeper.GetPruningState(s.Ctx)
+	s.Require().Equal(false, newPruningState.IsPruning)
+
+	expectedKeptRecords = []types.TwapRecord{
+		pool1Min2SMin1Ms,                                           // mistakenly kept, is fine though
+		pool1Min2SBaseMs,                                           // base time - 2s; kept since newest before lastKeptTime
+		pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC, // base time - 2s; kept since newest before lastKeptTime
+		pool2Min1SMin3MsAB, pool2Min1SMin3MsAC, pool2Min1SMin3MsBC, // base time - 1s - 3ms; kept since newest before lastKeptTime
+		pool2Min1SMin2MsAB, pool2Min1SMin2MsAC, pool2Min1SMin2MsBC, // base time - 1s - 2ms; kept since at lastKeptTime
+		pool2Min1SMin1MsAB, pool2Min1SMin1MsAC, pool2Min1SMin1MsBC, // base time - 1s - 1ms; kept since older
+		pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC, // base time - 1s - 1ms; kept since older
+		pool2Min1SBaseMsAB, pool2Min1SBaseMsAC, pool2Min1SBaseMsBC, // base time - 1s; kept since older
+		pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC, // base time - 1s; kept since older
+		pool3BaseSecMin3Ms,                                               // base time - 3ms; kept since older
+		pool3BaseSecMin2Ms,                                               // base time - 2ms; kept since older
+		pool3BaseSecMin1Ms,                                               // base time - 1ms; kept since older
+		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC, // base time - 1ms; kept since older
+		pool3BaseSecBaseMs,                                               // base time; kept since older
+		pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC, // base time; kept since older
+		pool4Plus1SMin3Ms,                                             // base time + 1s - 3ms; kept since older
+		pool4Plus1SMin2Ms,                                             // base time + 1s - 2ms; kept since older
+		pool4Plus1SMin1Ms,                                             // base time + 1s -1ms; kept since older
+		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC, // base time + 1s - 1ms; kept since older
+		pool4Plus1SBaseMs,                                             // base time + 1s; kept since older
+		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC, // base time + 1s; kept since older
+	}
+
+	s.validateExpectedRecords(expectedKeptRecords)
 }
 
 func (s *TestSuite) TestGetAllHistoricalTimeIndexedTWAPs() {

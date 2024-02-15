@@ -6,14 +6,14 @@ import (
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 )
 
 type UpgradeTestSuite struct {
@@ -60,7 +60,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// acc := s.App.AccountKeeper.GetAccount(s.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				// s.App.AccountKeeper.RemoveAccount(s.Ctx, acc)
 
-				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
+				// Because of SDK version map bug, we can't do the following, and instead do a massive hack
 				// vm := s.App.UpgradeKeeper.GetModuleVersionMap(s.Ctx)
 				// delete(vm, ibchookstypes.ModuleName)
 				// OR

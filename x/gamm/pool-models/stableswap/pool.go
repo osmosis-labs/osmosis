@@ -10,10 +10,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var (
@@ -220,7 +219,7 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 
 // updatePoolLiquidityForExit updates the pool liquidity and total shares after an exit.
 // The function sanity checks that not all tokens of a given denom are removed,
-// and panics if thats the case.
+// and panics if that's the case.
 func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins, exitingShares osmomath.Int) {
 	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
 	p.TotalShares.Amount = p.TotalShares.Amount.Sub(exitingShares)
@@ -285,7 +284,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 		return sdk.Coin{}, err
 	}
 
-	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
+	// We round up tokenInAmt, as this is what charged for the swap, for the precise amount out.
 	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmt := amt.Ceil().TruncateInt()
 
@@ -497,5 +496,5 @@ func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 // GetPoolDenoms implements types.CFMMPoolI.
 func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
 	liquidity := p.GetTotalPoolLiquidity(ctx)
-	return osmoutils.CoinsDenoms(liquidity)
+	return liquidity.Denoms()
 }

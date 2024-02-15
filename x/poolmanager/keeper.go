@@ -5,7 +5,7 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -100,23 +100,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 
 	// We track taker fees generated in the module's KVStore.
-	// If the values were exported, we set them here.
-	// If the values were not exported, we initialize the tracker to zero and set the accounting height to the current height.
-	if !genState.TakerFeesTracker.TakerFeesToStakers.Empty() {
-		k.SetTakerFeeTrackerForStakers(ctx, genState.TakerFeesTracker.TakerFeesToStakers)
-	} else {
-		k.SetTakerFeeTrackerForStakers(ctx, sdk.NewCoins())
+	for _, coin := range genState.TakerFeesTracker.TakerFeesToStakers {
+		if err := k.UpdateTakerFeeTrackerForStakersByDenom(ctx, coin.Denom, coin.Amount); err != nil {
+			panic(err)
+		}
 	}
-	if !genState.TakerFeesTracker.TakerFeesToCommunityPool.Empty() {
-		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesTracker.TakerFeesToCommunityPool)
-	} else {
-		k.SetTakerFeeTrackerForCommunityPool(ctx, sdk.NewCoins())
+	for _, coin := range genState.TakerFeesTracker.TakerFeesToCommunityPool {
+		if err := k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, coin.Denom, coin.Amount); err != nil {
+			panic(err)
+		}
 	}
-	if genState.TakerFeesTracker.HeightAccountingStartsFrom != 0 {
-		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
-	} else {
-		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-	}
+	k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
 
 	// Set the pool volumes KVStore.
 	for _, poolVolume := range genState.PoolVolumes {

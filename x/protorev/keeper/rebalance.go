@@ -4,9 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
+
+var zeroInt = osmomath.ZeroInt()
 
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
@@ -25,12 +27,12 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 		// Find the max profit for the route if it exists
 		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], remainingTxPoolPoints, remainingBlockPoolPoints)
 		if err != nil {
-			k.Logger(ctx).Error("Error finding max profit for route: " + err.Error())
+			k.Logger(ctx).Debug("Error finding max profit for route: " + err.Error())
 			continue
 		}
 
 		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
-		if profit.GT(osmomath.ZeroInt()) {
+		if profit.GT(zeroInt) {
 			profit, err := k.ConvertProfits(ctx, inputCoin, profit)
 			if err != nil {
 				k.Logger(ctx).Error("Error converting profits: " + err.Error())
@@ -75,7 +77,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 	}
 
 	// Calculate the amount of uosmo that we can get if we swapped the
-	// profited amount of the orignal asset through the highest uosmo liquidity pool
+	// profited amount of the original asset through the highest uosmo liquidity pool
 	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
 		conversionPool,

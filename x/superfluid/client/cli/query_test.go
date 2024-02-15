@@ -12,8 +12,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 type QueryTestSuite struct {
@@ -92,7 +92,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.ConnectedIntermediaryAccountResponse{},
 		},
 		// need to adapt s.val.String() to have an intermediate account,
-		// else the response is nil and theres a panic internally.
+		// else the response is nil and there's a panic internally.
 		// {
 		// 	"Query estimate sfs delegated amount by validator & denom",
 		// 	"/osmosis.superfluid.Query/EstimateSuperfluidDelegatedAmountByValidatorDenom",

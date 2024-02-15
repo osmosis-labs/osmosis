@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 const (
@@ -427,7 +427,7 @@ func TestPriceToTick(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			// surpress error here, we only listen to errors from system under test.
+			// suppress error here, we only listen to errors from system under test.
 			tick, _ := math.CalculatePriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.

@@ -4,8 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -24,9 +25,12 @@ func (k Keeper) EpochHooks() epochtypes.EpochHooks {
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
-		if err := hook.k.pruneRecords(ctx); err != nil {
-			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
-		}
+		lastKeptTime := ctx.BlockTime().Add(-hook.k.RecordHistoryKeepPeriod(ctx))
+		hook.k.SetPruningState(ctx, types.PruningState{
+			IsPruning:    true,
+			LastKeptTime: lastKeptTime,
+			LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""),
+		})
 	}
 	return nil
 }

@@ -8,12 +8,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	clmath "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	clmath "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -3064,7 +3064,7 @@ func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA osmomath.Int, amo
 	multCompare := multiplicativeTolerance.Compare(amountA, amountB)
 	if multCompare != 0 {
 		// If the multiplicative comparison fails, try again with additive tolerance of one.
-		// This may occcur for small amounts where the multiplicative tolerance ends up being
+		// This may occur for small amounts where the multiplicative tolerance ends up being
 		// too restrictive for the rounding difference of just 1. E.g. 100 vs 101 does not satisfy the
 		// 0.01% multiplciative margin of error but it is acceptable due to expected rounding epsilon.
 		osmoassert.Equal(s.T(), oneAdditiveTolerance, amountA, amountB)

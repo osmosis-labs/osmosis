@@ -14,10 +14,10 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 
-	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 const (
@@ -107,7 +107,7 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 
 	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
 
-	// set lockable duration so that we don't have erros upon creating gauge
+	// set lockable duration so that we don't have errors upon creating gauge
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,

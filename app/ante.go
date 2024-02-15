@@ -1,3 +1,6 @@
+//go:build !excludeIncrement
+// +build !excludeIncrement
+
 package app
 
 import (
@@ -11,17 +14,20 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	osmoante "github.com/osmosis-labs/osmosis/v21/ante"
-	v9 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v23/ante"
+	v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
+// N.B. There is a sister file called `ante_no_seq.go` that is used for e2e testing.
+// It leaves out the `IncrementSequenceDecorator` which is not needed for e2e testing.
+// If you make a change here, make sure to make the same change in `ante_no_seq.go`.
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasmtypes.WasmConfig,

@@ -9,8 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -202,7 +202,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // If no developer reward receivers given, funds the community pool instead.
 // Returns the total amount distributed from the developer vesting module account.
 // Updates supply offsets to reflect the amount of coins distributed. This is done so because the developer rewards distributions are
-// allocated from its own module account, not the mint module accont (TODO: next step in https://github.com/osmosis-labs/osmosis/issues/1916).
+// allocated from its own module account, not the mint module account (TODO: next step in https://github.com/osmosis-labs/osmosis/issues/1916).
 // Returns nil on success, error otherwise.
 // With respect to input parameters, errors occur when:
 // - developerRewardsProportion is greater than 1.

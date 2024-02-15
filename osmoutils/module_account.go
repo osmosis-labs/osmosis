@@ -62,7 +62,7 @@ func CanCreateModuleAccountAtAddr(ctx sdk.Context, ak AccountKeeper, addr sdk.Ac
 		return nil
 	}
 	return errors.New("cannot create module account %s, " +
-		"due to an account at that address already existing & not being an overrideable type")
+		"due to an account at that address already existing & not being an overridable type")
 }
 
 // CreateModuleAccount creates a module account at the provided address.

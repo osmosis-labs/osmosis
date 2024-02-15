@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
 )
@@ -59,7 +59,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// TrackBeforeSend calls the before send listener contract surpresses any errors
+// TrackBeforeSend calls the before send listener contract suppresses any errors
 func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) {
 	_ = h.k.callBeforeSendListener(ctx, from, to, amount, false)
 }

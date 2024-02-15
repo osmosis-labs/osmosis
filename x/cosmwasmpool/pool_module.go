@@ -6,10 +6,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
@@ -398,7 +398,11 @@ func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 			}
 		}
 		totalPoolLiquidity := cosmwasmPool.GetTotalPoolLiquidity(ctx)
-		totalLiquidity = totalLiquidity.Add(totalPoolLiquidity...)
+		// We range over the coins and add them one at a time because GetTotalPoolLiquidity
+		// doesn't always return a sorted list of coins.
+		for _, coin := range totalPoolLiquidity {
+			totalLiquidity = totalLiquidity.Add(coin)
+		}
 	}
 	return totalLiquidity, nil
 }

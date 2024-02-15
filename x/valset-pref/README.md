@@ -29,7 +29,7 @@ How does this module work?
 
 ### Delegate to validator set
 
-This is pretty straight-forward, theres not really any edge cases here.
+This is pretty straight-forward, there's not really any edge cases here.
 
 The user provides an amount to delegate and our `MsgDelegateToValidatorSet` divides the amount based on validator weight distribution.
   

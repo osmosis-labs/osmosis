@@ -4,9 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -334,16 +333,12 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	allProtoRev := s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
 	s.Require().Equal(types.AllProtocolRevenue{
 		TakerFeesTracker: poolmanagertypes.TakerFeesTracker{
-			TakerFeesToStakers:         sdk.Coins(nil),
-			TakerFeesToCommunityPool:   sdk.Coins(nil),
-			HeightAccountingStartsFrom: 0,
-		},
-		TxFeesTracker: txfeestypes.TxFeesTracker{
-			TxFees:                     sdk.Coins(nil),
+			TakerFeesToStakers:         []sdk.Coin{},
+			TakerFeesToCommunityPool:   []sdk.Coin{},
 			HeightAccountingStartsFrom: 0,
 		},
 		CyclicArbTracker: types.CyclicArbTracker{
-			CyclicArb:                  sdk.NewCoins(),
+			CyclicArb:                  []sdk.Coin{},
 			HeightAccountingStartsFrom: 0,
 		},
 	}, allProtoRev)
@@ -364,7 +359,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	txFeeCharged := sdk.NewCoins(sdk.NewCoin("uion", osmomath.NewInt(1000)))
 	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin("uion", 1000000)), 0, true, false, txFeeCharged)
 
-	// Psuedo collect cyclic arb profits
+	// Pseudo collect cyclic arb profits
 	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
@@ -373,10 +368,9 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 
 	// Check protocol revenue
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
-	s.Require().Equal(cyclicArbProfits, allProtoRev.CyclicArbTracker.CyclicArb)
-	s.Require().Equal(txFeeCharged, allProtoRev.TxFeesTracker.TxFees)
-	s.Require().Equal(expectedTakerFeeToStakers, allProtoRev.TakerFeesTracker.TakerFeesToStakers)
-	s.Require().Equal(expectedTakerFeeToCommunityPool, allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfits), allProtoRev.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToStakers), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToCommunityPool), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
@@ -387,7 +381,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// Charge txfee of 1000 uion
 	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin("uion", 1000000)), 0, true, false, txFeeCharged)
 
-	// Psuedo collect cyclic arb profits
+	// Pseudo collect cyclic arb profits
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
@@ -395,8 +389,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 
 	// Check protocol revenue
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
-	s.Require().Equal(cyclicArbProfits.Add(cyclicArbProfits...), allProtoRev.CyclicArbTracker.CyclicArb)
-	s.Require().Equal(txFeeCharged.Add(txFeeCharged...), allProtoRev.TxFeesTracker.TxFees)
-	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
-	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
+	s.Require().Equal([]sdk.Coin(cyclicArbProfits.Add(cyclicArbProfits...)), allProtoRev.CyclicArbTracker.CyclicArb)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...)), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal([]sdk.Coin(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...)), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 }

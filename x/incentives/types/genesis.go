@@ -18,6 +18,7 @@ func DefaultGenesis() *GenesisState {
 			DistrEpochIdentifier:         "week",
 			GroupCreationFee:             DefaultGroupCreationFee,
 			UnrestrictedCreatorWhitelist: []string{},
+			InternalUptime:               DefaultConcentratedUptime,
 		},
 		Gauges: []Gauge{},
 		LockableDurations: []time.Duration{

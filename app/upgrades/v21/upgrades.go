@@ -14,19 +14,19 @@ import (
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/app/keepers"
-	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
 
 	// SDK v47 modules
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -55,7 +55,7 @@ func CreateUpgradeHandler(
 		// wouldn't allow us to run each migration.
 		//
 		// Now, starting from 2 only works on mainnet because the legacysubspace is set.
-		// Because the legacysubspace is not set in the gotest, we cant simply run these migrations without setting the legacysubspace.
+		// Because the legacysubspace is not set in the gotest, we can't simply run these migrations without setting the legacysubspace.
 		// This legacysubspace can only be set at the initChain level, so it isn't clear to me how to directly set this in the test.
 		if ctx.ChainID() != TestingChainId {
 			fromVM[govtypes.ModuleName] = 2
@@ -143,7 +143,7 @@ func CreateUpgradeHandler(
 
 		// Migrate Tendermint consensus parameters from x/params module to a deprecated x/consensus module.
 		// The old params module is required to still be imported in your app.go in order to handle this migration.
-		baseapp.MigrateParams(ctx, baseAppLegacySS, &keepers.ConsensusParamsKeeper)
+		baseapp.MigrateParams(ctx, baseAppLegacySS, keepers.ConsensusParamsKeeper)
 
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -171,19 +171,13 @@ func CreateUpgradeHandler(
 		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
 		// that generates protocol rev.
 		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
-		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
+		// keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
 		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
 		// This will allow us to display the amount of cyclic arb profits that have been generated from a certain block height.
 		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)
 		allCyclicArbProfitsCoins := osmoutils.ConvertCoinArrayToCoins(allCyclicArbProfits)
 		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(ctx, allCyclicArbProfitsCoins)
 		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(ctx, ctx.BlockHeight())
-
-		// Set route mapping in state, to be updated every epoch
-		_, err = keepers.PoolManagerKeeper.SetDenomPairRoutes(ctx)
-		if err != nil {
-			return nil, err
-		}
 
 		return migrations, nil
 	}

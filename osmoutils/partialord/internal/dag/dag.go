@@ -44,7 +44,7 @@ func (dag DAG) Copy() DAG {
 			directedEdgeList[i][k] = v
 		}
 	}
-	// we re-use nodeNameToId and idToNodeNames as these are fixed at dag creation.
+	// we reuse nodeNameToId and idToNodeNames as these are fixed at dag creation.
 	return DAG{
 		directedEdgeList: directedEdgeList,
 		nodeNameToId:     dag.nodeNameToId,

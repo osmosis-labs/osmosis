@@ -4556,7 +4556,7 @@
         ]
       },
       {
-        "description": "Staking and goverance token for ODIN Protocol",
+        "description": "Staking and governance token for ODIN Protocol",
         "denom_units": [
           {
             "denom": "ibc/C360EF34A86D334F625E4CBB7DA3223AEA97174B61F35BB3758081A8160F7D9B",

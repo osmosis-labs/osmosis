@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,11 +17,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
-	"github.com/osmosis-labs/osmosis/v21/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {
@@ -119,7 +120,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) osmomath.Int {
 	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 
-	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	// ToDo: The commented-out code below is what we want to happen, but we're temporarily
 	//  using the whole supply for efficiency until there's a solution for
 	//  https://github.com/cosmos/ibc-go/issues/2664
 
@@ -443,7 +444,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
 	suite.fullRecvTest(false)
 }
 
-// Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
+// Test no rate limiting occurs when the contract is set, but no quotas are configured for the path
 func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
@@ -541,4 +542,24 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	suite.Require().True(ok)
 	// N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+}
+
+// Test rate limits are reverted if a "send" fails
+func (suite *MiddlewareTestSuite) TestNonICS20() {
+	suite.initializeEscrow()
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	data := []byte("{}")
+	_, err := osmosisApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+
+	suite.Require().Error(err)
+	// This will error out, but not because of rate limiting
+	suite.Require().NotContains(err.Error(), "rate limit")
+	suite.Require().Contains(err.Error(), "channel not found")
 }

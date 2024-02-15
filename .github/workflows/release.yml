@@ -16,7 +16,7 @@ permissions:
 jobs:
   release:
     name: Create release
-    runs-on: self-hosted
+    runs-on: buildjet-4vcpu-ubuntu-2204
     steps:
       -
         name: Check out repository code

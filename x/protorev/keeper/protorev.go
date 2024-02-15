@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -143,7 +142,7 @@ func (k Keeper) GetPoolForDenomPairNoOrder(ctx sdk.Context, tokenA, tokenB strin
 	poolId, err := k.GetPoolForDenomPair(ctx, tokenA, tokenB)
 	if err != nil {
 		if errors.Is(err, types.NoPoolForDenomPairError{BaseDenom: tokenA, MatchDenom: tokenB}) {
-			// Attempt changing base and mathch denoms.
+			// Attempt changing base and match denoms.
 			poolId, err = k.GetPoolForDenomPair(ctx, tokenB, tokenA)
 			if err != nil {
 				return 0, err
@@ -503,14 +502,8 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
 	}
 
-	txFeesTracker := txfeestypes.TxFeesTracker{
-		TxFees:                     k.txfeesKeeper.GetTxFeesTrackerValue(ctx),
-		HeightAccountingStartsFrom: k.txfeesKeeper.GetTxFeesTrackerStartHeight(ctx),
-	}
-
 	return types.AllProtocolRevenue{
 		TakerFeesTracker: takerFeesTracker,
-		TxFeesTracker:    txFeesTracker,
 		CyclicArbTracker: cyclicArbTracker,
 	}
 }

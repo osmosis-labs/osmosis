@@ -17,7 +17,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 )
 
 // Manager defines a simulation manager that provides the high level utility
@@ -151,7 +151,7 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []simtypes.ActionsWith
 // TODO: Fix this
 // Unfortunately I'm temporarily giving up on fixing genesis logic, its very screwed up in the legacy designs
 // and I want to move on to the more interesting goals of this simulation refactor.
-// We do need to come back and un-screw up alot of this genesis work.
+// We do need to come back and un-screw up a lot of this genesis work.
 //
 // Thankfully for Osmosis-custom modules, we don't really care about genesis logic. (yet)
 // The architectural errors for future readers revolve around on the design of the

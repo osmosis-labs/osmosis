@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
 )
 
 // This test validates GetTickLiquidityForFullRange query by force-setting the tick and their net liquidity
@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 }
 
 // Tests GetTickLiquidityForFullRange by creating a position as opposed to directly
-// setting tick net liquidity valies
+// setting tick net liquidity values
 func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange_CreatePosition() {
 	// Init suite for each test.
 	s.SetupTest()

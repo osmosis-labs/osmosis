@@ -9,8 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 var emptyCoins = sdk.NewCoins()
@@ -38,7 +38,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	// Note: we rely on the synching logic to persist the group to state
+	// Note: we rely on the syncing logic to persist the group to state
 	// if updated successfully.
 	// The reason we sync is to make sure that all pools in the group are valid
 	// and have the associated volume at group creation time. This prevents

@@ -21,8 +21,8 @@ var DefaultMinGasPriceForArbitrageTx = osmomath.ZeroDec()
 
 var (
 	DefaultMinGasPriceForHighGasTx = osmomath.ZeroDec()
-	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
-	DefaultHighGasTxThreshold      = uint64(2 * 1000 * 1000)
+	DefaultMaxGasWantedPerTx       = uint64(30 * 1000 * 1000)
+	DefaultHighGasTxThreshold      = uint64(2.5 * 1000 * 1000)
 	DefaultMempool1559Enabled      = true
 )
 
@@ -90,7 +90,7 @@ func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValu
 			panic("invalidly configured osmosis-mempool." + optName)
 		}
 		var err error
-		// pre-pend 0 to allow the config to start with a decimal, e.g. ".01"
+		// prepend 0 to allow the config to start with a decimal, e.g. ".01"
 		value, err = osmomath.NewDecFromStr("0" + valueStr)
 		if err != nil {
 			panic(fmt.Errorf("invalidly configured osmosis-mempool.%v, err= %v", optName, err))

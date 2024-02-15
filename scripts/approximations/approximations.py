@@ -24,7 +24,7 @@ def linspace(start: sp.Float, end: sp.Float, num_points: int) -> list[sp.Float]:
 
 def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> tuple:
     """ Performs all supported approximations of the given function, evaluates
-    each wih the given x-coordinates.
+    each with the given x-coordinates.
 
     Returns y-coordinates as a tuple in the following order:
     - Evaluated Equispaced Polynomial

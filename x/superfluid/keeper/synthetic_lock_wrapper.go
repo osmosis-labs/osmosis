@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,7 +19,7 @@ func unstakingSyntheticDenom(denom, valAddr string) string {
 	return fmt.Sprintf("%s/superunbonding/%s", denom, valAddr)
 }
 
-// quick fix for getting the validator addresss from a synthetic denom.
+// quick fix for getting the validator address from a synthetic denom.
 func ValidatorAddressFromSyntheticDenom(syntheticDenom string) (string, error) {
 	if strings.Contains(syntheticDenom, "superbonding") {
 		splitString := strings.Split(syntheticDenom, "/superbonding/")

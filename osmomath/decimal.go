@@ -58,6 +58,11 @@ var (
 
 	// precisionFactors are used to adjust the scale of big.Int values to match the desired precision
 	precisionFactors = make(map[uint64]*big.Int)
+
+	zeroBigDec    BigDec = ZeroBigDec()
+	oneBigDec     BigDec = OneBigDec()
+	oneHalfBigDec BigDec = oneBigDec.Quo(twoBigDec)
+	negOneBigDec  BigDec = oneBigDec.Neg()
 )
 
 // Decimal errors
@@ -248,6 +253,15 @@ func (d BigDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
+// BigIntMut returns the pointer of the underlying big.Int.
+func (d BigDec) BigIntMut() *big.Int {
+	if d.IsNil() {
+		return nil
+	}
+
+	return d.i
+}
+
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
 	copy := d.Clone()
@@ -275,6 +289,11 @@ func (d BigDec) Sub(d2 BigDec) BigDec {
 	}
 	return BigDec{res}
 }
+
+func (d BigDec) NegMut() BigDec {
+	d.i.Neg(d.i)
+	return d
+} // reverse the decimal sign
 
 // Clone performs a deep copy of the receiver
 // and returns the new result.
@@ -813,7 +832,7 @@ func (d BigDec) TruncateDec() BigDec {
 	return NewBigDecFromBigInt(chopPrecisionAndTruncate(d.i))
 }
 
-// Ceil returns the smallest interger value (as a decimal) that is greater than
+// Ceil returns the smallest integer value (as a decimal) that is greater than
 // or equal to the given decimal.
 func (d BigDec) Ceil() BigDec {
 	tmp := new(big.Int).Set(d.i)
@@ -1028,9 +1047,9 @@ func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bo
 func (x BigDec) LogBase2() BigDec {
 	// create a new decimal to avoid mutating
 	// the receiver's int buffer.
-	xCopy := ZeroBigDec()
+	xCopy := BigDec{}
 	xCopy.i = new(big.Int).Set(x.i)
-	if xCopy.LTE(ZeroBigDec()) {
+	if xCopy.LTE(zeroBigDec) {
 		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", xCopy))
 	}
 
@@ -1040,18 +1059,18 @@ func (x BigDec) LogBase2() BigDec {
 	y := ZeroBigDec()
 
 	// repeat until: x >= 1.
-	for xCopy.LT(OneBigDec()) {
+	for xCopy.LT(oneBigDec) {
 		xCopy.i.Lsh(xCopy.i, 1)
-		y = y.Sub(OneBigDec())
+		y.AddMut(negOneBigDec)
 	}
 
 	// repeat until: x < 2.
 	for xCopy.GTE(twoBigDec) {
 		xCopy.i.Rsh(xCopy.i, 1)
-		y = y.Add(OneBigDec())
+		y.AddMut(oneBigDec)
 	}
 
-	b := OneBigDec().Quo(twoBigDec)
+	b := oneHalfBigDec.Clone()
 
 	// N.B. At this point x is a positive real number representing
 	// mantissa of the log. We estimate it using the following
@@ -1060,10 +1079,10 @@ func (x BigDec) LogBase2() BigDec {
 	// This has shown precision of 32 digits relative
 	// to Wolfram Alpha in tests.
 	for i := 0; i < maxLog2Iterations; i++ {
-		xCopy = xCopy.Mul(xCopy)
+		xCopy.MulMut(xCopy)
 		if xCopy.GTE(twoBigDec) {
 			xCopy.i.Rsh(xCopy.i, 1)
-			y = y.Add(b)
+			y.AddMut(b)
 		}
 		b.i.Rsh(b.i, 1)
 	}

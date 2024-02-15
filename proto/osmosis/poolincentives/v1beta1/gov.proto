@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "osmosis/poolincentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types";
 
 // ReplacePoolIncentivesProposal is a gov Content type for updating the pool
 // incentives. If a ReplacePoolIncentivesProposal passes, the proposal’s records
@@ -29,7 +29,7 @@ message ReplacePoolIncentivesProposal {
 
 // UpdatePoolIncentivesProposal is a gov Content type for updating the pool
 // incentives. If a UpdatePoolIncentivesProposal passes, all the DistrRecords
-// in the proposals are edited. An existing DistrRecord is not overriden unless
+// in the proposals are edited. An existing DistrRecord is not overridden unless
 // explicitly included in the proposal.
 // This differs from an ReplacePoolIncentivesProposal because it only does an
 // in place update of the DistrRecords for gauges explicitly mentioned in the
