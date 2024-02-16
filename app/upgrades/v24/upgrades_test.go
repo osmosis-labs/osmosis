@@ -15,9 +15,7 @@ import (
 )
 
 const (
-	v24UpgradeHeight              = int64(10)
-	HistoricalTWAPTimeIndexPrefix = "historical_time_index"
-	KeySeparator                  = "|"
+	v24UpgradeHeight = int64(10)
 )
 
 type UpgradeTestSuite struct {

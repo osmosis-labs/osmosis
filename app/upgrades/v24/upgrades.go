@@ -24,7 +24,7 @@ func CreateUpgradeHandler(
 		}
 
 		// We no longer use the KVStore base denoms and instead use the param store for performance reasons.
-		// We retrieve the base denoms from the KVStore, set them in the param store, then delete them here.
+		// We retrieve the base denoms from the KVStore, set them in the param store, then delete them from the KVStore here.
 		baseDenoms, err := keepers.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(ctx)
 		if err != nil {
 			return nil, err
