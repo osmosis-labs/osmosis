@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"encoding/json"
 	"fmt"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
@@ -110,8 +108,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	cosignerActive, cosignerContract := ad.isCosignerActive(cacheCtx)
-
 	ak, ok := ad.accountKeeper.(*authkeeper.AccountKeeper)
 	if !ok {
 		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
@@ -140,15 +136,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
 			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
-		}
-
-		if cosignerActive && isCosignerMsg(msg) {
-			cosignerAuthenticator, err := ad.cosignerAuthenticator(ctx, account, cosignerContract) // CosmwasmAuthenticator.Inititialize()
-			if err != nil {
-				return sdk.Context{}, err
-			}
-			// TODO: is it better to wrap the authenticators as [AllOf(cosigner, i) for i in authenticators] instead?
-			authenticators = []types.Authenticator{cosignerAuthenticator}
 		}
 
 		// Generate the authentication request data
@@ -202,53 +189,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	return next(ctx, tx, simulate)
-}
-
-func isCosignerMsg(msg sdk.Msg) bool {
-	if _, ok := msg.(*authenticatortypes.MsgAddAuthenticator); ok {
-		return true
-	}
-	if _, ok := msg.(*authenticatortypes.MsgRemoveAuthenticator); ok {
-		return true
-	}
-	return false
-}
-
-func (ad AuthenticatorDecorator) cosignerAuthenticator(ctx sdk.Context, account sdk.AccAddress, cosignerContract string) (types.Authenticator, error) {
-	cosmwasmAuthenticator := ad.authenticatorKeeper.AuthenticatorManager.GetAuthenticatorByType("CosmwasmAuthenticator")
-	if cosmwasmAuthenticator == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "CosmwasmAuthenticator not found")
-	}
-
-	acc, err := authante.GetSignerAcc(ctx, ad.accountKeeper, account)
-	if err != nil {
-		return nil, err
-	}
-	initData := authenticator.CosmwasmAuthenticatorInitData{
-		Contract: cosignerContract,
-		Params:   acc.GetPubKey().Bytes(),
-	}
-	initDataBz, err := json.Marshal(initData)
-	if err != nil {
-		return nil, err
-	}
-
-	instance, err := cosmwasmAuthenticator.Initialize(initDataBz)
-	if err != nil {
-		return nil, err
-	}
-
-	return instance, nil
-}
-
-func (ad AuthenticatorDecorator) isCosignerActive(ctx sdk.Context) (bool, string) {
-	params := ad.authenticatorKeeper.GetParams(ctx)
-	cosignerContract := params.CosignerContract
-
-	if cosignerContract == "" {
-		return false, ""
-	}
-	return true, cosignerContract
 }
 
 // GetSelectedAuthenticators retrieves the selected authenticators for the provided transaction extension
