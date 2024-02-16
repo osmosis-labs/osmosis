@@ -122,13 +122,13 @@ All public API's for the module will sort the input denoms to the canonical repr
 Example of historical TWAP pool indexed records for a pool containing 3 assets.
 * Number of records per time: `3 * (3 - 1) / 2 = 3`
 * Records are in a format:
-  HistoricalTWAPPoolIndexPrefix | pool id | denom1 | denom2 | time |
+  HistoricalTWAPPoolIndexPrefix | pool id | denom1 | denom2 | time
 
   For our pool with Id = 1 and 3 assets: denomA, denomB and denomC:
 
-  historical_pool_index|1|denomA|denomB|2009-11-10T23:00:00.000000000|
-  historical_pool_index|1|denomA|denomC|2009-11-10T23:00:00.000000000|
-  historical_pool_index|1|denomB|denomC|2009-11-10T23:00:00.000000000|
+  historical_pool_index|1|denomA|denomB|2009-11-10T23:00:00.000000000
+  historical_pool_index|1|denomA|denomC|2009-11-10T23:00:00.000000000
+  historical_pool_index|1|denomB|denomC|2009-11-10T23:00:00.000000000
 
 Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.proto):
 
