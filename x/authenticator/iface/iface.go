@@ -11,8 +11,7 @@ type SignModeData struct {
 
 type LocalAny struct {
 	TypeURL string `json:"type_url"`
-	Value   []byte `json:"value"` // TODO: use this field for the bytes
-	Bytes   []byte `json:"bytes"` // TODO: remove this field
+	Value   []byte `json:"value"`
 }
 
 type ExplicitTxData struct {
