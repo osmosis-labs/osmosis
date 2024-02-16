@@ -19,20 +19,21 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"token_pair_arb_routes\""
   ];
-  // The base denominations being used to create cyclic arbitrage routes via the
-  // highest liquidity method.
+  // DEPRECATED: The base denominations being used to create cyclic arbitrage
+  // routes via the highest liquidity method. This field is deprecated and will
+  // be removed in a future version.
   repeated BaseDenom base_denoms = 3 [
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"base_denoms\""
+    (gogoproto.moretags) = "yaml:\"base_denoms\"",
+    deprecated = true
   ];
-  // The pool weights that are being used to calculate the weight (compute cost)
-  // of each route.
-  //
-  // DEPRECATED: This field is deprecated and will be removed in the next
-  // release. It is replaced by the `info_by_pool_type` field.
+  // DEPRECATED: The pool weights that are being used to calculate the weight
+  // (compute cost) of each route. This field is deprecated and will be removed
+  // in the next release. It is replaced by the `info_by_pool_type` field.
   PoolWeights pool_weights = 4 [
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"pool_weights\""
+    (gogoproto.moretags) = "yaml:\"pool_weights\"",
+    deprecated = true
   ];
   // The number of days since module genesis.
   uint64 days_since_module_genesis = 5
