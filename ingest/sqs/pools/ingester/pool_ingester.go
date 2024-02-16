@@ -311,7 +311,21 @@ func (pi *poolIngester) convertPool(
 	denomToRoutingInfoMap map[string]denomRoutingInfo,
 	denomPairToTakerFeeMap sqsdomain.TakerFeeMap,
 	tokenPrecisionMap map[string]int,
+<<<<<<< HEAD
 ) (sqsdomain.PoolI, error) {
+=======
+) (sqsPool sqsdomain.PoolI, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			telemetry.IncrCounter(1, "sqs_ingest_convert_pool_panic", "pool_"+strconv.FormatUint(pool.GetId(), 10))
+
+			err = fmt.Errorf("sqs ingest pool (%d) conversion panicked: %v", pool.GetId(), r)
+			ctx.Logger().Error(err.Error())
+		}
+	}()
+
+>>>>>>> 7eedeaf3 (feat(observability): telemetry counters for incentives and sqs (#7494))
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
 	osmoPoolTVL := osmomath.ZeroInt()

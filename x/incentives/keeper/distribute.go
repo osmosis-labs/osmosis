@@ -8,6 +8,7 @@ import (
 
 	db "github.com/cometbft/cometbft-db"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -45,7 +46,8 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 	for _, group := range activeGroups {
 		err := k.syncGroupWeights(ctx, group)
 		if err != nil {
-			ctx.Logger().Error("error syncing group gauge weights, skipping", "group gauge id", group.GroupGaugeId, "error", err.Error())
+			telemetry.IncrCounter(1, types.SyncGroupGaugeFailureTelemetryName)
+			ctx.Logger().Error(types.SyncGroupGaugeFailureTelemetryName, "group_gauge_id", group.GroupGaugeId, "error", err.Error())
 			continue
 		}
 
