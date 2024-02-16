@@ -1,8 +1,8 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -67,9 +67,13 @@ func FormatModuleRouteKey(poolId uint64) []byte {
 // FormatDenomTradePairKey serializes denom trade pair to bytes.
 // Denom trade pair is automatically sorted lexicographically.
 func FormatDenomTradePairKey(denom0, denom1 string) []byte {
-	denoms := []string{denom0, denom1}
-	sort.Strings(denoms)
-	return []byte(fmt.Sprintf("%s%s%s%s%s", DenomTradePairPrefix, KeySeparator, denoms[0], KeySeparator, denoms[1]))
+	denomA, denomB := denom0, denom1
+	if denom0 > denom1 {
+		denomA, denomB = denom1, denom0
+	}
+	var buffer bytes.Buffer
+	fmt.Fprintf(&buffer, "%s%s%s%s%s", DenomTradePairPrefix, KeySeparator, denomA, KeySeparator, denomB)
+	return buffer.Bytes()
 }
 
 // ParseModuleRouteFromBz parses the raw bytes into ModuleRoute.
