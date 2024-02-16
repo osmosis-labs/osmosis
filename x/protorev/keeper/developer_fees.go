@@ -103,8 +103,7 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfit sdk.Coin) error {
 	}
 
 	// Burn the remaining profit by sending to the null address.
-	remainingProfit := sdk.NewCoin(arbProfit.Denom, osmomath.ZeroInt())
-	remainingProfit.Amount = arbProfit.Amount.Sub(devProfit.Amount)
+	remainingProfit := sdk.NewCoin(arbProfit.Denom, arbProfit.Amount.Sub(devProfit.Amount))
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, types.DefaultNullAddress, sdk.NewCoins(remainingProfit)); err != nil {
 		return err
 	}
