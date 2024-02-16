@@ -46,7 +46,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		err := k.syncGroupWeights(ctx, group)
 		if err != nil {
 			telemetry.IncrCounter(1, types.SyncGroupGaugeFailureTelemetryName)
-			ctx.Logger().Error(types.SyncGroupGaugeFailureTelemetryName, "group gauge id", group.GroupGaugeId, "error", err.Error())
+			ctx.Logger().Error(types.SyncGroupGaugeFailureTelemetryName, "group_gauge_id", group.GroupGaugeId, "error", err.Error())
 			continue
 		}
 
