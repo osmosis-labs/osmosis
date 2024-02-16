@@ -322,7 +322,7 @@ func (pi *poolIngester) convertPool(
 	defer func() {
 		r := recover()
 		if r != nil {
-			telemetry.IncrCounter(1, "sqs_ingest", "convert_pool", "panic", strconv.FormatUint(pool.GetId(), 10))
+			telemetry.IncrCounter(1, "sqs_ingest_convert_pool_panic", "pool_"+strconv.FormatUint(pool.GetId(), 10))
 
 			err = fmt.Errorf("sqs ingest pool (%d) conversion panicked: %v", pool.GetId(), r)
 			ctx.Logger().Error(err.Error())
