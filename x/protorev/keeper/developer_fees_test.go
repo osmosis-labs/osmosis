@@ -8,19 +8,29 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
-// TestSendDeveloperFee tests the SendDeveloperFee function
-func (suite *KeeperTestSuite) TestSendDeveloperFee() {
+var (
+	usdcDenom = "usdc"
+	arbProfit = osmomath.NewInt(1000)
+)
+
+func (suite *KeeperTestSuite) TestDistributeProfit() {
 	cases := []struct {
 		description       string
 		alterState        func()
+		denom             string
 		expectedErr       bool
 		expectedDevProfit sdk.Coin
+		expectedModuleBal sdk.Coin
+		expectedBurnBal   sdk.Coin
 	}{
 		{
 			description:       "Send with unset developer account",
 			alterState:        func() {},
+			denom:             types.OsmosisDenomination,
 			expectedErr:       true,
 			expectedDevProfit: sdk.Coin{},
+			expectedModuleBal: sdk.Coin{},
+			expectedBurnBal:   sdk.Coin{},
 		},
 		{
 			description: "Send with set developer account in first phase",
@@ -28,11 +38,14 @@ func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, osmomath.NewInt(1000), 100)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, arbProfit, 100)
 				suite.Require().NoError(err)
 			},
+			denom:             types.OsmosisDenomination,
 			expectedErr:       false,
-			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(20)),
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(200)),
+			expectedModuleBal: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(0)),
+			expectedBurnBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(800)),
 		},
 		{
 			description: "Send with set developer account in second phase",
@@ -40,11 +53,14 @@ func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, osmomath.NewInt(1000), 500)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, arbProfit, 500)
 				suite.Require().NoError(err)
 			},
+			denom:             types.OsmosisDenomination,
 			expectedErr:       false,
-			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10)),
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)),
+			expectedModuleBal: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(0)),
+			expectedBurnBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(900)),
 		},
 		{
 			description: "Send with set developer account in third (final) phase",
@@ -52,11 +68,59 @@ func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, osmomath.NewInt(1000), 1000)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, arbProfit, 1000)
 				suite.Require().NoError(err)
 			},
+			denom:             types.OsmosisDenomination,
 			expectedErr:       false,
-			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(5)),
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(50)),
+			expectedModuleBal: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(0)),
+			expectedBurnBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(950)),
+		},
+		{
+			description: "Send with set developer account in first phase with non-osmo profit",
+			alterState: func() {
+				account := apptesting.CreateRandomAccounts(1)[0]
+				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+
+				err := suite.pseudoExecuteTrade(usdcDenom, arbProfit, 100)
+				suite.Require().NoError(err)
+			},
+			denom:             usdcDenom,
+			expectedErr:       false,
+			expectedDevProfit: sdk.NewCoin(usdcDenom, osmomath.NewInt(200)),
+			expectedModuleBal: sdk.NewCoin(usdcDenom, osmomath.NewInt(800)),
+			expectedBurnBal:   sdk.NewCoin(usdcDenom, osmomath.NewInt(0)),
+		},
+		{
+			description: "Send with set developer account in second phase with non-osmo profit",
+			alterState: func() {
+				account := apptesting.CreateRandomAccounts(1)[0]
+				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+
+				err := suite.pseudoExecuteTrade(usdcDenom, arbProfit, 500)
+				suite.Require().NoError(err)
+			},
+			denom:             usdcDenom,
+			expectedErr:       false,
+			expectedDevProfit: sdk.NewCoin(usdcDenom, osmomath.NewInt(100)),
+			expectedModuleBal: sdk.NewCoin(usdcDenom, osmomath.NewInt(900)),
+			expectedBurnBal:   sdk.NewCoin(usdcDenom, osmomath.NewInt(0)),
+		},
+		{
+			description: "Send with set developer account in third (final) phase with non-osmo profit",
+			alterState: func() {
+				account := apptesting.CreateRandomAccounts(1)[0]
+				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+
+				err := suite.pseudoExecuteTrade(usdcDenom, arbProfit, 1000)
+				suite.Require().NoError(err)
+			},
+			denom:             usdcDenom,
+			expectedErr:       false,
+			expectedDevProfit: sdk.NewCoin(usdcDenom, osmomath.NewInt(50)),
+			expectedModuleBal: sdk.NewCoin(usdcDenom, osmomath.NewInt(950)),
+			expectedBurnBal:   sdk.NewCoin(usdcDenom, osmomath.NewInt(0)),
 		},
 	}
 
@@ -65,7 +129,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 			suite.SetupTest()
 			tc.alterState()
 
-			err := suite.App.ProtoRevKeeper.SendDeveloperFee(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
+			err := suite.App.ProtoRevKeeper.DistributeProfit(suite.Ctx, sdk.NewCoin(tc.denom, arbProfit))
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {
@@ -74,8 +138,18 @@ func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 
 			developerAccount, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
 			if !tc.expectedErr {
-				developerFee := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, developerAccount, types.OsmosisDenomination)
+				// Validate the developer account balance.
+				developerFee := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, developerAccount, tc.denom)
 				suite.Require().Equal(tc.expectedDevProfit, developerFee)
+
+				// Validate the module account balance.
+				moduleAccount := suite.App.AppKeepers.AccountKeeper.GetModuleAddress(types.ModuleName)
+				moduleBal := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, moduleAccount, tc.denom)
+				suite.Require().Equal(tc.expectedModuleBal, moduleBal)
+
+				// Validate the burn balance.
+				burnBal := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, types.DefaultNullAddress, tc.denom)
+				suite.Require().Equal(tc.expectedBurnBal, burnBal)
 			} else {
 				suite.Require().Error(err)
 			}

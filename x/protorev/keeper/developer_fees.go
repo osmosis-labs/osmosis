@@ -66,8 +66,9 @@ func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, denom string, profit osmoma
 	return nil
 }
 
-// SendDeveloperFee sends the developer fee from the module account to the developer account
-func (k Keeper) SendDeveloperFee(ctx sdk.Context, arbProfit sdk.Coin) error {
+// DistributeProfit sends the developer fee from the module account to the developer account
+// and burns the remaining profit if denominated in osmo.
+func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfit sdk.Coin) error {
 	// Developer account must be set in order to be able to withdraw developer fees
 	developerAccount, err := k.GetDeveloperAccount(ctx)
 	if err != nil {
@@ -94,6 +95,17 @@ func (k Keeper) SendDeveloperFee(ctx sdk.Context, arbProfit sdk.Coin) error {
 
 	// Send the developer profit to the developer account
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, developerAccount, sdk.NewCoins(devProfit)); err != nil {
+		return err
+	}
+
+	if arbProfit.Denom != types.OsmosisDenomination {
+		return nil
+	}
+
+	// Burn the remaining profit by sending to the null address.
+	remainingProfit := sdk.NewCoin(arbProfit.Denom, osmomath.ZeroInt())
+	remainingProfit.Amount = arbProfit.Amount.Sub(devProfit.Amount)
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, types.DefaultNullAddress, sdk.NewCoins(remainingProfit)); err != nil {
 		return err
 	}
 
