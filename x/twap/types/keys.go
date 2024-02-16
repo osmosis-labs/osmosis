@@ -56,7 +56,7 @@ func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 
 func FormatHistoricalPoolIndexDenomPairTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	var buffer bytes.Buffer
-	fmt.Fprintf(&buffer, "%s%d%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2)
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator)
 	return buffer.Bytes()
 }
 
