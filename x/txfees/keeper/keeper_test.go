@@ -46,6 +46,10 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	// Configure protorev base denoms
 	baseDenomPriorities := []protorevtypes.BaseDenom{
 		{
+			Denom:    protorevtypes.OsmosisDenomination,
+			StepSize: osmomath.NewInt(1_000_000),
+		},
+		{
 			Denom:    baseDenom,
 			StepSize: osmomath.NewInt(1_000_000),
 		},

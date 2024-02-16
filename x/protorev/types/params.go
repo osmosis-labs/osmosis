@@ -17,6 +17,7 @@ var (
 
 	ParamStoreKeyEnableModule = []byte("EnableProtoRevModule")
 	ParamStoreKeyAdminAccount = []byte("AdminAccount")
+	ParamStoreKeyBaseDenoms   = []byte("BaseDenoms")
 )
 
 // ParamKeyTable the param key table for launch module
@@ -25,16 +26,17 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(enable bool, admin string) Params {
+func NewParams(enable bool, admin string, baseDenoms []BaseDenom) Params {
 	return Params{
-		Enabled: enable,
-		Admin:   admin,
+		Enabled:    enable,
+		Admin:      admin,
+		BaseDenoms: baseDenoms,
 	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams(DefaultEnableModule, DefaultAdminAccount)
+	return NewParams(DefaultEnableModule, DefaultAdminAccount, DefaultBaseDenoms)
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -42,6 +44,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableModule, &p.Enabled, ValidateBoolean),
 		paramtypes.NewParamSetPair(ParamStoreKeyAdminAccount, &p.Admin, ValidateAccount),
+		paramtypes.NewParamSetPair(ParamStoreKeyBaseDenoms, &p.BaseDenoms, ValidateBaseDenom),
 	}
 }
 
@@ -71,6 +74,32 @@ func ValidateBoolean(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func ValidateBaseDenom(i interface{}) error {
+	denoms, ok := i.([]BaseDenom)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// The first base denom must be the Osmosis denomination
+	if len(denoms) == 0 || denoms[0].Denom != OsmosisDenomination {
+		return fmt.Errorf("the first base denom must be the Osmosis denomination")
+	}
+
+	seenDenoms := make(map[string]bool)
+	for _, denom := range denoms {
+		if err := denom.Validate(); err != nil {
+			return err
+		}
+
+		// Ensure that the base denom is unique
+		if seenDenoms[denom.Denom] {
+			return fmt.Errorf("duplicate base denom %s", denom)
+		}
+		seenDenoms[denom.Denom] = true
 	}
 	return nil
 }
