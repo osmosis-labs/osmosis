@@ -50,8 +50,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 			StepSize: osmomath.NewInt(1_000_000),
 		},
 	}
-	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
-	s.Require().NoError(err)
+	s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
 
 	// Mint some assets to the accounts.
 	for _, acc := range s.TestAccs {

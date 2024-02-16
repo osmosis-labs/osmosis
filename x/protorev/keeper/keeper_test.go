@@ -94,8 +94,7 @@ func (s *KeeperTestSuite) SetupTest() {
 			StepSize: osmomath.NewInt(1_000_000),
 		},
 	}
-	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
-	s.Require().NoError(err)
+	s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
@@ -151,7 +150,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Set the Admin Account
 	s.adminAccount = apptesting.CreateRandomAccounts(1)[0]
-	err = protorev.HandleSetProtoRevAdminAccount(s.Ctx, *s.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: s.adminAccount.String()})
+	err := protorev.HandleSetProtoRevAdminAccount(s.Ctx, *s.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: s.adminAccount.String()})
 	s.Require().NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.Ctx, s.App.InterfaceRegistry())

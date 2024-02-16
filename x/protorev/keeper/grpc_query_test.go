@@ -330,8 +330,7 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 // TestGetProtoRevBaseDenoms tests the query to retrieve the base denoms
 func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 	// base denoms already set in setup
-	baseDenoms, err := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
-	s.Require().NoError(err)
+	baseDenoms := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 
 	req := &types.QueryGetProtoRevBaseDenomsRequest{}
 	res, err := s.queryClient.GetProtoRevBaseDenoms(sdk.WrapSDKContext(s.Ctx), req)
