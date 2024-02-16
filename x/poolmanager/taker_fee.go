@@ -24,14 +24,15 @@ func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
 // it is deleted from state.
 func (k Keeper) SetDenomPairTakerFee(ctx sdk.Context, denom0, denom1 string, takerFee osmomath.Dec) {
 	store := ctx.KVStore(k.storeKey)
+	key := types.FormatDenomTradePairKey(denom0, denom1)
 	// if given taker fee is equal to the default taker fee,
 	// delete whatever we have in current state to use default taker fee.
 	// TODO: This logic is actually wrong imo, where it can be valid to set an override over the default.
 	if takerFee.Equal(k.GetDefaultTakerFee(ctx)) {
-		store.Delete(types.FormatDenomTradePairKey(denom0, denom1))
+		store.Delete(key)
 		return
 	} else {
-		osmoutils.MustSetDec(store, types.FormatDenomTradePairKey(denom0, denom1), takerFee)
+		osmoutils.MustSetDec(store, key, takerFee)
 	}
 }
 
