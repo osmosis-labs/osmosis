@@ -30,7 +30,6 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v21/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v21/x/downtime-detector/types"
 
-	authzwrapper "github.com/osmosis-labs/osmosis/v21/app/keepers"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -162,7 +161,7 @@ func appModules(
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		evidence.NewAppModule(*app.EvidenceKeeper),
-		authzwrapper.NewAppModuleWrapper(authzmodule.NewAppModule(appCodec, app.AuthzKeeper.Keeper(), app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), app.AuthzKeeper),
+		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
