@@ -86,20 +86,22 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 func (k Keeper) GetAuthenticatorsForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-) ([]iface.Authenticator, error) {
+) ([]int64, []iface.Authenticator, error) {
 	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	authenticators := make([]iface.Authenticator, len(authenticatorData))
+	ids := make([]int64, len(authenticatorData))
 	for i, accountAuthenticator := range authenticatorData {
 		authenticators[i] = accountAuthenticator.AsAuthenticator(k.AuthenticatorManager)
 		if authenticators[i] == nil {
-			return nil, fmt.Errorf("authenticator %d failed to initialize", accountAuthenticator.Id)
+			return nil, nil, fmt.Errorf("authenticator %d failed to initialize", accountAuthenticator.Id)
 		}
+		ids[i] = int64(accountAuthenticator.Id)
 	}
-	return authenticators, nil
+	return ids, authenticators, nil
 }
 
 // GetAuthenticatorsForAccountOrDefault returns the authenticators for the account if there allRecords
@@ -109,17 +111,18 @@ func (k Keeper) GetAuthenticatorsForAccount(
 func (k Keeper) GetAuthenticatorsForAccountOrDefault(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-) ([]iface.Authenticator, error) {
-	authenticators, err := k.GetAuthenticatorsForAccount(ctx, account)
+) ([]int64, []iface.Authenticator, error) {
+	ids, authenticators, err := k.GetAuthenticatorsForAccount(ctx, account)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(authenticators) == 0 {
 		authenticators = append(authenticators, k.AuthenticatorManager.GetDefaultAuthenticator())
+		ids = append(ids, -1)
 	}
 
-	return authenticators, nil
+	return ids, authenticators, nil
 }
 
 // GetNextAuthenticatorId returns the next authenticator id

@@ -19,28 +19,7 @@ func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 
 // AuthenticatorStorage is an interface abstracting the only method from the keeper that we care about
 type AuthenticatorStorage interface {
-	GetAuthenticatorsForAccountOrDefault(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator, error)
-}
-
-func TrackMessages(ctx sdk.Context, authStorage AuthenticatorStorage, msgs []sdk.Msg) error {
-	for _, msg := range msgs {
-		account, err := GetAccount(msg)
-		if err != nil {
-			return err
-		}
-
-		allAuthenticators, err := authStorage.GetAuthenticatorsForAccountOrDefault(ctx, account)
-		if err != nil {
-			return err
-		}
-		for _, authenticator := range allAuthenticators {
-			err := authenticator.Track(ctx, account, msg)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	GetAuthenticatorsForAccountOrDefault(ctx sdk.Context, account sdk.AccAddress) ([]int64, []types.Authenticator, error)
 }
 
 // ConfirmExecutionWithoutTx is a utility for msg executors that bypass the tx flow (i.e.: authz, ica)
@@ -58,7 +37,7 @@ func ConfirmExecutionWithoutTx(ctx sdk.Context, authStorage AuthenticatorStorage
 			//Msg:     msg,
 		}
 
-		allAuthenticators, err := authStorage.GetAuthenticatorsForAccountOrDefault(ctx, account)
+		_, allAuthenticators, err := authStorage.GetAuthenticatorsForAccountOrDefault(ctx, account)
 		if err != nil {
 			return err
 		}

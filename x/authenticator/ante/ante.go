@@ -97,6 +97,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// This is a transient context stored globally throughout the execution of the tx
 	// Any changes will to authenticator storage will be written to the store at the end of the tx
 	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
+	// Ensure that no usedAuthenticators are stored in the transient store
+	ad.authenticatorKeeper.TransientStore.ResetUsedAuthenticators()
 
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
@@ -117,6 +119,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
 	}
 
+	var tracks []func() error
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		// By default, the first signer is the account
@@ -128,7 +132,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get all authenticators for the executing account
 		// If no authenticators are found, use the default authenticator
 		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
-		allAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
+		ids, allAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
 		if err != nil {
 			return sdk.Context{}, err
 		}
@@ -140,6 +144,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
 			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
+			ids = []int64{ids[selectedAuthenticators[msgIndex]]}
 		}
 
 		if cosignerActive && isCosignerMsg(msg) {
@@ -158,7 +163,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		msgAuthenticated := false
-		for _, authenticator := range authenticators {
+		for i, authenticator := range authenticators {
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
@@ -168,6 +173,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 
 			if authentication.IsAuthenticated() {
+				ad.authenticatorKeeper.TransientStore.AddUsedAuthenticator(ids[i])
 				msgAuthenticated = true
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
@@ -177,6 +183,16 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					ctx = ctx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}
+
+				// Append the track closure to be called after the fee payer is authenticated
+				tracks = append(tracks, func() error {
+					err := authenticator.Track(ctx, account, msg)
+					if err != nil {
+						return err
+					}
+					return nil
+				})
+
 				break
 			}
 		}
@@ -193,12 +209,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "fee payer not authenticated")
 	}
 
-	// If the transaction has been authenticated, we call TrackMessages(...) to
-	// notify every authenticator so that they can handle any storage updates
-	// that need to happen regardless of how the message was authorized.
-	err = utils.TrackMessages(cacheCtx, ad.authenticatorKeeper, msgs)
-	if err != nil {
-		return sdk.Context{}, err
+	// If the transaction has been authenticated, we call Track(...) on every message
+	// to notify its authenticator so that it can handle any state updates.
+	for _, track := range tracks {
+		if err := track(); err != nil {
+			return sdk.Context{}, err
+		}
 	}
 
 	return next(ctx, tx, simulate)

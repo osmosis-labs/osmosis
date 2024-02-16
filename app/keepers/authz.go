@@ -62,14 +62,6 @@ func (kw *KeeperWrapper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (kw *KeeperWrapper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
-	// This means track messages gets called twice. Authenticator authors need to be aware that this is a possibility
-	err := utils.TrackMessages(kw.transientStore.GetTransientContext(), kw.authenticatorStorage, msgs)
-	if err != nil {
-		return nil, err
-	}
-
-	kw.transientStore.WriteInto(ctx)
-
 	results, err := kw.K.DispatchActions(ctx, grantee, msgs)
 	if err != nil {
 		return nil, err

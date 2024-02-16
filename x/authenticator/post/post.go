@@ -12,7 +12,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 )
 
@@ -46,6 +45,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 	// state of the authenticators. If a post handler returns an error, then
 	// all state changes are reverted anyway
 	ad.authenticatorKeeper.TransientStore.WriteInto(ctx)
+	usedAuthenticators := ad.authenticatorKeeper.TransientStore.GetUsedAuthenticators()
 
 	// collect all the keys for authenticators that are not ready
 	nonReadyAccountAuthenticatorKeys := make(map[string]struct{})
@@ -67,16 +67,24 @@ func (ad AuthenticatorDecorator) PostHandle(
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
-		for _, accountAuthenticator := range accountAuthenticators { // This should execute on *all* "ready" authenticators so that they can update their state
-			// We want to skip `ConfirmExecution` if the authenticator is newly added
-			// since Authenticate & Track are called on antehandler but newly added authenticator
-			// so Authenticate & Track on newly added authenticator has not been called yet
-			// which means the authenticator is not ready to confirm execution
-			if !accountAuthenticator.IsReady {
-				key := string(types.KeyAccountId(account, accountAuthenticator.Id))
-				nonReadyAccountAuthenticatorKeys[key] = struct{}{}
+		for _, accountAuthenticator := range accountAuthenticators { // This should execute on the authenticators used to authenticate the msg
+			// TODO: defence in depth checks on lengths everywhere? or maybe a better datastructure for this?
+			if usedAuthenticators[msgIndex] != int64(accountAuthenticator.Id) {
 				continue
 			}
+
+			// TODO: I think this can go away now that we only execute post on used authenticators.
+			//  B ut will need to reason a bit more about this before fully removing
+			//
+			//// We want to skip `ConfirmExecution` if the authenticator is newly added
+			//// since Authenticate & Track are called on antehandler but newly added authenticator
+			//// so Authenticate & Track on newly added authenticator has not been called yet
+			//// which means the authenticator is not ready to confirm execution
+			//if !accountAuthenticator.IsReady {
+			//	key := string(types.KeyAccountId(account, accountAuthenticator.Id))
+			//	nonReadyAccountAuthenticatorKeys[key] = struct{}{}
+			//	continue
+			//}
 
 			authenticator := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 

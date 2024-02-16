@@ -322,7 +322,7 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 			var success iface.AuthenticationResult
 			for i, msg := range tx.GetMsgs() {
 				accAddress := sdk.AccAddress(tc.TestData.Signers[i].PubKey().Address())
-				allAuthenticators, err := s.OsmosisApp.AuthenticatorKeeper.GetAuthenticatorsForAccountOrDefault(s.Ctx, accAddress)
+				_, allAuthenticators, err := s.OsmosisApp.AuthenticatorKeeper.GetAuthenticatorsForAccountOrDefault(s.Ctx, accAddress)
 				s.Require().NoError(err)
 
 				for _, a11r := range allAuthenticators {
