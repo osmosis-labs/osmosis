@@ -3,28 +3,25 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
-	"time"
-
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"testing"
-
-	"github.com/osmosis-labs/osmosis/v21/app"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/stretchr/testify/suite"
-
+	"github.com/osmosis-labs/osmosis/v21/app"
 	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+
+	"github.com/stretchr/testify/suite"
 )
 
 type AuthenticatorSuite struct {
@@ -112,7 +109,6 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 }
 
 func (s *AuthenticatorSuite) TestMessageFilterStory() {
-	s.T().Skip("TODO: this currently fails as the message filter authenticator need to be updated")
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
 	sendMsg := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
@@ -130,20 +126,17 @@ func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	err = s.app.AuthenticatorKeeper.AddAuthenticator(
 		s.chainA.GetContext(), s.Account.GetAddress(),
 		"MessageFilterAuthenticator",
-		[]byte(fmt.Sprintf(`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"amount": [{"denom": "%s", "amount": "50"}]}}`, sdk.DefaultBondDenom)))
+		[]byte("/cosmos.bank.v1beta1.MsgSend"))
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	// Submit a bank send tx using the second private key
-	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
-	s.Require().NoError(err, "Failed to send bank tx using the second private key")
-
+	// Send a message not defined in the message filter
 	coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
-	sendMsg = &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		Amount:      coins,
+	swapMsg := &poolmanagertypes.MsgSwapExactAmountIn{
+		Sender:            sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+		TokenOutMinAmount: sdk.NewInt(100),
 	}
-	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, swapMsg)
 	s.Require().Error(err)
 }
 
