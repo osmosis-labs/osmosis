@@ -314,16 +314,13 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
 	s.Require().NoError(err, "Should encode Any value successfully")
 
-	jsonMsg, _ := json.Marshal(testMsg)
-
 	msg = s.QueryLatestSudoCall(addr)
 	s.Require().Equal(authenticator.SudoMsg{
 		Track: &authenticator.TrackRequest{
 			Account: accounts[0],
 			Msg: iface.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
-				Value:   jsonMsg,
-				Bytes:   encodedMsg.Value,
+				Value:   encodedMsg.Value,
 			},
 			AuthenticatorParams: []byte(params),
 		},
@@ -338,8 +335,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			Account: accounts[0],
 			Msg: iface.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
-				Value:   jsonMsg,
-				Bytes:   encodedMsg.Value,
+				Value:   encodedMsg.Value,
 			},
 			AuthenticatorParams: []byte(params),
 		},

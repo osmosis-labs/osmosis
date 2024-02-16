@@ -43,7 +43,7 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.Auth
 	}
 	// unmarshal the message.value into the bank.MsgSend struct
 	var send banktypes.MsgSend
-	err := proto.Unmarshal(request.Msg.Bytes, &send)
+	err := proto.Unmarshal(request.Msg.Value, &send)
 	if err != nil {
 		return iface.NotAuthenticated()
 	}
@@ -64,7 +64,7 @@ func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.
 	}
 	// unmarshal the message.value into the bank.MsgSend struct
 	var send banktypes.MsgSend
-	err := proto.Unmarshal(request.Msg.Bytes, &send)
+	err := proto.Unmarshal(request.Msg.Value, &send)
 	if err != nil {
 		return iface.Confirm()
 	}

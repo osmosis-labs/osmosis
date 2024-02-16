@@ -1,7 +1,6 @@
 package authenticator
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -242,18 +241,9 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 		if err != nil {
 			return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to encode msg")
 		}
-		// TODO: Can we get this to not print an error every time?
-		jsonMsg, err := json.Marshal(msg)
-		if err != nil {
-			// Messages with Anys cannot be marshalled to JSON. It's ok for these to be empty. The consumer should be able to parse the byte value
-			// Example error:
-			// JSON marshal marshaling error for &Any{TypeUrl:/cosmos.bank.v1beta1.SendAuthorization,Value:[10 16 10 5 115 116 97 107 101 18 7 49 48 48 48 48 48 48],XXX_unrecognized:[]}, this is likely because amino is being used directly (instead of codec.LegacyAmino which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members. To see a stacktrace of where the error is coming from, set the var Debug = true in codec/types/compat.go
-			ctx.Logger().Error("failed to marshal msg", "msg", msg)
-		}
 		msgs[i] = iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
-			Value:   jsonMsg,
-			Bytes:   encodedMsg.Value,
+			Value:   encodedMsg.Value,
 		}
 	}
 

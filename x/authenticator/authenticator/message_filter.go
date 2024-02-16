@@ -182,6 +182,7 @@ type SimplifiedMsg struct {
 }
 
 func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+	g
 	encodedMsg, err := json.Marshal(SimplifiedMsg{
 		MsgType: request.Msg.TypeURL,
 		Value:   request.Msg.Value,
