@@ -301,7 +301,7 @@ versions_info=(
     "v18:https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-amd64?checksum=sha256:d83b4122e3ff9c428c8d6dcfe89718f5229f80e9976dbab2deefeb68dceb0f38"
     "v19:https://github.com/osmosis-labs/osmosis/releases/download/v19.2.0/osmosisd-19.2.0-linux-arm64?checksum=sha256:d933b893d537422164a25bf161d7f269a59ea26d37f398cdb7dd575a9ec33ed2"
     "v20:https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-amd64?checksum=sha256:4e60a870861ca17819fbcb49fff981b5731ec1121d7cbab43987c5f04ff099fa"
-    "v21:https://github.com/osmosis-labs/osmosis/releases/download/v21.1.4/osmosisd-21.1.4-linux-amd64?checksum=sha256:518fd61873622d505640ab08edb788e307e6beb4f52476fab77661dd96860416
+    "v21:https://github.com/osmosis-labs/osmosis/releases/download/v21.1.4/osmosisd-21.1.4-linux-amd64?checksum=sha256:518fd61873622d505640ab08edb788e307e6beb4f52476fab77661dd96860416"
     "v22:https://github.com/osmosis-labs/osmosis/releases/download/v22.0.1/osmosisd-22.0.1-linux-amd64?checksum=sha256:427588cbdd82752e6b31383493637029358f4550fcc71b81182334de2a54a20c"
 )
 
