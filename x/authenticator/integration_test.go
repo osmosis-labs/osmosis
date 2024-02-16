@@ -3,16 +3,6 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
-<<<<<<< HEAD
-=======
-	"time"
-
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
->>>>>>> feat/smart-accounts
 	"testing"
 	"time"
 
