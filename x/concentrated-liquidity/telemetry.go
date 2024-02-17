@@ -36,7 +36,7 @@ func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder string
 		}
 
 		// Append additional labels
-		for i := 0; i < len(extraKeyVals); i++ {
+		for i := 0; i < len(extraKeyVals); i += 2 {
 			// This might skip applying the last label pair if key or value is missing
 			if i+1 > len(labels)-1 {
 				break
