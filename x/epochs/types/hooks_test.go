@@ -52,6 +52,11 @@ type dummyEpochHook struct {
 	shouldError    bool
 }
 
+// GetModuleName implements types.EpochHooks.
+func (*dummyEpochHook) GetModuleName() string {
+	return "dummy"
+}
+
 func (hook *dummyEpochHook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if hook.shouldPanic {
 		panic("dummyEpochHook is panicking")
