@@ -3870,6 +3870,14 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 			denom:            BAR,
 			expectedNumPools: 2,
 		},
+		"A cosmwasm pool": {
+			poolType: []types.PoolType{types.CosmWasm},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+			},
+			denom:            BAR,
+			expectedNumPools: 1,
+		},
 	}
 
 	for name, tc := range tests {
