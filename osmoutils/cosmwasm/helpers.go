@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const DefaultContractCallGasLimit = 30_000_000
+
 // ContracKeeper defines the interface needed to be fulfilled for
 // the ContractKeeper.
 type ContractKeeper interface {
@@ -118,10 +120,15 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 		return response, err
 	}
 
-	responseBz, err := contractKeeper.Sudo(ctx, sdk.MustAccAddressFromBech32(contractAddress), bz)
+	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
+	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(DefaultContractCallGasLimit))
+	responseBz, err := contractKeeper.Sudo(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err
 	}
+
+	// Consume gas used for calling contract to the parent ctx
+	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track contract call gas")
 
 	// valid empty response
 	if len(responseBz) == 0 {
