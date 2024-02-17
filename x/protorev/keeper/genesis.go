@@ -28,7 +28,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// Configure the initial base denoms used for cyclic route building. The order of the list of base
 	// denoms is the order in which routes will be prioritized i.e. routes will be built and simulated in a
 	// first come first serve basis that is based on the order of the base denoms.
-	if err := k.SetBaseDenoms(ctx, genState.BaseDenoms); err != nil {
+	if err := k.SetBaseDenoms(ctx, genState.BaseDenoms.BaseDenoms); err != nil {
 		panic(err)
 	}
 
@@ -126,7 +126,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
-	genesis.BaseDenoms = baseDenoms
+	genesis.BaseDenoms = types.BaseDenoms{BaseDenoms: baseDenoms}
 
 	// Export the developer fees that have been collected.
 	fees, err := k.GetAllDeveloperFees(ctx)

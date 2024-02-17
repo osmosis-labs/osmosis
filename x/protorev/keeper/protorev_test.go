@@ -68,7 +68,7 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	s.Require().Equal(baseDenoms[2].Denom, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
 	// Should be able to delete all base denoms
-	s.App.ProtoRevKeeper.DeleteBaseDenoms(s.Ctx)
+	s.App.ProtoRevKeeper.DeprecatedDeleteBaseDenoms(s.Ctx)
 	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(0, len(baseDenoms))

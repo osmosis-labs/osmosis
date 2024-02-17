@@ -12,12 +12,12 @@ var (
 	// Configure the initial base denoms used for cyclic route building. The order of the list of base
 	// denoms is the order in which routes will be prioritized i.e. routes will be built and simulated in a
 	// first come first serve basis that is based on the order of the base denoms.
-	DefaultBaseDenoms = []BaseDenom{
+	DefaultBaseDenoms = BaseDenoms{[]BaseDenom{
 		{
 			Denom:    OsmosisDenomination,
 			StepSize: osmomath.NewInt(1_000_000),
 		},
-	}
+	}}
 	DefaultPoolTypeInfo = InfoByPoolType{
 		Balancer: BalancerPoolInfo{
 			Weight: 2, // it takes around 2 ms to simulate and execute a balancer swap
@@ -72,7 +72,7 @@ func (gs GenesisState) Validate() error {
 	}
 
 	// Validate the base denoms
-	if err := ValidateBaseDenoms(gs.BaseDenoms); err != nil {
+	if err := ValidateBaseDenoms(gs.BaseDenoms.BaseDenoms); err != nil {
 		return err
 	}
 
