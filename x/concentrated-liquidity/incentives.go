@@ -288,7 +288,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// if total amount emitted does not exceed remaining rewards,
 		if totalEmittedAmount.LTE(remainingRewards) {
 			// Emit telemetry for accumulator updates
-			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationTelemetryName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
+			emitAccumulatorUpdateTelemetry(types.IncentiveTruncationTelemetryName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
 
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
@@ -315,7 +315,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 
 			// Emit telemetry for accumulator updates
-			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationTelemetryName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
+			emitAccumulatorUpdateTelemetry(types.IncentiveTruncationTelemetryName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
 
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
