@@ -54,18 +54,6 @@ func (p Params) Validate() error {
 		return fmt.Errorf("invalid admin account address: %s", p.Admin)
 	}
 
-	if err := ValidateBoolean(p.Enabled); err != nil {
-		return err
-	}
-
-	if err := ValidateAccount(p.Admin); err != nil {
-		return err
-	}
-
-	if err := ValidateBaseDenoms(p.BaseDenoms); err != nil {
-		return err
-	}
-
 	return nil
 }
 

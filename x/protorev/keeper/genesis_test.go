@@ -15,6 +15,12 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 		s.Require().Contains(tokenPairArbRoutes, route)
 	}
 
+	baseDenoms := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().Equal(len(baseDenoms), len(exportedGenesis.BaseDenoms))
+	for _, baseDenom := range exportedGenesis.BaseDenoms {
+		s.Require().Contains(baseDenoms, baseDenom)
+	}
+
 	params := s.App.ProtoRevKeeper.GetParams(s.Ctx)
 	s.Require().Equal(params, exportedGenesis.Params)
 

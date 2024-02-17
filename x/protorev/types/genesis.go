@@ -50,6 +50,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params:                 DefaultParams(),
 		TokenPairArbRoutes:     DefaultTokenPairArbRoutes,
+		BaseDenoms:             DefaultBaseDenoms,
 		InfoByPoolType:         DefaultPoolTypeInfo,
 		DaysSinceModuleGenesis: DefaultDaysSinceModuleGenesis,
 		DeveloperFees:          DefaultDeveloperFees,
@@ -67,6 +68,11 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	// Validate the token pair arb routes
 	if err := ValidateTokenPairArbRoutes(gs.TokenPairArbRoutes); err != nil {
+		return err
+	}
+
+	// Validate the base denoms
+	if err := ValidateBaseDenoms(gs.BaseDenoms); err != nil {
 		return err
 	}
 

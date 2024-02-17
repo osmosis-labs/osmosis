@@ -117,15 +117,14 @@ func (k Keeper) DeprecatedSetBaseDenoms(ctx sdk.Context, baseDenoms []types.Base
 	return nil
 }
 
-// GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
 func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) []types.BaseDenom {
 	return k.GetParams(ctx).BaseDenoms
 }
 
-// SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
-// order is going to match the order of the base denoms in the slice.
 func (k Keeper) SetBaseDenoms(ctx sdk.Context, newBaseDenoms []types.BaseDenom) {
-	k.SetParam(ctx, types.ParamStoreKeyBaseDenoms, newBaseDenoms)
+	params := k.GetParams(ctx)
+	params.BaseDenoms = newBaseDenoms
+	k.SetParams(ctx, params)
 }
 
 // DeprecatedDeleteBaseDenoms deletes all of the base denoms.
