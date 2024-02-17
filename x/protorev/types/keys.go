@@ -99,7 +99,7 @@ var (
 	// KeyCyclicArbTracker is the prefix for store that keeps track of the height we began tracking cyclic arbitrage
 	KeyCyclicArbTrackerStartHeight = []byte{prefixcyclicArbTrackerStartHeight}
 
-	// KeyPrefixDeprecatedBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
+	// KeyPrefixBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
 	KeyPrefixBaseDenoms = []byte{prefixBaseDenoms}
 )
 
@@ -109,7 +109,7 @@ func GetKeyPrefixDenomPairToPool(baseDenom, matchDenom string) []byte {
 }
 
 // Returns the key needed to fetch info about base denoms
-func GetKeyPrefixBaseDenom(priority uint64) []byte {
+func DeprecatedGetKeyPrefixBaseDenom(priority uint64) []byte {
 	return append(KeyPrefixDeprecatedBaseDenoms, sdk.Uint64ToBigEndian(priority)...)
 }
 

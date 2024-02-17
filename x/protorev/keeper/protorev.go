@@ -105,7 +105,7 @@ func (k Keeper) DeprecatedSetBaseDenoms(ctx sdk.Context, baseDenoms []types.Base
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeprecatedBaseDenoms)
 
 	for i, baseDenom := range baseDenoms {
-		key := types.GetKeyPrefixBaseDenom(uint64(i))
+		key := types.DeprecatedGetKeyPrefixBaseDenom(uint64(i))
 
 		bz, err := baseDenom.Marshal()
 		if err != nil {
@@ -115,6 +115,12 @@ func (k Keeper) DeprecatedSetBaseDenoms(ctx sdk.Context, baseDenoms []types.Base
 	}
 
 	return nil
+}
+
+// DeprecatedDeleteBaseDenoms deletes all of the base denoms.
+// After v24 upgrade, this method should be deleted. We now use the param store.
+func (k Keeper) DeprecatedDeleteBaseDenoms(ctx sdk.Context) {
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixDeprecatedBaseDenoms)
 }
 
 // GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
@@ -141,12 +147,6 @@ func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) err
 
 	store.Set(types.KeyPrefixBaseDenoms, test)
 	return nil
-}
-
-// DeprecatedDeleteBaseDenoms deletes all of the base denoms.
-// After v24 upgrade, this method should be deleted. We now use the param store.
-func (k Keeper) DeprecatedDeleteBaseDenoms(ctx sdk.Context) {
-	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixDeprecatedBaseDenoms)
 }
 
 // GetPoolForDenomPair returns the id of the highest liquidity pool between the base denom and the denom to match
