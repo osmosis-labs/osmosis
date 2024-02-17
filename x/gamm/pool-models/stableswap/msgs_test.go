@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 	stableswap "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"

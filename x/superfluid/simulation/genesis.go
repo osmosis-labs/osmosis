@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"

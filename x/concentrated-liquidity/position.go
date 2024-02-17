@@ -11,10 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"

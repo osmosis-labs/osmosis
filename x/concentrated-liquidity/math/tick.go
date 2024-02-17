@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 

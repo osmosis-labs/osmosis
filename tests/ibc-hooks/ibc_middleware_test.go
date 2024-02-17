@@ -3,11 +3,12 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
 	"time"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/tidwall/gjson"
 
@@ -17,8 +18,8 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"

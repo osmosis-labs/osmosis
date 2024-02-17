@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

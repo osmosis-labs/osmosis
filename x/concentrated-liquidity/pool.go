@@ -11,9 +11,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"

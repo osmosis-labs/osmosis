@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"

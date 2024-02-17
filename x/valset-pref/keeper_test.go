@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"

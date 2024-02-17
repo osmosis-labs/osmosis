@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v23/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"

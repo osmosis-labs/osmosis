@@ -3,8 +3,8 @@ package v8
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 )

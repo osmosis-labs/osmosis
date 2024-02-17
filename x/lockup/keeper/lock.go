@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"

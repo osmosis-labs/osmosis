@@ -2,8 +2,6 @@ go 1.21
 
 use .
 
-use ./osmomath
-
 use ./osmoutils
 
 use ./x/ibc-hooks

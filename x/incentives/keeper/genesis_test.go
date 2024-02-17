@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
 
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"

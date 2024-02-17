@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

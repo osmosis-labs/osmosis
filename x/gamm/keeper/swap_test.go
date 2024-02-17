@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"

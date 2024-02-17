@@ -10,8 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
 	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 	clmodule "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"

@@ -15,7 +15,7 @@ import (
 	"github.com/cometbft/cometbft/libs/bytes"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"

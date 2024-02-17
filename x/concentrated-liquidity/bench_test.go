@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 	clmath "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"

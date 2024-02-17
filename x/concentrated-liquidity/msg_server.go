@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )

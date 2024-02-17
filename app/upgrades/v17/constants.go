@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
 	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"

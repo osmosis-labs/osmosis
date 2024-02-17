@@ -3,7 +3,7 @@ package poolmanager_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v23/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )

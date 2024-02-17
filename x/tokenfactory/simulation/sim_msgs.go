@@ -5,8 +5,8 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	sdkrand "github.com/osmosis-labs/osmosis/v23/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 )

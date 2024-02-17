@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 )
 
 var (

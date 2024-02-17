@@ -3,7 +3,7 @@ package coinutil
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 )
 
 // Mutative helpers that mutate the input coins

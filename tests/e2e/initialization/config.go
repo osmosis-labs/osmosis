@@ -19,7 +19,7 @@ import (
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"

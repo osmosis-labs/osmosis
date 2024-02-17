@@ -1,7 +1,7 @@
 package twap
 
 import (
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"

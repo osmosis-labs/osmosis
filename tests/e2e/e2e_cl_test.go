@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 

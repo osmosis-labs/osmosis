@@ -11,8 +11,8 @@ import (
 	sqsdomainmocks "github.com/osmosis-labs/sqs/sqsdomain/mocks"
 	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain/mocks"

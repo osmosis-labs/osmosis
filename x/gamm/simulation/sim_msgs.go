@@ -8,7 +8,7 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"

@@ -3,7 +3,7 @@ package poolsingester_test
 import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
 )
 

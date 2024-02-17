@@ -15,7 +15,7 @@ import (
 
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 )
 

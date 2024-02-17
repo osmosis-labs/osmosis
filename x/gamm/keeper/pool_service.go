@@ -10,7 +10,7 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )

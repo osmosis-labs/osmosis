@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	osmosim "github.com/osmosis-labs/osmosis/v23/simulation/executor"
 	txfeetypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 )

@@ -1,7 +1,7 @@
 package swapstrategy_test
 
 import (
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"

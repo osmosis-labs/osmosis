@@ -12,8 +12,8 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"

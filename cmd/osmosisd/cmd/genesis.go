@@ -25,7 +25,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"

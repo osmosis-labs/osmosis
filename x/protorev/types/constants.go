@@ -1,6 +1,6 @@
 package types
 
-import "github.com/osmosis-labs/osmosis/osmomath"
+import "github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 
 // OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
 var OsmosisDenomination string = "uosmo"

@@ -11,7 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 )
 
 // defaultOwnerReceiverPlaceholder is used as a place holder for default owner receiver for the

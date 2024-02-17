@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v23/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"

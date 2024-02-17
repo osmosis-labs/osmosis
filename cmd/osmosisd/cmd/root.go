@@ -20,7 +20,7 @@ import (
 
 	cometbftdb "github.com/cometbft/cometbft-db"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"

@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
