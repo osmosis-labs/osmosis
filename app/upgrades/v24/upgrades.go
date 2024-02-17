@@ -29,7 +29,9 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
-		keepers.ProtoRevKeeper.SetBaseDenoms(ctx, baseDenoms)
+		protorevParams := keepers.ProtoRevKeeper.GetParams(ctx)
+		protorevParams.BaseDenoms = baseDenoms
+		keepers.ProtoRevKeeper.SetParams(ctx, protorevParams)
 		keepers.ProtoRevKeeper.DeprecatedDeleteBaseDenoms(ctx)
 
 		return migrations, nil
