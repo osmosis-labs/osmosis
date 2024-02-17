@@ -260,7 +260,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Total amount emitted = time elapsed * emission
 		totalEmittedAmount, err := computeTotalIncentivesToEmit(timeElapsed, incentiveRecordBody.EmissionRate)
 		if err != nil {
-			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			ctx.Logger().Info(types.IncentiveOverflowTelemetryName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
 			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
 			// Continue to the next incentive record.
 			continue
@@ -270,7 +270,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// when dividing by the liquidity in the accumulator.
 		scaledTotalEmittedAmount, err := scaleUpTotalEmittedAmount(totalEmittedAmount, incentiveScalingFactorForPool)
 		if err != nil {
-			ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			ctx.Logger().Info(types.IncentiveOverflowTelemetryName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
 			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
 			// Continue to the next incentive record.
 			continue
@@ -281,7 +281,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		incentivesPerLiquidity := scaledTotalEmittedAmount.QuoTruncate(liquidityInAccum)
 
 		// Emit telemetry for accumulator updates
-		emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
+		emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationTelemetryName, types.IncentiveEmissionTelemetryName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
 
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
@@ -305,7 +305,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 			// when dividing by the liquidity in the accumulator.
 			remainingRewardsScaled, err := scaleUpTotalEmittedAmount(remainingRewards, incentiveScalingFactorForPool)
 			if err != nil {
-				ctx.Logger().Info(types.IncentiveOverflowPlaceholderName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+				ctx.Logger().Info(types.IncentiveOverflowTelemetryName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
 				// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
 				// Continue to the next incentive record.
 				continue
@@ -315,7 +315,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 
 			// Emit telemetry for accumulator updates
-			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationPlaceholderName, types.IncentiveEmissionPlaceholderName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
+			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationTelemetryName, types.IncentiveEmissionTelemetryName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
 
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
@@ -333,7 +333,7 @@ func scaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor os
 		r := recover()
 
 		if r != nil {
-			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
+			telemetry.IncrCounter(1, types.IncentiveOverflowTelemetryName)
 			err = types.IncentiveScalingFactorOverflowError{
 				PanicMessage: fmt.Sprintf("%v", r),
 			}
@@ -355,7 +355,7 @@ func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate 
 		r := recover()
 
 		if r != nil {
-			telemetry.IncrCounter(1, types.IncentiveOverflowPlaceholderName)
+			telemetry.IncrCounter(1, types.IncentiveOverflowTelemetryName)
 			err = types.IncentiveEmissionOvrflowError{
 				PanicMessage: fmt.Sprintf("%v", r),
 			}

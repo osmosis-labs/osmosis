@@ -437,7 +437,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
 
 		// Emit telemetry to detect spread reward truncation.
-		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationPlaceholderName, types.SpreadRewardEmissionPlaceholderName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", true)
+		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationTelemetryName, types.SpreadRewardEmissionTelemetryName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", true)
 
 		ctx.Logger().Debug("cl calc out given in")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardCharge)
@@ -565,7 +565,7 @@ func (k Keeper) computeInAmtGivenOut(
 		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
 		// Emit telemetry to detect spread reward truncation.
-		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationPlaceholderName, types.SpreadRewardEmissionPlaceholderName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", false)
+		emitAccumulatorUpdateTelemetry(ctx, types.SpreadFactorTruncationTelemetryName, types.SpreadRewardEmissionTelemetryName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", false)
 
 		ctx.Logger().Debug("cl calc in given out")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)

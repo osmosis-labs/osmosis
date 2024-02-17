@@ -26,11 +26,14 @@ func (k Keeper) EpochHooks() epochtypes.EpochHooks {
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
 		lastKeptTime := ctx.BlockTime().Add(-hook.k.RecordHistoryKeepPeriod(ctx))
-		hook.k.SetPruningState(ctx, types.PruningState{
-			IsPruning:    true,
-			LastKeptTime: lastKeptTime,
-			LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""),
-		})
+		poolIdToStartFrom := hook.k.poolmanagerKeeper.GetNextPoolId(ctx) - 1
+		if poolIdToStartFrom > 0 {
+			hook.k.SetPruningState(ctx, types.PruningState{
+				IsPruning:      true,
+				LastKeptTime:   lastKeptTime,
+				LastSeenPoolId: poolIdToStartFrom,
+			})
+		}
 	}
 	return nil
 }

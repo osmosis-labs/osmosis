@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +28,6 @@ const (
 var (
 	PruningStateKey                    = []byte{0x01}
 	mostRecentTWAPsNoSeparator         = "recent_twap"
-	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
 	// We do key management to let us easily meet the goals of (AKA minimal iteration):
@@ -40,9 +38,6 @@ var (
 	// format is just pool id | denom1 | denom2
 	// made for getting most recent key
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-	// format is time | pool id | denom1 | denom2
-	// made for efficiently deleting records by time in pruning
-	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
 	// format is pool id | denom1 | denom2 | time
 	// made for efficiently getting records given (pool id, denom1, denom2) and time bounds
 	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
@@ -59,11 +54,9 @@ func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	return []byte(fmt.Sprintf("%s%s%s%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator, denom1, KeySeparator, denom2))
 }
 
-// TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
-func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uint64, denom1, denom2 string) []byte {
+func FormatHistoricalPoolIndexDenomPairTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	var buffer bytes.Buffer
-	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	fmt.Fprintf(&buffer, "%s%s%s%d%s%s%s%s", HistoricalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2)
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator)
 	return buffer.Bytes()
 }
 
@@ -76,23 +69,6 @@ func FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId uint64, denom1, denom2 s
 	var buffer bytes.Buffer
 	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, accumulatorWriteTimeString)
 	return buffer.Bytes()
-}
-
-// returns timeString, poolIdString, denom1, denom2, error
-// nolint: revive
-func ParseFieldsFromHistoricalTimeKey(bz []byte) (string, uint64, string, string, error) {
-	split := bytes.Split(bz, []byte(KeySeparator))
-	if len(split) != 5 {
-		return "", 0, "", "", errors.New("invalid key")
-	}
-	timeS := string(split[1])
-	poolId, err := strconv.Atoi(string(split[2]))
-	if err != nil {
-		return "", 0, "", "", err
-	}
-	denom1 := string(split[3])
-	denom2 := string(split[4])
-	return timeS, uint64(poolId), denom1, denom2, err
 }
 
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {

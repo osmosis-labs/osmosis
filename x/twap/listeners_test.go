@@ -257,7 +257,7 @@ func (s *TestSuite) TestAfterEpochEnd() {
 
 	s.twapkeeper.StoreNewRecord(s.Ctx, newestRecord)
 
-	twapsBeforeEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
+	twapsBeforeEpoch, err := s.twapkeeper.GetAllHistoricalPoolIndexedTWAPs(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(2, len(twapsBeforeEpoch))
 

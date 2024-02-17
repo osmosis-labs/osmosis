@@ -341,12 +341,6 @@ func (s *TestSuite) getAllHistoricalRecordsForPool(poolId uint64) []types.TwapRe
 func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) {
 	twapKeeper := s.twapkeeper
 
-	// validate that the time indexed TWAPs are cleared.
-	timeIndexedTwaps, err := twapKeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().Len(timeIndexedTwaps, len(expectedRecords))
-	s.Require().Equal(timeIndexedTwaps, expectedRecords)
-
 	// validate that the pool indexed TWAPs are cleared.
 	poolIndexedTwaps, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPs(s.Ctx)
 	s.Require().NoError(err)

@@ -46,9 +46,7 @@ func TestFormatHistoricalTwapKeys(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotTimeKey := FormatHistoricalTimeIndexTWAPKey(tt.time, tt.poolId, tt.denom1, tt.denom2)
 			gotPoolKey := FormatHistoricalPoolIndexTWAPKey(tt.poolId, tt.denom1, tt.denom2, tt.time)
-			require.Equal(t, tt.wantTimeIndex, string(gotTimeKey))
 			require.Equal(t, tt.wantPoolIndex, string(gotPoolKey))
 
 			poolIndexPrefix := FormatHistoricalPoolIndexTimePrefix(tt.poolId, tt.denom1, tt.denom2)

@@ -85,3 +85,7 @@ func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context
 	}
 	return p.underlyingKeeper.RouteCalculateSpotPrice(ctx, poolId, quoteDenom, baseDenom)
 }
+
+func (p *ProgrammedPoolManagerInterface) GetNextPoolId(ctx sdk.Context) uint64 {
+	return p.underlyingKeeper.GetNextPoolId(ctx)
+}

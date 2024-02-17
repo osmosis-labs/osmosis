@@ -9,7 +9,7 @@ A time weighted average price is a function that takes a sequence of `(time, pri
 Using the arithmetic mean, the TWAP of a sequence `(t_i, p_i)`, from `t_0` to `t_n`, indexed by time in ascending order, is: $$\frac{1}{t_n - t_0}\sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$$
 Notice that the latest price `p_n` isn't used, as it has lasted for a time interval of `0` seconds in this range!
 
-To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is: 
+To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is:
 $$\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2$$
 
 ## Geometric mean TWAP
@@ -48,7 +48,7 @@ We also maintain within each accumulator record in state, the latest spot price.
 This allows us to interpolate accumulation records between times.
 Namely, if I want the twap from `t=10s` to `t=15s`, but the time records are at `9s, 13s, 17s`, this is fine.
 Using the latest spot price in each record, we create the accumulator value for `t=10` by computing
-`a_10 = a_9 + a_9_latest_spot_price * (10s - 9s)`, and `a_15 = a_13 + a_13_latest_spot_price * (15s - 13s)`. 
+`a_10 = a_9 + a_9_latest_spot_price * (10s - 9s)`, and `a_15 = a_13 + a_13_latest_spot_price * (15s - 13s)`.
 Given these interpolated accumulation values, we can compute the TWAP as before.
 
 ## Module API
@@ -79,7 +79,7 @@ and have a similar cosmwasm binding.
 // * endTime in the future
 // * startTime older than 48 hours OR pool creation
 // * pool with id poolId does not exist, or does not contain quoteAssetDenom, baseAssetDenom
-// * there were some computational errors during computing arithmetic twap within the time range of  
+// * there were some computational errors during computing arithmetic twap within the time range of
 //   startRecord, endRecord - including the exact record times, which indicates that the result returned could be faulty
 
 // N.B. If there is a notable use case, the state machine could maintain more historical records, e.g. at one per hour.
@@ -106,32 +106,29 @@ computation of the TWAP, which is done via the geometric mean.
 - types/* - Implement TwapRecord, GenesisState. Define AMM interface, and methods to format keys.
 - twapmodule/module.go - SDK AppModule interface implementation.
 - api.go - Public API, that other users / modules can/should depend on
-- listeners.go - Defines hooks & calls to logic.go, for triggering actions on 
+- listeners.go - Defines hooks & calls to logic.go, for triggering actions on
 - keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
 - logic.go - Implements all TWAP module 'logic'. (Arithmetic, defining what to get/set where, etc.)
 - store.go - Managing logic for getting and setting things to underlying stores
 
 ## Store layout
 
-We maintain TWAP accumulation records for every AMM pool on Osmosis. 
+We maintain TWAP accumulation records for every AMM pool on Osmosis.
 
 Because Osmosis supports multi-asset pools, a complicating factor is that we have to store a record for every asset pair in the pool.
 For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
 All public API's for the module will sort the input denoms to the canonical representation, so the caller does not need to worry about this. (The canonical representation is the denoms in lexicographical order)
 
-Example of historical TWAP time index records for a pool containing 3 assets.
+Example of historical TWAP pool indexed records for a pool containing 3 assets.
 * Number of records per time: `3 * (3 - 1) / 2 = 3`
 * Records are in a format:
-  HistoricalTWAPTimeIndexPrefix | time | pool id | denom1 | denom2
+  HistoricalTWAPPoolIndexPrefix | pool id | denom1 | denom2 | time
 
   For our pool with Id = 1 and 3 assets: denomA, denomB and denomC:
 
-  historical_time_index|2009-11-10T23:00:00.000000000|1|denomA|denomB  
-  historical_time_index|2009-11-10T23:00:00.000000000|1|denomA|denomC  
-  historical_time_index|2009-11-10T23:00:00.000000000|1|denomB|denomC  
-
-
-
+  historical_pool_index|1|denomA|denomB|2009-11-10T23:00:00.000000000
+  historical_pool_index|1|denomA|denomC|2009-11-10T23:00:00.000000000
+  historical_pool_index|1|denomB|denomC|2009-11-10T23:00:00.000000000
 
 Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.proto):
 
@@ -140,10 +137,10 @@ Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.
 * Accumulation value of base asset A in terms of quote asset B
 * Accumulation value of base asset B in terms of quote asset A
 
-important for calculation of arthmetic twap. 
+important for calculation of arthmetic twap.
 
-Besides those values, TWAP records currently hold:  poolId, Asset0Denom, Asset1Denom, Height (for debugging purposes), Time and  
-Last error time - time in which the last spot price error occurred. This will allert the caller if they are getting a potentially erroneous TWAP.
+Besides those values, TWAP records currently hold:  poolId, Asset0Denom, Asset1Denom, Height (for debugging purposes), Time and
+Last error time - time in which the last spot price error occurred. This will alert the caller if they are getting a potentially erroneous TWAP.
 
 All TWAP records are indexed in state by the time of write.
 
@@ -161,8 +158,8 @@ During `EndBlock`, new records are created, with:
 
 In the event that a pool is created, and has a swap in the same block, the record entries are over written with the end block price.
 
-Error handling during records creation/updating: 
-* If there are issues with creating a record after pool creation, the creation of a pool will be aborted. 
+Error handling during records creation/updating:
+* If there are issues with creating a record after pool creation, the creation of a pool will be aborted.
 * Whereas, if there is an issue with updating records for a pool with potentially price changing events, existing errors will be ignored and the records will not be updated.
 
 ### Tracking spot-price changing events in a block
@@ -182,7 +179,7 @@ and then clears on the block committing. This is done to save on gas (and I/O fo
 
 To avoid infinite growth of the state with the TWAP records, we attempt to delete some old records after every epoch.
 Essentially, records older than a configurable parameter `RecordHistoryKeepPeriod` are pruned away. Currently, this parameter is set to 48 hours.
-Therefore, at the end of an epoch, records older than 48 hours before the current block time are pruned away.  
+Therefore, at the end of an epoch, records older than 48 hours before the current block time are pruned away.
 This could potentially leave the store with only one record - or no records at all within the "keep" period, so the pruning mechanism keeps the newest record that is older than the pruning time. This record is necessary to enable us interpolating from and getting TWAPs from the "keep" period.
 Such record is preserved for each pool.
 
@@ -192,7 +189,7 @@ Post-TWAP launch, new pool types were introduced, one such example
 being the concentrated liquidity pool. In the context of `x/twap`, there are subtle
 differences in terms of when the spot price updates for a concentrated liquidity pool. As a result,
 the need for their twap state updates are delivered by distinct listeners that implement a
-`concentratedliquiditytypes.ConcentratedLiquidityListener` interface. 
+`concentratedliquiditytypes.ConcentratedLiquidityListener` interface.
 
 See `x/concentrated-liquidity/README.md` for the details about these differences.
 
@@ -235,7 +232,7 @@ The pre-release testing methodology planned for the twap module is:
   - The osmosis simulator, simulates building up complex state machine states, in random ways not seen before. We plan on, in a property check, maintaining expected TWAPs for short time ranges, and seeing that the keeper query will return the same value as what we get off of the raw price history for short history intervals.
   - Not currently deemed release blocking, but planned: Integration for gas tracking, to ensure gas of reads/writes does not grow with time.
 - [ ] Mutation testing usage
-  - integration of the TWAP module into [go mutation testing](https://github.com/osmosis-labs/go-mutesting): 
+  - integration of the TWAP module into [go mutation testing](https://github.com/osmosis-labs/go-mutesting):
     - We've seen with the `tokenfactory` module that it succeeds at surfacing behavior for untested logic.
         e.g. if you delete a line, or change the direction of a conditional, mutation tests show if regular Go tests catch it.
     - We expect to get this to a state, where after mutation testing is ran, the only items it mutates, that is not caught in a test, is: Deleting `return err`, or `panic` lines, in the situation where that error return or panic isn't reachable.
