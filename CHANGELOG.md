@@ -45,7 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution.
-* [#7508](https://github.com/osmosis-labs/osmosis/pull/7508) Improve protorev performance by removing iterator and storing base denoms as a parameter.
 
 ## v23.0.0
 
