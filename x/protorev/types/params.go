@@ -44,7 +44,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableModule, &p.Enabled, ValidateBoolean),
 		paramtypes.NewParamSetPair(ParamStoreKeyAdminAccount, &p.Admin, ValidateAccount),
-		paramtypes.NewParamSetPair(ParamStoreKeyBaseDenoms, &p.BaseDenoms, ValidateBaseDenoms),
+		paramtypes.NewParamSetPair(ParamStoreKeyBaseDenoms, &p.BaseDenoms, ValidateBaseDenom),
 	}
 }
 
@@ -74,6 +74,32 @@ func ValidateBoolean(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func ValidateBaseDenom(i interface{}) error {
+	denoms, ok := i.([]BaseDenom)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// The first base denom must be the Osmosis denomination
+	if len(denoms) == 0 || denoms[0].Denom != OsmosisDenomination {
+		return fmt.Errorf("the first base denom must be the Osmosis denomination")
+	}
+
+	seenDenoms := make(map[string]bool)
+	for _, denom := range denoms {
+		if err := denom.Validate(); err != nil {
+			return err
+		}
+
+		// Ensure that the base denom is unique
+		if seenDenoms[denom.Denom] {
+			return fmt.Errorf("duplicate base denom %s", denom)
+		}
+		seenDenoms[denom.Denom] = true
 	}
 	return nil
 }
