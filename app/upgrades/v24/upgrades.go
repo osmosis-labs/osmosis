@@ -24,7 +24,7 @@ func CreateUpgradeHandler(
 		}
 
 		// We no longer use the base denoms array and instead use the repeated base denoms field for performance reasons.
-		// We retrieve the base denoms array from the KVStore, delete them from the KVStore, and set them as a repeated field.
+		// We retrieve the old base denoms array from the KVStore, delete the array from the KVStore, and set them as a repeated field in the new KVStore.
 		baseDenoms, err := keepers.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(ctx)
 		if err != nil {
 			return nil, err

@@ -17,8 +17,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 	baseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
-	s.Require().Equal(len(baseDenoms), len(exportedGenesis.BaseDenoms.BaseDenoms))
-	for _, baseDenom := range exportedGenesis.BaseDenoms.BaseDenoms {
+	s.Require().Equal(len(baseDenoms), len(exportedGenesis.BaseDenoms))
+	for _, baseDenom := range exportedGenesis.BaseDenoms {
 		s.Require().Contains(baseDenoms, baseDenom)
 	}
 
