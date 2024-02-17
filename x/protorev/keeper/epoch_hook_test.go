@@ -47,7 +47,8 @@ func (s *KeeperTestSuite) TestEpochHook() {
 
 	totalNumberExpected := 0
 	expectedToSee := make(map[string]Pool)
-	baseDenoms := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	baseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
 	for _, pool := range s.pools {
 		// Module currently limited to two asset pools
 		// Instantiate asset and amounts for the pool

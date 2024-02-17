@@ -154,7 +154,11 @@ func (k Keeper) StoreJoinExitPoolSwaps(ctx sdk.Context, sender sdk.AccAddress, p
 // AfterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
 // for any of the base denoms, and stores it if so.
 func (k Keeper) AfterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
-	baseDenoms := k.GetAllBaseDenoms(ctx)
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		ctx.Logger().Error("Protorev error getting base denoms in AfterCFMMPoolCreated hook: " + err.Error())
+		return
+	}
 
 	baseDenomMap := make(map[string]bool)
 	for _, baseDenom := range baseDenoms {

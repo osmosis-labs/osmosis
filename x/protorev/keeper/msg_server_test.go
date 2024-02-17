@@ -655,7 +655,8 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 				s.Require().NoError(err)
 				s.Require().Equal(response, &types.MsgSetBaseDenomsResponse{})
 
-				baseDenoms := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+				baseDenoms, err := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+				s.Require().NoError(err)
 				s.Require().Equal(testCase.baseDenoms, baseDenoms)
 			} else {
 				s.Require().Error(err)

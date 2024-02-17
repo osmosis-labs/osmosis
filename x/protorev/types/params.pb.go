@@ -4,7 +4,6 @@
 package types
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -31,8 +30,6 @@ type Params struct {
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty" yaml:"enabled"`
 	// The admin account (settings manager) of the protorev module.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty" yaml:"admin"`
-	// All enabled base denominations for the protorev module.
-	BaseDenoms []BaseDenom `protobuf:"bytes,3,rep,name=base_denoms,json=baseDenoms,proto3" json:"base_denoms" yaml:"base_denoms"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -82,67 +79,8 @@ func (m *Params) GetAdmin() string {
 	return ""
 }
 
-func (m *Params) GetBaseDenoms() []BaseDenom {
-	if m != nil {
-		return m.BaseDenoms
-	}
-	return nil
-}
-
-// BaseDenom represents a single base denom that the module uses for its
-// arbitrage trades. It contains the denom name alongside the step size of the
-// binary search that is used to find the optimal swap amount
-type BaseDenom struct {
-	// The denom i.e. name of the base denom (ex. uosmo)
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
-	// The step size of the binary search that is used to find the optimal swap
-	// amount
-	StepSize cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=step_size,json=stepSize,proto3,customtype=cosmossdk.io/math.Int" json:"step_size" yaml:"step_size"`
-}
-
-func (m *BaseDenom) Reset()         { *m = BaseDenom{} }
-func (m *BaseDenom) String() string { return proto.CompactTextString(m) }
-func (*BaseDenom) ProtoMessage()    {}
-func (*BaseDenom) Descriptor() ([]byte, []int) {
-	return fileDescriptor_72168e5a5a65ae7e, []int{1}
-}
-func (m *BaseDenom) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BaseDenom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BaseDenom.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BaseDenom) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BaseDenom.Merge(m, src)
-}
-func (m *BaseDenom) XXX_Size() int {
-	return m.Size()
-}
-func (m *BaseDenom) XXX_DiscardUnknown() {
-	xxx_messageInfo_BaseDenom.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BaseDenom proto.InternalMessageInfo
-
-func (m *BaseDenom) GetDenom() string {
-	if m != nil {
-		return m.Denom
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*Params)(nil), "osmosis.protorev.v1beta1.Params")
-	proto.RegisterType((*BaseDenom)(nil), "osmosis.protorev.v1beta1.BaseDenom")
 }
 
 func init() {
@@ -150,30 +88,22 @@ func init() {
 }
 
 var fileDescriptor_72168e5a5a65ae7e = []byte{
-	// 362 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0xb1, 0x4e, 0xeb, 0x30,
-	0x18, 0x85, 0xe3, 0x5b, 0xdd, 0xd2, 0xba, 0x08, 0x55, 0x11, 0x48, 0xa1, 0x43, 0x52, 0x19, 0x81,
-	0x3a, 0x80, 0xad, 0xb6, 0x4c, 0x8c, 0x11, 0x0b, 0x4b, 0x85, 0xc2, 0xc6, 0x52, 0x9c, 0xc6, 0x6a,
-	0x23, 0x9a, 0x38, 0xaa, 0x4d, 0x45, 0xbb, 0xf2, 0x02, 0x3c, 0x12, 0x63, 0xc7, 0x8e, 0x88, 0x21,
-	0x42, 0xed, 0x1b, 0xe4, 0x09, 0x50, 0xec, 0xa4, 0xc0, 0xc0, 0xe6, 0xff, 0x9c, 0xef, 0x3f, 0xf1,
-	0x89, 0xe1, 0x29, 0x17, 0x11, 0x17, 0xa1, 0x20, 0xc9, 0x8c, 0x4b, 0x3e, 0x63, 0x73, 0x32, 0xef,
-	0xfa, 0x4c, 0xd2, 0x2e, 0x49, 0xe8, 0x8c, 0x46, 0x02, 0x2b, 0xdd, 0xb4, 0x0a, 0x0c, 0x97, 0x18,
-	0x2e, 0xb0, 0xd6, 0xe1, 0x98, 0x8f, 0xb9, 0x52, 0x49, 0x7e, 0xd2, 0x40, 0xeb, 0x78, 0xa4, 0x16,
-	0x86, 0xda, 0xd0, 0x83, 0xb6, 0xd0, 0x1b, 0x80, 0xd5, 0x5b, 0x95, 0x6d, 0x9e, 0xc3, 0x3d, 0x16,
-	0x53, 0x7f, 0xca, 0x02, 0x0b, 0xb4, 0x41, 0xa7, 0xe6, 0x9a, 0x59, 0xea, 0x1c, 0x2c, 0x68, 0x34,
-	0xbd, 0x42, 0x85, 0x81, 0xbc, 0x12, 0x31, 0xcf, 0xe0, 0x7f, 0x1a, 0x44, 0x61, 0x6c, 0xfd, 0x6b,
-	0x83, 0x4e, 0xdd, 0x6d, 0x66, 0xa9, 0xb3, 0xaf, 0x59, 0x25, 0x23, 0x4f, 0xdb, 0xe6, 0x03, 0x6c,
-	0xf8, 0x54, 0xb0, 0x61, 0xc0, 0x62, 0x1e, 0x09, 0xab, 0xd2, 0xae, 0x74, 0x1a, 0xbd, 0x13, 0xfc,
-	0x57, 0x03, 0xec, 0x52, 0xc1, 0xae, 0x73, 0xd6, 0x6d, 0xad, 0x52, 0xc7, 0xc8, 0x52, 0xc7, 0xd4,
-	0xb1, 0x3f, 0x52, 0x90, 0x07, 0xfd, 0x12, 0x13, 0xe8, 0x05, 0xc0, 0xfa, 0x6e, 0x2b, 0xbf, 0x97,
-	0x82, 0x54, 0x87, 0x5f, 0xf7, 0x52, 0x32, 0xf2, 0xb4, 0x6d, 0x0e, 0x60, 0x5d, 0x48, 0x96, 0x0c,
-	0x45, 0xb8, 0x64, 0x45, 0x87, 0x6e, 0xfe, 0xc1, 0x8f, 0xd4, 0x39, 0xd2, 0x7f, 0x48, 0x04, 0x8f,
-	0x38, 0xe4, 0x24, 0xa2, 0x72, 0x82, 0x6f, 0x62, 0x99, 0xa5, 0x4e, 0x53, 0x07, 0xed, 0xf6, 0x90,
-	0x57, 0xcb, 0xcf, 0x77, 0xe1, 0x92, 0xb9, 0x83, 0xd5, 0xc6, 0x06, 0xeb, 0x8d, 0x0d, 0x3e, 0x37,
-	0x36, 0x78, 0xdd, 0xda, 0xc6, 0x7a, 0x6b, 0x1b, 0xef, 0x5b, 0xdb, 0xb8, 0xbf, 0x1c, 0x87, 0x72,
-	0xf2, 0xe4, 0xe3, 0x11, 0x8f, 0x48, 0x51, 0xfb, 0x62, 0x4a, 0x7d, 0x51, 0x0e, 0x64, 0xde, 0xeb,
-	0x93, 0xe7, 0xef, 0x27, 0x97, 0x8b, 0x84, 0x09, 0xbf, 0xaa, 0xe6, 0xfe, 0x57, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x96, 0x8a, 0xd6, 0x63, 0x13, 0x02, 0x00, 0x00,
+	// 233 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xcd, 0x2f, 0xce, 0xcd,
+	0x2f, 0xce, 0x2c, 0xd6, 0x2f, 0x28, 0xca, 0x2f, 0xc9, 0x2f, 0x4a, 0x2d, 0xd3, 0x2f, 0x33, 0x4c,
+	0x4a, 0x2d, 0x49, 0x34, 0xd4, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x03, 0x8b, 0x0b, 0x49,
+	0x40, 0x95, 0xe9, 0xc1, 0x94, 0xe9, 0x41, 0x95, 0x49, 0x89, 0xa4, 0xe7, 0xa7, 0xe7, 0x83, 0x45,
+	0xf5, 0x41, 0x2c, 0x88, 0x02, 0x29, 0xc9, 0x64, 0xb0, 0x86, 0x78, 0x88, 0x04, 0x84, 0x03, 0x91,
+	0x52, 0x8a, 0xe3, 0x62, 0x0b, 0x00, 0x1b, 0x2d, 0xa4, 0xc3, 0xc5, 0x9e, 0x9a, 0x97, 0x98, 0x94,
+	0x93, 0x9a, 0x22, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe1, 0x24, 0xf4, 0xe9, 0x9e, 0x3c, 0x5f, 0x65,
+	0x62, 0x6e, 0x8e, 0x95, 0x12, 0x54, 0x42, 0x29, 0x08, 0xa6, 0x44, 0x48, 0x8d, 0x8b, 0x35, 0x31,
+	0x25, 0x37, 0x33, 0x4f, 0x82, 0x49, 0x81, 0x51, 0x83, 0xd3, 0x49, 0xe0, 0xd3, 0x3d, 0x79, 0x1e,
+	0x88, 0x5a, 0xb0, 0xb0, 0x52, 0x10, 0x44, 0xda, 0xc9, 0xef, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f,
+	0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b,
+	0x8f, 0xe5, 0x18, 0xa2, 0x4c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5,
+	0xa1, 0xfe, 0xd1, 0xcd, 0x49, 0x4c, 0x2a, 0x86, 0x71, 0xf4, 0xcb, 0x8c, 0x8c, 0xf5, 0x2b, 0x10,
+	0x21, 0x51, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0xe6, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff,
+	0xff, 0xed, 0x90, 0x62, 0x56, 0x2a, 0x01, 0x00, 0x00,
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -196,20 +126,6 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.BaseDenoms) > 0 {
-		for iNdEx := len(m.BaseDenoms) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.BaseDenoms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintParams(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
 	if len(m.Admin) > 0 {
 		i -= len(m.Admin)
 		copy(dAtA[i:], m.Admin)
@@ -226,46 +142,6 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 		i--
 		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *BaseDenom) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BaseDenom) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BaseDenom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size := m.StepSize.Size()
-		i -= size
-		if _, err := m.StepSize.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintParams(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintParams(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -294,27 +170,6 @@ func (m *Params) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovParams(uint64(l))
 	}
-	if len(m.BaseDenoms) > 0 {
-		for _, e := range m.BaseDenoms {
-			l = e.Size()
-			n += 1 + l + sovParams(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BaseDenom) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovParams(uint64(l))
-	}
-	l = m.StepSize.Size()
-	n += 1 + l + sovParams(uint64(l))
 	return n
 }
 
@@ -404,156 +259,6 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Admin = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenoms", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowParams
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthParams
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthParams
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BaseDenoms = append(m.BaseDenoms, BaseDenom{})
-			if err := m.BaseDenoms[len(m.BaseDenoms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipParams(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthParams
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BaseDenom) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowParams
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BaseDenom: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BaseDenom: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowParams
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthParams
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthParams
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StepSize", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowParams
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthParams
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthParams
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.StepSize.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -214,7 +214,10 @@ func (q Querier) GetProtoRevBaseDenoms(c context.Context, req *types.QueryGetPro
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	baseDenoms := q.Keeper.GetAllBaseDenoms(ctx)
+	baseDenoms, err := q.Keeper.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &types.QueryGetProtoRevBaseDenomsResponse{BaseDenoms: baseDenoms}, nil
 }

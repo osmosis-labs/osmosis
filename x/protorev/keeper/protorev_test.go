@@ -60,7 +60,8 @@ func (s *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 // TestGetAllBaseDenoms tests the GetAllBaseDenoms, SetBaseDenoms, and DeleteBaseDenoms functions.
 func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	// Should be initialized on genesis
-	baseDenoms := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	baseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().Equal(3, len(baseDenoms))
 	s.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
 	s.Require().Equal(baseDenoms[1].Denom, "Atom")
@@ -68,12 +69,15 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 
 	// Should be able to delete all base denoms
 	s.App.ProtoRevKeeper.DeleteBaseDenoms(s.Ctx)
-	baseDenoms = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
-	baseDenoms = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	s.Require().NoError(err)
+	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().Equal(3, len(baseDenoms))
 	s.Require().Equal(baseDenoms[0].Denom, "osmo")
 	s.Require().Equal(baseDenoms[1].Denom, "atom")

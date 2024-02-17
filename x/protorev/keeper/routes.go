@@ -91,7 +91,10 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route types.Route, poolId uint64)
 // and routes are built in a greedy manner.
 func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]RouteMetaData, error) {
 	routes := make([]RouteMetaData, 0)
-	baseDenoms := k.GetAllBaseDenoms(ctx)
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return routes, err
+	}
 
 	// Iterate through all denoms greedily. When simulating and executing trades, routes that are closer to the beginning of the list
 	// have priority over those that are later in the list. This way we can build routes that are more likely to succeed and bring in

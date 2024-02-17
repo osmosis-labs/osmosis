@@ -139,17 +139,22 @@ func (m MsgServer) SetBaseDenoms(c context.Context, msg *types.MsgSetBaseDenoms)
 	}
 
 	// Get the old base denoms
-	oldBaseDenoms := m.k.GetAllBaseDenoms(ctx)
+	baseDenoms, err := m.k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// Delete all pools associated with the base denoms
-	for _, baseDenom := range oldBaseDenoms {
+	for _, baseDenom := range baseDenoms {
 		m.k.DeleteAllPoolsForBaseDenom(ctx, baseDenom.Denom)
 	}
 
-	// // Delete the old base denoms
-	// m.k.DeleteBaseDenoms(ctx)
+	// Delete the old base denoms
+	m.k.DeleteBaseDenoms(ctx)
 
-	m.k.SetBaseDenoms(ctx, msg.BaseDenoms)
+	if err := m.k.SetBaseDenoms(ctx, msg.BaseDenoms); err != nil {
+		return nil, err
+	}
 
 	// Update all of the pools
 	if err := m.k.UpdatePools(ctx); err != nil {
