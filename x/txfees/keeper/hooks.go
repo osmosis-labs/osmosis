@@ -47,6 +47,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				Name:  "coins",
 				Value: baseDenomCoins.String(),
 			},
+			{
+				Name:  "err",
+				Value: err.Error(),
+			},
 		})
 	}
 
@@ -69,6 +73,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			{
 				Name:  "coins",
 				Value: denomToSwapToCoins.String(),
+			},
+			{
+				Name:  "err",
+				Value: err.Error(),
 			},
 		})
 	}
@@ -131,6 +139,10 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 						Name:  "match_denom",
 						Value: coin.Denom,
 					},
+					{
+						Name:  "err",
+						Value: err.Error(),
+					},
 				})
 
 				// The pool route either doesn't exist or is disabled in protorev.
@@ -162,6 +174,10 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 				{
 					Name:  "pool_id",
 					Value: strconv.FormatUint(poolId, 10),
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
 				},
 			})
 		}
