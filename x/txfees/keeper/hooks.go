@@ -42,7 +42,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		return err
 	})
 	if err != nil {
-		telemetry.IncrCounterWithLabels([]string{types.TakerFeeFailedNativeRewardUpdateMetricName}, 1, []metrics.Label{
+		telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName}, 1, []metrics.Label{
 			{
 				Name:  "coins",
 				Value: baseDenomCoins.String(),
@@ -69,7 +69,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		return err
 	})
 	if err != nil {
-		telemetry.IncrCounterWithLabels([]string{types.TakerFeeFailedCommunityPoolUpdateMetricName}, 1, []metrics.Label{
+		telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName}, 1, []metrics.Label{
 			{
 				Name:  "coins",
 				Value: denomToSwapToCoins.String(),
@@ -93,7 +93,7 @@ var _ epochstypes.EpochHooks = Hooks{}
 
 // GetModuleName implements types.EpochHooks.
 func (Hooks) GetModuleName() string {
-	return types.ModuleName
+	return txfeestypes.ModuleName
 }
 
 // Return the wrapper struct
