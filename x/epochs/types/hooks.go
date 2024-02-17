@@ -16,7 +16,7 @@ type EpochHooks interface {
 	AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
 	// new epoch is next block of epoch end block
 	BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
-	// Returns the name of the module impelmenting epoch hook.
+	// Returns the name of the module implementing epoch hook.
 	GetModuleName() string
 }
 
