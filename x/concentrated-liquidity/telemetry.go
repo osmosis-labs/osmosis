@@ -5,7 +5,6 @@ import (
 
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
@@ -13,7 +12,7 @@ import (
 
 // emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates
 // It detects whether an accumulator update does not occur when expected due to truncation or does occur and emits the appropriate telemetry
-func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder string, rewardsPerUnitOfLiquidity, rewardsTotal osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec, extraKeyVals ...string) {
+func emitAccumulatorUpdateTelemetry(truncatedPlaceholder string, rewardsPerUnitOfLiquidity, rewardsTotal osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec, extraKeyVals ...string) {
 	// If truncation occurs, we emit events to alert us of the issue.
 	if rewardsPerUnitOfLiquidity.IsZero() && !rewardsTotal.IsZero() {
 		labels := []metrics.Label{

@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -130,7 +129,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
 		if err != nil {
 			if err != nil {
-				telemetry.IncrCounterWithLabels([]string{types.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+				telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
 					{
 						Name:  "base_denom",
 						Value: denomToSwapTo,
@@ -166,7 +165,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			return err
 		})
 		if err != nil {
-			telemetry.IncrCounterWithLabels([]string{types.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
 				{
 					Name:  "coin_in",
 					Value: coin.String(),
