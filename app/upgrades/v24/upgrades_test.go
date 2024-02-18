@@ -97,7 +97,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// The new KVStore should be set to the default
 	newBaseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
-	s.Require().Equal(protorevtypes.DefaultBaseDenoms.BaseDenoms, newBaseDenoms)
+	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
 
 	// Run the upgrade
 	dummyUpgrade(s)
