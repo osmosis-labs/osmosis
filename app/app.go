@@ -641,7 +641,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	if upgradeToTrigger != "" {
 		upgradePlan := upgradetypes.Plan{
 			Name:   upgradeToTrigger,
-			Height: app.LastBlockHeight(),
+			Height: app.LastBlockHeight() + 10,
 		}
 		err = app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradePlan)
 		if err != nil {

@@ -61,13 +61,11 @@ func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
 	return alteredPoolIds
 }
 
-// storeHistoricalTWAP writes a twap to the store, in all needed indexing.
+// storeHistoricalTWAP writes a twap to the store, indexed by pool id.
 func (k Keeper) StoreHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
-	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
-	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
-	osmoutils.MustSet(store, key1, &twap)
-	osmoutils.MustSet(store, key2, &twap)
+	key := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
+	osmoutils.MustSet(store, key, &twap)
 }
 
 // pruneRecordsBeforeTimeButNewest prunes all records for each pool before the given time but the newest
@@ -87,72 +85,59 @@ func (k Keeper) StoreHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // If we reach the per block pruning limit, we store the last key seen in the pruning state.
 // This is so that we can continue pruning from where we left off in the next block.
 // If we have pruned all records, we set the pruning state to not pruning.
-// There is a small bug here where we store more seenPoolAssetTriplets than we need to.
-// Issue added here: https://github.com/osmosis-labs/osmosis/issues/7435
-// The bloat is minimal though, and is not at risk of getting out of hand.
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.PruningState) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// Reverse iterator guarantees that we iterate through the newest per pool first.
-	// Due to how it is indexed, we will only iterate times starting from
-	// lastKeptTime exclusively down to the oldest record.
-	iter := store.ReverseIterator(
-		[]byte(types.HistoricalTWAPTimeIndexPrefix),
-		state.LastKeySeen)
-	defer iter.Close()
-
-	// We mark what (pool id, asset 0, asset 1) triplets we've seen.
-	// We prune all records for a triplet that we haven't already seen.
-	type uniqueTriplet struct {
-		poolId uint64
-		asset0 string
-		asset1 string
-	}
-	seenPoolAssetTriplets := map[uniqueTriplet]struct{}{}
-
 	var numPruned uint16
+	var lastPoolIdCompleted uint64
 
-	for ; iter.Valid(); iter.Next() {
-		timeIndexKey := iter.Key()
-		timeS, poolId, asset0, asset1, err := types.ParseFieldsFromHistoricalTimeKey(timeIndexKey)
+	for poolId := state.LastSeenPoolId; poolId > 0; poolId-- {
+		denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
 		if err != nil {
 			return err
 		}
 
-		poolKey := uniqueTriplet{
-			poolId,
-			asset0,
-			asset1,
-		}
-		_, hasSeenPoolRecord := seenPoolAssetTriplets[poolKey]
-		if !hasSeenPoolRecord {
-			seenPoolAssetTriplets[poolKey] = struct{}{}
-			continue
-		}
+		// Notice, if we hit the prune limit in the middle of a pool, we will re-iterate over the completed pruned pool records.
+		// This is acceptable overhead for the simplification this provides.
+		denomPairs := types.GetAllUniqueDenomPairs(denoms)
+		for _, denomPair := range denomPairs {
+			// Reverse iterator guarantees that we iterate through the newest per pool first.
+			// Due to how it is indexed, we will only iterate times starting from
+			// lastKeptTime exclusively down to the oldest record.
+			iter := store.ReverseIterator(
+				types.FormatHistoricalPoolIndexDenomPairTWAPKey(poolId, denomPair.Denom0, denomPair.Denom1),
+				types.FormatHistoricalPoolIndexTWAPKey(poolId, denomPair.Denom0, denomPair.Denom1, state.LastKeptTime))
+			defer iter.Close()
 
-		// Now we need to delete the historical record, formatted by both historical time and pool index.
-		// We already are iterating over the historical time index, so we delete that key. Then we
-		// reformat the key to delete the historical pool index key.
-		store.Delete(timeIndexKey)
-		poolIndexKey := types.FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId, asset0, asset1, timeS)
-		store.Delete(poolIndexKey)
+			firstIteration := true
+			for ; iter.Valid(); iter.Next() {
+				if !firstIteration {
+					// We have stored the newest record, so we can prune the rest.
+					timeIndexKey := iter.Key()
+					store.Delete(timeIndexKey)
+					numPruned += 1
 
-		// Increment the number of records pruned by 2, since we delete two records per iteration.
-		numPruned += 2
-
-		if numPruned >= NumRecordsToPrunePerBlock {
-			// We have hit the limit, so we stop pruning.
-			break
+					if numPruned >= NumRecordsToPrunePerBlock {
+						// We have hit the limit in the middle of a pool.
+						// We store this pool as the last seen pool in the pruning state.
+						// We accept re-iterating over denomPairs as acceptable overhead.
+						state.LastSeenPoolId = poolId
+						k.SetPruningState(ctx, state)
+						return nil
+					}
+				} else {
+					// If this is the first iteration after we have gotten through the records after lastKeptTime, we
+					// still keep the record in order to allow interpolation (see function description for more details).
+					firstIteration = false
+				}
+			}
 		}
+		lastPoolIdCompleted = poolId
 	}
 
-	if !iter.Valid() {
-		// The iterator is exhausted, so we have pruned all records.
+	if lastPoolIdCompleted == 1 {
+		// We have pruned all records.
 		state.IsPruning = false
-		k.SetPruningState(ctx, state)
-	} else {
-		// We have not pruned all records, so we update the last key seen.
-		state.LastKeySeen = iter.Key()
 		k.SetPruningState(ctx, state)
 	}
 	return nil
@@ -160,10 +145,8 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 
 func (k Keeper) DeleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
-	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
-	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
-	store.Delete(key1)
-	store.Delete(key2)
+	key := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
+	store.Delete(key)
 }
 
 // getMostRecentRecordStoreRepresentation returns the most recent twap record in the store
@@ -211,13 +194,7 @@ func (k Keeper) GetAllMostRecentRecordsForPoolWithDenoms(ctx sdk.Context, poolId
 	return []types.TwapRecord{record}, err
 }
 
-// getAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
-func (k Keeper) GetAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
-}
-
 // getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool id.
-// nolint: unused
 func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }
@@ -283,4 +260,17 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	}
 
 	return twap, nil
+}
+
+// DeleteAllHistoricalTimeIndexedTWAPs deletes every historical twap record indexed by time.
+// This is to be used in the upgrade handler, to clear out the now-obsolete historical twap records
+// that were indexed by time.
+func (k Keeper) DeleteAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
+	defer iter.Close()
+	for iter.Valid() {
+		store.Delete(iter.Key())
+		iter.Next()
+	}
 }

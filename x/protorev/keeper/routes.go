@@ -226,13 +226,13 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 	totalWeight := uint64(0)
 
 	for _, poolId := range route.PoolIds() {
-		// Ensure that all of the pools in the route exist and are active
-		if err := k.IsValidPool(ctx, poolId); err != nil {
+		pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+		if err != nil {
 			return 0, err
 		}
 
-		pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
-		if err != nil {
+		// Ensure that all of the pools in the route exist and are active
+		if err := k.IsValidPool(ctx, pool); err != nil {
 			return 0, err
 		}
 
@@ -276,14 +276,9 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 }
 
 // IsValidPool checks if the pool is active and exists
-func (k Keeper) IsValidPool(ctx sdk.Context, poolID uint64) error {
-	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolID)
-	if err != nil {
-		return err
-	}
-
+func (k Keeper) IsValidPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	if !pool.IsActive(ctx) {
-		return fmt.Errorf("pool %d is not active", poolID)
+		return fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
 	return nil

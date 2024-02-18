@@ -23,6 +23,10 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
+		// since we only need the pool indexed TWAPs.
+		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)
+
 		return migrations, nil
 	}
 }
