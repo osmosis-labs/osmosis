@@ -490,9 +490,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "osmosis-authenticators"
-version = "0.22.0-alpha.8"
+version = "0.22.0-alpha.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "715d12266c7a064a86b1f967af89af74aef6728c58d1fbaedad7d92539bd4a44"
+checksum = "fb04c9c345de8540e045bb1f62a9ad907aa355785dd7e8cf96c46016eaffa6e9"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
