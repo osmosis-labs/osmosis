@@ -8,8 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
-var maxSpotPriceBigDec = osmomath.BigDecFromDec(types.MaxSpotPrice)
-
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
@@ -192,7 +190,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.IsNegative() {
 		return 0, fmt.Errorf("price must be greater than zero")
 	}
-	if price.GT(maxSpotPriceBigDec) || price.LT(types.MinSpotPriceV2) {
+	if price.GT(types.MaxSpotPriceBigDec) || price.LT(types.MinSpotPriceV2) {
 		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(osmomathBigOneDec) {
