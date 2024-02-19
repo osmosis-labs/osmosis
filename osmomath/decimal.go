@@ -138,6 +138,14 @@ func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 	}
 }
 
+// returns a BigDec, built using a mutated copy of the passed in bigint.
+// CONTRACT: prec <= BigDecPrecision
+func NewBigDecFromBigIntMutWithPrec(i *big.Int, prec int64) BigDec {
+	return BigDec{
+		i.Mul(i, precisionMultiplier(prec)),
+	}
+}
+
 // create a new BigDec from big integer assuming whole numbers
 // CONTRACT: prec <= BigDecPrecision
 func NewBigDecFromInt(i BigInt) BigDec {
@@ -357,7 +365,8 @@ func (d BigDec) MulInt(i BigInt) BigDec {
 
 // MulInt64 - multiplication with int64
 func (d BigDec) MulInt64(i int64) BigDec {
-	mul := new(big.Int).Mul(d.i, big.NewInt(i))
+	bi := big.NewInt(i)
+	mul := bi.Mul(d.i, bi)
 
 	if mul.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -667,13 +676,13 @@ func (d BigDec) DecRoundUp() Dec {
 // BigDecFromDec returns the BigDec representation of an Dec.
 // Values in any additional decimal places are truncated.
 func BigDecFromDec(d Dec) BigDec {
-	return NewBigDecFromBigIntWithPrec(d.BigInt(), DecPrecision)
+	return NewBigDecFromBigIntMutWithPrec(d.BigInt(), DecPrecision)
 }
 
 // BigDecFromSDKInt returns the BigDec representation of an sdkInt.
 // Values in any additional decimal places are truncated.
 func BigDecFromSDKInt(i Int) BigDec {
-	return NewBigDecFromBigIntWithPrec(i.BigInt(), 0)
+	return NewBigDecFromBigIntWithPrec(i.BigIntMut(), 0)
 }
 
 // BigDecFromDecSlice returns the []BigDec representation of an []Dec.
@@ -681,7 +690,7 @@ func BigDecFromSDKInt(i Int) BigDec {
 func BigDecFromDecSlice(ds []Dec) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewBigDecFromBigIntWithPrec(d.BigInt(), DecPrecision)
+		result[i] = NewBigDecFromBigIntMutWithPrec(d.BigInt(), DecPrecision)
 	}
 	return result
 }
@@ -691,7 +700,7 @@ func BigDecFromDecSlice(ds []Dec) []BigDec {
 func BigDecFromDecCoinSlice(ds []sdk.DecCoin) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewBigDecFromBigIntWithPrec(d.Amount.BigInt(), DecPrecision)
+		result[i] = NewBigDecFromBigIntMutWithPrec(d.Amount.BigInt(), DecPrecision)
 	}
 	return result
 }
