@@ -142,8 +142,10 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	// note we mutate this one line below, to avoid extra heap allocations.
 	glDec := osmomath.NewDec(int64(gasRequested))
-	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
+	baseFeeAmt := glDec.MulMut(minBaseGasPrice).Ceil().RoundInt()
+	requiredBaseFee := sdk.Coin{Denom: baseDenom, Amount: baseFeeAmt}
 
 	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
 	if err != nil {
