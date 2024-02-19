@@ -224,7 +224,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
 		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
 		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewPassKeyAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
 		authenticator.NewSpendLimitAuthenticator(
 			appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
 			"uosmo",
@@ -548,7 +547,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// register CosmWasm authenticator
 	appKeepers.AuthenticatorManager.RegisterAuthenticator(
-		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler(), appCodec))
+		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.keys[wasmtypes.StoreKey], appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler(), appCodec))
 
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)

@@ -144,6 +144,12 @@ func (as *TransientStore) WriteInto(ctx sdk.Context) {
 	syncStores(srcStore, destStore, true)
 }
 
+func (as *TransientStore) WriteCosmWasmAuthenticatorStateInto(ctx sdk.Context, cwa *CosmwasmAuthenticator) {
+	srcStore := cwa.GetContractPrefixStore(as.transientCtx)
+	destStore := cwa.GetContractPrefixStore(ctx)
+	syncStores(srcStore, destStore, true)
+}
+
 func (as *TransientStore) UpdateFrom(ctx sdk.Context) {
 	if as.transientCtx.IsZero() {
 		as.ResetTransientContext(ctx)
