@@ -11,16 +11,16 @@ const (
 	// RouterKey is the message route for slashing.
 	RouterKey = ModuleName
 
-	// FeeCollectorName the module account name for the fee collector account address.
-	FeeCollectorName = "fee_collector"
+	// NonNativeTxFeeCollectorName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	NonNativeTxFeeCollectorName = "non_native_fee_collector"
 
-	// FeeCollectorForStakingRewardsName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
-	// These fees go to the staking rewards pool.
-	FeeCollectorForStakingRewardsName = "non_native_fee_collector"
-
-	// FeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// DeprecatedFeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
 	// These fees go to the community pool.
-	FeeCollectorForCommunityPoolName = "non_native_fee_collector_community_pool"
+	// This module account is deprecated and we instead just send all taker fees to the taker fee collector, regardless of the denom.
+	DeprecatedFeeCollectorForCommunityPoolName = "non_native_fee_collector_community_pool"
+
+	// TakerFeeCollectorName the module account name for the taker fee collector account address. It collects both native and non-native taker fees.
+	TakerFeeCollectorName = "taker_fee_collector"
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
