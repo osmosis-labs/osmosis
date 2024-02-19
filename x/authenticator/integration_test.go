@@ -506,25 +506,25 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 	}
 
 	// 3. Serialize SigVerificationAuthenticator InitializationData
-	dataPrivKey0, err := json.Marshal(initDataPrivKey0)
-	s.Require().NoError(err)
-	dataPrivKey1, err := json.Marshal(initDataPrivKey1)
-	s.Require().NoError(err)
+	compositeData, err := json.Marshal([]authenticator.InitializationData{
+		initDataPrivKey0,
+		initDataPrivKey1,
+	})
 
 	// construct InitializationData for AnyOf authenticator
 	initDataAnyOf := authenticator.InitializationData{
 		AuthenticatorType: anyOf.Type(),
-		Data:              append(dataPrivKey0, dataPrivKey1...),
+		Data:              compositeData,
 	}
 
 	// 5. Combine to construct the final composite for AllOf authenticator
-	compositeAuthData := []authenticator.InitializationData{
+	finalCompositeAuthData := []authenticator.InitializationData{
 		initDataAnyOf,
 		initDataPrivKey2,
 	}
 
 	// serialize the AllOf InitializationData
-	dataAllOf, err := json.Marshal(compositeAuthData)
+	dataAllOf, err := json.Marshal(finalCompositeAuthData)
 	s.Require().NoError(err)
 
 	// Set the authenticator to our account
@@ -546,6 +546,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 	//       senders (validation will prob fail for the same reason). We may want to test AllOf
 	//       with a different authenticator (MaxAmountAuthenticator?) and use multisig instead
 	//       of AllOf for validating multiple signatures
+	s.T().Skip("TODO: This doesn't work right now. Fix when we can split signatures")
 	//_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0], s.PrivKeys[2]}, sendMsg)
 	//s.Require().NoError(err)
 }
@@ -574,13 +575,24 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "unauthorized") // Spend limit only rejects. Never authorizes
 
-	// Add a SigVerificationAuthenticator to the account
-	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[0].PubKey().Bytes())
-	s.Require().NoError(err, "Failed to add authenticator")
+	// Add the spend limit as part of an AnyOf
+	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
+	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
 
-	// mark the authenticator as ready
-	key := string(authenticatortypes.KeyAccountId(s.Account.GetAddress(), 0))
-	s.app.AuthenticatorKeeper.MarkAuthenticatorAsReady(s.chainA.GetContext(), []byte(key))
+	internalData, err := json.Marshal([]authenticator.InitializationData{
+		{
+			AuthenticatorType: "SignatureVerificationAuthenticator",
+			Data:              s.PrivKeys[0].PubKey().Bytes(),
+		},
+		{
+			AuthenticatorType: spendLimit.Type(),
+			Data:              initData,
+		},
+	})
+
+	// Add a SigVerificationAuthenticator to the account
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), anyOf.Type(), internalData)
+	s.Require().NoError(err, "Failed to add authenticator")
 
 	// sending 500 ok
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)

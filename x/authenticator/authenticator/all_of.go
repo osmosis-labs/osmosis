@@ -2,7 +2,6 @@ package authenticator
 
 import (
 	"encoding/json"
-
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	errorsmod "cosmossdk.io/errors"
@@ -129,10 +128,11 @@ func validateSubAuthenticatorData(initDatas []InitializationData, am *Authentica
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				subAuthenticatorCount++
-				continue
+				break
 			}
 		}
 	}
+	// TODO: Should we recursively call OnAdded here?
 
 	// If not all sub-authenticators are registered, return an error
 	if subAuthenticatorCount != len(initDatas) {
