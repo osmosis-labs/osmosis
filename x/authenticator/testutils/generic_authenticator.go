@@ -11,8 +11,7 @@ import (
 )
 
 var (
-	_ iface.Authenticator     = &TestingAuthenticator{}
-	_ iface.AuthenticatorData = &TestingAuthenticatorData{}
+	_ iface.Authenticator = &TestingAuthenticator{}
 )
 
 type ApproveOn int
@@ -59,11 +58,7 @@ func (t TestingAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return t, nil
 }
 
-func (t TestingAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return TestingAuthenticatorData{}, nil
-}
-
-func (t TestingAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	if t.Approve == Always {
 		return iface.Authenticated()
 	} else {
@@ -75,7 +70,7 @@ func (t TestingAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	if t.Confirm == Always {
 		return iface.Confirm()
 	} else {

@@ -104,11 +104,7 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 	return sla, nil
 }
 
-func (sla SpendLimitAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return iface.EmptyAuthenticationData{}, nil // No data needed for this authenticator
-}
-
-func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	// We never authenticate ourselves. We just  authentication after the fact if the balances changed too much
 	return iface.NotAuthenticated()
 }
@@ -133,10 +129,10 @@ func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress
 	return nil
 }
 
-func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
-	prevBalances := sla.GetBalance(account)
-	currentBalances := sla.bankKeeper.GetAllBalances(ctx, account)
+	prevBalances := sla.GetBalance(request.Account)
+	currentBalances := sla.bankKeeper.GetAllBalances(ctx, request.Account)
 
 	totalPrevValue := osmomath.NewInt(0)
 	totalCurrentValue := osmomath.NewInt(0)
@@ -162,15 +158,15 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	delta := totalPrevValue.Sub(totalCurrentValue)
 
 	// Get the total spent so far in the current period
-	spentSoFar := sla.GetSpentInPeriod(account, ctx.BlockTime())
+	spentSoFar := sla.GetSpentInPeriod(request.Account, ctx.BlockTime())
 
 	if delta.Add(spentSoFar).Int64() > int64(sla.allowedDelta.Uint64()) {
 		return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
 	}
 
 	// Update the total spent so far in the current period
-	sla.SetSpentInPeriod(account, ctx.BlockTime(), delta.Add(spentSoFar))
-	sla.DeleteBalances(account) // This is not 100% necessary, but it's nice to clean up after ourselves
+	sla.SetSpentInPeriod(request.Account, ctx.BlockTime(), delta.Add(spentSoFar))
+	sla.DeleteBalances(request.Account) // This is not 100% necessary, but it's nice to clean up after ourselves
 
 	return iface.Confirm()
 }

@@ -78,6 +78,7 @@ func (s *AutherticatorAnteSuite) SetupTest() {
 	s.AuthenticatorDecorator = ante.NewAuthenticatorDecorator(
 		s.OsmosisApp.AuthenticatorKeeper,
 		s.OsmosisApp.AccountKeeper,
+		s.EncodingConfig.TxConfig.SignModeHandler(),
 	)
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 }
@@ -162,60 +163,34 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	s.Require().NoError(err)
 }
 
-// TestSignatureVerificationWithAuthenticatorInStore test out of gas error
+// TestSignatureVerificationOutOfGas tests that the ante handler exits early by running out of gas if the
+// fee payer has not been authenticated before consuming the 20_000 low gas limit (even if the specified limit is 300k)
+// This is to ensure that the amount of compute a non-authenticated user can execute is limited.
 func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	// Create a test messages for signing
+	// This message will have several authenticators for s.TestPrivKeys[0] and one for s.TestPrivKeys[1] at the end
 	testMsg1 := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[0]),
 		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
 		Amount:      coins,
 	}
-	testMsg2 := &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
-		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
-		Amount:      coins,
+
+	// The base gas consumption of authenticators is ~7k gas
+	for i := 0; i < 9; i++ { // Each signature check consumes about 2k gas
+		err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+			s.Ctx,
+			s.TestAccAddress[0],
+			"SignatureVerificationAuthenticator",
+			s.TestPrivKeys[0].PubKey().Bytes(),
+		)
+		s.Require().NoError(err)
 	}
-	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
-
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
-		s.Ctx,
-		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
-		s.TestPrivKeys[0].PubKey().Bytes(),
-	)
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
-		s.Ctx,
-		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
-		s.TestPrivKeys[0].PubKey().Bytes(),
-	)
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
-		s.Ctx,
-		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
-		s.TestPrivKeys[0].PubKey().Bytes(),
-	)
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
-		s.Ctx,
-		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
-		s.TestPrivKeys[0].PubKey().Bytes(),
-	)
-	s.Require().NoError(err)
-
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
-		s.Ctx,
-		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
-		s.TestPrivKeys[0].PubKey().Bytes(),
-	)
-	s.Require().NoError(err)
 
 	// fee payer is authenticated
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
@@ -223,22 +198,49 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	)
 	s.Require().NoError(err)
 
+	// This tx expects will authenticate the fee payer after checking 9 other authenticators.
+	// It should error by running out of gas
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
-		testMsg2,
-	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
+	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
-		s.TestPrivKeys[1],
 	}, []cryptotypes.PrivKey{
-		s.TestPrivKeys[1],
 		s.TestPrivKeys[1],
 	}, []int32{})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
-
 	s.Require().Error(err)
-	s.Require().ErrorContains(err, "gas")
+	s.Require().ErrorContains(err, "FeePayer not authenticated yet. The gas limit has been reduced to 20000. Consumed: 20")
+	s.Require().Len(err.Error(), 100)
+	// Now, let's ensure the fee payer has been authenticated before checking all authenticators for s.TestPrivKeys[1]
+
+	// This is a message that can only be aithenticated by its default authenticator (s.TestAccAddress[1])
+	testMsg2 := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
+		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
+		Amount:      coins,
+	}
+
+	// This other tx expects will authenticate the fee payer after checking 9 other authenticators
+	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+		testMsg2,
+		testMsg1,
+	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
+		s.TestPrivKeys[1],
+		s.TestPrivKeys[0],
+	}, []cryptotypes.PrivKey{
+		s.TestPrivKeys[1],
+		s.TestPrivKeys[1],
+	}, []int32{})
+
+	// This authentication should succeed and consume gas over the 20_000 limit (because the fee payer
+	// is authenticated in under 20k in the first message)
+	res, err := anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(20_000))
+	// sanity check that all authenticators are checked for the second message
+	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(100_000))
 }
 
 func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
@@ -285,7 +287,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Bad selection", s.TestPrivKeys[0], []int32{3}, false, 0},
 	}
 
-	approachingGasPerSig := 4000 // Each signature consumes at least this amount (but not much more)
+	approachingGasPerSig := 4105 // Each signature consumes at least this amount (but not much more)
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -311,11 +313,10 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 			// ensure only the right amount of sigs have been checked
 			if tc.checks > 0 {
 				s.Require().Greater(res.GasMeter().GasConsumed(), uint64(tc.checks*approachingGasPerSig))
-				s.Require().Less(res.GasMeter().GasConsumed(), uint64((tc.checks+1)*approachingGasPerSig))
+				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64((tc.checks+1)*approachingGasPerSig))
 			} else {
-				s.Require().Less(res.GasMeter().GasConsumed(), uint64(2_000))
+				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(2_400))
 			}
-
 		})
 	}
 }

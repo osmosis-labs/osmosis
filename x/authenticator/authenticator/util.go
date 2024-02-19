@@ -1,9 +1,14 @@
 package authenticator
 
 import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -87,8 +92,6 @@ func GetSignersAndSignatures(
 		}
 	}
 
-	// TODO: This strips any extra signatures. We should include all signatures
-
 	// Handle the feePayer.
 	if feePayer != "" {
 		if _, exists := signerToSignature[feePayer]; !exists {
@@ -121,22 +124,15 @@ func GetSignersAndSignatures(
 // It is used in both the PassKeyAuthenticator and the SignatureVerificationAuthenticator
 //
 // Parameters:
-// - ctx: The context of the current operation.
 // - tx: The transaction to extract authentication data from.
 // - messageIndex: The index of the message within the transaction.
-// - simulate: A boolean indicating whether to simulate the transaction.
 //
 // Returns:
 // - signers: A list of account addresses that signed the transaction.
 // - signatures: A list of signature objects.
 // - sigTx: The transaction with signature information.
 // - err: An error if any issues are encountered during the extraction.
-func GetCommonAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (signers []sdk.AccAddress, signatures []signing.SignatureV2, sigTx authsigning.Tx, err error) {
+func GetCommonAuthenticationData(tx sdk.Tx, messageIndex int) (signers []sdk.AccAddress, signatures []signing.SignatureV2, sigTx authsigning.Tx, err error) {
 	// Attempt to cast the provided transaction to an authsigning.Tx.
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
@@ -154,16 +150,22 @@ func GetCommonAuthenticationData(
 	msgs := sigTx.GetMsgs()
 
 	// Ensure the transaction is of type sdk.FeeTx.
+	// TODO: We should find a better way to get the fee payer si that it doesn't iterate over all the messages.
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+	feePayerStr := ""
+	feePayer := feeTx.FeePayer()
+	if feePayer != nil {
+		feePayerStr = feePayer.String()
 	}
 
 	// Parse signers and signatures from the transaction.
 	signers, signatures, err = GetSignersAndSignatures(
 		msgs,
 		signatures,
-		feeTx.FeePayer().String(),
+		feePayerStr,
 		messageIndex,
 	)
 	if err != nil {
@@ -172,4 +174,125 @@ func GetCommonAuthenticationData(
 
 	// Return the extracted data.
 	return signers, signatures, sigTx, nil
+}
+
+// make replay protection into an interface. SequenceMatch is a default implementation
+type ReplayProtection func(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error
+
+func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
+	if signature.Sequence != txData.Sequence {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
+	}
+	return nil
+}
+
+func NoReplayProtection(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
+	return nil
+}
+
+func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
+	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
+	txSigners, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
+	if err != nil {
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signes and signatures")
+	}
+
+	if len(msg.GetSigners()) != 1 {
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "only messages with a single signer are supported")
+	}
+
+	// Retrieve and build the signer data struct
+	genesis := ctx.BlockHeight() == 0
+	chainID := ctx.ChainID()
+	var accNum uint64
+	baseAccount := ak.GetAccount(ctx, account)
+	if !genesis {
+		accNum = baseAccount.GetAccountNumber()
+	}
+	var sequence uint64
+	if baseAccount != nil {
+		sequence = baseAccount.GetSequence()
+	}
+
+	signerData := authsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      sequence,
+	}
+
+	// This can also be extracted
+	signBytes, err := sigModeHandler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+	if err != nil {
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
+	}
+
+	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
+	if !ok {
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
+	}
+	memoTx, ok := tx.(sdk.TxWithMemo)
+	if !ok {
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+	}
+
+	msgs := make([]iface.LocalAny, len(tx.GetMsgs()))
+	for i, txMsg := range tx.GetMsgs() {
+		encodedMsg, err := types.NewAnyWithValue(txMsg)
+		if err != nil {
+			return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to encode msg")
+		}
+		msgs[i] = iface.LocalAny{
+			TypeURL: encodedMsg.TypeUrl,
+			Value:   encodedMsg.Value,
+		}
+	}
+
+	txData := iface.ExplicitTxData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      sequence,
+		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
+		Msgs:          msgs,
+		Memo:          memoTx.GetMemo(),
+	}
+
+	// TODO: Do we want to support multiple signers per message?
+	// At least enforce it
+	signer := msg.GetSigners()[0] // We're only supporting one signer per message.
+	var signatures [][]byte
+	var msgSignature []byte
+	for i, signature := range txSignatures {
+		// ToDo: deal with other signature types
+		single, ok := signature.Data.(*signing.SingleSignatureData)
+		if !ok {
+			return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
+		}
+		signatures = append(signatures, single.Signature)
+
+		if txSigners[i].Equals(signer) { // We're only supporting one signer per message.
+			msgSignature = single.Signature
+			err := replayProtection(&txData, &signature)
+			if err != nil {
+				return iface.AuthenticationRequest{}, err
+			}
+		}
+	}
+
+	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
+	authRequest := iface.AuthenticationRequest{
+		Account:   account,
+		Msg:       txData.Msgs[msgIndex],
+		Signature: msgSignature, // currently only allowing one signer per message.
+		TxData:    txData,
+		SignModeTxData: iface.SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
+			Direct: signBytes,
+		},
+		SignatureData: iface.SimplifiedSignatureData{
+			Signers:    txSigners,
+			Signatures: signatures,
+		},
+		Simulate:            simulate,
+		AuthenticatorParams: nil,
+	}
+	return authRequest, nil
 }

@@ -5,16 +5,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
-	_ iface.Authenticator     = &StatefulAuthenticator{}
-	_ iface.AuthenticatorData = &StatefulAuthenticatorData{}
+	_ iface.Authenticator = &StatefulAuthenticator{}
 )
 
 type StatefulAuthenticatorData struct {
@@ -38,15 +35,8 @@ func (s StatefulAuthenticator) Initialize(data []byte) (iface.Authenticator, err
 	return s, nil
 }
 
-func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
-}
-
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
-	if !ok {
-		return iface.Rejected("", errorsmod.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
-	}
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx)}
 	if statefulData.Value > 10 {
 		return iface.Rejected("value is too high", nil)
 	}
@@ -73,7 +63,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 	return statefulData.Value
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
 	return iface.Confirm()
 }

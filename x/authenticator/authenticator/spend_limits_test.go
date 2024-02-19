@@ -1,25 +1,24 @@
 package authenticator_test
 
 import (
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
 )
 
 type SpendLimitAuthenticatorTest struct {
-	suite.Suite
-	Ctx        sdk.Context
-	OsmosisApp *app.OsmosisApp
+	BaseAuthenticatorSuite
+
 	Store      prefix.Store
 	SpendLimit authenticator.SpendLimitAuthenticator
 }
@@ -29,9 +28,7 @@ func TestSpendLimitAuthenticatorTest(t *testing.T) {
 }
 
 func (s *SpendLimitAuthenticatorTest) SetupTest() {
-	s.OsmosisApp = app.Setup(false)
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.SetupKeys()
 
 	authenticatorsStoreKey := s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
 	//s.Store = prefix.NewStore(s.Ctx.KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
@@ -104,9 +101,19 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 			spendLimit, err := s.SpendLimit.Initialize(tt.data)
 			s.Require().NoError(err, "Initialization failed")
 
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			// sample msg
+			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+			// sample tx
+			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+			s.Require().NoError(err)
+			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			s.Require().NoError(err)
+
 			// Set initial time
 			s.Ctx = s.Ctx.WithBlockTime(tt.t1)
-			spendLimit.Authenticate(s.Ctx, account, nil, nil)
+			spendLimit.Authenticate(s.Ctx, request)
 
 			// simulate spending
 			err = s.OsmosisApp.BankKeeper.SendCoins(s.Ctx, account, account, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(tt.amt))))
@@ -116,7 +123,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 			s.Ctx = s.Ctx.WithBlockTime(tt.t2)
 
 			// Execute ConfirmExecution and check if it's confirmed or blocked
-			result := spendLimit.ConfirmExecution(s.Ctx, account, nil, nil)
+			result := spendLimit.ConfirmExecution(s.Ctx, request)
 			s.Require().Equal(tt.pass, result.IsConfirm())
 		})
 	}
@@ -124,16 +131,11 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 
 func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends() {
 	// Mock an account
-	account, err := sdk.AccAddressFromBech32("osmo1s43st0ev6zuvu8ck64jumtjsz06tzqvqqmfspg")
-	accountSet := authtypes.NewBaseAccount(account, nil, 0, 0)
-	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, accountSet)
-
-	receiver, err := sdk.AccAddressFromBech32("osmo1f3cwcxwmpzjm56zavvv4xat43jxeyk0du4hqfj")
-	accountSet = authtypes.NewBaseAccount(receiver, nil, 0, 0)
-	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, accountSet)
+	account := s.TestAccAddress[0]
+	receiver := s.TestAccAddress[1]
 
 	supply := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(2_000_000_000)))
-	err = s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
+	err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
 	s.Require().NoError(err)
 	initialBalance := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10_000)))
 	err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, account, initialBalance)
@@ -232,8 +234,18 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 				// Simulate time transition
 				s.Ctx = s.Ctx.WithBlockTime(pair.timePoint)
 
-				spendLimit.Authenticate(s.Ctx, account, nil, nil)
-				err := spendLimit.Track(s.Ctx, account, nil)
+				ak := s.OsmosisApp.AccountKeeper
+				sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+				// sample msg
+				msg := &bank.MsgSend{FromAddress: account.String(), ToAddress: receiver.String(), Amount: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(pair.spendingAmt)))}
+				// sample tx
+				tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+				s.Require().NoError(err)
+				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, account, msg, tx, 0, false, authenticator.SequenceMatch)
+				s.Require().NoError(err)
+
+				spendLimit.Authenticate(s.Ctx, request)
+				err = spendLimit.Track(s.Ctx, account, nil)
 				s.Require().NoError(err)
 
 				// Simulate spending
@@ -241,7 +253,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 				s.Require().NoError(err)
 
 				// Execute ConfirmExecution and check if it's confirmed or blocked
-				result := spendLimit.ConfirmExecution(s.Ctx, account, nil, nil)
+				result := spendLimit.ConfirmExecution(s.Ctx, request)
 				s.Require().Equal(pair.expectToPass, result.IsConfirm())
 			}
 		})

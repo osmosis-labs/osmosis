@@ -18,10 +18,8 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// Compile time type assertion for the SignatureData using the
-// PassKeyAuthenticator struct
+// Compile time type assertion for the  PassKeyAuthenticator struct
 var _ iface.Authenticator = &PassKeyAuthenticator{}
-var _ iface.AuthenticatorData = &SignatureData{}
 
 const (
 	// PassKeyAuthenticatorType represents a type of authenticator specifically designed for
@@ -84,137 +82,47 @@ func (sva PassKeyAuthenticator) Initialize(
 	return sva, nil
 }
 
-// PassKeySignatureData is used to package all the signature data and the tx
-// for use in the Authenticate function
-type PassKeySignatureData = SignatureData
-
-// GetAuthenticationData parses the signers and signatures from a transactiom
-// then returns a indexed list of both signers and signatures
-// NOTE: position in the array is used to associate the signer and signature
-func (sva PassKeyAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
-	signers, signatures, signingTx, err := GetCommonAuthenticationData(ctx, tx, messageIndex, simulate)
-	if err != nil {
-		return SignatureData{}, err
-	}
-
-	// Get the signature for the message at msgIndex
-	return SignatureData{
-		Signers:    signers,
-		Signatures: signatures,
-		Tx:         signingTx,
-		Simulate:   simulate,
-	}, nil
-}
-
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva PassKeyAuthenticator) Authenticate(
-	ctx sdk.Context,
-	account sdk.AccAddress,
-	msg sdk.Msg,
-	authenticationData iface.AuthenticatorData,
-) iface.AuthenticationResult {
+func (sva PassKeyAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	// Retrieve pubkey we use either the public key from the authenticator store
 	// the public key is added to the sva struct by the Initialize function
 	pubKey := sva.PubKey
 
+	// TODO: Why is this a separate function?
 	return Authenticate(
 		ctx,
-		msg,
-		authenticationData,
+		request,
 		sva.ak,
 		pubKey,
-		sva.Handler,
 	)
 }
 
 func Authenticate(
 	ctx sdk.Context,
-	msg sdk.Msg,
-	authenticationData iface.AuthenticatorData,
+	request iface.AuthenticationRequest,
 	ak authante.AccountKeeper,
 	pubKey cryptotypes.PubKey,
-	handler authsigning.SignModeHandler,
 ) iface.AuthenticationResult {
-	verificationData, ok := authenticationData.(SignatureData)
-	if !ok {
-		return iface.Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
-	}
-
 	// First consume gas for verifing the signature
 	params := ak.GetParams(ctx)
-	for _, sig := range verificationData.Signatures {
-		err := authante.DefaultSigVerificationGasConsumer(ctx.GasMeter(), sig, params)
-		if err != nil {
-			return iface.Rejected("couldn't get gas consumer", err)
-		}
-	}
+	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256r1(), "secp256r1 signature verification")
+
 	// after gas consumption continue to verify signatures
-	for i, sig := range verificationData.Signatures {
-		acc, err := authante.GetSignerAcc(ctx, ak, verificationData.Signers[i])
-		if err != nil {
-			return iface.Rejected("couldn't get signer account", err)
-		}
+	if !request.Simulate && pubKey == nil {
+		return iface.Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
+	}
 
-		if !verificationData.Simulate && pubKey == nil {
-			return iface.Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
-		}
-
-		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return iface.Rejected(
-				fmt.Sprintf("account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence),
-				sdkerrors.ErrInvalidPubKey,
+	// No need to verify signatures on recheck tx
+	if !request.Simulate && !ctx.IsReCheckTx() {
+		if !pubKey.VerifySignature(request.SignModeTxData.Direct, request.Signature) {
+			ctx.Logger().Debug(
+				"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
+				request.TxData.AccountNumber,
+				request.TxData.Sequence,
+				request.TxData.ChainID,
 			)
-		}
-
-		// Retrieve and build the signer data struct
-		genesis := ctx.BlockHeight() == 0
-		chainID := ctx.ChainID()
-		var accNum uint64
-		if !genesis {
-			accNum = acc.GetAccountNumber()
-		}
-		signerData := authsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-		}
-
-		// No need to verify signatures on recheck tx
-		if !verificationData.Simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(
-				pubKey,
-				signerData,
-				sig.Data,
-				handler,
-				verificationData.Tx,
-			)
-			if err != nil {
-				if authante.OnlyLegacyAminoSigners(sig.Data) {
-					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-					// and therefore communicate sequence number as a potential cause of error.
-					ctx.Logger().Debug(
-						"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
-						accNum,
-						acc.GetSequence(),
-						chainID,
-					)
-				} else {
-					ctx.Logger().Debug(fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)",
-						accNum,
-						chainID,
-					))
-				}
-				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
-				// return NotAuthenticated()
-				return iface.NotAuthenticated()
-			}
+			return iface.NotAuthenticated()
 		}
 	}
 	return iface.Authenticated()
@@ -237,6 +145,6 @@ func (sva PassKeyAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account 
 	return nil
 }
 
-func (sva PassKeyAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (sva PassKeyAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	return iface.Confirm()
 }

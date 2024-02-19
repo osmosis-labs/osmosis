@@ -4,8 +4,40 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AuthenticatorData represents the data required for verifying a signer's address and message signature.
-type AuthenticatorData interface{}
+type SignModeData struct {
+	Direct  []byte `json:"sign_mode_direct"`
+	Textual string `json:"sign_mode_textual"`
+}
+
+type LocalAny struct {
+	TypeURL string `json:"type_url"`
+	Value   []byte `json:"value"`
+}
+
+type ExplicitTxData struct {
+	ChainID       string     `json:"chain_id"`
+	AccountNumber uint64     `json:"account_number"`
+	Sequence      uint64     `json:"sequence"` // TODO: rename to account_sequence
+	TimeoutHeight uint64     `json:"timeout_height"`
+	Msgs          []LocalAny `json:"msgs"`
+	Memo          string     `json:"memo"`
+}
+
+type SimplifiedSignatureData struct {
+	Signers    []sdk.AccAddress `json:"signers"`
+	Signatures [][]byte         `json:"signatures"`
+}
+
+type AuthenticationRequest struct { // TODO: Add authenticator id
+	Account             sdk.AccAddress          `json:"account"`
+	Msg                 LocalAny                `json:"msg"`
+	Signature           []byte                  `json:"signature"` // Only allowing messages with a single signer
+	SignModeTxData      SignModeData            `json:"sign_mode_tx_data"`
+	TxData              ExplicitTxData          `json:"tx_data"`
+	SignatureData       SimplifiedSignatureData `json:"signature_data"`
+	Simulate            bool                    `json:"simulate"`
+	AuthenticatorParams []byte                  `json:"authenticator_params,omitempty"`
+}
 
 // Authenticator is an interface employed to encapsulate all authentication functionalities essential for
 // verifying transactions, paying transaction fees, and managing gas consumption during verification.
@@ -26,17 +58,6 @@ type Authenticator interface {
 	// allowing the same authenticator code to verify signatures for different public keys.
 	Initialize(data []byte) (Authenticator, error)
 
-	// GetAuthenticationData retrieves any required authentication data from a transaction.
-	// It returns an interface defined as a concrete type by the implementer of the interface.
-	// This is used within an ante handler in conjunction with Authenticate to ensure that
-	// the user possesses the correct permissions to execute a message.
-	GetAuthenticationData(
-		ctx sdk.Context, // The SDK Context is utilized to access data associated with authentication data.
-		tx sdk.Tx, // The transaction is passed to the getter function to parse signatures and signers.
-		messageIndex int, // The message index is used to extract specific signers and signatures from the authentication data.
-		simulate bool, // Simulate is used to perform transaction simulation.
-	) (AuthenticatorData, error)
-
 	// Track is used for authenticators to track any information they may need regardless of how the transactions is
 	// authenticated. For instance, if a message is authenticated via authz, ICA, or similar, those entrypoints should
 	// call authenticator.Track(...) so that the authenticator can know that the account has executed a specific message
@@ -50,16 +71,14 @@ type Authenticator interface {
 	// It returns true if authenticated, or false if not authenticated. This function is used within an ante handler.
 	// Note: Gas consumption occurs within this function.
 	Authenticate(
-		ctx sdk.Context, // The SDK Context is used to access data for authentication and to consume gas.
-		account sdk.AccAddress, // The account being authenticated (typically msg.GetSigners()[0]).
-		msg sdk.Msg, // A message is passed into the authenticate function, allowing authenticators to utilize its information.
-		authenticationData AuthenticatorData, // The authentication data is used to authenticate a message.
+		ctx sdk.Context,
+		request AuthenticationRequest,
 	) AuthenticationResult
 
 	// ConfirmExecution is employed in the post-handler function to enforce transaction rules,
 	// such as spending and transaction limits. It accesses the account's owned state to store
 	// and verify these values.
-	ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult
+	ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) ConfirmationResult
 
 	// OnAuthenticatorAdded is called when an authenticator is added to an account. If the data is not properly formatted
 	// or the authenticator is not compatible with the account, an error should be returned.
@@ -71,8 +90,3 @@ type Authenticator interface {
 	// Removal prevention should be used sparingly and only when absolutely necessary.
 	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error
 }
-
-// EmptyAuthenticationData is a generic implementation used when no custom authentication data is needed or available
-type EmptyAuthenticationData struct{}
-
-var _ AuthenticatorData = EmptyAuthenticationData{}

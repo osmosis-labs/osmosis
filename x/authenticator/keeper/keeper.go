@@ -178,7 +178,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 }
 
 // MarkAuthenticatorAsReady sets an authenticator to be ready
-func (k Keeper) MarkAuthenticatorAsReady(ctx sdk.Context, keyAccountId []byte) error {
+func (k Keeper) MarkAuthenticatorAsReady(ctx sdk.Context, keyAccountId []byte) {
 	store := ctx.KVStore(k.storeKey)
 
 	var auth types.AccountAuthenticator
@@ -186,7 +186,6 @@ func (k Keeper) MarkAuthenticatorAsReady(ctx sdk.Context, keyAccountId []byte) e
 
 	auth.IsReady = true
 	osmoutils.MustSet(store, keyAccountId, &auth)
-	return nil
 }
 
 // RemoveAuthenticator removes an authenticator from an account

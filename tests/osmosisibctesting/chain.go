@@ -69,11 +69,17 @@ func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msg
 	// extract account numbers and sequences from messages
 	accountNumbers := make([]uint64, len(msgs))
 	accountSequences := make([]uint64, len(msgs))
+	seenSequence := make(map[string]uint64)
 	for i, msg := range msgs {
 		signer := msg.GetSigners()[0]
 		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
 		accountNumbers[i] = account.GetAccountNumber()
-		accountSequences[i] = account.GetSequence()
+		if sequence, ok := seenSequence[signer.String()]; ok {
+			accountSequences[i] = sequence + 1
+		} else {
+			accountSequences[i] = account.GetSequence()
+		}
+		seenSequence[signer.String()] = accountSequences[i]
 	}
 
 	_, r, err := SignAndDeliver(

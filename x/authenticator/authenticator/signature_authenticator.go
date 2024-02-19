@@ -10,8 +10,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
@@ -21,7 +19,6 @@ import (
 // Compile time type assertion for the SignatureData using the
 // SignatureVerificationAuthenticator struct
 var _ iface.Authenticator = &SignatureVerificationAuthenticator{}
-var _ iface.AuthenticatorData = &SignatureData{}
 
 const (
 	// SignatureVerificationAuthenticatorType represents a type of authenticator specifically designed for
@@ -72,128 +69,42 @@ func (sva SignatureVerificationAuthenticator) Initialize(
 	return sva, nil
 }
 
-type Tx struct {
-}
-
-// SignatureData is used to package all the signature data and the tx
-// for use in the Authenticate function
-type SignatureData struct {
-	Signers    []sdk.AccAddress
-	Signatures []signing.SignatureV2
-	Tx         sdk.Tx
-	Simulate   bool
-}
-
-// GetAuthenticationData parses the signers and signatures from a transactiom
-// then returns an indexed list of both signers and signatures
-// NOTE: position in the array is used to associate the signer and signature
-func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
-	signers, signatures, signingTx, err := GetCommonAuthenticationData(ctx, tx, messageIndex, simulate)
-	if err != nil {
-		return SignatureData{}, err
-	}
-
-	// Get the signature for the message at msgIndex
-	return SignatureData{
-		Signers:    signers,
-		Signatures: signatures,
-		Tx:         signingTx,
-		Simulate:   simulate,
-	}, nil
-}
-
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
-	verificationData, ok := authenticationData.(SignatureData)
-	if !ok {
-		return iface.Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
-	}
-
+func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
 	// First consume gas for verifing the signature
 	params := sva.ak.GetParams(ctx)
-	for _, sig := range verificationData.Signatures {
-		err := authante.DefaultSigVerificationGasConsumer(ctx.GasMeter(), sig, params)
-		if err != nil {
-			return iface.Rejected("couldn't get gas consumer", err)
-		}
-	}
+	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
 
-	// after gas consumption continue to verify signatures
-	for i, sig := range verificationData.Signatures {
-		acc, err := authante.GetSignerAcc(ctx, sva.ak, verificationData.Signers[i])
+	// Retrieve pubkey we use either the public key from the authenticator store
+	// if that's not available query the original auth store for the public key
+	// the public key is added to the sva struct by the Initialize function
+	pubKey := sva.PubKey
+	if pubKey == nil {
+		// Having a default here keeps this authenticator stateless,
+		// that way we don't have to create specific authenticators with the pubkey of each existing account
+		acc, err := authante.GetSignerAcc(ctx, sva.ak, request.Account)
 		if err != nil {
 			return iface.Rejected("couldn't get signer account", err)
 		}
+		pubKey = acc.GetPubKey()
+	}
 
-		// Retrieve pubkey we use either the public key from the authenticator store
-		// if that's not available query the original auth store for the public key
-		// the public key is added to the sva struct by the Initialize function
-		pubKey := sva.PubKey
-		if pubKey == nil {
-			// Having a default here keeps this authenticator stateless,
-			// that way we don't have to create specific authenticators with the pubkey of each existing account
-			pubKey = acc.GetPubKey()
-		}
-		if !verificationData.Simulate && pubKey == nil {
-			return iface.Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
-		}
+	// after gas consumption continue to verify signatures
+	if !request.Simulate && pubKey == nil {
+		return iface.Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
+	}
 
-		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return iface.Rejected(
-				fmt.Sprintf("account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence),
-				sdkerrors.ErrInvalidPubKey,
+	// No need to verify signatures on recheck tx
+	if !request.Simulate && !ctx.IsReCheckTx() {
+		if !pubKey.VerifySignature(request.SignModeTxData.Direct, request.Signature) {
+			ctx.Logger().Debug(
+				"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
+				request.TxData.AccountNumber,
+				request.TxData.Sequence,
+				request.TxData.ChainID,
 			)
-		}
-
-		// Retrieve and build the signer data struct
-		genesis := ctx.BlockHeight() == 0
-		chainID := ctx.ChainID()
-		var accNum uint64
-		if !genesis {
-			accNum = acc.GetAccountNumber()
-		}
-		signerData := authsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-		}
-
-		// No need to verify signatures on recheck tx
-		if !verificationData.Simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(
-				pubKey,
-				signerData,
-				sig.Data,
-				sva.Handler,
-				verificationData.Tx,
-			)
-			if err != nil {
-				if authante.OnlyLegacyAminoSigners(sig.Data) {
-					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-					// and therefore communicate sequence number as a potential cause of error.
-					ctx.Logger().Debug(
-						"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
-						accNum,
-						acc.GetSequence(),
-						chainID,
-					)
-				} else {
-					ctx.Logger().Debug(fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)",
-						accNum,
-						chainID,
-					))
-				}
-				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
-				// return NotAuthenticated()
-				return iface.NotAuthenticated()
-			}
+			return iface.NotAuthenticated()
 		}
 	}
 	return iface.Authenticated()
@@ -203,7 +114,7 @@ func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	return iface.Confirm()
 }
 
