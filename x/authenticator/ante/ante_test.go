@@ -287,6 +287,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Bad selection", s.TestPrivKeys[0], []int32{3}, false, 0},
 	}
 
+	baseGas := 2707              // base gas consimed before starting to iterate through authenticators
 	approachingGasPerSig := 4105 // Each signature consumes at least this amount (but not much more)
 
 	for _, tc := range testCases {
@@ -303,6 +304,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 
 			anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 			res, err := anteHandler(s.Ctx.WithGasMeter(sdk.NewGasMeter(300000)), tx, false)
+			fmt.Println(res.GasMeter().GasConsumed())
 
 			if tc.shouldPass {
 				s.Require().NoError(err, "Expected to pass but got error")
@@ -312,10 +314,10 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 
 			// ensure only the right amount of sigs have been checked
 			if tc.checks > 0 {
-				s.Require().Greater(res.GasMeter().GasConsumed(), uint64(tc.checks*approachingGasPerSig))
-				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64((tc.checks+1)*approachingGasPerSig))
+				s.Require().GreaterOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+(tc.checks-1)*approachingGasPerSig))
+				s.Require().Less(res.GasMeter().GasConsumed(), uint64(baseGas+tc.checks*approachingGasPerSig))
 			} else {
-				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(2_400))
+				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas))
 			}
 		})
 	}

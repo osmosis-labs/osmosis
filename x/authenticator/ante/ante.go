@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"encoding/json"
 	"fmt"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
@@ -97,6 +95,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// This is a transient context stored globally throughout the execution of the tx
 	// Any changes will to authenticator storage will be written to the store at the end of the tx
 	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
+	// Ensure that no usedAuthenticators are stored in the transient store
+	ad.authenticatorKeeper.TransientStore.ResetUsedAuthenticators()
 
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
@@ -110,12 +110,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	cosignerActive, cosignerContract := ad.isCosignerActive(cacheCtx)
-
 	ak, ok := ad.accountKeeper.(*authkeeper.AccountKeeper)
 	if !ok {
 		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
 	}
+
+	var tracks []func() error
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
@@ -139,16 +139,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
 				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
-			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
-		}
-
-		if cosignerActive && isCosignerMsg(msg) {
-			cosignerAuthenticator, err := ad.cosignerAuthenticator(ctx, account, cosignerContract) // CosmwasmAuthenticator.Inititialize()
-			if err != nil {
-				return sdk.Context{}, err
-			}
-			// TODO: is it better to wrap the authenticators as [AllOf(cosigner, i) for i in authenticators] instead?
-			authenticators = []types.Authenticator{cosignerAuthenticator}
+			authenticators = []types.InitializedAuthenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
 		// Generate the authentication request data
@@ -158,16 +149,20 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		msgAuthenticated := false
-		for _, authenticator := range authenticators {
-			// Consume the authenticator's static gas
-			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
+		for _, initializedAuthenticator := range authenticators {
+			a11r := initializedAuthenticator.Authenticator
+			id := initializedAuthenticator.Id
 
-			authentication := authenticator.Authenticate(cacheCtx, authenticationRequest)
+			// Consume the authenticator's static gas
+			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
+
+			authentication := a11r.Authenticate(cacheCtx, authenticationRequest)
 			if authentication.IsRejected() {
 				return ctx, authentication.Error()
 			}
 
 			if authentication.IsAuthenticated() {
+				ad.authenticatorKeeper.TransientStore.AddUsedAuthenticator(id)
 				msgAuthenticated = true
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
@@ -177,6 +172,16 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					ctx = ctx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}
+
+				// Append the track closure to be called after the fee payer is authenticated
+				tracks = append(tracks, func() error {
+					err := a11r.Track(ctx, account, msg)
+					if err != nil {
+						return err
+					}
+					return nil
+				})
+
 				break
 			}
 		}
@@ -193,62 +198,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "fee payer not authenticated")
 	}
 
-	// If the transaction has been authenticated, we call TrackMessages(...) to
-	// notify every authenticator so that they can handle any storage updates
-	// that need to happen regardless of how the message was authorized.
-	err = utils.TrackMessages(cacheCtx, ad.authenticatorKeeper, msgs)
-	if err != nil {
-		return sdk.Context{}, err
+	// If the transaction has been authenticated, we call Track(...) on every message
+	// to notify its authenticator so that it can handle any state updates.
+	for _, track := range tracks {
+		if err := track(); err != nil {
+			return sdk.Context{}, err
+		}
 	}
 
 	return next(ctx, tx, simulate)
-}
-
-func isCosignerMsg(msg sdk.Msg) bool {
-	if _, ok := msg.(*authenticatortypes.MsgAddAuthenticator); ok {
-		return true
-	}
-	if _, ok := msg.(*authenticatortypes.MsgRemoveAuthenticator); ok {
-		return true
-	}
-	return false
-}
-
-func (ad AuthenticatorDecorator) cosignerAuthenticator(ctx sdk.Context, account sdk.AccAddress, cosignerContract string) (types.Authenticator, error) {
-	cosmwasmAuthenticator := ad.authenticatorKeeper.AuthenticatorManager.GetAuthenticatorByType("CosmwasmAuthenticator")
-	if cosmwasmAuthenticator == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "CosmwasmAuthenticator not found")
-	}
-
-	acc, err := authante.GetSignerAcc(ctx, ad.accountKeeper, account)
-	if err != nil {
-		return nil, err
-	}
-	initData := authenticator.CosmwasmAuthenticatorInitData{
-		Contract: cosignerContract,
-		Params:   acc.GetPubKey().Bytes(),
-	}
-	initDataBz, err := json.Marshal(initData)
-	if err != nil {
-		return nil, err
-	}
-
-	instance, err := cosmwasmAuthenticator.Initialize(initDataBz)
-	if err != nil {
-		return nil, err
-	}
-
-	return instance, nil
-}
-
-func (ad AuthenticatorDecorator) isCosignerActive(ctx sdk.Context) (bool, string) {
-	params := ad.authenticatorKeeper.GetParams(ctx)
-	cosignerContract := params.CosignerContract
-
-	if cosignerContract == "" {
-		return false, ""
-	}
-	return true, cosignerContract
 }
 
 // GetSelectedAuthenticators retrieves the selected authenticators for the provided transaction extension

@@ -15,9 +15,7 @@ type AllOfAuthenticator struct {
 	am                *AuthenticatorManager
 }
 
-var (
-	_ iface.Authenticator = &AllOfAuthenticator{}
-)
+var _ iface.Authenticator = &AllOfAuthenticator{}
 
 func NewAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
 	return AllOfAuthenticator{
@@ -129,10 +127,11 @@ func validateSubAuthenticatorData(initDatas []InitializationData, am *Authentica
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				subAuthenticatorCount++
-				continue
+				break
 			}
 		}
 	}
+	// TODO: Should we recursively call OnAdded here?
 
 	// If not all sub-authenticators are registered, return an error
 	if subAuthenticatorCount != len(initDatas) {
