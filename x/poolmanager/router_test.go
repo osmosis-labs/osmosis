@@ -69,7 +69,7 @@ var (
 	}
 	communityPoolAddrName = "distribution"
 	txFeesStakingAddrName = txfeestypes.NonNativeTxFeeCollectorName
-	nonQuoteCommAddrName  = txfeestypes.DeprecatedFeeCollectorForCommunityPoolName
+	nonQuoteCommAddrName  = txfeestypes.TakerFeeCommunityPoolName
 	takerFeeAddrName      = txfeestypes.TakerFeeCollectorName
 
 	defaultPoolInitAmount     = osmomath.NewInt(10_000_000_000)

@@ -34,7 +34,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	nonNativefeeTokenCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeTxFeeCollectorName)
 
 	// Non-native fee token collector for staking rewards get swapped entirely into base denom.
-	k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, nonNativefeeTokenCollectorAddress, k.bankKeeper.GetAllBalances(ctx, nonNativefeeTokenCollectorAddress))
+	k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, nonNativefeeTokenCollectorAddress)
 
 	// Now that the rewards have been swapped, transfer any base denom existing in the non-native tx fee collector to the auth fee token collector (indirectly distributing to stakers)
 	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativefeeTokenCollectorAddress, defaultFeesDenom))
@@ -113,7 +113,6 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	nonOsmoTakerFeeDistribution := takerFeeParams.NonOsmoTakerFeeDistribution
 	authorizedQuoteDenoms := poolManagerParams.AuthorizedQuoteDenoms
 
-	nonOsmoForStaking := sdk.NewCoins()
 	nonOsmoForCommunityPool := sdk.NewCoins()
 
 	// Loop through all remaining tokens in the taker fee module account.
@@ -145,21 +144,23 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 		}
 
-		// Staking Rewards:
-		if nonOsmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && takerFeeCoin.Amount.GT(osmomath.ZeroInt()) {
-			// Track the non osmo assets designated for staking rewards here and later swap everything to the base denom.
-			nonOsmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(takerFeeCoin.Denom, takerFeeCoin.Amount)
-			nonOsmoForStaking = nonOsmoForStaking.Add(nonOsmoTakerFeeToStakingRewardsCoin)
-		}
+		// We done need to calculate the staking rewards for non native taker fees, since it ends up being whatever is left over!
 	}
 
+	// Send the non-native, non-whitelisted taker fees to the taker fee community pool module account.
+	// We do this in the event that the swap fails, we can still track the amount of non-native, non-whitelisted taker fees that were intended for the community pool.
+	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeCommunityPoolName, nonOsmoForCommunityPool)
+		return err
+	})
 	// Swap the non-native, non-whitelisted taker fees slated for community pool into the denom specified in the pool manager params.
+	takerFeeCommunityPoolModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeCommunityPoolName)
 	denomToSwapTo := poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
-	totalCoinOut := k.swapNonNativeFeeToDenom(ctx, denomToSwapTo, takerFeeModuleAccount, nonOsmoForCommunityPool)
+	totalCoinOut := k.swapNonNativeFeeToDenom(ctx, denomToSwapTo, takerFeeCommunityPoolModuleAccount)
 	// Now that the non whitelisted assets have been swapped, fund the community pool with the denom we swapped to.
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(totalCoinOut), takerFeeModuleAccount)
+			err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(totalCoinOut), takerFeeCommunityPoolModuleAccount)
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, totalCoinOut.Denom, totalCoinOut.Amount)
 			if trackerErr != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for community pool by denom", "error", err)
@@ -169,7 +170,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	}
 
 	// Swap the taker fees slated for staking rewards into the base denom.
-	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeModuleAccount, nonOsmoForStaking)
+	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeModuleAccount)
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
 		// Now that the assets have been swapped, transfer any base denom existing in the taker fee module account to the auth fee collector module account (indirectly distributing to stakers)
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
@@ -187,7 +188,8 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 // If an error in swap occurs for a given denom, it will be silently skipped.
 // CONTRACT: a pool must exist between each denom in the balance and denomToSwapTo. If doesn't exist. Silently skip swap.
 // CONTRACT: protorev must be configured to have a pool for the given denom pair. Otherwise, the denom will be skipped.
-func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress, coinsToSwap sdk.Coins) sdk.Coin {
+func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) sdk.Coin {
+	coinsToSwap := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
 	totalCoinOut := sdk.NewCoin(denomToSwapTo, osmomath.ZeroInt())
 	for _, coin := range coinsToSwap {
 		if coin.Denom == denomToSwapTo {

@@ -11,15 +11,15 @@ const (
 	// RouterKey is the message route for slashing.
 	RouterKey = ModuleName
 
-	// NonNativeTxFeeCollectorName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// NonNativeTxFeeCollectorName is the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
 	NonNativeTxFeeCollectorName = "non_native_fee_collector"
 
-	// DeprecatedFeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
-	// These fees go to the community pool.
-	// This module account is deprecated and we instead just send all taker fees to the taker fee collector, regardless of the denom.
-	DeprecatedFeeCollectorForCommunityPoolName = "non_native_fee_collector_community_pool"
+	// TakerFeeCommunityPoolName is the name of the module account that collects non-native taker fees and sends them to the community pool.
+	// Note, all taker fees initially get sent to the TakerFeeCollectorName, and then prior to the taker fees slated for the community pool being swapped and sent to the community pool, they are sent to this account.
+	// This is done so that, in the event of a failed swap, the funds slated for the community pool are not grouped back with the rest of the taker fees in the next epoch.
+	TakerFeeCommunityPoolName = "non_native_fee_collector_community_pool"
 
-	// TakerFeeCollectorName the module account name for the taker fee collector account address. It collects both native and non-native taker fees.
+	// TakerFeeCollectorName is the module account name for the taker fee collector account address. It collects both native and non-native taker fees.
 	TakerFeeCollectorName = "taker_fee_collector"
 
 	// QuerierRoute defines the module's query routing key

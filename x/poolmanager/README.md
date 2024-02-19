@@ -478,7 +478,7 @@ type TakerFeeParams struct {
 
 Not shown here is a separate KVStore, which holds overrides for the defaultTakerFee.
 
-The module account that holds all taker fees prior to distribution is named the `taker_fee_collector`. This used to be two separate module accounts, but was combined into one to simplify the distribution process.
+The module account that holds all taker fees prior to distribution is named the `taker_fee_collector`. Prior to swapping and distributing non-native taker fees to the community pool, these tokens are sent to the `non_native_fee_collector_community_pool` module account. This done so that, if a swap fails, the tokens that fail to swap are not grouped back into the taker fees for stakers in the next epoch. It also allows us to skip calculating the taker fees for non-native tokens that go to stakers, since it ends up being whatever is left over.
 
 Lets go through the lifecycle to better understand how taker fee works in a variety of situations, and how the module account and distribution parameters are used depending on the input token.
 

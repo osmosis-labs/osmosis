@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 			// Fund the account with the preFundCoins
 			s.FundAcc(testAccount, tc.preFundCoins)
 
-			s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount, tc.preFundCoins)
+			s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
 
 			// Check balance
 			balances := s.App.BankKeeper.GetAllBalances(s.Ctx, testAccount)
@@ -342,7 +342,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				s.FundAcc(testAccount, tc.preFundCoins)
 
 				// System under test.
-				s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount, tc.preFundCoins)
+				s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
 
 				// Check balance
 				validateFinalBalance(tc.expectedEndBalanceDenoms, testAccount)
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 		s.FundAcc(testAccount, preFundCoins)
 
 		// System under test.
-		s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, denomToSwapTo, testAccount, preFundCoins)
+		s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, denomToSwapTo, testAccount)
 
 		// Check balance
 		validateFinalBalance(expectedEndBalanceDenoms, testAccount)
