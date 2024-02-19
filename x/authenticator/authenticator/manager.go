@@ -94,14 +94,14 @@ func (am *AuthenticatorManager) GetDefaultAuthenticator() iface.Authenticator {
 type TransientStore struct {
 	storeKey           storetypes.StoreKey
 	transientCtx       sdk.Context
-	usedAuthenticators []int64
+	usedAuthenticators []uint64
 }
 
 func NewTransientStore(storeKey storetypes.StoreKey, ctx sdk.Context) *TransientStore {
 	return &TransientStore{
 		storeKey:           storeKey,
 		transientCtx:       ctx,
-		usedAuthenticators: []int64{},
+		usedAuthenticators: []uint64{},
 	}
 }
 
@@ -111,7 +111,7 @@ func (as *TransientStore) ResetTransientContext(ctx sdk.Context) sdk.Context {
 }
 
 func (as *TransientStore) ResetUsedAuthenticators() {
-	as.usedAuthenticators = []int64{}
+	as.usedAuthenticators = []uint64{}
 }
 
 func (as *TransientStore) GetKvStore() store.KVStore {
@@ -127,11 +127,11 @@ func (as *TransientStore) GetTransientContextWithGasMeter(gasMeter sdk.GasMeter)
 	return as.transientCtx
 }
 
-func (as *TransientStore) GetUsedAuthenticators() []int64 {
+func (as *TransientStore) GetUsedAuthenticators() []uint64 {
 	return as.usedAuthenticators
 }
 
-func (as *TransientStore) AddUsedAuthenticator(authenticatorId int64) {
+func (as *TransientStore) AddUsedAuthenticator(authenticatorId uint64) {
 	as.usedAuthenticators = append(as.usedAuthenticators, authenticatorId)
 }
 

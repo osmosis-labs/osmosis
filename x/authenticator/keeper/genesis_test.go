@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	)
 	s.Require().NoError(err)
 
-	_, authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
+	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
 	s.Require().NoError(err)
 	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 

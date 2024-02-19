@@ -38,7 +38,7 @@ func (m msgServer) AddAuthenticator(
 		return nil, err
 	}
 
-	_, authenticators, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
+	authenticators, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
