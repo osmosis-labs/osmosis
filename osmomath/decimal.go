@@ -119,8 +119,9 @@ func NewBigDec(i int64) BigDec {
 // create a new BigDec from integer with decimal place at prec
 // CONTRACT: prec <= BigDecPrecision
 func NewBigDecWithPrec(i, prec int64) BigDec {
+	bi := big.NewInt(i)
 	return BigDec{
-		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
+		bi.Mul(bi, precisionMultiplier(prec)),
 	}
 }
 
@@ -841,11 +842,9 @@ func (d BigDec) Ceil() BigDec {
 	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
-	if rem.Cmp(zeroInt) == 0 {
+	if rem.Sign() == 0 {
 		return NewBigDecFromBigInt(quo)
-	}
-
-	if rem.Sign() == -1 {
+	} else if rem.Sign() == -1 {
 		return NewBigDecFromBigInt(quo)
 	}
 
@@ -944,7 +943,7 @@ func (d *BigDec) MarshalTo(data []byte) (n int, err error) {
 		d.i = new(big.Int)
 	}
 
-	if d.i.Cmp(zeroInt) == 0 {
+	if d.i.Sign() == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}
