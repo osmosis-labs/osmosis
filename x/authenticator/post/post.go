@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
