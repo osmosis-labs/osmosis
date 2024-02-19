@@ -71,6 +71,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 			if usedAuthenticators[msgIndex] != accountAuthenticator.Id {
 				continue
 			}
+			authenticationRequest.AuthenticatorId = accountAuthenticator.Id
 
 			authenticator := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 

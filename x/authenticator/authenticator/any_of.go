@@ -82,9 +82,10 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 	return iface.NotAuthenticated()
 }
 
-func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId uint64) error {
+	// TODO: Evolve authenticator IDs to allow tracking of sub-authenticators
 	for _, auth := range aoa.SubAuthenticators {
-		err := auth.Track(ctx, account, msg)
+		err := auth.Track(ctx, account, msg, authenticatorId)
 		if err != nil {
 			return err
 		}

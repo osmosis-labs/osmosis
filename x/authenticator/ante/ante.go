@@ -176,7 +176,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 				// Append the track closure to be called after the fee payer is authenticated
 				tracks = append(tracks, func() error {
-					err := a11r.Track(ctx, account, msg)
+					err := a11r.Track(ctx, account, msg, id)
 					if err != nil {
 						return err
 					}

@@ -40,7 +40,7 @@ func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator
 	return m, nil
 }
 
-func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId uint64) error {
 	return nil
 }
 

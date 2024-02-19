@@ -66,7 +66,7 @@ func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 	}
 }
 
-func (t TestingAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+func (t TestingAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId uint64) error {
 	return nil
 }
 

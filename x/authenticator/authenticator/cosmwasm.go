@@ -101,7 +101,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 	return authResult
 }
 
-func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId uint64) error {
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")

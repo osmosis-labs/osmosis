@@ -245,7 +245,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 				s.Require().NoError(err)
 
 				spendLimit.Authenticate(s.Ctx, request)
-				err = spendLimit.Track(s.Ctx, account, nil)
+				err = spendLimit.Track(s.Ctx, account, nil, 0)
 				s.Require().NoError(err)
 
 				// Simulate spending

@@ -59,15 +59,6 @@ type Authenticator interface {
 	// allowing the same authenticator code to verify signatures for different public keys.
 	Initialize(data []byte) (Authenticator, error)
 
-	// Track is used for authenticators to track any information they may need regardless of how the transactions is
-	// authenticated. For instance, if a message is authenticated via authz, ICA, or similar, those entrypoints should
-	// call authenticator.Track(...) so that the authenticator can know that the account has executed a specific message
-	Track(
-		ctx sdk.Context, // The SDK Context is used to access data for authentication and to consume gas.
-		account sdk.AccAddress, // The account being authenticated (typically msg.GetSigners()[0]).
-		msg sdk.Msg, // A message is passed into the authenticate function, allowing authenticators to utilize its information.
-	) error
-
 	// Authenticate validates a message based on the signer and data parsed from the GetAuthenticationData function.
 	// It returns true if authenticated, or false if not authenticated. This function is used within an ante handler.
 	// Note: Gas consumption occurs within this function.
@@ -75,6 +66,16 @@ type Authenticator interface {
 		ctx sdk.Context,
 		request AuthenticationRequest,
 	) AuthenticationResult
+
+	// Track is used for authenticators to track any information they may need regardless of how the transactions is
+	// authenticated. For instance, if a message is authenticated via authz, ICA, or similar, those entrypoints should
+	// call authenticator.Track(...) so that the authenticator can know that the account has executed a specific message
+	Track(
+		ctx sdk.Context,        // The SDK Context is used to access data for authentication and to consume gas.
+		account sdk.AccAddress, // The account being authenticated (typically msg.GetSigners()[0]).
+		msg sdk.Msg,            // A message is passed into the authenticate function, allowing authenticators to utilize its information.
+		authenticatorId uint64, // The global authenticator id
+	) error
 
 	// ConfirmExecution is employed in the post-handler function to enforce transaction rules,
 	// such as spending and transaction limits. It accesses the account's owned state to store
