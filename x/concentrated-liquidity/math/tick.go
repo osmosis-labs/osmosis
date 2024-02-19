@@ -101,7 +101,8 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	currentAdditiveIncrementInTicks := powTenBigDec(exponentAtCurrentTick)
 
 	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current geometricExponent we have passed
-	numAdditiveTicks := osmomath.NewBigDec(tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks))
+	numAdditiveTicks := tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)
+	additiveSpacing := currentAdditiveIncrementInTicks.MulInt64(numAdditiveTicks)
 
 	var price osmomath.BigDec
 
@@ -111,9 +112,9 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	// For the newly extended range of [MinInitializedTickV2, MinInitializedTick), we use the new math
 	// based on 36 precision decimal.
 	if tickIndex < types.MinInitializedTick {
-		price = powTenBigDec(geometricExponentDelta).Add(numAdditiveTicks.Mul(currentAdditiveIncrementInTicks))
+		price = additiveSpacing.AddMut(powTenBigDec(geometricExponentDelta))
 	} else {
-		price = osmomath.BigDecFromDec(PowTenInternal(geometricExponentDelta).Add(numAdditiveTicks.Mul(currentAdditiveIncrementInTicks).Dec()))
+		price = osmomath.BigDecFromDec(PowTenInternal(geometricExponentDelta).Add(additiveSpacing.Dec()))
 	}
 
 	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
@@ -189,7 +190,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.IsNegative() {
 		return 0, fmt.Errorf("price must be greater than zero")
 	}
-	if price.GT(osmomath.BigDecFromDec(types.MaxSpotPrice)) || price.LT(types.MinSpotPriceV2) {
+	if price.GT(types.MaxSpotPriceBigDec) || price.LT(types.MinSpotPriceV2) {
 		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(osmomathBigOneDec) {
@@ -230,7 +231,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	// The number of ticks that need to be filled by our current spacing is
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
 	priceInThisExponent := price.Sub(geoSpacing.initialPrice)
-	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
+	ticksFilledByCurrentSpacing := priceInThisExponent.QuoMut(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
 	// * adding to it the number of ticks filled by the current spacing
