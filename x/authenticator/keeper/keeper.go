@@ -61,12 +61,12 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 ) ([]*types.AccountAuthenticator, error) {
 	// unmarshalFn is used to unmarshal the AccountAuthenticator from the store
 	unmarshalFn := func(bz []byte) (*types.AccountAuthenticator, error) {
-		var authenticator types.AccountAuthenticator
-		err := k.cdc.Unmarshal(bz, &authenticator)
+		var accountAuthenticator types.AccountAuthenticator
+		err := k.cdc.Unmarshal(bz, &accountAuthenticator)
 		if err != nil {
 			return &types.AccountAuthenticator{}, err
 		}
-		return &authenticator, nil
+		return &accountAuthenticator, nil
 	}
 
 	accountAuthenticators, err := osmoutils.GatherValuesFromStorePrefix(
@@ -83,19 +83,19 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 
 // GetAuthenticatorsForAccount returns all the authenticators for the account
 // this function relies in GetAuthenticationDataForAccount
-func (k Keeper) GetAuthenticatorsForAccount(
-	ctx sdk.Context,
-	account sdk.AccAddress,
-) ([]iface.Authenticator, error) {
+func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]iface.InitializedAuthenticator, error) {
 	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
-	authenticators := make([]iface.Authenticator, len(authenticatorData))
+	authenticators := make([]iface.InitializedAuthenticator, len(authenticatorData))
 	for i, accountAuthenticator := range authenticatorData {
-		authenticators[i] = accountAuthenticator.AsAuthenticator(k.AuthenticatorManager)
-		if authenticators[i] == nil {
+		authenticators[i] = iface.InitializedAuthenticator{
+			Id:            accountAuthenticator.Id,
+			Authenticator: accountAuthenticator.AsAuthenticator(k.AuthenticatorManager),
+		}
+		if authenticators[i].Authenticator == nil {
 			return nil, fmt.Errorf("authenticator %d failed to initialize", accountAuthenticator.Id)
 		}
 	}
@@ -106,21 +106,23 @@ func (k Keeper) GetAuthenticatorsForAccount(
 // authenticators in the store, or the default if there is no authenticator associated with an account,
 // this would be the case if there is an account with authenticators
 // This function relies in GetAuthenticationsForAccount
-func (k Keeper) GetAuthenticatorsForAccountOrDefault(
-	ctx sdk.Context,
-	account sdk.AccAddress,
-) ([]iface.Authenticator, error) {
+func (k Keeper) GetAuthenticatorsForAccountOrDefault(ctx sdk.Context, account sdk.AccAddress) ([]iface.InitializedAuthenticator, error) {
 	authenticators, err := k.GetAuthenticatorsForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(authenticators) == 0 {
-		authenticators = append(authenticators, k.AuthenticatorManager.GetDefaultAuthenticator())
+		return []iface.InitializedAuthenticator{{
+			Id:            0,
+			Authenticator: k.AuthenticatorManager.GetDefaultAuthenticator(),
+		}}, nil
 	}
 
 	return authenticators, nil
 }
+
+const FirstAuthenticatorId = 1
 
 // GetNextAuthenticatorId returns the next authenticator id
 func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
@@ -131,8 +133,8 @@ func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 		panic(err)
 	}
 	if !found {
-		k.SetNextAuthenticatorId(ctx, 0)
-		return 0
+		k.SetNextAuthenticatorId(ctx, FirstAuthenticatorId)
+		return FirstAuthenticatorId
 	}
 	return nextAuthenticatorId.Value
 }

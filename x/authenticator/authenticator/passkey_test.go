@@ -330,7 +330,7 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 					request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accAddress, msg, tx, i, false, authenticator.SequenceMatch)
 					s.Require().NoError(err)
 
-					success = a11r.Authenticate(s.Ctx, request)
+					success = a11r.Authenticator.Authenticate(s.Ctx, request)
 				}
 			}
 			if tc.TestData.ShouldSucceedPassKey {

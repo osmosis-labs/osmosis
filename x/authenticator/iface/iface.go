@@ -90,3 +90,8 @@ type Authenticator interface {
 	// Removal prevention should be used sparingly and only when absolutely necessary.
 	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error
 }
+
+type InitializedAuthenticator struct {
+	Id            uint64
+	Authenticator Authenticator
+}
