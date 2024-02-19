@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -121,6 +122,8 @@ func (k Keeper) GetAuthenticatorsForAccountOrDefault(ctx sdk.Context, account sd
 	return authenticators, nil
 }
 
+const FirstAuthenticatorId = 1
+
 // GetNextAuthenticatorId returns the next authenticator id
 func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
@@ -130,8 +133,8 @@ func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 		panic(err)
 	}
 	if !found {
-		k.SetNextAuthenticatorId(ctx, 1)
-		return 1
+		k.SetNextAuthenticatorId(ctx, FirstAuthenticatorId)
+		return FirstAuthenticatorId
 	}
 	return nextAuthenticatorId.Value
 }
