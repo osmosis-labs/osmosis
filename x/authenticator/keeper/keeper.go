@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
 	"github.com/cometbft/cometbft/libs/log"
