@@ -12,6 +12,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -255,6 +256,8 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
+		telemetry.IncrCounter(1, types.NoPoolIdForGaugeTelemetryName)
+		ctx.Logger().Error(types.NoPoolIdForGaugeTelemetryName, "gaugeId", gaugeId, "duration", lockableDuration)
 		return 0, types.NoPoolAssociatedWithGaugeError{GaugeId: gaugeId, Duration: lockableDuration}
 	}
 

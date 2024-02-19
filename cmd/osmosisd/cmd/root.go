@@ -31,6 +31,8 @@ import (
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/client/pruning"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -683,6 +685,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		PrintEnvironmentCmd(),
 		PrintAllEnvironmentCmd(),
 		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
+		snapshot.Cmd(newApp),
+		pruning.Cmd(newApp, osmosis.DefaultNodeHome),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)

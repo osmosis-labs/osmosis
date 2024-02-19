@@ -119,8 +119,9 @@ func NewBigDec(i int64) BigDec {
 // create a new BigDec from integer with decimal place at prec
 // CONTRACT: prec <= BigDecPrecision
 func NewBigDecWithPrec(i, prec int64) BigDec {
+	bi := big.NewInt(i)
 	return BigDec{
-		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
+		bi.Mul(bi, precisionMultiplier(prec)),
 	}
 }
 
@@ -135,6 +136,14 @@ func NewBigDecFromBigInt(i *big.Int) BigDec {
 func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i, precisionMultiplier(prec)),
+	}
+}
+
+// returns a BigDec, built using a mutated copy of the passed in bigint.
+// CONTRACT: prec <= BigDecPrecision
+func NewBigDecFromBigIntMutWithPrec(i *big.Int, prec int64) BigDec {
+	return BigDec{
+		i.Mul(i, precisionMultiplier(prec)),
 	}
 }
 
@@ -357,7 +366,8 @@ func (d BigDec) MulInt(i BigInt) BigDec {
 
 // MulInt64 - multiplication with int64
 func (d BigDec) MulInt64(i int64) BigDec {
-	mul := new(big.Int).Mul(d.i, big.NewInt(i))
+	bi := big.NewInt(i)
+	mul := bi.Mul(d.i, bi)
 
 	if mul.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -667,13 +677,13 @@ func (d BigDec) DecRoundUp() Dec {
 // BigDecFromDec returns the BigDec representation of an Dec.
 // Values in any additional decimal places are truncated.
 func BigDecFromDec(d Dec) BigDec {
-	return NewBigDecFromBigIntWithPrec(d.BigInt(), DecPrecision)
+	return NewBigDecFromBigIntMutWithPrec(d.BigInt(), DecPrecision)
 }
 
 // BigDecFromSDKInt returns the BigDec representation of an sdkInt.
 // Values in any additional decimal places are truncated.
 func BigDecFromSDKInt(i Int) BigDec {
-	return NewBigDecFromBigIntWithPrec(i.BigInt(), 0)
+	return NewBigDecFromBigIntWithPrec(i.BigIntMut(), 0)
 }
 
 // BigDecFromDecSlice returns the []BigDec representation of an []Dec.
@@ -681,7 +691,7 @@ func BigDecFromSDKInt(i Int) BigDec {
 func BigDecFromDecSlice(ds []Dec) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewBigDecFromBigIntWithPrec(d.BigInt(), DecPrecision)
+		result[i] = NewBigDecFromBigIntMutWithPrec(d.BigInt(), DecPrecision)
 	}
 	return result
 }
@@ -691,7 +701,7 @@ func BigDecFromDecSlice(ds []Dec) []BigDec {
 func BigDecFromDecCoinSlice(ds []sdk.DecCoin) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewBigDecFromBigIntWithPrec(d.Amount.BigInt(), DecPrecision)
+		result[i] = NewBigDecFromBigIntMutWithPrec(d.Amount.BigInt(), DecPrecision)
 	}
 	return result
 }
@@ -841,11 +851,9 @@ func (d BigDec) Ceil() BigDec {
 	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
-	if rem.Cmp(zeroInt) == 0 {
+	if rem.Sign() == 0 {
 		return NewBigDecFromBigInt(quo)
-	}
-
-	if rem.Sign() == -1 {
+	} else if rem.Sign() == -1 {
 		return NewBigDecFromBigInt(quo)
 	}
 
@@ -944,7 +952,7 @@ func (d *BigDec) MarshalTo(data []byte) (n int, err error) {
 		d.i = new(big.Int)
 	}
 
-	if d.i.Cmp(zeroInt) == 0 {
+	if d.i.Sign() == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}
