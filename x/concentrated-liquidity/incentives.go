@@ -151,8 +151,9 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNowWithPool(ctx sdk.Context, pool 
 }
 
 var dec1e9 = osmomath.NewDec(1e9)
+var oneDec = osmomath.OneDec()
 
-// updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
+// updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id.
 // Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
 // If last liquidity update happened in the current block, this function is a no-op.
 // Specifically, it gets the time elapsed since the last update and divides it
@@ -162,10 +163,14 @@ var dec1e9 = osmomath.NewDec(1e9)
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: given uptimeAccums are associated with the given pool id.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
+//
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // Note: the following are the differences of this function from updatePoolUptimeAccumulatorsToNow:
+//
 // * this function does not refetch the uptime accumulators from state.
+//
 // * this function operates on the given pool directly, instead of fetching it from state.
+//
 // This is to avoid unnecessary state reads during swaps for performance reasons.
 func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []*accum.AccumulatorObject) error {
 	if pool == nil {
@@ -175,7 +180,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 to get
 	// time elapsed in seconds
 	timeElapsedNanoSec := osmomath.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
-	timeElapsedSec := timeElapsedNanoSec.Quo(dec1e9)
+	timeElapsedSec := timeElapsedNanoSec.QuoMut(dec1e9)
 
 	// If no time has elapsed, this function is a no-op
 	if timeElapsedSec.IsZero() {
@@ -204,7 +209,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 
 	// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
 	qualifyingLiquidity := pool.GetLiquidity()
-	if !qualifyingLiquidity.LT(osmomath.OneDec()) {
+	if !qualifyingLiquidity.LT(oneDec) {
 		for uptimeIndex := range uptimeAccums {
 			// Get relevant uptime-level values
 			curUptimeDuration := types.SupportedUptimes[uptimeIndex]
