@@ -645,17 +645,6 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	return totalLiquidity, nil
 }
 
-// isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.
-// If it does, it returns true, otherwise false.
-func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
-	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
-		if denom == authorizedQuoteDenom {
-			return true
-		}
-	}
-	return false
-}
-
 // nolint: unused
 // trackVolume converts the input token into OSMO units and adds it to the global tracked volume for the given pool ID.
 // Fails quietly if an OSMO paired pool cannot be found, although this should only happen in rare scenarios where OSMO is
