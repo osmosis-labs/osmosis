@@ -9,8 +9,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 
+	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
@@ -50,6 +50,9 @@ func (ad AuthenticatorDecorator) PostHandle(
 	// collect all the keys for authenticators that are not ready
 	nonReadyAccountAuthenticatorKeys := make(map[string]struct{})
 
+	// collect all the contract address that has been updated from transient store
+	transientStoreUpdatedContracts := make(map[string]struct{})
+
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
 		if err != nil {
@@ -78,16 +81,37 @@ func (ad AuthenticatorDecorator) PostHandle(
 				continue
 			}
 
-			authenticator := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
+			a := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 
-			// Confirm Execution
-			successfulExecution := authenticator.ConfirmExecution(ctx, authenticationRequest)
+			// If the authenticator is a cosmwasm authenticator, we need to state from the transient store
+			// to the contract state
+			//
+			// TODO: Note that this is a temporary solution. There are issues with the current design:
+			// - This will overwrite `runMsgs` changes to the contract state
+			// - Any othere contract that is used by this contract on `Track` will not be updated
+			//   since we only sync the cosmwasm authenticator contract state
+			cosmwasmAuthenticator, ok := a.(authenticator.CosmwasmAuthenticator)
+			contractAddr := cosmwasmAuthenticator.ContractAddress().String()
+			_, isUpdated := transientStoreUpdatedContracts[contractAddr]
 
-			if successfulExecution.IsBlock() {
-				return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
+			if ok && !isUpdated {
+				// sync the transient store state to the committing contract state
+				ad.authenticatorKeeper.TransientStore.WriteCosmWasmAuthenticatorStateInto(ctx, &cosmwasmAuthenticator)
+
+				// mark contract as updated
+				transientStoreUpdatedContracts[contractAddr] = struct{}{}
 			}
 
-			success = successfulExecution.IsConfirm()
+			// Confirm Execution
+			res := a.ConfirmExecution(ctx, authenticationRequest)
+
+			if res.IsBlock() {
+				err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "execution blocked by authenticator (account = %s, id = %d)", account, accountAuthenticator.Id)
+				err = errorsmod.Wrap(err, fmt.Sprintf("%s", res.Error()))
+				return sdk.Context{}, err
+			}
+
+			success = res.IsConfirm()
 		}
 	}
 
