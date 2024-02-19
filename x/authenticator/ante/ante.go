@@ -156,6 +156,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
+			authenticationRequest.AuthenticatorId = id
 			authentication := a11r.Authenticate(cacheCtx, authenticationRequest)
 			if authentication.IsRejected() {
 				return ctx, authentication.Error()

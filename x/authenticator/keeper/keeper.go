@@ -130,8 +130,8 @@ func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 		panic(err)
 	}
 	if !found {
-		k.SetNextAuthenticatorId(ctx, 0)
-		return 0
+		k.SetNextAuthenticatorId(ctx, 1)
+		return 1
 	}
 	return nextAuthenticatorId.Value
 }

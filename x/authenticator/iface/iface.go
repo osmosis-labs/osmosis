@@ -15,12 +15,12 @@ type LocalAny struct {
 }
 
 type ExplicitTxData struct {
-	ChainID       string     `json:"chain_id"`
-	AccountNumber uint64     `json:"account_number"`
-	Sequence      uint64     `json:"sequence"` // TODO: rename to account_sequence
-	TimeoutHeight uint64     `json:"timeout_height"`
-	Msgs          []LocalAny `json:"msgs"`
-	Memo          string     `json:"memo"`
+	ChainID         string     `json:"chain_id"`
+	AccountNumber   uint64     `json:"account_number"`
+	AccountSequence uint64     `json:"sequence"`
+	TimeoutHeight   uint64     `json:"timeout_height"`
+	Msgs            []LocalAny `json:"msgs"`
+	Memo            string     `json:"memo"`
 }
 
 type SimplifiedSignatureData struct {
@@ -29,6 +29,7 @@ type SimplifiedSignatureData struct {
 }
 
 type AuthenticationRequest struct { // TODO: Add authenticator id
+	AuthenticatorId     uint64                  `json:"authenticator_id"`
 	Account             sdk.AccAddress          `json:"account"`
 	Msg                 LocalAny                `json:"msg"`
 	Signature           []byte                  `json:"signature"` // Only allowing messages with a single signer

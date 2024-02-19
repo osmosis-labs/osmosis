@@ -101,7 +101,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 			ctx.Logger().Debug(
 				"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
 				request.TxData.AccountNumber,
-				request.TxData.Sequence,
+				request.TxData.AccountSequence,
 				request.TxData.ChainID,
 			)
 			return iface.NotAuthenticated()
