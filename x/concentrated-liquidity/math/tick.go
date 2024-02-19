@@ -8,6 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
+var maxSpotPriceBigDec = osmomath.BigDecFromDec(types.MaxSpotPrice)
+
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
@@ -190,7 +192,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.IsNegative() {
 		return 0, fmt.Errorf("price must be greater than zero")
 	}
-	if price.GT(osmomath.BigDecFromDec(types.MaxSpotPrice)) || price.LT(types.MinSpotPriceV2) {
+	if price.GT(maxSpotPriceBigDec) || price.LT(types.MinSpotPriceV2) {
 		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(osmomathBigOneDec) {
@@ -231,7 +233,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	// The number of ticks that need to be filled by our current spacing is
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
 	priceInThisExponent := price.Sub(geoSpacing.initialPrice)
-	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
+	ticksFilledByCurrentSpacing := priceInThisExponent.QuoMut(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
 	// * adding to it the number of ticks filled by the current spacing
