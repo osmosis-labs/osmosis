@@ -548,7 +548,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// register CosmWasm authenticator
 	appKeepers.AuthenticatorManager.RegisterAuthenticator(
-		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler(), appCodec))
+		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.keys[wasmtypes.StoreKey], appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler(), appCodec))
 
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)

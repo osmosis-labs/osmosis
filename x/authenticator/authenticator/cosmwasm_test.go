@@ -46,7 +46,7 @@ func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
+	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.GetKey(wasmtypes.StoreKey), s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
 }
 
 func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
