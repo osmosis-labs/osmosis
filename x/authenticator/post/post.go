@@ -95,7 +95,6 @@ func (ad AuthenticatorDecorator) PostHandle(
 			_, isUpdated := transientStoreUpdatedContracts[contractAddr]
 
 			if ok && !isUpdated {
-
 				// sync the transient store state to the committing contract state
 				ad.authenticatorKeeper.TransientStore.WriteCosmWasmAuthenticatorStateInto(ctx, &cosmwasmAuthenticator)
 
