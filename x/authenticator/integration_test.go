@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v21/app/params"
 	"github.com/osmosis-labs/osmosis/v21/tests/osmosisibctesting"
 )
 
@@ -34,8 +35,9 @@ type AuthenticatorSuite struct {
 	// TODO: is there a better way to do this?
 	coordinator *ibctesting.Coordinator
 
-	chainA *osmosisibctesting.TestChain
-	app    *app.OsmosisApp
+	chainA         *osmosisibctesting.TestChain
+	app            *app.OsmosisApp
+	EncodingConfig params.EncodingConfig
 
 	PrivKeys []cryptotypes.PrivKey
 	Account  authtypes.AccountI
@@ -57,6 +59,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 		TestChain: s.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
 	s.app = s.chainA.GetOsmosisApp()
+	s.EncodingConfig = app.MakeEncodingConfig()
 
 	// Initialize two private keys for testing
 	s.PrivKeys = make([]cryptotypes.PrivKey, 3)
@@ -112,7 +115,6 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 }
 
 func (s *AuthenticatorSuite) TestMessageFilterStory() {
-	s.T().Skip("TODO: this currently fails as the message filter authenticator need to be updated")
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
 	sendMsg := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
@@ -125,12 +127,12 @@ func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
 	// Change account's authenticator
-	msgFilter := authenticator.MessageFilterAuthenticator{}
+	msgFilter := authenticator.NewMessageFilterAuthenticator(s.EncodingConfig)
 	s.app.AuthenticatorManager.RegisterAuthenticator(msgFilter)
 	err = s.app.AuthenticatorKeeper.AddAuthenticator(
 		s.chainA.GetContext(), s.Account.GetAddress(),
 		"MessageFilterAuthenticator",
-		[]byte(fmt.Sprintf(`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"amount": [{"denom": "%s", "amount": "50"}]}}`, sdk.DefaultBondDenom)))
+		[]byte(fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","amount": [{"denom": "%s", "amount": "50"}]}`, sdk.DefaultBondDenom)))
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Submit a bank send tx using the second private key

@@ -232,12 +232,12 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	}
 
 	txData := iface.ExplicitTxData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      sequence,
-		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
-		Msgs:          msgs,
-		Memo:          memoTx.GetMemo(),
+		ChainID:         chainID,
+		AccountNumber:   accNum,
+		AccountSequence: sequence,
+		TimeoutHeight:   timeoutTx.GetTimeoutHeight(),
+		Msgs:            msgs,
+		Memo:            memoTx.GetMemo(),
 	}
 
 	// TODO: Do we want to support multiple signers per message?
