@@ -11,9 +11,7 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-var (
-	zeroDec = osmomath.ZeroDec()
-)
+var zeroDec = osmomath.ZeroDec()
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return nil
@@ -69,19 +67,30 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
+// calculateDistributeAndTrackTakerFees calculates the taker fees and distributes them to the community pool and stakers.
+// The following is the logic for the taker fee distribution:
+//
+// - OSMO taker fees
+//   - For Community Pool: Sent directly to community pool
+//   - For Stakers: Sent directly to auth module account, which distributes it to stakers
+//
+// - Non native taker fees
+//   - For Community Pool: Sent to `non_native_fee_collector_community_pool` module account, swapped to `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, then sent to community pool
+//   - For Stakers: Sent to `non_native_fee_collector_stakers` module account, swapped to OSMO, then sent to auth module account, which distributes it to stakers
+//   - The sub-module accounts here are used so that, if a swap fails, the tokens that fail to swap are not grouped back into the wrong taker fee category in the next epoch
 func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFeesDenom string) {
 	// First deal with the native tokens in the taker fee collector.
-	takerFeeModuleAccountName := txfeestypes.TakerFeeCollectorName
-	takerFeeModuleAccount := k.accountKeeper.GetModuleAddress(takerFeeModuleAccountName)
-	osmoFromFeeModuleAccount := k.bankKeeper.GetBalance(ctx, takerFeeModuleAccount, defaultFeesDenom)
+	takerFeeModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName)
+	osmoFromTakerFeeModuleAccount := k.bankKeeper.GetBalance(ctx, takerFeeModuleAccount, defaultFeesDenom)
+
 	poolManagerParams := k.poolManager.GetParams(ctx)
 	takerFeeParams := poolManagerParams.TakerFeeParams
 	osmoTakerFeeDistribution := takerFeeParams.OsmoTakerFeeDistribution
 
 	// Community Pool:
-	if osmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && osmoFromFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
+	if osmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
 		// Osmo community pool funds are a direct send to the community pool.
-		osmoTakerFeeToCommunityPoolDec := osmoFromFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.CommunityPool)
+		osmoTakerFeeToCommunityPoolDec := osmoFromTakerFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.CommunityPool)
 		osmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(defaultFeesDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt())
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoTakerFeeToCommunityPoolCoin), takerFeeModuleAccount)
@@ -91,13 +100,13 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		})
-		osmoFromFeeModuleAccount = osmoFromFeeModuleAccount.Sub(osmoTakerFeeToCommunityPoolCoin)
+		osmoFromTakerFeeModuleAccount = osmoFromTakerFeeModuleAccount.Sub(osmoTakerFeeToCommunityPoolCoin)
 	}
 
 	// Staking Rewards:
-	if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && osmoFromFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
+	if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
 		// Osmo staking rewards funds are a direct send to the auth fee token collector (indirectly distributing to stakers)
-		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoFromFeeModuleAccount.Amount)
+		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoFromTakerFeeModuleAccount.Amount)
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, authtypes.FeeCollectorName, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
@@ -144,7 +153,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 		}
 
-		// We done need to calculate the staking rewards for non native taker fees, since it ends up being whatever is left over!
+		// We don't need to calculate the staking rewards for non native taker fees, since it ends up being whatever is left over in the taker fee module account!
 	}
 
 	// Send the non-native, non-whitelisted taker fees slated for the community pool to the taker fee community pool module account.

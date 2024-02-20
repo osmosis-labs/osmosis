@@ -108,8 +108,6 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 	return takerFees, nil
 }
 
-// var zeroDec = osmomath.ZeroDec()
-
 // chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
 // module account. It returns the tokenIn after the taker fee has been extracted.
 // If the sender is in the taker fee reduced whitelisted, it returns the tokenIn without extracting the taker fee.
