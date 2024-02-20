@@ -515,7 +515,7 @@ For simplicity sake, let’s say staking rewards are 40% and community pool is 6
 
 At time of swap, all 1 USDC is sent to the `taker_fee_collector` module account. Nothing is done with any taker fee funds until epoch.
 
-Starting with the community pool funds, at epoch, the protocol checks if the token is a whitelisted fee token. If it is, it is sent directly to the community pool. If it is not, the funds are sent to the `non_native_fee_collector_community_pool`, swapped to the `CommunityPoolDenomToSwapNonWhitelistedAssetsTo` defined in the `poolmanger` params above, and then sent all at once to the community pool after all swaps at epoch have taken place.
+Starting with the community pool funds, at epoch, the protocol checks if the token is a whitelisted fee token. If it is, it is sent directly to the community pool. If it is not, the funds are sent to the `non_native_fee_collector_community_pool`, swapped to the `CommunityPoolDenomToSwapNonWhitelistedAssetsTo` defined in the `poolmanager` params above, and then sent all at once to the community pool after all swaps at epoch have taken place.
 
 Next, for staking rewards, since this is a non-OSMO token, it is swapped to OSMO and sent to the auth module account, which distributes it to stakers.
 
