@@ -52,7 +52,7 @@ func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
 	return nil
 }
 
