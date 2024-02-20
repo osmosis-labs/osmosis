@@ -523,7 +523,7 @@ Next, for staking rewards, since this is a non-OSMO token, it is swapped to OSMO
 
 This example does not differ much from the previous example. In this example, a user is swapping 1000 OSMO for USDC.
 
-We search for a KVStore taker fee override before utilizing the default taker fee. Just as before (order does not matter), a KVStore entry for OSMO<>USDC exists, so we utilize a 0.01% taker fee instead of the 0.02% default taker fee. 0.01% of 1000 OSMO is 1 OSMO.
+We search for a KVStore taker fee override before utilizing the default taker fee. Just as before (order does not matter), a KVStore entry for OSMO<>USDC exists, so we utilize a 0.01% taker fee instead of the 0.02% default taker fee. 0.01% of 10000 OSMO is 1 OSMO.
 
 At time of swap, all 1 OSMO is sent to the `taker_fee_collector` module account. Again, nothing is done with any taker fee funds until epoch.
 
