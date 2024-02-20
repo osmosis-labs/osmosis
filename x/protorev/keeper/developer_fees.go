@@ -39,15 +39,21 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfit sdk.Coin) error {
 		return err
 	}
 
-	if arbProfit.Denom != types.OsmosisDenomination {
-		return nil
-	}
-
-	// Burn the remaining profit by sending to the null address.
+	// Burn the remaining profit by sending to the null address iff the profit is denominated in osmo.
 	remainingProfit := sdk.NewCoin(arbProfit.Denom, arbProfit.Amount.Sub(devProfit.Amount))
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, types.DefaultNullAddress, sdk.NewCoins(remainingProfit)); err != nil {
-		return err
+	if arbProfit.Denom == types.OsmosisDenomination {
+		return k.bankKeeper.SendCoinsFromModuleToAccount(
+			ctx,
+			types.ModuleName,
+			types.DefaultNullAddress,
+			sdk.NewCoins(remainingProfit),
+		)
 	}
 
-	return nil
+	// Otherwise distribute the remaining profit to the community pool.
+	return k.distributionKeeper.FundCommunityPool(
+		ctx,
+		sdk.NewCoins(remainingProfit),
+		k.accountKeeper.GetModuleAddress(types.ModuleName),
+	)
 }
