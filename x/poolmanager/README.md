@@ -496,7 +496,7 @@ A user makes a swap of USDC to OSMO. First, the protocol checks the KVStore to d
 
 In this example, defaultTakerFee is 0.02%. A USDC<>OSMO KVStore exists with an override of 0.01%. Therefore, 0.01% is used.
 
-Now, imagine the amount in is 1000 USDC. This means that the amount of takerFee utilized is 0.01% of 1000, which is 1 USDC.
+Now, imagine the amount in is 10000 USDC. This means that the amount of takerFee utilized is 0.01% of 10000, which is 1 USDC.
 
 In the takerFee params, there are two distribution categories:
 1. Taker fees generated in OSMO
