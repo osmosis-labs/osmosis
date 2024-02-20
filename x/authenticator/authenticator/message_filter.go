@@ -181,6 +181,10 @@ func isSuperset(a, b interface{}) error {
 			return fmt.Errorf("expected slice, got %T", b)
 		}
 
+		// TODO: Do we want to allow subset/superset checks here or require both slices to be the same?
+		// If we want to allow this, maybe we want to either:
+		//      1. Treat them like a set
+		// 	    2. Ensure all elements of A are in B and in the same order, but B can have more elements
 		if len(av) > len(bv) {
 			return fmt.Errorf("first slice has more elements than second slice")
 		}
@@ -192,18 +196,24 @@ func isSuperset(a, b interface{}) error {
 		}
 
 	case string:
-		bv, ok := b.(string)
-		if !ok {
+		if bv, ok := b.(string); ok {
+			// Attempt to treat strings as numbers if they look like numbers
+			if decA, err := sdk.NewDecFromStr(av); err == nil {
+				if decB, err := sdk.NewDecFromStr(bv); err == nil {
+					if !decA.Equal(decB) {
+						return fmt.Errorf("numbers do not match: %s != %s", decA, decB)
+					}
+				}
+			}
+			if av != bv {
+				return fmt.Errorf("strings do not match: %s != %s", av, bv)
+			}
+		} else {
 			return fmt.Errorf("expected string, got %T", b)
-		}
-		// Compare strings directly
-		if av != bv {
-			return fmt.Errorf("strings do not match: %s != %s", av, bv)
 		}
 
 	case bool:
-		bv, ok := b.(bool)
-		if !ok || av != bv {
+		if bv, ok := b.(bool); !ok || av != bv {
 			return fmt.Errorf("booleans do not match or wrong type: %v != %v", av, b)
 		}
 
