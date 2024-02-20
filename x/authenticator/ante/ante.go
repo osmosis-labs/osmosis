@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+	"strconv"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -152,10 +153,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		for _, initializedAuthenticator := range authenticators {
 			a11r := initializedAuthenticator.Authenticator
 			id := initializedAuthenticator.Id
+			stringId := strconv.FormatInt(int64(id), 10)
 
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
+			authenticationRequest.AuthenticatorId = stringId
 			authentication := a11r.Authenticate(cacheCtx, authenticationRequest)
 			if authentication.IsRejected() {
 				return ctx, authentication.Error()
@@ -175,7 +178,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 				// Append the track closure to be called after the fee payer is authenticated
 				tracks = append(tracks, func() error {
-					err := a11r.Track(ctx, account, msg)
+					err := a11r.Track(ctx, account, msg, stringId)
 					if err != nil {
 						return err
 					}

@@ -180,8 +180,8 @@ func GetCommonAuthenticationData(tx sdk.Tx, messageIndex int) (signers []sdk.Acc
 type ReplayProtection func(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error
 
 func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
-	if signature.Sequence != txData.Sequence {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
+	if signature.Sequence != txData.AccountSequence {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.AccountSequence, signature.Sequence))
 	}
 	return nil
 }
@@ -248,12 +248,12 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	}
 
 	txData := iface.ExplicitTxData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      sequence,
-		TimeoutHeight: timeoutTx.GetTimeoutHeight(),
-		Msgs:          msgs,
-		Memo:          memoTx.GetMemo(),
+		ChainID:         chainID,
+		AccountNumber:   accNum,
+		AccountSequence: sequence,
+		TimeoutHeight:   timeoutTx.GetTimeoutHeight(),
+		Msgs:            msgs,
+		Memo:            memoTx.GetMemo(),
 	}
 
 	// TODO: Do we want to support multiple signers per message?
