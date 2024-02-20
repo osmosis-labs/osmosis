@@ -201,8 +201,11 @@ func appModules(
 func orderBeginBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
 	// Upgrades should be run VERY first
-	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
-	// But would have to be a holistic change with other pipelines taken into account.
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end,
+	// but would have to be a holistic change with other pipelines taken into account.
+	// Epochs must come before staking, because txfees epoch hook sends fees to the auth "fee collector"
+	// module account, which is then distributed to stakers. If staking comes before epochs, then the
+	// funds will not be distributed to stakers as expected.
 	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
 
 	// Staking ordering
