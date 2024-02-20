@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 
@@ -73,7 +74,9 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 }
 
 func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	for _, auth := range aoa.SubAuthenticators {
+	baseId := request.AuthenticatorId
+	for id, auth := range aoa.SubAuthenticators {
+		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
 		result := auth.Authenticate(ctx, request)
 		if result.IsAuthenticated() || result.IsRejected() {
 			return result
@@ -82,10 +85,9 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 	return iface.NotAuthenticated()
 }
 
-func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId uint64) error {
-	// TODO: Evolve authenticator IDs to allow tracking of sub-authenticators
-	for _, auth := range aoa.SubAuthenticators {
-		err := auth.Track(ctx, account, msg, authenticatorId)
+func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+	for id, auth := range aoa.SubAuthenticators {
+		err := auth.Track(ctx, account, msg, authenticatorId+"."+strconv.Itoa(id))
 		if err != nil {
 			return err
 		}
@@ -94,7 +96,9 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 }
 
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	for _, auth := range aoa.SubAuthenticators {
+	baseId := request.AuthenticatorId
+	for id, auth := range aoa.SubAuthenticators {
+		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
 		result := auth.ConfirmExecution(ctx, request)
 		if result.IsBlock() {
 			return result

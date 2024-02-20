@@ -2,6 +2,7 @@ package post
 
 import (
 	"fmt"
+	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -74,7 +75,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 			if usedAuthenticators[msgIndex] != accountAuthenticator.Id {
 				continue
 			}
-			authenticationRequest.AuthenticatorId = accountAuthenticator.Id
+			authenticationRequest.AuthenticatorId = strconv.FormatUint(accountAuthenticator.Id, 10)
 
 			a := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 

@@ -29,7 +29,7 @@ type SimplifiedSignatureData struct {
 }
 
 type AuthenticationRequest struct {
-	AuthenticatorId     uint64                  `json:"authenticator_id"`
+	AuthenticatorId     string                  `json:"authenticator_id"`
 	Account             sdk.AccAddress          `json:"account"`
 	Msg                 LocalAny                `json:"msg"`
 	Signature           []byte                  `json:"signature"` // Only allowing messages with a single signer
@@ -74,7 +74,7 @@ type Authenticator interface {
 		ctx sdk.Context, // The SDK Context is used to access data for authentication and to consume gas.
 		account sdk.AccAddress, // The account being authenticated (typically msg.GetSigners()[0]).
 		msg sdk.Msg, // A message is passed into the authenticate function, allowing authenticators to utilize its information.
-		authenticatorId uint64, // The global authenticator id
+		authenticatorId string, // The global authenticator id
 	) error
 
 	// ConfirmExecution is employed in the post-handler function to enforce transaction rules,

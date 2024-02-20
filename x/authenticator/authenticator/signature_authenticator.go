@@ -110,7 +110,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 	return iface.Authenticated()
 }
 
-func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId uint64) error {
+func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
 	return nil
 }
 
