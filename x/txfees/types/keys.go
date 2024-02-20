@@ -12,6 +12,7 @@ const (
 	RouterKey = ModuleName
 
 	// NonNativeTxFeeCollectorName is the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// N.B. OSMO goes to authtypes.FeeCollectorName, matching the normal SDK flow.
 	NonNativeTxFeeCollectorName = "non_native_fee_collector"
 
 	// TakerFeeCommunityPoolName is the name of the module account that collects non-native taker fees, swaps, and sends them to the community pool.
