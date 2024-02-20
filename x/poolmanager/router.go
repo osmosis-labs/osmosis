@@ -225,10 +225,27 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	return tokenOutAmount, nil
 }
 
+func (k Keeper) MultihopEstimateOutGivenExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+) (tokenOutAmount osmomath.Int, err error) {
+	return k.multihopEstimateOutGivenExactAmountInInternal(ctx, route, tokenIn, false)
+}
+
 func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	ctx sdk.Context,
 	route []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
+) (tokenOutAmount osmomath.Int, err error) {
+	return k.multihopEstimateOutGivenExactAmountInInternal(ctx, route, tokenIn, true)
+}
+
+func (k Keeper) multihopEstimateOutGivenExactAmountInInternal(
+	ctx sdk.Context,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	applyTakerFee bool,
 ) (tokenOutAmount osmomath.Int, err error) {
 	// recover from panic
 	defer func() {
@@ -254,14 +271,18 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
 
-		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
-		if err != nil {
-			return osmomath.Int{}, err
+		actualTokenIn := tokenIn
+		// apply taker fee if applicable
+		if applyTakerFee {
+			takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
+			if err != nil {
+				return osmomath.Int{}, err
+			}
+
+			actualTokenIn, _ = CalcTakerFeeExactIn(tokenIn, takerFee)
 		}
 
-		tokenInAfterSubTakerFee, _ := CalcTakerFeeExactIn(tokenIn, takerFee)
-
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, actualTokenIn, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
