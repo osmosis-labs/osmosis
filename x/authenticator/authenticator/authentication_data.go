@@ -1,8 +1,6 @@
 package authenticator
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -174,20 +172,6 @@ func GetCommonAuthenticationData(tx sdk.Tx, messageIndex int) (signers []sdk.Acc
 
 	// Return the extracted data.
 	return signers, signatures, sigTx, nil
-}
-
-// make replay protection into an interface. SequenceMatch is a default implementation
-type ReplayProtection func(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error
-
-func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
-	if signature.Sequence != txData.AccountSequence {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.AccountSequence, signature.Sequence))
-	}
-	return nil
-}
-
-func NoReplayProtection(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
-	return nil
 }
 
 func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
