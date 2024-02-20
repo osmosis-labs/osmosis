@@ -122,6 +122,7 @@ var moduleAccountPermissions = map[string][]string{
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
 	txfeestypes.NonNativeTxFeeCollectorName:  nil,
+	txfeestypes.TakerFeeStakersName:          nil,
 	txfeestypes.TakerFeeCommunityPoolName:    nil,
 	txfeestypes.TakerFeeCollectorName:        nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},

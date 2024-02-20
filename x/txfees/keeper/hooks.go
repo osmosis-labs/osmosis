@@ -147,7 +147,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 		// We done need to calculate the staking rewards for non native taker fees, since it ends up being whatever is left over!
 	}
 
-	// Send the non-native, non-whitelisted taker fees to the taker fee community pool module account.
+	// Send the non-native, non-whitelisted taker fees slated for the community pool to the taker fee community pool module account.
 	// We do this in the event that the swap fails, we can still track the amount of non-native, non-whitelisted taker fees that were intended for the community pool.
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeCommunityPoolName, nonOsmoForCommunityPool)
@@ -169,12 +169,20 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 		})
 	}
 
+	// Send the non-native taker fees slated for stakers to the taker fee staking module account.
+	// We do this in the event that the swap fails, we can still track the amount of non-native taker fees that were intended for stakers.
+	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		remainingTakerFeeModuleAccBal := k.bankKeeper.GetAllBalances(ctx, takerFeeModuleAccount)
+		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeStakersName, remainingTakerFeeModuleAccBal)
+		return err
+	})
 	// Swap the taker fees slated for staking rewards into the base denom.
-	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeModuleAccount)
+	takerFeeStakersModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeStakersName)
+	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeStakersModuleAccount)
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
 		// Now that the assets have been swapped, transfer any base denom existing in the taker fee module account to the auth fee collector module account (indirectly distributing to stakers)
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeCollectorName, authtypes.FeeCollectorName, sdk.NewCoins(totalCoinOut))
+			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeStakersName, authtypes.FeeCollectorName, sdk.NewCoins(totalCoinOut))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, totalCoinOut.Denom, totalCoinOut.Amount)
 			if trackerErr != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)

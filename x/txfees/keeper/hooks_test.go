@@ -418,19 +418,12 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	stakingDenomCommunityPoolDenomPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(stakingDenom, communityPoolDenom)
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, stakingDenom, communityPoolDenom, stakingDenomCommunityPoolDenomPool.GetId())
 
-	// validateEndCollectorBalance validates that only denoms with no pool and no protorev link are left in the balance.
-	validateEndCollectorBalance := func(collectorAddress sdk.AccAddress) {
-		communityPoolCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, collectorAddress)
-		s.Require().Len(communityPoolCollectorBalance, 2)
-		s.Require().Equal(communityPoolCollectorBalance[0].Denom, denomWithNoPool)
-		s.Require().Equal(communityPoolCollectorBalance[1].Denom, denomWithNoProtorevLink)
-	}
-
 	// Prepare the tx fee collector.
-	stakingCollectorAddress := prepareFeeCollector(types.NonNativeTxFeeCollectorName, stakingDenom)
+	txFeeCollectorAddress := prepareFeeCollector(types.NonNativeTxFeeCollectorName, stakingDenom)
 
 	// Prepare the taker fee collector.
-	communityPoolCollectorAddress := prepareFeeCollector(types.TakerFeeCollectorName, communityPoolDenom)
+	prepareFeeCollector(types.TakerFeeCollectorName, communityPoolDenom)
+	communityPoolCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCommunityPoolName)
 
 	// Snapshot the community pool balance before the epoch end.
 	communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
@@ -441,8 +434,11 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	err := s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
 	s.Require().NoError(err)
 
-	// Confirm that staking fee collector only has denomWithNoPool and denomWithNoProtorevLink left in balance.
-	validateEndCollectorBalance(stakingCollectorAddress)
+	// Confirm that tx fee collector only has denomWithNoPool and denomWithNoProtorevLink left in balance.
+	txFeeCollectorAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, txFeeCollectorAddress)
+	s.Require().Len(txFeeCollectorAddressBalance, 2)
+	s.Require().Equal(txFeeCollectorAddressBalance[0].Denom, denomWithNoPool)
+	s.Require().Equal(txFeeCollectorAddressBalance[1].Denom, denomWithNoProtorevLink)
 
 	// Confirm that that all native tokens are sent to the fee collector.
 	feeCollectorAddress := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
@@ -450,8 +446,11 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	s.Require().Len(feeCollectorBalance, 1)
 	s.Require().Equal(feeCollectorBalance[0].Denom, stakingDenom)
 
-	// Confirm that community pool fee collector only has denomWithNoPool and denomWithNoProtorevLink left in balance.
-	validateEndCollectorBalance(communityPoolCollectorAddress)
+	// Confirm that community pool fee collector only denomWithNoProtorevLink left in balance.
+	// denomWithNoPool is a whitelisted asset, so it should be directly sent to the community pool.
+	communityPoolCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolCollectorAddress)
+	s.Require().Len(communityPoolCollectorBalance, 1)
+	s.Require().Equal(communityPoolCollectorBalance[0].Denom, denomWithNoProtorevLink)
 
 	communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
 	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)

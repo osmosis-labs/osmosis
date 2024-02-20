@@ -482,9 +482,8 @@ At time of swap, all taker fees are sent to the `taker_fee_collector` module acc
 
 - Non native taker fees
     - For Community Pool: Sent to `non_native_fee_collector_community_pool` module account, swapped to `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, then sent to community pool
-        * This is done so that, if a swap fails, the tokens that fail to swap are not grouped back into the taker fees for stakers in the next epoch
-        * It also allows us to skip calculating the taker fees for non-native tokens that go to stakers, since it ends up being whatever is left over
-    - For Stakers: Swapped to OSMO, then sent to auth module account, which distributes it to stakers
+    - For Stakers: Sent to `non_native_fee_collector_stakers` module account, swapped to OSMO, then sent to auth module account, which distributes it to stakers
+    - The sub-module accounts here are used so that, if a swap fails, the tokens that fail to swap are not grouped back into the wrong taker fee category in the next epoch
 - OSMO taker fees
     - For Community Pool: Sent directly to community pool
     - For Stakers: Sent directly to auth module account, which distributes it to stakers
@@ -516,7 +515,7 @@ For simplicity sake, let’s say staking rewards are 40% and community pool is 6
 
 At time of swap, all 1 USDC is sent to the `taker_fee_collector` module account. Nothing is done with any taker fee funds until epoch.
 
-Starting with the community pool funds, at epoch, the protocol checks if the token is a whitelisted fee token. If it is, it is sent directly to the community pool. If it is not, the funds are swapped to the `CommunityPoolDenomToSwapNonWhitelistedAssetsTo` defined in the `poolmanger` params above, and then sent all at once to the community pool after all swaps at epoch have taken place.
+Starting with the community pool funds, at epoch, the protocol checks if the token is a whitelisted fee token. If it is, it is sent directly to the community pool. If it is not, the funds are sent to the `non_native_fee_collector_community_pool`, swapped to the `CommunityPoolDenomToSwapNonWhitelistedAssetsTo` defined in the `poolmanger` params above, and then sent all at once to the community pool after all swaps at epoch have taken place.
 
 Next, for staking rewards, since this is a non-OSMO token, it is swapped to OSMO and sent to the auth module account, which distributes it to stakers.
 
