@@ -39,7 +39,7 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
-	MultihopEstimateOutGivenExactAmountIn(
+	MultihopEstimateOutGivenExactAmountInNoTakerFee(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
