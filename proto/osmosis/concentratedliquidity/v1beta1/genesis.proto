@@ -11,7 +11,7 @@ import "osmosis/concentratedliquidity/v1beta1/position.proto";
 import "osmosis/concentratedliquidity/v1beta1/tickInfo.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis";
 
 // FullTick contains tick index and pool id along with other tick model
 // information.
@@ -61,7 +61,7 @@ message PositionData {
 message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
-  // pool data containining serialized pool struct and ticks.
+  // pool data containing serialized pool struct and ticks.
   repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
   repeated PositionData position_data = 3 [ (gogoproto.nullable) = false ];
@@ -71,6 +71,10 @@ message GenesisState {
 
   uint64 next_incentive_record_id = 5
       [ (gogoproto.moretags) = "yaml:\"next_incentive_record_id\"" ];
+
+  uint64 incentives_accumulator_pool_id_migration_threshold = 6
+      [ (gogoproto.moretags) =
+            "yaml:\"incentives_accumulator_pool_id_migration_threshold\"" ];
 }
 
 message AccumObject {

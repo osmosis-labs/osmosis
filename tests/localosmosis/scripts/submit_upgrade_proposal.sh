@@ -11,7 +11,7 @@ RPC_NODE=http://localhost:26657/
 # Default upgrade version
 UPGRADE_VERSION=${1:-"v15"}
 
-# Paramters
+# Parameters
 KEY=val
 PROPOSAL_DEPOSIT=1600000000uosmo
 TX_FEES=1000uosmo

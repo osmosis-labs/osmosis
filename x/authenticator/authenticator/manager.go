@@ -1,7 +1,7 @@
 package authenticator
 
 import (
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 type AuthenticatorManager struct {

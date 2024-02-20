@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 // validateCreatedPool checks that the pool was created with the correct pool ID and address.
@@ -99,6 +99,9 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 
 	// Get the next pool ID and increment the pool ID counter.
 	poolId := k.getNextPoolIdAndIncrement(ctx)
+	if poolId >= types.MaxPoolId {
+		return nil, fmt.Errorf("next pool ID %d is greater than max pool ID %d", poolId, types.MaxPoolId)
+	}
 
 	poolType := msg.GetPoolType()
 
@@ -128,20 +131,15 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
 
-	emitCreatePoolEvents(ctx, poolId, msg)
+	emitCreatePoolEvents(ctx, poolId)
 	return pool, nil
 }
 
-func emitCreatePoolEvents(ctx sdk.Context, poolId uint64, msg types.CreatePoolMsg) {
+func emitCreatePoolEvents(ctx sdk.Context, poolId uint64) {
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolCreated,
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
 		),
 	})
 }

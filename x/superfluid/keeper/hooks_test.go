@@ -7,9 +7,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v21/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// reward for the second delegation is expected to be different. Amount superfluid staked would be equivalently 7_500_000 stake.
 			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
 			// last period cumulative reward ratio being 0
-			// Thus as rewards, we expect 999986stake, calculted using the following equation: (0.117647) * 7_500_000
+			// Thus as rewards, we expect 999986stake, calculated using the following equation: (0.117647) * 7_500_000
 			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}, {sdk.NewCoin("stake", osmomath.NewInt(882352))}},
 		},
 	}

@@ -8,10 +8,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -350,7 +350,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 	})
 
 	// tests SwapNonNativeFeeToDenom with multiple tokens
-	// in the initial balance. Some of these tokens sucessfully swap, others do not and are silently skipped.
+	// in the initial balance. Some of these tokens successfully swap, others do not and are silently skipped.
 	// The denomToSwapTo in the initial balance is also silently skipped
 	s.Run("multiple tokens", func() {
 		s.Setup()
@@ -406,9 +406,6 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		// Prepare coins with all edge cases and success scenarios for swapping to denomToSwapTo.
 		preFundCollectorCoins := prepareCoinsForSwapToDenomTest(denomToSwapTo)
 		s.FundModuleAcc(collectorName, preFundCollectorCoins)
-
-		currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
-		s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, currentTxFeesTrackerValue.Add(preFundCollectorCoins...))
 
 		// Prepare pools.
 		s.preparePoolsForSwappingToDenom(otherPreSwapDenom, preSwapDenom, denomToSwapTo)

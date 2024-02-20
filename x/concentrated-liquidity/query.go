@@ -10,11 +10,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
-	types "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
+	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 const invalidTickIndex = int64(-1)
@@ -103,7 +103,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 	}
 
-	// This signifies that currrent tick is above the max initialized tick
+	// This signifies that current tick is above the max initialized tick
 	if currentTick >= previousTickIndex && currentTickLiquidity.IsZero() {
 		currentBucketIndex = int64(len(liquidityDepthsForRange))
 	}

@@ -17,7 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -74,7 +74,7 @@ func GetCmdModuleLockedAmount() (*osmocli.QueryDescriptor, *types.ModuleLockedAm
 	}, &types.ModuleLockedAmountRequest{}
 }
 
-// GetCmdAccountUnlockableCoins returns unlockable coins which has finsihed unlocking.
+// GetCmdAccountUnlockableCoins returns unlockable coins which has finished unlocking.
 // TODO: DELETE THIS + Actual query in subsequent PR
 func GetCmdAccountUnlockableCoins() *cobra.Command {
 	cmd := &cobra.Command{

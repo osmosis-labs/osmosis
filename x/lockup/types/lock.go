@@ -2,10 +2,14 @@ package types
 
 import (
 	"fmt"
+	"math/big"
+	"math/bits"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
@@ -62,17 +66,46 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 	return p.Coins[0], nil
 }
 
-func SumLocksByDenom(locks []PeriodLock, denom string) osmomath.Int {
-	sum := osmomath.NewInt(0)
+// TODO: Can we use sumtree instead here?
+// Assumes that caller is passing in locks that contain denom
+func SumLocksByDenom(locks []*PeriodLock, denom string) (osmomath.Int, error) {
+	sumBi := big.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
 	if err != nil {
-		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
+		return osmomath.Int{}, fmt.Errorf("invalid denom used internally: %s, %v", denom, err)
 	}
 	for _, lock := range locks {
-		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
+		var amt osmomath.Int
+		// skip a 1second cumulative runtimeEq check
+		if len(lock.Coins) == 1 {
+			amt = lock.Coins[0].Amount
+		} else {
+			amt = lock.Coins.AmountOfNoDenomValidation(denom)
+		}
+		sumBi.Add(sumBi, amt.BigIntMut())
 	}
-	return sum
+
+	// handle overflow check here so we don't panic.
+	err = checkBigInt(sumBi)
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+	return osmomath.NewIntFromBigInt(sumBi), nil
+}
+
+// Max number of words a sdk.Int's big.Int can contain.
+// This is predicated on MaxBitLen being divisible by 64
+var maxWordLen = sdkmath.MaxBitLen / bits.UintSize
+
+// check if a bigInt would overflow max sdk.Int. If it does, return an error.
+func checkBigInt(bi *big.Int) error {
+	if len(bi.Bits()) > maxWordLen {
+		if bi.BitLen() > sdkmath.MaxBitLen {
+			return fmt.Errorf("bigInt overflow")
+		}
+	}
+	return nil
 }
 
 // quick fix for getting native denom from synthetic denom.

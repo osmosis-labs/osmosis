@@ -11,9 +11,9 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/utils"
 )
 
 type AuthenticatorDecorator struct {

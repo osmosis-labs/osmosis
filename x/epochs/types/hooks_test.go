@@ -44,7 +44,7 @@ func dummyBeforeEpochStartEvent(epochIdentifier string, epochNumber int64) sdk.E
 var dummyErr = errors.New("9", 9, "dummyError")
 
 // dummyEpochHook is a struct satisfying the epoch hook interface,
-// that maintains a counter for how many times its been succesfully called,
+// that maintains a counter for how many times its been successfully called,
 // and a boolean for whether it should panic during its execution.
 type dummyEpochHook struct {
 	successCounter int
@@ -95,10 +95,10 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 		expectedCounterValues []int
 		lenEvents             int
 	}{
-		{[]dummyEpochHook{noPanicHook}, []int{1}, 2},
+		{[]dummyEpochHook{noPanicHook}, []int{1}, 1},
 		{[]dummyEpochHook{panicHook}, []int{0}, 0},
 		{[]dummyEpochHook{errorHook}, []int{0}, 0},
-		{simpleHooks, []int{0, 1, 0, 1}, 4},
+		{simpleHooks, []int{0, 1, 0, 1}, 2},
 	}
 
 	for tcIndex, tc := range tests {

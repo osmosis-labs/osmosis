@@ -30,7 +30,7 @@ the initial `weights`, pool weight shift will not begin until
 The following is an example of a liquidity bootstrapping pool. The
 weights linearly change between the initial weights provided, and the
 target weights over 72 hrs (3 days) No start time, it defaults to time
-the tx was succesfully executed on chain.
+the tx was successfully executed on chain.
 
 pool.json
 

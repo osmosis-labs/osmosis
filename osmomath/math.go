@@ -14,6 +14,7 @@ var (
 	one_half Dec = MustNewDecFromStr("0.5")
 	one      Dec = OneDec()
 	two      Dec = MustNewDecFromStr("2")
+	ten      Dec = MustNewDecFromStr("10")
 
 	// https://www.wolframalpha.com/input?i=2.718281828459045235360287471352662498&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
 	// nolint: unused
@@ -129,7 +130,7 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 	// With a > 0, |x| << 1, and p sufficiently low, perhaps this actually is true.
 
 	// TODO: Check with our parameterization
-	// TODO: If theres a bug, balancer is also wrong here :thonk:
+	// TODO: If there's a bug, balancer is also wrong here :thonk:
 
 	base := originalBase.Clone()
 	x, xneg := AbsDifferenceWithSign(base, one)
@@ -174,4 +175,31 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 		}
 	}
 	return sum
+}
+
+// OrderOfMagnitude calculates the order of magnitude without using logarithms.
+// CONTRACT: num must be positive or zero. Panics if not
+func OrderOfMagnitude(num Dec) int {
+	if num.IsZero() {
+		return 0
+	}
+	if !num.IsPositive() {
+		panic(fmt.Errorf("num must be positive or zero, was (%s)", num))
+	}
+
+	// Make a copy so we don't mutate the original
+	num = num.Clone()
+
+	order := 0
+	for num.GTE(ten) {
+		num.QuoMut(ten)
+		order++
+	}
+
+	for num.LT(one) {
+		num.MulMut(ten)
+		order--
+	}
+
+	return order
 }

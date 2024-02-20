@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v21/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v21/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v23/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 )
 
 var (
@@ -151,6 +151,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis_ExternalNoLock() {
 	// Create external non-perpetual gauge
 	externalGaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, s.TestAccs[0], defaultCoins.Add(defaultCoins...), lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.NoLock,
+		Duration:      defaultNoLockDuration,
 	}, s.Ctx.BlockTime(), 2, clPool.GetId())
 	s.Require().NoError(err)
 

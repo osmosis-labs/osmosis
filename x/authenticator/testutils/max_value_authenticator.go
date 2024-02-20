@@ -5,7 +5,7 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"

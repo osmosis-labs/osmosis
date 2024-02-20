@@ -43,7 +43,7 @@ If a key exists in state, that begins with `0x04`, it is expected that it is of 
 
 `0x04|` || `string encoding of pool ID` || `|` || `string encoding of min uptime index` || `|` || `denom` || `|` || `bech32 addr`
 
-- This encoding is safe, because denom cannot contain a `|`, it is restricted to alpha-numeric and `/`.
+- This encoding is safe, because denom cannot contain a `|`, it is restricted to alphanumeric and `/`.
 
 - We are expected to be able to safely iterate over all positions for a pool ID
     - Iterate over `0x04|` || `string encoding of pool ID` || `|` 

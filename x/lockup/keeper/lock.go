@@ -15,11 +15,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
-	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
-// WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
+// WithdrawAllMaturedLocks withdraws every lock that's in the process of unlocking, and has finished unlocking by
 // the current block time.
 func (k Keeper) WithdrawAllMaturedLocks(ctx sdk.Context) {
 	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, ctx.BlockTime()))
@@ -626,7 +626,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 			return err
 		}
 
-		// Add to the accumlation store cache
+		// Add to the accumulation store cache
 		for _, coin := range lock.Coins {
 			// update or create the new map from duration -> Int for this denom.
 			var curDurationMap map[time.Duration]osmomath.Int
@@ -686,7 +686,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 			ctx.Logger().Debug(msg)
 		}
 
-		// Add to the accumlation store cache
+		// Add to the accumulation store cache
 		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockId)
 		if err != nil {
 			return err

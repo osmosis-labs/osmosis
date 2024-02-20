@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
 
 var _ types.PoolManagerInterface = &ProgrammedPoolManagerInterface{}
@@ -84,4 +84,8 @@ func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context
 		return osmomath.BigDecFromDec(res.Sp), res.Err
 	}
 	return p.underlyingKeeper.RouteCalculateSpotPrice(ctx, poolId, quoteDenom, baseDenom)
+}
+
+func (p *ProgrammedPoolManagerInterface) GetNextPoolId(ctx sdk.Context) uint64 {
+	return p.underlyingKeeper.GetNextPoolId(ctx)
 }

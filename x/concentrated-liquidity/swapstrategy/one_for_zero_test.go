@@ -2,9 +2,9 @@ package swapstrategy_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 func (suite *StrategyTestSuite) setupNewOneForZeroSwapStrategy(sqrtPriceLimit osmomath.Dec, spread osmomath.Dec) swapstrategy.SwapStrategy {
@@ -160,7 +160,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
 		},
 		// This edge case does not occur anymore. The fix observed in PR: https://github.com/osmosis-labs/osmosis/pull/6352
-		// See linked issue for detals of the change.
+		// See linked issue for details of the change.
 		"7: (fixed) invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: osmomath.BigDecFromDec(osmomath.MustNewDecFromStr("0.000001000049998750")),

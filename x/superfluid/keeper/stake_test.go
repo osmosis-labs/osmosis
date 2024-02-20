@@ -7,12 +7,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
-			// get pre-superfluid delgations osmo supply and supplyWithOffset
+			// get pre-superfluid delegations osmo supply and supplyWithOffset
 			presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 			presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
@@ -365,7 +365,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 					lock = &lockuptypes.PeriodLock{}
 				}
 
-				// get pre-superfluid delgations osmo supply and supplyWithOffset
+				// get pre-superfluid delegations osmo supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
@@ -529,7 +529,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 					lock = &lockuptypes.PeriodLock{}
 				}
 
-				// get pre-superfluid delgations osmo supply and supplyWithOffset
+				// get pre-superfluid delegations osmo supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
@@ -651,7 +651,7 @@ func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		s.Require().NoError(err)
 		s.Require().True(updatedLock.IsUnlocking())
 
-		// check if finsihed unlocking synth lock did not increase balance
+		// check if finished unlocking synth lock did not increase balance
 		balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lock.OwnerAddress())
 		s.Require().Equal(0, balances.Len())
 
@@ -975,7 +975,8 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, 2, denom, multiplier)
 			}
 
-			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx)
+			accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx, accs)
 
 			originalMultiplier := osmomath.NewDec(20)
 			for interAccIndex, intermediaryAcc := range intermediaryAccs {
@@ -1022,7 +1023,8 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			}
 
 			// refresh intermediary account delegations
-			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx)
+			accs = s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+			s.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(s.Ctx, accs)
 
 			for _, intermediaryAcc := range intermediaryAccs {
 				// check unbonded amount is removed after refresh operation
@@ -1528,7 +1530,7 @@ func (s *KeeperTestSuite) TestDelegateBaseOnValsetPref() {
 				originalSuperfluidValAddr = s.SetupValidator(stakingtypes.Bonded).String()
 			}
 
-			// by having existing delegation, we can test val set pref based delgation
+			// by having existing delegation, we can test val set pref based delegation
 			var superfluidStakedValAddr sdk.ValAddress
 			if tc.haveExistingDelegation {
 				superfluidStakedValAddr = s.SetupValidator(stakingtypes.Bonded)
@@ -1686,10 +1688,10 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 // delegationCheck checks staking related invariants of the test.
 // We check the following in this method:
 // - if superfluid staked previously, check if the original validator's delegation has been deleted.
-// - Cehck if the delegation of the new validator matches what's expected.
+// - Check if the delegation of the new validator matches what's expected.
 func (s *KeeperTestSuite) delegationCheck(sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted osmomath.Int) {
 	if !originalValAddr.Empty() {
-		// check if original superfluid staked lock's delgation is successfully deleted
+		// check if original superfluid staked lock's delegation is successfully deleted
 		_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
 		s.Require().False(found)
 	}

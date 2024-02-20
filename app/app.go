@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -31,6 +32,9 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -38,12 +42,15 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/bytes"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
@@ -63,42 +70,43 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v21/app/keepers"
-	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v21"
-	v3 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v21/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v21/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v21/ingest"
-	"github.com/osmosis-labs/osmosis/v21/x/mint"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs"
-
-	"github.com/osmosis-labs/osmosis/v21/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
+	v24 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v24"
+	v3 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v23/ingest"
+	"github.com/osmosis-labs/osmosis/v23/x/mint"
 )
 
 const appName = "OsmosisApp"
@@ -136,7 +144,7 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -259,7 +267,7 @@ func NewOsmosisApp(
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
-		sqsKeepers := common.SQSIngestKeepers{
+		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
 			BankKeeper:         app.BankKeeper,
@@ -298,7 +306,7 @@ func NewOsmosisApp(
 	// Generally NewAppModule will require the keeper that module defines to be passed in as an exact struct,
 	// but should take in every other keeper as long as it matches a certain interface. (So no need to be de-ref'd)
 	//
-	// Any time a module requires a keeper de-ref'd thats not its native one,
+	// Any time a module requires a keeper de-ref'd that's not its native one,
 	// its code-smell and should probably change. We should get the staking keeper dependencies fixed.
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
 
@@ -325,7 +333,7 @@ func NewOsmosisApp(
 
 	app.sm = module.NewSimulationManager(
 		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
@@ -398,6 +406,247 @@ func NewOsmosisApp(
 		// Initialize pinned codes in wasmvm as they are not persisted there
 		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+		}
+	}
+
+	return app
+}
+
+// InitOsmosisAppForTestnet is broken down into two sections:
+// Required Changes: Changes that, if not made, will cause the testnet to halt or panic
+// Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
+func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *OsmosisApp {
+	//
+	// Required Changes:
+	//
+
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	pubkey := &ed25519.PubKey{Key: newValPubKey.Bytes()}
+	pubkeyAny, err := types.NewAnyWithValue(pubkey)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// STAKING
+	//
+
+	// Create Validator struct for our new validator.
+	_, bz, err := bech32.DecodeAndConvert(newOperatorAddress)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	bech32Addr, err := bech32.ConvertAndEncode("osmovaloper", bz)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	newVal := stakingtypes.Validator{
+		OperatorAddress: bech32Addr,
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          false,
+		Status:          stakingtypes.Bonded,
+		Tokens:          sdk.NewInt(900000000000000),
+		DelegatorShares: sdk.MustNewDecFromStr("10000000"),
+		Description: stakingtypes.Description{
+			Moniker: "Testnet Validator",
+		},
+		Commission: stakingtypes.Commission{
+			CommissionRates: stakingtypes.CommissionRates{
+				Rate:          sdk.MustNewDecFromStr("0.05"),
+				MaxRate:       sdk.MustNewDecFromStr("0.1"),
+				MaxChangeRate: sdk.MustNewDecFromStr("0.05"),
+			},
+		},
+		MinSelfDelegation: sdk.OneInt(),
+	}
+
+	// Remove all validators from power store
+	stakingKey := app.GetKey(stakingtypes.ModuleName)
+	stakingStore := ctx.KVStore(stakingKey)
+	iterator := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all valdiators from last validators store
+	iterator = app.StakingKeeper.LastValidatorsIterator(ctx)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all validators from validators store
+	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all validators from unbonding queue
+	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Add our validator to power and last validators store
+	app.StakingKeeper.SetValidator(ctx, newVal)
+	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
+	app.StakingKeeper.SetLastValidatorPower(ctx, newVal.GetOperator(), 0)
+	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, newVal.GetOperator()); err != nil {
+		panic(err)
+	}
+
+	// DISTRIBUTION
+	//
+
+	// Initialize records for this validator across all distribution stores
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, newVal.GetOperator(), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorCurrentRewards(ctx, newVal.GetOperator(), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, newVal.GetOperator(), distrtypes.InitialValidatorAccumulatedCommission())
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, newVal.GetOperator(), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+
+	// SLASHING
+	//
+
+	// Set validator signing info for our new validator.
+	newConsAddr := sdk.ConsAddress(newValAddr.Bytes())
+	newValidatorSigningInfo := slashingtypes.ValidatorSigningInfo{
+		Address:     newConsAddr.String(),
+		StartHeight: app.LastBlockHeight() - 1,
+		Tombstoned:  false,
+	}
+	app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+
+	//
+	// Optional Changes:
+	//
+
+	// GOV
+	//
+
+	newExpeditedVotingPeriod := time.Minute
+	newVotingPeriod := time.Minute * 2
+
+	govParams := app.GovKeeper.GetParams(ctx)
+	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
+	govParams.VotingPeriod = &newVotingPeriod
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 100000000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 150000000))
+
+	err = app.GovKeeper.SetParams(ctx, govParams)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// EPOCHS
+	//
+
+	dayEpochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "day")
+	dayEpochInfo.Duration = time.Hour * 6
+	// Prevents epochs from running back to back
+	dayEpochInfo.CurrentEpochStartTime = time.Now().UTC()
+	// If you want epoch to run a minute after starting the chain, uncomment the line below and comment the line above
+	// dayEpochInfo.CurrentEpochStartTime = time.Now().UTC().Add(-dayEpochInfo.Duration).Add(time.Minute)
+	dayEpochInfo.CurrentEpochStartHeight = app.LastBlockHeight()
+	app.EpochsKeeper.DeleteEpochInfo(ctx, "day")
+	err = app.EpochsKeeper.AddEpochInfo(ctx, dayEpochInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	weekEpochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "week")
+	weekEpochInfo.Duration = time.Hour * 12
+	// Prevents epochs from running back to back
+	weekEpochInfo.CurrentEpochStartTime = time.Now().UTC()
+	weekEpochInfo.CurrentEpochStartHeight = app.LastBlockHeight()
+	app.EpochsKeeper.DeleteEpochInfo(ctx, "week")
+	err = app.EpochsKeeper.AddEpochInfo(ctx, weekEpochInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// BANK
+	//
+
+	defaultCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
+		sdk.NewInt64Coin("uosmo", 1000000000000),
+		sdk.NewInt64Coin("uion", 1000000000))
+
+	localOsmosisAccounts := []sdk.AccAddress{
+		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
+		sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
+		sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
+		sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
+		sdk.MustAccAddressFromBech32("osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
+		sdk.MustAccAddressFromBech32("osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
+		sdk.MustAccAddressFromBech32("osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
+		sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
+		sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
+		sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
+		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+
+	// Fund localosmosis accounts
+	for _, account := range localOsmosisAccounts {
+		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
+		if err != nil {
+			tmos.Exit(err.Error())
+		}
+		err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account, defaultCoins)
+		if err != nil {
+			tmos.Exit(err.Error())
+		}
+	}
+
+	// Fund edgenet faucet
+	faucetCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
+		sdk.NewInt64Coin("uosmo", 1000000000000000),
+		sdk.NewInt64Coin("uion", 1000000000000))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1rqgf207csps822qwmd3k2n6k6k4e99w502e79t"), faucetCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// Mars bank account
+	marsCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("uosmo", 10000000000000),
+		sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
+		sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
+		sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),
+		sdk.NewInt64Coin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", 700000000000),
+		sdk.NewInt64Coin("ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", 2000000000),
+		sdk.NewInt64Coin("ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", 3000000000000000000))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, marsCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// UPGRADE
+	//
+
+	if upgradeToTrigger != "" {
+		upgradePlan := upgradetypes.Plan{
+			Name:   upgradeToTrigger,
+			Height: app.LastBlockHeight() + 10,
+		}
+		err = app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradePlan)
+		if err != nil {
+			panic(err)
 		}
 	}
 

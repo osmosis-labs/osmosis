@@ -1,6 +1,6 @@
 syntax = "proto3";
 // this is a legacy package that requires additional migration logic
-// in order to use the correct packge. Decision made to use legacy package path
+// in order to use the correct package. Decision made to use legacy package path
 // until clear steps for migration logic and the unknowns for state breaking are
 // investigated for changing proto package.
 package osmosis.concentratedliquidity.v1beta1;
@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model";
 
 message TickInfo {
   string liquidity_gross = 1 [

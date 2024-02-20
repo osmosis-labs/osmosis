@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,8 +15,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

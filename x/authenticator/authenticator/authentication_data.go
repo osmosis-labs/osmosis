@@ -6,7 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

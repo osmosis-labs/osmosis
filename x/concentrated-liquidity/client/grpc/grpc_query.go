@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
 )
 
 type Querier struct {
@@ -89,6 +89,16 @@ func (q Querier) Params(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
+}
+
+func (q Querier) NumPoolPositions(grpcCtx context.Context,
+	req *queryproto.NumPoolPositionsRequest,
+) (*queryproto.NumPoolPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.NumPoolPositions(ctx, *req)
 }
 
 func (q Querier) NumNextInitializedTicks(grpcCtx context.Context,

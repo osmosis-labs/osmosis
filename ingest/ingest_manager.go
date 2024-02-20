@@ -6,7 +6,7 @@ import (
 
 // IngestManager is an interface that defines the methods for the ingest manager.
 // Ingest manager handles the processing of blocks and ingesting data into various sinks
-// tha are defined by the Ingester interface.
+// that are defined by the Ingester interface.
 type IngestManager interface {
 	// RegisterIngester registers an ingester.
 	RegisterIngester(ingester Ingester)

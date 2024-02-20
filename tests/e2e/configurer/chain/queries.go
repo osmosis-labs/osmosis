@@ -21,16 +21,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v21/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v21/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v23/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -213,7 +213,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, fmt.Errorf("invalid number of parameters, must follow the format of key + value")
 	}
 
-	// add the URL for the given validator ID, and pre-pend to to path.
+	// add the URL for the given validator ID, and prepend to to path.
 	hostPort, err := n.containerManager.GetHostPort(n.Name, "1317/tcp")
 	require.NoError(n.t, err)
 	endpoint := fmt.Sprintf("http://%s", hostPort)

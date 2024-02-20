@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/utils"
 )
 
 const (

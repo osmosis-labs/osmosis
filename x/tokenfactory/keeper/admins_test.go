@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestAdminMsgs() {
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 }
 
 // TestMintDenom ensures the following properties of the MintMessage:
-// * Noone can mint tokens for a denom that doesn't exist
+// * No one can mint tokens for a denom that doesn't exist
 // * Only the admin of a denom can mint tokens for it
 // * The admin of a denom can mint tokens for it
 func (s *KeeperTestSuite) TestMintDenom() {

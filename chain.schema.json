@@ -2,26 +2,22 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "codebase": {
     "git_repo": "https://github.com/osmosis-labs/osmosis",
-    "recommended_version": "v20.2.1",
+    "recommended_version": "v21.0.0",
     "compatible_versions": [
-      "v20.2.1",
-      "v20.2.0",
-      "v20.1.2",
-      "v20.1.1",
-      "v20.1.0"
+      "v21.0.0"
     ],
     "binaries": {
-      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-amd64?checksum=sha256:4e60a870861ca17819fbcb49fff981b5731ec1121d7cbab43987c5f04ff099fa",
-      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-arm64?checksum=sha256:4e7fe2cc369a9eef28a8083414c2d7e0a8cb5eb5b75e913ded06ee457dff62bb"
-    },
-    "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230922030206-734f99fba785",
+      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v21.0.0/osmosisd-21.0.0-linux-amd64?checksum=sha256:d5da96edab67152fa73ba5455b89bb8fc76907e9c6e4e9683af42df94087dbcc",
+      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v21.0.0/osmosisd-21.0.0-linux-arm64?checksum=sha256:36061fcc4a9c044b5738232e3e4235f17951e76e91f18900b25596fd7761d576"
+    }
+    "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@v0.47.5-osmo",
     "consensus": {
       "type": "tendermint",
-      "version": "0.38.0"
+      "version": "0.37.2"
     },
-    "cosmwasm_version": "osmosis-labs/wasmd@0.31.0-osmo-v16",
+    "cosmwasm_version": "osmosis-labs/wasmd@v0.45.0-osmo",
     "cosmwasm_enabled": true,
-    "ibc_go_version": "4.5.1",
+    "ibc_go_version": "v7.3.1",
     "ics_enabled": [
       "ics20-1"
     ],
@@ -258,15 +254,11 @@
       },
       {
         "name": "v20",
-        "tag": "v20.2.1",
+        "tag": "v20.5.0",
         "height": 12028900,
-        "recommended_version": "v20.2.1",
+        "recommended_version": "v20.5.0",
         "compatible_versions": [
-          "v20.2.1",
-          "v20.2.0",
-          "v20.1.2",
-          "v20.1.1",
-          "v20.1.0"
+          "v20.5.0"
         ],
         "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230922030206-734f99fba785",
         "consensus": {
@@ -280,8 +272,33 @@
           "ics20-1"
         ],
         "binaries": {
-          "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-amd64?checksum=sha256:4e60a870861ca17819fbcb49fff981b5731ec1121d7cbab43987c5f04ff099fa",
-          "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-arm64?checksum=sha256:4e7fe2cc369a9eef28a8083414c2d7e0a8cb5eb5b75e913ded06ee457dff62bb"
+          "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v20.5.0/osmosisd-20.5.0-linux-amd64?checksum=sha256:f9ff6176e32499f22b20288c71dbc802556eb5399baef23de164fe6158a55a69",
+          "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v20.5.0/osmosisd-20.5.0-linux-arm64?checksum=sha256:99359257ff81d21b55b685924a74473d532cbc5af196a672a784bf13dad06d26"
+        },
+        "next_version_name": "v21"
+      },
+      {
+        "name": "v21",
+        "tag": "v21.0.0",
+        "height": 12834100,
+        "recommended_version": "v21.0.0",
+        "compatible_versions": [
+          "v21.0.0"
+        ],
+        "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@v0.47.5-osmo",
+        "consensus": {
+          "type": "tendermint",
+          "version": "0.37.2"
+        },
+        "cosmwasm_version": "osmosis-labs/wasmd@v0.45.0-osmo",
+        "cosmwasm_enabled": true,
+        "ibc_go_version": "v7.3.1",
+        "ics_enabled": [
+          "ics20-1"
+        ],
+        "binaries": {
+          "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v21.0.0/osmosisd-21.0.0-linux-amd64?checksum=sha256:d5da96edab67152fa73ba5455b89bb8fc76907e9c6e4e9683af42df94087dbcc",
+          "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v21.0.0/osmosisd-21.0.0-linux-arm64?checksum=sha256:36061fcc4a9c044b5738232e3e4235f17951e76e91f18900b25596fd7761d576"
         }
       }
     ]

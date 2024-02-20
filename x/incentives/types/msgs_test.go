@@ -10,13 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
-	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 // TestMsgCreateGauge tests if valid/invalid create gauge messages are properly validated/invalidated
@@ -205,19 +205,6 @@ func TestMsgCreateGauge(t *testing.T) {
 				// This is set by the system when creating internal gauges.
 				// Client should provide empty string.
 				msg.DistributeTo.Denom = types.NoLockInternalGaugeDenom(1)
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid due to no lock with non-zero lock duration",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				msg.DistributeTo.Denom = ""
-				msg.PoolId = 1
-
-				// breaks
-				msg.DistributeTo.Duration = time.Hour
 				return msg
 			}),
 			expectPass: false,

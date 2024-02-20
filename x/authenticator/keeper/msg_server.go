@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	impl "github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	impl "github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 type msgServer struct {

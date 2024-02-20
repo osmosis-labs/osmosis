@@ -7,14 +7,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
 type KeeperTestSuite struct {

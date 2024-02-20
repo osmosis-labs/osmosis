@@ -1,19 +1,20 @@
 package authenticator_test
 
 import (
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"testing"
 	"time"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
-	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 )
 
 type SpendLimitAuthenticatorTest struct {

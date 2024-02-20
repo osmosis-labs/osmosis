@@ -20,20 +20,20 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v21/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v21/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v21/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -390,9 +390,8 @@ func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 		time.Second * 120,
 		time.Second * 240,
 	}
-	incentivesGenState.Params = incentivestypes.Params{
-		DistrEpochIdentifier: "day",
-	}
+	incentivesGenState = incentivestypes.DefaultGenesis()
+	incentivesGenState.Params.DistrEpochIdentifier = "day"
 }
 
 func updateMintGenesis(mintGenState *minttypes.GenesisState) {
@@ -456,7 +455,7 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 		gammGenState := &gammtypes.GenesisState{}
 		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
 
-		// Lower keep period from defaults to allos us to test pruning.
+		// Lower keep period from defaults to allows us to test pruning.
 		twapGenState.Params.RecordHistoryKeepPeriod = time.Second * 15
 
 		for _, poolAny := range gammGenState.Pools {

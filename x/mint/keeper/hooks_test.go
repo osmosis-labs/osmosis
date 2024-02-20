@@ -8,9 +8,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v23/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -393,7 +393,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 
 			// Old supply
 			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
-			// We require a validator be setup in the app setup logic, or else tests wont run.
+			// We require a validator be setup in the app setup logic, or else tests won't run.
 			// This validator has a delegation equal to sdk.DefaultPowerReduction, so we add this
 			// to the expected supply.
 			s.Require().Equal(osmomath.NewInt(keeper.DeveloperVestingAmount).Add(sdk.DefaultPowerReduction), oldSupply)
@@ -524,7 +524,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 	s.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
 
 	// Test setup parameters are not identical with mainnet.
-	// Therfore, we set them here to the desired mainnet values.
+	// Therefore, we set them here to the desired mainnet values.
 	mintKeeper.SetParams(ctx, mintParams)
 	mintKeeper.SetLastReductionEpochNum(ctx, 0)
 	mintKeeper.SetMinter(ctx, types.Minter{

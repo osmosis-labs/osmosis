@@ -5,8 +5,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) TestGaugeReferencesManagement() {
 	_ = s.App.IncentivesKeeper.AddGaugeRefByKey(s.Ctx, key2, 2)
 	_ = s.App.IncentivesKeeper.AddGaugeRefByKey(s.Ctx, key2, 3)
 
-	// ensure key1 only has 2 entires
+	// ensure key1 only has 2 entries
 	gaugeRefs1 := s.App.IncentivesKeeper.GetGaugeRefs(s.Ctx, key1)
 	s.Require().Equal(len(gaugeRefs1), 2)
 
@@ -36,7 +36,7 @@ func (s *KeeperTestSuite) TestGaugeReferencesManagement() {
 	err := s.App.IncentivesKeeper.DeleteGaugeRefByKey(s.Ctx, key2, 1)
 	s.Require().NoError(err)
 
-	// ensure key2 now only has 2 entires
+	// ensure key2 now only has 2 entries
 	gaugeRefs3 := s.App.IncentivesKeeper.GetGaugeRefs(s.Ctx, key2)
 	s.Require().Equal(len(gaugeRefs3), 2)
 }

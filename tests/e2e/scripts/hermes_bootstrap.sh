@@ -46,7 +46,7 @@ max_gas = 9000000
 gas_multiplier = 1.5
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
-clock_drift = '1m' # to accomdate docker containers
+clock_drift = '1m' # to accommodate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
 [[chains]]
@@ -62,7 +62,7 @@ max_gas = 9000000
 gas_multiplier = 1.5
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
-clock_drift = '1m' # to accomdate docker containers
+clock_drift = '1m' # to accommodate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
 EOF

@@ -13,9 +13,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/ante"
+	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 )
 
 // AutherticatorSetPubKeyAnteSuite is a test suite for the authenticator and SetPubKey AnteDecorator.

@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 // NOTE: This should never return a pointer

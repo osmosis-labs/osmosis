@@ -10,9 +10,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/client/cli"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/client/cli"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

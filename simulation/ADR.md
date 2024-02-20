@@ -28,7 +28,7 @@ We want to be able to use golang fuzz testing tools to thoroughly test edge case
 
 ### Run memoryless state consistency tests
 
-On complex states, check that all of state is "consistent" acccording to various checks.
+On complex states, check that all of state is "consistent" according to various checks.
 (Known as "invariants" in the current SDK architecture)
 
 ### Make memory-ful property tests

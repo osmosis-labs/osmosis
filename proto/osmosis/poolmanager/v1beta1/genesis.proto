@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
 import "osmosis/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {
@@ -25,7 +25,7 @@ message Params {
   ];
   // authorized_quote_denoms is a list of quote denoms that can be used as
   // token1 when creating a concentrated pool. We limit the quote assets to a
-  // small set for the purposes of having convinient price increments stemming
+  // small set for the purposes of having convenient price increments stemming
   // from tick to price conversion. These increments are in a human readable
   // magnitude only for token1 as a quote. For limit orders in the future, this
   // will be a desirable property in terms of UX as to allow users to set limit
@@ -62,7 +62,7 @@ message TakerFeeParams {
     (gogoproto.nullable) = false
   ];
   // osmo_taker_fee_distribution defines the distribution of taker fees
-  // generated in OSMO. As of this writing, it has two catagories:
+  // generated in OSMO. As of this writing, it has two categories:
   // - staking_rewards: the percent of the taker fee that gets distributed to
   //   stakers.
   // - community_pool: the percent of the taker fee that gets sent to the
@@ -74,7 +74,7 @@ message TakerFeeParams {
   // non_osmo_taker_fee_distribution defines the distribution of taker fees
   // generated in non-OSMO. As of this writing, it has two categories:
   // - staking_rewards: the percent of the taker fee that gets swapped to OSMO
-  //   and then distirbuted to stakers.
+  //   and then distributed to stakers.
   // - community_pool: the percent of the taker fee that gets sent to the
   //   community pool. Note: If the non-OSMO asset is an authorized_quote_denom,
   //   that denom is sent directly to the community pool. Otherwise, it is
@@ -126,14 +126,10 @@ message TakerFeeDistributionPercentage {
 }
 
 message TakerFeesTracker {
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2
+      [ (gogoproto.nullable) = false ];
   int64 height_accounting_starts_from = 3
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }

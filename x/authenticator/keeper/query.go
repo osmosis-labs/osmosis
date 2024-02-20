@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 var _ types.QueryServer = Keeper{}

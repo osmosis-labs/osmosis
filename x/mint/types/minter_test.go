@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -94,7 +94,7 @@ func TestMinterValidate(t *testing.T) {
 	}
 }
 
-// TestGetInflationProvisions sanity checks that inflation provisons are calculated correctly.
+// TestGetInflationProvisions sanity checks that inflation provisions are calculated correctly.
 func TestGetInflationProvisions(t *testing.T) {
 	// Setup
 	var (
@@ -112,7 +112,7 @@ func TestGetInflationProvisions(t *testing.T) {
 	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
 }
 
-// TestGetDeveloperVestingProvisions sanity checks that developer vesting provisons are calculated correctly.
+// TestGetDeveloperVestingProvisions sanity checks that developer vesting provisions are calculated correctly.
 func TestGetDeveloperVestingProvisions(t *testing.T) {
 	// Setup
 	var (

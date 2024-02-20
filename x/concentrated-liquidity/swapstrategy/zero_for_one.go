@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -188,7 +188,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 // zeroForOneStrategy assumes moving to the left of the current square root price.
 // As a result, we use a reverse iterator to seek to the next tick index relative to the currentTickIndex.
 // Since end key of the reverse iterator is exclusive, we search from currentTickIndex + 1 tick index
-// in decrasing lexicographic order until a tick one smaller than current is found.
+// in decreasing lexicographic order until a tick one smaller than current is found.
 // We add 1 so that the current tick index is included in the search. This is a requirement to satisfy our
 // "active range" invariant of "lower tick <= current tick < upper tick". If we swapr right (zfo) and
 // cross tick X, then immediately start swapping left (zfo), we should be able to cross tick X in the other direction.

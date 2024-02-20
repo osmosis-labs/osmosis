@@ -10,9 +10,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/x/twap"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/twap"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -340,12 +340,6 @@ func (s *TestSuite) getAllHistoricalRecordsForPool(poolId uint64) []types.TwapRe
 // validateExpectedRecords validates that the twap keeper has the expected records.
 func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) {
 	twapKeeper := s.twapkeeper
-
-	// validate that the time indexed TWAPs are cleared.
-	timeIndexedTwaps, err := twapKeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().Len(timeIndexedTwaps, len(expectedRecords))
-	s.Require().Equal(timeIndexedTwaps, expectedRecords)
 
 	// validate that the pool indexed TWAPs are cleared.
 	poolIndexedTwaps, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPs(s.Ctx)

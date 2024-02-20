@@ -177,7 +177,7 @@ func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField
 }
 
 func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string) error {
-	// We cant pass in a negative number due to the way pflags works...
+	// We can't pass in a negative number due to the way pflags works...
 	// This is an (extraordinarily ridiculous) workaround that checks if a negative int is encapsulated in square brackets,
 	// and if so, trims the square brackets
 	if strings.HasPrefix(arg, "[") && strings.HasSuffix(arg, "]") && arg[1] == '-' {

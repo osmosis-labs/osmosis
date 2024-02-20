@@ -7,11 +7,12 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v23/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 
 	"github.com/stretchr/testify/suite"
 )

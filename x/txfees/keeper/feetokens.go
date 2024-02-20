@@ -6,7 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -35,7 +35,7 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 	// Note: spotPrice truncation is done here for maintaining state-compatibility with v19.x
 	// It should be changed to support full spot price precision before
 	// https://github.com/osmosis-labs/osmosis/issues/6064 is complete
-	return sdk.NewCoin(baseDenom, spotPrice.Dec().MulInt(inputFee.Amount).RoundInt()), nil
+	return sdk.NewCoin(baseDenom, spotPrice.Dec().MulIntMut(inputFee.Amount).RoundInt()), nil
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
@@ -53,7 +53,7 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.B
 		return osmomath.BigDec{}, err
 	}
 
-	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
+	spotPrice, err := k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
@@ -105,7 +105,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 	// - feeToken.Denom exists
 	// - feeToken.PoolID exists
 	// - feeToken.PoolID has both feeToken.Denom and baseDenom
-	_, err = k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
+	_, err = k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
 
 	return err
 }

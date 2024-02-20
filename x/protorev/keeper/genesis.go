@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
@@ -89,7 +89,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	// Since we now track all aspects of protocol revenue, we need to take a snapshot of cyclic arb profits from this module at a certain block height.
 	// This allows us to display how much protocol revenue has been generated since block "X" instead of just since the module was initialized.
-	if !genState.CyclicArbTracker.CyclicArb.IsZero() {
+	if len(genState.CyclicArbTracker.CyclicArb) > 0 {
 		k.SetCyclicArbProfitTrackerValue(ctx, genState.CyclicArbTracker.CyclicArb)
 	} else {
 		k.SetCyclicArbProfitTrackerValue(ctx, genState.Profits)

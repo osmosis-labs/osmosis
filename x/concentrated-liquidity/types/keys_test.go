@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
 // TestReverseRelationTickIndexToBytes tests if TickIndexToBytes and TickIndexFromBytes
-// succesfully converts back to the original value.
+// successfully converts back to the original value.
 func TestReverseRelationTickIndexToBytes(t *testing.T) {
 	tests := map[string]struct {
 		tickIndex int64

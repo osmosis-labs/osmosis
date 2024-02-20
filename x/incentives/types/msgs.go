@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -71,10 +71,6 @@ func (m MsgCreateGauge) ValidateBasic() error {
 		if m.DistributeTo.Denom != "" {
 			return errors.New(`no lock gauge denom should be unset. It will be automatically set to the NoLockExternalGaugeDenom(<pool id>)
 			 format internally, allowing for querying the gauges by denom with this prefix`)
-		}
-
-		if m.DistributeTo.Duration != 0 {
-			return fmt.Errorf("'no lock' gauge must have duration set to 0, was (%d)", m.DistributeTo.Duration)
 		}
 	} else {
 		if m.PoolId != 0 {

@@ -279,7 +279,10 @@ func BinarySearchBigDec(f func(BigDec) BigDec,
 
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
-		curEstimate = lowerbound.Add(upperbound).Quo(NewBigDec(2))
+		// (lowerbound + upperbound) / 2
+		curEstimate = lowerbound.Add(upperbound)
+		curEstimateBi := curEstimate.BigIntMut()
+		curEstimateBi.Rsh(curEstimateBi, 1)
 		curOutput = f(curEstimate)
 
 		// fmt.Println("binary search, input, target output, cur output", curEstimate, targetOutput, curOutput)

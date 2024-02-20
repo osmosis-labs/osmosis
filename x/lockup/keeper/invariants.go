@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 // RegisterInvariants registers all governance invariants.
@@ -30,7 +30,7 @@ func SyntheticLockupInvariant(keeper Keeper) sdk.Invariant {
 			}
 			if baselock.ID != synthlock.UnderlyingLockId {
 				return sdk.FormatInvariant(types.ModuleName, "synthetic-lockup-invariant",
-					fmt.Sprintf("\tSynthetic lock denom %s\n\tUnderlying lock ID: %d\n\tActual underying lock ID: %d\n",
+					fmt.Sprintf("\tSynthetic lock denom %s\n\tUnderlying lock ID: %d\n\tActual underlying lock ID: %d\n",
 						synthlock.SynthDenom, synthlock.UnderlyingLockId, baselock.ID,
 					)), true
 			}

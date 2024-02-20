@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 const (
@@ -18,11 +18,14 @@ const (
 )
 
 var (
-	EmptyCoins         = emptyCoins
-	HundredFooCoins    = sdk.NewDecCoin("foo", osmomath.NewInt(100))
-	HundredBarCoins    = sdk.NewDecCoin("bar", osmomath.NewInt(100))
-	TwoHundredFooCoins = sdk.NewDecCoin("foo", osmomath.NewInt(200))
-	TwoHundredBarCoins = sdk.NewDecCoin("bar", osmomath.NewInt(200))
+	EmptyCoins              = emptyCoins
+	HundredFooCoins         = sdk.NewDecCoin("foo", osmomath.NewInt(100))
+	HundredBarCoins         = sdk.NewDecCoin("bar", osmomath.NewInt(100))
+	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
+	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
+	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
+
+	OneDecScalingFactor = oneDecScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -204,8 +207,8 @@ func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
-func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) {
-	ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) osmomath.Dec {
+	return ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 }
 
 // Test helpers.
@@ -231,8 +234,8 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
 }
 
-func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
-	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
+func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord, scalingFactorForPool osmomath.Dec) (sdk.DecCoins, []types.IncentiveRecord, error) {
+	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords, 0, scalingFactorForPool)
 }
 
 func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []*accum.AccumulatorObject) error {
@@ -343,4 +346,16 @@ func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 
 func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
 	return k.getPoolHookContract(ctx, poolId, actionPrefix)
+}
+
+func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Dec, err error) {
+	return scaleUpTotalEmittedAmount(totalEmittedAmount, scalingFactor)
+}
+
+func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
+	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
+}
+
+func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	return k.getIncentiveScalingFactorForPool(ctx, poolID)
 }

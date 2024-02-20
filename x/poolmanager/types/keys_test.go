@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
 func TestFormatDenomTradePairKey(t *testing.T) {
@@ -61,5 +61,26 @@ func TestParseDenomTradePairKey(t *testing.T) {
 	_, _, err = types.ParseDenomTradePairKey([]byte(invalidKey))
 	if err == nil {
 		t.Errorf("Expected error, got nil")
+	}
+}
+
+func TestFormatModuleRouteKey(t *testing.T) {
+	cases := []struct {
+		id                 uint64
+		expectedSansPrefix string
+	}{0: {id: 0, expectedSansPrefix: "0"},
+		1: {id: 1, expectedSansPrefix: "1"},
+		2: {id: 12, expectedSansPrefix: "12"},
+		3: {id: 122, expectedSansPrefix: "122"},
+		4: {id: 4522, expectedSansPrefix: "4522"},
+		5: {id: 54522, expectedSansPrefix: "54522"},
+		6: {id: 654522, expectedSansPrefix: "654522"},
+	}
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf("id=%d", tc.id), func(t *testing.T) {
+			key := types.FormatModuleRouteKey(tc.id)
+			require.Equal(t, types.SwapModuleRouterPrefix[0], key[0])
+			require.Equal(t, tc.expectedSansPrefix, string(key[1:]))
+		})
 	}
 }

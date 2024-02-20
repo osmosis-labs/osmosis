@@ -2,17 +2,18 @@ package authenticator_test
 
 import (
 	"encoding/json"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"strings"
 	"testing"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/testutils"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
 type AggregatedAuthenticatorsTest struct {

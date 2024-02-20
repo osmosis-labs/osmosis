@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/txfee_filters"
 )
 
 type KeeperTestSuite struct {
@@ -59,6 +59,36 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
 		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
 		Msg:      affiliateSwapMsgBz,
+	}
+
+	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})
+	suite.Require().True(isArb)
+}
+
+// Tests that the arb filter is enabled on swap msg.
+func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_SwapMsg() {
+	contractSwapMsg := &txfee_filters.ContractSwapMsg{
+		ContractSwap: txfee_filters.ContractSwap{
+			InputCoin: txfee_filters.InputCoin{
+				Amount: "2775854",
+				Denom:  "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F",
+			},
+			OutputDenom: "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F",
+			Slippage: txfee_filters.Slippage{
+				MinOutputAmount: "2775854",
+			},
+		},
+	}
+
+	msgBz, err := json.Marshal(contractSwapMsg)
+	suite.Require().NoError(err)
+
+	// https://celatone.osmosis.zone/osmosis-1/txs/8D20755D4E009CB72C763963A76886BCCCC5C2EBFC3F57266332710216A0D10D
+	executeMsg := &wasmtypes.MsgExecuteContract{
+		Contract: "osmo1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
+		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
+		Msg:      msgBz,
 	}
 
 	_, isArb := txfee_filters.IsArbTxLooseAuthz(executeMsg, executeMsg.Funds[0].Denom, map[types.LiquidityChangeType]bool{})

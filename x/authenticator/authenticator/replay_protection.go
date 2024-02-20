@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

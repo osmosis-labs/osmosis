@@ -12,12 +12,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v21/app"
-	cl "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
+	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {
@@ -41,6 +41,7 @@ var (
 		PoolData:              []genesis.PoolData{},
 		NextIncentiveRecordId: 2,
 		NextPositionId:        3,
+		IncentivesAccumulatorPoolIdMigrationThreshold: 3,
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -117,7 +118,7 @@ func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 			Name: types.KeyUptimeAccumulator(poolId, uint64(0)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(20))),
-				TotalShares: osmomath.NewDec(20),
+				TotalShares: twentyDec,
 			},
 		},
 		{
@@ -131,28 +132,28 @@ func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 			Name: types.KeyUptimeAccumulator(poolId, uint64(2)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("baz", osmomath.NewInt(10))),
-				TotalShares: osmomath.NewDec(10),
+				TotalShares: tenDec,
 			},
 		},
 		{
 			Name: types.KeyUptimeAccumulator(poolId, uint64(3)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("qux", osmomath.NewInt(20))),
-				TotalShares: osmomath.NewDec(20),
+				TotalShares: twentyDec,
 			},
 		},
 		{
 			Name: types.KeyUptimeAccumulator(poolId, uint64(4)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quux", osmomath.NewInt(20))),
-				TotalShares: osmomath.NewDec(20),
+				TotalShares: twentyDec,
 			},
 		},
 		{
 			Name: types.KeyUptimeAccumulator(poolId, uint64(5)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quuux", osmomath.NewInt(10))),
-				TotalShares: osmomath.NewDec(20),
+				TotalShares: twentyDec,
 			},
 		},
 	}
@@ -235,8 +236,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							UptimeAccumRecords: []accum.Record{
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(10000), osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1000), osmomath.NewInt(100), osmomath.NewInt(50)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(100), osmomath.NewInt(100), osmomath.NewInt(50)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(10), osmomath.NewInt(100), osmomath.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, hundredDec, osmomath.NewInt(100), osmomath.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, tenDec, osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
 							},
@@ -246,7 +247,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						Name: types.KeySpreadRewardPoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(10))),
-							TotalShares: osmomath.NewDec(10),
+							TotalShares: tenDec,
 						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
@@ -255,7 +256,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							PoolId: uint64(1),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("bar", osmomath.NewInt(15)),
-								EmissionRate:  osmomath.NewDec(20),
+								EmissionRate:  twentyDec,
 								StartTime:     defaultTime2,
 							},
 							MinUptime:   testUptimeOne,
@@ -265,7 +266,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							PoolId: uint64(1),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("foo", osmomath.NewInt(5)),
-								EmissionRate:  osmomath.NewDec(10),
+								EmissionRate:  tenDec,
 								StartTime:     defaultTime1,
 							},
 							MinUptime:   testUptimeOne,
@@ -297,8 +298,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					UptimeAccumRecords: []accum.Record{
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(10000), osmomath.NewInt(100), osmomath.NewInt(50)),
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1000), osmomath.NewInt(100), osmomath.NewInt(50)),
-						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(100), osmomath.NewInt(100), osmomath.NewInt(50)),
-						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(10), osmomath.NewInt(100), osmomath.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, hundredDec, osmomath.NewInt(100), osmomath.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, tenDec, osmomath.NewInt(100), osmomath.NewInt(50)),
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
 					},
@@ -309,7 +310,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					Name: types.KeySpreadRewardPoolAccumulator(1),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(10))),
-						TotalShares: osmomath.NewDec(10),
+						TotalShares: tenDec,
 					},
 				},
 			},
@@ -318,7 +319,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					PoolId: uint64(1),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingCoin: sdk.NewDecCoin("bar", osmomath.NewInt(15)),
-						EmissionRate:  osmomath.NewDec(20),
+						EmissionRate:  twentyDec,
 						StartTime:     defaultTime2,
 					},
 					MinUptime: testUptimeOne,
@@ -327,7 +328,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					PoolId: uint64(1),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingCoin: sdk.NewDecCoin("foo", osmomath.NewInt(5)),
-						EmissionRate:  osmomath.NewDec(10),
+						EmissionRate:  tenDec,
 						StartTime:     defaultTime1,
 					},
 					MinUptime: testUptimeOne,
@@ -354,7 +355,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						Name: types.KeySpreadRewardPoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(10))),
-							TotalShares: osmomath.NewDec(10),
+							TotalShares: tenDec,
 						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
@@ -363,7 +364,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							PoolId: uint64(1),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("foo", osmomath.NewInt(5)),
-								EmissionRate:  osmomath.NewDec(10),
+								EmissionRate:  tenDec,
 								StartTime:     defaultTime1,
 							},
 							MinUptime:   testUptimeOne,
@@ -396,7 +397,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						Name: types.KeySpreadRewardPoolAccumulator(2),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", osmomath.NewInt(20))),
-							TotalShares: osmomath.NewDec(20),
+							TotalShares: twentyDec,
 						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(2),
@@ -405,7 +406,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							PoolId: uint64(2),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("bar", osmomath.NewInt(5)),
-								EmissionRate:  osmomath.NewDec(10),
+								EmissionRate:  tenDec,
 								StartTime:     defaultTime1,
 							},
 							MinUptime:   testUptimeOne,
@@ -432,14 +433,14 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					Name: types.KeySpreadRewardPoolAccumulator(1),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(10))),
-						TotalShares: osmomath.NewDec(10),
+						TotalShares: tenDec,
 					},
 				},
 				{
 					Name: types.KeySpreadRewardPoolAccumulator(2),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", osmomath.NewInt(20))),
-						TotalShares: osmomath.NewDec(20),
+						TotalShares: twentyDec,
 					},
 				},
 			},
@@ -448,7 +449,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					PoolId: uint64(1),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingCoin: sdk.NewDecCoin("foo", osmomath.NewInt(5)),
-						EmissionRate:  osmomath.NewDec(10),
+						EmissionRate:  tenDec,
 						StartTime:     defaultTime1,
 					},
 					MinUptime: testUptimeOne,
@@ -457,7 +458,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					PoolId: uint64(2),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingCoin: sdk.NewDecCoin("bar", osmomath.NewInt(5)),
-						EmissionRate:  osmomath.NewDec(10),
+						EmissionRate:  tenDec,
 						StartTime:     defaultTime1,
 					},
 					MinUptime: testUptimeOne,
@@ -595,6 +596,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			}
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
+
+			// Validate incentive migration threshold
+			incentiveMigrationThreshold, err := clKeeper.GetIncentivePoolIDMigrationThreshold(ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, incentiveMigrationThreshold)
 		})
 	}
 }
@@ -638,7 +644,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						Name: types.KeySpreadRewardPoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(10))),
-							TotalShares: osmomath.NewDec(10),
+							TotalShares: tenDec,
 						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
@@ -647,7 +653,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							PoolId: uint64(1),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("bar", osmomath.NewInt(15)),
-								EmissionRate:  osmomath.NewDec(20),
+								EmissionRate:  twentyDec,
 								StartTime:     defaultTime2,
 							},
 							MinUptime:   testUptimeOne,
@@ -657,7 +663,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							PoolId: uint64(1),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("foo", osmomath.NewInt(5)),
-								EmissionRate:  osmomath.NewDec(10),
+								EmissionRate:  tenDec,
 								StartTime:     defaultTime1,
 							},
 							MinUptime:   testUptimeOne,
@@ -693,7 +699,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						Name: types.KeySpreadRewardPoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(10))),
-							TotalShares: osmomath.NewDec(10),
+							TotalShares: tenDec,
 						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
@@ -702,7 +708,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							PoolId: uint64(1),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("foo", osmomath.NewInt(5)),
-								EmissionRate:  osmomath.NewDec(10),
+								EmissionRate:  tenDec,
 								StartTime:     defaultTime1,
 							},
 							MinUptime: testUptimeOne,
@@ -719,7 +725,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						Name: types.KeySpreadRewardPoolAccumulator(poolTwo.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", osmomath.NewInt(20))),
-							TotalShares: osmomath.NewDec(20),
+							TotalShares: twentyDec,
 						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(2),
@@ -728,7 +734,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							PoolId: uint64(2),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingCoin: sdk.NewDecCoin("bar", osmomath.NewInt(5)),
-								EmissionRate:  osmomath.NewDec(10),
+								EmissionRate:  tenDec,
 								StartTime:     defaultTime1,
 							},
 							MinUptime: testUptimeOne,
@@ -814,6 +820,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
+
+			// Validate incentive migration threshold
+			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, actualExported.IncentivesAccumulatorPoolIdMigrationThreshold)
 		})
 	}
 }

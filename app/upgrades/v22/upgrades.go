@@ -3,11 +3,12 @@ package v22
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	"github.com/osmosis-labs/osmosis/v21/app/keepers"
-	"github.com/osmosis-labs/osmosis/v21/app/upgrades"
-
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	tmtypes "github.com/cometbft/cometbft/types"
+
+	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
 )
 
 func CreateUpgradeHandler(
@@ -24,9 +25,37 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		authenticatorParams := keepers.AuthenticatorKeeper.GetParams(ctx)
-		authenticatorParams.MaximumUnauthenticatedGas = 50000
-		keepers.AuthenticatorKeeper.SetParams(ctx, authenticatorParams)
+		// Migrate legacy taker fee tracker to new taker fee tracker (for performance reasons)
+		oldTakerFeeTrackerForStakers := keepers.PoolManagerKeeper.GetLegacyTakerFeeTrackerForStakers(ctx)
+		for _, coin := range oldTakerFeeTrackerForStakers {
+			err := keepers.PoolManagerKeeper.UpdateTakerFeeTrackerForStakersByDenom(ctx, coin.Denom, coin.Amount)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		oldTakerFeeTrackerForCommunityPool := keepers.PoolManagerKeeper.GetLegacyTakerFeeTrackerForCommunityPool(ctx)
+		for _, coin := range oldTakerFeeTrackerForCommunityPool {
+			err := keepers.PoolManagerKeeper.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, coin.Denom, coin.Amount)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Properly register consensus params. In the process, change params as per:
+		// https://www.mintscan.io/osmosis/proposals/705
+		defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
+		defaultConsensusParams.Block.MaxBytes = 5000000 // previously 10485760
+		defaultConsensusParams.Block.MaxGas = 300000000 // previously 120000000
+		keepers.ConsensusParamsKeeper.Set(ctx, &defaultConsensusParams)
+
+		// Increase the tx size cost per byte to 20 to reduce the exploitability of bandwidth amplification problems.
+		accountParams := keepers.AccountKeeper.GetParams(ctx)
+		accountParams.TxSizeCostPerByte = 20 // Double from the default value of 10
+		err = keepers.AccountKeeper.SetParams(ctx, accountParams)
+		if err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}

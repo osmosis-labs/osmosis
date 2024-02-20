@@ -16,14 +16,13 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)

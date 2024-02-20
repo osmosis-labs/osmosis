@@ -7,16 +7,16 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	types "github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v21/x/authenticator/keeper"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic

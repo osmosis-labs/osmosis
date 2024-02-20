@@ -4,7 +4,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	types "github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+
+	types "github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 // GetAccount retrieves the account associated with the first signer of a transaction message.

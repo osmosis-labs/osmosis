@@ -10,13 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v21/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v21/x/twap"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types/twapmock"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types/twapmock"
 )
 
 var (
@@ -410,7 +409,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom0:      baseRecord.Asset0Denom,
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			expectedErr: fmt.Errorf("looking for a time that's too old, not in the historical index. "+
 				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"on lexicographical order denom parameters": {
@@ -521,7 +520,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 		"call 1 second before existing record": {
 			recordsToPreSet: baseRecord,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			expectedErr: fmt.Errorf("looking for a time that's too old, not in the historical index. "+
 				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"test non lexicographical order parameter": {
@@ -571,62 +570,6 @@ type computeThreeAssetArithmeticTwapTestCase struct {
 	quoteAsset  []string
 	expTwap     []osmomath.Dec
 	expErr      bool
-}
-
-// TestPruneRecords tests that twap records earlier than
-// current block time - RecordHistoryKeepPeriod are pruned from the store
-// while keeping the newest record before the above time threshold.
-// Such record is kept for each pool.
-func (s *TestSuite) TestPruneRecords() {
-	recordHistoryKeepPeriod := s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx)
-
-	pool1OlderMin2MsRecord, // deleted
-		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
-		pool3OlderBaseRecord,    // kept as newest under keep period
-		pool4OlderPlus1Record := // kept as newest under keep period
-		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
-
-	pool1Min2MsRecord, // kept as newest under keep period
-		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC, // kept as newest under keep period
-		pool3BaseRecord,    // kept as it is at the keep period boundary
-		pool4Plus1Record := // kept as it is above the keep period boundary
-		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
-
-	// non-ascending insertion order.
-	recordsToPreSet := []types.TwapRecord{
-		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC,
-		pool4Plus1Record,
-		pool4OlderPlus1Record,
-		pool3OlderBaseRecord,
-		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC,
-		pool3BaseRecord,
-		pool1Min2MsRecord,
-		pool1OlderMin2MsRecord,
-	}
-
-	// tMin2Record is before the threshold and is pruned away.
-	// tmin1Record is the newest record before current block time - record history keep period.
-	// All other records happen after the threshold and are kept.
-	expectedKeptRecords := []types.TwapRecord{
-		pool3OlderBaseRecord,
-		pool4OlderPlus1Record,
-		pool1Min2MsRecord,
-		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC,
-		pool3BaseRecord,
-		pool4Plus1Record,
-	}
-	s.SetupTest()
-	s.preSetRecords(recordsToPreSet)
-
-	ctx := s.Ctx
-	twapKeeper := s.twapkeeper
-
-	ctx = ctx.WithBlockTime(baseTime)
-
-	err := twapKeeper.PruneRecords(ctx)
-	s.Require().NoError(err)
-
-	s.validateExpectedRecords(expectedKeptRecords)
 }
 
 // TestUpdateRecords tests that the records are updated correctly.
@@ -1323,7 +1266,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 			s.Require().Equal(tc.poolId, poolId)
 			s.Require().NoError(err)
 
-			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denoms := tc.poolCoins.Denoms()
 			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for _, denomPair := range denomPairs {

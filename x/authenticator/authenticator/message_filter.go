@@ -9,9 +9,10 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
 
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 var _ iface.Authenticator = &MessageFilterAuthenticator{}

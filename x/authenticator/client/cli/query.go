@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 func GetQueryCmd() *cobra.Command {

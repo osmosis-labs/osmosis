@@ -2,7 +2,8 @@ package authenticator
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 type TrackRequest struct {

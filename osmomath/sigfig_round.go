@@ -20,7 +20,8 @@ func SigFigRound(d Dec, tenToSigFig Int) Dec {
 	dkSigFig := dTimesK.MulInt(tenToSigFig)
 	numerator := dkSigFig.RoundInt().ToLegacyDec()
 
+	// TODO: Use pre-computed table for 10^k
 	tenToK := NewInt(10).ToLegacyDec().Power(k)
 	denominator := tenToSigFig.Mul(tenToK.TruncateInt())
-	return numerator.QuoInt(denominator)
+	return numerator.QuoIntMut(denominator)
 }

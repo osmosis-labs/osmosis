@@ -42,7 +42,7 @@ update_genesis '.app_state["staking"]["params"]["unbonding_time"]="240s"'
 # update crisis variable to uosmo
 update_genesis '.app_state["crisis"]["constant_fee"]["denom"]="uosmo"'
 
-# udpate gov genesis
+# update gov genesis
 update_genesis '.app_state["gov"]["voting_params"]["voting_period"]="60s"'
 update_genesis '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="uosmo"'
 

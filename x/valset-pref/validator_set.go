@@ -11,9 +11,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appParams "github.com/osmosis-labs/osmosis/v21/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/valset-pref/types"
+	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
 )
 
 type valSet struct {
@@ -103,8 +103,8 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 			return err
 		}
 
-		// in the last valset iteration we dont calculate it from shares using decimals and trucation,
-		// we use whats remaining to get more accurate value
+		// in the last valset iteration we dont calculate it from shares using decimals and truncation,
+		// we use what's remaining to get more accurate value
 		if len(existingSet.Preferences)-1 == i {
 			tokenAmt = coin.Amount.Sub(totalDelAmt).ToLegacyDec().TruncateInt()
 		} else {
@@ -125,7 +125,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 
 // UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
 // If the valset does not exist, it undelegates from existing staking position.
-// Ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
+// Ex: user A has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 // Truncation ensures we do not undelegate more than the user has staked with the validator set.
@@ -166,8 +166,8 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		for index, val := range valSetRatio {
 			validator := validators[val.ValAddr.String()]
 
-			// in the last valset iteration we don't calculate it from shares using decimals and trucation,
-			// we use whats remaining to get more accurate value
+			// in the last valset iteration we don't calculate it from shares using decimals and truncation,
+			// we use what's remaining to get more accurate value
 			if len(existingSet.Preferences)-1 == index {
 				amountToUnDelegate = undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
 			} else {
@@ -285,7 +285,7 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 		validator := validators[val.ValAddr.String()]
 
 		// in the last valset iteration we don't calculate it from shares using decimals and truncation,
-		// we use whats remaining to get more accurate value
+		// we use what's remaining to get more accurate value
 		if len(existingSet.Preferences)-1 == index {
 			// Directly retrieve the delegation to the last validator
 			// Use the min between our undelegation amount calculated via iterations of undelegating
@@ -471,7 +471,7 @@ func (k Keeper) getValTargetAndSource(ctx sdk.Context, valSource, valTarget stri
 // If the valset does not exist, it withdraws from existing staking position.
 // Delegation reward is collected by the validator and in doing so, they can charge commission to the delegators.
 // Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
-// receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
+// receives new delegation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
 	// Get all validators the user is delegated to, and create a set from it.
 	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)

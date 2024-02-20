@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)
@@ -94,10 +94,8 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1
 	// in order to assign an initial spot price.
-	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
-	if err != nil {
-		return CreatePositionData{}, err
-	}
+	// N.B. the pool is not mutated between fetching and this call.
+	hasPositions := k.PoolHasPosition(ctx, pool)
 
 	// Trigger before hook for CreatePosition prior to mutating state.
 	// If no contract is set, this will be a no-op.
@@ -209,7 +207,7 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // On success, returns a positive amount of each token withdrawn.
 // If we are attempting to withdraw all liquidity available in the position, we also collect spread factors and incentives for the position.
 // When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
-// Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
+// Currently, it creates twap records. Assuming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
 // is undefined. When the last position is removed by calling this method, the current sqrt price and current
 // tick of the pool are set to zero. Lastly, if the tick being withdrawn from is now empty due to the withdrawal,
@@ -307,6 +305,11 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return osmomath.Int{}, osmomath.Int{}, err
 		}
 
+		// Note that here we currently use the iterator based definition to search
+		// for a remaining position in the pool. Since we have removed a position we need to
+		// search if there are more.
+		// Ideally in the future we could have a simple "num positions" counter to make this logic
+		// much faster.
 		anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
 		if err != nil {
 			return osmomath.Int{}, osmomath.Int{}, err
@@ -417,11 +420,12 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, osmomath.Int{}, osmomath.Int{}, err
 	}
 
-	anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
+	pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
 	if err != nil {
 		return 0, osmomath.Int{}, osmomath.Int{}, err
 	}
 
+	anyPositionsRemainingInPool := k.PoolHasPosition(ctx, pool)
 	if !anyPositionsRemainingInPool {
 		return 0, osmomath.Int{}, osmomath.Int{}, types.AddToLastPositionInPoolError{PoolId: position.PoolId, PositionId: position.PositionId}
 	}
@@ -429,10 +433,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	// Create new position with updated liquidity.
 	amount0Desired := amount0Withdrawn.Add(amount0Added)
 	amount1Desired := amount1Withdrawn.Add(amount1Added)
-	pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
-	if err != nil {
-		return 0, osmomath.Int{}, osmomath.Int{}, err
-	}
+
 	tokensProvided := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0Desired), sdk.NewCoin(pool.GetToken1(), amount1Desired))
 	minimumAmount0 := amount0Withdrawn
 	minimumAmount1 := amount1Withdrawn

@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	incentivetypes "github.com/osmosis-labs/osmosis/v21/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v21/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	incentivetypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 )
 
 const (
@@ -92,7 +92,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 	s.Require().NoError(err)
 
-	// Distirbute rewards
+	// Distribute rewards
 	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivetypes.Gauge{*gauge})
 	s.Require().NoError(err)
 

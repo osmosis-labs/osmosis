@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v21/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -131,7 +131,7 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 }
 
 // Validates that group gauges can be allocated minted tokens from pool incentives as expected
-// The test creates 2 groups, creates distribuion records for them, calls AllocateAsset and then
+// The test creates 2 groups, creates distribution records for them, calls AllocateAsset and then
 // checks that the group gauges have the expected amount of tokens.
 func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
 	var (

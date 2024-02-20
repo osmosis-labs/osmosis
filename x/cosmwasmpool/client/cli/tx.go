@@ -18,8 +18,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v21/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -89,9 +89,6 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
-				return err
-			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -177,9 +174,6 @@ func NewCmdMigratePoolContractsProposal() *cobra.Command {
 
 			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
 			if err != nil {
-				return err
-			}
-			if err = proposalMsg.ValidateBasic(); err != nil {
 				return err
 			}
 

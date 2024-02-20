@@ -14,14 +14,14 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v21/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v21/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v21/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v21/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v21/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v21/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 )
 
 var (
@@ -99,27 +99,27 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			expectedError:            errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
-		"error: lock that is not superfluid delegated, not unlocking, min exit coins more than being exitted": {
+		"error: lock that is not superfluid delegated, not unlocking, min exit coins more than being exited": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000)), sdk.NewCoin("stake", osmomath.NewInt(5000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
-		"error: lock that is not superfluid delegated, unlocking, min exit coins more than being exitted": {
+		"error: lock that is not superfluid delegated, unlocking, min exit coins more than being exited": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
 			unlocking:                true,
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
-		"error: lock that is superfluid delegated, not unlocking (full shares), min exit coins more than being exitted": {
+		"error: lock that is superfluid delegated, not unlocking (full shares), min exit coins more than being exited": {
 			// migrateSuperfluidBondedBalancerToConcentrated
 			superfluidDelegated:      true,
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(10000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
-		"error: lock that is superfluid undelegating, not unlocking, min exit coins more than being exitted": {
+		"error: lock that is superfluid undelegating, not unlocking, min exit coins more than being exited": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(40000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
-		"lock that is superfluid undelegating, unlocking, min exit coins more than being exitted": {
+		"lock that is superfluid undelegating, unlocking, min exit coins more than being exited": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
@@ -1132,7 +1132,7 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 	}
 }
 
-// TODO add user balace pre swap and then add to result
+// TODO add user balance pre swap and then add to result
 
 func (s *KeeperTestSuite) ValidateMigrateResult(
 	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering uint64,

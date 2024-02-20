@@ -3,11 +3,13 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 	"os"
 	"testing"
 	"time"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -20,11 +22,11 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v21/app"
-	"github.com/osmosis-labs/osmosis/v21/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v21/app/params"
-	"github.com/osmosis-labs/osmosis/v21/x/authenticator/authenticator"
-	minttypes "github.com/osmosis-labs/osmosis/v21/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 )
 
 type CosmwasmAuthenticatorTest struct {

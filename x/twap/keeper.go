@@ -5,10 +5,11 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v21/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -78,9 +79,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis returns the twap module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	// These are ordered in increasing order, guaranteed by the iterator
-	// that is prefixed by time.
-	twapRecords, err := k.GetAllHistoricalTimeIndexedTWAPs(ctx)
+	twapRecords, err := k.getAllHistoricalPoolIndexedTWAPs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -99,4 +98,32 @@ func (k Keeper) GetGeometricStrategy() *geometric {
 // GetArithmeticStrategy gets arithmetic TWAP keeper.
 func (k Keeper) GetArithmeticStrategy() *arithmetic {
 	return &arithmetic{k}
+}
+
+// GetPruningState gets the current pruning state, which is used to determine
+// whether to prune historical records in the EndBlock. This allows us to spread
+// out the computational cost of pruning over time rather than all at once at epoch.
+func (k Keeper) GetPruningState(ctx sdk.Context) types.PruningState {
+	store := ctx.KVStore(k.storeKey)
+	state := types.PruningState{}
+
+	bz := store.Get(types.PruningStateKey)
+	if bz == nil {
+		return state
+	}
+	err := proto.Unmarshal(bz, &state)
+	if err != nil {
+		panic(err)
+	}
+	return state
+}
+
+func (k Keeper) SetPruningState(ctx sdk.Context, state types.PruningState) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz, err := proto.Marshal(&state)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(types.PruningStateKey, bz)
 }

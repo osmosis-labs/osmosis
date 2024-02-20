@@ -9,9 +9,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	mempool1559 "github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v21/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v21/x/txfees/types"
+	mempool1559 "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -142,8 +142,10 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	// note we mutate this one line below, to avoid extra heap allocations.
 	glDec := osmomath.NewDec(int64(gasRequested))
-	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
+	baseFeeAmt := glDec.MulMut(minBaseGasPrice).Ceil().RoundInt()
+	requiredBaseFee := sdk.Coin{Denom: baseDenom, Amount: baseFeeAmt}
 
 	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
 	if err != nil {
@@ -244,16 +246,30 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
+	fees := feeTx.GetFee()
+
+	// if we are simulating, set the fees to 1 uosmo as they don't matter.
+	// set it as coming from the burn addr
+	if simulate && fees.IsZero() {
+		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
+		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+		// were doing 1 extra get account call alas
+		burnAcct := dfd.ak.GetAccount(ctx, burnAcctAddr)
+		if burnAcct != nil {
+			deductFeesFromAcc = burnAcct
+		}
+	}
+
 	// deducts the fees and transfer them to the module account
-	if !feeTx.GetFee().IsZero() {
-		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
+	if !fees.IsZero() {
+		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, fees)
 		if err != nil {
 			return ctx, err
 		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
-		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+		sdk.NewAttribute(sdk.AttributeKeyFee, fees.String()),
 	)})
 
 	return next(ctx, tx, simulate)
@@ -286,8 +302,6 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
-
-	txFeesKeeper.IncreaseTxFeesTracker(ctx, fees[0])
 
 	return nil
 }

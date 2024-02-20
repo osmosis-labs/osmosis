@@ -17,7 +17,7 @@ const (
 	// equals to this tick, it is only possible to swap in the right (one for zero)
 	// direction.
 	// Note, that this behavior is different from MaxTick since our "active range"
-	// invariant is [lower tick, uppper tick). As a result, when we consume all lower
+	// invariant is [lower tick, upper tick). As a result, when we consume all lower
 	// tick liquiditty, we must cross it and get kicked out of it.
 	MinCurrentTick int64 = MinInitializedTick - 1
 	// Tick corresponding to the extended min spot price of 10^-30.

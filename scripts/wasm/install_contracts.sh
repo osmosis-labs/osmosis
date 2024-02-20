@@ -6,7 +6,7 @@ VAL=$(osmosisd keys show -a validator --keyring-backend test)
 # We can make this a loop in the future, hard with bash, so I copy it twice
 
 CONTRACT=cw20_base
-# we cannot really do this progamatically, find this from the events, so we hardcode
+# we cannot really do this programmatically, find this from the events, so we hardcode
 PROPOSAL=1
 
 osmosisd tx gov submit-proposal wasm-store $CONTRACT.wasm --title "Add $CONTRACT" \
