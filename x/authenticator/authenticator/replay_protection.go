@@ -14,8 +14,8 @@ import (
 type ReplayProtection func(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error
 
 func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
-	if signature.Sequence != txData.Sequence {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.Sequence, signature.Sequence))
+	if signature.Sequence != txData.AccountSequence {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, fmt.Sprintf("account sequence mismatch, expected %d, got %d", txData.AccountSequence, signature.Sequence))
 	}
 	return nil
 }
