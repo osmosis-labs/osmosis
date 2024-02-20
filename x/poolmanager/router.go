@@ -546,6 +546,7 @@ func (k Keeper) AllPools(
 // ListPoolsByDenom returns all pools by denom sorted by their ids
 // from every pool module registered in the
 // pool manager keeper.
+// N.B. It is possible for incorrectly implemented pools to be skipped
 func (k Keeper) ListPoolsByDenom(
 	ctx sdk.Context,
 	denom string,
