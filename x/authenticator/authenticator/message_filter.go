@@ -7,29 +7,40 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	appparams "github.com/osmosis-labs/osmosis/v21/app/params"
 
 	"github.com/osmosis-labs/osmosis/v21/x/authenticator/iface"
 )
 
 var _ iface.Authenticator = &MessageFilterAuthenticator{}
 
+// MessageFilterAuthenticator filters incoming messages based on a predefined JSON pattern.
+// It allows for complex pattern matching to support advanced authentication flows.
 type MessageFilterAuthenticator struct {
+	encCfg  appparams.EncodingConfig
 	pattern []byte
 }
 
-func NewMessageFilterAuthenticator() MessageFilterAuthenticator {
-	return MessageFilterAuthenticator{}
+// NewMessageFilterAuthenticator creates a new MessageFilterAuthenticator with the provided EncodingConfig.
+func NewMessageFilterAuthenticator(encCfg appparams.EncodingConfig) MessageFilterAuthenticator {
+	return MessageFilterAuthenticator{
+		encCfg: encCfg,
+	}
 }
 
+// Type returns the type of the authenticator.
 func (m MessageFilterAuthenticator) Type() string {
 	return "MessageFilterAuthenticator"
 }
 
+// StaticGas returns the static gas amount for the authenticator. Currently, it's set to zero.
 func (m MessageFilterAuthenticator) StaticGas() uint64 {
 	return 0
 }
 
+// Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
 func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	var jsonData json.RawMessage
 	err := json.Unmarshal(data, &jsonData)
@@ -40,15 +51,73 @@ func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator
 	return m, nil
 }
 
+// Track is a no-op in this implementation but can be used to track message handling.
 func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
 	return nil
 }
 
-type EncodedMsg struct {
-	MsgType string          `json:"type"`
-	Value   json.RawMessage `json:"value"`
+// Authenticate checks if the provided message conforms to the set JSON pattern. It returns an AuthenticationResult based on the evaluation.
+func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+	// Get the concrete message from the interface registry
+	protoMsg, err := m.encCfg.InterfaceRegistry.Resolve(request.Msg.TypeURL)
+	if err != nil {
+		return iface.NotAuthenticated()
+	}
+
+	// Attach the codec proto marshaller
+	protoResponseType, ok := protoMsg.(codec.ProtoMarshaler)
+	if !ok {
+		return iface.NotAuthenticated()
+	}
+
+	// Unmarshal to bytes to the concrete proto message
+	err = m.encCfg.Marshaler.Unmarshal(request.Msg.Value, protoResponseType)
+	if err != nil {
+		return iface.NotAuthenticated()
+	}
+
+	// Convert the proto message to JSON bytes for comparison to the Initialized data from the store
+	jsonBz, err := m.encCfg.Marshaler.MarshalInterfaceJSON(protoResponseType)
+	if err != nil {
+		return iface.NotAuthenticated()
+	}
+
+	// Check that the encoding is a superset of the pattern
+	err = IsJsonSuperset(m.pattern, jsonBz)
+	if err != nil {
+		return iface.NotAuthenticated()
+	}
+	return iface.Authenticated()
 }
 
+// ConfirmExecution confirms the execution of a message. Currently, it always confirms.
+func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+	return iface.Confirm()
+}
+
+// OnAuthenticatorAdded performs additional checks when an authenticator is added. Specifically, it ensures numbers in JSON are encoded as strings.
+func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	var jsonData json.RawMessage
+	err := json.Unmarshal(data, &jsonData)
+	if err != nil {
+		return errorsmod.Wrap(err, "invalid json representation of message")
+	}
+	hasFloats, err := containsFloats(data)
+	if err != nil {
+		return errorsmod.Wrap(err, "invalid json representation of message") // This should never happen
+	}
+	if hasFloats {
+		return fmt.Errorf("invalid json representation of message. Numbers should be encoded as strings")
+	}
+	return nil
+}
+
+// OnAuthenticatorRemoved is a no-op in this implementation but can be used when an authenticator is removed.
+func (m MessageFilterAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
+// containsFloats checks if the given JSON data contains any floating point numbers.
 func containsFloats(data []byte) (bool, error) {
 	var v interface{}
 	if err := json.Unmarshal(data, &v); err != nil {
@@ -58,6 +127,7 @@ func containsFloats(data []byte) (bool, error) {
 	return checkForFloats(v), nil
 }
 
+// checkForFloats recursively checks if any value in the given data is a floating point number.
 func checkForFloats(v interface{}) bool {
 	switch vv := v.(type) {
 	case map[string]interface{}:
@@ -78,6 +148,7 @@ func checkForFloats(v interface{}) bool {
 	return false
 }
 
+// isSuperset checks if the first JSON structure is a superset of the second JSON structure.
 func isSuperset(a, b interface{}) error {
 	switch av := a.(type) {
 	case map[string]interface{}:
@@ -161,6 +232,7 @@ func isSuperset(a, b interface{}) error {
 	return nil
 }
 
+// IsJsonSuperset checks if the first JSON byte array is a superset of the second JSON byte array.
 func IsJsonSuperset(a, b []byte) error {
 	var av, bv interface{}
 
@@ -174,58 +246,4 @@ func IsJsonSuperset(a, b []byte) error {
 	}
 
 	return isSuperset(av, bv)
-}
-
-type SimplifiedMsg struct {
-	MsgType string          `json:"type"`
-	Value   json.RawMessage `json:"value"`
-}
-
-func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	encodedMsg, err := json.Marshal(SimplifiedMsg{
-		MsgType: request.Msg.TypeURL,
-		Value:   request.Msg.Value,
-	})
-
-	if err != nil {
-		return iface.NotAuthenticated()
-	}
-	// Check that the encoding is a superset of the pattern
-	err = IsJsonSuperset(m.pattern, encodedMsg)
-	if err != nil {
-		// emit an event with the error
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				"AuthenticatorError",
-				sdk.NewAttribute("error", err.Error()),
-			),
-		)
-
-		return iface.NotAuthenticated()
-	}
-	return iface.Authenticated()
-}
-
-func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
-}
-
-func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
-	var jsonData json.RawMessage
-	err := json.Unmarshal(data, &jsonData)
-	if err != nil {
-		return errorsmod.Wrap(err, "invalid json representation of message")
-	}
-	hasFloats, err := containsFloats(data)
-	if err != nil {
-		return errorsmod.Wrap(err, "invalid json representation of message") // This should never happen
-	}
-	if hasFloats {
-		return fmt.Errorf("invalid json representation of message. Numbers should be encoded as strings")
-	}
-	return nil
-}
-
-func (m MessageFilterAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
-	return nil
 }

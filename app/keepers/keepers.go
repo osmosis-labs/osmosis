@@ -224,12 +224,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
 		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
 		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewSpendLimitAuthenticator(
-			appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
-			"uosmo",
-			authenticator.AbsoluteValue,
-			appKeepers.BankKeeper, appKeepers.PoolManagerKeeper, appKeepers.TwapKeeper),
-		// delay registering cosmwasm authenticator until after contract keeper is created
+		authenticator.NewMessageFilterAuthenticator(encodingConfig),
 	})
 	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 
