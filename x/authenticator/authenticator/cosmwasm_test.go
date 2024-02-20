@@ -303,6 +303,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
+	request.AuthenticatorId = "0"
 
 	// Test with valid signature
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
@@ -317,7 +318,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	msg = s.QueryLatestSudoCall(addr)
 	s.Require().Equal(authenticator.SudoMsg{
 		Track: &authenticator.TrackRequest{
-			Account: accounts[0],
+			AuthenticatorId: "0",
+			Account:         accounts[0],
 			Msg: iface.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -332,7 +334,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	msg = s.QueryLatestSudoCall(addr)
 	s.Require().Equal(authenticator.SudoMsg{
 		ConfirmExecution: &authenticator.ConfirmExecutionRequest{
-			Account: accounts[0],
+			AuthenticatorId: "0",
+			Account:         accounts[0],
 			Msg: iface.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,

@@ -113,7 +113,8 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	}
 
 	trackRequest := TrackRequest{
-		Account: account,
+		AuthenticatorId: authenticatorId,
+		Account:         account,
 		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
@@ -136,6 +137,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
 	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
+		AuthenticatorId:     request.AuthenticatorId,
 		Account:             request.Account,
 		Msg:                 request.Msg,
 		AuthenticatorParams: cwa.authenticatorParams,
