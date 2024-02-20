@@ -531,4 +531,4 @@ At epoch, we check the `OsmoTakerFeeDistribution`. In this example, let’s say 
 
 For community pool, this is just a direct send of the OSMO to the community pool.
 
-For staking, the OSMO is directly sent to the auth module account, which distributes it to stakers.
+For staking, the OSMO is directly sent to the auth "fee collector" module account, which distributes it to stakers.
