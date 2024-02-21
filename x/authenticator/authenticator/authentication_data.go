@@ -179,7 +179,7 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	txSigners, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
 	if err != nil {
-		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signes and signatures")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signs and signatures")
 	}
 
 	if len(msg.GetSigners()) != 1 {

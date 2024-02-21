@@ -43,8 +43,8 @@ func (sva SignatureVerificationAuthenticator) StaticGas() uint64 {
 }
 
 // NewSignatureVerificationAuthenticator creates a new SignatureVerificationAuthenticator
-// when the app starts a SignatureVerificationAuthenticator is passed to the authentation manager,
-// it will only be instantiated once then used for each signature authentation.
+// when the app starts a SignatureVerificationAuthenticator is passed to the authentication manager,
+// it will only be instantiated once then used for each signature authentication.
 func NewSignatureVerificationAuthenticator(
 	ak *authkeeper.AccountKeeper,
 	Handler authsigning.SignModeHandler,
@@ -72,7 +72,7 @@ func (sva SignatureVerificationAuthenticator) Initialize(
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
 func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	// First consume gas for verifing the signature
+	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
 

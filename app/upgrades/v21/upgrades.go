@@ -176,10 +176,6 @@ func CreateUpgradeHandler(
 		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(ctx, allCyclicArbProfitsCoins)
 		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(ctx, ctx.BlockHeight())
 
-		authenticatorParams := keepers.AuthenticatorKeeper.GetParams(ctx)
-		authenticatorParams.MaximumUnauthenticatedGas = 50000
-		keepers.AuthenticatorKeeper.SetParams(ctx, authenticatorParams)
-
 		return migrations, nil
 	}
 }
