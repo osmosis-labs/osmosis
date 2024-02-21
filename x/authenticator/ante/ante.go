@@ -118,6 +118,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	var tracks []func() error
 
+	signerToSignature, err := authenticator.GetCommonAuthenticationData(tx, -1)
+	if err != nil {
+		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to get common authentication data")
+	}
+	authenticationRequest, err := authenticator.GenerateBaseAuthenticationRequest(ctx, tx, signerToSignature, msgs, simulate)
+	if err != nil {
+		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to generate base authentication request")
+	}
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		// By default, the first signer is the account
@@ -144,9 +153,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		// Generate the authentication request data
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ak, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.SequenceMatch)
+		err = authenticator.UpdateAuthenticationRequestForAccount(ctx, &authenticationRequest, tx, signerToSignature, ak, ad.sigModeHandler, account, uint64(msgIndex), authenticator.SequenceMatch)
 		if err != nil {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to update authentication request with message %d", msgIndex))
 		}
 
 		msgAuthenticated := false
