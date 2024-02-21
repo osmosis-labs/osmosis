@@ -84,7 +84,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 			//
 			// TODO: Note that this is a temporary solution. There are issues with the current design:
 			// - This will overwrite `runMsgs` changes to the contract state
-			// - Any othere contract that is used by this contract on `Track` will not be updated
+			// - Any other contract that is used by this contract on `Track` will not be updated
 			//   since we only sync the cosmwasm authenticator contract state
 			cosmwasmAuthenticator, ok := a.(authenticator.CosmwasmAuthenticator)
 			contractAddr := cosmwasmAuthenticator.ContractAddress().String()
