@@ -27,6 +27,11 @@ func CreateUpgradeHandler(
 		// since we only need the pool indexed TWAPs.
 		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)
 
+		// Set the authenticator params in the store
+		authenticatorParams := keepers.AuthenticatorKeeper.GetParams(ctx)
+		authenticatorParams.MaximumUnauthenticatedGas = 50000
+		keepers.AuthenticatorKeeper.SetParams(ctx, authenticatorParams)
+
 		return migrations, nil
 	}
 }
