@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -256,8 +258,16 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
-		telemetry.IncrCounter(1, types.NoPoolIdForGaugeTelemetryName)
-		ctx.Logger().Error(types.NoPoolIdForGaugeTelemetryName, "gaugeId", gaugeId, "duration", lockableDuration)
+		telemetry.IncrCounterWithLabels([]string{types.NoPoolIdForGaugeTelemetryName}, 1, []metrics.Label{
+			{
+				Name:  "gauge_id",
+				Value: strconv.FormatUint(gaugeId, 10),
+			},
+			{
+				Name:  "duration",
+				Value: lockableDuration.String(),
+			},
+		})
 		return 0, types.NoPoolAssociatedWithGaugeError{GaugeId: gaugeId, Duration: lockableDuration}
 	}
 

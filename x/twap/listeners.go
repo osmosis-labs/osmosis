@@ -23,6 +23,11 @@ func (k Keeper) EpochHooks() epochtypes.EpochHooks {
 	return &epochhook{k}
 }
 
+// GetModuleName implements types.EpochHooks.
+func (*epochhook) GetModuleName() string {
+	return types.ModuleName
+}
+
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
 		lastKeptTime := ctx.BlockTime().Add(-hook.k.RecordHistoryKeepPeriod(ctx))

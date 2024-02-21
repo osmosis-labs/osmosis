@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"strconv"
+
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -32,10 +36,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// Now that the rewards have been swapped, transfer any base denom existing in the non-native fee collector to the fee collector (indirectly distributing to stakers)
 	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativeStakingCollectorAddress, defaultFeesDenom))
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+	err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.FeeCollectorForStakingRewardsName, txfeestypes.FeeCollectorName, baseDenomCoins)
 		return err
 	})
+	if err != nil {
+		telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName}, 1, []metrics.Label{
+			{
+				Name:  "coins",
+				Value: baseDenomCoins.String(),
+			},
+			{
+				Name:  "err",
+				Value: err.Error(),
+			},
+		})
+	}
 
 	// Non-native fee collector for community pool get swapped entirely into denom specified in the pool manager params.
 	poolManagerParams := k.poolManager.GetParams(ctx)
@@ -47,10 +63,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// Now that the non whitelisted assets have been swapped, fund the community pool with the denom we swapped to.
 	denomToSwapToCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativeCommunityPoolCollectorAddress, denomToSwapTo))
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		err := k.distributionKeeper.FundCommunityPool(ctx, denomToSwapToCoins, nonNativeCommunityPoolCollectorAddress)
 		return err
 	})
+	if err != nil {
+		telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName}, 1, []metrics.Label{
+			{
+				Name:  "coins",
+				Value: denomToSwapToCoins.String(),
+			},
+			{
+				Name:  "err",
+				Value: err.Error(),
+			},
+		})
+	}
 
 	return nil
 }
@@ -61,6 +89,11 @@ type Hooks struct {
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return txfeestypes.ModuleName
+}
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
@@ -96,6 +129,21 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
 		if err != nil {
 			if err != nil {
+				telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+					{
+						Name:  "base_denom",
+						Value: denomToSwapTo,
+					},
+					{
+						Name:  "match_denom",
+						Value: coin.Denom,
+					},
+					{
+						Name:  "err",
+						Value: err.Error(),
+					},
+				})
+
 				// The pool route either doesn't exist or is disabled in protorev.
 				// It will just accrue in the non-native fee collector account.
 				// Skip this denom and move on to the next one.
@@ -104,7 +152,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		}
 
 		// Do the swap of this fee token denom to base denom.
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			// We allow full slippage. There's not really an effective way to bound slippage until TWAP's land,
 			// but even then the point is a bit moot.
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
@@ -116,5 +164,21 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
 			return err
 		})
+		if err != nil {
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
+				{
+					Name:  "coin_in",
+					Value: coin.String(),
+				},
+				{
+					Name:  "pool_id",
+					Value: strconv.FormatUint(poolId, 10),
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
+				},
+			})
+		}
 	}
 }
