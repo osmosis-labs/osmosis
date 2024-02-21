@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type Hooks struct {
@@ -15,7 +17,8 @@ type Hooks struct {
 }
 
 var (
-	_ gammtypes.GammHooks = Hooks{}
+	_ gammtypes.GammHooks    = Hooks{}
+	_ epochstypes.EpochHooks = Hooks{}
 )
 
 // Create new ProtoRev hooks.
@@ -88,6 +91,20 @@ func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress,
 	}
 
 	h.k.StoreSwap(ctx, poolId, input[0].Denom, output[0].Denom)
+}
+
+// ----------------------------------------------------------------------------
+// EPOCH HOOKS
+// ----------------------------------------------------------------------------
+
+// Hooks wrapper struct for incentives keeper
+
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+}
+
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
 // ----------------------------------------------------------------------------
@@ -220,4 +237,95 @@ func (k Keeper) CompareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 	if newPoolLiquidity.GT(storedPoolLiquidity) {
 		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 	}
+}
+
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
+}
+
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	store := ctx.KVStore(k.storeKey)
+	moduleAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
+
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Calculate the current profit by subtracting the last epoch's protorev balance from the current protorev balance
+	profit, err := k.CalculateCurrentProfit(ctx, store, moduleAcc, baseDenoms)
+	if err != nil {
+		return err
+	}
+
+	// Calculate the developer fee from the current profit, and send the developer fee to the developer address
+	err = k.SendDeveloperFee(ctx, profit)
+	if err != nil {
+		return fmt.Errorf("failed to send developer fee: %w", err)
+	}
+
+	// Store the current profit as the last epoch's protorev balance
+	err = k.StoreEpochProfit(ctx, profit, moduleAcc, baseDenoms, store)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CalculateCurrentProfit calculates the current profit by subtracting the last epoch's protorev balance from the current protorev balance
+// and returns the profit as sdk.Coins. The profit is calculated for all base denoms. Any denom that is not a base denom is ignored.
+func (k Keeper) CalculateCurrentProfit(ctx sdk.Context, store sdk.KVStore, moduleAcc sdk.AccAddress, baseDenoms []types.BaseDenom) (sdk.Coins, error) {
+	// Get last protorev balance of all base denoms
+	var lastEpochBalance types.LastEpochProtorevModuleBalance
+	lastEpochBalanceBz := store.Get(types.KeyLastEpochProtorevModuleBalance)
+	if err := k.cdc.Unmarshal(lastEpochBalanceBz, &lastEpochBalance); err != nil {
+		return nil, err
+	}
+
+	// Get the current protorev balance of all denoms
+	protorevBalanceAllDenoms := k.bankKeeper.GetAllBalances(ctx, moduleAcc)
+
+	// Filter for base denoms
+	var protorevBalanceBaseDenoms sdk.Coins
+
+	for _, baseDenom := range baseDenoms {
+		amountOfBaseDenom := protorevBalanceAllDenoms.AmountOf(baseDenom.Denom)
+		if !amountOfBaseDenom.IsZero() {
+			protorevBalanceBaseDenoms = append(protorevBalanceBaseDenoms, sdk.NewCoin(baseDenom.Denom, amountOfBaseDenom))
+		}
+	}
+
+	protorevBalanceBaseDenoms = protorevBalanceBaseDenoms.Sort()
+
+	// Use the difference to calculate the profit
+	profit := protorevBalanceBaseDenoms.Sub(lastEpochBalance.Balance...)
+	return profit, nil
+}
+
+// StoreEpochProfit stores the current profit as the last epoch's protorev balance.
+// The profit is stored for all base denoms. Any denom that is not a base denom is ignored.
+func (k Keeper) StoreEpochProfit(ctx sdk.Context, profit sdk.Coins, moduleAcc sdk.AccAddress, baseDenoms []types.BaseDenom, store sdk.KVStore) error {
+	// Get the protorev balance of all denoms for this epoch
+	currentEpochBalanceAllDenoms := k.bankKeeper.GetAllBalances(ctx, moduleAcc)
+
+	// Filter for base denoms
+	var currentEpochBalanceBaseDenoms sdk.Coins
+	for _, baseDenom := range baseDenoms {
+		amountOfBaseDenom := currentEpochBalanceAllDenoms.AmountOf(baseDenom.Denom)
+		if !amountOfBaseDenom.IsZero() {
+			currentEpochBalanceBaseDenoms = append(currentEpochBalanceBaseDenoms, sdk.NewCoin(baseDenom.Denom, amountOfBaseDenom))
+		}
+	}
+
+	// Store the protorev balance of all base denoms for this epoch, to be used in the next epoch
+	currentEpochBalanceBaseDenomsInterface := types.LastEpochProtorevModuleBalance{
+		Balance: currentEpochBalanceBaseDenoms,
+	}
+	currentEpochBalanceBaseDenomsBz, err := currentEpochBalanceBaseDenomsInterface.Marshal()
+	if err != nil {
+		return err
+	}
+	store.Set(types.KeyLastEpochProtorevModuleBalance, currentEpochBalanceBaseDenomsBz)
+	return nil
 }

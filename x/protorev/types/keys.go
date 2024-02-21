@@ -38,6 +38,7 @@ const (
 	prefixSwapsToBackrun
 	prefixcyclicArbTracker
 	prefixcyclicArbTrackerStartHeight
+	prefixlastEpochProtorevModuleBalance
 )
 
 var (
@@ -97,6 +98,10 @@ var (
 
 	// KeyCyclicArbTracker is the prefix for store that keeps track of the height we began tracking cyclic arbitrage
 	KeyCyclicArbTrackerStartHeight = []byte{prefixcyclicArbTrackerStartHeight}
+
+	// KeyLastEpochProtorevModuleBalance is the prefix for store that keeps track of the balance of the protorev module at the end of the last epoch.
+	// This is used to calculate the profit and in turn the developer fee.
+	KeyLastEpochProtorevModuleBalance = []byte{prefixlastEpochProtorevModuleBalance}
 )
 
 // Returns the key needed to fetch the pool id for a given denom

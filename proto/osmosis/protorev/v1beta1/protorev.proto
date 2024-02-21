@@ -207,3 +207,14 @@ message CyclicArbTracker {
   int64 height_accounting_starts_from = 2
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }
+
+// LastEpochProtorevModuleBalance is the balance of the protorev module at the
+// end of the last epoch. This is used to calculate the revenue for the current
+// epoch, allowing us to do a single developer rewards distirbution instead of
+// after every backrun.
+message LastEpochProtorevModuleBalance {
+  repeated cosmos.base.v1beta1.Coin balance = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

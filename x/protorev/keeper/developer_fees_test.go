@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 			suite.SetupTest()
 			tc.alterState()
 
-			err := suite.App.ProtoRevKeeper.SendDeveloperFee(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
+			err := suite.App.ProtoRevKeeper.SendDeveloperFee(suite.Ctx, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100))))
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {

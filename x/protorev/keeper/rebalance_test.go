@@ -494,6 +494,8 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 		txPoolPointsRemaining := uint64(100)
 		blockPoolPointsRemaining := uint64(100)
 
+		initialDeveloperAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
+
 		err := s.App.ProtoRevKeeper.ExecuteTrade(
 			s.Ctx,
 			test.param.route,
@@ -523,7 +525,14 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedNumOfTrades, totalNumberOfTrades)
 
-			// Check the dev account was paid the correct amount
+			// Check the dev account was not paid anything, as epoch has not happened yet
+			developerAccBalanceAfterTrade := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
+			s.Require().Equal(initialDeveloperAccBalance, developerAccBalanceAfterTrade)
+
+			// Run the epoch hook
+			s.App.ProtoRevKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+
+			// Check the dev account was paid the correct amount after epoch
 			developerAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
 			s.Require().Equal(test.param.expectedProfit.MulRaw(types.ProfitSplitPhase1).QuoRaw(100), developerAccBalance.Amount)
 
