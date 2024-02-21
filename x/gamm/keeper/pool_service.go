@@ -186,7 +186,7 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 	// sanity check, don't return error as not worth halting the LP. We know its not too much.
 	if sharesOut.LT(shareOutAmount) {
-		ctx.Logger().Error(fmt.Sprintf("Expected to JoinPoolNoSwap >= %s shares, actually did %s shares",
+		ctx.Logger().Debug(fmt.Sprintf("Expected to JoinPoolNoSwap >= %s shares, actually did %s shares",
 			shareOutAmount, sharesOut))
 	}
 
