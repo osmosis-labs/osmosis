@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
@@ -36,6 +37,9 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+
+	// TWAP Setup
+	//
 
 	// Manually set up TWAP records indexed by both pool ID and time.
 	twapStoreKey := s.App.GetKey(twaptypes.ModuleName)
@@ -75,10 +79,34 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Len(twapRecords, 1)
 	s.Require().Equal(twap, twapRecords[0])
 
+	// PROTOREV Setup
+	//
+
+	// Set the old KVStore base denoms
+	s.App.ProtoRevKeeper.DeprecatedSetBaseDenoms(s.Ctx, []protorevtypes.BaseDenom{
+		{Denom: protorevtypes.OsmosisDenomination, StepSize: osmomath.NewInt(1_000_000)},
+		{Denom: "atom", StepSize: osmomath.NewInt(1_000_000)},
+		{Denom: "weth", StepSize: osmomath.NewInt(1_000_000)}})
+	oldBaseDenoms, err := s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(oldBaseDenoms))
+	s.Require().Equal(oldBaseDenoms[0].Denom, protorevtypes.OsmosisDenomination)
+	s.Require().Equal(oldBaseDenoms[1].Denom, "atom")
+	s.Require().Equal(oldBaseDenoms[2].Denom, "weth")
+
+	// The new KVStore should be set to the default
+	newBaseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
+
+	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
+
+	// TWAP Tests
+	//
 
 	// TWAP records indexed by time should be completely removed.
 	twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
@@ -90,6 +118,19 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 	s.Require().Len(twapRecords, 1)
 	s.Require().Equal(twap, twapRecords[0])
+
+	// PROTOREV Tests
+	//
+
+	// The new KVStore should return the old KVStore values
+	newBaseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(oldBaseDenoms, newBaseDenoms)
+
+	// The old KVStore base denoms should be deleted
+	oldBaseDenoms, err = s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Empty(oldBaseDenoms)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
