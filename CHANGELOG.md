@@ -44,10 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution.
+* [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
-* [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
+* [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations
+* [#7564](https://github.com/osmosis-labs/osmosis/pull/7564) Move protorev dev account bank sends from every backrun to once per epoch
 
 ## v23.0.0
 
