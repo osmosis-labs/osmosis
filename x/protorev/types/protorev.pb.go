@@ -830,7 +830,7 @@ func (m *CyclicArbTracker) GetHeightAccountingStartsFrom() int64 {
 
 // LastEpochProtorevModuleBalance is the balance of the protorev module at the
 // end of the last epoch. This is used to calculate the revenue for the current
-// epoch, allowing us to do a single developer rewards distirbution instead of
+// epoch, allowing us to do a single developer rewards distribution instead of
 // after every backrun.
 type LastEpochProtorevModuleBalance struct {
 	Balance github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balance,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balance"`
