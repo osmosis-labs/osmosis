@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -21,6 +22,11 @@ var _ epochstypes.EpochHooks = EpochHooks{}
 
 func (k Keeper) EpochHooks() epochstypes.EpochHooks {
 	return EpochHooks{k}
+}
+
+// GetModuleName implements types.EpochHooks.
+func (EpochHooks) GetModuleName() string {
+	return types.ModuleName
 }
 
 // BeforeEpochStart is the epoch start hook.

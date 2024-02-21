@@ -5,6 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,6 +21,11 @@ var _ epochstypes.EpochHooks = Hooks{}
 // Return the wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
+}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return types.ModuleName
 }
 
 // epochs hooks

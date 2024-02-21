@@ -265,7 +265,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Total amount emitted = time elapsed * emission
 		totalEmittedAmount, err := computeTotalIncentivesToEmit(timeElapsed, incentiveRecordBody.EmissionRate)
 		if err != nil {
-			ctx.Logger().Info(types.IncentiveOverflowTelemetryName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			emitIncentiveOverflowTelemetry(poolID, incentiveRecord.IncentiveId, timeElapsed, incentiveRecordBody.EmissionRate, err)
 			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
 			// Continue to the next incentive record.
 			continue
@@ -275,7 +275,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// when dividing by the liquidity in the accumulator.
 		scaledTotalEmittedAmount, err := scaleUpTotalEmittedAmount(totalEmittedAmount, incentiveScalingFactorForPool)
 		if err != nil {
-			ctx.Logger().Info(types.IncentiveOverflowTelemetryName, "pool_id", poolID, "incentive_id", incentiveRecord.IncentiveId, "time_elapsed", timeElapsed, "emission_rate", incentiveRecordBody.EmissionRate, "error", err.Error())
+			emitIncentiveOverflowTelemetry(poolID, incentiveRecord.IncentiveId, timeElapsed, incentiveRecordBody.EmissionRate, err)
 			// Silently ignore the truncated incentive record to avoid halting the entire accumulator update.
 			// Continue to the next incentive record.
 			continue
@@ -285,9 +285,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		// Note that we truncate to ensure we do not overdistribute incentives
 		incentivesPerLiquidity := scaledTotalEmittedAmount.QuoTruncate(liquidityInAccum)
 
-		// Emit telemetry for accumulator updates
-		emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationTelemetryName, types.IncentiveEmissionTelemetryName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
-
 		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
 		// Ensure that we only emit if there are enough incentives remaining to be emitted
@@ -295,6 +292,9 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 		// if total amount emitted does not exceed remaining rewards,
 		if totalEmittedAmount.LTE(remainingRewards) {
+			// Emit telemetry for accumulator updates
+			emitAccumulatorUpdateTelemetry(types.IncentiveTruncationTelemetryName, incentivesPerLiquidity, totalEmittedAmount, poolID, liquidityInAccum)
+
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
 			// Update incentive record to reflect the incentives that were emitted
@@ -320,7 +320,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 
 			// Emit telemetry for accumulator updates
-			emitAccumulatorUpdateTelemetry(ctx, types.IncentiveTruncationTelemetryName, types.IncentiveEmissionTelemetryName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
+			emitAccumulatorUpdateTelemetry(types.IncentiveTruncationTelemetryName, remainingIncentivesPerLiquidity, remainingRewards, poolID, liquidityInAccum)
 
 			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
@@ -1038,22 +1038,6 @@ func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 // getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
 func (k Keeper) getLargestSupportedUptimeDuration() time.Duration {
 	return getLargestDuration(types.SupportedUptimes)
-}
-
-// emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates
-// It detects whether an accumulator update does not occur when expected due to truncation or does occur and emits the appropriate telemetry
-func emitAccumulatorUpdateTelemetry(ctx sdk.Context, truncatedPlaceholder, emittedPlaceholder string, rewardsPerUnitOfLiquidity, rewardsTotal osmomath.Dec, poolID uint64, liquidityInAccum osmomath.Dec, extraKeyVals ...interface{}) {
-	// If truncation occurs, we emit events to alert us of the issue.
-	if rewardsPerUnitOfLiquidity.IsZero() && !rewardsTotal.IsZero() {
-		telemetry.IncrCounter(1, truncatedPlaceholder)
-		ctx.Logger().Error(truncatedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", rewardsPerUnitOfLiquidity, "total_amt", rewardsTotal, extraKeyVals)
-
-		// We emit events for these pools specifically as they are at the border of truncation in terms of liquidity
-		// TODO: remove these after scaling factor approach is implemented
-	} else if poolID == (1423) || poolID == (1213) {
-		telemetry.IncrCounter(1, emittedPlaceholder)
-		ctx.Logger().Info(emittedPlaceholder, "pool_id", poolID, "total_liq", liquidityInAccum, "per_unit_liq", rewardsPerUnitOfLiquidity, "total_amt", rewardsTotal, extraKeyVals)
-	}
 }
 
 // getIncentiveScalingFactorForPool returns the scaling factor for the given pool.

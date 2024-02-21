@@ -76,12 +76,13 @@ func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixTokenPairRoutes)
 }
 
-// GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
-func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, error) {
+// DeprecatedGetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
+// After v24 upgrade, this method should be deleted. We now use the param store.
+func (k Keeper) DeprecatedGetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, error) {
 	baseDenoms := make([]types.BaseDenom, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixBaseDenoms)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixDeprecatedBaseDenoms)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -97,13 +98,14 @@ func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, error) {
 	return baseDenoms, nil
 }
 
-// SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
+// DeprecatedSetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
 // order is going to match the order of the base denoms in the slice.
-func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixBaseDenoms)
+// After v24 upgrade, this method should be deleted. We now use the param store.
+func (k Keeper) DeprecatedSetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeprecatedBaseDenoms)
 
 	for i, baseDenom := range baseDenoms {
-		key := types.GetKeyPrefixBaseDenom(uint64(i))
+		key := types.DeprecatedGetKeyPrefixBaseDenom(uint64(i))
 
 		bz, err := baseDenom.Marshal()
 		if err != nil {
@@ -115,9 +117,36 @@ func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) err
 	return nil
 }
 
-// DeleteBaseDenoms deletes all of the base denoms
-func (k Keeper) DeleteBaseDenoms(ctx sdk.Context) {
-	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixBaseDenoms)
+// DeprecatedDeleteBaseDenoms deletes all of the base denoms.
+// After v24 upgrade, this method should be deleted. We now use the param store.
+func (k Keeper) DeprecatedDeleteBaseDenoms(ctx sdk.Context) {
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixDeprecatedBaseDenoms)
+}
+
+// GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
+func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, error) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.KeyPrefixBaseDenoms)
+	baseDenoms := types.BaseDenoms{}
+	err := baseDenoms.Unmarshal(bz)
+	if err != nil {
+		return []types.BaseDenom{}, err
+	}
+	return baseDenoms.BaseDenoms, nil
+}
+
+// SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
+// order is going to match the order of the base denoms in the slice.
+func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) error {
+	newBaseDenoms := types.BaseDenoms{BaseDenoms: baseDenoms}
+	store := ctx.KVStore(k.storeKey)
+	test, err := newBaseDenoms.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.KeyPrefixBaseDenoms, test)
+	return nil
 }
 
 // GetPoolForDenomPair returns the id of the highest liquidity pool between the base denom and the denom to match
