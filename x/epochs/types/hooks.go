@@ -2,7 +2,10 @@ package types
 
 import (
 	fmt "fmt"
+	"strconv"
 
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -13,12 +16,24 @@ type EpochHooks interface {
 	AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
 	// new epoch is next block of epoch end block
 	BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
+	// Returns the name of the module implementing epoch hook.
+	GetModuleName() string
 }
+
+const (
+	// flag indicating whether this is a before epoch hook
+	isBeforeEpoch = true
+)
 
 var _ EpochHooks = MultiEpochHooks{}
 
 // combine multiple gamm hooks, all hook functions are run in array sequence.
 type MultiEpochHooks []EpochHooks
+
+// GetModuleName implements EpochHooks.
+func (MultiEpochHooks) GetModuleName() string {
+	return ModuleName
+}
 
 func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 	return hooks
@@ -26,16 +41,16 @@ func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 
 // AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending.
 func (h MultiEpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	for i := range h {
-		panicCatchingEpochHook(ctx, h[i].AfterEpochEnd, epochIdentifier, epochNumber)
+	for _, hook := range h {
+		panicCatchingEpochHook(ctx, hook.AfterEpochEnd, epochIdentifier, epochNumber, h.GetModuleName(), !isBeforeEpoch)
 	}
 	return nil
 }
 
 // BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting.
 func (h MultiEpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	for i := range h {
-		panicCatchingEpochHook(ctx, h[i].BeforeEpochStart, epochIdentifier, epochNumber)
+	for _, hook := range h {
+		panicCatchingEpochHook(ctx, hook.BeforeEpochStart, epochIdentifier, epochNumber, hook.GetModuleName(), isBeforeEpoch)
 	}
 	return nil
 }
@@ -45,6 +60,8 @@ func panicCatchingEpochHook(
 	hookFn func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error,
 	epochIdentifier string,
 	epochNumber int64,
+	moduleName string,
+	isBeforeEpoch bool,
 ) {
 	wrappedHookFn := func(ctx sdk.Context) error {
 		return hookFn(ctx, epochIdentifier, epochNumber)
@@ -52,6 +69,21 @@ func panicCatchingEpochHook(
 	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring
 	err := osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn)
 	if err != nil {
+		telemetry.IncrCounterWithLabels([]string{}, 1, []metrics.Label{
+			{
+				Name:  "module_name",
+				Value: moduleName,
+			},
+			{
+				Name:  "error",
+				Value: err.Error(),
+			},
+			{
+				Name:  "is_before_hook",
+				Value: strconv.FormatBool(isBeforeEpoch),
+			},
+		})
+
 		ctx.Logger().Error(fmt.Sprintf("error in epoch hook %v", err))
 	}
 }
