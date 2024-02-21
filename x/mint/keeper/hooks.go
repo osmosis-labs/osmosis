@@ -95,6 +95,11 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return types.ModuleName
+}
+
 // epochs hooks.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
