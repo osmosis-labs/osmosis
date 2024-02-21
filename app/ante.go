@@ -67,7 +67,17 @@ func NewAnteHandler(
 		authante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Our authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
+		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler,
+			// Both the signature verification and gas consumption handlers functionality
+			// is enbedded in the authenticator decorator, we add the both here to enable a
+			// circuit breaker pattern.
+			sdk.ChainAnteDecorators(
+				ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
+				ante.NewSigVerificationDecorator(accountKeeper, signModeHandler),
+				ante.NewIncrementSequenceDecorator(accountKeeper),
+				ibcante.NewRedundantRelayDecorator(channelKeeper),
+			),
+		),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)

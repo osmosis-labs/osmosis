@@ -20,17 +20,20 @@ type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       *authkeeper.AccountKeeper
 	sigModeHandler      authsigning.SignModeHandler
+	next                sdk.AnteHandler
 }
 
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
+	next sdk.AnteHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
 		accountKeeper:       accountKeeper,
 		sigModeHandler:      sigModeHandler,
+		next:                next,
 	}
 }
 
@@ -42,6 +45,10 @@ func (ad AuthenticatorDecorator) PostHandle(
 	success bool,
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
+	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
+	if !authenticatorParams.AreSmartAccountsActive {
+		return ad.next(ctx, tx, simulate)
+	}
 	// If this is getting called, all messages succeeded. We can now update the
 	// state of the authenticators. If a post handler returns an error, then
 	// all state changes are reverted anyway
@@ -84,7 +91,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 			//
 			// TODO: Note that this is a temporary solution. There are issues with the current design:
 			// - This will overwrite `runMsgs` changes to the contract state
-			// - Any othere contract that is used by this contract on `Track` will not be updated
+			// - Any other contract that is used by this contract on `Track` will not be updated
 			//   since we only sync the cosmwasm authenticator contract state
 			cosmwasmAuthenticator, ok := a.(authenticator.CosmwasmAuthenticator)
 			contractAddr := cosmwasmAuthenticator.ContractAddress().String()

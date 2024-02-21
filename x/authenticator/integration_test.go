@@ -114,6 +114,40 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 
 }
 
+func (s *AuthenticatorSuite) TestCircuitBreakerStory() {
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      coins,
+	}
+
+	// Activate circuit breaker
+	authenticatorParams := s.app.AuthenticatorKeeper.GetParams(s.chainA.GetContext())
+	authenticatorParams.AreSmartAccountsActive = false
+	s.app.AuthenticatorKeeper.SetParams(s.chainA.GetContext(), authenticatorParams)
+
+	// Send msg from accounts default privkey
+	_, err := s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the first private key")
+
+	// Add signature verification authenticator
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[1].PubKey().Bytes())
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// Submit a bank send tx using the second private key
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, sendMsg)
+	s.Require().Error(err, "Failed to send bank tx using the second private key")
+
+	// Deactivate circuit breaker
+	authenticatorParams.AreSmartAccountsActive = true
+	s.app.AuthenticatorKeeper.SetParams(s.chainA.GetContext(), authenticatorParams)
+
+	// ReSubmit a bank send tx using the second private key
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the second private key")
+}
+
 func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
 	sendMsg := &banktypes.MsgSend{

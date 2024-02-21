@@ -59,7 +59,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 		// This is the only change from the original ante handler in the cosmos sdk
 		// we do this change because in the authenticator implementation we allow
-		// users to send transactions with differnet public keys that can authenticate as an account
+		// users to send transactions with different public keys that can authenticate as an account
 		// but we never want to set an incorrect public key in the original account store
 		// Only set key if simulate=false
 		if !simulate && bytes.Equal(pk.Address(), signers[i]) {
