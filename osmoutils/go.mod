@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/osmoutils
 go 1.21
 
 require (
-	cosmossdk.io/math v1.2.0
+	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.10.0
@@ -165,11 +165,10 @@ require (
 	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
 replace (
@@ -178,7 +177,7 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
 	// cometbft is replaced to print custom app hash logs. Using branch osmo-v23/v0.37.4.
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2

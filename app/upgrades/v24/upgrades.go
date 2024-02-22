@@ -23,6 +23,18 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// We no longer use the base denoms array and instead use the repeated base denoms field for performance reasons.
+		// We retrieve the old base denoms array from the KVStore, delete the array from the KVStore, and set them as a repeated field in the new KVStore.
+		baseDenoms, err := keepers.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(ctx)
+		if err != nil {
+			return nil, err
+		}
+		keepers.ProtoRevKeeper.DeprecatedDeleteBaseDenoms(ctx)
+		err = keepers.ProtoRevKeeper.SetBaseDenoms(ctx, baseDenoms)
+		if err != nil {
+			return nil, err
+		}
+
 		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
 		// since we only need the pool indexed TWAPs.
 		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)

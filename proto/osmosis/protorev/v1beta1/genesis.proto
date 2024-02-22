@@ -25,15 +25,10 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"base_denoms\""
   ];
-  // The pool weights that are being used to calculate the weight (compute cost)
-  // of each route.
-  //
-  // DEPRECATED: This field is deprecated and will be removed in the next
-  // release. It is replaced by the `info_by_pool_type` field.
-  PoolWeights pool_weights = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"pool_weights\""
-  ];
+  // DEPRECATED: pool_weights are weights that are being used to calculate the
+  // compute cost of each route. This field is deprecated.
+  // It is replaced by the `info_by_pool_type` field.
+  reserved 4;
   // The number of days since module genesis.
   uint64 days_since_module_genesis = 5
       [ (gogoproto.moretags) = "yaml:\"days_since_module_genesis\"" ];

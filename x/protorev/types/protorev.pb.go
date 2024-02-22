@@ -724,6 +724,52 @@ func (m *BaseDenom) GetDenom() string {
 	return ""
 }
 
+// BaseDenoms represents all of the base denoms that the module uses for its
+// arbitrage trades.
+type BaseDenoms struct {
+	BaseDenoms []BaseDenom `protobuf:"bytes,1,rep,name=base_denoms,json=baseDenoms,proto3" json:"base_denoms" yaml:"base_denoms"`
+}
+
+func (m *BaseDenoms) Reset()         { *m = BaseDenoms{} }
+func (m *BaseDenoms) String() string { return proto.CompactTextString(m) }
+func (*BaseDenoms) ProtoMessage()    {}
+func (*BaseDenoms) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1e9f2391fd9fec01, []int{12}
+}
+func (m *BaseDenoms) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BaseDenoms) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BaseDenoms.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BaseDenoms) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BaseDenoms.Merge(m, src)
+}
+func (m *BaseDenoms) XXX_Size() int {
+	return m.Size()
+}
+func (m *BaseDenoms) XXX_DiscardUnknown() {
+	xxx_messageInfo_BaseDenoms.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BaseDenoms proto.InternalMessageInfo
+
+func (m *BaseDenoms) GetBaseDenoms() []BaseDenom {
+	if m != nil {
+		return m.BaseDenoms
+	}
+	return nil
+}
+
 type AllProtocolRevenue struct {
 	TakerFeesTracker types1.TakerFeesTracker `protobuf:"bytes,1,opt,name=taker_fees_tracker,json=takerFeesTracker,proto3" json:"taker_fees_tracker" yaml:"taker_fees_tracker"`
 	CyclicArbTracker CyclicArbTracker        `protobuf:"bytes,3,opt,name=cyclic_arb_tracker,json=cyclicArbTracker,proto3" json:"cyclic_arb_tracker" yaml:"cyclic_arb_tracker"`
@@ -733,7 +779,7 @@ func (m *AllProtocolRevenue) Reset()         { *m = AllProtocolRevenue{} }
 func (m *AllProtocolRevenue) String() string { return proto.CompactTextString(m) }
 func (*AllProtocolRevenue) ProtoMessage()    {}
 func (*AllProtocolRevenue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1e9f2391fd9fec01, []int{12}
+	return fileDescriptor_1e9f2391fd9fec01, []int{13}
 }
 func (m *AllProtocolRevenue) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -785,7 +831,7 @@ func (m *CyclicArbTracker) Reset()         { *m = CyclicArbTracker{} }
 func (m *CyclicArbTracker) String() string { return proto.CompactTextString(m) }
 func (*CyclicArbTracker) ProtoMessage()    {}
 func (*CyclicArbTracker) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1e9f2391fd9fec01, []int{13}
+	return fileDescriptor_1e9f2391fd9fec01, []int{14}
 }
 func (m *CyclicArbTracker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -889,6 +935,7 @@ func init() {
 	proto.RegisterType((*CosmwasmPoolInfo)(nil), "osmosis.protorev.v1beta1.CosmwasmPoolInfo")
 	proto.RegisterType((*WeightMap)(nil), "osmosis.protorev.v1beta1.WeightMap")
 	proto.RegisterType((*BaseDenom)(nil), "osmosis.protorev.v1beta1.BaseDenom")
+	proto.RegisterType((*BaseDenoms)(nil), "osmosis.protorev.v1beta1.BaseDenoms")
 	proto.RegisterType((*AllProtocolRevenue)(nil), "osmosis.protorev.v1beta1.AllProtocolRevenue")
 	proto.RegisterType((*CyclicArbTracker)(nil), "osmosis.protorev.v1beta1.CyclicArbTracker")
 	proto.RegisterType((*LastEpochProtorevModuleBalance)(nil), "osmosis.protorev.v1beta1.LastEpochProtorevModuleBalance")
@@ -1587,6 +1634,43 @@ func (m *BaseDenom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *BaseDenoms) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BaseDenoms) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BaseDenoms) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for iNdEx := len(m.BaseDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BaseDenoms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProtorev(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *AllProtocolRevenue) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1924,6 +2008,21 @@ func (m *BaseDenom) Size() (n int) {
 	}
 	l = m.StepSize.Size()
 	n += 1 + l + sovProtorev(uint64(l))
+	return n
+}
+
+func (m *BaseDenoms) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for _, e := range m.BaseDenoms {
+			l = e.Size()
+			n += 1 + l + sovProtorev(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -3383,6 +3482,90 @@ func (m *BaseDenom) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.StepSize.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProtorev(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BaseDenoms) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProtorev
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BaseDenoms: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BaseDenoms: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenoms", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProtorev
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenoms = append(m.BaseDenoms, BaseDenom{})
+			if err := m.BaseDenoms[len(m.BaseDenoms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

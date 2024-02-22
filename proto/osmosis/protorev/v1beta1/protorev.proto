@@ -184,6 +184,15 @@ message BaseDenom {
   ];
 }
 
+// BaseDenoms represents all of the base denoms that the module uses for its
+// arbitrage trades.
+message BaseDenoms {
+  repeated BaseDenom base_denoms = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"base_denoms\""
+  ];
+}
+
 message AllProtocolRevenue {
   osmosis.poolmanager.v1beta1.TakerFeesTracker taker_fees_tracker = 1 [
     (gogoproto.moretags) = "yaml:\"taker_fees_tracker\"",
