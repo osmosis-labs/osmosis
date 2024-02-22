@@ -24,8 +24,13 @@ import (
 )
 
 func setupStore() sdk.KVStore {
+<<<<<<< HEAD
 	db := dbm.NewMemDB()
 	tree, _ := iavl.NewMutableTree(db, 100, false)
+=======
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
+>>>>>>> c838470f (iavl grow fix (#7587))
 	_, _, err := tree.SaveVersion()
 	if err != nil {
 		panic(err)

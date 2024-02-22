@@ -26,10 +26,16 @@ type TreeTestSuite struct {
 }
 
 func (suite *TreeTestSuite) SetupTest() {
+<<<<<<< HEAD
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, 100, false)
 	suite.Require().NoError(err)
 	_, _, err = tree.SaveVersion()
+=======
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
+	_, _, err := tree.SaveVersion()
+>>>>>>> c838470f (iavl grow fix (#7587))
 	suite.Require().Nil(err)
 	kvstore := iavlstore.UnsafeNewStore(tree)
 	suite.tree = sumtree.NewTree(kvstore, 10)

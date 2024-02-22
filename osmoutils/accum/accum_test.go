@@ -106,10 +106,16 @@ func withUnclaimedRewards(record accumPackage.Record, unclaimedRewards sdk.DecCo
 
 // Sets/resets KVStore to use for tests under `suite.store`
 func (suite *AccumTestSuite) SetupTest() {
+<<<<<<< HEAD
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, 100, false)
 	suite.Require().NoError(err)
 	_, _, err = tree.SaveVersion()
+=======
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
+	_, _, err := tree.SaveVersion()
+>>>>>>> c838470f (iavl grow fix (#7587))
 	suite.Require().Nil(err)
 	kvstore := iavlstore.UnsafeNewStore(tree)
 	suite.store = kvstore
