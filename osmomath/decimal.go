@@ -133,6 +133,10 @@ func NewBigDecFromBigInt(i *big.Int) BigDec {
 	return NewBigDecFromBigIntWithPrec(i, 0)
 }
 
+func NewBigDecFromBigIntMut(i *big.Int) BigDec {
+	return NewBigDecFromBigIntMutWithPrec(i, 0)
+}
+
 // create a new BigDec from big integer assuming whole numbers
 // CONTRACT: prec <= BigDecPrecision
 func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
@@ -857,18 +861,19 @@ func (d BigDec) TruncateDec() BigDec {
 // or equal to the given decimal.
 func (d BigDec) Ceil() BigDec {
 	tmp := new(big.Int).Set(d.i)
+	return BigDec{i: tmp}.CeilMut()
+}
 
-	quo, rem := tmp, big.NewInt(0)
-	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
+func (d BigDec) CeilMut() BigDec {
+	quo, rem := d.i, big.NewInt(0)
+	quo, rem = quo.QuoRem(quo, precisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
-	if rem.Sign() == 0 {
-		return NewBigDecFromBigInt(quo)
-	} else if rem.Sign() == -1 {
-		return NewBigDecFromBigInt(quo)
+	if rem.Sign() <= 0 {
+		return NewBigDecFromBigIntMut(quo)
 	}
 
-	return NewBigDecFromBigInt(quo.Add(quo, oneInt))
+	return NewBigDecFromBigIntMut(quo.Add(quo, oneInt))
 }
 
 // MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
