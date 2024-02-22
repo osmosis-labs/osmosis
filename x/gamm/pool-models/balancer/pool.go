@@ -645,7 +645,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 	supplyRatio := quote.Token.Amount.ToLegacyDec().Quo(base.Token.Amount.ToLegacyDec())
 	spotPriceDec := supplyRatio.Mul(invWeightRatio)
 
-	return osmomath.BigDecFromDec(spotPriceDec), err
+	return osmomath.BigDecFromDecMut(spotPriceDec), err
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.
