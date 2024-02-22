@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 
 			tc.alterState()
 
-			err := suite.App.ProtoRevKeeper.DistributeProfit(suite.Ctx, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100))))
+			err := suite.App.ProtoRevKeeper.DistributeProfit(suite.Ctx, sdk.NewCoins(sdk.NewCoin(tc.denom, arbProfit)))
 			if tc.expectedErr {
 				suite.Require().Error(err)
 				return
