@@ -29,7 +29,7 @@ env:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check out repo
         uses: actions/checkout@v4

@@ -50,12 +50,13 @@ jobs:
   compare_versions:
     # Compare current mainnet osmosis major version with the major version of github branch
     # Skip the next job if the current github major is greater than the current mainnet major
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       should_i_run: ${{ steps.compare_versions.outputs.should_i_run }}
       mainnet_major_version: ${{ steps.mainnet_version.outputs.mainnet_major_version }}
     steps:
-      - name: Get mainnet major version
+      -
+        name: Get mainnet major version
         id: mainnet_version
         run: |
           # Find current major version via rpc.osmosis.zone/abci_info
@@ -64,7 +65,8 @@ jobs:
 
           echo "MAINNET_MAJOR_VERSION=$MAINNET_MAJOR_VERSION" >> $GITHUB_ENV
           echo "mainnet_major_version=$MAINNET_MAJOR_VERSION" >> $GITHUB_OUTPUT
-      - name: Get GitHub branch major version
+      -
+        name: Get GitHub branch major version
         id: compare_versions
         run: |
           CURRENT_BRANCH_MAJOR_VERSION=$(echo ${{ github.event.pull_request.base.ref }} | tr -dc '0-9')
@@ -86,19 +88,23 @@ jobs:
     needs: compare_versions
     runs-on: self-hosted
     steps:
-      - name: Checkout branch
+      -
+        name: Checkout branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: 🐿 Setup Golang
+      -
+        name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: 🔨 Build the osmosisd binary
+      -
+        name: 🔨 Build the osmosisd binary
         run: |
           make build
           build/osmosisd version
-      - name: 🧪 Initialize Osmosis Node
+      -
+        name: 🧪 Initialize Osmosis Node
         run: |
           rm -rf $HOME/.osmosisd/ || true
           build/osmosisd init runner -o
@@ -111,7 +117,8 @@ jobs:
 
           # Copy genesis to config folder
           cp /mnt/data/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
-      - name: ⏬ Download last pre-epoch snapshot
+      -
+        name: ⏬ Download last pre-epoch snapshot
         run: |
           REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | sed 's/\.x//')
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
@@ -131,7 +138,8 @@ jobs:
 
           # Copy snapshot in Data folder
           cp -R /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/* $HOME/.osmosisd/
-      - name: 🧪 Configure Osmosis Node
+      -
+        name: 🧪 Configure Osmosis Node
         run: |
           CONFIG_FOLDER=$HOME/.osmosisd/config
           REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | tr -dc '0-9')
@@ -167,8 +175,10 @@ jobs:
 
           # Download addrbook
           wget -q -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
-      - name: 🧪 Start Osmosis Node
+      -
+        name: 🧪 Start Osmosis Node
         run: build/osmosisd start
-      - name: 🧹 Clean up Osmosis Home
+      -
+        name: 🧹 Clean up Osmosis Home
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true
