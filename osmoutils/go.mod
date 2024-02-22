@@ -3,11 +3,19 @@ module github.com/osmosis-labs/osmosis/osmoutils
 go 1.21
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/math v1.1.3-rc.1
 	github.com/CosmWasm/wasmvm v1.5.1
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
+=======
+	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
+	github.com/CosmWasm/wasmvm v1.5.2
+	github.com/cometbft/cometbft v0.37.4
+	github.com/cometbft/cometbft-db v0.10.0
+	github.com/cosmos/cosmos-sdk v0.47.8
+>>>>>>> 682dd4e1 (Update sdkmath to a commit to check state compat (#7573))
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ibc-go/v7 v7.3.1
@@ -157,11 +165,10 @@ require (
 	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
 replace (

@@ -3,6 +3,7 @@ module github.com/osmosis-labs/osmosis/x/epochs
 go 1.21
 
 require (
+<<<<<<< HEAD
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.11
@@ -10,6 +11,15 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.8
 	github.com/osmosis-labs/osmosis/v22 v22.0.0-alpha0
+=======
+	github.com/armon/go-metrics v0.4.1
+	github.com/cometbft/cometbft v0.37.4
+	github.com/cosmos/cosmos-sdk v0.47.8
+	github.com/cosmos/gogoproto v1.4.11
+	github.com/golang/protobuf v1.5.3
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059
+>>>>>>> 682dd4e1 (Update sdkmath to a commit to check state compat (#7573))
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -34,11 +44,17 @@ require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
+<<<<<<< HEAD
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3 // indirect
 	github.com/CosmWasm/wasmvm v1.5.1 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
+=======
+	github.com/ChainSafe/go-schnorrkel v1.0.0 // indirect
+	github.com/CosmWasm/wasmvm v1.5.2 // indirect
+	github.com/DataDog/zstd v1.4.5 // indirect
+>>>>>>> 682dd4e1 (Update sdkmath to a commit to check state compat (#7573))
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
@@ -177,12 +193,20 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
+=======
+	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
+>>>>>>> 682dd4e1 (Update sdkmath to a commit to check state compat (#7573))
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
