@@ -67,11 +67,13 @@ func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, e
 type OnAuthenticatorAddedRequest struct {
 	Account             sdk.AccAddress `json:"account"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+	AuthenticatorId     string         `json:"authenticator_id"`
 }
 
 type OnAuthenticatorRemovedRequest struct {
 	Account             sdk.AccAddress `json:"account"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
+	AuthenticatorId     string         `json:"authenticator_id"`
 }
 
 type SudoMsg struct {
@@ -167,6 +169,7 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 	bz, err := json.Marshal(SudoMsg{OnAuthenticatorAdded: &OnAuthenticatorAddedRequest{
 		Account:             account,
 		AuthenticatorParams: params,
+		AuthenticatorId:     authenticatorId,
 	}})
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall OnAuthenticatorAddedRequest")
@@ -189,6 +192,7 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account
 	bz, err := json.Marshal(SudoMsg{OnAuthenticatorRemoved: &OnAuthenticatorRemovedRequest{
 		Account:             account,
 		AuthenticatorParams: params,
+		AuthenticatorId:     authenticatorId,
 	}})
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshall OnAuthenticatorRemovedRequest")

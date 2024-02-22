@@ -98,6 +98,7 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 					OnAuthenticatorAdded: &authenticator.OnAuthenticatorAddedRequest{
 						Account:             acc,
 						AuthenticatorParams: initData.Params,
+						AuthenticatorId:     "1",
 					},
 				}
 
@@ -155,6 +156,7 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
 					OnAuthenticatorRemoved: &authenticator.OnAuthenticatorRemovedRequest{
 						Account:             acc,
 						AuthenticatorParams: initData.Params,
+						AuthenticatorId:     "1",
 					},
 				}
 
@@ -283,6 +285,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		OnAuthenticatorAdded: &authenticator.OnAuthenticatorAddedRequest{
 			Account:             accounts[0],
 			AuthenticatorParams: []byte(params),
+			AuthenticatorId:     "1",
 		},
 	}, msg, "Should match latest sudo msg ")
 

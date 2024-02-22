@@ -85,6 +85,7 @@ fn on_authenticator_added(
     _deps: DepsMut,
     OnAuthenticatorAddedRequest {
         account: _,
+        authenticator_id: _,
         authenticator_params,
     }: OnAuthenticatorAddedRequest,
 ) -> Result<Response, StdError> {
@@ -102,6 +103,7 @@ fn on_authenticator_removed(
     _deps: DepsMut,
     OnAuthenticatorRemovedRequest {
         account: _,
+        authenticator_id: _,
         authenticator_params,
     }: OnAuthenticatorRemovedRequest,
 ) -> Result<Response, StdError> {
