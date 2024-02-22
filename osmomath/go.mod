@@ -12,12 +12,8 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-	cosmossdk.io/errors v1.0.0 // indirect
-=======
 	cosmossdk.io/errors v1.0.1 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
->>>>>>> 682dd4e1 (Update sdkmath to a commit to check state compat (#7573))
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -90,13 +86,9 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-<<<<<<< HEAD
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-=======
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
->>>>>>> 682dd4e1 (Update sdkmath to a commit to check state compat (#7573))
 	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
