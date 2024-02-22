@@ -166,3 +166,11 @@ pull_request_rules:
       backport:
         branches:
           - v23.x
+  - name: backport patches to v23.x-iavl-v1 branch
+    conditions:
+      - base=main
+      - label=A:backport/v23.x-iavl-v1
+    actions:
+      backport:
+        branches:
+          - v23.x-iavl-v1
