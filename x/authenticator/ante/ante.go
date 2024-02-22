@@ -25,6 +25,7 @@ type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       authante.AccountKeeper
 	sigModeHandler      authsigning.SignModeHandler
+	next                sdk.AnteHandler
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
@@ -32,11 +33,14 @@ func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
+	next sdk.AnteHandler,
+
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
 		accountKeeper:       accountKeeper,
 		sigModeHandler:      sigModeHandler,
+		next:                next,
 	}
 }
 
@@ -48,6 +52,11 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	// Check that the authenticator flow is active by querying the params
+	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
+	if !authenticatorParams.AreSmartAccountsActive {
+		return ad.next(ctx, tx, simulate)
+	}
 	// Performing fee payer authentication with minimal gas allocation
 	// serves as a spam-prevention strategy to prevent users from adding multiple
 	// authenticators that may excessively consume computational resources.
@@ -61,8 +70,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// this approach presents challenges due to the implementation of the InfiniteGasMeter.
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
-	maximumUnauthenticatedGasParam := ad.authenticatorKeeper.GetParams(ctx)
-	payerGasMeter := sdk.NewGasMeter(maximumUnauthenticatedGasParam.MaximumUnauthenticatedGas)
+	payerGasMeter := sdk.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
 	feeTx, ok := tx.(sdk.FeeTx)
@@ -85,7 +93,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
-					maximumUnauthenticatedGasParam.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
+					authenticatorParams.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
 				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
 				panic(r)

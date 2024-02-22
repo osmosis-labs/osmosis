@@ -30,6 +30,7 @@ func CreateUpgradeHandler(
 		// Set the authenticator params in the store
 		authenticatorParams := keepers.AuthenticatorKeeper.GetParams(ctx)
 		authenticatorParams.MaximumUnauthenticatedGas = 50000
+		authenticatorParams.AreSmartAccountsActive = true
 		keepers.AuthenticatorKeeper.SetParams(ctx, authenticatorParams)
 
 		return migrations, nil

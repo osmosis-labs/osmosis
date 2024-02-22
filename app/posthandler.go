@@ -16,10 +16,15 @@ func NewPostHandler(
 	authenticatorKeeper *authenticators.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
-
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
-		authpost.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, sigModeHandler),
+		authpost.NewAuthenticatorDecorator(
+			authenticatorKeeper,
+			accountKeeper,
+			sigModeHandler,
+			// Add an empty handler here to enable a circuit breaker pattern
+			sdk.ChainAnteDecorators(sdk.Terminator{}),
+		),
 	)
 }

@@ -20,17 +20,20 @@ type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       *authkeeper.AccountKeeper
 	sigModeHandler      authsigning.SignModeHandler
+	next                sdk.AnteHandler
 }
 
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
+	next sdk.AnteHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
 		accountKeeper:       accountKeeper,
 		sigModeHandler:      sigModeHandler,
+		next:                next,
 	}
 }
 
@@ -42,6 +45,10 @@ func (ad AuthenticatorDecorator) PostHandle(
 	success bool,
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
+	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
+	if !authenticatorParams.AreSmartAccountsActive {
+		return ad.next(ctx, tx, simulate)
+	}
 	// If this is getting called, all messages succeeded. We can now update the
 	// state of the authenticators. If a post handler returns an error, then
 	// all state changes are reverted anyway

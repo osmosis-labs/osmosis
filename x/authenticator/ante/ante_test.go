@@ -79,6 +79,7 @@ func (s *AutherticatorAnteSuite) SetupTest() {
 		s.OsmosisApp.AuthenticatorKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
+		sdk.ChainAnteDecorators(sdk.Terminator{}),
 	)
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 }
@@ -287,7 +288,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Bad selection", s.TestPrivKeys[0], []int32{3}, false, 0},
 	}
 
-	baseGas := 2707              // base gas consimed before starting to iterate through authenticators
+	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
 	approachingGasPerSig := 4105 // Each signature consumes at least this amount (but not much more)
 
 	for _, tc := range testCases {
