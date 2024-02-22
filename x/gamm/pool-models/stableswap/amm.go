@@ -178,7 +178,7 @@ func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice osmomath.Dec, e
 }
 
 func oneMinus(spreadFactor osmomath.Dec) osmomath.BigDec {
-	return osmomath.BigDecFromDec(osmomath.OneDec().Sub(spreadFactor))
+	return osmomath.BigDecFromDecMut(osmomath.OneDec().SubMut(spreadFactor))
 }
 
 // calcOutAmtGivenIn calculate amount of specified denom to output from a pool in osmomath.Dec given the input `tokenIn`

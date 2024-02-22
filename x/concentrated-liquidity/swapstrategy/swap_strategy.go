@@ -143,7 +143,7 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}
-		return osmomath.BigDecFromDec(sqrtPriceLimit), nil
+		return osmomath.BigDecFromDecMut(sqrtPriceLimit), nil
 	}
 
 	// On the newly extended lower price range, utilize the 36 decimal
