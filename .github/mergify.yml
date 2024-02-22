@@ -166,3 +166,4 @@ pull_request_rules:
       backport:
         branches:
           - v23.x
+          - v23.x-iavl-v1
