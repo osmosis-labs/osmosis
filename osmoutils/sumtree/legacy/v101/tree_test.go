@@ -26,7 +26,7 @@ import (
 )
 
 func setupStore() sdk.KVStore {
-	db := wrapper.NewCosmosDB(dbm.NewMemDB())
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	_, _, err := tree.SaveVersion()
 	if err != nil {
