@@ -29,7 +29,7 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240222171503-685566578734
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.4
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.5
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463
 	github.com/pkg/errors v0.9.1
