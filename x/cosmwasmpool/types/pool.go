@@ -23,4 +23,6 @@ type CosmWasmExtension interface {
 	SetWasmKeeper(wasmKeeper WasmKeeper)
 
 	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
+
+	SetCodeId(codeId uint64)
 }

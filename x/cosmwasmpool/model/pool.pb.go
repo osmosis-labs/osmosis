@@ -48,6 +48,7 @@ type CosmWasmPool struct {
 	InstantiateMsg  []byte `protobuf:"bytes,4,opt,name=instantiate_msg,json=instantiateMsg,proto3" json:"instantiate_msg,omitempty" yaml:"instantiate_msg"`
 }
 
+
 func (m *CosmWasmPool) Reset()      { *m = CosmWasmPool{} }
 func (*CosmWasmPool) ProtoMessage() {}
 func (*CosmWasmPool) Descriptor() ([]byte, []int) {
