@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type AuthenticatorTxOptions interface {
@@ -14,6 +15,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterImplementations((*tx.TxExtensionOptionI)(nil), &TxExtension{})
+
 	registry.RegisterImplementations(
 		(*AuthenticatorTxOptions)(nil),
 		&TxExtension{},
