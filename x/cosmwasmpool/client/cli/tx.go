@@ -212,7 +212,7 @@ func parseMigratePoolContractsProposal(cmd *cobra.Command, args []string) (govty
 	}
 
 	wasm := []byte{}
-	// Only attempt to parse the bytecode of code ID is not
+	// Only attempt to parse the bytecode if code ID is not
 	// given (i.e. 0)
 	if newCodeId == 0 {
 		byteCodeFileName := args[2]
