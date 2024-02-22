@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -74,7 +75,7 @@ func (k Keeper) AddAuthenticatorWithId(
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
 	cacheCtx, _ := ctx.CacheContext()
-	err := impl.OnAuthenticatorAdded(cacheCtx, account, data)
+	err := impl.OnAuthenticatorAdded(cacheCtx, account, data, strconv.FormatUint(id, 10))
 	if err != nil {
 		return err
 	}

@@ -171,7 +171,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request ifa
 	return iface.Confirm()
 }
 
-func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	var initData InitData
 	if err := json.Unmarshal(data, &initData); err != nil {
 		return errorsmod.Wrap(err, "failed to unmarshal initialization data")
@@ -185,7 +185,7 @@ func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account
 	return nil
 }
 
-func (sla SpendLimitAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (sla SpendLimitAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	return nil
 }
 

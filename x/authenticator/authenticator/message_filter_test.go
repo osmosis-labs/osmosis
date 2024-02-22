@@ -155,7 +155,7 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.MessageFilterAuthenticator.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.pattern))
+			err := s.MessageFilterAuthenticator.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.pattern), "1")
 			if tt.passvalidation {
 				s.Require().NoError(err)
 			} else {

@@ -78,14 +78,15 @@ func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.Au
 	}
 }
 
-func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	if t.BlockAddition {
 		return fmt.Errorf("authenticator could not be added")
 	}
 	return nil
 }
 
-func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+	fmt.Println("OnAuthenticatorRemoved: block removal", t.BlockRemoval)
 	if t.BlockRemoval {
 		return fmt.Errorf("authenticator could not be removed")
 	}

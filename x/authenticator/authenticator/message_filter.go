@@ -97,7 +97,7 @@ func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request if
 }
 
 // OnAuthenticatorAdded performs additional checks when an authenticator is added. Specifically, it ensures numbers in JSON are encoded as strings.
-func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	var jsonData json.RawMessage
 	err := json.Unmarshal(data, &jsonData)
 	if err != nil {
@@ -114,7 +114,7 @@ func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, accoun
 }
 
 // OnAuthenticatorRemoved is a no-op in this implementation but can be used when an authenticator is removed.
-func (m MessageFilterAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (m MessageFilterAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	return nil
 }
 
