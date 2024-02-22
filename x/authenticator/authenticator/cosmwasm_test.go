@@ -82,7 +82,7 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), acc, tt.data)
+			err := s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), acc, tt.data, "1")
 
 			if tt.pass {
 				s.Require().NoError(err, "Should succeed")
@@ -140,7 +140,7 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.CosmwasmAuth.OnAuthenticatorRemoved(s.Ctx.WithBlockTime(time.Now()), acc, tt.data)
+			err := s.CosmwasmAuth.OnAuthenticatorRemoved(s.Ctx.WithBlockTime(time.Now()), acc, tt.data, "1")
 			if tt.pass {
 				s.Require().NoError(err, "Should succeed")
 
@@ -275,7 +275,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	params := `{ "label": "test" }`
 	initData := []byte(fmt.Sprintf(`{"contract": "%s", "params": %s}`, addr, toBytesString(params)))
-	err = s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), accounts[0], initData)
+	err = s.CosmwasmAuth.OnAuthenticatorAdded(s.Ctx.WithBlockTime(time.Now()), accounts[0], initData, "1")
 	s.Require().NoError(err, "OnAuthenticator added should succeed")
 
 	msg := s.QueryLatestSudoCall(addr)

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
@@ -160,12 +161,16 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
 
-	err := impl.OnAuthenticatorAdded(ctx, account, data)
+	nextId := k.GetNextAuthenticatorId(ctx)
+	stringId := strconv.FormatInt(int64(nextId), 10)
+	err := impl.OnAuthenticatorAdded(ctx, account, data, stringId)
 
 	if err != nil {
 		return err
 	}
-	nextId := k.GetNextAuthenticatorIdAndIncrement(ctx)
+
+	k.SetNextAuthenticatorId(ctx, nextId+1)
+
 	osmoutils.MustSet(ctx.KVStore(k.storeKey),
 		types.KeyAccountId(account, nextId),
 		&types.AccountAuthenticator{
@@ -208,8 +213,10 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 		return fmt.Errorf("authenticator type %s is not registered", existing.Type)
 	}
 
+	stringId := strconv.FormatInt(int64(authenticatorId), 10)
+
 	// Authenticators can prevent removal. This should be used sparingly
-	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data)
+	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data, stringId)
 	if err != nil {
 		return err
 	}

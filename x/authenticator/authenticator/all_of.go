@@ -107,7 +107,7 @@ func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.Au
 	return iface.Confirm()
 }
 
-func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	var initDatas []InitializationData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
@@ -118,7 +118,7 @@ func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 	return nil
 }
 
-func (aoa AllOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (aoa AllOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	return nil
 }
 

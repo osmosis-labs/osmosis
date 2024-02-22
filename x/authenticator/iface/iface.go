@@ -84,13 +84,13 @@ type Authenticator interface {
 
 	// OnAuthenticatorAdded is called when an authenticator is added to an account. If the data is not properly formatted
 	// or the authenticator is not compatible with the account, an error should be returned.
-	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error
+	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
 
 	// OnAuthenticatorRemoved is called when an authenticator is removed from an account.
 	// This can be used to update any global data that the authenticator is tracking or to prevent removal
 	// by returning an error.
 	// Removal prevention should be used sparingly and only when absolutely necessary.
-	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error
+	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
 }
 
 type InitializedAuthenticator struct {

@@ -158,7 +158,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 	return confirmationResult
 }
 
-func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
 	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return err
