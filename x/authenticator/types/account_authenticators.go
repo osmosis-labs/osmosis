@@ -13,7 +13,7 @@ func (a *AccountAuthenticator) AsAuthenticator(
 ) iface.Authenticator {
 	for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 		if authenticatorCode.Type() == a.Type {
-			instance, err := authenticatorCode.Initialize(a.Data) // TODO: Pass the a.id
+			instance, err := authenticatorCode.Initialize(a.Data)
 			if err != nil {
 				return nil // TODO: We should probably handle errors here
 			}

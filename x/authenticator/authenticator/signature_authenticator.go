@@ -59,9 +59,7 @@ func NewSignatureVerificationAuthenticator(
 // this is used to verify a signature from an account that does not have a public key
 // in the store. In this case we Initialize the authenticator from the authenticators store
 // which should have a public key in the data field.
-func (sva SignatureVerificationAuthenticator) Initialize(
-	data []byte,
-) (iface.Authenticator, error) {
+func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	if len(data) != secp256k1.PubKeySize {
 		sva.PubKey = nil
 	}

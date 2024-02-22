@@ -112,13 +112,27 @@ func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
 	}
-	// TODO: Consume extra gas for each sub authenticator to avoid spam? (same on allOf)
-	if err := validateSubAuthenticatorData(initDatas, aoa.am); err != nil {
+	if err := validateSubAuthenticatorData(ctx, account, initDatas, authenticatorId, aoa.am); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+	var initDatas []InitializationData
+	if err := json.Unmarshal(data, &initDatas); err != nil {
+		return err
+	}
+	for _, initData := range initDatas {
+		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
+			if authenticatorCode.Type() == initData.AuthenticatorType {
+				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, authenticatorId)
+				if err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
 	return nil
 }

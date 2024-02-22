@@ -112,17 +112,33 @@ func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
 	}
-	if err := validateSubAuthenticatorData(initDatas, aoa.am); err != nil {
+	if err := validateSubAuthenticatorData(ctx, account, initDatas, authenticatorId, aoa.am); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (aoa AllOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+	var initDatas []InitializationData
+	if err := json.Unmarshal(data, &initDatas); err != nil {
+		return err
+	}
+	for _, initData := range initDatas {
+		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
+			if authenticatorCode.Type() == initData.AuthenticatorType {
+				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, authenticatorId)
+				if err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
+
 	return nil
 }
 
-func validateSubAuthenticatorData(initDatas []InitializationData, am *AuthenticatorManager) error {
+func validateSubAuthenticatorData(ctx sdk.Context, account sdk.AccAddress, initDatas []InitializationData, authenticatorId string, am *AuthenticatorManager) error {
 	if len(initDatas) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
@@ -132,11 +148,14 @@ func validateSubAuthenticatorData(initDatas []InitializationData, am *Authentica
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				subAuthenticatorCount++
+				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, authenticatorId)
+				if err != nil {
+					return err
+				}
 				break
 			}
 		}
 	}
-	// TODO: Should we recursively call OnAdded here?
 
 	// If not all sub-authenticators are registered, return an error
 	if subAuthenticatorCount != len(initDatas) {
