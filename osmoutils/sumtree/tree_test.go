@@ -28,7 +28,7 @@ type TreeTestSuite struct {
 }
 
 func (suite *TreeTestSuite) SetupTest() {
-	db := wrapper.NewCosmosDB(dbm.NewMemDB())
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	_, _, err := tree.SaveVersion()
 	suite.Require().Nil(err)
