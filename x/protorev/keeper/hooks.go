@@ -107,6 +107,10 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
+func (h Hooks) GetModuleName() string {
+	return epochstypes.ModuleName
+}
+
 // ----------------------------------------------------------------------------
 // HELPER METHODS
 // ----------------------------------------------------------------------------
@@ -259,7 +263,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	}
 
 	// Calculate the developer fee from the current profit, and send the developer fee to the developer address
-	err = k.SendDeveloperFee(ctx, profit)
+	err = k.DistributeProfit(ctx, profit)
 	if err != nil {
 		return fmt.Errorf("failed to send developer fee: %w", err)
 	}
