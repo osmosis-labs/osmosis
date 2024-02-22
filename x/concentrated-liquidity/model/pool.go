@@ -118,13 +118,14 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 		return osmomath.BigDec{}, fmt.Errorf("quote asset denom (%s) is not in pool with (%s, %s) pair", quoteAssetDenom, p.Token0, p.Token1)
 	}
 
+	priceSquared := p.CurrentSqrtPrice.PowerInteger(2)
 	// The reason why we convert the result to Dec and then back to BigDec is to temporarily
 	// maintain backwards compatibility with the original implementation.
 	// TODO: remove before https://github.com/osmosis-labs/osmosis/issues/5726 is complete
 	if baseAssetDenom == p.Token0 {
-		return osmomath.BigDecFromDec(p.CurrentSqrtPrice.PowerInteger(2).Dec()), nil
+		return osmomath.BigDecFromDecMut(priceSquared.Dec()), nil
 	}
-	return osmomath.BigDecFromDec(osmomath.OneBigDec().Quo(p.CurrentSqrtPrice.PowerInteger(2)).Dec()), nil
+	return osmomath.BigDecFromDecMut(osmomath.OneBigDec().Quo(priceSquared).Dec()), nil
 }
 
 // GetToken0 returns the token0 of the pool

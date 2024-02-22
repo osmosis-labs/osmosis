@@ -74,7 +74,7 @@ func MonotonicSqrtBigDec(d BigDec) (BigDec, error) {
 	if check.Cmp(shiftedD) == -1 {
 		r.Add(r, oneBigInt)
 	}
-	root := NewBigDecFromBigIntWithPrec(r, 36)
+	root := NewBigDecFromBigIntMutWithPrec(r, 36)
 
 	return root, nil
 }
