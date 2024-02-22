@@ -42,7 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-
 ### State Compatible
 
 * [#7590](https://github.com/osmosis-labs/osmosis/pull/7590) fix cwpool migration prop disallowing only one of code id or bytecode.
