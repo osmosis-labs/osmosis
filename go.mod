@@ -67,8 +67,10 @@ require (
 	github.com/Abirdcfly/dupword v0.0.13 // indirect
 	github.com/Antonboom/testifylint v0.2.3 // indirect
 	github.com/ChainSafe/go-schnorrkel v1.0.0 // indirect
+	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.1.0 // indirect
+	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.1.0 // indirect
 	github.com/alecthomas/go-check-sumtype v0.1.3 // indirect
 	github.com/alexkohler/nakedret/v2 v2.0.2 // indirect
@@ -84,6 +86,7 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/errors v1.10.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
+	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect

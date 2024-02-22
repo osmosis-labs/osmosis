@@ -60,13 +60,9 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-<<<<<<< HEAD
-	github.com/cosmos/iavl v0.20.1 // indirect
+	github.com/cosmos/iavl v1.0.1 // indirect
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 // indirect
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 // indirect
-=======
-	github.com/cosmos/iavl v1.0.1 // indirect
->>>>>>> 3f7d1a70 (feat: iavl v1 (#7582))
 	github.com/cosmos/ibc-go/v7 v7.3.2 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
