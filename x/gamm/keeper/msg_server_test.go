@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
 			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 4, // 1 gamm + 3 events emitted by other keeper methods.
+			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
 			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 8, // 1 gamm + 7 events emitted by other keeper methods.
+			expectedMessageEvents: 6, // 1 gamm + 5 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -76,10 +76,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:               sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenIn)),
-			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
-			expectedMessageEvents: 1,
-			expectError:           true,
+			tokenIn:           sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount: osmomath.NewInt(tokenInMinAmount),
+			expectError:       true,
 		},
 	}
 
@@ -151,7 +150,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
 			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 4, // 1 gamm + 3 events emitted by other keeper methods.
+			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -167,7 +166,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
 			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 8, // 1 gamm + 7 events emitted by other keeper methods.
+			expectedMessageEvents: 6, // 1 gamm + 5 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{

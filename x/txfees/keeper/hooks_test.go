@@ -13,6 +13,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -103,12 +104,12 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				_, _, addr0 := testdata.KeyTestPubAddr()
 				err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
 				s.NoError(err)
-				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.FeeCollectorForStakingRewardsName, sdk.Coins{coin})
+				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.NonNativeTxFeeCollectorName, sdk.Coins{coin})
 				s.NoError(err)
 			}
 
 			// checks the balance of the non-native denom in module account
-			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorForStakingRewardsName)
+			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.NonNativeTxFeeCollectorName)
 			s.Equal(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee), tc.coins)
 
 			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
@@ -118,7 +119,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			s.NoError(err)
 
 			// check the balance of the native-basedenom in module
-			moduleAddrFee := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+			moduleAddrFee := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 			moduleBaseDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddrFee, tc.baseDenom)
 
 			// non-osmos module account should be empty as all the funds should be transferred to osmo module
@@ -413,19 +414,16 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		return s.App.AccountKeeper.GetModuleAddress(collectorName)
 	}
 
-	// validateEndCollectorBalance validates that only denoms with no pool and no protorev link are left in the balance.
-	validateEndCollectorBalance := func(collectorAddress sdk.AccAddress) {
-		communityPoolCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, collectorAddress)
-		s.Require().Len(communityPoolCollectorBalance, 2)
-		s.Require().Equal(communityPoolCollectorBalance[0].Denom, denomWithNoPool)
-		s.Require().Equal(communityPoolCollectorBalance[1].Denom, denomWithNoProtorevLink)
-	}
+	// CommunityPoolDenoms that come in for stakers and not for community pool need to be swapped to stakingDenom, so we need to set the pool for the denom pair.
+	stakingDenomCommunityPoolDenomPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(stakingDenom, communityPoolDenom)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, stakingDenom, communityPoolDenom, stakingDenomCommunityPoolDenomPool.GetId())
 
-	// Prepare the staking fee collector.
-	stakingCollectorAddress := prepareFeeCollector(types.FeeCollectorForStakingRewardsName, stakingDenom)
+	// Prepare the tx fee collector.
+	txFeeCollectorAddress := prepareFeeCollector(types.NonNativeTxFeeCollectorName, stakingDenom)
 
-	// Prepare the community pool collector.
-	communityPoolCollectorAddress := prepareFeeCollector(types.FeeCollectorForCommunityPoolName, communityPoolDenom)
+	// Prepare the taker fee collector.
+	prepareFeeCollector(types.TakerFeeCollectorName, communityPoolDenom)
+	communityPoolCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCommunityPoolName)
 
 	// Snapshot the community pool balance before the epoch end.
 	communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
@@ -436,24 +434,33 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	err := s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
 	s.Require().NoError(err)
 
-	// Confirm that staking fee collector only has denomWithNoPool and denomWithNoProtorevLink left in balance.
-	validateEndCollectorBalance(stakingCollectorAddress)
+	// Confirm that tx fee collector only has denomWithNoPool and denomWithNoProtorevLink left in balance.
+	txFeeCollectorAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, txFeeCollectorAddress)
+	s.Require().Len(txFeeCollectorAddressBalance, 2)
+	s.Require().Equal(txFeeCollectorAddressBalance[0].Denom, denomWithNoPool)
+	s.Require().Equal(txFeeCollectorAddressBalance[1].Denom, denomWithNoProtorevLink)
 
 	// Confirm that that all native tokens are sent to the fee collector.
-	feeCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+	feeCollectorAddress := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	feeCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, feeCollectorAddress)
 	s.Require().Len(feeCollectorBalance, 1)
 	s.Require().Equal(feeCollectorBalance[0].Denom, stakingDenom)
 
-	// Confirm that community pool fee collector only has denomWithNoPool and denomWithNoProtorevLink left in balance.
-	validateEndCollectorBalance(communityPoolCollectorAddress)
+	// Confirm that community pool fee collector only denomWithNoProtorevLink left in balance.
+	// denomWithNoPool is a whitelisted asset, so it should be directly sent to the community pool.
+	communityPoolCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolCollectorAddress)
+	s.Require().Len(communityPoolCollectorBalance, 1)
+	s.Require().Equal(communityPoolCollectorBalance[0].Denom, denomWithNoProtorevLink)
 
 	communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
 	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
 
 	// Confirm that that all tokens that are of the configured denom parameter are sent to the community pool.
-	s.Require().Len(communityPoolBalanceDelta, 1)
-	s.Require().Equal(communityPoolBalanceDelta[0].Denom, communityPoolDenom)
+	s.Require().Len(communityPoolBalanceDelta, 4)
+	s.Require().Equal(communityPoolBalanceDelta[0].Denom, otherPreSwapDenom)
+	s.Require().Equal(communityPoolBalanceDelta[1].Denom, denomWithNoPool)
+	s.Require().Equal(communityPoolBalanceDelta[2].Denom, preSwapDenom)
+	s.Require().Equal(communityPoolBalanceDelta[3].Denom, communityPoolDenom)
 }
 
 // preparePoolsForSwappingToDenom sets up two pools:
