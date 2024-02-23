@@ -45,16 +45,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		return err
 	})
 	if err != nil {
-		telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName}, 1, []metrics.Label{
-			{
-				Name:  "coins",
-				Value: baseDenomCoins.String(),
-			},
-			{
-				Name:  "err",
-				Value: err.Error(),
-			},
-		})
+		incTelementryCounter(txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName, baseDenomCoins.String(), err.Error())
 	}
 
 	// Distribute and track the taker fees.
@@ -113,7 +104,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 		// Osmo community pool funds are a direct send to the community pool.
 		osmoTakerFeeToCommunityPoolDec := osmoFromTakerFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.CommunityPool)
 		osmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(defaultFeesDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt())
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoTakerFeeToCommunityPoolCoin), takerFeeModuleAccount)
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, osmoTakerFeeToCommunityPoolCoin.Denom, osmoTakerFeeToCommunityPoolCoin.Amount)
 			if trackerErr != nil {
@@ -121,6 +112,9 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		})
+		if err != nil {
+			incTelementryCounter(txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, osmoTakerFeeToCommunityPoolCoin.String(), err.Error())
+		}
 		osmoFromTakerFeeModuleAccount = osmoFromTakerFeeModuleAccount.Sub(osmoTakerFeeToCommunityPoolCoin)
 	}
 
@@ -128,7 +122,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
 		// Osmo staking rewards funds are a direct send to the auth fee token collector (indirectly distributing to stakers)
 		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoFromTakerFeeModuleAccount.Amount)
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, authtypes.FeeCollectorName, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
 			if trackerErr != nil {
@@ -136,6 +130,9 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		})
+		if err != nil {
+			incTelementryCounter(txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName, osmoTakerFeeToStakingRewardsCoin.String(), err.Error())
+		}
 	}
 
 	// Now, deal with the non-native tokens in the taker fee collector.
@@ -154,7 +151,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			if denomIsWhitelisted {
 				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(takerFeeCoin.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt())
-				_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+				err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 					err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(nonOsmoTakerFeeToCommunityPoolCoin), takerFeeModuleAccount)
 					if err == nil {
 						takerFeeCoin.Amount = takerFeeCoin.Amount.Sub(nonOsmoTakerFeeToCommunityPoolCoin.Amount)
@@ -165,6 +162,9 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 					}
 					return err
 				})
+				if err != nil {
+					incTelementryCounter(txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, nonOsmoTakerFeeToCommunityPoolCoin.String(), err.Error())
+				}
 			} else {
 				// If the non osmo denom is not a whitelisted asset, we track the assets here and later swap everything to the community pool denom.
 				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
@@ -179,17 +179,20 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 
 	// Send the non-native, non-whitelisted taker fees slated for the community pool to the taker fee community pool module account.
 	// We do this in the event that the swap fails, we can still track the amount of non-native, non-whitelisted taker fees that were intended for the community pool.
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+	err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeCommunityPoolName, nonOsmoForCommunityPool)
 		return err
 	})
+	if err != nil {
+		incTelementryCounter(txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, nonOsmoForCommunityPool.String(), err.Error())
+	}
 	// Swap the non-native, non-whitelisted taker fees slated for community pool into the denom specified in the pool manager params.
 	takerFeeCommunityPoolModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeCommunityPoolName)
 	denomToSwapTo := poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
 	totalCoinOut := k.swapNonNativeFeeToDenom(ctx, denomToSwapTo, takerFeeCommunityPoolModuleAccount)
 	// Now that the non whitelisted assets have been swapped, fund the community pool with the denom we swapped to.
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(totalCoinOut), takerFeeCommunityPoolModuleAccount)
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, totalCoinOut.Denom, totalCoinOut.Amount)
 			if trackerErr != nil {
@@ -197,21 +200,28 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		})
+		if err != nil {
+			incTelementryCounter(txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, totalCoinOut.String(), err.Error())
+		}
 	}
 
 	// Send the non-native taker fees slated for stakers to the taker fee staking module account.
 	// We do this in the event that the swap fails, we can still track the amount of non-native taker fees that were intended for stakers.
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		remainingTakerFeeModuleAccBal := k.bankKeeper.GetAllBalances(ctx, takerFeeModuleAccount)
+	var remainingTakerFeeModuleAccBal sdk.Coins
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		remainingTakerFeeModuleAccBal = k.bankKeeper.GetAllBalances(ctx, takerFeeModuleAccount)
 		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeStakersName, remainingTakerFeeModuleAccBal)
 		return err
 	})
+	if err != nil {
+		incTelementryCounter(txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName, remainingTakerFeeModuleAccBal.String(), err.Error())
+	}
 	// Swap the taker fees slated for staking rewards into the base denom.
 	takerFeeStakersModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeStakersName)
 	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeStakersModuleAccount)
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
 		// Now that the assets have been swapped, transfer any base denom existing in the taker fee module account to the auth fee collector module account (indirectly distributing to stakers)
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeStakersName, authtypes.FeeCollectorName, sdk.NewCoins(totalCoinOut))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, totalCoinOut.Denom, totalCoinOut.Amount)
 			if trackerErr != nil {
@@ -219,6 +229,9 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		})
+		if err != nil {
+			incTelementryCounter(txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName, totalCoinOut.String(), err.Error())
+		}
 	}
 }
 
@@ -308,4 +321,18 @@ func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
 		}
 	}
 	return false
+}
+
+// incTelementryCounter is a helper function to increment a telemetry counter with the given label.
+func incTelementryCounter(labelName, coins, err string) {
+	telemetry.IncrCounterWithLabels([]string{labelName}, 1, []metrics.Label{
+		{
+			Name:  "coins",
+			Value: coins,
+		},
+		{
+			Name:  "err",
+			Value: err,
+		},
+	})
 }
