@@ -21,9 +21,11 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 		return err
 	}
 
-	var devProfit sdk.Coins
-	var remainingProfit sdk.Coins
-	var profitSplit int64
+	var (
+		devProfit       sdk.Coins
+		remainingProfit sdk.Coins
+		profitSplit     int64
+	)
 
 	if daysSinceGenesis < types.Phase1Length {
 		profitSplit = types.ProfitSplitPhase1
@@ -50,12 +52,15 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 	// Burn the remaining osmo profit by sending to the null address iff the profit is denominated in osmo.
 	arbProfitsOsmoCoin := sdk.NewCoin(types.OsmosisDenomination, remainingProfit.AmountOf(types.OsmosisDenomination))
 	if arbProfitsOsmoCoin.IsPositive() {
-		return k.bankKeeper.SendCoinsFromModuleToAccount(
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(
 			ctx,
 			types.ModuleName,
 			types.DefaultNullAddress,
 			sdk.NewCoins(arbProfitsOsmoCoin),
 		)
+		if err != nil {
+			return err
+		}
 	}
 
 	remainingProfit = remainingProfit.Sub(arbProfitsOsmoCoin)
