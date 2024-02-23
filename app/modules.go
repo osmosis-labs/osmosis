@@ -5,6 +5,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -38,7 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -66,6 +66,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	authenticator "github.com/osmosis-labs/osmosis/v23/x/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
@@ -128,6 +130,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
+	authenticatortypes.ModuleName:                 nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -192,6 +195,7 @@ func appModules(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
+		authenticator.NewAppModule(appCodec, *app.AuthenticatorKeeper),
 	}
 }
 
@@ -256,6 +260,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
+		authenticatortypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,

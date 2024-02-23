@@ -33,6 +33,8 @@ import (
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	authenticator "github.com/osmosis-labs/osmosis/v23/x/authenticator"
+
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
@@ -128,4 +130,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
+	authenticator.AppModuleBasic{},
 }

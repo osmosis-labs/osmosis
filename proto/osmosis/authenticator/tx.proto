@@ -1,0 +1,41 @@
+syntax = "proto3";
+package osmosis.authenticator;
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/authenticator/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc AddAuthenticator(MsgAddAuthenticator)
+      returns (MsgAddAuthenticatorResponse);
+  rpc RemoveAuthenticator(MsgRemoveAuthenticator)
+      returns (MsgRemoveAuthenticatorResponse);
+}
+
+// MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
+message MsgAddAuthenticator {
+  string sender = 1;
+  string type = 2;
+  bytes data = 3;
+}
+
+// MsgAddAuthenticatorResponse defines the Msg/AddAuthenticator response type.
+message MsgAddAuthenticatorResponse { bool success = 1; }
+
+// MsgRemoveAuthenticatorRequest defines the Msg/RemoveAuthenticator request
+// type.
+message MsgRemoveAuthenticator {
+  string sender = 1;
+  uint64 id = 2;
+}
+
+// MsgRemoveAuthenticatorResponse defines the Msg/RemoveAuthenticator response
+// type.
+message MsgRemoveAuthenticatorResponse { bool success = 1; }
+
+// TxExtension allows for additional authenticator-specific data in
+// transactions.
+message TxExtension {
+  // selected_authenticators holds indices for the chosen authenticators per
+  // message.
+  repeated int32 selected_authenticators = 1;
+}
