@@ -49,7 +49,7 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 		return err
 	}
 
-	// Burn the remaining osmo profit by sending to the null address iff the profit is denominated in osmo.
+	// If the osmo denom is part of total remaining profits, burn the osmo by sending to the null address iff the profit is denominated in osmo.
 	arbProfitsOsmoCoin := sdk.NewCoin(types.OsmosisDenomination, remainingProfit.AmountOf(types.OsmosisDenomination))
 	if arbProfitsOsmoCoin.IsPositive() {
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(
@@ -65,7 +65,7 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 
 	remainingProfit = remainingProfit.Sub(arbProfitsOsmoCoin)
 
-	// Send the remaining profit to the community pool if the profit is not denominated in osmo.
+	// Send all remaining profit to the community pool.
 	return k.distributionKeeper.FundCommunityPool(
 		ctx,
 		remainingProfit,
