@@ -103,6 +103,6 @@ func (p *CosmWasmPool) GetPoolDenoms(ctx sdk.Context) []string {
 }
 
 // SetCodeId implements types.CosmWasmExtension.
-func (cp *CosmWasmPool) SetCodeId(codeId uint64) {
-	cp.CodeId = codeId
+func (p *CosmWasmPool) SetCodeId(codeId uint64) {
+	p.CodeId = codeId
 }
