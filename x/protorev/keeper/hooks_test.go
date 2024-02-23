@@ -855,30 +855,25 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	tests := []struct {
 		name       string
 		arbProfits sdk.Coins
-		expectPass bool
 	}{
 		{
 			name:       "osmo denom only",
 			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000))),
-			expectPass: true,
 		},
 		{
 			name: "osmo denom and another base denom",
 			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)),
 				sdk.NewCoin("juno", osmomath.NewInt(100000000))),
-			expectPass: true,
 		},
 		{
 			name: "osmo denom, another base denom, and a non base denom",
 			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)),
 				sdk.NewCoin("juno", osmomath.NewInt(100000000)),
 				sdk.NewCoin("eth", osmomath.NewInt(100000000))),
-			expectPass: true,
 		},
 		{
 			name:       "no profits",
 			arbProfits: sdk.Coins{},
-			expectPass: true,
 		},
 	}
 
@@ -908,55 +903,57 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 
 			communityPoolBalancePre := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
 
+			// System under test
 			err = s.App.ProtoRevKeeper.AfterEpochEnd(s.Ctx, "day", 1)
-			if tc.expectPass {
-				expectedDevProfit := sdk.Coins{}
-				expectedOsmoBurn := sdk.Coins{}
-				arbProfitsBaseDenoms := sdk.Coins{}
-				arbProfitsNonBaseDenoms := sdk.Coins{}
-				for _, coin := range tc.arbProfits {
-					isBaseDenom := false
-					for _, baseDenom := range baseDenoms {
-						if coin.Denom == baseDenom.Denom {
-							isBaseDenom = true
-							break
-						}
-					}
-					if isBaseDenom {
-						arbProfitsBaseDenoms = append(arbProfitsBaseDenoms, coin)
-					} else {
-						arbProfitsNonBaseDenoms = append(arbProfitsNonBaseDenoms, coin)
+
+			expectedDevProfit := sdk.Coins{}
+			expectedOsmoBurn := sdk.Coins{}
+			arbProfitsBaseDenoms := sdk.Coins{}
+			arbProfitsNonBaseDenoms := sdk.Coins{}
+
+			// Split the profits into base and non base denoms
+			for _, coin := range tc.arbProfits {
+				isBaseDenom := false
+				for _, baseDenom := range baseDenoms {
+					if coin.Denom == baseDenom.Denom {
+						isBaseDenom = true
+						break
 					}
 				}
-				profitSplit := types.ProfitSplitPhase1
-				for _, arbProfit := range arbProfitsBaseDenoms {
-					devProfitAmount := arbProfit.Amount.MulRaw(profitSplit).QuoRaw(100)
-					expectedDevProfit = append(expectedDevProfit, sdk.NewCoin(arbProfit.Denom, devProfitAmount))
-				}
-
-				// Get the developer account balance
-				devAccountBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, devAccount)
-				s.Require().Equal(expectedDevProfit, devAccountBalance)
-
-				// Get the burn address balance
-				burnAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
-				if arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).IsPositive() {
-					expectedOsmoBurn = sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).Sub(expectedDevProfit.AmountOf(types.OsmosisDenomination))))
-					s.Require().Equal(expectedOsmoBurn, burnAddressBalance)
+				if isBaseDenom {
+					arbProfitsBaseDenoms = append(arbProfitsBaseDenoms, coin)
 				} else {
-					s.Require().Equal(sdk.Coins{}, burnAddressBalance)
+					arbProfitsNonBaseDenoms = append(arbProfitsNonBaseDenoms, coin)
 				}
-
-				// Get the community pool balance
-				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
-				actualCommunityPool := communityPoolBalancePost.Sub(communityPoolBalancePre...)
-				expectedCommunityPool := arbProfitsBaseDenoms.Sub(expectedDevProfit...).Sub(expectedOsmoBurn...)
-				s.Require().Equal(expectedCommunityPool, actualCommunityPool)
-
-				// The protorev module account should only contain the non base denoms if there are any
-				protorevModuleAccount := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				s.Require().Equal(arbProfitsNonBaseDenoms, protorevModuleAccount)
 			}
+			profitSplit := types.ProfitSplitPhase1
+			for _, arbProfit := range arbProfitsBaseDenoms {
+				devProfitAmount := arbProfit.Amount.MulRaw(profitSplit).QuoRaw(100)
+				expectedDevProfit = append(expectedDevProfit, sdk.NewCoin(arbProfit.Denom, devProfitAmount))
+			}
+
+			// Get the developer account balance
+			devAccountBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, devAccount)
+			s.Require().Equal(expectedDevProfit, devAccountBalance)
+
+			// Get the burn address balance
+			burnAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+			if arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).IsPositive() {
+				expectedOsmoBurn = sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).Sub(expectedDevProfit.AmountOf(types.OsmosisDenomination))))
+				s.Require().Equal(expectedOsmoBurn, burnAddressBalance)
+			} else {
+				s.Require().Equal(sdk.Coins{}, burnAddressBalance)
+			}
+
+			// Get the community pool balance
+			communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+			actualCommunityPool := communityPoolBalancePost.Sub(communityPoolBalancePre...)
+			expectedCommunityPool := arbProfitsBaseDenoms.Sub(expectedDevProfit...).Sub(expectedOsmoBurn...)
+			s.Require().Equal(expectedCommunityPool, actualCommunityPool)
+
+			// The protorev module account should only contain the non base denoms if there are any
+			protorevModuleAccount := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+			s.Require().Equal(arbProfitsNonBaseDenoms, protorevModuleAccount)
 		})
 	}
 }
