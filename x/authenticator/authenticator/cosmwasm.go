@@ -122,6 +122,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
+		MsgIndex:            msgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{Track: &trackRequest})
@@ -143,6 +144,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 		AuthenticatorId:     request.AuthenticatorId,
 		Account:             request.Account,
 		Msg:                 request.Msg,
+		MsgIndex:            request.MsgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})

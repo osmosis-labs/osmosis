@@ -13,7 +13,7 @@ for dir in $SCRIPT_DIR/*; do
             # build the contract
             pushd $dir
             cargo wasm
-            cp target/wasm32-unknown-unknown/release/*.wasm bytecode/
+            cp target/wasm32-unknown-unknown/release/*.wasm "$SCRIPT_DIR/../bytecode/"
             popd
         fi
     fi
