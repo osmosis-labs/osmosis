@@ -104,19 +104,8 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	numAdditiveTicks := tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)
 	additiveSpacing := currentAdditiveIncrementInTicks.MulInt64(numAdditiveTicks)
 
-	var price osmomath.BigDec
-
 	// Finally, we can calculate the price
-	// Note that to maintain backwards state-compatibility, we utilize the
-	// original math based on 18 precision decimal on the range of [MinInitializedTick, tick(MaxSpotPrice)]
-	// For the newly extended range of [MinInitializedTickV2, MinInitializedTick), we use the new math
-	// based on 36 precision decimal.
-	// TODO: Delete this code difference, it yields the exact same number every time.
-	if tickIndex < types.MinInitializedTick {
-		price = additiveSpacing.AddMut(powTenBigDec(geometricExponentDelta))
-	} else {
-		price = osmomath.BigDecFromDecMut((additiveSpacing.Dec()).AddMut(PowTenInternal(geometricExponentDelta)))
-	}
+	price := additiveSpacing.AddMut(powTenBigDec(geometricExponentDelta))
 
 	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
 	// min tick and max tick.
@@ -285,11 +274,10 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 		outOfBounds = true
 	}
 
-	sqrtPriceTmin1, errM1 := TickToSqrtPrice(tick - 1)
 	sqrtPriceT, errT := TickToSqrtPrice(tick)
 	sqrtPriceTplus1, errP1 := TickToSqrtPrice(tick + 1)
 	sqrtPriceTplus2, errP2 := TickToSqrtPrice(tick + 2)
-	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
+	if errT != nil || errP1 != nil || errP2 != nil {
 		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 	}
 
@@ -298,7 +286,7 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
 	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
 	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
-	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
+	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) {
 		return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
 	}
 
