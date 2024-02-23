@@ -85,9 +85,10 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 	return iface.NotAuthenticated()
 }
 
-func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	for id, auth := range aoa.SubAuthenticators {
-		err := auth.Track(ctx, account, msg, authenticatorId+"."+strconv.Itoa(id))
+		err := auth.Track(ctx, account, msg, msgIndex, authenticatorId+"."+strconv.Itoa(id))
 		if err != nil {
 			return err
 		}

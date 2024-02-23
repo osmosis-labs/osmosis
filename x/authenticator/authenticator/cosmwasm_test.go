@@ -314,7 +314,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
 
-	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, "0")
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, 0, "0")
 	s.Require().NoError(err, "Track should succeed")
 
 	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)

@@ -44,7 +44,8 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.Authe
 	return iface.Authenticated()
 }
 
-func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	return nil
 }
 

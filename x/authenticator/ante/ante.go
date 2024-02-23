@@ -184,9 +184,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					feePayerAuthenticated = true
 				}
 
+				// no need to check if it's > 0, as it's guaranteed to be so
+				msgIndexUint64 := uint64(msgIndex)
+
 				// Append the track closure to be called after the fee payer is authenticated
 				tracks = append(tracks, func() error {
-					err := a11r.Track(ctx, account, msg, stringId)
+					err := a11r.Track(ctx, account, msg, msgIndexUint64, stringId)
 					if err != nil {
 						return err
 					}
