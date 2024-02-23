@@ -38,7 +38,6 @@ const (
 	prefixSwapsToBackrun
 	prefixcyclicArbTracker
 	prefixcyclicArbTrackerStartHeight
-	prefixlastEpochProtorevModuleBalance
 	prefixBaseDenoms
 )
 
