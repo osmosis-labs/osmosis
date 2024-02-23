@@ -35,21 +35,21 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 		profitSplit = types.ProfitSplitPhase3
 	}
 
+	// Calculate the developer fee from all arb profits
 	for _, arbProfit := range arbProfits {
-		// Calculate the developer fee
 		devProfitAmount := arbProfit.Amount.MulRaw(profitSplit).QuoRaw(100)
 		devProfit = append(devProfit, sdk.NewCoin(arbProfit.Denom, devProfitAmount))
 	}
-
-	// Calculate the remaining profit
-	remainingProfit = arbProfits.Sub(devProfit...)
 
 	// Send the developer profit to the developer account
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, developerAccount, devProfit); err != nil {
 		return err
 	}
 
-	// If the osmo denom is part of total remaining profits, burn the osmo by sending to the null address iff the profit is denominated in osmo.
+	// Remove the developer profit from the remaining arb profits
+	remainingProfit = arbProfits.Sub(devProfit...)
+
+	// If the remaining arb profits has the OSMO denom for one of the coins, burn the OSMO by sending to the null address
 	arbProfitsOsmoCoin := sdk.NewCoin(types.OsmosisDenomination, remainingProfit.AmountOf(types.OsmosisDenomination))
 	if arbProfitsOsmoCoin.IsPositive() {
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(
@@ -63,9 +63,10 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 		}
 	}
 
+	// Remove the burned OSMO from the remaining arb profits
 	remainingProfit = remainingProfit.Sub(arbProfitsOsmoCoin)
 
-	// Send all remaining profit to the community pool.
+	// Send all remaining arb profits to the community pool
 	return k.distributionKeeper.FundCommunityPool(
 		ctx,
 		remainingProfit,

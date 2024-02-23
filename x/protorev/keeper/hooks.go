@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -248,7 +247,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	// Get the current profit
+	// Get the current arb profits (only in base denoms to prevent spam vector)
 	profit, err := k.CurrentBaseDenomProfits(ctx)
 	if err != nil {
 		return err
@@ -257,7 +256,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// Distribute profits to developer account, community pool, and burn osmo
 	err = k.DistributeProfit(ctx, profit)
 	if err != nil {
-		return fmt.Errorf("failed to send developer fee: %w", err)
+		return err
 	}
 
 	return nil
