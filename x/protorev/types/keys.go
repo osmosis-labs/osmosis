@@ -100,10 +100,6 @@ var (
 	// KeyCyclicArbTracker is the prefix for store that keeps track of the height we began tracking cyclic arbitrage
 	KeyCyclicArbTrackerStartHeight = []byte{prefixcyclicArbTrackerStartHeight}
 
-	// KeyLastEpochProtorevModuleBalance is the prefix for store that keeps track of the balance of the protorev module at the end of the last epoch.
-	// This is used to calculate the profit and in turn the developer fee.
-	KeyLastEpochProtorevModuleBalance = []byte{prefixlastEpochProtorevModuleBalance}
-
 	// KeyPrefixBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
 	KeyPrefixBaseDenoms = []byte{prefixBaseDenoms}
 )
