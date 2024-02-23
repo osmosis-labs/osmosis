@@ -47,8 +47,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution.
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
+* [#7508](https://github.com/osmosis-labs/osmosis/pull/7508) Improve protorev performance by removing iterator and storing base denoms as a single object rather than an array.
+* [#7509](https://github.com/osmosis-labs/osmosis/pull/7509) Distributing ProtoRev profits to the community pool and burn address
+* [#7550](https://github.com/osmosis-labs/osmosis/pull/7550) Speedup small CL swaps, by only fetching CL uptime accumulators if there is a tick crossing.
 * [#7555](https://github.com/osmosis-labs/osmosis/pull/7555) Refactor taker fees, distribute via a single module account, track once at epoch
 * [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
+* [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
+
+### State Compatible
+
+* [#7590](https://github.com/osmosis-labs/osmosis/pull/7590) fix cwpool migration prop disallowing only one of code id or bytecode.
+* [#7582](https://github.com/osmosis-labs/osmosis/pull/7582) IAVL v1
 
 ## v23.0.0
 

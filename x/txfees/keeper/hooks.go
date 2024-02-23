@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"strconv"
+
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -36,10 +40,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// Now that the rewards have been swapped, transfer any base denom existing in the non-native tx fee collector to the auth fee token collector (indirectly distributing to stakers)
 	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativefeeTokenCollectorAddress, defaultFeesDenom))
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+	err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeTxFeeCollectorName, authtypes.FeeCollectorName, baseDenomCoins)
 		return err
 	})
+	if err != nil {
+		telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName}, 1, []metrics.Label{
+			{
+				Name:  "coins",
+				Value: baseDenomCoins.String(),
+			},
+			{
+				Name:  "err",
+				Value: err.Error(),
+			},
+		})
+	}
 
 	// Distribute and track the taker fees.
 	k.calculateDistributeAndTrackTakerFees(ctx, defaultFeesDenom)
@@ -53,6 +69,11 @@ type Hooks struct {
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return txfeestypes.ModuleName
+}
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
@@ -221,6 +242,21 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		// the next epoch.
 		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
 		if err != nil {
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+				{
+					Name:  "base_denom",
+					Value: denomToSwapTo,
+				},
+				{
+					Name:  "match_denom",
+					Value: coin.Denom,
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
+				},
+			})
+
 			// The pool route either doesn't exist or is disabled in protorev.
 			// It will just accrue in the non-native fee collector account.
 			// Skip this denom and move on to the next one.
@@ -228,7 +264,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		}
 
 		// Do the swap of this fee token denom to base denom.
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			// We allow full slippage. There's not really an effective way to bound slippage until TWAP's land,
 			// but even then the point is a bit moot.
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
@@ -243,6 +279,22 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			}
 			return err
 		})
+		if err != nil {
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
+				{
+					Name:  "coin_in",
+					Value: coin.String(),
+				},
+				{
+					Name:  "pool_id",
+					Value: strconv.FormatUint(poolId, 10),
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
+				},
+			})
+		}
 	}
 	return totalCoinOut
 }

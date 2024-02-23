@@ -67,12 +67,6 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	s.Require().Equal(baseDenoms[1].Denom, "Atom")
 	s.Require().Equal(baseDenoms[2].Denom, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
-	// Should be able to delete all base denoms
-	s.App.ProtoRevKeeper.DeleteBaseDenoms(s.Ctx)
-	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().Equal(0, len(baseDenoms))
-
 	// Should be able to set the base denoms
 	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	s.Require().NoError(err)
