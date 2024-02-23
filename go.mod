@@ -45,11 +45,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
-<<<<<<< HEAD
-	google.golang.org/grpc v1.60.1
-=======
 	google.golang.org/grpc v1.61.1
->>>>>>> d58ae5e2 (chore(deps): bump google.golang.org/grpc from 1.61.0 to 1.61.1 (#7531))
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
