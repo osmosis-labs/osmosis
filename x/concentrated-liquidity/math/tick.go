@@ -274,10 +274,11 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 		outOfBounds = true
 	}
 
+	sqrtPriceTmin1, errM1 := TickToSqrtPrice(tick - 1)
 	sqrtPriceT, errT := TickToSqrtPrice(tick)
 	sqrtPriceTplus1, errP1 := TickToSqrtPrice(tick + 1)
 	sqrtPriceTplus2, errP2 := TickToSqrtPrice(tick + 2)
-	if errT != nil || errP1 != nil || errP2 != nil {
+	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
 		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 	}
 
@@ -286,7 +287,7 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
 	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
 	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
-	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) {
+	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
 		return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
 	}
 
