@@ -881,8 +881,8 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 	// Initialize swap state
 	// Utilize the total amount of tokenOutDenom in the pool as the specified amountOut, since we want
 	// the limitation to be the tick crossing, not the amountOut.
-	balances := k.bankKeeper.GetAllBalances(ctx, p.GetAddress())
-	swapState := newSwapState(balances.AmountOf(tokenOutDenom), p, swapStrategy)
+	balance := k.bankKeeper.GetBalance(ctx, p.GetAddress(), tokenOutDenom)
+	swapState := newSwapState(balance.Amount, p, swapStrategy)
 
 	nextInitTickIter := swapStrategy.InitializeNextTickIterator(cacheCtx, poolId, swapState.tick)
 	defer nextInitTickIter.Close()
