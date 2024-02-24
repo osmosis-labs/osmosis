@@ -489,7 +489,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
-	spreadRewardGrowth := sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)
+	spreadRewardGrowth := sdk.DecCoin{Denom: tokenInMin.Denom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
 
 	// Coin amounts require int values
