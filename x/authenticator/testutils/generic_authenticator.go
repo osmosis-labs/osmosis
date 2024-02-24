@@ -58,11 +58,11 @@ func (t TestingAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return t, nil
 }
 
-func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	if t.Approve == Always {
-		return iface.Authenticated()
+		return nil
 	} else {
-		return iface.NotAuthenticated()
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator authentication error")
 	}
 }
 

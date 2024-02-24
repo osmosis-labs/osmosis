@@ -73,16 +73,20 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return aoa, nil
 }
 
-func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	baseId := request.AuthenticatorId
+
+	var err error
 	for id, auth := range aoa.SubAuthenticators {
 		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		result := auth.Authenticate(ctx, request)
-		if result.IsAuthenticated() || result.IsRejected() {
-			return result
+		err = auth.Authenticate(ctx, request)
+
+		// early return ok if any of the sub-authenticators return ok
+		if err == nil {
+			return nil
 		}
 	}
-	return iface.NotAuthenticated()
+	return err
 }
 
 func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,

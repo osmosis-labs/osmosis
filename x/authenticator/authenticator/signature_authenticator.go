@@ -3,6 +3,8 @@ package authenticator
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -69,7 +71,7 @@ func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (iface.Aut
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
@@ -83,29 +85,29 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 		// that way we don't have to create specific authenticators with the pubkey of each existing account
 		acc, err := authante.GetSignerAcc(ctx, sva.ak, request.Account)
 		if err != nil {
-			return iface.Rejected("couldn't get signer account", err)
+			return errorsmod.Wrap(err, "couldn't get signer account")
 		}
 		pubKey = acc.GetPubKey()
 	}
 
 	// after gas consumption continue to verify signatures
 	if !request.Simulate && pubKey == nil {
-		return iface.Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on not set on account or authenticator")
 	}
 
 	// No need to verify signatures on recheck tx
 	if !request.Simulate && !ctx.IsReCheckTx() {
 		if !pubKey.VerifySignature(request.SignModeTxData.Direct, request.Signature) {
-			ctx.Logger().Debug(
+			return errorsmod.Wrapf(
+				sdkerrors.ErrUnauthorized,
 				"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
 				request.TxData.AccountNumber,
 				request.TxData.AccountSequence,
 				request.TxData.ChainID,
 			)
-			return iface.NotAuthenticated()
 		}
 	}
-	return iface.Authenticated()
+	return nil
 }
 
 func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,

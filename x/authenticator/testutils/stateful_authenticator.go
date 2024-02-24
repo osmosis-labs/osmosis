@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
@@ -35,13 +36,13 @@ func (s StatefulAuthenticator) Initialize(data []byte) (iface.Authenticator, err
 	return s, nil
 }
 
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx)}
 	if statefulData.Value > 10 {
-		return iface.Rejected("value is too high", nil)
+		return fmt.Errorf("Value is too high: %d", statefulData.Value)
 	}
 	s.SetValue(ctx, statefulData.Value+1)
-	return iface.Authenticated()
+	return nil
 }
 
 func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,

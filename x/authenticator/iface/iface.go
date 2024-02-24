@@ -72,7 +72,7 @@ type Authenticator interface {
 	Authenticate(
 		ctx sdk.Context,
 		request AuthenticationRequest,
-	) AuthenticationResult
+	) error
 
 	// Track is used for authenticators to track any information they may need regardless of how the transactions is
 	// authenticated. For instance, if a message is authenticated via authz, ICA, or similar, those entrypoints should

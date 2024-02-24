@@ -157,7 +157,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
 
-		msgAuthenticated := false
+		var authErr error
 		for _, initializedAuthenticator := range authenticators {
 			a11r := initializedAuthenticator.Authenticator
 			id := initializedAuthenticator.Id
@@ -167,14 +167,11 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
 			authenticationRequest.AuthenticatorId = stringId
-			authentication := a11r.Authenticate(cacheCtx, authenticationRequest)
-			if authentication.IsRejected() {
-				return ctx, authentication.Error()
-			}
+			authErr = a11r.Authenticate(cacheCtx, authenticationRequest)
 
-			if authentication.IsAuthenticated() {
+			if authErr == nil {
+				// authentication succeeded, add the authenticator to the used authenticators
 				ad.authenticatorKeeper.TransientStore.AddUsedAuthenticator(id)
-				msgAuthenticated = true
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
@@ -196,13 +193,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					return nil
 				})
 
+				// skip the rest if found a successful authenticator
 				break
 			}
 		}
 
 		// if authentication failed, return an error
-		if !msgAuthenticated {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
+		if authErr != nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr))
 		}
 	}
 

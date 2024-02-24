@@ -104,9 +104,9 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 	return sla, nil
 }
 
-func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	// We never authenticate ourselves. We just  authentication after the fact if the balances changed too much
-	return iface.NotAuthenticated()
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	// We never authenticate ourselves. We just confirm execution after the fact if the balances changed too much
+	return nil
 }
 
 func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,

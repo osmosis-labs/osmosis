@@ -84,28 +84,25 @@ type SudoMsg struct {
 	ConfirmExecution       *ConfirmExecutionRequest       `json:"confirm_execution,omitempty"`
 }
 
-func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	// Add the authenticator params set for this authenticator in Initialize()
 	request.AuthenticatorParams = cwa.authenticatorParams
 
 	bz, err := json.Marshal(SudoMsg{Authenticate: &request})
 	if err != nil {
-		// REVIEW Q: Should this be reject or just not authenticated?
-		return iface.Rejected("failed to marshall AuthenticationRequest", err)
+		return errorsmod.Wrapf(err, "failed to marshall AuthenticationRequest")
 	}
 
-	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
+	_, err = cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
 	if err != nil {
-		// REVIEW Q: Should this be reject or just not authenticated?
-		return iface.Rejected("failed to sudo", err)
+		return errorsmod.Wrapf(err, "failed to sudo")
 	}
 
-	authResult, err := UnmarshalAuthenticationResult(result)
 	if err != nil {
-		// REVIEW Q: Should this be reject or just not authenticated?
-		return iface.Rejected("failed to unmarshal authentication result", err)
+		return errorsmod.Wrapf(err, "failed to unmarshal authentication result")
 	}
-	return authResult
+
+	return nil
 }
 
 func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
@@ -215,35 +212,6 @@ func (cwa CosmwasmAuthenticator) ContractAddress() sdk.AccAddress {
 
 func (cwa CosmwasmAuthenticator) Params() []byte {
 	return cwa.authenticatorParams
-}
-
-func UnmarshalAuthenticationResult(data []byte) (iface.AuthenticationResult, error) {
-	// Unmarshal type field
-	var rawType struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &rawType); err != nil {
-		return nil, err
-	}
-
-	switch rawType.Type { // using snake case here because that's what cosmwasm defaults to
-	case "authenticated":
-		return iface.Authenticated(), nil
-	case "not_authenticated":
-		return iface.NotAuthenticated(), nil
-	case "rejected":
-		var rawContent struct {
-			Content struct {
-				Msg string `json:"msg"`
-			} `json:"content"`
-		}
-		if err := json.Unmarshal(data, &rawContent); err != nil {
-			return nil, err
-		}
-		return iface.Rejected(rawContent.Content.Msg, fmt.Errorf("cosmwasm contract error")), nil
-	default:
-		return nil, fmt.Errorf("invalid authentication result type: %s", rawType.Type)
-	}
 }
 
 func UnmarshalConfirmationResult(data []byte) (iface.ConfirmationResult, error) {
