@@ -489,7 +489,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
-	spreadRewardGrowth := sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)
+	spreadRewardGrowth := sdk.DecCoin{Denom: tokenInMin.Denom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
 
 	// Coin amounts require int values
@@ -670,7 +670,8 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	}
 
 	// Retrieve the liquidity held in the next closest initialized tick
-	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity), spreadRewardAccum.GetValue(), *uptimeAccums)
+	spreadRewardGrowth := sdk.DecCoin{Denom: tokenInDenom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
+	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), *uptimeAccums)
 	if err != nil {
 		return swapState, err
 	}
