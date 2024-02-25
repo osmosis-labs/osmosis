@@ -861,8 +861,8 @@ github.com/esimonov/ifshort v1.0.4 h1:6SID4yGWfRae/M7hkVDVVyppy8q/v9OuxNdmjLQStB
 github.com/esimonov/ifshort v1.0.4/go.mod h1:Pe8zjlRrJ80+q2CxHLfEOfTwxCZ4O+MuhcHcfgNWTk0=
 github.com/ettle/strcase v0.1.1 h1:htFueZyVeE1XNnMEfbqp5r67qAN/4r6ya1ysq8Q+Zcw=
 github.com/ettle/strcase v0.1.1/go.mod h1:hzDLsPC7/lwKyBOywSHEP89nt2pDgdy+No1NBA9o9VY=
-github.com/faddat/cometbft v0.37.2-0.20240225200011-fd052e2da242 h1:NcfJRBFgoX5JWRTOax+Kwz/d3kLgsostWUrhHiiMk5Q=
-github.com/faddat/cometbft v0.37.2-0.20240225200011-fd052e2da242/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
+github.com/faddat/cometbft v0.37.2-0.20240225224357-07424566c434 h1:WyMZkT7pFkQLqpIjrugFpBLmQN9nqtwt2KeetPQDlog=
+github.com/faddat/cometbft v0.37.2-0.20240225224357-07424566c434/go.mod h1:DzbZuaHQ7vLgOnMI/AXPlomdFV1YreOoOoiNnS9b/ag=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.15.0 h1:kOqh6YHBtK8aywxGerMG2Eq3H6Qgoqeo13Bk2Mv/nBs=
 github.com/fatih/color v1.15.0/go.mod h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBDUSsw=

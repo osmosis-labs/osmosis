@@ -387,7 +387,7 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
 	// cometbft is replaced to print custom app hash logs. Using branch osmo-v23/v0.37.4.
-	github.com/cometbft/cometbft => github.com/faddat/cometbft v0.37.2-0.20240225200011-fd052e2da242
+	github.com/cometbft/cometbft => github.com/faddat/cometbft v0.37.2-0.20240225224357-07424566c434
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
