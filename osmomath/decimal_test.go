@@ -586,8 +586,10 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 
 	for i, tc := range testCases {
+		tc_input_copy := tc.input.Clone()
 		res := tc.input.Ceil()
-		s.Require().Equal(tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().Equal(tc.input, tc_input_copy, "unexpected mutation of input in test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Equal(res), "unexpected result for test case %d, input: %v, got %v, expected %v:", i, tc.input, res, tc.expected)
 	}
 }
 

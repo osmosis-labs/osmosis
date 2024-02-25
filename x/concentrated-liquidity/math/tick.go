@@ -49,7 +49,7 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}
-		return osmomath.BigDecFromDec(sqrtPrice), nil
+		return osmomath.BigDecFromDecMut(sqrtPrice), nil
 	}
 
 	// For the newly extended range of [tick(MinSpotPriceV2), MinInitializedTick), we use the new math
@@ -104,18 +104,8 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	numAdditiveTicks := tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)
 	additiveSpacing := currentAdditiveIncrementInTicks.MulInt64(numAdditiveTicks)
 
-	var price osmomath.BigDec
-
 	// Finally, we can calculate the price
-	// Note that to maintain backwards state-compatibility, we utilize the
-	// original math based on 18 precision decimal on the range of [MinInitializedTick, tick(MaxSpotPrice)]
-	// For the newly extended range of [MinInitializedTickV2, MinInitializedTick), we use the new math
-	// based on 36 precision decimal.
-	if tickIndex < types.MinInitializedTick {
-		price = additiveSpacing.AddMut(powTenBigDec(geometricExponentDelta))
-	} else {
-		price = osmomath.BigDecFromDec(PowTenInternal(geometricExponentDelta).Add(additiveSpacing.Dec()))
-	}
+	price := additiveSpacing.AddMut(powTenBigDec(geometricExponentDelta))
 
 	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
 	// min tick and max tick.
