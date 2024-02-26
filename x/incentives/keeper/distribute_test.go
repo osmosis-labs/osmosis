@@ -215,6 +215,12 @@ func (s *KeeperTestSuite) TestDistribute() {
 	}
 	for _, tc := range tests {
 		s.SetupTest()
+
+		// set the base denom and min value for distribution
+		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
+		s.Require().NoError(err)
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinOsmoValueForDistr, sdk.NewInt(1000))
+
 		// setup gauges and the locks defined in the above tests, then distribute to them
 		gauges := s.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := s.SetupUserLocks(tc.users)
@@ -224,7 +230,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 			s.SetupChangeRewardReceiver(tc.changeRewardReceiver, addrs)
 		}
 
-		_, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
+		_, err = s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
 		s.Require().NoError(err)
 		// check expected rewards against actual rewards received
 		for i, addr := range addrs {

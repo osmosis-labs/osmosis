@@ -50,6 +50,9 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 		expectedDenomSuffix  = "/transmuter/poolshare"
 	)
 
+	// Set base denom
+	err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, uosmo)
+
 	// Create Transmuter pool
 	transmuter := s.PrepareCosmWasmPool()
 
@@ -77,7 +80,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	// Lock shares
 	shareCoins := sdk.NewCoins(shareCoin)
 	lockDuration := time.Hour
-	_, err := s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], shareCoins, lockDuration)
+	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], shareCoins, lockDuration)
 	s.Require().NoError(err)
 
 	// Create gauge
