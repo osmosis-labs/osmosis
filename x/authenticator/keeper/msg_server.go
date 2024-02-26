@@ -41,7 +41,7 @@ func (m msgServer) AddAuthenticator(
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if len(authenticators) == 0 {
 		// We ensure the data for the first public key is correct. If the public key is already in the
 		// auth store, we will not use this data again. This validation is performed only for the first public key.
