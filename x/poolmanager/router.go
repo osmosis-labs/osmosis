@@ -585,6 +585,7 @@ func (k Keeper) ListPoolsByDenom(
 			// skip the pool.
 			poolDenoms, err := poolModule.GetPoolDenoms(ctx, pool.GetId())
 			if err != nil {
+				ctx.Logger().Debug(fmt.Sprintf("Error getting pool denoms for pool %d: %s", pool.GetId(), err.Error()))
 				continue
 			}
 			if osmoutils.Contains(poolDenoms, denom) {
