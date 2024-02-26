@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	impl "github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
@@ -41,11 +40,6 @@ func (m msgServer) AddAuthenticator(
 	authenticators, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
 	if err != nil {
 		return nil, err
-	}
-
-	// If there are no other authenticators, ensure that the first authenticator is a SignatureVerificationAuthenticator.
-	if len(authenticators) == 0 && msg.Type != impl.SignatureVerificationAuthenticatorType {
-		return nil, fmt.Errorf("the first authenticator must be a SignatureVerificationAuthenticator")
 	}
 
 	if len(authenticators) == 0 {

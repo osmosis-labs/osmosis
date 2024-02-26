@@ -101,7 +101,7 @@ func (s *UpgradeTestSuite) TestUpgradeAuthenticatorParams() {
 	})
 
 	authenticatorParams := s.App.AuthenticatorKeeper.GetParams(s.Ctx)
-	s.Require().Equal(authenticatorParams.MaximumUnauthenticatedGas, uint64(50000))
+	s.Require().Equal(authenticatorParams.MaximumUnauthenticatedGas, uint64(120_000))
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
