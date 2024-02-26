@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	impl "github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
@@ -42,12 +41,7 @@ func (m msgServer) AddAuthenticator(
 	if err != nil {
 		return nil, err
 	}
-
-	// If there are no other authenticators, ensure that the first authenticator is a SignatureVerificationAuthenticator.
-	if len(authenticators) == 0 && msg.Type != impl.SignatureVerificationAuthenticatorType {
-		return nil, fmt.Errorf("the first authenticator must be a SignatureVerificationAuthenticator")
-	}
-
+	
 	if len(authenticators) == 0 {
 		// We ensure the data for the first public key is correct. If the public key is already in the
 		// auth store, we will not use this data again. This validation is performed only for the first public key.
