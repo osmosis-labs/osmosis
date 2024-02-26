@@ -80,13 +80,13 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 	for id, auth := range aoa.SubAuthenticators {
 		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
 		err = auth.Authenticate(ctx, request)
-
+		ctx.Logger().Debug("AnyOfAuthenticator.Authenticate", "request.AuthenticatorId", request.AuthenticatorId, "err", err)
 		// early return ok if any of the sub-authenticators return ok
 		if err == nil {
 			return nil
 		}
 	}
-	return err
+	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
 }
 
 func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
