@@ -23,7 +23,14 @@ import (
 
 var (
 	millisecondsInSecDec = osmomath.NewDec(1000)
+	zeroInt              = osmomath.ZeroInt()
 )
+
+// DistributionValueCache is a cache for when we calculate the minimum value
+// an underlying token must be to be distributed.
+type DistributionValueCache struct {
+	denomToMinValueMap map[string]osmomath.Int
+}
 
 // AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
 // policy and allocates the coins to the underlying gauges per the updated weights.
@@ -454,7 +461,7 @@ func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 // calculateGroupWeights calculates the updated weights of the group records based on the pool volumes.
 // It returns the updated group and an error if any. It does not mutate the passed in object.
 func (k Keeper) calculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
-	totalWeight := sdk.ZeroInt()
+	totalWeight := zeroInt
 
 	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
 	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
@@ -615,6 +622,20 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
+	// Retrieve the min osmo value for distribution.
+	// If any distribution amount is valued less than what the param is set, it will be skipped.
+	minOsmoValueForDistr := k.GetParams(ctx).MinOsmoValueForDistribution
+	osmoDenom, err := k.tk.GetBaseDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set up the cache for the distribution.
+	// This way we don't need to calculate what the min value needs to be f
+	cache := DistributionValueCache{
+		denomToMinValueMap: make(map[string]osmomath.Int),
+	}
+
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 
 	// if its a perpetual gauge, we set remaining epochs to 1.
@@ -722,6 +743,54 @@ func (k Keeper) distributeInternal(
 				// which is bounded to an Int. So we can safely skip this.
 
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
+
+				// Determine if the value to distribute is worth enough in OSMO to be distributed.
+				if coin.Denom == osmoDenom {
+					// If the denom is OSMO, no transformation is needed.
+					if amtInt.LT(minOsmoValueForDistr) {
+						continue
+					}
+				} else {
+					// If the denom is not OSMO, we need to transform the underlying to OSMO.
+					// Check if the denom exists in the cached values
+					value, ok := cache.denomToMinValueMap[coin.Denom]
+					if !ok {
+						// Cache miss, figure out the value and add it to the cache
+						poolId, err := k.prk.GetPoolForDenomPairNoOrder(ctx, osmoDenom, coin.Denom)
+						if err != nil {
+							// If the pool denom pair pool route does not exist in protorev, we add a zero value to cache to avoid
+							// querying the pool again.
+							cache.denomToMinValueMap[coin.Denom] = zeroInt
+							continue
+						}
+						swapModule, pool, err := k.pmk.GetPoolModuleAndPool(ctx, poolId)
+						if err != nil {
+							return nil, err
+						}
+						minOsmoCoin := sdk.Coin{Denom: osmoDenom, Amount: minOsmoValueForDistr}
+
+						minTokenRequiredForDistr, err := swapModule.CalcOutAmtGivenIn(ctx, pool, minOsmoCoin, coin.Denom, sdk.ZeroDec())
+						if err != nil {
+							return nil, err
+						}
+
+						// Add min token required for distribution to the cache
+						cache.denomToMinValueMap[coin.Denom] = minTokenRequiredForDistr.Amount
+
+						// Check if the value is worth enough in the token to be distributed.
+						if coin.Amount.LT(minTokenRequiredForDistr.Amount) {
+							continue
+						}
+					} else {
+						// Cache hit, use the value
+
+						// Check if the underlying is worth enough in the token to be distributed.
+						if coin.Amount.LT(value) {
+							continue
+						}
+					}
+				}
+
 				if amtInt.Sign() == 1 {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
@@ -750,7 +819,7 @@ func (k Keeper) distributeInternal(
 		}
 	}
 
-	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+	err = k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
 }
 

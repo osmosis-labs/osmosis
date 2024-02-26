@@ -1,6 +1,10 @@
 package types
 
-import time "time"
+import (
+	time "time"
+
+	sdkmath "cosmossdk.io/math"
+)
 
 var (
 	BaseGasFeeForCreateGauge      = 10_000
@@ -12,5 +16,6 @@ var (
 	// PerpetualNumEpochsPaidOver is the number of epochs that must be given
 	// for a gauge to be perpetual. For any other number of epochs
 	// other than zero, the gauge is non-perpetual. Zero is invalid.
-	PerpetualNumEpochsPaidOver = uint64(0)
+	PerpetualNumEpochsPaidOver  = uint64(0)
+	DefaultMinOsmoValueForDistr = sdkmath.NewInt(10000) // 0.01
 )

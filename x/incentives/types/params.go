@@ -10,6 +10,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
+	sdkmath "cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -19,6 +20,7 @@ var (
 	KeyGroupCreationFee     = []byte("GroupCreationFee")
 	KeyCreatorWhitelist     = []byte("CreatorWhitelist")
 	KeyInternalUptime       = []byte("InternalUptime")
+	KeyMinOsmoValueForDistr = []byte("MinOsmoValueForDistr")
 
 	// 100 OSMO
 	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
@@ -30,12 +32,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams takes an epoch distribution identifier and group creation fee, then returns an incentives Params struct.
-func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins, internalUptime time.Duration) Params {
+func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins, internalUptime time.Duration, minOsmoValueForDistr sdkmath.Int) Params {
 	return Params{
 		DistrEpochIdentifier:         distrEpochIdentifier,
 		GroupCreationFee:             groupCreationFee,
 		UnrestrictedCreatorWhitelist: []string{},
 		InternalUptime:               internalUptime,
+		MinOsmoValueForDistribution:  minOsmoValueForDistr,
 	}
 }
 
@@ -46,6 +49,7 @@ func DefaultParams() Params {
 		GroupCreationFee:             DefaultGroupCreationFee,
 		UnrestrictedCreatorWhitelist: []string{},
 		InternalUptime:               DefaultConcentratedUptime,
+		MinOsmoValueForDistribution:  DefaultMinOsmoValueForDistr,
 	}
 }
 
@@ -64,6 +68,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := ValidateInternalUptime(p.InternalUptime); err != nil {
+		return err
+	}
+
+	if err := ValidateMinOsmoValueForDistr(p.MinOsmoValueForDistribution); err != nil {
 		return err
 	}
 
@@ -109,6 +117,14 @@ func ValidateInternalUptime(i interface{}) error {
 	return nil
 }
 
+func ValidateMinOsmoValueForDistr(i interface{}) error {
+	_, ok := i.(sdkmath.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
 // ParamSetPairs takes the parameter struct and associates the paramsubspace key and field of the parameters as a KVStore.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
@@ -116,5 +132,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyGroupCreationFee, &p.GroupCreationFee, ValidateGroupCreaionFee),
 		paramtypes.NewParamSetPair(KeyCreatorWhitelist, &p.UnrestrictedCreatorWhitelist, osmoutils.ValidateAddressList),
 		paramtypes.NewParamSetPair(KeyInternalUptime, &p.InternalUptime, ValidateInternalUptime),
+		paramtypes.NewParamSetPair(KeyMinOsmoValueForDistr, &p.MinOsmoValueForDistribution, ValidateMinOsmoValueForDistr),
 	}
 }

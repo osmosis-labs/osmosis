@@ -420,6 +420,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ConcentratedLiquidityKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.PoolIncentivesKeeper,
+		appKeepers.ProtoRevKeeper,
 	)
 	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 	appKeepers.GAMMKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
