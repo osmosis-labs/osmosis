@@ -52,6 +52,8 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.Auth
 		return fmt.Errorf("total amount sent is greater than 3_000")
 	}
 
+func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	return nil
 }
 
