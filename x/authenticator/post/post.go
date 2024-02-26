@@ -49,17 +49,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 	if !authenticatorParams.AreSmartAccountsActive {
 		return ad.next(ctx, tx, simulate)
 	}
-	// If this is getting called, all messages succeeded. We can now update the
-	// state of the authenticators. If a post handler returns an error, then
-	// all state changes are reverted anyway
-	ad.authenticatorKeeper.TransientStore.WriteInto(ctx)
-	usedAuthenticators := ad.authenticatorKeeper.TransientStore.GetUsedAuthenticators()
-
-	// collect all the keys for authenticators that are not ready
-	nonReadyAccountAuthenticatorKeys := make(map[string]struct{})
-
-	// collect all the contract address that has been updated from transient store
-	transientStoreUpdatedContracts := make(map[string]struct{})
+	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
 
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
@@ -86,25 +76,6 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 			a := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
 
-			// If the authenticator is a cosmwasm authenticator, we need to state from the transient store
-			// to the contract state
-			//
-			// TODO: Note that this is a temporary solution. There are issues with the current design:
-			// - This will overwrite `runMsgs` changes to the contract state
-			// - Any other contract that is used by this contract on `Track` will not be updated
-			//   since we only sync the cosmwasm authenticator contract state
-			cosmwasmAuthenticator, ok := a.(authenticator.CosmwasmAuthenticator)
-			contractAddr := cosmwasmAuthenticator.ContractAddress().String()
-			_, isUpdated := transientStoreUpdatedContracts[contractAddr]
-
-			if ok && !isUpdated {
-				// sync the transient store state to the committing contract state
-				ad.authenticatorKeeper.TransientStore.WriteCosmWasmAuthenticatorStateInto(ctx, &cosmwasmAuthenticator)
-
-				// mark contract as updated
-				transientStoreUpdatedContracts[contractAddr] = struct{}{}
-			}
-
 			// Confirm Execution
 			err := a.ConfirmExecution(ctx, authenticationRequest)
 
@@ -116,11 +87,6 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 			success = err == nil
 		}
-	}
-
-	// All non-ready authenticators should be ready now
-	for key := range nonReadyAccountAuthenticatorKeys {
-		ad.authenticatorKeeper.MarkAuthenticatorAsReady(ctx, []byte(key))
 	}
 
 	return next(ctx, tx, simulate, success)

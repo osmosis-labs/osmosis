@@ -392,23 +392,19 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	// mark the authenticator as ready
-	key := string(authenticatortypes.KeyAccountId(s.Account.GetAddress(), 0))
-	s.app.AuthenticatorKeeper.MarkAuthenticatorAsReady(s.chainA.GetContext(), []byte(key))
-
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, failSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
-	// Auth failed, so no increment
-	s.Require().Equal(0, stateful.GetValue(s.chainA.GetContext()))
+	// Auth failed, but track still increments! Authenticate() tries to increment, but thosre changes are discarded.
+	s.Require().Equal(1, stateful.GetValue(s.chainA.GetContext()))
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
-	s.Require().Equal(2, stateful.GetValue(s.chainA.GetContext()))
+	s.Require().Equal(3, stateful.GetValue(s.chainA.GetContext()))
 }
 
 // TODO: Cleanup experiment tests
@@ -430,10 +426,6 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
 
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "MaxAmountAuthenticator", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
-
-	// mark the authenticator as ready
-	key := string(authenticatortypes.KeyAccountId(s.Account.GetAddress(), 0))
-	s.app.AuthenticatorKeeper.MarkAuthenticatorAsReady(s.chainA.GetContext(), []byte(key))
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg, successSendMsg)
 	fmt.Println("err: ", err)
