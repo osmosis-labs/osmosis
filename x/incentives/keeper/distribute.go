@@ -622,13 +622,9 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
-	// Retrieve the min osmo value for distribution.
+	// Retrieve the min value for distribution.
 	// If any distribution amount is valued less than what the param is set, it will be skipped.
-	minOsmoValueForDistr := k.GetParams(ctx).MinOsmoValueForDistribution
-	osmoDenom, err := k.tk.GetBaseDenom(ctx)
-	if err != nil {
-		return nil, err
-	}
+	minValueForDistr := k.GetParams(ctx).MinValueForDistribution
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 
@@ -738,19 +734,19 @@ func (k Keeper) distributeInternal(
 
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
 
-				// Determine if the value to distribute is worth enough in OSMO to be distributed.
-				if coin.Denom == osmoDenom {
-					// If the denom is OSMO, no transformation is needed.
-					if amtInt.LT(minOsmoValueForDistr) {
+				// Determine if the value to distribute is worth enough in minValueForDistr denom to be distributed.
+				if coin.Denom == minValueForDistr.Denom {
+					// If the denom is the same as the minValueForDistr param, no transformation is needed.
+					if amtInt.LT(minValueForDistr.Amount) {
 						continue
 					}
 				} else {
-					// If the denom is not OSMO, we need to transform the underlying to OSMO.
+					// If the denom is not the minValueForDistr denom, we need to transform the underlying to it.
 					// Check if the denom exists in the cached values
 					value, ok := minDistrValueCache.denomToMinValueMap[coin.Denom]
 					if !ok {
 						// Cache miss, figure out the value and add it to the cache
-						poolId, err := k.prk.GetPoolForDenomPairNoOrder(ctx, osmoDenom, coin.Denom)
+						poolId, err := k.prk.GetPoolForDenomPairNoOrder(ctx, minValueForDistr.Denom, coin.Denom)
 						if err != nil {
 							// If the pool denom pair pool route does not exist in protorev, we add a zero value to cache to avoid
 							// querying the pool again.
@@ -761,9 +757,8 @@ func (k Keeper) distributeInternal(
 						if err != nil {
 							return nil, err
 						}
-						minOsmoCoin := sdk.Coin{Denom: osmoDenom, Amount: minOsmoValueForDistr}
 
-						minTokenRequiredForDistr, err := swapModule.CalcOutAmtGivenIn(ctx, pool, minOsmoCoin, coin.Denom, sdk.ZeroDec())
+						minTokenRequiredForDistr, err := swapModule.CalcOutAmtGivenIn(ctx, pool, minValueForDistr, coin.Denom, sdk.ZeroDec())
 						if err != nil {
 							return nil, err
 						}
@@ -814,7 +809,7 @@ func (k Keeper) distributeInternal(
 		}
 	}
 
-	err = k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
 }
 

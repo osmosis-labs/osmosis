@@ -10,7 +10,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
-	sdkmath "cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -20,7 +19,7 @@ var (
 	KeyGroupCreationFee     = []byte("GroupCreationFee")
 	KeyCreatorWhitelist     = []byte("CreatorWhitelist")
 	KeyInternalUptime       = []byte("InternalUptime")
-	KeyMinOsmoValueForDistr = []byte("MinOsmoValueForDistr")
+	KeyMinValueForDistr     = []byte("MinValueForDistr")
 
 	// 100 OSMO
 	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
@@ -32,13 +31,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams takes an epoch distribution identifier and group creation fee, then returns an incentives Params struct.
-func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins, internalUptime time.Duration, minOsmoValueForDistr sdkmath.Int) Params {
+func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins, internalUptime time.Duration, minValueForDistr sdk.Coin) Params {
 	return Params{
 		DistrEpochIdentifier:         distrEpochIdentifier,
 		GroupCreationFee:             groupCreationFee,
 		UnrestrictedCreatorWhitelist: []string{},
 		InternalUptime:               internalUptime,
-		MinOsmoValueForDistribution:  minOsmoValueForDistr,
+		MinValueForDistribution:      minValueForDistr,
 	}
 }
 
@@ -49,7 +48,7 @@ func DefaultParams() Params {
 		GroupCreationFee:             DefaultGroupCreationFee,
 		UnrestrictedCreatorWhitelist: []string{},
 		InternalUptime:               DefaultConcentratedUptime,
-		MinOsmoValueForDistribution:  DefaultMinOsmoValueForDistr,
+		MinValueForDistribution:      DefaultMinValueForDistr,
 	}
 }
 
@@ -71,7 +70,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := ValidateMinOsmoValueForDistr(p.MinOsmoValueForDistribution); err != nil {
+	if err := ValidateMinValueForDistr(p.MinValueForDistribution); err != nil {
 		return err
 	}
 
@@ -117,8 +116,8 @@ func ValidateInternalUptime(i interface{}) error {
 	return nil
 }
 
-func ValidateMinOsmoValueForDistr(i interface{}) error {
-	_, ok := i.(sdkmath.Int)
+func ValidateMinValueForDistr(i interface{}) error {
+	_, ok := i.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -132,6 +131,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyGroupCreationFee, &p.GroupCreationFee, ValidateGroupCreaionFee),
 		paramtypes.NewParamSetPair(KeyCreatorWhitelist, &p.UnrestrictedCreatorWhitelist, osmoutils.ValidateAddressList),
 		paramtypes.NewParamSetPair(KeyInternalUptime, &p.InternalUptime, ValidateInternalUptime),
-		paramtypes.NewParamSetPair(KeyMinOsmoValueForDistr, &p.MinOsmoValueForDistribution, ValidateMinOsmoValueForDistr),
+		paramtypes.NewParamSetPair(KeyMinValueForDistr, &p.MinValueForDistribution, ValidateMinValueForDistr),
 	}
 }

@@ -138,7 +138,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Check that the new min osmo value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
-	s.Require().Equal(incentivestypes.DefaultMinOsmoValueForDistr, params.MinOsmoValueForDistribution)
+	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinOsmoValueForDistribution)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {

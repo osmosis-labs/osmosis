@@ -43,7 +43,7 @@ func CreateUpgradeHandler(
 
 		// Set the new min osmo value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
-		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinOsmoValueForDistr, incentivestypes.DefaultMinOsmoValueForDistr)
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
 
 		return migrations, nil
 	}

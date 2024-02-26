@@ -273,7 +273,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 		// set the base denom and min value for distribution
 		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
 		s.Require().NoError(err)
-		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinOsmoValueForDistr, sdk.NewInt(1000))
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, sdk.NewInt(1000)))
 		baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 		s.Require().NoError(err)
 
@@ -853,7 +853,7 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 		// set the base denom and min value for distribution
 		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
 		s.Require().NoError(err)
-		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinOsmoValueForDistr, sdk.NewInt(1000))
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, sdk.NewInt(1000)))
 		baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 		s.Require().NoError(err)
 
