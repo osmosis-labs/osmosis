@@ -100,16 +100,16 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	baseId := request.AuthenticatorId
 	for id, auth := range aoa.SubAuthenticators {
 		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		result := auth.ConfirmExecution(ctx, request)
-		if result.IsBlock() {
-			return result
+		err := auth.ConfirmExecution(ctx, request)
+		if err != nil {
+			return err
 		}
 	}
-	return iface.Confirm()
+	return nil
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

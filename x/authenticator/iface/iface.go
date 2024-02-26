@@ -88,7 +88,7 @@ type Authenticator interface {
 	// ConfirmExecution is employed in the post-handler function to enforce transaction rules,
 	// such as spending and transaction limits. It accesses the account's owned state to store
 	// and verify these values.
-	ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) ConfirmationResult
+	ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error
 
 	// OnAuthenticatorAdded is called when an authenticator is added to an account. If the data is not properly formatted
 	// or the authenticator is not compatible with the account, an error should be returned.

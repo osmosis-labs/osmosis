@@ -115,8 +115,8 @@ func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 func (sva SignatureVerificationAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

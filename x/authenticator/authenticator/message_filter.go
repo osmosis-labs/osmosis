@@ -93,8 +93,8 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 // OnAuthenticatorAdded performs additional checks when an authenticator is added. Specifically, it ensures numbers in JSON are encoded as strings.

@@ -333,8 +333,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		},
 	}, msg, "Should match latest sudo msg")
 
-	res := auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), request)
-	s.Require().True(res.IsConfirm(), "Execution should be confirmed")
+	err = auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), request)
+	s.Require().NoError(err, "Execution should be confirmed")
 
 	msg = s.QueryLatestSudoCall(addr)
 	s.Require().Equal(authenticator.SudoMsg{

@@ -185,8 +185,8 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			err = initializedAuth.Authenticate(s.Ctx, request)
 			s.Require().Equal(tc.expectSuccessful, err == nil)
 
-			result := initializedAuth.ConfirmExecution(s.Ctx, request)
-			s.Require().Equal(tc.expectConfirm, result.IsConfirm())
+			err = initializedAuth.ConfirmExecution(s.Ctx, request)
+			s.Require().Equal(tc.expectConfirm, err == nil)
 		})
 	}
 }
@@ -309,8 +309,8 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			err = initializedAuth.Authenticate(s.Ctx, request)
 			s.Require().Equal(tc.expectSuccessful, err == nil)
 
-			result := initializedAuth.ConfirmExecution(s.Ctx, request)
-			s.Require().Equal(tc.expectConfirm, result.IsConfirm())
+			err = initializedAuth.ConfirmExecution(s.Ctx, request)
+			s.Require().Equal(tc.expectConfirm, err == nil)
 		})
 	}
 }

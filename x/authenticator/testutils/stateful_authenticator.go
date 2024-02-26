@@ -65,9 +65,9 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 	return statefulData.Value
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
-	return iface.Confirm()
+	return nil
 }
 
 func (s StatefulAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

@@ -39,8 +39,8 @@ func (m MockAuthenticator) Authenticate(ctx sdk.Context, request iface.Authentic
 	return nil
 }
 
-func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 func (m MockAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
@@ -143,8 +143,8 @@ func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request iface.Authe
 	return fmt.Errorf("Authentication failed")
 }
 
-func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 func (m MockAuthenticatorFail) Type() string {

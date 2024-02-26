@@ -71,11 +71,11 @@ func (t TestingAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	if t.Confirm == Always {
-		return iface.Confirm()
+		return nil
 	} else {
-		return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block"))
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "TestingAuthenticator block")
 	}
 }
 

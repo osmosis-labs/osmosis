@@ -135,7 +135,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		AuthenticatorId:     request.AuthenticatorId,
@@ -146,18 +146,15 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
 	if err != nil {
-		return iface.Block(fmt.Errorf("failed to marshall ConfirmExecutionRequest: %w", err))
+		return fmt.Errorf("failed to marshall ConfirmExecutionRequest: %w", err)
 	}
 
-	result, err := cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
+	_, err = cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
 	if err != nil {
-		return iface.Block(err)
+		return err
 	}
-	confirmationResult, err := UnmarshalConfirmationResult(result)
-	if err != nil {
-		return iface.Block(fmt.Errorf("failed to unmarshal confirmation result: %w", err))
-	}
-	return confirmationResult
+
+	return nil
 }
 
 func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
@@ -212,33 +209,6 @@ func (cwa CosmwasmAuthenticator) ContractAddress() sdk.AccAddress {
 
 func (cwa CosmwasmAuthenticator) Params() []byte {
 	return cwa.authenticatorParams
-}
-
-func UnmarshalConfirmationResult(data []byte) (iface.ConfirmationResult, error) {
-	var rawType struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &rawType); err != nil {
-		return nil, err
-	}
-
-	switch rawType.Type { // using snake case here because that's what cosmwasm defaults to
-	case "confirm":
-		return iface.Confirm(), nil
-	case "block":
-		var rawContent struct {
-			Content struct {
-				Msg string `json:"msg"`
-			} `json:"content"`
-		}
-		if err := json.Unmarshal(data, &rawContent); err != nil {
-			return nil, err
-		}
-
-		return iface.Block(fmt.Errorf("cosmwasm contract error: %s", rawContent.Content.Msg)), nil
-	default:
-		return nil, fmt.Errorf("invalid confirmation result type: %s", rawType.Type)
-	}
 }
 
 func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {

@@ -106,15 +106,15 @@ func (ad AuthenticatorDecorator) PostHandle(
 			}
 
 			// Confirm Execution
-			res := a.ConfirmExecution(ctx, authenticationRequest)
+			err := a.ConfirmExecution(ctx, authenticationRequest)
 
-			if res.IsBlock() {
-				err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "execution blocked by authenticator (account = %s, id = %d)", account, accountAuthenticator.Id)
-				err = errorsmod.Wrap(err, fmt.Sprintf("%s", res.Error()))
+			if err != nil {
+				err = errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, id = %d)", account, accountAuthenticator.Id)
+				err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s", err)
 				return sdk.Context{}, err
 			}
 
-			success = res.IsConfirm()
+			success = err == nil
 		}
 	}
 
