@@ -108,7 +108,8 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 	return authResult
 }
 
-func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
@@ -121,6 +122,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
+		MsgIndex:            msgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{Track: &trackRequest})
@@ -142,6 +144,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 		AuthenticatorId:     request.AuthenticatorId,
 		Account:             request.Account,
 		Msg:                 request.Msg,
+		MsgIndex:            request.MsgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})

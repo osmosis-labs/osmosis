@@ -10,6 +10,7 @@ type TrackRequest struct {
 	AuthenticatorId     string         `json:"authenticator_id"`
 	Account             sdk.AccAddress `json:"account"`
 	Msg                 iface.LocalAny `json:"msg"`
+	MsgIndex            uint64         `json:"msg_index"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
 
@@ -17,5 +18,6 @@ type ConfirmExecutionRequest struct {
 	AuthenticatorId     string         `json:"authenticator_id"`
 	Account             sdk.AccAddress `json:"account"`
 	Msg                 iface.LocalAny `json:"msg"`
+	MsgIndex            uint64         `json:"msg_index"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }

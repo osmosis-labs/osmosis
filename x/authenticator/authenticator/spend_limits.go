@@ -109,7 +109,8 @@ func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.A
 	return iface.NotAuthenticated()
 }
 
-func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
 	// Get the current period based on block time
 	currentPeriod := formatPeriodTime(ctx.BlockTime(), sla.periodType)

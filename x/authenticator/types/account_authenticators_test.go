@@ -21,7 +21,8 @@ func (m MockAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.A
 	return nil
 }
 
-func (m MockAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+func (m MockAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	return nil
 }
 
@@ -124,7 +125,8 @@ func (m MockAuthenticatorFail) OnAuthenticatorAdded(ctx sdk.Context, account sdk
 	return nil
 }
 
-func (m MockAuthenticatorFail) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticatorId string) error {
+func (m MockAuthenticatorFail) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+	authenticatorId string) error {
 	return nil
 }
 

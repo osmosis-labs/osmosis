@@ -263,10 +263,16 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 		}
 	}
 
-	// should we pass ctx.IsReCheckTx() here? How about msgIndex?
+	if msgIndex < 0 {
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msgIndex cannot be negative")
+	}
+	msgIndexUint64 := uint64(msgIndex)
+
+	// should we pass ctx.IsReCheckTx() here?
 	authRequest := iface.AuthenticationRequest{
 		Account:   account,
 		Msg:       txData.Msgs[msgIndex],
+		MsgIndex:  msgIndexUint64,
 		Signature: msgSignature, // currently only allowing one signer per message.
 		TxData:    txData,
 		SignModeTxData: iface.SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
