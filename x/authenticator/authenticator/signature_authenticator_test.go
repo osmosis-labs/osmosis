@@ -264,13 +264,12 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 				// Test Authenticate method
 				if tc.TestData.ShouldSucceedSignatureVerification {
-					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
+					err = s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
 					s.Require().NoError(err)
-					s.Require().True(success.IsAuthenticated())
 
 				} else {
-					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
-					s.Require().False(success.IsAuthenticated())
+					err = s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
+					s.Require().Error(err)
 				}
 			} else {
 				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)

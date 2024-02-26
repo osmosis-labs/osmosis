@@ -104,9 +104,9 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 	return sla, nil
 }
 
-func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	// We never authenticate ourselves. We just  authentication after the fact if the balances changed too much
-	return iface.NotAuthenticated()
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	// We never authenticate ourselves. We just confirm execution after the fact if the balances changed too much
+	return nil
 }
 
 func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
@@ -130,7 +130,7 @@ func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress
 	return nil
 }
 
-func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
 	prevBalances := sla.GetBalance(request.Account)
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, request.Account)
@@ -142,7 +142,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request ifa
 		price, err := sla.getPriceInQuoteDenom(ctx, coin)
 		if err != nil {
 			// ToDO: what do we want to do if we can't determine the price of an asset?
-			return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom)
 		}
 		totalPrevValue = totalPrevValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
@@ -151,7 +151,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request ifa
 		price, err := sla.getPriceInQuoteDenom(ctx, coin)
 		if err != nil {
 			// ToDO: what do we want to do if we can't determine the price of an asset?
-			return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom)
 		}
 		totalCurrentValue = totalCurrentValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
@@ -162,14 +162,14 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request ifa
 	spentSoFar := sla.GetSpentInPeriod(request.Account, ctx.BlockTime())
 
 	if delta.Add(spentSoFar).Int64() > int64(sla.allowedDelta.Uint64()) {
-		return iface.Block(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded")
 	}
 
 	// Update the total spent so far in the current period
 	sla.SetSpentInPeriod(request.Account, ctx.BlockTime(), delta.Add(spentSoFar))
 	sla.DeleteBalances(request.Account) // This is not 100% necessary, but it's nice to clean up after ourselves
 
-	return iface.Confirm()
+	return nil
 }
 
 func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

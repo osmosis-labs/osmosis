@@ -124,8 +124,12 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 			s.Ctx = s.Ctx.WithBlockTime(tt.t2)
 
 			// Execute ConfirmExecution and check if it's confirmed or blocked
-			result := spendLimit.ConfirmExecution(s.Ctx, request)
-			s.Require().Equal(tt.pass, result.IsConfirm())
+			err = spendLimit.ConfirmExecution(s.Ctx, request)
+			if tt.pass {
+				s.Require().NoError(err, "Should succeed")
+			} else {
+				s.Require().Error(err, "Should fail")
+			}
 		})
 	}
 }
@@ -255,7 +259,11 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 
 				// Execute ConfirmExecution and check if it's confirmed or blocked
 				result := spendLimit.ConfirmExecution(s.Ctx, request)
-				s.Require().Equal(pair.expectToPass, result.IsConfirm())
+				if pair.expectToPass {
+					s.Require().NoError(result, "Should succeed")
+				} else {
+					s.Require().Error(result, "Should fail")
+				}
 			}
 		})
 	}

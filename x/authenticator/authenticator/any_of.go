@@ -73,16 +73,20 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return aoa, nil
 }
 
-func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	baseId := request.AuthenticatorId
+
+	var err error
 	for id, auth := range aoa.SubAuthenticators {
 		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		result := auth.Authenticate(ctx, request)
-		if result.IsAuthenticated() || result.IsRejected() {
-			return result
+		err = auth.Authenticate(ctx, request)
+		ctx.Logger().Debug("AnyOfAuthenticator.Authenticate", "request.AuthenticatorId", request.AuthenticatorId, "err", err)
+		// early return ok if any of the sub-authenticators return ok
+		if err == nil {
+			return nil
 		}
 	}
-	return iface.NotAuthenticated()
+	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
 }
 
 func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
@@ -96,16 +100,16 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	baseId := request.AuthenticatorId
 	for id, auth := range aoa.SubAuthenticators {
 		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		result := auth.ConfirmExecution(ctx, request)
-		if result.IsBlock() {
-			return result
+		err := auth.ConfirmExecution(ctx, request)
+		if err != nil {
+			return err
 		}
 	}
-	return iface.Confirm()
+	return nil
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

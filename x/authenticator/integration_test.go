@@ -345,8 +345,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 			for _, step := range tc.Steps {
 				// useful for debugging
-				//allAuthenticators, _ := s.app.AuthenticatorKeeper.GetAuthenticatorDataForAccount(s.chainA.GetContext(), s.Account.GetAddress())
-				//fmt.Println("allAuthenticators", allAuthenticators)
+				// allAuthenticators, _ := s.app.AuthenticatorKeeper.GetAuthenticatorDataForAccount(s.chainA.GetContext(), s.Account.GetAddress())				// fmt.Println("allAuthenticators", allAuthenticators)
 
 				// Add keys for the current step
 				for _, keyIndex := range step.KeysToAdd {
@@ -474,11 +473,11 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 
 	alwaysLow := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 0}
 	alwaysHigh := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 4_000}
-	neverHigh := testutils.TestingAuthenticator{Approve: testutils.Never, GasConsumption: 8_000}
+	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 17_000}
 
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysLow)
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigh)
-	s.app.AuthenticatorManager.RegisterAuthenticator(neverHigh)
+	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
 	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), alwaysLow.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -497,9 +496,9 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 
 	// Add two authenticators that are never high, and one always high.
 	// This allows account2 to execute but *only* after consuming >9k gas
-	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), neverHigh.Type(), []byte{})
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigher.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
-	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), neverHigh.Type(), []byte{})
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigher.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigh.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -606,10 +605,6 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.PrivKeys[1].PubKey().Address()),
 		Amount:      coins,
 	}
-
-	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
-	s.Require().Error(err)
-	s.Require().ErrorContains(err, "unauthorized") // Spend limit only rejects. Never authorizes
 
 	// Add the spend limit as part of an AnyOf
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)

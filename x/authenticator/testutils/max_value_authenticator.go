@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"fmt"
 
 	proto "github.com/cosmos/gogoproto/proto"
 
@@ -37,40 +38,38 @@ func (m MaxAmountAuthenticator) Initialize(data []byte) (iface.Authenticator, er
 	return m, nil
 }
 
-func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.MsgSend" {
-		return iface.NotAuthenticated()
+		return nil
 	}
 	// unmarshal the message.value into the bank.MsgSend struct
 	var send banktypes.MsgSend
 	err := proto.Unmarshal(request.Msg.Value, &send)
 	if err != nil {
-		return iface.NotAuthenticated()
+		return err
 	}
 	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
-		return iface.NotAuthenticated()
+		return fmt.Errorf("total amount sent is greater than 3_000")
 	}
-
-	return iface.Authenticated()
-}
-
-func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
 	return nil
 }
 
-func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
+func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
+	return nil
+}
+
+func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.MsgSend" {
-		return iface.Confirm()
+		return nil
 	}
 	// unmarshal the message.value into the bank.MsgSend struct
 	var send banktypes.MsgSend
 	err := proto.Unmarshal(request.Msg.Value, &send)
 	if err != nil {
-		return iface.Confirm()
+		return nil
 	}
 	m.SetAmount(ctx, m.GetAmount(ctx).Add(send.Amount[0].Amount))
-	return iface.Confirm()
+	return nil
 }
 
 func (m MaxAmountAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

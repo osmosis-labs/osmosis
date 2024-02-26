@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
@@ -34,12 +35,12 @@ func (m MockAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	return iface.Authenticated()
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
-func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 func (m MockAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
@@ -138,12 +139,12 @@ func (m MockAuthenticatorFail) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
-	return iface.NotAuthenticated()
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return fmt.Errorf("Authentication failed")
 }
 
-func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 func (m MockAuthenticatorFail) Type() string {
@@ -164,10 +165,10 @@ func TestMockAuthenticators(t *testing.T) {
 	var mockCtx sdk.Context
 
 	// Testing mockPass
-	isAuthenticatedPass := mockPass.Authenticate(mockCtx, iface.AuthenticationRequest{})
-	require.True(t, isAuthenticatedPass.IsAuthenticated())
+	err := mockPass.Authenticate(mockCtx, iface.AuthenticationRequest{})
+	require.NoError(t, err)
 
 	// Testing mockFail
-	isAuthenticatedFail := mockFail.Authenticate(mockCtx, iface.AuthenticationRequest{})
-	require.False(t, isAuthenticatedFail.IsAuthenticated())
+	err = mockFail.Authenticate(mockCtx, iface.AuthenticationRequest{})
+	require.Error(t, err)
 }

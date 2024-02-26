@@ -6,8 +6,8 @@ use cosmwasm_std::{
 };
 use cw_storage_plus::Item;
 use osmosis_authenticators::{
-    AuthenticationRequest, AuthenticationResult, ConfirmExecutionRequest, ConfirmationResult,
-    OnAuthenticatorAddedRequest, OnAuthenticatorRemovedRequest, TrackRequest,
+    AuthenticationRequest, ConfirmExecutionRequest, OnAuthenticatorAddedRequest,
+    OnAuthenticatorRemovedRequest, TrackRequest,
 };
 
 #[cw_serde]
@@ -60,9 +60,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
         }
         SudoMsg::Authenticate(auth_request) => authenticate(deps, auth_request),
         SudoMsg::Track(track_request) => track(deps, track_request),
-        SudoMsg::ConfirmExecution(_) => {
-            Ok(Response::new().set_data(ConfirmationResult::Confirm {}))
-        }
+        SudoMsg::ConfirmExecution(_) => Ok(Response::new()),
     }
 }
 
@@ -130,19 +128,14 @@ fn authenticate(deps: DepsMut, auth_request: AuthenticationRequest) -> Result<Re
 
     // verify the signature
     let hash = osmosis_authenticators::sha256(&auth_request.sign_mode_tx_data.sign_mode_direct);
-    let valid = deps
-        .api
+    deps.api
         .secp256k1_verify(&hash, &auth_request.signature, &pubkey)
         .or_else(|e| {
             deps.api.debug(&format!("error {:?}", e));
             Err(StdError::generic_err("Failed to verify signature"))
         })?;
 
-    if !valid {
-        return Ok(Response::new().set_data(AuthenticationResult::NotAuthenticated {}));
-    }
-
-    Ok(Response::new().set_data(AuthenticationResult::Authenticated {}))
+    Ok(Response::new())
 }
 
 // Track is a no-op

@@ -311,8 +311,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	request.AuthenticatorId = "0"
 
 	// Test with valid signature
-	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
-	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
+	err = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
+	s.Require().NoError(err, "Should be authenticated")
 
 	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, 0, "0")
 	s.Require().NoError(err, "Track should succeed")
@@ -333,8 +333,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		},
 	}, msg, "Should match latest sudo msg")
 
-	res := auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), request)
-	s.Require().True(res.IsConfirm(), "Execution should be confirmed")
+	err = auth.ConfirmExecution(s.Ctx.WithBlockTime(time.Now()), request)
+	s.Require().NoError(err, "Execution should be confirmed")
 
 	msg = s.QueryLatestSudoCall(addr)
 	s.Require().Equal(authenticator.SudoMsg{
@@ -351,8 +351,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	// Test with an invalid signature
 	request.Signature = []byte("invalid")
-	status = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
-	s.Require().False(status.IsAuthenticated(), "Should not be authenticated")
+	err = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
+	s.Require().Error(err, "Should not be authenticated")
 }
 
 type CosignerInstantiateMsg struct {

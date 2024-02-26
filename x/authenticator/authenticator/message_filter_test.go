@@ -172,11 +172,11 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tt.msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
-			result := filter.Authenticate(s.Ctx, request)
+			err = filter.Authenticate(s.Ctx, request)
 			if tt.match {
-				s.Require().True(result.IsAuthenticated())
+				s.Require().True(err == nil)
 			} else {
-				s.Require().True(result.IsAuthenticationFailed())
+				s.Require().True(err != nil)
 			}
 		})
 	}
@@ -275,11 +275,11 @@ func (s *MessageFilterAuthenticatorTest) TestPoolManagerSwapExactAmountIn() {
 			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tt.msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
-			result := filter.Authenticate(s.Ctx, request)
+			err = filter.Authenticate(s.Ctx, request)
 			if tt.match {
-				s.Require().True(result.IsAuthenticated())
+				s.Require().True(err == nil)
 			} else {
-				s.Require().True(result.IsAuthenticationFailed())
+				s.Require().True(err != nil)
 			}
 		})
 	}

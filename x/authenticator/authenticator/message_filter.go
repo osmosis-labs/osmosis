@@ -59,42 +59,42 @@ func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddres
 }
 
 // Authenticate checks if the provided message conforms to the set JSON pattern. It returns an AuthenticationResult based on the evaluation.
-func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) iface.AuthenticationResult {
+func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	// Get the concrete message from the interface registry
 	protoMsg, err := m.encCfg.InterfaceRegistry.Resolve(request.Msg.TypeURL)
 	if err != nil {
-		return iface.NotAuthenticated()
+		return errorsmod.Wrap(err, "failed to resolve message type")
 	}
 
 	// Attach the codec proto marshaller
 	protoResponseType, ok := protoMsg.(codec.ProtoMarshaler)
 	if !ok {
-		return iface.NotAuthenticated()
+		return errorsmod.Wrapf(err, "failed to resolve message type")
 	}
 
 	// Unmarshal to bytes to the concrete proto message
 	err = m.encCfg.Marshaler.Unmarshal(request.Msg.Value, protoResponseType)
 	if err != nil {
-		return iface.NotAuthenticated()
+		return errorsmod.Wrap(err, "failed to unmarshal message")
 	}
 
 	// Convert the proto message to JSON bytes for comparison to the Initialized data from the store
 	jsonBz, err := m.encCfg.Marshaler.MarshalInterfaceJSON(protoResponseType)
 	if err != nil {
-		return iface.NotAuthenticated()
+		return errorsmod.Wrap(err, "failed to marshal message to JSON")
 	}
 
 	// Check that the encoding is a superset of the pattern
 	err = IsJsonSuperset(m.pattern, jsonBz)
 	if err != nil {
-		return iface.NotAuthenticated()
+		return errorsmod.Wrap(err, "message does not match pattern")
 	}
-	return iface.Authenticated()
+	return nil
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) iface.ConfirmationResult {
-	return iface.Confirm()
+func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+	return nil
 }
 
 // OnAuthenticatorAdded performs additional checks when an authenticator is added. Specifically, it ensures numbers in JSON are encoded as strings.
