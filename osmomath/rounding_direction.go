@@ -20,7 +20,7 @@ func DivIntByU64ToBigDec(i Int, u uint64, round RoundingDirection) (BigDec, erro
 	if u == 0 {
 		return BigDec{}, errors.New("div by zero")
 	}
-	d := BigDecFromDec(i.ToLegacyDec())
+	d := BigDecFromDecMut(i.ToLegacyDec())
 	if round == RoundUp {
 		return d.QuoRoundUp(NewBigDec(int64(u))), nil
 	} else if round == RoundDown {

@@ -149,9 +149,6 @@ func (m MsgServer) SetBaseDenoms(c context.Context, msg *types.MsgSetBaseDenoms)
 		m.k.DeleteAllPoolsForBaseDenom(ctx, baseDenom.Denom)
 	}
 
-	// Delete the old base denoms
-	m.k.DeleteBaseDenoms(ctx)
-
 	if err := m.k.SetBaseDenoms(ctx, msg.BaseDenoms); err != nil {
 		return nil, err
 	}

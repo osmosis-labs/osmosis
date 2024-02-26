@@ -67,12 +67,6 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	s.Require().Equal(baseDenoms[1].Denom, "Atom")
 	s.Require().Equal(baseDenoms[2].Denom, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
-	// Should be able to delete all base denoms
-	s.App.ProtoRevKeeper.DeleteBaseDenoms(s.Ctx)
-	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().Equal(0, len(baseDenoms))
-
 	// Should be able to set the base denoms
 	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	s.Require().NoError(err)
@@ -326,8 +320,15 @@ func (s *KeeperTestSuite) TestGetInfoByPoolType() {
 }
 
 func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
+	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	s.Require().NoError(err)
+	communityPoolDenom := "Akash"
+	atom := "Atom"
+	ion := "uion"
+
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.02")
+	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = communityPoolDenom
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
 	allProtoRev := s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
@@ -344,26 +345,46 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	}, allProtoRev)
 
 	// Swap on a pool to charge taker fee
-	swapInCoin := sdk.NewCoin("Atom", osmomath.NewInt(1000))
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(10000))))
-	poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(10000)), sdk.NewCoin("Akash", osmomath.NewInt(10000)))...)
-	_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, swapInCoin, "Akash", sdk.ZeroInt())
+	swapInCoin := sdk.NewCoin(atom, osmomath.NewInt(1000))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(atom, osmomath.NewInt(10000))))
+	atomCommPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(atom, osmomath.NewInt(10000)), sdk.NewCoin(communityPoolDenom, osmomath.NewInt(10000)))...)
+	atomBaseDenomPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(atom, baseDenom)
+
+	// Store cache context prior to swap so we can use it to calculate how much outToken we should expect after the epoch hook is called and taker fees are swapped.
+	cacheCtx, _ := s.Ctx.CacheContext()
+
+	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, sdk.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeFromInput := swapInCoin.Amount.ToLegacyDec().Mul(poolManagerParams.TakerFeeParams.DefaultTakerFee)
 	expectedTakerFeeToCommunityPoolAmt := expectedTakerFeeFromInput.Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool).TruncateInt()
 	expectedTakerFeeToStakersAmt := expectedTakerFeeFromInput.Sub(expectedTakerFeeToCommunityPoolAmt.ToLegacyDec()).TruncateInt()
-	expectedTakerFeeToStakers := sdk.NewCoins(sdk.NewCoin("Atom", expectedTakerFeeToStakersAmt))
-	expectedTakerFeeToCommunityPool := sdk.NewCoins(sdk.NewCoin("Atom", expectedTakerFeeToCommunityPoolAmt))
+	expectedTakerFeeToStakers := sdk.NewCoins(sdk.NewCoin(atom, expectedTakerFeeToStakersAmt))
+	expectedTakerFeeToCommunityPool := sdk.NewCoins(sdk.NewCoin(atom, expectedTakerFeeToCommunityPoolAmt))
+
+	// We swap taker fees to stakers to the base denom
+	baseDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomBaseDenomPool.GetId(), expectedTakerFeeToStakers[0], baseDenom, sdk.ZeroInt())
+	s.Require().NoError(err)
+	expectedTakerFeeToStakers = sdk.NewCoins(sdk.NewCoin(baseDenom, baseDenomAmt))
+
+	// We swap taker fees to community pool that are not whitelisted to the CommunityPoolDenomToSwapNonWhitelistedAssetsTo
+	communityPoolDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomCommPoolID, expectedTakerFeeToCommunityPool[0], communityPoolDenom, sdk.ZeroInt())
+	s.Require().NoError(err)
+	expectedTakerFeeToCommunityPool = sdk.NewCoins(sdk.NewCoin(communityPoolDenom, communityPoolDenomAmt))
 
 	// Charge txfee of 1000 uion
-	txFeeCharged := sdk.NewCoins(sdk.NewCoin("uion", osmomath.NewInt(1000)))
-	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin("uion", 1000000)), 0, true, false, txFeeCharged)
+	txFeeCharged := sdk.NewCoins(sdk.NewCoin(ion, osmomath.NewInt(1000)))
+	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
 
 	// Pseudo collect cyclic arb profits
-	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
+	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin(atom, osmomath.NewInt(3000)))
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
+	s.Require().NoError(err)
+
+	// Tracker logic is executed has been moved to once per epoch, so we trigger it here.
+	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
+	err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 1)
 	s.Require().NoError(err)
 
 	// Check protocol revenue
@@ -374,17 +395,21 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("Atom", osmomath.NewInt(10000))))
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, swapInCoin, "Akash", sdk.ZeroInt())
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(atom, osmomath.NewInt(10000))))
+	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, sdk.ZeroInt())
 	s.Require().NoError(err)
 
 	// Charge txfee of 1000 uion
-	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin("uion", 1000000)), 0, true, false, txFeeCharged)
+	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
 
 	// Pseudo collect cyclic arb profits
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
+	s.Require().NoError(err)
+
+	// Tracker logic is executed has been moved to once per epoch, so we trigger it here.
+	err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 2)
 	s.Require().NoError(err)
 
 	// Check protocol revenue
