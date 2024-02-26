@@ -51,14 +51,10 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.Auth
 	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
 		return fmt.Errorf("total amount sent is greater than 3_000")
 	}
-
-func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
 	return nil
 }
 
-func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
+func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
 	return nil
 }
 
