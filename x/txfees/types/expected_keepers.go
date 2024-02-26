@@ -51,6 +51,8 @@ type PoolManager interface {
 		quoteAssetDenom string,
 		baseAssetDenom string,
 	) (price osmomath.BigDec, err error)
+	UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
+	UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

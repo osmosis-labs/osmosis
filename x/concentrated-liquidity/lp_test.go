@@ -1710,7 +1710,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 	sqrt := func(x int64) osmomath.BigDec {
 		sqrt, err := osmomath.MonotonicSqrt(osmomath.NewDec(x))
 		s.Require().NoError(err)
-		return osmomath.BigDecFromDec(sqrt)
+		return osmomath.BigDecFromDecMut(sqrt)
 	}
 
 	type sendTest struct {

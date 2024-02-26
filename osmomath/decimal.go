@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -36,14 +37,15 @@ const (
 )
 
 var (
-	precisionReuse        = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision), nil)
-	squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
-	precisionReuseSDK     = new(big.Int).Exp(big.NewInt(10), big.NewInt(DecPrecision), nil)
-	fivePrecision         = new(big.Int).Quo(precisionReuse, big.NewInt(2))
-	precisionMultipliers  []*big.Int
-	zeroInt               = big.NewInt(0)
-	oneInt                = big.NewInt(1)
-	tenInt                = big.NewInt(10)
+	precisionReuse               = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision), nil)
+	squaredPrecisionReuse        = new(big.Int).Mul(precisionReuse, precisionReuse)
+	precisionReuseSDK            = new(big.Int).Exp(big.NewInt(10), big.NewInt(DecPrecision), nil)
+	bigDecDecPrecisionFactorDiff = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision-DecPrecision), nil)
+	fivePrecision                = new(big.Int).Quo(precisionReuse, big.NewInt(2))
+	precisionMultipliers         []*big.Int
+	zeroInt                      = big.NewInt(0)
+	oneInt                       = big.NewInt(1)
+	tenInt                       = big.NewInt(10)
 
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
@@ -129,6 +131,10 @@ func NewBigDecWithPrec(i, prec int64) BigDec {
 // CONTRACT: prec <= BigDecPrecision
 func NewBigDecFromBigInt(i *big.Int) BigDec {
 	return NewBigDecFromBigIntWithPrec(i, 0)
+}
+
+func NewBigDecFromBigIntMut(i *big.Int) BigDec {
+	return NewBigDecFromBigIntMutWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer assuming whole numbers
@@ -617,7 +623,10 @@ func (d BigDec) MustFloat64() float64 {
 // Dec returns the osmomath.Dec representation of a BigDec.
 // Values in any additional decimal places are truncated.
 func (d BigDec) Dec() Dec {
-	return d.DecWithPrecision(DecPrecision)
+	dec := math.LegacyNewDec(0)
+	decBi := dec.BigIntMut()
+	decBi.Quo(d.i, bigDecDecPrecisionFactorDiff)
+	return dec
 }
 
 // DecWithPrecision converts BigDec to Dec with desired precision
@@ -636,7 +645,7 @@ func (d BigDec) DecWithPrecision(precision uint64) Dec {
 
 	// Truncate any additional decimal values that exist due to BigDec's additional precision
 	// This relies on big.Int's Quo function doing floor division
-	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
+	intRepresentation := new(big.Int).Quo(d.BigIntMut(), precisionFactor)
 
 	// convert int representation back to SDK Dec precision
 	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, int64(precision))
@@ -678,6 +687,12 @@ func (d BigDec) DecRoundUp() Dec {
 // Values in any additional decimal places are truncated.
 func BigDecFromDec(d Dec) BigDec {
 	return NewBigDecFromBigIntMutWithPrec(d.BigInt(), DecPrecision)
+}
+
+// BigDecFromDec returns the BigDec representation of an Dec.
+// Values in any additional decimal places are truncated.
+func BigDecFromDecMut(d Dec) BigDec {
+	return NewBigDecFromBigIntMutWithPrec(d.BigIntMut(), DecPrecision)
 }
 
 // BigDecFromSDKInt returns the BigDec representation of an sdkInt.
@@ -846,18 +861,19 @@ func (d BigDec) TruncateDec() BigDec {
 // or equal to the given decimal.
 func (d BigDec) Ceil() BigDec {
 	tmp := new(big.Int).Set(d.i)
+	return BigDec{i: tmp}.CeilMut()
+}
 
-	quo, rem := tmp, big.NewInt(0)
-	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
+func (d BigDec) CeilMut() BigDec {
+	quo, rem := d.i, big.NewInt(0)
+	quo, rem = quo.QuoRem(quo, precisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
-	if rem.Sign() == 0 {
-		return NewBigDecFromBigInt(quo)
-	} else if rem.Sign() == -1 {
-		return NewBigDecFromBigInt(quo)
+	if rem.Sign() <= 0 {
+		return NewBigDecFromBigIntMut(quo)
 	}
 
-	return NewBigDecFromBigInt(quo.Add(quo, oneInt))
+	return NewBigDecFromBigIntMut(quo.Add(quo, oneInt))
 }
 
 // MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()

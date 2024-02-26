@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -21,11 +22,12 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	v101 "github.com/osmosis-labs/osmosis/osmoutils/sumtree/legacy/v101"
+	"github.com/osmosis-labs/osmosis/osmoutils/wrapper"
 )
 
 func setupStore() sdk.KVStore {
-	db := dbm.NewMemDB()
-	tree, _ := iavl.NewMutableTree(db, 100, false)
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	_, _, err := tree.SaveVersion()
 	if err != nil {
 		panic(err)

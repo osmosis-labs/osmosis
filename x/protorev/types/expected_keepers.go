@@ -39,7 +39,7 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
-	MultihopEstimateOutGivenExactAmountIn(
+	MultihopEstimateOutGivenExactAmountInNoTakerFee(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
@@ -80,4 +80,10 @@ type ConcentratedLiquidityKeeper interface {
 		tokenInDenom string,
 		maxTicksCrossed uint64,
 	) (maxTokenIn, resultingTokenOut sdk.Coin, err error)
+}
+
+// DistributionKeeper defines the distribution contract that must be fulfilled when
+// creating a x/protorev keeper.
+type DistributionKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

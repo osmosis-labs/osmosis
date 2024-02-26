@@ -460,7 +460,7 @@ Here is the following process for the `EstimateTradeBasedOnPriceImpactConcentrat
 
 9. If a viable trade amount is found, the function performs a final estimation of `tokenOut` considering the swap fee and returns the estimated trade.
 
-## Take Fee
+## Taker Fees
 
 Taker fee distribution is defined in the poolmanager module’s param store:
 
@@ -478,14 +478,17 @@ type TakerFeeParams struct {
 
 Not shown here is a separate KVStore, which holds overrides for the defaultTakerFee.
 
-There are also two module accounts involved:
+At time of swap, all taker fees are sent to the `taker_fee_collector` module account. At epoch:
 
-```proto
-non_native_fee_collector: osmo1g7ajkk295vactngp74shkfrprvjrdwn662dg26
-non_native_fee_collector_community_pool: osmo1f3xhl0gqmyhnu49c8k3j7fkdv75ug0xjtaqu09
-```
+- Non native taker fees
+    - For Community Pool: Sent to `non_native_fee_collector_community_pool` module account, swapped to `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, then sent to community pool
+    - For Stakers: Sent to `non_native_fee_collector_stakers` module account, swapped to OSMO, then sent to auth module account, which distributes it to stakers
+    - The sub-module accounts here are used so that, if a swap fails, the tokens that fail to swap are not grouped back into the wrong taker fee category in the next epoch
+- OSMO taker fees
+    - For Community Pool: Sent directly to community pool
+    - For Stakers: Sent directly to auth module account, which distributes it to stakers
 
-Lets go through the lifecycle to better understand how taker fee works in a variety of situations, and how each of these parameters and module accounts are used.
+Lets go through the lifecycle to better understand how taker fee works in a variety of situations, and how the module account and distribution parameters are used depending on the input token.
 
 ### Example 1: Non OSMO taker fee
 
@@ -493,7 +496,7 @@ A user makes a swap of USDC to OSMO. First, the protocol checks the KVStore to d
 
 In this example, defaultTakerFee is 0.02%. A USDC<>OSMO KVStore exists with an override of 0.01%. Therefore, 0.01% is used.
 
-Now, imagine the amount in is 1000 USDC. This means that the amount of takerFee utilized is 0.01% of 1000, which is 1 USDC. 
+Now, imagine the amount in is 10000 USDC. This means that the amount of takerFee utilized is 0.01% of 10000, which is 1 USDC.
 
 In the takerFee params, there are two distribution categories:
 1. Taker fees generated in OSMO
@@ -508,31 +511,24 @@ type TakerFeeDistributionPercentage struct {
 }
 ```
 
-For simplicity sake, let’s say staking rewards is 40% and community pool is 60%. This means that out of the 1 USDC taken, 0.4 USDC is meant for staking rewards and 0.6 USDC is meant for community pool.
+For simplicity sake, let’s say staking rewards are 40% and community pool is 60%. This means that out of the 1 USDC taken, 0.4 USDC is meant for staking rewards and 0.6 USDC is meant for community pool.
 
-Starting with the community pool funds, the protocol checks if the fee is a whitelisted fee token. If it is, it is sent directly to the community pool. If it is not, it is sent to the `non_native_fee_collector_community_pool` module address. At epoch, the funds in this account are swapped to the `CommunityPoolDenomToSwapNonWhitelistedAssetsTo` defined in the `poolmanger` params above, and then sent all at once to the community pool at that time.
+At time of swap, all 1 USDC is sent to the `taker_fee_collector` module account. Nothing is done with any taker fee funds until epoch.
 
-Next, for staking rewards, since this is a non-OSMO token, it is sent directly to the `non_native_fee_collector`. At epoch, all funds in this module account are swapped to OSMO and distributed directly to OSMO stakers.
+Starting with the community pool funds, at epoch, the protocol checks if the token is a whitelisted fee token. If it is, it is sent directly to the community pool. If it is not, the funds are sent to the `non_native_fee_collector_community_pool`, swapped to the `CommunityPoolDenomToSwapNonWhitelistedAssetsTo` defined in the `poolmanager` params above, and then sent all at once to the community pool after all swaps at epoch have taken place.
+
+Next, for staking rewards, since this is a non-OSMO token, it is swapped to OSMO and sent to the auth module account, which distributes it to stakers.
 
 ### Example 2: OSMO taker fee
 
 This example does not differ much from the previous example. In this example, a user is swapping 1000 OSMO for USDC.
 
-Just as before, we search for a KVStore taker fee override before utilizing the default taker fee. Just as before (order does not matter), a KVStore entry for OSMO<>USDC exists, so we utilize a 0.01% taker fee instead of the 0.02% default taker fee. 0.01% of 1000 OSMO is 1 OSMO.
+We search for a KVStore taker fee override before utilizing the default taker fee. Just as before (order does not matter), a KVStore entry for OSMO<>USDC exists, so we utilize a 0.01% taker fee instead of the 0.02% default taker fee. 0.01% of 10000 OSMO is 1 OSMO.
 
-We now check the `OsmoTakerFeeDistribution`. In this example, let’s say its 20% to community pool and 80% to stakers. This means that 0.2 OSMO is set for community pool and 0.8 is set for stakers.
+At time of swap, all 1 OSMO is sent to the `taker_fee_collector` module account. Again, nothing is done with any taker fee funds until epoch.
 
-For community pool, this is just a direct send to community pool.
+At epoch, we check the `OsmoTakerFeeDistribution`. In this example, let’s say its 20% to community pool and 80% to stakers. This means that 0.2 OSMO is set for community pool and 0.8 is set for stakers.
 
-For staking, we actually ALSO send this to the `non_native_fee_collector`. At epoch time, this OSMO is just skipped over, while everything else is swapped to OSMO. At the very end, it takes the OSMO directly sent to the `non_native_fee_collector` along with the non native tokens that were just swapped to OSMO and distributes it to stakers.
+For community pool, this is just a direct send of the OSMO to the community pool.
 
-### Important Note: How to extract the data
-
-If one were to take the total amount of tokens in the two module accounts (`non_native_fee_collector` and `non_native_fee_collector_community_pool`), this would be slightly over exaggerating the amount that is generated from taker fees. This is because, when a user uses a non-native token as a FEE TOKEN, this is also sent to the `non_native_fee_collector`. So there are two options here to extract the info:
-
-1. Track the delta of the module accounts 1 block after epoch X and 1 block before epoch X+1. Also, track the total non osmo txfees generated in this period. Subtract the total non osmo txfees generated in this period from the delta of the `non_native_fee_collector`. Add this to the delta of `non_native_fee_collector_community_pool` values. This is the taker fees generated
-2. This is the less better way, but you can track the `SendCoinsFromAccountToModule` events from each block. The problem with this is, imagine I swap USDC to OSMO and use USDC as txfee. This would generate three `SendCoinsFromAccountToModule` events:
-   1. Txfee gets sent to `non_native_fee_collector`
-   2. Part of taker fee gets sent to `non_native_fee_collector`
-   3. Other part of taker fee gets sent to `non_native_fee_collector_community_pool`
-   You could make an assumption here that the txfee is going to be the smaller of the two that gets sent to the `non_native_fee_collector`, or better the order of operations is going to always be the same, so you can figure out if the first or second send to `non_native_fee_collector` is the txfee and not track that value
+For staking, the OSMO is directly sent to the auth "fee collector" module account, which distributes it to stakers.

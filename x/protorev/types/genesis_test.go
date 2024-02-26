@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
@@ -32,4 +33,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNullAccount(t *testing.T) {
+	strAddress, err := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+	require.NoError(t, err)
+	require.True(t, types.DefaultNullAddress.Equals(strAddress))
 }

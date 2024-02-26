@@ -30,14 +30,14 @@ var (
 	DefaultReverseSpotPrice = osmomath.NewDec(1).Quo(DefaultSpotPrice)
 	DefaultSqrtSpotPrice    = func() osmomath.BigDec {
 		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultSpotPrice)
-		return osmomath.BigDecFromDec(sqrtPrice)
+		return osmomath.BigDecFromDecMut(sqrtPrice)
 	}()
 	DefaultLiquidityAmt        = osmomath.MustNewDecFromStr("1517882343.751510418088349649")
 	DefaultCurrTick      int64 = 310000
 	DefaultCurrPrice           = osmomath.NewDec(5000)
 	DefaultCurrSqrtPrice       = func() osmomath.BigDec {
 		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice)
-		return osmomath.BigDecFromDec(sqrtPrice)
+		return osmomath.BigDecFromDecMut(sqrtPrice)
 	}() // 70.710678118654752440
 
 	DefaultSpreadFactor = osmomath.MustNewDecFromStr("0.01")
