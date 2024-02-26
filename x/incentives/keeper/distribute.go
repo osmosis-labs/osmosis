@@ -925,7 +925,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	// Instead of re-fetching the minimum value an underlying token must be to meet the minimum
 	// requirement for distribution, we cache the values here.
 	// While this isn't precise as it doesn't account for price impact, it is good enough for the sole
-	// purpose fo determining if we should distribute the token or not.
+	// purpose of determining if we should distribute the token or not.
 	minDistrValueCache := &DistributionValueCache{
 		denomToMinValueMap: make(map[string]osmomath.Int),
 	}
