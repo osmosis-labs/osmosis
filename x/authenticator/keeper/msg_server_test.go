@@ -56,17 +56,8 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 		Data:   priv.PubKey().Bytes(),
 	}
 
-	key = "6cf5103c60c939a5b38e383b52239c5296c968579eec1c68a47d70fbf1d19157"
-	bz, _ = hex.DecodeString(key)
-	priv = &secp256k1.PrivKey{Key: bz}
-	accAddress = sdk.AccAddress(priv.PubKey().Address())
-	msg.Data = priv.PubKey().Bytes()
-
-	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
-	s.Require().Error(err)
-
 	msg.Type = "PassKeyAuthenticator"
-	_, err = msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
 	s.Require().Error(err)
 }
 

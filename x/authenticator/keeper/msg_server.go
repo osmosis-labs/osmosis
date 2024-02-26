@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
@@ -40,16 +38,6 @@ func (m msgServer) AddAuthenticator(
 	authenticators, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(authenticators) == 0 {
-		// We ensure the data for the first public key is correct. If the public key is already in the
-		// auth store, we will not use this data again. This validation is performed only for the first public key.
-		pubKey := secp256k1.PubKey{Key: msg.Data}
-		newAccountPubKey := sdk.AccAddress(pubKey.Address())
-		if !newAccountPubKey.Equals(sender) {
-			return nil, fmt.Errorf("the first authenticator must be associated with the account, expected %s, got %s", sender, newAccountPubKey)
-		}
 	}
 
 	// Limit the number of authenticators to prevent excessive iteration in the ante handler.
