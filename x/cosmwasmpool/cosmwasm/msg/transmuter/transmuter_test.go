@@ -51,7 +51,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	)
 
 	// Set base denom
-	err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, uosmo)
+	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("uosmo", osmomath.NewInt(10000)))
 
 	// Create Transmuter pool
 	transmuter := s.PrepareCosmWasmPool()
@@ -80,7 +80,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	// Lock shares
 	shareCoins := sdk.NewCoins(shareCoin)
 	lockDuration := time.Hour
-	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], shareCoins, lockDuration)
+	_, err := s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], shareCoins, lockDuration)
 	s.Require().NoError(err)
 
 	// Create gauge
