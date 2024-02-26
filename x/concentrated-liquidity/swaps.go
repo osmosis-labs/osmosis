@@ -658,12 +658,8 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	}
 
 	// Retrieve the liquidity held in the next closest initialized tick
-<<<<<<< HEAD
-	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity), spreadRewardAccum.GetValue(), uptimeAccums)
-=======
 	spreadRewardGrowth := sdk.DecCoin{Denom: tokenInDenom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
-	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), *uptimeAccums)
->>>>>>> 083258c1 (Minor swap speedup (#7606))
+	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), uptimeAccums)
 	if err != nil {
 		return swapState, err
 	}
