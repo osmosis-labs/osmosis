@@ -13,7 +13,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/utils"
 )
 
 type AuthenticatorDecorator struct {
@@ -62,10 +61,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 	transientStoreUpdatedContracts := make(map[string]struct{})
 
 	for msgIndex, msg := range tx.GetMsgs() {
-		account, err := utils.GetAccount(msg)
-		if err != nil {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unable to get account")
-		}
+		account := msg.GetSigners()[0]
 
 		accountAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorDataForAccount(ctx, account)
 		if err != nil {
