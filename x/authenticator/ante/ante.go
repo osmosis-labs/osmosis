@@ -87,12 +87,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
-	// This is a transient context stored globally throughout the execution of the tx
-	// Any changes will to authenticator storage will be written to the store at the end of the tx
-	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
+	cacheCtx, writeCache := ctx.CacheContext()
 
 	// Ensure that no usedAuthenticators are stored in the transient store
-	ad.authenticatorKeeper.TransientStore.ResetUsedAuthenticators()
+	ad.authenticatorKeeper.UsedAuthenticators.ResetUsedAuthenticators()
 
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -113,6 +111,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	if !ok {
 		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
 	}
+
+	var tracks []func() error
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
@@ -175,26 +175,30 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
 			authenticationRequest.AuthenticatorId = stringId
-			authErr = a11r.Authenticate(cacheCtx, authenticationRequest)
+			// Authenticate should never modify state. That's what track is for
+			neverWriteCtx, _ := cacheCtx.CacheContext()
+			authErr = a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
 			// if authentication failed, return an error
 			if authErr == nil {
 				// authentication succeeded, add the authenticator to the used authenticators
-				ad.authenticatorKeeper.TransientStore.AddUsedAuthenticator(id)
+				ad.authenticatorKeeper.UsedAuthenticators.AddUsedAuthenticator(id)
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 					// Reset this for both contexts
-					cacheCtx = ad.authenticatorKeeper.TransientStore.GetTransientContextWithGasMeter(originalGasMeter)
+					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
 					ctx = ctx.WithGasMeter(originalGasMeter)
 				}
 
-				// TODO: revert to old closure track function calls
-				err := a11r.Track(ctx, account, msg, uint64(msgIndex), stringId)
-				if err != nil {
-					return sdk.Context{},
-						errorsmod.Wrap(sdkerrors.ErrUnauthorized, err.Error())
-				}
+				// Append the track closure to be called after the fee payer is authenticated
+				tracks = append(tracks, func() error {
+					err := a11r.Track(cacheCtx, account, msg, uint64(msgIndex), stringId)
+					if err != nil {
+						return err
+					}
+					return nil
+				})
 
 				// skip the rest if found a successful authenticator
 				break
@@ -204,9 +208,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if authErr != nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr))
 		}
-
 	}
 
+	// If the transaction has been authenticated, we call Track(...) on every message
+	// to notify its authenticator so that it can handle any state updates.
+	for _, track := range tracks {
+		if err := track(); err != nil {
+			return sdk.Context{}, err
+		}
+	}
+
+	writeCache()
 	return next(ctx, tx, simulate)
 }
 
