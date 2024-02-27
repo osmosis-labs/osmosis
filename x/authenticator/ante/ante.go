@@ -179,7 +179,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			neverWriteCtx, _ := cacheCtx.CacheContext()
 			authErr = a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
-			// if authentication failed, return an error
+			// if authentication is successful, continue
 			if authErr == nil {
 				// authentication succeeded, add the authenticator to the used authenticators
 				ad.authenticatorKeeper.UsedAuthenticators.AddUsedAuthenticator(id)
@@ -205,6 +205,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 		}
 
+		// if authentication failed, return an error
 		if authErr != nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr))
 		}
