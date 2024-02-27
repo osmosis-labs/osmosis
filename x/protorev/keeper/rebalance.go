@@ -98,7 +98,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 // and then subtracting the amount in from the amount out to get the profit
 func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount osmomath.Int, route poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, osmomath.Int, error) {
 	tokenIn := sdk.Coin{Denom: inputDenom, Amount: amount}
-	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(ctx, route, tokenIn)
+	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountInNoTakerFee(ctx, route, tokenIn)
 	if err != nil {
 		return sdk.Coin{}, osmomath.ZeroInt(), err
 	}
@@ -376,11 +376,6 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 	// Update the module statistics stores
 	if err = k.UpdateStatistics(ctx, route, inputCoin.Denom, profit); err != nil {
 		return err
-	}
-
-	// Send the developer fee to the developer address
-	if err := k.SendDeveloperFee(ctx, sdk.NewCoin(inputCoin.Denom, profit)); err != nil {
-		ctx.Logger().Error("failed to send developer fee: " + err.Error())
 	}
 
 	// Create and emit the backrun event and add it to the context

@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
@@ -66,8 +68,9 @@ var (
 		stakingRewardAssets:         sdk.NewCoins(),
 	}
 	communityPoolAddrName = "distribution"
-	stakingAddrName       = txfeestypes.FeeCollectorForStakingRewardsName
-	nonQuoteCommAddrName  = txfeestypes.FeeCollectorForCommunityPoolName
+	txFeesStakingAddrName = txfeestypes.NonNativeTxFeeCollectorName
+	nonQuoteCommAddrName  = txfeestypes.TakerFeeCommunityPoolName
+	takerFeeAddrName      = txfeestypes.TakerFeeCollectorName
 
 	defaultPoolInitAmount     = osmomath.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = osmomath.NewInt(25_000_000)
@@ -2781,9 +2784,6 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				}
 			}
 
-			// Log starting community pool balance to compare against
-			initCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-
 			tokenOut, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
 
 			if tc.expectError != nil {
@@ -2815,16 +2815,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			// -- Ensure taker fee distributions have properly executed --
 
-			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
-			newCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances...)...))
-
-			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
-
-			// We expect all taker fees intended for staking reward distributions (both quote and non quote) to be collected in the same address
-			// to ensure distributions are executed together.
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.stakingRewardAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))...))
+			// We expect all taker fees collected to be sent to the taker fee module account
+			totalTakerFeesExpected := tc.expectedTakerFees.communityPoolQuoteAssets.Add(tc.expectedTakerFees.communityPoolNonQuoteAssets...).Add(tc.expectedTakerFees.stakingRewardAssets...)
+			s.Require().Equal(totalTakerFeesExpected, sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(takerFeeAddrName))...))
 		})
 	}
 }
@@ -3700,9 +3693,9 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			// Log starting balances to compare against
 			communityPoolBalancesPreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			stakingRewardFeeCollectorMainBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txfeestypes.FeeCollectorName))
-			stakingRewardFeeCollectorTxfeesBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
-			commPoolFeeCollectorBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
+			stakingRewardFeeCollectorMainBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))
+			stakingRewardFeeCollectorTxfeesBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txFeesStakingAddrName))
+			takerFeeCollectorBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(takerFeeAddrName))
 
 			// Execute swap
 			tokenOut, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
@@ -3731,36 +3724,29 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			// -- Ensure taker fee distributions have properly executed --
 
-			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
-			communityPoolBalancesAfterSwap := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook...)...))
-
-			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address txfees community pool address
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
-
-			// We expect all taker fees intended for staking reward distributions (both quote and non quote) to be collected in the same address
-			// to ensure distributions are executed together.
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.stakingRewardAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))...))
+			// We expect all taker fees collected to be sent directly the taker fee module account at time of swap.
+			totalTakerFeesExpected := tc.expectedTakerFees.communityPoolQuoteAssets.Add(tc.expectedTakerFees.communityPoolNonQuoteAssets...).Add(tc.expectedTakerFees.stakingRewardAssets...)
+			s.Require().Equal(totalTakerFeesExpected, sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(takerFeeAddrName))...))
 
 			// Run the afterEpochEnd hook from txfees directly
 			s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
 
 			// Store balances after hook
 			communityPoolBalancesPostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			stakingRewardFeeCollectorMainBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txfeestypes.FeeCollectorName))
-			stakingRewardFeeCollectorTxfeesBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
-			commPoolFeeCollectorBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
+			stakingRewardFeeCollectorMainBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))
+			stakingRewardFeeCollectorTxfeesBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txFeesStakingAddrName))
+			takerFeeCollectorBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(takerFeeAddrName))
 
 			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook...)
-			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook...)
 			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook...)
 			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook...)
+			takerFeeBalanceDelta := takerFeeCollectorBalancePostHook.Sub(takerFeeCollectorBalancePreHook...)
 
 			// Ensure balances are as expected
 			s.Require().Equal(tc.expectedCommunityPoolBalancesDelta, communityPoolBalancesDelta)
-			s.Require().Equal(sdk.Coins{}, commPoolFeeCollectorBalanceDelta) // should always be empty after hook if all routes exist
 			s.Require().Equal(tc.expectedStakingRewardFeeCollectorMainBalanceDelta, stakingRewardFeeCollectorMainBalanceDelta)
 			s.Require().Equal(sdk.Coins{}, stakingRewardFeeCollectorTxfeesBalanceDelta) // should always be empty after hook if all routes exist
+			s.Require().Equal(sdk.Coins{}, takerFeeBalanceDelta)                        // should always be empty after hook if all routes exist
 		})
 	}
 }

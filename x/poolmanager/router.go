@@ -27,6 +27,23 @@ var (
 	}
 )
 
+func (k Keeper) GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModule types.PoolModuleI, pool types.PoolI, err error) {
+	// Get the pool-specific module implementation to ensure that
+	// swaps are routed to the pool type corresponding to pool ID's pool.
+	swapModule, err = k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return
+	}
+
+	// Get pool as a general pool type. Note that the underlying function used
+	// still varies with the pool type.
+	pool, err = swapModule.GetPool(ctx, poolId)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // RouteExactAmountIn processes a swap along the given route using the swap function
 // corresponding to poolID's pool type. It takes in the input denom and amount for
 // the initial swap against the first pool and chains the output as the input for the
@@ -146,18 +163,9 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutDenom string,
 	tokenOutMinAmount osmomath.Int,
 ) (tokenOutAmount osmomath.Int, err error) {
-	// Get the pool-specific module implementation to ensure that
-	// swaps are routed to the pool type corresponding to pool ID's pool.
-	swapModule, err := k.GetPoolModule(ctx, poolId)
+	swapModule, pool, err := k.GetPoolModuleAndPool(ctx, poolId)
 	if err != nil {
 		return osmomath.Int{}, err
-	}
-
-	// Get pool as a general pool type. Note that the underlying function used
-	// still varies with the pool type.
-	pool, poolErr := swapModule.GetPool(ctx, poolId)
-	if poolErr != nil {
-		return osmomath.Int{}, poolErr
 	}
 
 	// Check if pool has swaps enabled.
@@ -195,18 +203,9 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	tokenOutDenom string,
 	tokenOutMinAmount osmomath.Int,
 ) (tokenOutAmount osmomath.Int, err error) {
-	// Get the pool-specific module implementation to ensure that
-	// swaps are routed to the pool type corresponding to pool ID's pool.
-	swapModule, err := k.GetPoolModule(ctx, poolId)
+	swapModule, pool, err := k.GetPoolModuleAndPool(ctx, poolId)
 	if err != nil {
 		return osmomath.Int{}, err
-	}
-
-	// Get pool as a general pool type. Note that the underlying function used
-	// still varies with the pool type.
-	pool, poolErr := swapModule.GetPool(ctx, poolId)
-	if poolErr != nil {
-		return osmomath.Int{}, poolErr
 	}
 
 	// Check if pool has swaps enabled.
@@ -226,10 +225,27 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	return tokenOutAmount, nil
 }
 
+func (k Keeper) MultihopEstimateOutGivenExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+) (tokenOutAmount osmomath.Int, err error) {
+	return k.multihopEstimateOutGivenExactAmountInInternal(ctx, route, tokenIn, false)
+}
+
 func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	ctx sdk.Context,
 	route []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
+) (tokenOutAmount osmomath.Int, err error) {
+	return k.multihopEstimateOutGivenExactAmountInInternal(ctx, route, tokenIn, true)
+}
+
+func (k Keeper) multihopEstimateOutGivenExactAmountInInternal(
+	ctx sdk.Context,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	applyTakerFee bool,
 ) (tokenOutAmount osmomath.Int, err error) {
 	// recover from panic
 	defer func() {
@@ -248,27 +264,25 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	}
 
 	for _, routeStep := range route {
-		swapModule, err := k.GetPoolModule(ctx, routeStep.PoolId)
+		swapModule, poolI, err := k.GetPoolModuleAndPool(ctx, routeStep.PoolId)
 		if err != nil {
 			return osmomath.Int{}, err
-		}
-
-		// Execute the expected swap on the current routed pool
-		poolI, poolErr := swapModule.GetPool(ctx, routeStep.PoolId)
-		if poolErr != nil {
-			return osmomath.Int{}, poolErr
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
 
-		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
-		if err != nil {
-			return osmomath.Int{}, err
+		actualTokenIn := tokenIn
+		// apply taker fee if applicable
+		if applyTakerFee {
+			takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
+			if err != nil {
+				return osmomath.Int{}, err
+			}
+
+			actualTokenIn, _ = CalcTakerFeeExactIn(tokenIn, takerFee)
 		}
 
-		tokenInAfterSubTakerFee, _ := CalcTakerFeeExactIn(tokenIn, takerFee)
-
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, actualTokenIn, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
@@ -330,8 +344,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
 	for i, routeStep := range route {
-		// Get underlying pool type corresponding to the pool ID at the current routeStep.
-		swapModule, err := k.GetPoolModule(ctx, routeStep.PoolId)
+		swapModule, pool, err := k.GetPoolModuleAndPool(ctx, routeStep.PoolId)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
@@ -342,12 +355,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		// to the estimated input of the final pool.
 		if i != len(route)-1 {
 			_tokenOut = sdk.NewCoin(route[i+1].TokenInDenom, insExpected[i+1])
-		}
-
-		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, routeStep.PoolId)
-		if poolErr != nil {
-			return osmomath.Int{}, poolErr
 		}
 
 		// check if pool is active, if not error
@@ -532,12 +539,8 @@ func (k Keeper) GetPool(
 	ctx sdk.Context,
 	poolId uint64,
 ) (types.PoolI, error) {
-	swapModule, err := k.GetPoolModule(ctx, poolId)
-	if err != nil {
-		return nil, err
-	}
-
-	return swapModule.GetPool(ctx, poolId)
+	_, pool, err := k.GetPoolModuleAndPool(ctx, poolId)
+	return pool, err
 }
 
 // AllPools returns all pools sorted by their ids
@@ -564,6 +567,7 @@ func (k Keeper) AllPools(
 // ListPoolsByDenom returns all pools by denom sorted by their ids
 // from every pool module registered in the
 // pool manager keeper.
+// N.B. It is possible for incorrectly implemented pools to be skipped
 func (k Keeper) ListPoolsByDenom(
 	ctx sdk.Context,
 	denom string,
@@ -577,9 +581,12 @@ func (k Keeper) ListPoolsByDenom(
 
 		var poolsByDenom []types.PoolI
 		for _, pool := range currentModulePools {
+			// If the pool is incorrectly implemented and we can't get the PoolDenoms
+			// skip the pool.
 			poolDenoms, err := poolModule.GetPoolDenoms(ctx, pool.GetId())
 			if err != nil {
-				return nil, err
+				ctx.Logger().Debug(fmt.Sprintf("Error getting pool denoms for pool %d: %s", pool.GetId(), err.Error()))
+				continue
 			}
 			if osmoutils.Contains(poolDenoms, denom) {
 				poolsByDenom = append(poolsByDenom, pool)
@@ -604,12 +611,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 	for i := len(route) - 1; i >= 0; i-- {
 		routeStep := route[i]
 
-		swapModule, err := k.GetPoolModule(ctx, routeStep.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		poolI, err := swapModule.GetPool(ctx, routeStep.PoolId)
+		swapModule, poolI, err := k.GetPoolModuleAndPool(ctx, routeStep.PoolId)
 		if err != nil {
 			return nil, err
 		}
@@ -666,17 +668,6 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
-}
-
-// isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.
-// If it does, it returns true, otherwise false.
-func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
-	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
-		if denom == authorizedQuoteDenom {
-			return true
-		}
-	}
-	return false
 }
 
 // nolint: unused

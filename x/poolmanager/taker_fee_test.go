@@ -3,11 +3,11 @@ package poolmanager_test
 import (
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 )
 
 // validates that the pool manager keeper can charge taker fees correctly.
@@ -121,57 +121,23 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 				s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[nonWhitelistedSenderIndex], s.TestAccs[whitelistedSenderIndex], sdk.NewCoins(tc.tokenIn))
 			}
 
-			// Check the taker fee tracker before the taker fee is charged.
-			takerFeeTrackerForStakersBefore := poolManager.GetTakerFeeTrackerForStakers(s.Ctx)
-			takerFeeTrackerForCommunityPoolBefore := poolManager.GetTakerFeeTrackerForCommunityPool(s.Ctx)
-
 			// System under test.
 			tokenInAfterTakerFee, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[tc.senderIndex], tc.exactIn)
 
-			// Check the taker fee tracker after the taker fee is charged.
-			takerFeeTrackerForStakersAfter := poolManager.GetTakerFeeTrackerForStakers(s.Ctx)
-			takerFeeTrackerForCommunityPoolAfter := poolManager.GetTakerFeeTrackerForCommunityPool(s.Ctx)
-
 			if tc.expectError != nil {
 				s.Require().Error(err)
-				s.Require().Equal(takerFeeTrackerForStakersBefore, takerFeeTrackerForStakersAfter)
-				s.Require().Equal(takerFeeTrackerForCommunityPoolBefore, takerFeeTrackerForCommunityPoolAfter)
 				return
 			}
 			s.Require().NoError(err)
 
-			params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-
-			var expectedTotalTakerFee osmomath.Int
+			var takerFeeTaken sdk.Coin
 			if tc.exactIn {
-				expectedTotalTakerFee = defaultAmount.Sub(tc.expectedResult.Amount)
+				takerFeeTaken = tc.tokenIn.Sub(tokenInAfterTakerFee)
 			} else {
-				expectedTotalTakerFee = tc.expectedResult.Amount.Sub(defaultAmount)
+				takerFeeTaken = tokenInAfterTakerFee.Sub(tc.tokenIn)
 			}
-			expectedTakerFeeToStakersAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
-			expectedTakerFeeToCommunityPoolAmount := expectedTotalTakerFee.ToLegacyDec().Mul(params.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
-
-			roundup := func(d sdkmath.LegacyDec) sdkmath.Int {
-				if d.Sub(sdkmath.LegacyNewDecFromInt(d.TruncateInt())).GT(sdkmath.LegacyZeroDec()) {
-					return d.TruncateInt().Add(sdkmath.NewInt(1))
-				}
-				return d.TruncateInt()
-			}
-			expectedTakerFeeToStakers := []sdk.Coin{sdk.NewCoin(tc.expectedResult.Denom, roundup(expectedTakerFeeToStakersAmount))}
-			expectedTakerFeeToCommunityPool := []sdk.Coin{sdk.NewCoin(tc.expectedResult.Denom, expectedTakerFeeToCommunityPoolAmount.TruncateInt())}
-
-			// Validate results.
-			s.Require().Equal(tc.expectedResult.String(), tokenInAfterTakerFee.String())
-			expectedTakerFeeTrackerForStakersAfter := []sdk.Coin{}
-			if !expectedTakerFeeToStakers[0].IsZero() {
-				expectedTakerFeeTrackerForStakersAfter = expectedTakerFeeToStakers
-			}
-			s.Require().Equal(expectedTakerFeeTrackerForStakersAfter, takerFeeTrackerForStakersAfter)
-			expectedTakerFeeTrackerForCommunityPoolAfter := []sdk.Coin{}
-			if !expectedTakerFeeToCommunityPool[0].IsZero() {
-				expectedTakerFeeTrackerForCommunityPoolAfter = expectedTakerFeeToCommunityPool
-			}
-			s.Require().Equal(expectedTakerFeeTrackerForCommunityPoolAfter, takerFeeTrackerForCommunityPoolAfter)
+			takerFeeModuleAccBal := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName))
+			s.Require().True(sdk.NewCoins(takerFeeTaken).IsEqual(takerFeeModuleAccBal))
 		})
 	}
 }

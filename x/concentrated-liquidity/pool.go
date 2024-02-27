@@ -215,13 +215,10 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 		return nil, err
 	}
 
-	poolBalance := k.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+	token0Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken0())
+	token1Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken1())
 
-	// This is to ensure that malicious actor cannot send dust to
-	// a pool address.
-	filteredPoolBalance := osmoutils.FilterDenoms(poolBalance, []string{pool.GetToken0(), pool.GetToken1()})
-
-	return filteredPoolBalance, nil
+	return sdk.NewCoins(token0Bal, token1Bal), nil
 }
 
 // asPoolI takes a types.ConcentratedPoolExtension and attempts to convert it to a

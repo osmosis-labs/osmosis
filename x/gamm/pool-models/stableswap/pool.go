@@ -317,7 +317,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return osmomath.BigDecFromDec(spotPriceDec), nil
+	return osmomath.BigDecFromDecMut(spotPriceDec), nil
 }
 
 func (p Pool) Copy() Pool {

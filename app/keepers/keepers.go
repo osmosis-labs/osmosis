@@ -391,6 +391,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.EpochsKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.ConcentratedLiquidityKeeper,
+		appKeepers.DistrKeeper,
 	)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 	appKeepers.PoolManagerKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)

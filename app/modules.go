@@ -103,31 +103,33 @@ import (
 // moduleAccountPermissions defines module account permissions
 // TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
 var moduleAccountPermissions = map[string][]string{
-	authtypes.FeeCollectorName:                    nil,
-	distrtypes.ModuleName:                         nil,
-	ibchookstypes.ModuleName:                      nil,
-	icatypes.ModuleName:                           nil,
-	icqtypes.ModuleName:                           nil,
-	minttypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
-	minttypes.DeveloperVestingModuleAcctName:      nil,
-	stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
-	govtypes.ModuleName:                           {authtypes.Burner},
-	ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-	gammtypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
-	incentivestypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
-	protorevtypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
-	lockuptypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-	poolincentivestypes.ModuleName:                nil,
-	superfluidtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
-	txfeestypes.ModuleName:                        nil,
-	txfeestypes.FeeCollectorForStakingRewardsName: nil,
-	txfeestypes.FeeCollectorForCommunityPoolName:  nil,
-	wasmtypes.ModuleName:                          {authtypes.Burner},
-	tokenfactorytypes.ModuleName:                  {authtypes.Minter, authtypes.Burner},
-	valsetpreftypes.ModuleName:                    {authtypes.Staking},
-	poolmanagertypes.ModuleName:                   nil,
-	cosmwasmpooltypes.ModuleName:                  nil,
+	authtypes.FeeCollectorName:               nil,
+	distrtypes.ModuleName:                    nil,
+	ibchookstypes.ModuleName:                 nil,
+	icatypes.ModuleName:                      nil,
+	icqtypes.ModuleName:                      nil,
+	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	minttypes.DeveloperVestingModuleAcctName: nil,
+	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
+	govtypes.ModuleName:                      {authtypes.Burner},
+	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
+	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+	protorevtypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
+	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+	poolincentivestypes.ModuleName:           nil,
+	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+	txfeestypes.ModuleName:                   nil,
+	txfeestypes.NonNativeTxFeeCollectorName:  nil,
+	txfeestypes.TakerFeeStakersName:          nil,
+	txfeestypes.TakerFeeCommunityPoolName:    nil,
+	txfeestypes.TakerFeeCollectorName:        nil,
+	wasmtypes.ModuleName:                     {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	valsetpreftypes.ModuleName:               {authtypes.Staking},
+	poolmanagertypes.ModuleName:              nil,
+	cosmwasmpooltypes.ModuleName:             nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -199,8 +201,11 @@ func appModules(
 func orderBeginBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
 	// Upgrades should be run VERY first
-	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
-	// But would have to be a holistic change with other pipelines taken into account.
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end,
+	// but would have to be a holistic change with other pipelines taken into account.
+	// Epochs must come before staking, because txfees epoch hook sends fees to the auth "fee collector"
+	// module account, which is then distributed to stakers. If staking comes before epochs, then the
+	// funds will not be distributed to stakers as expected.
 	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
 
 	// Staking ordering

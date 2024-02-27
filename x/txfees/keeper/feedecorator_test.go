@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
@@ -153,9 +154,9 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 			if tc.expectPass {
 				// ensure fee was collected
 				if !tc.txFee.IsZero() {
-					moduleName := types.FeeCollectorName
+					moduleName := authtypes.FeeCollectorName
 					if tc.txFee[0].Denom != baseDenom {
-						moduleName = types.FeeCollectorForStakingRewardsName
+						moduleName = types.NonNativeTxFeeCollectorName
 					}
 					moduleAddr := s.App.AccountKeeper.GetModuleAddress(moduleName)
 					s.Require().Equal(tc.txFee[0], s.App.BankKeeper.GetBalance(s.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)

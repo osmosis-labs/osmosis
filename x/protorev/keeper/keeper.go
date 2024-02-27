@@ -25,6 +25,7 @@ type (
 		epochKeeper                 types.EpochKeeper
 		poolmanagerKeeper           types.PoolManagerKeeper
 		concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
+		distributionKeeper          types.DistributionKeeper
 	}
 )
 
@@ -38,6 +39,7 @@ func NewKeeper(
 	epochKeeper types.EpochKeeper,
 	poolmanagerKeeper types.PoolManagerKeeper,
 	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper,
+	distributionKeeper types.DistributionKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -54,6 +56,7 @@ func NewKeeper(
 		epochKeeper:                 epochKeeper,
 		poolmanagerKeeper:           poolmanagerKeeper,
 		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
+		distributionKeeper:          distributionKeeper,
 	}
 }
 

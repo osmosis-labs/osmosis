@@ -3,8 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/armon/go-metrics"
 	db "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -45,8 +47,16 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 	for _, group := range activeGroups {
 		err := k.syncGroupWeights(ctx, group)
 		if err != nil {
-			telemetry.IncrCounter(1, types.SyncGroupGaugeFailureTelemetryName)
-			ctx.Logger().Error(types.SyncGroupGaugeFailureTelemetryName, "group_gauge_id", group.GroupGaugeId, "error", err.Error())
+			telemetry.IncrCounterWithLabels([]string{types.SyncGroupGaugeFailureMetricName}, 1, []metrics.Label{
+				{
+					Name:  "group_gauge_id",
+					Value: strconv.FormatUint(group.GroupGaugeId, 10),
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
+				},
+			})
 			continue
 		}
 

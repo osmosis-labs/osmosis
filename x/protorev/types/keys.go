@@ -22,7 +22,7 @@ const (
 const (
 	prefixTokenPairRoutes = iota + 1
 	prefixDenomPairToPool
-	prefixBaseDenoms
+	prefixDeprecatedBaseDenoms
 	prefixNumberOfTrades
 	prefixProfitsByDenom
 	prefixTradesByRoute
@@ -38,6 +38,7 @@ const (
 	prefixSwapsToBackrun
 	prefixcyclicArbTracker
 	prefixcyclicArbTrackerStartHeight
+	prefixBaseDenoms
 )
 
 var (
@@ -48,8 +49,8 @@ var (
 	// KeyPrefixDenomPairToPool is the prefix that is used to store the pool id for a given denom pair (baseDenom, otherDenom)
 	KeyPrefixDenomPairToPool = []byte{prefixDenomPairToPool}
 
-	// KeyPrefixBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
-	KeyPrefixBaseDenoms = []byte{prefixBaseDenoms}
+	// DEPRECATED: KeyPrefixDeprecatedBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
+	KeyPrefixDeprecatedBaseDenoms = []byte{prefixDeprecatedBaseDenoms}
 
 	// -------------- Keys for statistics stores -------------- //
 	// KeyPrefixNumberOfTrades is the prefix for the store that keeps track of the number of trades executed
@@ -97,6 +98,9 @@ var (
 
 	// KeyCyclicArbTracker is the prefix for store that keeps track of the height we began tracking cyclic arbitrage
 	KeyCyclicArbTrackerStartHeight = []byte{prefixcyclicArbTrackerStartHeight}
+
+	// KeyPrefixBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
+	KeyPrefixBaseDenoms = []byte{prefixBaseDenoms}
 )
 
 // Returns the key needed to fetch the pool id for a given denom
@@ -105,8 +109,8 @@ func GetKeyPrefixDenomPairToPool(baseDenom, matchDenom string) []byte {
 }
 
 // Returns the key needed to fetch info about base denoms
-func GetKeyPrefixBaseDenom(priority uint64) []byte {
-	return append(KeyPrefixBaseDenoms, sdk.Uint64ToBigEndian(priority)...)
+func DeprecatedGetKeyPrefixBaseDenom(priority uint64) []byte {
+	return append(KeyPrefixDeprecatedBaseDenoms, sdk.Uint64ToBigEndian(priority)...)
 }
 
 // Returns the key needed to fetch the tokenPair routes for a given pair of tokens

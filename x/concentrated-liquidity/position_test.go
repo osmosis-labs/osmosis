@@ -1609,7 +1609,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 			positionCoins:   sdk.NewCoins(DefaultCoin0, DefaultCoin1),
 			lowerTick:       DefaultMinTick,
 			upperTick:       DefaultUpperTick, // max tick doesn't overlap, should not count towards full range liquidity
-			updateLiquidity: osmomath.NewDec(100),
+			updateLiquidity: hundredDec,
 		},
 		{
 			name:            "full range + position overlapping max tick. update liquidity downwards",

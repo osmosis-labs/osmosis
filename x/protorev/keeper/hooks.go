@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type Hooks struct {
@@ -15,7 +16,8 @@ type Hooks struct {
 }
 
 var (
-	_ gammtypes.GammHooks = Hooks{}
+	_ gammtypes.GammHooks    = Hooks{}
+	_ epochstypes.EpochHooks = Hooks{}
 )
 
 // Create new ProtoRev hooks.
@@ -88,6 +90,24 @@ func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress,
 	}
 
 	h.k.StoreSwap(ctx, poolId, input[0].Denom, output[0].Denom)
+}
+
+// ----------------------------------------------------------------------------
+// EPOCH HOOKS
+// ----------------------------------------------------------------------------
+
+// Hooks wrapper struct for incentives keeper
+
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+}
+
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+}
+
+func (h Hooks) GetModuleName() string {
+	return epochstypes.ModuleName
 }
 
 // ----------------------------------------------------------------------------
@@ -220,4 +240,49 @@ func (k Keeper) CompareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 	if newPoolLiquidity.GT(storedPoolLiquidity) {
 		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 	}
+}
+
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
+}
+
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	// Get the current arb profits (only in base denoms to prevent spam vector)
+	profit, err := k.CurrentBaseDenomProfits(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Distribute profits to developer account, community pool, and burn osmo
+	err = k.DistributeProfit(ctx, profit)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CalculateCurrentProfit retrieves the current balance of the protorev module account and filters for base denoms.
+func (k Keeper) CurrentBaseDenomProfits(ctx sdk.Context) (sdk.Coins, error) {
+	moduleAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
+
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the current protorev balance of all denoms
+	protorevBalanceAllDenoms := k.bankKeeper.GetAllBalances(ctx, moduleAcc)
+
+	// Filter for base denoms
+	var protorevBalanceBaseDenoms sdk.Coins
+
+	for _, baseDenom := range baseDenoms {
+		amountOfBaseDenom := protorevBalanceAllDenoms.AmountOf(baseDenom.Denom)
+		if !amountOfBaseDenom.IsZero() {
+			protorevBalanceBaseDenoms = append(protorevBalanceBaseDenoms, sdk.NewCoin(baseDenom.Denom, amountOfBaseDenom))
+		}
+	}
+
+	return protorevBalanceBaseDenoms.Sort(), nil
 }
