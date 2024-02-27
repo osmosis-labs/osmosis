@@ -113,6 +113,10 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 			_, err = s.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(s.Ctx), types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), denom, cosmwasmAddress.String()))
 			s.Require().NoError(err, "test: %v", tc.desc)
 
+			denoms, beforeSendHooks := s.App.TokenFactoryKeeper.GetAllBeforeSendHooks(s.Ctx)
+			s.Require().Equal(beforeSendHooks, []string{cosmwasmAddress.String()})
+			s.Require().Equal(denoms, []string{denom})
+
 			for _, sendTc := range tc.sendMsgs {
 				_, err := s.bankMsgServer.Send(sdk.WrapSDKContext(s.Ctx), sendTc.msg(denom))
 				if sendTc.expectPass {

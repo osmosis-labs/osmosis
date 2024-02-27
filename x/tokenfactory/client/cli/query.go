@@ -46,6 +46,13 @@ func GetCmdDenomsFromCreator() (*osmocli.QueryDescriptor, *types.QueryDenomsFrom
 		Long: `{{.Short}}{{.ExampleHeader}}
 		{{.CommandPrefix}} <address>`,
 	}, &types.QueryDenomsFromCreatorRequest{}
+
+}
+func GetCmdBeforeSendHooks() (*osmocli.QueryDescriptor, *types.QueryAllBeforeSendHooksAddressesRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-before-send-hooks",
+		Short: "Returns a list of all before send hooks registered",
+	}, &types.QueryAllBeforeSendHooksAddressesRequest{}
 }
 
 // GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom
