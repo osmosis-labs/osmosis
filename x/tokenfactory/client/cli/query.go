@@ -21,6 +21,7 @@ func GetQueryCmd() *cobra.Command {
 
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdDenomAuthorityMetadata)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdDenomsFromCreator)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdAllBeforeSendHooks)
 
 	cmd.AddCommand(
 		osmocli.GetParams[*types.QueryParamsRequest](
@@ -48,7 +49,7 @@ func GetCmdDenomsFromCreator() (*osmocli.QueryDescriptor, *types.QueryDenomsFrom
 	}, &types.QueryDenomsFromCreatorRequest{}
 
 }
-func GetCmdBeforeSendHooks() (*osmocli.QueryDescriptor, *types.QueryAllBeforeSendHooksAddressesRequest) {
+func GetCmdAllBeforeSendHooks() (*osmocli.QueryDescriptor, *types.QueryAllBeforeSendHooksAddressesRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "all-before-send-hooks",
 		Short: "Returns a list of all before send hooks registered",
