@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
 * [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
 * [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
+* * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Remove duplicate CL accumulator update logic.
 
 ### State Compatible
 
