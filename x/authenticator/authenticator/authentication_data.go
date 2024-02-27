@@ -1,6 +1,8 @@
 package authenticator
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -13,22 +15,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func GetSigners(
-	msgs []sdk.Msg,
-) []sdk.AccAddress {
-	var signers []sdk.AccAddress
-
-	// Iterate over messages and their signers.
-	for _, msg := range msgs {
-		for _, signer := range msg.GetSigners() {
-			signers = append(signers, signer)
-		}
-	}
-
-	return signers
-}
-
-func GetCommonAuthenticationData(
+func GetSignerAndSignatures(
 	tx sdk.Tx,
 ) (signers []sdk.AccAddress, signatures []signing.SignatureV2, err error) {
 	// Attempt to cast the provided transaction to an authsigning.Tx.
@@ -45,10 +32,13 @@ func GetCommonAuthenticationData(
 	}
 
 	// Retrieve messages from the transaction.
-	msgs := sigTx.GetMsgs()
-	signers = GetSigners(msgs)
+	signers = sigTx.GetSigners()
 
-	// TODO: enforce len(singers) == len(signatures) == len(msgs)
+	// check that signer length and signature length are the same
+	if len(signatures) != len(signers) {
+		return nil, nil,
+			errorsmod.Wrap(sdkerrors.ErrTxDecode, fmt.Sprintf("invalid number of signer;  expected: %d, got %d", len(signers), len(signatures)))
+	}
 
 	return signers, signatures, nil
 }
@@ -64,9 +54,9 @@ func GenerateAuthenticationData(
 	simulate bool,
 	replayProtection ReplayProtection,
 ) (iface.AuthenticationRequest, error) {
-	txSigners, txSignatures, err := GetCommonAuthenticationData(tx)
+	txSigners, txSignatures, err := GetSignerAndSignatures(tx)
 	if err != nil {
-		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signs and signatures")
+		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signers and signatures")
 	}
 
 	// Retrieve and build the signer data struct
