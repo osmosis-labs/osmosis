@@ -117,11 +117,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		signers := msg.GetSigners()
+		// Enforce only one signer per message
 		if len(signers) != 1 {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
 		}
 
-		// By default, the first signer is the account
+		// By default, the first signer is the account that is used
 		account := signers[0]
 
 		// Ensure the feePayer is the signer of the first message
@@ -132,6 +133,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get all authenticators for the executing account
 		// If no authenticators are found, use the default authenticator
 		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
+		// TODO: only return the selected account authenticator (no defaults)
 		allAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
 		if err != nil {
 			return sdk.Context{}, err
@@ -187,6 +189,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					ctx = ctx.WithGasMeter(originalGasMeter)
 				}
 
+				// TODO: revert to old closure track function calls
 				err := a11r.Track(ctx, account, msg, uint64(msgIndex), stringId)
 				if err != nil {
 					return sdk.Context{},

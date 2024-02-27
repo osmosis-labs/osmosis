@@ -48,6 +48,8 @@ func GetCommonAuthenticationData(
 	msgs := sigTx.GetMsgs()
 	signers = GetSigners(msgs)
 
+	// TODO: enforce len(singers) == len(signatures) == len(msgs)
+
 	return signers, signatures, nil
 }
 
