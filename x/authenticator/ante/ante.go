@@ -101,11 +101,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
-	// This is a transient context stored globally throughout the execution of the tx
-	// Any changes will to authenticator storage will be written to the store at the end of the tx
-	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
+	cacheCtx, writeCache := ctx.CacheContext()
+
 	// Ensure that no usedAuthenticators are stored in the transient store
-	ad.authenticatorKeeper.TransientStore.ResetUsedAuthenticators()
+	ad.authenticatorKeeper.UsedAuthenticators.ResetUsedAuthenticators()
 
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
@@ -167,16 +166,18 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
 			authenticationRequest.AuthenticatorId = stringId
-			authErr = a11r.Authenticate(cacheCtx, authenticationRequest)
+			// Authenticate should never modify state. That's what track is for
+			neverWriteCtx, _ := cacheCtx.CacheContext()
+			authErr = a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
 			if authErr == nil {
 				// authentication succeeded, add the authenticator to the used authenticators
-				ad.authenticatorKeeper.TransientStore.AddUsedAuthenticator(id)
+				ad.authenticatorKeeper.UsedAuthenticators.AddUsedAuthenticator(id)
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 					// Reset this for both contexts
-					cacheCtx = ad.authenticatorKeeper.TransientStore.GetTransientContextWithGasMeter(originalGasMeter)
+					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
 					ctx = ctx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}
@@ -186,7 +187,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 				// Append the track closure to be called after the fee payer is authenticated
 				tracks = append(tracks, func() error {
-					err := a11r.Track(ctx, account, msg, msgIndexUint64, stringId)
+					err := a11r.Track(cacheCtx, account, msg, msgIndexUint64, stringId)
 					if err != nil {
 						return err
 					}
@@ -218,6 +219,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}
 
+	writeCache()
 	return next(ctx, tx, simulate)
 }
 

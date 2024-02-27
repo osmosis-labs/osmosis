@@ -30,13 +30,12 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	AuthenticatorManager *authenticator.AuthenticatorManager
-	TransientStore       *authenticator.TransientStore
+	UsedAuthenticators   *authenticator.UsedAuthenticators
 }
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	managerStoreKey storetypes.StoreKey,
-	authenticatorStoreKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	authenticatorManager *authenticator.AuthenticatorManager,
 ) Keeper {
@@ -50,7 +49,7 @@ func NewKeeper(
 		cdc:                  cdc,
 		paramSpace:           ps,
 		AuthenticatorManager: authenticatorManager,
-		TransientStore:       authenticator.NewTransientStore(authenticatorStoreKey, sdk.Context{}),
+		UsedAuthenticators:   authenticator.NewUsedAuthenticators(),
 	}
 }
 
@@ -177,22 +176,8 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 			Id:   nextId,
 			Type: authenticatorType,
 			Data: data,
-			// set this to false to skip the `ConfirmExecution` call on MsgAddAuthenticator for itself
-			// it will be ready after `ConfirmExecution` on the aforementioned message is called.
-			IsReady: false,
 		})
 	return nil
-}
-
-// MarkAuthenticatorAsReady sets an authenticator to be ready
-func (k Keeper) MarkAuthenticatorAsReady(ctx sdk.Context, keyAccountId []byte) {
-	store := ctx.KVStore(k.storeKey)
-
-	var auth types.AccountAuthenticator
-	osmoutils.MustGet(store, keyAccountId, &auth)
-
-	auth.IsReady = true
-	osmoutils.MustSet(store, keyAccountId, &auth)
 }
 
 // RemoveAuthenticator removes an authenticator from an account

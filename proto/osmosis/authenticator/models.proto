@@ -20,9 +20,4 @@ message AccountAuthenticator {
   // The interpretation of this field is overloaded, enabling multiple
   // authenticators to utilize it for their respective purposes.
   bytes data = 3;
-
-  // IsReady indicates whether the authenticator is ready to be used.
-  // This flag is used to skip `ConfirmExecution` on the message
-  // that adds the authenticator itself.
-  bool is_ready = 4;
 }

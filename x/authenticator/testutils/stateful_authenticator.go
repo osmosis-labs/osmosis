@@ -11,9 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	_ iface.Authenticator = &StatefulAuthenticator{}
-)
+var _ iface.Authenticator = &StatefulAuthenticator{}
 
 type StatefulAuthenticatorData struct {
 	Value int
@@ -46,7 +44,13 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.Authe
 }
 
 func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
+	authenticatorId string,
+) error {
+	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx)}
+	if statefulData.Value > 10 {
+		return fmt.Errorf("Value is too high: %d", statefulData.Value)
+	}
+	s.SetValue(ctx, statefulData.Value+1)
 	return nil
 }
 
