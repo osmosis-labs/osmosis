@@ -2,7 +2,6 @@ package authenticator
 
 import (
 	"encoding/json"
-	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
@@ -27,11 +26,6 @@ func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
 	}
 }
 
-type InitializationData struct {
-	AuthenticatorType string `json:"authenticator_type"`
-	Data              []byte `json:"data"`
-}
-
 func (aoa AnyOfAuthenticator) Type() string {
 	return "AnyOfAuthenticator"
 }
@@ -46,7 +40,7 @@ func (aoa AnyOfAuthenticator) StaticGas() uint64 {
 
 func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	// Decode the initialization data for each sub-authenticator
-	var initDatas []InitializationData
+	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return nil, err
 	}
@@ -74,70 +68,47 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 }
 
 func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
-	baseId := request.AuthenticatorId
-
-	var err error
-	for id, auth := range aoa.SubAuthenticators {
-		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		err = auth.Authenticate(ctx, request)
-		ctx.Logger().Debug("AnyOfAuthenticator.Authenticate", "request.AuthenticatorId", request.AuthenticatorId, "err", err)
-		// early return ok if any of the sub-authenticators return ok
-		if err == nil {
-			return nil
-		}
+	if len(aoa.SubAuthenticators) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
-	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
+
+	err := subHandleRequest(
+		ctx, request, aoa.SubAuthenticators, requireAnyPass,
+		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+			err := auth.Authenticate(ctx, request)
+
+			if err != nil {
+				ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
+			}
+
+			return err
+		},
+	)
+
+	if err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
+	}
+
+	return nil
 }
 
-func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
-	for id, auth := range aoa.SubAuthenticators {
-		err := auth.Track(ctx, account, msg, msgIndex, authenticatorId+"."+strconv.Itoa(id))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
+	return subTrack(ctx, account, msg, msgIndex, authenticatorId, aoa.SubAuthenticators)
 }
 
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
-	baseId := request.AuthenticatorId
-	for id, auth := range aoa.SubAuthenticators {
-		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		err := auth.ConfirmExecution(ctx, request)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return subHandleRequest(
+		ctx, request, aoa.SubAuthenticators, requireAnyPass,
+		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+			return auth.ConfirmExecution(ctx, request)
+		},
+	)
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	var initDatas []InitializationData
-	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return err
-	}
-	if err := validateSubAuthenticatorData(ctx, account, initDatas, authenticatorId, aoa.am); err != nil {
-		return err
-	}
-	return nil
+	return onSubAuthenticatorsAdded(ctx, account, data, authenticatorId, aoa.am)
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	var initDatas []InitializationData
-	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return err
-	}
-	for _, initData := range initDatas {
-		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
-			if authenticatorCode.Type() == initData.AuthenticatorType {
-				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, authenticatorId)
-				if err != nil {
-					return err
-				}
-				break
-			}
-		}
-	}
-	return nil
+	return onSubAuthenticatorsRemoved(ctx, account, data, authenticatorId, aoa.am)
 }

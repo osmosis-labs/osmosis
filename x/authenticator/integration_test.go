@@ -391,17 +391,18 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAnyOf() {
 
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
 
-	initDataPrivKey1 := authenticator.InitializationData{
+	// construct SubAuthenticatorInitData for each SigVerificationAuthenticator
+	initDataPrivKey1 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[1].PubKey().Bytes(),
 	}
-	initDataPrivKey2 := authenticator.InitializationData{
+	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[2].PubKey().Bytes(),
 	}
 
-	// Serialize SigVerificationAuthenticator InitializationData
-	compositeData, err := json.Marshal([]authenticator.InitializationData{
+	// 3. Serialize SigVerificationAuthenticator SubAuthenticatorInitData
+	compositeData, err := json.Marshal([]authenticator.SubAuthenticatorInitData{
 		initDataPrivKey1,
 		initDataPrivKey2,
 	})
@@ -440,12 +441,12 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 
 	allOf := authenticator.NewAllOfAuthenticator(s.app.AuthenticatorManager)
 
-	initDataPrivKey1 := authenticator.InitializationData{
+	initDataPrivKey1 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[1].PubKey().Bytes(),
 	}
 
-	initMessageFilter := authenticator.InitializationData{
+	initMessageFilter := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "MessageFilterAuthenticator",
 		Data: []byte(
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","amount": [{"denom": "%s", "amount": "50"}]}`,
@@ -453,7 +454,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 			)),
 	}
 
-	compositeData, err := json.Marshal([]authenticator.InitializationData{
+	compositeData, err := json.Marshal([]authenticator.SubAuthenticatorInitData{
 		initDataPrivKey1,
 		initMessageFilter,
 	})
@@ -496,13 +497,13 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	//       with a different authenticator (MaxAmountAuthenticator?) and use multisig instead
 	//       of AllOf for validating multiple signatures
 
-	initDataPrivKey2 := authenticator.InitializationData{
+	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[2].PubKey().Bytes(),
 	}
 
 	// Create an AllOf authenticator with 2 signature verification authenticators
-	compositeData, err = json.Marshal([]authenticator.InitializationData{
+	compositeData, err = json.Marshal([]authenticator.SubAuthenticatorInitData{
 		initDataPrivKey1,
 		initDataPrivKey2,
 	})
@@ -543,7 +544,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
 	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
 
-	internalData, err := json.Marshal([]authenticator.InitializationData{
+	internalData, err := json.Marshal([]authenticator.SubAuthenticatorInitData{
 		{
 			AuthenticatorType: "SignatureVerificationAuthenticator",
 			Data:              s.PrivKeys[0].PubKey().Bytes(),

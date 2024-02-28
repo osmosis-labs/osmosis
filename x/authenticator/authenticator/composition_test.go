@@ -84,7 +84,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove",
@@ -102,7 +102,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
@@ -114,19 +114,19 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
@@ -150,7 +150,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "approveAndBlock + rejectAndConfirm",
 			authenticators:   []iface.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 	}
 
@@ -158,9 +158,9 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
-			initData := []authenticator.InitializationData{}
+			initData := []authenticator.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
-				initData = append(initData, authenticator.InitializationData{
+				initData = append(initData, authenticator.SubAuthenticatorInitData{
 					AuthenticatorType: auth.Type(),
 					Data:              testData,
 				})
@@ -281,9 +281,9 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
-			initData := []authenticator.InitializationData{}
+			initData := []authenticator.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
-				initData = append(initData, authenticator.InitializationData{
+				initData = append(initData, authenticator.SubAuthenticatorInitData{
 					AuthenticatorType: auth.Type(),
 					Data:              testData,
 				})
@@ -406,14 +406,14 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 }
 
 func marshalAuth(ta testAuth, testData []byte) ([]byte, error) {
-	initData := []authenticator.InitializationData{}
+	initData := []authenticator.SubAuthenticatorInitData{}
 
 	for _, sub := range ta.subAuths {
 		subData, err := marshalAuth(sub, testData)
 		if err != nil {
 			return nil, err
 		}
-		initData = append(initData, authenticator.InitializationData{
+		initData = append(initData, authenticator.SubAuthenticatorInitData{
 			AuthenticatorType: sub.authenticator.Type(),
 			Data:              subData,
 		})
