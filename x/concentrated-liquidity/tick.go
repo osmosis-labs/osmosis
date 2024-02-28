@@ -22,7 +22,7 @@ import (
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta osmomath.Dec, upper bool) (tickIsEmpty bool, err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityDelta osmomath.Dec, upper bool) (tickIsEmpty bool, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return false, err
@@ -35,19 +35,6 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
 	liquidityBefore := tickInfo.LiquidityGross
-
-	// if given tickIndex is LTE to the current tick and the liquidityBefore is zero,
-	// set the tick's spread reward growth opposite direction of last traversal to the spread factor accumulator's value
-	if liquidityBefore.IsZero() {
-		if tickIndex <= currentTick {
-			accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
-			if err != nil {
-				return false, err
-			}
-
-			tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
-		}
-	}
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
@@ -153,7 +140,21 @@ func (k Keeper) makeInitialTickInfo(ctx sdk.Context, poolId uint64, tickIndex in
 		initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 	}
 
-	return model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
+	uptimeTrackers := model.UptimeTrackers{List: initialUptimeTrackers}
+
+	// Emit init tick event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtInitTick,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTickIndex, strconv.FormatInt(tickIndex, 10)),
+			sdk.NewAttribute(types.AttributeKeySpreadRewardGrowthOppositeDirectionOfLastTraversal, initialSpreadRewardGrowthOppositeDirectionOfLastTraversal.String()),
+			sdk.NewAttribute(types.AttributeKeyUptimeGrowthOppositeDirectionOfLastTraversal, uptimeTrackers.String()),
+		),
+	})
+
+	return model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: uptimeTrackers}, nil
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
@@ -167,6 +168,16 @@ func (k Keeper) RemoveTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) 
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	store.Delete(key)
+
+	// Emit remove tick event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtRemoveTick,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTickIndex, strconv.FormatInt(tickIndex, 10)),
+		),
+	})
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {

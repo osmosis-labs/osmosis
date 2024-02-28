@@ -44,21 +44,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution.
+* [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
+* [#7564](https://github.com/osmosis-labs/osmosis/pull/7564) Move protorev dev account bank sends from every backrun to once per epoch
 * [#7508](https://github.com/osmosis-labs/osmosis/pull/7508) Improve protorev performance by removing iterator and storing base denoms as a single object rather than an array.
 * [#7509](https://github.com/osmosis-labs/osmosis/pull/7509) Distributing ProtoRev profits to the community pool and burn address
+* [#7524](https://github.com/osmosis-labs/osmosis/pull/7524) Poolmanager: ListPoolsByDenom will now skip pools that cannot correctly return their constituent denoms.
 * [#7550](https://github.com/osmosis-labs/osmosis/pull/7550) Speedup small CL swaps, by only fetching CL uptime accumulators if there is a tick crossing.
 * [#7555](https://github.com/osmosis-labs/osmosis/pull/7555) Refactor taker fees, distribute via a single module account, track once at epoch
 * [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
 * [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
 * [#7615](https://github.com/osmosis-labs/osmosis/pull/7615) Min value param for epoch distribution.
+* [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
+* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Remove duplicate CL accumulator update logic.
+
 
 ### State Compatible
 
 * [#7590](https://github.com/osmosis-labs/osmosis/pull/7590) fix cwpool migration prop disallowing only one of code id or bytecode.
 * [#7582](https://github.com/osmosis-labs/osmosis/pull/7582) IAVL v1
+* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
 
 ## v23.0.0
 

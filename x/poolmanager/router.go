@@ -567,6 +567,7 @@ func (k Keeper) AllPools(
 // ListPoolsByDenom returns all pools by denom sorted by their ids
 // from every pool module registered in the
 // pool manager keeper.
+// N.B. It is possible for incorrectly implemented pools to be skipped
 func (k Keeper) ListPoolsByDenom(
 	ctx sdk.Context,
 	denom string,
@@ -580,9 +581,12 @@ func (k Keeper) ListPoolsByDenom(
 
 		var poolsByDenom []types.PoolI
 		for _, pool := range currentModulePools {
+			// If the pool is incorrectly implemented and we can't get the PoolDenoms
+			// skip the pool.
 			poolDenoms, err := poolModule.GetPoolDenoms(ctx, pool.GetId())
 			if err != nil {
-				return nil, err
+				ctx.Logger().Debug(fmt.Sprintf("Error getting pool denoms for pool %d: %s", pool.GetId(), err.Error()))
+				continue
 			}
 			if osmoutils.Contains(poolDenoms, denom) {
 				poolsByDenom = append(poolsByDenom, pool)
