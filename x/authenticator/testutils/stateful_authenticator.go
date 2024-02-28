@@ -43,7 +43,7 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.Authe
 	return nil
 }
 
-func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
 	authenticatorId string,
 ) error {
 	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx)}

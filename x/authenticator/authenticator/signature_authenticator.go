@@ -110,7 +110,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
 	authenticatorId string) error {
 	return nil
 }

@@ -54,7 +54,7 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.Auth
 	return nil
 }
 
-func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
+func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
 	return nil
 }
 

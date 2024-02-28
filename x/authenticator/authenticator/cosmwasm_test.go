@@ -314,7 +314,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	err = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().NoError(err, "Should be authenticated")
 
-	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, 0, "0")
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], accounts[0], testMsg, 0, "0")
 	s.Require().NoError(err, "Track should succeed")
 
 	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
@@ -325,6 +325,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		Track: &authenticator.TrackRequest{
 			AuthenticatorId: "0",
 			Account:         accounts[0],
+			FeePayer:        accounts[0],
 			Msg: iface.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -341,6 +342,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		ConfirmExecution: &authenticator.ConfirmExecutionRequest{
 			AuthenticatorId: "0",
 			Account:         accounts[0],
+			FeePayer:        accounts[0],
 			Msg: iface.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
