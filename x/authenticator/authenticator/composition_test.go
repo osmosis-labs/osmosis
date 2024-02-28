@@ -84,7 +84,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove",
@@ -102,7 +102,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
@@ -114,19 +114,19 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
 			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
@@ -150,7 +150,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			name:             "approveAndBlock + rejectAndConfirm",
 			authenticators:   []iface.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
 			expectSuccessful: true,
-			expectConfirm:    false,
+			expectConfirm:    true,
 		},
 	}
 

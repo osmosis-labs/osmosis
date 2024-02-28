@@ -75,7 +75,13 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 	err := subHandleRequest(
 		ctx, request, aoa.SubAuthenticators, requireAnyPass,
 		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
-			return auth.Authenticate(ctx, request)
+			err := auth.Authenticate(ctx, request)
+
+			if err != nil {
+				ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
+			}
+
+			return err
 		},
 	)
 
@@ -92,7 +98,7 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
 	return subHandleRequest(
-		ctx, request, aoa.SubAuthenticators, requireAllPass,
+		ctx, request, aoa.SubAuthenticators, requireAnyPass,
 		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
 			return auth.ConfirmExecution(ctx, request)
 		},
