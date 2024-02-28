@@ -577,7 +577,7 @@ type QueryClient interface {
 	// AllBeforeSendHooksAddresses defines a gRPC query method for
 	// getting all addresses with before send hook registered.
 	// The response returns two arrays, an array with a list of denom and an array
-	// of before send hook addresses. The idx of denom correspons to before send
+	// of before send hook addresses. The idx of denom corresponds to before send
 	// hook addresse's idx.
 	AllBeforeSendHooksAddresses(ctx context.Context, in *QueryAllBeforeSendHooksAddressesRequest, opts ...grpc.CallOption) (*QueryAllBeforeSendHooksAddressesResponse, error)
 }
@@ -652,7 +652,7 @@ type QueryServer interface {
 	// AllBeforeSendHooksAddresses defines a gRPC query method for
 	// getting all addresses with before send hook registered.
 	// The response returns two arrays, an array with a list of denom and an array
-	// of before send hook addresses. The idx of denom correspons to before send
+	// of before send hook addresses. The idx of denom corresponds to before send
 	// hook addresse's idx.
 	AllBeforeSendHooksAddresses(context.Context, *QueryAllBeforeSendHooksAddressesRequest) (*QueryAllBeforeSendHooksAddressesResponse, error)
 }
