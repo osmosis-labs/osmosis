@@ -2,7 +2,6 @@ package authenticator
 
 import (
 	"encoding/json"
-	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
@@ -38,7 +37,7 @@ func (aoa AllOfAuthenticator) StaticGas() uint64 {
 }
 
 func (aoa AllOfAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
-	var initDatas []InitializationData
+	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return nil, err
 	}
@@ -73,95 +72,31 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
-	baseId := request.AuthenticatorId
-	for id, auth := range aoa.SubAuthenticators {
-		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		err := auth.Authenticate(ctx, request)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return subHandleRequest(
+		ctx, request, aoa.SubAuthenticators, requireAllPass,
+		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+			return auth.Authenticate(ctx, request)
+		},
+	)
 }
 
-func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
-	for id, auth := range aoa.SubAuthenticators {
-		err := auth.Track(ctx, account, msg, msgIndex, authenticatorId+"."+strconv.Itoa(id))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
+	return subTrack(ctx, account, msg, msgIndex, authenticatorId, aoa.SubAuthenticators)
 }
 
 func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
-	baseId := request.AuthenticatorId
-	for id, auth := range aoa.SubAuthenticators {
-		request.AuthenticatorId = baseId + "." + strconv.Itoa(id)
-		err := auth.ConfirmExecution(ctx, request)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return subHandleRequest(
+		ctx, request, aoa.SubAuthenticators, requireAllPass,
+		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+			return auth.ConfirmExecution(ctx, request)
+		},
+	)
 }
 
 func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	var initDatas []InitializationData
-	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return err
-	}
-	if err := validateSubAuthenticatorData(ctx, account, initDatas, authenticatorId, aoa.am); err != nil {
-		return err
-	}
-	return nil
+	return onSubAuthenticatorsAdded(ctx, account, data, authenticatorId, aoa.am)
 }
 
 func (aoa AllOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	var initDatas []InitializationData
-	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return err
-	}
-	for _, initData := range initDatas {
-		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
-			if authenticatorCode.Type() == initData.AuthenticatorType {
-				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, authenticatorId)
-				if err != nil {
-					return err
-				}
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-func validateSubAuthenticatorData(ctx sdk.Context, account sdk.AccAddress, initDatas []InitializationData, authenticatorId string, am *AuthenticatorManager) error {
-	if len(initDatas) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
-	}
-
-	subAuthenticatorCount := 0
-	for _, initData := range initDatas {
-		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
-			if authenticatorCode.Type() == initData.AuthenticatorType {
-				subAuthenticatorCount++
-				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, authenticatorId)
-				if err != nil {
-					return err
-				}
-				break
-			}
-		}
-	}
-
-	// If not all sub-authenticators are registered, return an error
-	if subAuthenticatorCount != len(initDatas) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to initialize all sub-authenticators")
-	}
-
-	return nil
+	return onSubAuthenticatorsRemoved(ctx, account, data, authenticatorId, aoa.am)
 }

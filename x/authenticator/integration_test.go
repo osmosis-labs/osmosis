@@ -518,39 +518,39 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
 	allOf := authenticator.NewAllOfAuthenticator(s.app.AuthenticatorManager)
 
-	// construct InitializationData for each SigVerificationAuthenticator
-	initDataPrivKey0 := authenticator.InitializationData{
+	// construct SubAuthenticatorInitData for each SigVerificationAuthenticator
+	initDataPrivKey0 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[0].PubKey().Bytes(),
 	}
-	initDataPrivKey1 := authenticator.InitializationData{
+	initDataPrivKey1 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[1].PubKey().Bytes(),
 	}
-	initDataPrivKey2 := authenticator.InitializationData{
+	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[2].PubKey().Bytes(),
 	}
 
-	// 3. Serialize SigVerificationAuthenticator InitializationData
-	compositeData, err := json.Marshal([]authenticator.InitializationData{
+	// 3. Serialize SigVerificationAuthenticator SubAuthenticatorInitData
+	compositeData, err := json.Marshal([]authenticator.SubAuthenticatorInitData{
 		initDataPrivKey0,
 		initDataPrivKey1,
 	})
 
-	// construct InitializationData for AnyOf authenticator
-	initDataAnyOf := authenticator.InitializationData{
+	// construct SubAuthenticatorInitData for AnyOf authenticator
+	initDataAnyOf := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: anyOf.Type(),
 		Data:              compositeData,
 	}
 
 	// 5. Combine to construct the final composite for AllOf authenticator
-	finalCompositeAuthData := []authenticator.InitializationData{
+	finalCompositeAuthData := []authenticator.SubAuthenticatorInitData{
 		initDataAnyOf,
 		initDataPrivKey2,
 	}
 
-	// serialize the AllOf InitializationData
+	// serialize the AllOf InitData
 	dataAllOf, err := json.Marshal(finalCompositeAuthData)
 	s.Require().NoError(err)
 
@@ -602,7 +602,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
 	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
 
-	internalData, err := json.Marshal([]authenticator.InitializationData{
+	internalData, err := json.Marshal([]authenticator.SubAuthenticatorInitData{
 		{
 			AuthenticatorType: "SignatureVerificationAuthenticator",
 			Data:              s.PrivKeys[0].PubKey().Bytes(),
