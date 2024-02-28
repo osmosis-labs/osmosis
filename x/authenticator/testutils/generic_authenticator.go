@@ -87,7 +87,6 @@ func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 }
 
 func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	fmt.Println("OnAuthenticatorRemoved: block removal", t.BlockRemoval)
 	if t.BlockRemoval {
 		return fmt.Errorf("authenticator could not be removed")
 	}
