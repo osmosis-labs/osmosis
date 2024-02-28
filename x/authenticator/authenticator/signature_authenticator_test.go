@@ -146,16 +146,14 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					testMsg2,
 					testMsg2,
 				},
-				[]uint64{0, 0, 0},
-				[]uint64{0, 0, 0},
+				[]uint64{0, 0},
+				[]uint64{0, 0},
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
-					s.TestPrivKeys[1],
 					s.TestPrivKeys[1],
 				},
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
-					s.TestPrivKeys[1],
 					s.TestPrivKeys[1],
 				},
 				2,
