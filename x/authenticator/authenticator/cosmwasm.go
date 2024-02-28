@@ -140,6 +140,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		AuthenticatorId:     request.AuthenticatorId,
 		Account:             request.Account,
+		FeePayer:            request.FeePayer,
 		Msg:                 request.Msg,
 		MsgIndex:            request.MsgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,

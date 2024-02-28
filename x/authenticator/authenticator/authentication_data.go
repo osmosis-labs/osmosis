@@ -175,7 +175,7 @@ func GetCommonAuthenticationData(tx sdk.Tx, messageIndex int) (signers []sdk.Acc
 	return signers, signatures, sigTx, nil
 }
 
-func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
+func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, tx sdk.Tx, msgIndex int, simulate bool, replayProtection ReplayProtection) (iface.AuthenticationRequest, error) {
 	// TODO: This fn gets called on every msg. Extract the GetCommonAuthenticationData() fn as it doesn't depend on the msg
 	txSigners, txSignatures, _, err := GetCommonAuthenticationData(tx, -1)
 	if err != nil {
@@ -271,6 +271,7 @@ func GenerateAuthenticationData(ctx sdk.Context, ak *keeper.AccountKeeper, sigMo
 	// should we pass ctx.IsReCheckTx() here?
 	authRequest := iface.AuthenticationRequest{
 		Account:   account,
+		FeePayer:  feePayer,
 		Msg:       txData.Msgs[msgIndex],
 		MsgIndex:  msgIndexUint64,
 		Signature: msgSignature, // currently only allowing one signer per message.

@@ -17,6 +17,7 @@ type TrackRequest struct {
 type ConfirmExecutionRequest struct {
 	AuthenticatorId     string         `json:"authenticator_id"`
 	Account             sdk.AccAddress `json:"account"`
+	FeePayer            sdk.AccAddress `json:"fee_payer"`
 	Msg                 iface.LocalAny `json:"msg"`
 	MsgIndex            uint64         `json:"msg_index"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`

@@ -51,6 +51,15 @@ func (ad AuthenticatorDecorator) PostHandle(
 	}
 	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
 
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		// This should never happen
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	// The fee payer by default is the first signer of the transaction
+	feePayer := feeTx.FeePayer()
+
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)
 		if err != nil {
@@ -64,7 +73,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 		// We skip replay protection here as it was already checked on authenticate.
 		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.NoReplayProtection)
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, feePayer, msg, tx, msgIndex, simulate, authenticator.NoReplayProtection)
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}

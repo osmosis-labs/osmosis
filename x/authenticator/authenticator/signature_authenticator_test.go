@@ -259,7 +259,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().NoError(err)
 
 				// Test Authenticate method
@@ -272,7 +272,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().Error(err)
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().Error(err)
 
 				//// cast the interface as a concrete struct
