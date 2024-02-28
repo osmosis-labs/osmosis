@@ -44,7 +44,7 @@ service Query {
   // AllBeforeSendHooksAddresses defines a gRPC query method for
   // getting all addresses with before send hook registered.
   // The response returns two arrays, an array with a list of denom and an array
-  // of before send hook addresses. The idx of denom correspons to before send
+  // of before send hook addresses. The idx of denom corresponds to before send
   // hook addresse's idx.
   rpc AllBeforeSendHooksAddresses(QueryAllBeforeSendHooksAddressesRequest)
       returns (QueryAllBeforeSendHooksAddressesResponse) {
