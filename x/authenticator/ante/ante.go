@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	types "github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
-	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
@@ -56,6 +55,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	if !authenticatorParams.AreSmartAccountsActive {
 		return ad.next(ctx, tx, simulate)
 	}
+
+	extTx, ok := tx.(authante.HasExtensionOptionsTx)
+	if !ok {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
+	}
+
+	// Get the selected authenticator options from the transaction.
+	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	if txOptions == nil {
+		return ad.next(ctx, tx, simulate)
+	}
 	// Performing fee payer authentication with minimal gas allocation
 	// serves as a spam-prevention strategy to prevent users from adding multiple
 	// authenticators that may excessively consume computational resources.
@@ -65,8 +75,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// that will never be executed.
 	originalGasMeter := ctx.GasMeter()
 
-	// Ideally, we would prefer to use min(gasRemaining, maxFeePayerGas) here, but
-	// this approach presents challenges due to the implementation of the InfiniteGasMeter.
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
 	payerGasMeter := sdk.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
@@ -94,7 +102,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		// This should never happen
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
@@ -102,7 +109,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	feePayer := feeTx.FeePayer()
 
 	msgs := tx.GetMsgs()
-	selectedAuthenticators, err := ad.GetSelectedAuthenticators(feeTx, len(msgs))
+	selectedAuthenticators, err := ad.GetSelectedAuthenticators(txOptions, len(msgs))
 	if err != nil {
 		return ctx, err
 	}
@@ -143,7 +150,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		authenticators := allAuthenticators
 		if selectedAuthenticators[msgIndex] >= 0 {
 			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
-				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
+				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
+					fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
 			authenticators = []types.InitializedAuthenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
@@ -228,20 +236,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 // If no selected authenticators are found in the extension, the function initializes the list with -1 values.
 // It returns an array of selected authenticators or an error if the number of selected authenticators does not match
 // the number of messages in the transaction.
-func (ad AuthenticatorDecorator) GetSelectedAuthenticators(tx sdk.Tx, msgCount int) ([]int32, error) {
-	extTx, ok := tx.(authante.HasExtensionOptionsTx)
-	if !ok {
-		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx")
-	}
-
+func (ad AuthenticatorDecorator) GetSelectedAuthenticators(txOptions authenticatortypes.AuthenticatorTxOptions, msgCount int) ([]int32, error) {
 	// Initialize the list of selected authenticators with -1 values.
 	selectedAuthenticators := make([]int32, msgCount)
 	for i := range selectedAuthenticators {
 		selectedAuthenticators[i] = -1
 	}
-
-	// Get the transaction options from the AuthenticatorKeeper extension.
-	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 
 	if txOptions != nil {
 		// Retrieve the selected authenticators from the extension.

@@ -28,6 +28,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/app"
 	"github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
 type AutherticatorAnteSuite struct {
@@ -112,7 +113,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{})
+	}, []int32{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err := anteHandler(s.Ctx, tx, false)
@@ -156,7 +157,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{})
+	}, []int32{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -179,17 +180,6 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		Amount:      coins,
 	}
 
-	// The base gas consumption of authenticators is ~7k gas
-	for i := 0; i < 9; i++ { // Each signature check consumes about 2k gas
-		err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
-			s.Ctx,
-			s.TestAccAddress[0],
-			"SignatureVerificationAuthenticator",
-			s.TestPrivKeys[0].PubKey().Bytes(),
-		)
-		s.Require().NoError(err)
-	}
-
 	// fee payer is authenticated
 	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
@@ -199,21 +189,29 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	)
 	s.Require().NoError(err)
 
-	// This tx expects will authenticate the fee payer after checking 9 other authenticators.
-	// It should error by running out of gas
+	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
+	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
+
+	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		alwaysHigher.Type(),
+		[]byte{},
+	)
+	s.Require().NoError(err)
+
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
-	}, []int32{})
+	}, []int32{1})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
 	s.Require().Error(err)
-	s.Require().ErrorContains(err, "FeePayer not authenticated yet. The gas limit has been reduced to 20000. Consumed: 20")
-	s.Require().Len(err.Error(), 100)
+	s.Require().ErrorContains(err, "FeePayer not authenticated yet. The gas limit has been reduced to 20000. Consumed")
 	// Now, let's ensure the fee payer has been authenticated before checking all authenticators for s.TestPrivKeys[1]
 
 	// This is a message that can only be aithenticated by its default authenticator (s.TestAccAddress[1])
@@ -223,7 +221,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		Amount:      coins,
 	}
 
-	// This other tx expects will authenticate the fee payer after checking 9 other authenticators
+	// Authenticate the fee payer and check gas limit is raised
 	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg2,
 		testMsg1,
@@ -233,15 +231,13 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
 		s.TestPrivKeys[1],
-	}, []int32{})
+	}, []int32{0, 0})
 
 	// This authentication should succeed and consume gas over the 20_000 limit (because the fee payer
 	// is authenticated in under 20k in the first message)
 	res, err := anteHandler(s.Ctx, tx, false)
 	s.Require().NoError(err)
 	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(20_000))
-	// sanity check that all authenticators are checked for the second message
-	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(100_000))
 }
 
 func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
@@ -274,18 +270,19 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 
 	testCases := []struct {
 		name                  string
+		senderKey             cryptotypes.PrivKey
 		signKey               cryptotypes.PrivKey
 		selectedAuthenticator []int32
 		shouldPass            bool
 		checks                int
 	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], []int32{0}, true, 1},
-		{"Correct authenticator 1", s.TestPrivKeys[1], []int32{1}, true, 1},
-		{"Incorrect authenticator", s.TestPrivKeys[0], []int32{1}, false, 1},
-		{"Incorrect authenticator", s.TestPrivKeys[1], []int32{0}, false, 1},
-		{"Not Specified for 0", s.TestPrivKeys[0], []int32{}, true, 1},
-		{"Not Specified for 1", s.TestPrivKeys[1], []int32{}, true, 2},
-		{"Bad selection", s.TestPrivKeys[0], []int32{3}, false, 0},
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{0}, true, 1},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{1}, true, 1},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{1}, false, 1},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{0}, false, 1},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{}, true, 0},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{}, true, 0},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{3}, false, 0},
 	}
 
 	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
@@ -296,7 +293,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 			tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 				testMsg1,
 			}, feeCoins, 300000, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{
-				s.TestPrivKeys[1],
+				tc.senderKey,
 			}, []cryptotypes.PrivKey{
 				tc.signKey,
 			},
@@ -305,7 +302,6 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 
 			anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 			res, err := anteHandler(s.Ctx.WithGasMeter(sdk.NewGasMeter(300000)), tx, false)
-			fmt.Println(res.GasMeter().GasConsumed())
 
 			if tc.shouldPass {
 				s.Require().NoError(err, "Expected to pass but got error")

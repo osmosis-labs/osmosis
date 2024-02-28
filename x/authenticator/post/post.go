@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
@@ -48,6 +49,17 @@ func (ad AuthenticatorDecorator) PostHandle(
 	if !authenticatorParams.AreSmartAccountsActive {
 		return ad.next(ctx, tx, simulate)
 	}
+
+	extTx, ok := tx.(authante.HasExtensionOptionsTx)
+	if !ok {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
+	}
+
+	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	if txOptions == nil {
+		return ad.next(ctx, tx, simulate)
+	}
+
 	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
 
 	for msgIndex, msg := range tx.GetMsgs() {
@@ -60,9 +72,20 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 		// We skip replay protection here as it was already checked on authenticate.
 		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(ctx, ad.accountKeeper, ad.sigModeHandler, account, msg, tx, msgIndex, simulate, authenticator.NoReplayProtection)
+		authenticationRequest, err := authenticator.GenerateAuthenticationData(
+			ctx,
+			ad.accountKeeper,
+			ad.sigModeHandler,
+			account,
+			msg,
+			tx,
+			msgIndex,
+			simulate,
+			authenticator.NoReplayProtection,
+		)
 		if err != nil {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
+			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
+				fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
 		for _, accountAuthenticator := range accountAuthenticators { // This should execute on the authenticators used to authenticate the msg
 			if usedAuthenticators[msgIndex] != accountAuthenticator.Id {

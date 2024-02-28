@@ -1,9 +1,10 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	fmt "fmt"
+	"strings"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/utils"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -17,6 +18,8 @@ const (
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
 
+	KeySeparator = "|"
+
 	AttributeValueCategory        = ModuleName
 	AttributeKeyAuthenticatorType = "authenticator_type"
 )
@@ -29,17 +32,26 @@ var (
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {
-	return utils.BuildKey(KeyAccountAuthenticatorsPrefix, account.String())
+	return BuildKey(KeyAccountAuthenticatorsPrefix, account.String())
 }
 
 func KeyAccountId(account sdk.AccAddress, id uint64) []byte {
-	return utils.BuildKey(KeyAccountAuthenticatorsPrefix, account.String(), id)
+	return BuildKey(KeyAccountAuthenticatorsPrefix, account.String(), id)
 }
 
 func KeyNextAccountAuthenticatorId() []byte {
-	return utils.BuildKey(KeyNextAccountAuthenticatorIdPrefix)
+	return BuildKey(KeyNextAccountAuthenticatorIdPrefix)
 }
 
 func KeyAccountAuthenticatorsPrefixId() []byte {
-	return utils.BuildKey(KeyAccountAuthenticatorsPrefix)
+	return BuildKey(KeyAccountAuthenticatorsPrefix)
+}
+
+// BuildKey creates a key by concatenating the provided elements with the key separator.
+func BuildKey(elements ...interface{}) []byte {
+	strElements := make([]string, len(elements))
+	for i, element := range elements {
+		strElements[i] = fmt.Sprint(element)
+	}
+	return []byte(strings.Join(strElements, KeySeparator) + KeySeparator)
 }
