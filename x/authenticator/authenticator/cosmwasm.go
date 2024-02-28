@@ -100,7 +100,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.Aut
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
 	authenticatorId string) error {
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
@@ -110,6 +110,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	trackRequest := TrackRequest{
 		AuthenticatorId: authenticatorId,
 		Account:         account,
+		FeePayer:        feePayer,
 		Msg: iface.LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,

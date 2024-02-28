@@ -81,6 +81,7 @@ type Authenticator interface {
 	Track(
 		ctx sdk.Context, // The SDK Context is used to access data for authentication and to consume gas.
 		account sdk.AccAddress, // The account being authenticated (typically msg.GetSigners()[0]).
+		feePayer sdk.AccAddress, // The account paying the fee for the transaction.
 		msg sdk.Msg, // A message is passed into the authenticate function, allowing authenticators to utilize its information.
 		msgIndex uint64, // The index of the message in the transaction.
 		authenticatorId string, // The global authenticator id
