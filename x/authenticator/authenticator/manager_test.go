@@ -1,4 +1,4 @@
-package types_test
+package authenticator_test
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // Mock Authenticator for testing purposes
@@ -94,23 +93,6 @@ func TestGetRegisteredAuthenticators(t *testing.T) {
 		require.Contains(t, expectedAuthTypes, authType)
 		require.NotContains(t, unexpectedAuthTypes, authType)
 	}
-}
-
-func TestAsAuthenticator(t *testing.T) {
-	am := authenticator.NewAuthenticatorManager()
-
-	// Register mock authenticator
-	auth1 := MockAuthenticator{"type1"}
-	am.RegisterAuthenticator(auth1)
-
-	// Check if a registered authenticator type is recognized
-	accountAuth := types.AccountAuthenticator{Type: "type1"}
-	require.NotNil(t, accountAuth.AsAuthenticator(am), "Expected a valid Authenticator for 'type1'")
-	require.Equal(t, "type1", accountAuth.AsAuthenticator(am).Type())
-
-	// Check for an unregistered authenticator type
-	accountAuth = types.AccountAuthenticator{Type: "typeX"}
-	require.Nil(t, accountAuth.AsAuthenticator(am), "Didn't expect a valid Authenticator for 'typeX'")
 }
 
 // Second mock that always fails authentication

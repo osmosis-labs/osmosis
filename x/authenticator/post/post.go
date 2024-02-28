@@ -50,6 +50,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 		return ad.next(ctx, tx, simulate)
 	}
 
+	// Check that only authenticators that have been selected run in the post handler otherwise run the original flow
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
@@ -63,9 +64,11 @@ func (ad AuthenticatorDecorator) PostHandle(
 	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
 
 	for msgIndex, msg := range tx.GetMsgs() {
+		// When using a smart account we enfore one signer per transaction in the AnteHandler, if this is updated changes
+		// need to be reflected here
 		account := msg.GetSigners()[0]
 
-		accountAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorDataForAccount(ctx, account)
+		accountAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccount(ctx, account)
 		if err != nil {
 			return sdk.Context{}, err
 		}
@@ -93,10 +96,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 			}
 			authenticationRequest.AuthenticatorId = strconv.FormatUint(accountAuthenticator.Id, 10)
 
-			a := accountAuthenticator.AsAuthenticator(ad.authenticatorKeeper.AuthenticatorManager)
-
 			// Confirm Execution
-			err := a.ConfirmExecution(ctx, authenticationRequest)
+			err := accountAuthenticator.Authenticator.ConfirmExecution(ctx, authenticationRequest)
 
 			if err != nil {
 				err = errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, id = %d)", account, accountAuthenticator.Id)

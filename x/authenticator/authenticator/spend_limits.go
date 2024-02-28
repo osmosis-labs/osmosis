@@ -20,7 +20,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 type PeriodType string
@@ -249,7 +249,7 @@ func (sla SpendLimitAuthenticator) DeletePastPeriods(account sdk.AccAddress, t t
 	currentPeriodKey := getPeriodKey(account, sla.periodType, t)
 
 	// Use iterator range to focus on keys before the current period.
-	prefixKey := utils.BuildKey(account, string(sla.periodType))
+	prefixKey := types.BuildKey(account, string(sla.periodType))
 	iter := sla.store.Iterator(prefixKey, currentPeriodKey)
 	defer iter.Close()
 
@@ -275,15 +275,15 @@ func getPeriodKey(account sdk.AccAddress, period PeriodType, t time.Time) []byte
 	if !(period == Day || period == Week || period == Month || period == Year) {
 		panic("invalid period type")
 	}
-	return utils.BuildKey(account, period, formatPeriodTime(t, period))
+	return types.BuildKey(account, period, formatPeriodTime(t, period))
 }
 
 func getBalanceKey(account sdk.AccAddress) []byte {
-	return utils.BuildKey("balance", account)
+	return types.BuildKey("balance", account)
 }
 
 func getActivePeriodKey(account sdk.AccAddress, period PeriodType) []byte {
-	return utils.BuildKey("activePeriod", account, string(period))
+	return types.BuildKey("activePeriod", account, string(period))
 }
 
 func formatPeriodTime(t time.Time, periodType PeriodType) string {

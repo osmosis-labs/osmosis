@@ -82,21 +82,37 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 }
 
 // GetAuthenticatorsForAccount returns all the authenticators for the account
-// this function relies in GetAuthenticationDataForAccount
-func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]iface.InitializedAuthenticator, error) {
-	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
+// this function relies in GetAuthenticationDataForAccount, this function calls
+// Initialise on each authenticator
+func (k Keeper) GetAuthenticatorsForAccount(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+) ([]iface.InitializedAuthenticator, error) {
+	// Get the authenticator data from the store
+	allAuthenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
-	authenticators := make([]iface.InitializedAuthenticator, len(authenticatorData))
-	for i, accountAuthenticator := range authenticatorData {
-		authenticators[i] = iface.InitializedAuthenticator{
-			Id:            accountAuthenticator.Id,
-			Authenticator: accountAuthenticator.AsAuthenticator(k.AuthenticatorManager),
+	authenticators := make([]iface.InitializedAuthenticator, len(allAuthenticatorData))
+
+	// Iterate over all autenticator data from the store
+	for i, authenticatorData := range allAuthenticatorData {
+		// Ensure that the authenticators added to an account have been registered in the manager
+		authenticator := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorData.Type)
+		if authenticator == nil {
+			return nil, fmt.Errorf("authenticator %d failed to initialize, authenticator not registered manager", i)
 		}
-		if authenticators[i].Authenticator == nil {
-			return nil, fmt.Errorf("authenticator %d failed to initialize", accountAuthenticator.Id)
+
+		// Ensure that initialization of each authenticator works as expected
+		instance, err := authenticator.Initialize(authenticatorData.Data)
+		if err != nil || instance == nil {
+			return nil, fmt.Errorf("authenticator %d failed to initialize", authenticatorData.Id)
+		}
+
+		authenticators[i] = iface.InitializedAuthenticator{
+			Id:            authenticatorData.Id,
+			Authenticator: instance,
 		}
 	}
 	return authenticators, nil
