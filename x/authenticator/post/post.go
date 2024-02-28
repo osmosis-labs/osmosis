@@ -64,7 +64,7 @@ func (ad AuthenticatorDecorator) PostHandle(
 	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
 
 	for msgIndex, msg := range tx.GetMsgs() {
-		// When using a smart account we enfore one signer per transaction in the AnteHandler, if this is updated changes
+		// When using a smart account we enforce one signer per transaction in the AnteHandler, if this is updated changes
 		// need to be reflected here
 		account := msg.GetSigners()[0]
 

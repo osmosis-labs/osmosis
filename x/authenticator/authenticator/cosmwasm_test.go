@@ -9,8 +9,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -325,7 +323,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		Track: &authenticator.TrackRequest{
 			AuthenticatorId: "0",
 			Account:         accounts[0],
-			Msg: iface.LocalAny{
+			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
 			},
@@ -341,7 +339,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		ConfirmExecution: &authenticator.ConfirmExecutionRequest{
 			AuthenticatorId: "0",
 			Account:         accounts[0],
-			Msg: iface.LocalAny{
+			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
 			},

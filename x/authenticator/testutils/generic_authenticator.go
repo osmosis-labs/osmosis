@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 )
 
 var (
-	_ iface.Authenticator = &TestingAuthenticator{}
+	_ authenticator.Authenticator = &TestingAuthenticator{}
 )
 
 type ApproveOn int
@@ -54,11 +54,11 @@ func (t TestingAuthenticator) StaticGas() uint64 {
 	return uint64(t.GasConsumption)
 }
 
-func (t TestingAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (t TestingAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
 	return t, nil
 }
 
-func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	if t.Approve == Always {
 		return nil
 	} else {
@@ -71,7 +71,7 @@ func (t TestingAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return nil
 }
 
-func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	if t.Confirm == Always {
 		return nil
 	} else {

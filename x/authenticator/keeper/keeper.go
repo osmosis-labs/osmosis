@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -87,32 +85,32 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 func (k Keeper) GetAuthenticatorsForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-) ([]iface.InitializedAuthenticator, error) {
+) ([]authenticator.InitializedAuthenticator, error) {
 	// Get the authenticator data from the store
 	allAuthenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
-	authenticators := make([]iface.InitializedAuthenticator, len(allAuthenticatorData))
+	authenticators := make([]authenticator.InitializedAuthenticator, len(allAuthenticatorData))
 
-	// Iterate over all autenticator data from the store
+	// Iterate over all authenticator data from the store
 	for i, authenticatorData := range allAuthenticatorData {
 		// Ensure that the authenticators added to an account have been registered in the manager
-		authenticator := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorData.Type)
-		if authenticator == nil {
+		uninitializedAuthenticator := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorData.Type)
+		if uninitializedAuthenticator == nil {
 			return nil, fmt.Errorf("authenticator %d failed to initialize, authenticator not registered manager", i)
 		}
 
 		// Ensure that initialization of each authenticator works as expected
-		instance, err := authenticator.Initialize(authenticatorData.Data)
-		if err != nil || instance == nil {
+		initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorData.Data)
+		if err != nil || initializedAuthenticator == nil {
 			return nil, fmt.Errorf("authenticator %d failed to initialize", authenticatorData.Id)
 		}
 
-		authenticators[i] = iface.InitializedAuthenticator{
+		authenticators[i] = authenticator.InitializedAuthenticator{
 			Id:            authenticatorData.Id,
-			Authenticator: instance,
+			Authenticator: initializedAuthenticator,
 		}
 	}
 	return authenticators, nil
@@ -122,14 +120,14 @@ func (k Keeper) GetAuthenticatorsForAccount(
 // authenticators in the store, or the default if there is no authenticator associated with an account,
 // this would be the case if there is an account with authenticators
 // This function relies in GetAuthenticationsForAccount
-func (k Keeper) GetAuthenticatorsForAccountOrDefault(ctx sdk.Context, account sdk.AccAddress) ([]iface.InitializedAuthenticator, error) {
+func (k Keeper) GetAuthenticatorsForAccountOrDefault(ctx sdk.Context, account sdk.AccAddress) ([]authenticator.InitializedAuthenticator, error) {
 	authenticators, err := k.GetAuthenticatorsForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(authenticators) == 0 {
-		return []iface.InitializedAuthenticator{{
+		return []authenticator.InitializedAuthenticator{{
 			Id:            0,
 			Authenticator: k.AuthenticatorManager.GetDefaultAuthenticator(),
 		}}, nil

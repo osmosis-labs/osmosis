@@ -7,8 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v23/x/twap"
 
@@ -53,7 +51,7 @@ type SpendLimitAuthenticator struct {
 	periodType   PeriodType
 }
 
-var _ iface.Authenticator = &SpendLimitAuthenticator{}
+var _ Authenticator = &SpendLimitAuthenticator{}
 
 // NewSpendLimitAuthenticator creates a new SpendLimitAuthenticator. Creators must make sure to use a properly prefixed
 // store with this authenticator. That is, prefix.NewStore(authenticatorsStoreKey, []byte("spendLimitAuthenticator"))
@@ -88,7 +86,7 @@ func (sla SpendLimitAuthenticator) StaticGas() uint64 {
 	return 5000
 }
 
-func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (sla SpendLimitAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	var initData InitData
 	if err := json.Unmarshal(data, &initData); err != nil {
 		return nil, errorsmod.Wrap(err, "failed to unmarshal initialization data")
@@ -104,7 +102,7 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 	return sla, nil
 }
 
-func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// We never authenticate ourselves. We just confirm execution after the fact if the balances changed too much
 	return nil
 }
@@ -130,7 +128,7 @@ func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress
 	return nil
 }
 
-func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
 	prevBalances := sla.GetBalance(request.Account)
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, request.Account)

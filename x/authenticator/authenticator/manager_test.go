@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -26,7 +24,7 @@ func (m MockAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sd
 	return nil
 }
 
-func (m MockAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (m MockAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
 	return m, nil
 }
 
@@ -34,11 +32,11 @@ func (m MockAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	return nil
 }
 
-func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	return nil
 }
 
@@ -50,14 +48,14 @@ func (m MockAuthenticator) Type() string {
 	return m.authType
 }
 
-var _ iface.Authenticator = MockAuthenticator{}
+var _ authenticator.Authenticator = MockAuthenticator{}
 
 func TestInitializeAuthenticators(t *testing.T) {
 	am := authenticator.NewAuthenticatorManager()
 	auth1 := MockAuthenticator{"type1"}
 	auth2 := MockAuthenticator{"type2"}
 
-	am.InitializeAuthenticators([]iface.Authenticator{auth1, auth2})
+	am.InitializeAuthenticators([]authenticator.Authenticator{auth1, auth2})
 
 	authenticators := am.GetRegisteredAuthenticators()
 	require.Equal(t, 2, len(authenticators))
@@ -113,7 +111,7 @@ func (m MockAuthenticatorFail) Track(ctx sdk.Context, account sdk.AccAddress, ms
 	return nil
 }
 
-func (m MockAuthenticatorFail) Initialize(data []byte) (iface.Authenticator, error) {
+func (m MockAuthenticatorFail) Initialize(data []byte) (authenticator.Authenticator, error) {
 	return m, nil
 }
 
@@ -121,11 +119,11 @@ func (m MockAuthenticatorFail) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	return fmt.Errorf("Authentication failed")
 }
 
-func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	return nil
 }
 
@@ -134,8 +132,8 @@ func (m MockAuthenticatorFail) Type() string {
 }
 
 // Ensure our mocks implement the Authenticator interface
-var _ iface.Authenticator = MockAuthenticator{}
-var _ iface.Authenticator = MockAuthenticatorFail{}
+var _ authenticator.Authenticator = MockAuthenticator{}
+var _ authenticator.Authenticator = MockAuthenticatorFail{}
 
 // Tests for the mocks behavior
 func TestMockAuthenticators(t *testing.T) {
@@ -147,10 +145,10 @@ func TestMockAuthenticators(t *testing.T) {
 	var mockCtx sdk.Context
 
 	// Testing mockPass
-	err := mockPass.Authenticate(mockCtx, iface.AuthenticationRequest{})
+	err := mockPass.Authenticate(mockCtx, authenticator.AuthenticationRequest{})
 	require.NoError(t, err)
 
 	// Testing mockFail
-	err = mockFail.Authenticate(mockCtx, iface.AuthenticationRequest{})
+	err = mockFail.Authenticate(mockCtx, authenticator.AuthenticationRequest{})
 	require.Error(t, err)
 }

@@ -12,7 +12,6 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
-	types "github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
@@ -153,7 +152,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
 					fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
-			authenticators = []types.InitializedAuthenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
+			authenticators = []authenticator.InitializedAuthenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
 		// Generate the authentication request data

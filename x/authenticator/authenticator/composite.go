@@ -7,8 +7,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 type SubAuthenticatorInitData struct {
@@ -20,7 +18,7 @@ func subTrack(
 	ctx sdk.Context,
 	account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
 	authenticatorId string,
-	subAuthenticators []iface.Authenticator,
+	subAuthenticators []Authenticator,
 ) error {
 	for id, auth := range subAuthenticators {
 		err := auth.Track(ctx, account, msg, msgIndex, compositeId(authenticatorId, id))
@@ -40,10 +38,10 @@ const (
 
 func subHandleRequest(
 	ctx sdk.Context,
-	request iface.AuthenticationRequest,
-	subAuthenticators []iface.Authenticator,
+	request AuthenticationRequest,
+	subAuthenticators []Authenticator,
 	passingReq PassingReq,
-	f func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error,
+	f func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error,
 ) error {
 	if passingReq != requireAllPass && passingReq != requireAnyPass {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid passing req")

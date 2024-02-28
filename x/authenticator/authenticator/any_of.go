@@ -3,26 +3,24 @@ package authenticator
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type AnyOfAuthenticator struct {
-	SubAuthenticators []iface.Authenticator
+	SubAuthenticators []Authenticator
 	am                *AuthenticatorManager
 }
 
 var (
-	_ iface.Authenticator = &AnyOfAuthenticator{}
+	_ Authenticator = &AnyOfAuthenticator{}
 )
 
 func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
 	return AnyOfAuthenticator{
 		am:                am,
-		SubAuthenticators: []iface.Authenticator{},
+		SubAuthenticators: []Authenticator{},
 	}
 }
 
@@ -38,7 +36,7 @@ func (aoa AnyOfAuthenticator) StaticGas() uint64 {
 	return totalGas
 }
 
-func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (aoa AnyOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	// Decode the initialization data for each sub-authenticator
 	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
@@ -67,14 +65,14 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return aoa, nil
 }
 
-func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	if len(aoa.SubAuthenticators) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
 	err := subHandleRequest(
 		ctx, request, aoa.SubAuthenticators, requireAnyPass,
-		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+		func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
 			err := auth.Authenticate(ctx, request)
 
 			if err != nil {
@@ -96,10 +94,10 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 	return subTrack(ctx, account, msg, msgIndex, authenticatorId, aoa.SubAuthenticators)
 }
 
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	return subHandleRequest(
 		ctx, request, aoa.SubAuthenticators, requireAnyPass,
-		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+		func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
 			return auth.ConfirmExecution(ctx, request)
 		},
 	)

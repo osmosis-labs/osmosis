@@ -11,11 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
-var _ iface.Authenticator = &MessageFilterAuthenticator{}
+var _ Authenticator = &MessageFilterAuthenticator{}
 
 // MessageFilterAuthenticator filters incoming messages based on a predefined JSON pattern.
 // It allows for complex pattern matching to support advanced authentication flows.
@@ -42,7 +40,7 @@ func (m MessageFilterAuthenticator) StaticGas() uint64 {
 }
 
 // Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
-func (m MessageFilterAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (m MessageFilterAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	var jsonData json.RawMessage
 	err := json.Unmarshal(data, &jsonData)
 	if err != nil {
@@ -59,7 +57,7 @@ func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddres
 }
 
 // Authenticate checks if the provided message conforms to the set JSON pattern. It returns an AuthenticationResult based on the evaluation.
-func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// Get the concrete message from the interface registry
 	protoMsg, err := m.encCfg.InterfaceRegistry.Resolve(request.Msg.TypeURL)
 	if err != nil {
@@ -93,7 +91,7 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request iface.
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	return nil
 }
 
