@@ -314,6 +314,12 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	err = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().NoError(err, "Should be authenticated")
 
+	msg = s.QueryLatestSudoCall(addr)
+	request.AuthenticatorParams = []byte(params)
+	s.Require().Equal(authenticator.SudoMsg{
+		Authenticate: &request,
+	}, msg, "Should match latest sudo msg ")
+
 	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], accounts[0], testMsg, 0, "0")
 	s.Require().NoError(err, "Track should succeed")
 
