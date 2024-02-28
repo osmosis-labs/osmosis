@@ -62,6 +62,15 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
 
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		// This should never happen
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	// The fee payer by default is the first signer of the transaction
+	feePayer := feeTx.FeePayer()
+
 	for msgIndex, msg := range tx.GetMsgs() {
 		account := msg.GetSigners()[0]
 
@@ -77,12 +86,14 @@ func (ad AuthenticatorDecorator) PostHandle(
 			ad.accountKeeper,
 			ad.sigModeHandler,
 			account,
+			feePayer,
 			msg,
 			tx,
 			msgIndex,
 			simulate,
 			authenticator.NoReplayProtection,
 		)
+
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
 				fmt.Sprintf("failed to get authentication data for message %d", msgIndex))

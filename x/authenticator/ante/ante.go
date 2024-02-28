@@ -162,12 +162,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			ak,
 			ad.sigModeHandler,
 			account,
+			feePayer,
 			msg,
 			tx,
 			msgIndex,
 			simulate,
 			authenticator.SequenceMatch,
 		)
+
 		if err != nil {
 			return sdk.Context{},
 				errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))

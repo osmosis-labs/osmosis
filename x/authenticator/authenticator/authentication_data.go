@@ -48,6 +48,7 @@ func GenerateAuthenticationData(
 	ak *keeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
 	account sdk.AccAddress,
+	feePayer sdk.AccAddress,
 	msg sdk.Msg,
 	tx sdk.Tx,
 	msgIndex int,
@@ -140,6 +141,7 @@ func GenerateAuthenticationData(
 
 	authRequest := iface.AuthenticationRequest{
 		Account:   account,
+		FeePayer:  feePayer,
 		Msg:       txData.Msgs[msgIndex],
 		MsgIndex:  uint64(msgIndex),
 		Signature: msgSignature,
