@@ -51,7 +51,7 @@ func (m MessageFilterAuthenticator) Initialize(data []byte) (Authenticator, erro
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
 	authenticatorId string) error {
 	return nil
 }

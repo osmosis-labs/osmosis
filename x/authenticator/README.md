@@ -20,7 +20,7 @@ type Authenticator interface {
     StaticGas() uint64
     Initialize(data []byte) (Authenticator, error)
     GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (AuthenticatorData, error)
-    Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error
+    Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg) error
     Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult
     ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult
 }

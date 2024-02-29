@@ -46,7 +46,7 @@ func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.GetKey(wasmtypes.StoreKey), s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
+	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
 }
 
 func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
@@ -304,7 +304,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 	request.AuthenticatorId = "0"
 
@@ -312,7 +312,13 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	err = auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().NoError(err, "Should be authenticated")
 
-	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], testMsg, 0, "0")
+	msg = s.QueryLatestSudoCall(addr)
+	request.AuthenticatorParams = []byte(params)
+	s.Require().Equal(authenticator.SudoMsg{
+		Authenticate: &request,
+	}, msg, "Should match latest sudo msg ")
+
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], accounts[0], testMsg, 0, "0")
 	s.Require().NoError(err, "Track should succeed")
 
 	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
@@ -323,6 +329,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		Track: &authenticator.TrackRequest{
 			AuthenticatorId: "0",
 			Account:         accounts[0],
+			FeePayer:        accounts[0],
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -339,6 +346,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 		ConfirmExecution: &authenticator.ConfirmExecutionRequest{
 			AuthenticatorId: "0",
 			Account:         accounts[0],
+			FeePayer:        accounts[0],
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -422,7 +430,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	s.T().Skip("TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better cosigner implementation later?")
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)

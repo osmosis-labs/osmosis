@@ -6,10 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -18,7 +15,6 @@ import (
 
 type CosmwasmAuthenticator struct {
 	contractKeeper *keeper.PermissionedKeeper
-	wasmStoreKey   storetypes.StoreKey
 	ak             *authkeeper.AccountKeeper
 	cdc            codectypes.AnyUnpacker
 	sigModeHandler authsigning.SignModeHandler
@@ -29,10 +25,9 @@ type CosmwasmAuthenticator struct {
 
 var _ Authenticator = &CosmwasmAuthenticator{}
 
-func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, wasmStoreKey storetypes.StoreKey, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
+func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
 	return CosmwasmAuthenticator{
 		contractKeeper: contractKeeper,
-		wasmStoreKey:   wasmStoreKey,
 		sigModeHandler: sigModeHandler,
 		ak:             accountKeeper,
 		cdc:            cdc,
@@ -103,7 +98,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request Authentic
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
+func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
 	authenticatorId string) error {
 	encodedMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
@@ -113,6 +108,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	trackRequest := TrackRequest{
 		AuthenticatorId: authenticatorId,
 		Account:         account,
+		FeePayer:        feePayer,
 		Msg: LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
@@ -138,6 +134,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request Authe
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		AuthenticatorId:     request.AuthenticatorId,
 		Account:             request.Account,
+		FeePayer:            request.FeePayer,
 		Msg:                 request.Msg,
 		MsgIndex:            request.MsgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,
@@ -240,9 +237,4 @@ func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
 	}
 
 	return contractAddr, initData.Params, nil
-}
-
-func (cwa CosmwasmAuthenticator) GetContractPrefixStore(ctx sdk.Context) storetypes.KVStore {
-	prefixStoreKey := wasmtypes.GetContractStorePrefix(cwa.contractAddr)
-	return prefix.NewStore(ctx.KVStore(cwa.wasmStoreKey), prefixStoreKey)
 }
