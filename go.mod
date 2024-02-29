@@ -17,7 +17,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
-	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.0.0-20231213092633-b306e7a706e1
+	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092633-b306e7a706e1
 	github.com/cosmos/ibc-go/v7 v7.3.2
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
