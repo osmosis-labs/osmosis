@@ -40,8 +40,8 @@ const (
 
 func subHandleRequest(ctx sdk.Context, request iface.AuthenticationRequest, subAuthenticators []iface.Authenticator,
 	passingReq PassingReq, signatureAssignment SignatureAssignment,
-	f func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error) error {
-
+	f func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error,
+) error {
 	if passingReq != requireAllPass && passingReq != requireAnyPass {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid passing req")
 	}
@@ -110,7 +110,6 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, compositeId(baseId, id))
-
 				if err != nil {
 					return err
 				}
