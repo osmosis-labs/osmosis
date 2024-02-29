@@ -153,21 +153,7 @@ func (k Keeper) makeInitialTickInfo(ctx sdk.Context, poolId uint64, tickIndex in
 		initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 	}
 
-	uptimeTrackers := model.UptimeTrackers{List: initialUptimeTrackers}
-
-	// Emit init tick event
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtInitTick,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTickIndex, strconv.FormatInt(tickIndex, 10)),
-			sdk.NewAttribute(types.AttributeKeySpreadRewardGrowthOppositeDirectionOfLastTraversal, initialSpreadRewardGrowthOppositeDirectionOfLastTraversal.String()),
-			sdk.NewAttribute(types.AttributeKeyUptimeGrowthOppositeDirectionOfLastTraversal, uptimeTrackers.String()),
-		),
-	})
-
-	return model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: uptimeTrackers}, nil
+	return model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
@@ -181,16 +167,6 @@ func (k Keeper) RemoveTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) 
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	store.Delete(key)
-
-	// Emit remove tick event
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtRemoveTick,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTickIndex, strconv.FormatInt(tickIndex, 10)),
-		),
-	})
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
