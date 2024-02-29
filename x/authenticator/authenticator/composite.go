@@ -60,9 +60,11 @@ func subHandleRequest(ctx sdk.Context, request iface.AuthenticationRequest, subA
 		}
 	}
 
+	baseId := request.AuthenticatorId
+
 	for i, auth := range subAuthenticators {
 		// update the authenticator id to include the sub-authenticator id
-		request.AuthenticatorId = compositeId(request.AuthenticatorId, i)
+		request.AuthenticatorId = compositeId(baseId, i)
 
 		if signatureAssignment == Partitioned {
 			request.Signature = signatures[i]
