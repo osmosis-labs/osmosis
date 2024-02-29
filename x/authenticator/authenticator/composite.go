@@ -51,9 +51,11 @@ func subHandleRequest(
 
 	var err error
 
+	baseId := request.AuthenticatorId
+
 	for id, auth := range subAuthenticators {
 		// update the authenticator id to include the sub-authenticator id
-		request.AuthenticatorId = compositeId(request.AuthenticatorId, id)
+		request.AuthenticatorId = compositeId(baseId, id)
 
 		err = f(auth, ctx, request)
 
