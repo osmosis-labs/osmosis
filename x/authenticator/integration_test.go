@@ -492,7 +492,6 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), 0)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
-	// HERE
 	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[2].PubKey().Bytes(),
@@ -515,6 +514,12 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[2]}}, []int32{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AllOf authenticator account key")
+
+	// Failed as composite signature does not match the AllOf data
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []int32{0}, sendMsg,
+	)
+	s.Require().Error(err, "Authenticated using the AllOf authenticator with incorrect signatures")
 }
 
 // TestSpendWithinLimit test the spend limit authenticator
