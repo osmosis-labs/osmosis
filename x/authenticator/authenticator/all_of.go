@@ -11,21 +11,34 @@ import (
 )
 
 type AllOfAuthenticator struct {
-	SubAuthenticators []iface.Authenticator
-	am                *AuthenticatorManager
+	SubAuthenticators   []iface.Authenticator
+	am                  *AuthenticatorManager
+	signatureAssignment SignatureAssignment
 }
 
 var _ iface.Authenticator = &AllOfAuthenticator{}
 
 func NewAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
 	return AllOfAuthenticator{
-		am:                am,
-		SubAuthenticators: []iface.Authenticator{},
+		am:                  am,
+		SubAuthenticators:   []iface.Authenticator{},
+		signatureAssignment: Single,
+	}
+}
+
+func NewPartitionedAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
+	return AllOfAuthenticator{
+		am:                  am,
+		SubAuthenticators:   []iface.Authenticator{},
+		signatureAssignment: Partitioned,
 	}
 }
 
 func (aoa AllOfAuthenticator) Type() string {
-	return "AllOfAuthenticator"
+	if aoa.signatureAssignment == Single {
+		return "AllOfAuthenticator"
+	}
+	return "PartitionedAllOfAuthenticator"
 }
 
 func (aoa AllOfAuthenticator) StaticGas() uint64 {
@@ -72,12 +85,9 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
-	return subHandleRequest(
-		ctx, request, aoa.SubAuthenticators, requireAllPass,
-		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
-			return auth.Authenticate(ctx, request)
-		},
-	)
+	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAllPass, aoa.signatureAssignment, func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+		return auth.Authenticate(ctx, request)
+	})
 }
 
 func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
@@ -85,12 +95,9 @@ func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, fee
 }
 
 func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
-	return subHandleRequest(
-		ctx, request, aoa.SubAuthenticators, requireAllPass,
-		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
-			return auth.ConfirmExecution(ctx, request)
-		},
-	)
+	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAllPass, aoa.signatureAssignment, func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+		return auth.ConfirmExecution(ctx, request)
+	})
 }
 
 func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

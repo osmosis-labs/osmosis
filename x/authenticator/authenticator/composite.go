@@ -38,22 +38,35 @@ const (
 	requireAnyPass
 )
 
-func subHandleRequest(
-	ctx sdk.Context,
-	request iface.AuthenticationRequest,
-	subAuthenticators []iface.Authenticator,
-	passingReq PassingReq,
-	f func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error,
-) error {
+func subHandleRequest(ctx sdk.Context, request iface.AuthenticationRequest, subAuthenticators []iface.Authenticator,
+	passingReq PassingReq, signatureAssignment SignatureAssignment,
+	f func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error) error {
+
 	if passingReq != requireAllPass && passingReq != requireAnyPass {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid passing req")
 	}
 
 	var err error
 
-	for id, auth := range subAuthenticators {
+	// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+	var signatures [][]byte
+	if signatureAssignment == Partitioned {
+		err = json.Unmarshal(request.Signature, &signatures)
+		if err != nil {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to parse signatures")
+		}
+		if len(signatures) != len(subAuthenticators) {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid number of signatures")
+		}
+	}
+
+	for i, auth := range subAuthenticators {
 		// update the authenticator id to include the sub-authenticator id
-		request.AuthenticatorId = compositeId(request.AuthenticatorId, id)
+		request.AuthenticatorId = compositeId(request.AuthenticatorId, i)
+
+		if signatureAssignment == Partitioned {
+			request.Signature = signatures[i]
+		}
 
 		err = f(auth, ctx, request)
 

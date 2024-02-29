@@ -10,9 +10,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+type SignatureAssignment string
+
+const (
+	Single      SignatureAssignment = "single"
+	Partitioned SignatureAssignment = "partitioned"
+)
+
 type AnyOfAuthenticator struct {
-	SubAuthenticators []iface.Authenticator
-	am                *AuthenticatorManager
+	SubAuthenticators   []iface.Authenticator
+	am                  *AuthenticatorManager
+	signatureAssignment SignatureAssignment
 }
 
 var (
@@ -21,13 +29,26 @@ var (
 
 func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
 	return AnyOfAuthenticator{
-		am:                am,
-		SubAuthenticators: []iface.Authenticator{},
+		am:                  am,
+		SubAuthenticators:   []iface.Authenticator{},
+		signatureAssignment: Single,
+	}
+}
+
+func NewPartitionedAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
+	return AnyOfAuthenticator{
+		am:                  am,
+		SubAuthenticators:   []iface.Authenticator{},
+		signatureAssignment: Partitioned,
 	}
 }
 
 func (aoa AnyOfAuthenticator) Type() string {
-	return "AnyOfAuthenticator"
+	if aoa.signatureAssignment == Single {
+		return "AnyOfAuthenticator"
+	}
+	return "PartitionedAnyOfAuthenticator"
+
 }
 
 func (aoa AnyOfAuthenticator) StaticGas() uint64 {
@@ -72,18 +93,15 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
-	err := subHandleRequest(
-		ctx, request, aoa.SubAuthenticators, requireAnyPass,
-		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
-			err := auth.Authenticate(ctx, request)
+	err := subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+		err := auth.Authenticate(ctx, request)
 
-			if err != nil {
-				ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
-			}
+		if err != nil {
+			ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
+		}
 
-			return err
-		},
-	)
+		return err
+	})
 
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
@@ -97,12 +115,9 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, fee
 }
 
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
-	return subHandleRequest(
-		ctx, request, aoa.SubAuthenticators, requireAnyPass,
-		func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
-			return auth.ConfirmExecution(ctx, request)
-		},
-	)
+	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
+		return auth.ConfirmExecution(ctx, request)
+	})
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
