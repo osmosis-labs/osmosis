@@ -23,9 +23,7 @@ type AnyOfAuthenticator struct {
 	signatureAssignment SignatureAssignment
 }
 
-var (
-	_ iface.Authenticator = &AnyOfAuthenticator{}
-)
+var _ iface.Authenticator = &AnyOfAuthenticator{}
 
 func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
 	return AnyOfAuthenticator{
@@ -48,7 +46,6 @@ func (aoa AnyOfAuthenticator) Type() string {
 		return "AnyOfAuthenticator"
 	}
 	return "PartitionedAnyOfAuthenticator"
-
 }
 
 func (aoa AnyOfAuthenticator) StaticGas() uint64 {
@@ -95,14 +92,12 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request iface.Authen
 
 	err := subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth iface.Authenticator, ctx sdk.Context, request iface.AuthenticationRequest) error {
 		err := auth.Authenticate(ctx, request)
-
 		if err != nil {
 			ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
 		}
 
 		return err
 	})
-
 	if err != nil {
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
 	}
