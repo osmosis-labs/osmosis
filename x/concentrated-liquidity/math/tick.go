@@ -1,7 +1,6 @@
 package math
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -240,8 +239,6 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	return tickIndex, nil
 }
 
-var errCalculateSqrtPriceToTick = errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
-
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
 func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err error) {
@@ -288,14 +285,14 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 
 	sqrtPriceTplus1, err := TickToSqrtPrice(tick + 1)
 	if err != nil {
-		return 0, errCalculateSqrtPriceToTick
+		return 0, types.ErrCalculateSqrtPriceToTick
 	}
 	// code path where sqrtPrice is either in tick t + 1, or out of bounds.
 	if sqrtPrice.GTE(sqrtPriceTplus1) {
 		// out of bounds check
 		sqrtPriceTplus2, err := TickToSqrtPrice(tick + 2)
 		if err != nil {
-			return 0, errCalculateSqrtPriceToTick
+			return 0, types.ErrCalculateSqrtPriceToTick
 		}
 		// We error if sqrtPriceT is above sqrtPriceTplus2
 		// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
@@ -319,7 +316,7 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// to delete that sqrt call.
 	sqrtPriceT, err := TickToSqrtPrice(tick)
 	if err != nil {
-		return 0, errCalculateSqrtPriceToTick
+		return 0, types.ErrCalculateSqrtPriceToTick
 	}
 	// sqrtPriceT <= sqrtPrice < sqrtPriceTplus1, this were in bucket t
 	if sqrtPrice.GTE(sqrtPriceT) {
@@ -330,7 +327,7 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// TODO: Validate this case is impossible, and delete it
 	sqrtPriceTmin1, err := TickToSqrtPrice(tick - 1)
 	if err != nil {
-		return 0, errCalculateSqrtPriceToTick
+		return 0, types.ErrCalculateSqrtPriceToTick
 	}
 	if sqrtPrice.LT(sqrtPriceTmin1) {
 		return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
