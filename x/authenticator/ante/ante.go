@@ -179,7 +179,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		for _, initializedAuthenticator := range authenticators {
 			a11r := initializedAuthenticator.Authenticator
 			id := initializedAuthenticator.Id
-			stringId := strconv.FormatInt(int64(id), 10)
+			stringId := strconv.FormatUint(id, 10)
 
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
