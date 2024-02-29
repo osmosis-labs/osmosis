@@ -43,6 +43,7 @@ type AuthenticatorSuite struct {
 	Account  authtypes.AccountI
 }
 
+type cpks = [][]cryptotypes.PrivKey
 type pks = []cryptotypes.PrivKey
 
 func TestAuthenticatorSuite(t *testing.T) {
@@ -491,12 +492,6 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), 0)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
-	s.T().Skip("TODO: This doesn't work right now. Fix when we can split signatures")
-	// TODO: This doesn't work right now because there are checks on the number of sigs matching
-	//       senders (validation will prob fail for the same reason). We may want to test AllOf
-	//       with a different authenticator (MaxAmountAuthenticator?) and use multisig instead
-	//       of AllOf for validating multiple signatures
-
 	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
 		Data:              s.PrivKeys[2].PubKey().Bytes(),
@@ -509,13 +504,22 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	})
 
 	// Set the authenticator to our account
-	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOf.Type(), compositeData)
+	partitionedAllOf := authenticator.NewPartitionedAllOfAuthenticator(s.app.AuthenticatorManager)
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), partitionedAllOf.Type(), compositeData)
 	s.Require().NoError(err)
 
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0], s.PrivKeys[1]}, pks{s.PrivKeys[0], s.PrivKeys[1]}, []int32{0, 0}, sendMsg,
+	// We should provide only one signature (for the allOf authenticator) but the signature needs to be a compound
+	// signature if privkey1 and privkey2 (json.Marshal([sig1, sig2])
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[2]}}, []int32{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AllOf authenticator account key")
+
+	// Failed as composite signature does not match the AllOf data
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []int32{0}, sendMsg,
+	)
+	s.Require().Error(err, "Authenticated using the AllOf authenticator with incorrect signatures")
 }
 
 // TestSpendWithinLimit test the spend limit authenticator

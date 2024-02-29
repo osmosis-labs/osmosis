@@ -36,11 +36,8 @@ const (
 	requireAnyPass
 )
 
-func subHandleRequest(
-	ctx sdk.Context,
-	request AuthenticationRequest,
-	subAuthenticators []Authenticator,
-	passingReq PassingReq,
+func subHandleRequest(ctx sdk.Context, request AuthenticationRequest, subAuthenticators []Authenticator,
+	passingReq PassingReq, signatureAssignment SignatureAssignment,
 	f func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error,
 ) error {
 	if passingReq != requireAllPass && passingReq != requireAnyPass {
@@ -49,9 +46,27 @@ func subHandleRequest(
 
 	var err error
 
-	for id, auth := range subAuthenticators {
+	// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+	var signatures [][]byte
+	if signatureAssignment == Partitioned {
+		err = json.Unmarshal(request.Signature, &signatures)
+		if err != nil {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to parse signatures")
+		}
+		if len(signatures) != len(subAuthenticators) {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid number of signatures")
+		}
+	}
+
+	baseId := request.AuthenticatorId
+
+	for i, auth := range subAuthenticators {
 		// update the authenticator id to include the sub-authenticator id
-		request.AuthenticatorId = compositeId(request.AuthenticatorId, id)
+		request.AuthenticatorId = compositeId(baseId, i)
+
+		if signatureAssignment == Partitioned {
+			request.Signature = signatures[i]
+		}
 
 		err = f(auth, ctx, request)
 
@@ -93,7 +108,6 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, compositeId(baseId, id))
-
 				if err != nil {
 					return err
 				}

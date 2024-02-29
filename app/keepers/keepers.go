@@ -222,9 +222,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
 	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
 		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
+		authenticator.NewMessageFilterAuthenticator(encodingConfig),
 		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
 		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewMessageFilterAuthenticator(encodingConfig),
+		authenticator.NewPartitionedAnyOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAllOfAuthenticator(appKeepers.AuthenticatorManager),
 	})
 	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 
