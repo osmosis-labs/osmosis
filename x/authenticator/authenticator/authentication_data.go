@@ -9,12 +9,44 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+//
+// These structs define the data structure for authentication, used with AuthenticationRequest struct.
+//
+
+// SignModeData represents the signing modes with direct bytes and textual representation.
+type SignModeData struct {
+	Direct  []byte `json:"sign_mode_direct"`
+	Textual string `json:"sign_mode_textual"`
+}
+
+// LocalAny holds a message with its type URL and byte value.
+type LocalAny struct {
+	TypeURL string `json:"type_url"`
+	Value   []byte `json:"value"`
+}
+
+// SimplifiedSignatureData contains lists of signers and their corresponding signatures.
+type SimplifiedSignatureData struct {
+	Signers    []sdk.AccAddress `json:"signers"`
+	Signatures [][]byte         `json:"signatures"`
+}
+
+// ExplicitTxData encapsulates key transaction data like chain ID, account info, and messages.
+type ExplicitTxData struct {
+	ChainID         string     `json:"chain_id"`
+	AccountNumber   uint64     `json:"account_number"`
+	AccountSequence uint64     `json:"sequence"`
+	TimeoutHeight   uint64     `json:"timeout_height"`
+	Msgs            []LocalAny `json:"msgs"`
+	Memo            string     `json:"memo"`
+}
+
+// GetSignersAndSignatures gets an array of signer and an array of signatures from the transaction
+// checks their the same length and returns both
 func GetSignerAndSignatures(
 	tx sdk.Tx,
 ) (signers []sdk.AccAddress, signatures []signing.SignatureV2, err error) {
@@ -54,10 +86,10 @@ func GenerateAuthenticationData(
 	msgIndex int,
 	simulate bool,
 	replayProtection ReplayProtection,
-) (iface.AuthenticationRequest, error) {
+) (AuthenticationRequest, error) {
 	txSigners, txSignatures, err := GetSignerAndSignatures(tx)
 	if err != nil {
-		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signers and signatures")
+		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signers and signatures")
 	}
 
 	// Retrieve and build the signer data struct
@@ -82,32 +114,32 @@ func GenerateAuthenticationData(
 	// This can also be extracted
 	signBytes, err := sigModeHandler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
-		return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
+		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
 
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
-		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
+		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
 	}
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return iface.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
 	}
 
 	txMsgs := tx.GetMsgs()
-	msgs := make([]iface.LocalAny, len(txMsgs))
+	msgs := make([]LocalAny, len(txMsgs))
 	for i, txMsg := range txMsgs {
 		encodedMsg, err := types.NewAnyWithValue(txMsg)
 		if err != nil {
-			return iface.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to encode msg")
+			return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to encode msg")
 		}
-		msgs[i] = iface.LocalAny{
+		msgs[i] = LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		}
 	}
 
-	txData := iface.ExplicitTxData{
+	txData := ExplicitTxData{
 		ChainID:         chainID,
 		AccountNumber:   accNum,
 		AccountSequence: sequence,
@@ -123,12 +155,12 @@ func GenerateAuthenticationData(
 	for i, signature := range txSignatures {
 		err := replayProtection(&txData, &signature)
 		if err != nil {
-			return iface.AuthenticationRequest{}, err
+			return AuthenticationRequest{}, err
 		}
 
 		single, ok := signature.Data.(*signing.SingleSignatureData)
 		if !ok {
-			return iface.AuthenticationRequest{},
+			return AuthenticationRequest{},
 				errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
 		}
 
@@ -139,17 +171,17 @@ func GenerateAuthenticationData(
 		}
 	}
 
-	authRequest := iface.AuthenticationRequest{
+	authRequest := AuthenticationRequest{
 		Account:   account,
 		FeePayer:  feePayer,
 		Msg:       txData.Msgs[msgIndex],
 		MsgIndex:  uint64(msgIndex),
 		Signature: msgSignature,
 		TxData:    txData,
-		SignModeTxData: iface.SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
+		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
 			Direct: signBytes,
 		},
-		SignatureData: iface.SimplifiedSignatureData{
+		SignatureData: SimplifiedSignatureData{
 			Signers:    txSigners,
 			Signatures: signatures,
 		},

@@ -11,8 +11,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 )
 
 type CosmwasmAuthenticator struct {
@@ -25,7 +23,7 @@ type CosmwasmAuthenticator struct {
 	authenticatorParams []byte
 }
 
-var _ iface.Authenticator = &CosmwasmAuthenticator{}
+var _ Authenticator = &CosmwasmAuthenticator{}
 
 func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
 	return CosmwasmAuthenticator{
@@ -49,7 +47,7 @@ type CosmwasmAuthenticatorInitData struct {
 	Params   []byte `json:"params"`
 }
 
-func (cwa CosmwasmAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (cwa CosmwasmAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	contractAddr, params, err := parseInitData(data)
 	if err != nil {
 		return nil, err
@@ -74,12 +72,12 @@ type OnAuthenticatorRemovedRequest struct {
 type SudoMsg struct {
 	OnAuthenticatorAdded   *OnAuthenticatorAddedRequest   `json:"on_authenticator_added,omitempty"`
 	OnAuthenticatorRemoved *OnAuthenticatorRemovedRequest `json:"on_authenticator_removed,omitempty"`
-	Authenticate           *iface.AuthenticationRequest   `json:"authenticate,omitempty"`
+	Authenticate           *AuthenticationRequest         `json:"authenticate,omitempty"`
 	Track                  *TrackRequest                  `json:"track,omitempty"`
 	ConfirmExecution       *ConfirmExecutionRequest       `json:"confirm_execution,omitempty"`
 }
 
-func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// Add the authenticator params set for this authenticator in Initialize()
 	request.AuthenticatorParams = cwa.authenticatorParams
 
@@ -111,7 +109,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 		AuthenticatorId: authenticatorId,
 		Account:         account,
 		FeePayer:        feePayer,
-		Msg: iface.LocalAny{
+		Msg: LocalAny{
 			TypeURL: encodedMsg.TypeUrl,
 			Value:   encodedMsg.Value,
 		},
@@ -131,7 +129,7 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, 
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		AuthenticatorId:     request.AuthenticatorId,

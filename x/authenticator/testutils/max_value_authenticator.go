@@ -6,18 +6,17 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 )
 
 // This is a very naive implementation of an authenticator that tracks sends and blocks if the total amount sent is greater than 3_000
-var _ iface.Authenticator = &MaxAmountAuthenticator{}
+var _ authenticator.Authenticator = &MaxAmountAuthenticator{}
 
 type MaxAmountAuthenticatorData struct {
 	Amount osmomath.Int
@@ -34,11 +33,11 @@ func (m MaxAmountAuthenticator) Type() string {
 	return "MaxAmountAuthenticator"
 }
 
-func (m MaxAmountAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (m MaxAmountAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
 	return m, nil
 }
 
-func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.MsgSend" {
 		return nil
 	}
@@ -58,7 +57,7 @@ func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, f
 	return nil
 }
 
-func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	if request.Msg.TypeURL != "/cosmos.bank.v1beta1.MsgSend" {
 		return nil
 	}

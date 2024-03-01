@@ -1,29 +1,25 @@
 package authenticator
 
-import (
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-)
-
 type AuthenticatorManager struct {
-	registeredAuthenticators  []iface.Authenticator
+	registeredAuthenticators  []Authenticator
 	defaultAuthenticatorIndex int
 }
 
 // NewAuthenticatorManager creates a new AuthenticatorManager.
 func NewAuthenticatorManager() *AuthenticatorManager {
 	return &AuthenticatorManager{
-		registeredAuthenticators:  []iface.Authenticator{},
+		registeredAuthenticators:  []Authenticator{},
 		defaultAuthenticatorIndex: -1,
 	}
 }
 
 // ResetAuthenticators resets all registered authenticators.
 func (am *AuthenticatorManager) ResetAuthenticators() {
-	am.registeredAuthenticators = []iface.Authenticator{}
+	am.registeredAuthenticators = []Authenticator{}
 }
 
 // InitializeAuthenticators initializes authenticators. If already initialized, it will not overwrite.
-func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators []iface.Authenticator) {
+func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators []Authenticator) {
 	if len(am.registeredAuthenticators) > 0 {
 		return
 	}
@@ -31,12 +27,12 @@ func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators [
 }
 
 // RegisterAuthenticator adds a new authenticator to the list of registered authenticators.
-func (am *AuthenticatorManager) RegisterAuthenticator(authenticator iface.Authenticator) {
+func (am *AuthenticatorManager) RegisterAuthenticator(authenticator Authenticator) {
 	am.registeredAuthenticators = append(am.registeredAuthenticators, authenticator)
 }
 
 // UnregisterAuthenticator removes an authenticator from the list of registered authenticators.
-func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator iface.Authenticator) {
+func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator Authenticator) {
 	for i, auth := range am.registeredAuthenticators {
 		if auth == authenticator {
 			am.registeredAuthenticators = append(am.registeredAuthenticators[:i], am.registeredAuthenticators[i+1:]...)
@@ -46,7 +42,7 @@ func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator iface.Auth
 }
 
 // GetRegisteredAuthenticators returns the list of registered authenticators.
-func (am *AuthenticatorManager) GetRegisteredAuthenticators() []iface.Authenticator {
+func (am *AuthenticatorManager) GetRegisteredAuthenticators() []Authenticator {
 	return am.registeredAuthenticators
 }
 
@@ -61,7 +57,7 @@ func (am *AuthenticatorManager) IsAuthenticatorTypeRegistered(authenticatorType 
 }
 
 // GetAuthenticatorByType returns the base implementation of the authenticator type
-func (am *AuthenticatorManager) GetAuthenticatorByType(authenticatorType string) iface.Authenticator {
+func (am *AuthenticatorManager) GetAuthenticatorByType(authenticatorType string) Authenticator {
 	for _, authenticator := range am.GetRegisteredAuthenticators() {
 		if authenticator.Type() == authenticatorType {
 			return authenticator
@@ -79,7 +75,7 @@ func (am *AuthenticatorManager) SetDefaultAuthenticatorIndex(index int) {
 }
 
 // GetDefaultAuthenticator retrieves the default authenticator.
-func (am *AuthenticatorManager) GetDefaultAuthenticator() iface.Authenticator {
+func (am *AuthenticatorManager) GetDefaultAuthenticator() Authenticator {
 	if am.defaultAuthenticatorIndex < 0 {
 		// ToDo: Instead of panicking, maybe return a FalseAuthenticator that never authenticates?
 		panic("Default authenticator not set")

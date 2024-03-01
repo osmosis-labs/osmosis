@@ -76,7 +76,6 @@ import (
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 
@@ -221,7 +220,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	appKeepers.AuthenticatorManager.InitializeAuthenticators([]iface.Authenticator{
+	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
 		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
 		authenticator.NewMessageFilterAuthenticator(encodingConfig),
 		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),

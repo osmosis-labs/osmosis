@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 )
 
-var _ iface.Authenticator = &StatefulAuthenticator{}
+var _ authenticator.Authenticator = &StatefulAuthenticator{}
 
 type StatefulAuthenticatorData struct {
 	Value int
@@ -30,11 +30,11 @@ func (s StatefulAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (s StatefulAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (s StatefulAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
 	return s, nil
 }
 
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx)}
 	if statefulData.Value > 10 {
 		return fmt.Errorf("Value is too high: %d", statefulData.Value)
@@ -69,7 +69,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 	return statefulData.Value
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
 	return nil
 }

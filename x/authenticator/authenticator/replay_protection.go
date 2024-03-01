@@ -5,16 +5,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // make replay protection into an interface. SequenceMatch is a default implementation
-type ReplayProtection func(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error
+type ReplayProtection func(txData *ExplicitTxData, signature *signing.SignatureV2) error
 
-func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
+func SequenceMatch(txData *ExplicitTxData, signature *signing.SignatureV2) error {
 	if signature.Sequence != txData.AccountSequence {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidSequence,
@@ -24,6 +22,6 @@ func SequenceMatch(txData *iface.ExplicitTxData, signature *signing.SignatureV2)
 	return nil
 }
 
-func NoReplayProtection(txData *iface.ExplicitTxData, signature *signing.SignatureV2) error {
+func NoReplayProtection(txData *ExplicitTxData, signature *signing.SignatureV2) error {
 	return nil
 }

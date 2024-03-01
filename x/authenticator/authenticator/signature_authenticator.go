@@ -5,8 +5,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -20,7 +18,7 @@ import (
 
 // Compile time type assertion for the SignatureData using the
 // SignatureVerificationAuthenticator struct
-var _ iface.Authenticator = &SignatureVerificationAuthenticator{}
+var _ Authenticator = &SignatureVerificationAuthenticator{}
 
 const (
 	// SignatureVerificationAuthenticatorType represents a type of authenticator specifically designed for
@@ -61,7 +59,7 @@ func NewSignatureVerificationAuthenticator(
 // this is used to verify a signature from an account that does not have a public key
 // in the store. In this case we Initialize the authenticator from the authenticators store
 // which should have a public key in the data field.
-func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	if len(data) != secp256k1.PubKeySize {
 		sva.PubKey = nil
 	}
@@ -71,7 +69,7 @@ func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (iface.Aut
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
@@ -115,7 +113,7 @@ func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	return nil
 }
 

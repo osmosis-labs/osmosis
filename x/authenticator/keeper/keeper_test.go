@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
@@ -29,7 +28,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.am = authenticator.NewAuthenticatorManager()
 
 	// Register the SigVerificationAuthenticator
-	s.am.InitializeAuthenticators([]iface.Authenticator{
+	s.am.InitializeAuthenticators([]authenticator.Authenticator{
 		authenticator.SignatureVerificationAuthenticator{},
 		testutils.TestingAuthenticator{
 			Approve:        testutils.Always,
