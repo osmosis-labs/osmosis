@@ -12,10 +12,8 @@ import (
 )
 
 // NumRecordsToPrunePerBlock is the number of records to prune per block.
-// Two records are deleted per incentive record:
-// 1. by time index
-// 2. by pool index
-// Therefore, setting this to 200 means 100 complete incentive records are deleted per block.
+// One record indexed by pool ID is deleted per incentive record.
+// Therefore, setting this to 200 means 200 complete incentive records are deleted per block.
 // The choice is somewhat arbitrary
 // However, th intuition is that the number should be low enough to not make blocks take longer but
 // not too small where it would take all the way to the next epoch.
