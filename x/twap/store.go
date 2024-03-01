@@ -12,11 +12,20 @@ import (
 )
 
 // NumRecordsToPrunePerBlock is the number of records to prune per block.
+<<<<<<< HEAD
 // Two records are deleted per incentive record:
 // 1. by time index
 // 2. by pool index
 // Therefore, setting this to 1000 means 500 complete incentive records are deleted per block.
 var NumRecordsToPrunePerBlock uint16 = 1000
+=======
+// One record indexed by pool ID is deleted per incentive record.
+// Therefore, setting this to 200 means 200 complete incentive records are deleted per block.
+// The choice is somewhat arbitrary
+// However, th intuition is that the number should be low enough to not make blocks take longer but
+// not too small where it would take all the way to the next epoch.
+var NumRecordsToPrunePerBlock uint16 = 200
+>>>>>>> 1d0698c9 (chore: reduce per block prune of TWAP from 1000 to 200 (#7638))
 
 type timeTooOldError struct {
 	Time time.Time
