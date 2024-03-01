@@ -2,7 +2,6 @@ package testutils
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 
@@ -76,7 +75,6 @@ func (s SpyAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 }
 
 func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
-	fmt.Println("Authenticate", request.AuthenticatorId)
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.Authenticate = request
 		return calls
@@ -134,7 +132,16 @@ func (s SpyAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccA
 }
 
 func (s SpyAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
+	spy, err := s.Initialize(data)
+	if err != nil {
+		return err
+	}
+	spyAuth, ok := spy.(SpyAuthenticator)
+	if !ok {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to cast authenticator to SpyAuthenticator")
+	}
+
+	spyAuth.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.OnAuthenticatorRemoved = SpyRemoveRequest{
 			Account:         account,
 			Data:            data,

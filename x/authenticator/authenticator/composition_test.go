@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -488,7 +489,7 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 	return nil, fmt.Errorf("unreachable")
 }
 
-func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
+func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 	// Define test cases
 	type testCase struct {
 		name          string
@@ -537,14 +538,14 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
 		{
 			name:          "AnyOf(AllOf(AnyOf(a, b), c), AnyOf(d, e))",
 			compositeAuth: *anyOf(allOf(anyOf(root("a"), root("b")), root("c")), anyOf(root("d"), root("e"))),
-			id:            "5",
+			id:            "6",
 			names:         []string{"a"}, // b,c,d and e are not called because allOf is short-circuited
-			expectedIds:   []string{"5.0.0.0"},
+			expectedIds:   []string{"6.0.0.0"},
 		},
 	}
 
 	for _, tc := range testCases {
-		s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+		s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000))
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
@@ -565,16 +566,70 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
 			spy.ResetLatestCalls(s.Ctx)
 		}
 
+		msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+
+		encodedMsg, err := codectypes.NewAnyWithValue(msg)
+		s.Require().NoError(err, "Should encode Any value successfully")
+
+		// mock the authentication request
+		authReq := iface.AuthenticationRequest{
+			AuthenticatorId:     tc.id,
+			Account:             s.TestAccAddress[0],
+			FeePayer:            s.TestAccAddress[0],
+			Msg:                 iface.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			MsgIndex:            0,
+			Signature:           []byte{1, 1, 1, 1, 1},
+			SignModeTxData:      iface.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
+			SignatureData:       iface.SimplifiedSignatureData{Signers: []sdk.AccAddress{s.TestAccAddress[0]}, Signatures: [][]byte{{1, 1, 1, 1, 1}}},
+			Simulate:            false,
+			AuthenticatorParams: []byte{1, 1, 1, 1, 1},
+		}
+
 		// make calls
-		auth.OnAuthenticatorAdded(s.Ctx, s.TestAccAddress[0], data, tc.id)
-		auth.Authenticate(s.Ctx, iface.AuthenticationRequest{AuthenticatorId: tc.id})
+		auth.OnAuthenticatorAdded(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
+		auth.Authenticate(s.Ctx, authReq)
+		auth.Track(s.Ctx, authReq.Account, authReq.FeePayer, msg, authReq.MsgIndex, tc.id)
+		auth.ConfirmExecution(s.Ctx, authReq)
+		auth.OnAuthenticatorRemoved(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
 
 		// Check that the spy authenticator was called with the expected data
 		for i, name := range tc.names {
+			expectedAuthReq := authReq
+			expectedAuthReq.AuthenticatorId = tc.expectedIds[i]
+
 			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
 			latestCalls := spy.GetLatestCalls(s.Ctx)
-			s.Require().Equal(tc.expectedIds[i], latestCalls.OnAuthenticatorAdded.AuthenticatorId)
-			s.Require().Equal(tc.expectedIds[i], latestCalls.Authenticate.AuthenticatorId)
+
+			spyData, err := json.Marshal(testutils.SpyAuthenticatorData{Name: name})
+			s.Require().NoError(err, "Should marshal spy data successfully")
+
+			s.Require().Equal(
+				testutils.SpyAddRequest{
+					Account:         expectedAuthReq.Account,
+					Data:            spyData,
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+				},
+				latestCalls.OnAuthenticatorAdded,
+			)
+			s.Require().Equal(expectedAuthReq, latestCalls.Authenticate)
+			s.Require().Equal(
+				testutils.SpyTrackRequest{
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+					Account:         expectedAuthReq.Account,
+					Msg:             expectedAuthReq.Msg,
+					MsgIndex:        expectedAuthReq.MsgIndex,
+				},
+				latestCalls.Track,
+			)
+			s.Require().Equal(expectedAuthReq, latestCalls.ConfirmExecution)
+			s.Require().Equal(
+				testutils.SpyRemoveRequest{
+					Account:         expectedAuthReq.Account,
+					Data:            spyData,
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+				},
+				latestCalls.OnAuthenticatorRemoved,
+			)
 		}
 	}
 
