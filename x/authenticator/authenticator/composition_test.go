@@ -414,48 +414,60 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 }
 
 type CompositeSpyAuth struct {
-	AnyOf []*CompositeSpyAuth
-	AllOf []*CompositeSpyAuth
-	Name  string
+	anyOf []*CompositeSpyAuth
+	allOf []*CompositeSpyAuth
+	name  string
 }
 
 func allOf(sub ...*CompositeSpyAuth) *CompositeSpyAuth {
-	return &CompositeSpyAuth{AllOf: sub}
+	return &CompositeSpyAuth{allOf: sub}
 }
 
 func anyOf(sub ...*CompositeSpyAuth) *CompositeSpyAuth {
-	return &CompositeSpyAuth{AnyOf: sub}
+	return &CompositeSpyAuth{anyOf: sub}
 }
 
-func root(name string) *CompositeSpyAuth {
-	return &CompositeSpyAuth{Name: name}
+func spy(name string) *CompositeSpyAuth {
+	return &CompositeSpyAuth{name: name}
 }
 
 func (csa *CompositeSpyAuth) Type() string {
 	am := authenticator.NewAuthenticatorManager()
 
-	if len(csa.Name) > 0 {
+	if len(csa.name) > 0 {
 		return testutils.SpyAuthenticator{}.Type()
-	} else if len(csa.AnyOf) > 0 {
+	} else if len(csa.anyOf) > 0 {
 		return authenticator.NewAnyOfAuthenticator(am).Type()
-	} else if len(csa.AllOf) > 0 {
+	} else if len(csa.allOf) > 0 {
 		return authenticator.NewAllOfAuthenticator(am).Type()
 	}
 
 	panic("unreachable")
 }
 
+func (csa *CompositeSpyAuth) isSpy() bool {
+	return len(csa.name) > 0
+}
+
+func (csa *CompositeSpyAuth) isAnyOf() bool {
+	return len(csa.anyOf) > 0
+}
+
+func (csa *CompositeSpyAuth) isAllOf() bool {
+	return len(csa.allOf) > 0
+}
+
 func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 
 	// root
-	if len(csa.Name) > 0 {
+	if len(csa.name) > 0 {
 		spyData := testutils.SpyAuthenticatorData{
-			Name: csa.Name,
+			Name: csa.name,
 		}
 		return json.Marshal(spyData)
-	} else if len(csa.AnyOf) > 0 {
+	} else if len(csa.anyOf) > 0 {
 		var initData []authenticator.SubAuthenticatorInitData
-		for _, subAuth := range csa.AnyOf {
+		for _, subAuth := range csa.anyOf {
 			data, err := subAuth.buildInitData()
 			if err != nil {
 				return nil, err
@@ -468,9 +480,9 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 		}
 
 		return json.Marshal(initData)
-	} else if len(csa.AllOf) > 0 {
+	} else if len(csa.allOf) > 0 {
 		var initData []authenticator.SubAuthenticatorInitData
-		for _, subAuth := range csa.AllOf {
+		for _, subAuth := range csa.allOf {
 			data, err := subAuth.buildInitData()
 			if err != nil {
 				return nil, err
@@ -502,42 +514,42 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 	testCases := []testCase{
 		{
 			name:          "AllOf(a)",
-			compositeAuth: *allOf(root("a")),
+			compositeAuth: *allOf(spy("a")),
 			id:            "1",
 			names:         []string{"a"},
 			expectedIds:   []string{"1.0"},
 		},
 		{
 			name:          "AllOf(a, b)",
-			compositeAuth: *allOf(root("a"), root("b")),
+			compositeAuth: *allOf(spy("a"), spy("b")),
 			id:            "2",
 			names:         []string{"a", "b"},
 			expectedIds:   []string{"2.0", "2.1"},
 		},
 		{
 			name:          "AllOf(AnyOf(a, b), c)",
-			compositeAuth: *allOf(anyOf(root("a"), root("b")), root("c")),
+			compositeAuth: *allOf(anyOf(spy("a"), spy("b")), spy("c")),
 			id:            "3",
 			names:         []string{"a", "c"}, // b is not called because anyOf is short-circuited
 			expectedIds:   []string{"3.0.0", "3.1"},
 		},
 		{
 			name:          "AnyOf(AllOf(a, b), c)",
-			compositeAuth: *anyOf(allOf(root("a"), root("b")), root("c")),
+			compositeAuth: *anyOf(allOf(spy("a"), spy("b")), spy("c")),
 			id:            "4",
 			names:         []string{"a", "b"}, // c is not called because allOf is short-circuited
 			expectedIds:   []string{"4.0.0", "4.0.1"},
 		},
 		{
 			name:          "AnyOf(c, AllOf(a, b))",
-			compositeAuth: *anyOf(root("c"), allOf(root("a"), root("b"))),
+			compositeAuth: *anyOf(spy("c"), allOf(spy("a"), spy("b"))),
 			id:            "5",
 			names:         []string{"c"}, // a and b are not called because allOf is short-circuited
 			expectedIds:   []string{"5.0"},
 		},
 		{
 			name:          "AnyOf(AllOf(AnyOf(a, b), c), AnyOf(d, e))",
-			compositeAuth: *anyOf(allOf(anyOf(root("a"), root("b")), root("c")), anyOf(root("d"), root("e"))),
+			compositeAuth: *anyOf(allOf(anyOf(spy("a"), spy("b")), spy("c")), anyOf(spy("d"), spy("e"))),
 			id:            "6",
 			names:         []string{"a"}, // b,c,d and e are not called because allOf is short-circuited
 			expectedIds:   []string{"6.0.0.0"},
@@ -550,14 +562,14 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		s.Require().NoError(err)
 
 		var auth iface.Authenticator
-		if len(tc.compositeAuth.AllOf) > 0 {
+		if tc.compositeAuth.isAllOf() {
 			auth, err = s.AllOfAuth.Initialize(data)
 			s.Require().NoError(err)
-		} else if len(tc.compositeAuth.AnyOf) > 0 {
+		} else if tc.compositeAuth.isAnyOf() {
 			auth, err = s.AnyOfAuth.Initialize(data)
 			s.Require().NoError(err)
 		} else {
-			panic("invalid compositeAuth")
+			panic("top lv must be allOf or anyOf")
 		}
 
 		// reset all spy authenticators that the test is checking
