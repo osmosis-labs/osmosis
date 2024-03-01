@@ -60,8 +60,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 	if txOptions == nil {
 		return ad.next(ctx, tx, simulate)
 	}
-
-	usedAuthenticators := ad.authenticatorKeeper.UsedAuthenticators.GetUsedAuthenticators()
+	// Retrieve the selected authenticators from the extension.
+	selectedAuthenticatorsFromExtension := txOptions.GetSelectedAuthenticators()
 
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -77,7 +77,11 @@ func (ad AuthenticatorDecorator) PostHandle(
 		// need to be reflected here
 		account := msg.GetSigners()[0]
 
-		accountAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccount(ctx, account)
+		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
+			ctx,
+			account,
+			int(selectedAuthenticatorsFromExtension[msgIndex]),
+		)
 		if err != nil {
 			return sdk.Context{}, err
 		}
@@ -96,28 +100,22 @@ func (ad AuthenticatorDecorator) PostHandle(
 			simulate,
 			authenticator.NoReplayProtection,
 		)
-
 		if err != nil {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
 				fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
-		for _, accountAuthenticator := range accountAuthenticators { // This should execute on the authenticators used to authenticate the msg
-			if usedAuthenticators[msgIndex] != accountAuthenticator.Id {
-				continue
-			}
-			authenticationRequest.AuthenticatorId = strconv.FormatUint(accountAuthenticator.Id, 10)
 
-			// Confirm Execution
-			err := accountAuthenticator.Authenticator.ConfirmExecution(ctx, authenticationRequest)
+		authenticationRequest.AuthenticatorId = strconv.FormatUint(selectedAuthenticator.Id, 10)
 
-			if err != nil {
-				err = errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, id = %d)", account, accountAuthenticator.Id)
-				err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s", err)
-				return sdk.Context{}, err
-			}
-
-			success = err == nil
+		// Confirm Execution
+		err = selectedAuthenticator.Authenticator.ConfirmExecution(ctx, authenticationRequest)
+		if err != nil {
+			err = errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, id = %d)", account, selectedAuthenticator.Id)
+			err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s", err)
+			return sdk.Context{}, err
 		}
+
+		success = err == nil
 	}
 
 	return next(ctx, tx, simulate, success)

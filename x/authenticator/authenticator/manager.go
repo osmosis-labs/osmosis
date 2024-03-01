@@ -16,6 +16,7 @@ func NewAuthenticatorManager() *AuthenticatorManager {
 // ResetAuthenticators resets all registered authenticators.
 func (am *AuthenticatorManager) ResetAuthenticators() {
 	am.registeredAuthenticators = []Authenticator{}
+	am.defaultAuthenticatorIndex = -1
 }
 
 // InitializeAuthenticators initializes authenticators. If already initialized, it will not overwrite.
@@ -34,7 +35,7 @@ func (am *AuthenticatorManager) RegisterAuthenticator(authenticator Authenticato
 // UnregisterAuthenticator removes an authenticator from the list of registered authenticators.
 func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator Authenticator) {
 	for i, auth := range am.registeredAuthenticators {
-		if auth == authenticator {
+		if auth.Type() == authenticator.Type() {
 			am.registeredAuthenticators = append(am.registeredAuthenticators[:i], am.registeredAuthenticators[i+1:]...)
 			break
 		}
@@ -77,8 +78,7 @@ func (am *AuthenticatorManager) SetDefaultAuthenticatorIndex(index int) {
 // GetDefaultAuthenticator retrieves the default authenticator.
 func (am *AuthenticatorManager) GetDefaultAuthenticator() Authenticator {
 	if am.defaultAuthenticatorIndex < 0 {
-		// ToDo: Instead of panicking, maybe return a FalseAuthenticator that never authenticates?
-		panic("Default authenticator not set")
+		return nil
 	}
 	return am.registeredAuthenticators[am.defaultAuthenticatorIndex]
 }

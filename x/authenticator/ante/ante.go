@@ -96,16 +96,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	cacheCtx, writeCache := ctx.CacheContext()
 
-	// Ensure that no usedAuthenticators are stored in the transient store
-	ad.authenticatorKeeper.UsedAuthenticators.ResetUsedAuthenticators()
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
-
-	// The fee payer by default is the first signer of the transaction
-	feePayer := feeTx.FeePayer()
 
 	msgs := tx.GetMsgs()
 	selectedAuthenticators, err := ad.GetSelectedAuthenticators(txOptions, len(msgs))
@@ -118,11 +112,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
 	}
 
+	// tracks are used to make sure that we only write to the store after every message is successful
 	var tracks []func() error
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		signers := msg.GetSigners()
+
 		// Enforce only one signer per message
 		if len(signers) != 1 {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
@@ -131,28 +127,22 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// By default, the first signer is the account that is used
 		account := signers[0]
 
+		// By default, the fee payer is the first signer of the transaction
+		feePayer := feeTx.FeePayer()
+
 		// Ensure the feePayer is the signer of the first message
 		if msgIndex == 0 && !feePayer.Equals(account) {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "feePayer must be the signer of the first message")
 		}
 
-		// Get all authenticators for the executing account
-		// If no authenticators are found, use the default authenticator
-		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
-		// TODO: only return the selected account authenticator (no defaults)
-		allAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
+		// Get the currently selected authenticator
+		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
+			cacheCtx,
+			account,
+			int(selectedAuthenticators[msgIndex]),
+		)
 		if err != nil {
 			return sdk.Context{}, err
-		}
-
-		// Check if there has been a selected authenticator in the transaction
-		authenticators := allAuthenticators
-		if selectedAuthenticators[msgIndex] >= 0 {
-			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
-				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
-					fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
-			}
-			authenticators = []authenticator.InitializedAuthenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
 		// Generate the authentication request data
@@ -174,50 +164,45 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
 
-		var authErr error
-		for _, initializedAuthenticator := range authenticators {
-			a11r := initializedAuthenticator.Authenticator
-			id := initializedAuthenticator.Id
-			stringId := strconv.FormatUint(id, 10)
+		a11r := selectedAuthenticator.Authenticator
+		stringId := strconv.FormatUint(selectedAuthenticator.Id, 10)
+		authenticationRequest.AuthenticatorId = stringId
 
-			// Consume the authenticator's static gas
-			cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
+		// Consume the authenticator's static gas
+		cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
-			authenticationRequest.AuthenticatorId = stringId
-			// Authenticate should never modify state. That's what track is for
-			neverWriteCtx, _ := cacheCtx.CacheContext()
-			authErr = a11r.Authenticate(neverWriteCtx, authenticationRequest)
+		// Authenticate should never modify state. That's what track is for
+		neverWriteCtx, _ := cacheCtx.CacheContext()
+		authErr := a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
-			// if authentication is successful, continue
-			if authErr == nil {
-				// authentication succeeded, add the authenticator to the used authenticators
-				ad.authenticatorKeeper.UsedAuthenticators.AddUsedAuthenticator(id)
-				// Once the fee payer is authenticated, we can set the gas limit to its original value
-				if account.Equals(feePayer) {
-					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
-					// Reset this for both contexts
-					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
-					ctx = ctx.WithGasMeter(originalGasMeter)
-				}
+		// if authentication is successful, continue
+		if authErr == nil {
+			// Once the fee payer is authenticated, we can set the gas limit to its original value
+			if account.Equals(feePayer) {
+				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
-				// Append the track closure to be called after the fee payer is authenticated
-				tracks = append(tracks, func() error {
-					err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
-
-					if err != nil {
-						return err
-					}
-					return nil
-				})
-
-				// skip the rest if found a successful authenticator
-				break
+				// Reset this for both contexts
+				cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+				ctx = ctx.WithGasMeter(originalGasMeter)
 			}
+
+			// Append the track closure to be called after every message is authenticated
+			tracks = append(tracks, func() error {
+				err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
+
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 		}
 
-		// if authentication failed, return an error
+		// If authentication failed, return an error
 		if authErr != nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr))
+			return ctx, errorsmod.Wrap(
+				sdkerrors.ErrUnauthorized,
+				fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr),
+			)
 		}
 	}
 
@@ -238,25 +223,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 // If no selected authenticators are found in the extension, the function initializes the list with -1 values.
 // It returns an array of selected authenticators or an error if the number of selected authenticators does not match
 // the number of messages in the transaction.
-func (ad AuthenticatorDecorator) GetSelectedAuthenticators(txOptions authenticatortypes.AuthenticatorTxOptions, msgCount int) ([]int32, error) {
-	// Initialize the list of selected authenticators with -1 values.
-	selectedAuthenticators := make([]int32, msgCount)
-	for i := range selectedAuthenticators {
-		selectedAuthenticators[i] = -1
-	}
+func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
+	txOptions authenticatortypes.AuthenticatorTxOptions,
+	msgCount int,
+) ([]int32, error) {
+	// Retrieve the selected authenticators from the extension.
+	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
 
-	if txOptions != nil {
-		// Retrieve the selected authenticators from the extension.
-		selectedAuthenticatorsFromExtension := txOptions.GetSelectedAuthenticators()
-
-		if len(selectedAuthenticatorsFromExtension) != msgCount {
-			// Return an error if the number of selected authenticators does not match the number of messages.
-			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
-				"Mismatch between the number of selected authenticators and messages")
-		}
-
-		// Use the selected authenticators from the extension.
-		selectedAuthenticators = selectedAuthenticatorsFromExtension
+	if len(selectedAuthenticators) != msgCount {
+		// Return an error if the number of selected authenticators does not match the number of messages.
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
+			"Mismatch between the number of selected authenticators and messages")
 	}
 
 	return selectedAuthenticators, nil

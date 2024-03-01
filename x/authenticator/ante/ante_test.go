@@ -118,7 +118,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err := anteHandler(s.Ctx, tx, false)
 
-	s.Require().NoError(err)
+	s.Require().NoError(err, "Failed but should have passed as we return the default authenticator")
 }
 
 // TestSignatureVerificationWithAuthenticatorInStore test a non-smart account signature verification
@@ -282,7 +282,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{0}, false, 1},
 		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{}, true, 0},
 		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{}, true, 0},
-		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{3}, false, 0},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{3}, false, 1},
 	}
 
 	baseGas := 3207              // base gas consimed before starting to iterate through authenticators

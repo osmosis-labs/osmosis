@@ -353,7 +353,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	// Both account 0 and account 1 can send
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendFromAcc1)
 	s.Require().NoError(err)
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{0}, sendFromAcc2)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{1}, sendFromAcc2)
 	s.Require().NoError(err)
 
 	// Remove account2's authenticator
@@ -370,13 +370,13 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// This should fail, as authenticating the fee payer needs to be done with low gas
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{1}, sendFromAcc2)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{3}, sendFromAcc2)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "gas")
 
 	// This should work, since the fee payer has already been authenticated so the gas limit is raised
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0], s.PrivKeys[1]}, pks{s.PrivKeys[0], s.PrivKeys[1]}, []int32{0, 1}, sendFromAcc1, sendFromAcc2,
+		pks{s.PrivKeys[0], s.PrivKeys[1]}, pks{s.PrivKeys[0], s.PrivKeys[1]}, []int32{0, 3}, sendFromAcc1, sendFromAcc2,
 	)
 	s.Require().NoError(err)
 }
@@ -484,7 +484,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	}
 	// Send from account 0 the account key using the AllOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{0}, failedSendMsg,
+		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{1}, failedSendMsg,
 	)
 	s.Require().Error(err, "Should be rejected because the message filter rejects the transaction")
 
@@ -511,13 +511,13 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	// We should provide only one signature (for the allOf authenticator) but the signature needs to be a compound
 	// signature if privkey1 and privkey2 (json.Marshal([sig1, sig2])
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
-		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[2]}}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[2]}}, []int32{1}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AllOf authenticator account key")
 
 	// Failed as composite signature does not match the AllOf data
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
-		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []int32{1}, sendMsg,
 	)
 	s.Require().Error(err, "Authenticated using the AllOf authenticator with incorrect signatures")
 }
