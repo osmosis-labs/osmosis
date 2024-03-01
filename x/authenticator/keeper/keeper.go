@@ -103,6 +103,8 @@ func (k Keeper) GetAuthenticatorsForAccount(
 		}
 
 		// Ensure that initialization of each authenticator works as expected
+		// NOTE: Always return a concrete authenticator not a pointer, do not modify in place
+		// NOTE: The authenticator manager returns a struct that is reused
 		initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorData.Data)
 		if err != nil || initializedAuthenticator == nil {
 			return nil, fmt.Errorf("authenticator %d failed to initialize", authenticatorData.Id)
