@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 type AggregatedAuthenticatorsTest struct {
@@ -25,6 +27,7 @@ type AggregatedAuthenticatorsTest struct {
 	neverApprove     testutils.TestingAuthenticator
 	approveAndBlock  testutils.TestingAuthenticator
 	rejectAndConfirm testutils.TestingAuthenticator
+	spyAuth          testutils.SpyAuthenticator
 }
 
 func TestAggregatedAuthenticatorsTest(t *testing.T) {
@@ -58,6 +61,9 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 		GasConsumption: 10,
 		Confirm:        testutils.Always,
 	}
+	s.spyAuth = testutils.NewSpyAuthenticator(
+		s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey],
+	)
 
 	am.RegisterAuthenticator(s.AnyOfAuth)
 	am.RegisterAuthenticator(s.AllOfAuth)
@@ -65,6 +71,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am.RegisterAuthenticator(s.neverApprove)
 	am.RegisterAuthenticator(s.approveAndBlock)
 	am.RegisterAuthenticator(s.rejectAndConfirm)
+	am.RegisterAuthenticator(s.spyAuth)
 }
 
 func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
@@ -403,6 +410,162 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			s.Require().Equal(tc.success, err == nil)
 		})
 	}
+}
+
+type CompositeSpyAuth struct {
+	AnyOf []*CompositeSpyAuth
+	AllOf []*CompositeSpyAuth
+	Name  string
+}
+
+func allOf(sub ...*CompositeSpyAuth) *CompositeSpyAuth {
+	return &CompositeSpyAuth{AllOf: sub}
+}
+
+func anyOf(sub ...*CompositeSpyAuth) *CompositeSpyAuth {
+	return &CompositeSpyAuth{AnyOf: sub}
+}
+
+func root(name string) *CompositeSpyAuth {
+	return &CompositeSpyAuth{Name: name}
+}
+
+func (csa *CompositeSpyAuth) Type() string {
+	am := authenticator.NewAuthenticatorManager()
+
+	if len(csa.Name) > 0 {
+		return testutils.SpyAuthenticator{}.Type()
+	} else if len(csa.AnyOf) > 0 {
+		return authenticator.NewAnyOfAuthenticator(am).Type()
+	} else if len(csa.AllOf) > 0 {
+		return authenticator.NewAllOfAuthenticator(am).Type()
+	}
+
+	panic("unreachable")
+}
+
+func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
+
+	// root
+	if len(csa.Name) > 0 {
+		spyData := testutils.SpyAuthenticatorData{
+			Name: csa.Name,
+		}
+		return json.Marshal(spyData)
+	} else if len(csa.AnyOf) > 0 {
+		var initData []authenticator.SubAuthenticatorInitData
+		for _, subAuth := range csa.AnyOf {
+			data, err := subAuth.buildInitData()
+			if err != nil {
+				return nil, err
+			}
+
+			initData = append(initData, authenticator.SubAuthenticatorInitData{
+				AuthenticatorType: subAuth.Type(),
+				Data:              data,
+			})
+		}
+
+		return json.Marshal(initData)
+	} else if len(csa.AllOf) > 0 {
+		var initData []authenticator.SubAuthenticatorInitData
+		for _, subAuth := range csa.AllOf {
+			data, err := subAuth.buildInitData()
+			if err != nil {
+				return nil, err
+			}
+
+			initData = append(initData, authenticator.SubAuthenticatorInitData{
+				AuthenticatorType: subAuth.Type(),
+				Data:              data,
+			})
+		}
+
+		return json.Marshal(initData)
+
+	}
+
+	return nil, fmt.Errorf("unreachable")
+}
+
+func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
+	// Define test cases
+	type testCase struct {
+		name          string
+		compositeAuth CompositeSpyAuth
+		names         []string
+		id            string
+		expectedIds   []string
+	}
+
+	testCases := []testCase{
+		{
+			name:          "AllOf(a)",
+			compositeAuth: *allOf(root("a")),
+			id:            "1",
+			names:         []string{"a"},
+			expectedIds:   []string{"1.0"},
+		},
+		{
+			name:          "AllOf(a, b)",
+			compositeAuth: *allOf(root("a"), root("b")),
+			id:            "2",
+			names:         []string{"a", "b"},
+			expectedIds:   []string{"2.0", "2.1"},
+		},
+
+		// TODO: possibly an actual error, need to check
+		{
+			name:          "AllOf(AnyOf(a, b), c)",
+			compositeAuth: *allOf(anyOf(root("a"), root("b")), root("c")),
+			id:            "3",
+			names:         []string{"a", "b", "c"},
+			expectedIds:   []string{"3.0.0", "3.0.1", "3.1"},
+		},
+		// {
+		// 	name:          "AnyOf(AllOf(a, b), c)",
+		// 	compositeAuth: *anyOf(allOf(root("a"), root("b")), root("c")),
+		// 	id:            "4",
+		// 	names:         []string{"a", "b", "c"},
+		// 	expectedIds:   []string{"4.0.0", "4.0.1", "4.1"},
+		// },
+		// {
+		// 	name:          "AnyOf(AllOf(AnyOf(a, b), c), AnyOf(d, e))",
+		// 	compositeAuth: *anyOf(allOf(anyOf(root("a"), root("b")), root("c")), anyOf(root("d"), root("e"))),
+		// 	id:            "5",
+		// 	names:         []string{"a", "b", "c", "d", "e"},
+		// 	expectedIds:   []string{"5.0.0", "5.0.1", "5.1.0", "5.1.1"},
+		// },
+	}
+
+	for _, tc := range testCases {
+		data, err := tc.compositeAuth.buildInitData()
+		s.Require().NoError(err)
+
+		var auth iface.Authenticator
+		if len(tc.compositeAuth.AllOf) > 0 {
+			auth, err = s.AllOfAuth.Initialize(data)
+			s.Require().NoError(err)
+		} else if len(tc.compositeAuth.AnyOf) > 0 {
+			auth, err = s.AnyOfAuth.Initialize(data)
+			s.Require().NoError(err)
+		} else {
+			panic("invalid compositeAuth")
+		}
+
+		auth.OnAuthenticatorAdded(s.Ctx, s.TestAccAddress[0], data, tc.id)
+		auth.Authenticate(s.Ctx, iface.AuthenticationRequest{AuthenticatorId: tc.id})
+
+		// Check that the spy authenticator was called with the expected data
+		for i, name := range tc.names {
+			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			latestCalls := spy.GetLatestCalls(s.Ctx)
+			s.Require().Equal(tc.expectedIds[i], latestCalls.OnAuthenticatorAdded.AuthenticatorId)
+			s.Require().Equal(tc.expectedIds[i], latestCalls.Authenticate.AuthenticatorId)
+		}
+
+	}
+
 }
 
 func marshalAuth(ta testAuth, testData []byte) ([]byte, error) {
