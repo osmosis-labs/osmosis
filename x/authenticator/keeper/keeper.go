@@ -93,7 +93,7 @@ func (k Keeper) GetSelectedAuthenticatorData(
 	return authenticatorFromStore, nil
 }
 
-// GetSelectedAuthenticatorForAccountFromStore returns a sigle authenticator for the account
+// GetSelectedAuthenticatorForAccountFromStore returns a single authenticator for the account
 // this function relies in GetAuthenticationDataForAccount, this function calls
 // Initialise on the specific authenticator
 func (k Keeper) GetInitializedAuthenticatorForAccount(
@@ -107,7 +107,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 		return authenticator.InitializedAuthenticator{}, err
 	}
 
-	// Return the default authenticator here if theres nothing in the store
+	// Return the default authenticator here if there is nothing in the store
 	if authenticatorFromStore.Type == "" {
 		return authenticator.InitializedAuthenticator{
 			Id:            0,
