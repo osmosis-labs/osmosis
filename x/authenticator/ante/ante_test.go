@@ -113,7 +113,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []int64{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err := anteHandler(s.Ctx, tx, false)
@@ -157,7 +157,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []int64{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -206,7 +206,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
-	}, []int32{1})
+	}, []int64{1})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -231,7 +231,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []int64{0, 0})
 
 	// This authentication should succeed and consume gas over the 20_000 limit (because the fee payer
 	// is authenticated in under 20k in the first message)
@@ -272,17 +272,17 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		name                  string
 		senderKey             cryptotypes.PrivKey
 		signKey               cryptotypes.PrivKey
-		selectedAuthenticator []int32
+		selectedAuthenticator []int64
 		shouldPass            bool
 		checks                int
 	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{0}, true, 1},
-		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{1}, true, 1},
-		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{1}, false, 1},
-		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{0}, false, 1},
-		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{}, true, 0},
-		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{}, true, 0},
-		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{3}, false, 1},
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{0}, true, 1},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{1}, true, 1},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{1}, false, 1},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{0}, false, 1},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{}, true, 0},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{}, true, 0},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{3}, false, 1},
 	}
 
 	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
@@ -329,7 +329,7 @@ func GenTx(
 	chainID string,
 	accNums, accSeqs []uint64,
 	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []int32,
+	selectedAuthenticators []int64,
 ) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(signers))
 

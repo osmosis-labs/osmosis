@@ -158,7 +158,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			simulate,
 			authenticator.SequenceMatch,
 		)
-
 		if err != nil {
 			return sdk.Context{},
 				errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
@@ -175,7 +174,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		neverWriteCtx, _ := cacheCtx.CacheContext()
 		authErr := a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
-		// if authentication is successful, continue
+		// If authentication is successful, continue
 		if authErr == nil {
 			// Once the fee payer is authenticated, we can set the gas limit to its original value
 			if account.Equals(feePayer) {
@@ -226,7 +225,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	txOptions authenticatortypes.AuthenticatorTxOptions,
 	msgCount int,
-) ([]int32, error) {
+) ([]int64, error) {
 	// Retrieve the selected authenticators from the extension.
 	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
 

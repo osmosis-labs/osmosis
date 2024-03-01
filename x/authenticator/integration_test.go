@@ -105,7 +105,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Submit a bank send tx using the second private key
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
 	// Try to send again osing the original PrivKey. This will succeed with no selected authenticator
@@ -154,7 +154,7 @@ func (s *AuthenticatorSuite) TestCircuitBreaker() {
 	s.app.AuthenticatorKeeper.SetParams(s.chainA.GetContext(), authenticatorParams)
 
 	// ReSubmit a bank send tx using the second private key
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 }
 
@@ -181,7 +181,7 @@ func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Submit a bank send tx using the second authenticator the message filter
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the message filter")
 
 	coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
@@ -190,7 +190,7 @@ func (s *AuthenticatorSuite) TestMessageFilterStory() {
 		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
 		Amount:      coins,
 	}
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0}, sendMsg)
 	s.Require().Error(err, "Message filter authenticator failed to block")
 }
 
@@ -218,7 +218,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 	s.Require().Error(err, "Bank send should fail because it's signed with the incorrect private key")
 
 	// Use the authenticator flow and verify with an authenticator
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg)
 	s.Require().NoError(err, "Bank send with authenticator should pass 0")
 
 	// Add multiple keys
@@ -231,15 +231,15 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 	s.Require().NoError(err, "Failed to add authenticator for key %d", 0)
 
 	// Use the authenticator flow and verify with an authenticator 1
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{1}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{1}, sendMsg)
 	s.Require().NoError(err, "Bank send with authenticator should pass 1")
 
 	// Use the authenticator flow and verify with an authenticator 2
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[2]}, []int32{2}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[2]}, []int64{2}, sendMsg)
 	s.Require().NoError(err, "Bank send with authenticator should pass 2")
 
 	// Fail with an incorrect authenticator
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[2]}, []int32{1}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[2]}, []int64{1}, sendMsg)
 	s.Require().Error(err, "Should fail as incorrect authenticator selected")
 
 	// Remove an authenticator and try to send
@@ -247,7 +247,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 	s.Require().NoError(err, "Failed to remove authenticator with id %d", 1)
 
 	// Fail as authenticator was removed
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[2]}, []int32{2}, sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[2]}, []int64{2}, sendMsg)
 	s.Require().Error(err, "Should fail as authenticator was removed from store")
 }
 
@@ -271,13 +271,13 @@ func (s *AuthenticatorSuite) TestAuthenticatorState() {
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0}, failSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0}, failSendMsg)
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
 	// Auth failed, but track still increments! Authenticate() tries to increment, but those changes are discarded.
 	s.Require().Equal(1, stateful.GetValue(s.chainA.GetContext()))
 
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0}, successSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0}, successSendMsg)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
@@ -302,11 +302,11 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsg() {
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "MaxAmountAuthenticator", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0, 0}, successSendMsg, successSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0, 0}, successSendMsg, successSendMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
 
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int32{0, 0}, successSendMsg, successSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []int64{0, 0}, successSendMsg, successSendMsg)
 	s.Require().Error(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
 }
@@ -351,9 +351,9 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Both account 0 and account 1 can send
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendFromAcc1)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendFromAcc1)
 	s.Require().NoError(err)
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{1}, sendFromAcc2)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int64{1}, sendFromAcc2)
 	s.Require().NoError(err)
 
 	// Remove account2's authenticator
@@ -370,13 +370,13 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// This should fail, as authenticating the fee payer needs to be done with low gas
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{3}, sendFromAcc2)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int64{3}, sendFromAcc2)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "gas")
 
 	// This should work, since the fee payer has already been authenticated so the gas limit is raised
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0], s.PrivKeys[1]}, pks{s.PrivKeys[0], s.PrivKeys[1]}, []int32{0, 3}, sendFromAcc1, sendFromAcc2,
+		pks{s.PrivKeys[0], s.PrivKeys[1]}, pks{s.PrivKeys[0], s.PrivKeys[1]}, []int64{0, 3}, sendFromAcc1, sendFromAcc2,
 	)
 	s.Require().NoError(err)
 }
@@ -414,19 +414,19 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAnyOf() {
 
 	// Send from account 1 using the AnyOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int64{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AnyOf authenticator key 1")
 
 	// Send from account 2 using the AnyOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[2]}, pks{s.PrivKeys[2]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[2]}, pks{s.PrivKeys[2]}, []int64{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AnyOf authenticator key 2")
 
 	// Send from account 0 the account key using the AnyOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg,
 	)
 	s.Require().Error(err, "Should be rejected because the account key is not in the AnyOf authenticator")
 }
@@ -466,13 +466,13 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 
 	// Send from account 1 using the AllOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int64{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AllOf authenticator key 1")
 
 	// Send from account 2 using the AllOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg,
 	)
 	s.Require().Error(err, "Failed to authenticate using the AllOf authenticator account key")
 
@@ -484,7 +484,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	}
 	// Send from account 0 the account key using the AllOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int32{1}, failedSendMsg,
+		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []int64{1}, failedSendMsg,
 	)
 	s.Require().Error(err, "Should be rejected because the message filter rejects the transaction")
 
@@ -511,13 +511,13 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	// We should provide only one signature (for the allOf authenticator) but the signature needs to be a compound
 	// signature if privkey1 and privkey2 (json.Marshal([sig1, sig2])
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
-		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[2]}}, []int32{1}, sendMsg,
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[2]}}, []int64{1}, sendMsg,
 	)
 	s.Require().NoError(err, "Failed to authenticate using the AllOf authenticator account key")
 
 	// Failed as composite signature does not match the AllOf data
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
-		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []int32{1}, sendMsg,
+		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []int64{1}, sendMsg,
 	)
 	s.Require().Error(err, "Authenticated using the AllOf authenticator with incorrect signatures")
 }
@@ -565,19 +565,19 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 
 	// sending 500 ok
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Spend limit failed when it should have passed 500")
 
 	// sending 500 ok  (1000 limit reached)
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Spend limit failed when it should have passed 1000")
 
 	// sending again fails
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg,
 	)
 	s.Require().Error(err, "Spend limit should have blocked the transaction")
 
@@ -587,7 +587,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 
 	// sending 500 ok after a day
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int32{0}, sendMsg,
+		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []int64{0}, sendMsg,
 	)
 	s.Require().NoError(err, "Spend limit should have been reset")
 }

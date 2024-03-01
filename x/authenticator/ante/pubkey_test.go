@@ -104,7 +104,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{})
+	}, []int64{})
 
 	// Create a SetPubKey AnteDecorator
 	spkd := ante.NewSetPubKeyDecorator(s.OsmosisApp.AccountKeeper)
@@ -143,7 +143,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnteWithSenderNotSigner()
 		s.TestPrivKeys[3],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[3],
-	}, []int32{})
+	}, []int64{})
 
 	// Create a SetPubKey AnteDecorator
 	spkd := ante.NewSetPubKeyDecorator(s.OsmosisApp.AccountKeeper)

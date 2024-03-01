@@ -8,7 +8,7 @@ import (
 )
 
 type AuthenticatorTxOptions interface {
-	GetSelectedAuthenticators() []int32
+	GetSelectedAuthenticators() []int64
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
