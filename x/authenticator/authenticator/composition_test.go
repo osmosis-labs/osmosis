@@ -513,32 +513,38 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
 			names:         []string{"a", "b"},
 			expectedIds:   []string{"2.0", "2.1"},
 		},
-
-		// TODO: possibly an actual error, need to check
 		{
 			name:          "AllOf(AnyOf(a, b), c)",
 			compositeAuth: *allOf(anyOf(root("a"), root("b")), root("c")),
 			id:            "3",
-			names:         []string{"a", "b", "c"},
-			expectedIds:   []string{"3.0.0", "3.0.1", "3.1"},
+			names:         []string{"a", "c"}, // b is not called because anyOf is short-circuited
+			expectedIds:   []string{"3.0.0", "3.1"},
 		},
-		// {
-		// 	name:          "AnyOf(AllOf(a, b), c)",
-		// 	compositeAuth: *anyOf(allOf(root("a"), root("b")), root("c")),
-		// 	id:            "4",
-		// 	names:         []string{"a", "b", "c"},
-		// 	expectedIds:   []string{"4.0.0", "4.0.1", "4.1"},
-		// },
-		// {
-		// 	name:          "AnyOf(AllOf(AnyOf(a, b), c), AnyOf(d, e))",
-		// 	compositeAuth: *anyOf(allOf(anyOf(root("a"), root("b")), root("c")), anyOf(root("d"), root("e"))),
-		// 	id:            "5",
-		// 	names:         []string{"a", "b", "c", "d", "e"},
-		// 	expectedIds:   []string{"5.0.0", "5.0.1", "5.1.0", "5.1.1"},
-		// },
+		{
+			name:          "AnyOf(AllOf(a, b), c)",
+			compositeAuth: *anyOf(allOf(root("a"), root("b")), root("c")),
+			id:            "4",
+			names:         []string{"a", "b"}, // c is not called because allOf is short-circuited
+			expectedIds:   []string{"4.0.0", "4.0.1"},
+		},
+		{
+			name:          "AnyOf(c, AllOf(a, b))",
+			compositeAuth: *anyOf(root("c"), allOf(root("a"), root("b"))),
+			id:            "5",
+			names:         []string{"c"}, // a and b are not called because allOf is short-circuited
+			expectedIds:   []string{"5.0"},
+		},
+		{
+			name:          "AnyOf(AllOf(AnyOf(a, b), c), AnyOf(d, e))",
+			compositeAuth: *anyOf(allOf(anyOf(root("a"), root("b")), root("c")), anyOf(root("d"), root("e"))),
+			id:            "5",
+			names:         []string{"a"}, // b,c,d and e are not called because allOf is short-circuited
+			expectedIds:   []string{"5.0.0.0"},
+		},
 	}
 
 	for _, tc := range testCases {
+		s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
@@ -553,6 +559,13 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
 			panic("invalid compositeAuth")
 		}
 
+		// reset all spy authenticators that the test is checking
+		for _, name := range tc.names {
+			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			spy.ResetLatestCalls(s.Ctx)
+		}
+
+		// make calls
 		auth.OnAuthenticatorAdded(s.Ctx, s.TestAccAddress[0], data, tc.id)
 		auth.Authenticate(s.Ctx, iface.AuthenticationRequest{AuthenticatorId: tc.id})
 
@@ -563,7 +576,6 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorIdConstruction() {
 			s.Require().Equal(tc.expectedIds[i], latestCalls.OnAuthenticatorAdded.AuthenticatorId)
 			s.Require().Equal(tc.expectedIds[i], latestCalls.Authenticate.AuthenticatorId)
 		}
-
 	}
 
 }
