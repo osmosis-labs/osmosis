@@ -26,7 +26,7 @@ type Authenticator interface {
 	Initialize(data []byte) (Authenticator, error)
 
 	// Authenticate confirms the validity of a message using the provided authentication data.
-	// NOTE: Any state changes made by this function will be dicarded.
+	// NOTE: Any state changes made by this function will be discarded.
 	// It's a core function within an ante handler to ensure message authenticity and enforce gas consumption.
 	Authenticate(ctx sdk.Context, request AuthenticationRequest) error
 
@@ -36,7 +36,7 @@ type Authenticator interface {
 	Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error
 
 	// ConfirmExecution enforces transaction rules post-transaction, like spending and transaction limits.
-	// It is used to verify execution-specific state and values, to allow authentication to be dependant on the effects of a transaction.
+	// It is used to verify execution-specific state and values, to allow authentication to be dependent on the effects of a transaction.
 	ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error
 
 	// OnAuthenticatorAdded handles the addition of an authenticator to an account.
