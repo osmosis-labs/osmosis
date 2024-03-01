@@ -2,9 +2,11 @@ package authenticator_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -13,6 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 type AggregatedAuthenticatorsTest struct {
@@ -24,6 +27,7 @@ type AggregatedAuthenticatorsTest struct {
 	neverApprove     testutils.TestingAuthenticator
 	approveAndBlock  testutils.TestingAuthenticator
 	rejectAndConfirm testutils.TestingAuthenticator
+	spyAuth          testutils.SpyAuthenticator
 }
 
 func TestAggregatedAuthenticatorsTest(t *testing.T) {
@@ -57,6 +61,9 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 		GasConsumption: 10,
 		Confirm:        testutils.Always,
 	}
+	s.spyAuth = testutils.NewSpyAuthenticator(
+		s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey],
+	)
 
 	am.RegisterAuthenticator(s.AnyOfAuth)
 	am.RegisterAuthenticator(s.AllOfAuth)
@@ -64,6 +71,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am.RegisterAuthenticator(s.neverApprove)
 	am.RegisterAuthenticator(s.approveAndBlock)
 	am.RegisterAuthenticator(s.rejectAndConfirm)
+	am.RegisterAuthenticator(s.spyAuth)
 }
 
 func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
@@ -402,6 +410,240 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			s.Require().Equal(tc.success, err == nil)
 		})
 	}
+}
+
+type CompositeSpyAuth struct {
+	anyOf []*CompositeSpyAuth
+	allOf []*CompositeSpyAuth
+	name  string
+}
+
+func allOf(sub ...*CompositeSpyAuth) *CompositeSpyAuth {
+	return &CompositeSpyAuth{allOf: sub}
+}
+
+func anyOf(sub ...*CompositeSpyAuth) *CompositeSpyAuth {
+	return &CompositeSpyAuth{anyOf: sub}
+}
+
+func spy(name string) *CompositeSpyAuth {
+	return &CompositeSpyAuth{name: name}
+}
+
+func (csa *CompositeSpyAuth) Type() string {
+	am := authenticator.NewAuthenticatorManager()
+
+	if len(csa.name) > 0 {
+		return testutils.SpyAuthenticator{}.Type()
+	} else if len(csa.anyOf) > 0 {
+		return authenticator.NewAnyOfAuthenticator(am).Type()
+	} else if len(csa.allOf) > 0 {
+		return authenticator.NewAllOfAuthenticator(am).Type()
+	}
+
+	panic("unreachable")
+}
+
+func (csa *CompositeSpyAuth) isSpy() bool {
+	return len(csa.name) > 0
+}
+
+func (csa *CompositeSpyAuth) isAnyOf() bool {
+	return len(csa.anyOf) > 0
+}
+
+func (csa *CompositeSpyAuth) isAllOf() bool {
+	return len(csa.allOf) > 0
+}
+
+func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
+
+	// root
+	if len(csa.name) > 0 {
+		spyData := testutils.SpyAuthenticatorData{
+			Name: csa.name,
+		}
+		return json.Marshal(spyData)
+	} else if len(csa.anyOf) > 0 {
+		var initData []authenticator.SubAuthenticatorInitData
+		for _, subAuth := range csa.anyOf {
+			data, err := subAuth.buildInitData()
+			if err != nil {
+				return nil, err
+			}
+
+			initData = append(initData, authenticator.SubAuthenticatorInitData{
+				AuthenticatorType: subAuth.Type(),
+				Data:              data,
+			})
+		}
+
+		return json.Marshal(initData)
+	} else if len(csa.allOf) > 0 {
+		var initData []authenticator.SubAuthenticatorInitData
+		for _, subAuth := range csa.allOf {
+			data, err := subAuth.buildInitData()
+			if err != nil {
+				return nil, err
+			}
+
+			initData = append(initData, authenticator.SubAuthenticatorInitData{
+				AuthenticatorType: subAuth.Type(),
+				Data:              data,
+			})
+		}
+
+		return json.Marshal(initData)
+
+	}
+
+	return nil, fmt.Errorf("unreachable")
+}
+
+func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
+	// Define test cases
+	type testCase struct {
+		name          string
+		compositeAuth CompositeSpyAuth
+		names         []string
+		id            string
+		expectedIds   []string
+	}
+
+	testCases := []testCase{
+		{
+			name:          "AllOf(a)",
+			compositeAuth: *allOf(spy("a")),
+			id:            "1",
+			names:         []string{"a"},
+			expectedIds:   []string{"1.0"},
+		},
+		{
+			name:          "AllOf(a, b)",
+			compositeAuth: *allOf(spy("a"), spy("b")),
+			id:            "2",
+			names:         []string{"a", "b"},
+			expectedIds:   []string{"2.0", "2.1"},
+		},
+		{
+			name:          "AllOf(AnyOf(a, b), c)",
+			compositeAuth: *allOf(anyOf(spy("a"), spy("b")), spy("c")),
+			id:            "3",
+			names:         []string{"a", "c"}, // b is not called because anyOf is short-circuited
+			expectedIds:   []string{"3.0.0", "3.1"},
+		},
+		{
+			name:          "AnyOf(AllOf(a, b), c)",
+			compositeAuth: *anyOf(allOf(spy("a"), spy("b")), spy("c")),
+			id:            "4",
+			names:         []string{"a", "b"}, // c is not called because allOf is short-circuited
+			expectedIds:   []string{"4.0.0", "4.0.1"},
+		},
+		{
+			name:          "AnyOf(c, AllOf(a, b))",
+			compositeAuth: *anyOf(spy("c"), allOf(spy("a"), spy("b"))),
+			id:            "5",
+			names:         []string{"c"}, // a and b are not called because allOf is short-circuited
+			expectedIds:   []string{"5.0"},
+		},
+		{
+			name:          "AnyOf(AllOf(AnyOf(a, b), c), AnyOf(d, e))",
+			compositeAuth: *anyOf(allOf(anyOf(spy("a"), spy("b")), spy("c")), anyOf(spy("d"), spy("e"))),
+			id:            "6",
+			names:         []string{"a"}, // b,c,d and e are not called because allOf is short-circuited
+			expectedIds:   []string{"6.0.0.0"},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000))
+		data, err := tc.compositeAuth.buildInitData()
+		s.Require().NoError(err)
+
+		var auth iface.Authenticator
+		if tc.compositeAuth.isAllOf() {
+			auth, err = s.AllOfAuth.Initialize(data)
+			s.Require().NoError(err)
+		} else if tc.compositeAuth.isAnyOf() {
+			auth, err = s.AnyOfAuth.Initialize(data)
+			s.Require().NoError(err)
+		} else {
+			panic("top lv must be allOf or anyOf")
+		}
+
+		// reset all spy authenticators that the test is checking
+		for _, name := range tc.names {
+			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			spy.ResetLatestCalls(s.Ctx)
+		}
+
+		msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+
+		encodedMsg, err := codectypes.NewAnyWithValue(msg)
+		s.Require().NoError(err, "Should encode Any value successfully")
+
+		// mock the authentication request
+		authReq := iface.AuthenticationRequest{
+			AuthenticatorId:     tc.id,
+			Account:             s.TestAccAddress[0],
+			FeePayer:            s.TestAccAddress[0],
+			Msg:                 iface.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			MsgIndex:            0,
+			Signature:           []byte{1, 1, 1, 1, 1},
+			SignModeTxData:      iface.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
+			SignatureData:       iface.SimplifiedSignatureData{Signers: []sdk.AccAddress{s.TestAccAddress[0]}, Signatures: [][]byte{{1, 1, 1, 1, 1}}},
+			Simulate:            false,
+			AuthenticatorParams: []byte{1, 1, 1, 1, 1},
+		}
+
+		// make calls
+		auth.OnAuthenticatorAdded(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
+		auth.Authenticate(s.Ctx, authReq)
+		auth.Track(s.Ctx, authReq.Account, authReq.FeePayer, msg, authReq.MsgIndex, tc.id)
+		auth.ConfirmExecution(s.Ctx, authReq)
+		auth.OnAuthenticatorRemoved(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
+
+		// Check that the spy authenticator was called with the expected data
+		for i, name := range tc.names {
+			expectedAuthReq := authReq
+			expectedAuthReq.AuthenticatorId = tc.expectedIds[i]
+
+			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			latestCalls := spy.GetLatestCalls(s.Ctx)
+
+			spyData, err := json.Marshal(testutils.SpyAuthenticatorData{Name: name})
+			s.Require().NoError(err, "Should marshal spy data successfully")
+
+			s.Require().Equal(
+				testutils.SpyAddRequest{
+					Account:         expectedAuthReq.Account,
+					Data:            spyData,
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+				},
+				latestCalls.OnAuthenticatorAdded,
+			)
+			s.Require().Equal(expectedAuthReq, latestCalls.Authenticate)
+			s.Require().Equal(
+				testutils.SpyTrackRequest{
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+					Account:         expectedAuthReq.Account,
+					Msg:             expectedAuthReq.Msg,
+					MsgIndex:        expectedAuthReq.MsgIndex,
+				},
+				latestCalls.Track,
+			)
+			s.Require().Equal(expectedAuthReq, latestCalls.ConfirmExecution)
+			s.Require().Equal(
+				testutils.SpyRemoveRequest{
+					Account:         expectedAuthReq.Account,
+					Data:            spyData,
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+				},
+				latestCalls.OnAuthenticatorRemoved,
+			)
+		}
+	}
+
 }
 
 func marshalAuth(ta testAuth, testData []byte) ([]byte, error) {
