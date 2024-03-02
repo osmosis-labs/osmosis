@@ -3373,8 +3373,8 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedAndSupportedUptimes() {
 			expectedAuthorized:     time.Nanosecond,
 		},
 		"Unordered authorized uptimes": {
-			preSetAuthorizedParams: []time.Duration{time.Hour * 24 * 7, time.Nanosecond, time.Hour * 24},
-			expectedAuthorized:     time.Hour * 24 * 7,
+			preSetAuthorizedParams: []time.Duration{time.Hour, time.Nanosecond, time.Hour * 24},
+			expectedAuthorized:     time.Hour * 24,
 		},
 		// note cannot have test case with empty authorized uptimes due to parameter validation.
 	}
