@@ -205,7 +205,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	tx sdk.Tx,
 	msgCount int,
-) ([]int64, error) {
+) ([]uint64, error) {
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")

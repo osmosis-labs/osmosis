@@ -121,7 +121,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int64{})
+	}, []uint64{})
 
 	mockTestClassic := MockAnteDecorator{Called: 1}
 	mockTestAuthenticator := MockAnteDecorator{Called: 0}
@@ -159,7 +159,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int64{1})
+	}, []uint64{1})
 
 	params = s.OsmosisApp.AuthenticatorKeeper.GetParams(ctx)
 	params.AreSmartAccountsActive = true
