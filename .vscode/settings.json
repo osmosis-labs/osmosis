@@ -1,4 +1,5 @@
 {
+  "cSpell.diagnosticLevel": "Hint",
   "tabnine.experimentalAutoImports": true,
   "go.lintTool": "golangci-lint",
   "go.lintFlags": [
