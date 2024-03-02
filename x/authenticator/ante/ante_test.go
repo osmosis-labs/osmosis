@@ -31,7 +31,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
-type AutherticatorAnteSuite struct {
+type AuthenticatorAnteSuite struct {
 	suite.Suite
 	OsmosisApp             *app.OsmosisApp
 	Ctx                    sdk.Context
@@ -42,11 +42,11 @@ type AutherticatorAnteSuite struct {
 	TestPrivKeys           []*secp256k1.PrivKey
 }
 
-func TestAutherticatorAnteSuite(t *testing.T) {
-	suite.Run(t, new(AutherticatorAnteSuite))
+func TestAuthenticatorAnteSuite(t *testing.T) {
+	suite.Run(t, new(AuthenticatorAnteSuite))
 }
 
-func (s *AutherticatorAnteSuite) SetupTest() {
+func (s *AuthenticatorAnteSuite) SetupTest() {
 	// Test data for authenticator signature verification
 	TestKeys := []string{
 		"6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159",
@@ -80,14 +80,13 @@ func (s *AutherticatorAnteSuite) SetupTest() {
 		s.OsmosisApp.AuthenticatorKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
-		sdk.ChainAnteDecorators(sdk.Terminator{}),
 	)
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 }
 
 // TestSignatureVerificationNoAuthenticatorInStore test a non-smart account signature verification
 // with no authenticator in the store
-func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore() {
+func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -123,7 +122,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 
 // TestSignatureVerificationWithAuthenticatorInStore test a non-smart account signature verification
 // with a single authenticator in the store
-func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInStore() {
+func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInStore() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -168,7 +167,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 // TestSignatureVerificationOutOfGas tests that the ante handler exits early by running out of gas if the
 // fee payer has not been authenticated before consuming the 20_000 low gas limit (even if the specified limit is 300k)
 // This is to ensure that the amount of compute a non-authenticated user can execute is limited.
-func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
+func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
@@ -240,7 +239,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(20_000))
 }
 
-func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
+func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -280,8 +279,8 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{1}, true, 1},
 		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{1}, false, 1},
 		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{0}, false, 1},
-		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{}, true, 0},
-		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{}, true, 0},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{}, false, 0},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int64{}, false, 0},
 		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int64{3}, false, 1},
 	}
 

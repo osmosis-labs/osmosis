@@ -13,7 +13,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
@@ -22,7 +21,6 @@ type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       authante.AccountKeeper
 	sigModeHandler      authsigning.SignModeHandler
-	next                sdk.AnteHandler
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
@@ -30,14 +28,11 @@ func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
-	next sdk.AnteHandler,
-
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
 		accountKeeper:       accountKeeper,
 		sigModeHandler:      sigModeHandler,
-		next:                next,
 	}
 }
 
@@ -49,22 +44,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// Check that the authenticator flow is active by querying the params
-	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
-	if !authenticatorParams.AreSmartAccountsActive {
-		return ad.next(ctx, tx, simulate)
-	}
-
-	extTx, ok := tx.(authante.HasExtensionOptionsTx)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
-	}
-
-	// Get the selected authenticator options from the transaction.
-	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
-	if txOptions == nil {
-		return ad.next(ctx, tx, simulate)
-	}
 	// Performing fee payer authentication with minimal gas allocation
 	// serves as a spam-prevention strategy to prevent users from adding multiple
 	// authenticators that may excessively consume computational resources.
@@ -76,6 +55,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
+	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
 	payerGasMeter := sdk.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
@@ -101,8 +81,11 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
+	// By default, the fee payer is the first signer of the transaction
+	feePayer := feeTx.FeePayer()
+
 	msgs := tx.GetMsgs()
-	selectedAuthenticators, err := ad.GetSelectedAuthenticators(txOptions, len(msgs))
+	selectedAuthenticators, err := ad.GetSelectedAuthenticators(tx, len(msgs))
 	if err != nil {
 		return ctx, err
 	}
@@ -126,9 +109,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		// By default, the first signer is the account that is used
 		account := signers[0]
-
-		// By default, the fee payer is the first signer of the transaction
-		feePayer := feeTx.FeePayer()
 
 		// Ensure the feePayer is the signer of the first message
 		if msgIndex == 0 && !feePayer.Equals(account) {
@@ -223,9 +203,20 @@ func (ad AuthenticatorDecorator) AnteHandle(
 // It returns an array of selected authenticators or an error if the number of selected authenticators does not match
 // the number of messages in the transaction.
 func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
-	txOptions authenticatortypes.AuthenticatorTxOptions,
+	tx sdk.Tx,
 	msgCount int,
 ) ([]int64, error) {
+	extTx, ok := tx.(authante.HasExtensionOptionsTx)
+	if !ok {
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
+	}
+
+	// Get the selected authenticator options from the transaction.
+	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	if txOptions == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
+			"Cannot get tx ext")
+	}
 	// Retrieve the selected authenticators from the extension.
 	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
 

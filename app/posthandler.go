@@ -24,7 +24,7 @@ func NewPostHandler(
 			accountKeeper,
 			sigModeHandler,
 			// Add an empty handler here to enable a circuit breaker pattern
-			sdk.ChainAnteDecorators(sdk.Terminator{}),
+			sdk.ChainPostDecorators(sdk.Terminator{}),
 		),
 	)
 }

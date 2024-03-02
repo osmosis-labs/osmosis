@@ -20,14 +20,14 @@ type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       *authkeeper.AccountKeeper
 	sigModeHandler      authsigning.SignModeHandler
-	next                sdk.AnteHandler
+	next                sdk.PostHandler
 }
 
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
-	next sdk.AnteHandler,
+	next sdk.PostHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
@@ -45,9 +45,10 @@ func (ad AuthenticatorDecorator) PostHandle(
 	success bool,
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
+	// Ensure that the transaction is a authenticator transaction
 	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
 	if !authenticatorParams.AreSmartAccountsActive {
-		return ad.next(ctx, tx, simulate)
+		return ad.next(ctx, tx, simulate, success)
 	}
 
 	// Check that only authenticators that have been selected run in the post handler otherwise run the original flow
@@ -58,8 +59,9 @@ func (ad AuthenticatorDecorator) PostHandle(
 
 	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 	if txOptions == nil {
-		return ad.next(ctx, tx, simulate)
+		return ad.next(ctx, tx, simulate, success)
 	}
+
 	// Retrieve the selected authenticators from the extension.
 	selectedAuthenticatorsFromExtension := txOptions.GetSelectedAuthenticators()
 
