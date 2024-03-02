@@ -2,8 +2,11 @@
 name: General issue
 about: A template for general issues with acceptance criteria
 title: ''
+labels: ''
 assignees: ''
+
 ---
+
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
 v                               ✰  Thanks for creating an issue! ✰    
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
