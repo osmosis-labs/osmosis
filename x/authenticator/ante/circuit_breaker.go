@@ -67,5 +67,5 @@ func IsCircuitBreakActive(
 		return true, nil
 	}
 
-	return false, nil
+	return false, txOptions
 }

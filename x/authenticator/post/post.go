@@ -8,10 +8,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	authenticatorante "github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
 )
@@ -46,19 +46,8 @@ func (ad AuthenticatorDecorator) PostHandle(
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
 	// Ensure that the transaction is a authenticator transaction
-	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
-	if !authenticatorParams.AreSmartAccountsActive {
-		return ad.next(ctx, tx, simulate, success)
-	}
-
-	// Check that only authenticators that have been selected run in the post handler otherwise run the original flow
-	extTx, ok := tx.(authante.HasExtensionOptionsTx)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
-	}
-
-	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
-	if txOptions == nil {
+	active, txOptions := authenticatorante.IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper)
+	if active {
 		return ad.next(ctx, tx, simulate, success)
 	}
 
