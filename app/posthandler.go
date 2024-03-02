@@ -19,7 +19,7 @@ func NewPostHandler(
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
-		authpost.NewAuthenticatorDecorator(
+		authpost.NewAuthenticatorPostDecorator(
 			authenticatorKeeper,
 			accountKeeper,
 			sigModeHandler,
