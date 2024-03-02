@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 // when calling CollectIncentives.
 func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 	uptimeHelper := getExpectedUptimes()
-	twoWeeks := time.Hour * 24 * 14
+	oneDay := time.Hour * 24
 	testcases := map[string]struct {
 		upperTick                           int64
 		lowerTick                           int64
@@ -414,7 +414,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 
 			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
 			s.Require().NoError(err)
-			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
+			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour))
 			positionAge := ctx.BlockTime().Sub(position.JoinTime)
 
 			// Set up accrued incentives
@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
 			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
 			incentivesToBeSentToUsers := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
-			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers...)
+			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, numPositions).Sub(incentivesToBeSentToUsers...)
 			totalAmountToFund := incentivesToBeSentToUsers.Add(incentivesToBeSentToCommunityPool...)
 			s.FundAcc(pool.GetIncentivesAddress(), totalAmountToFund)
 
