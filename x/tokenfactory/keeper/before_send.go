@@ -47,6 +47,24 @@ func (k Keeper) GetBeforeSendHook(ctx sdk.Context, denom string) string {
 	return string(bz)
 }
 
+func (k Keeper) GetAllBeforeSendHooks(ctx sdk.Context) ([]string, []string) {
+	denomsList := []string{}
+	beforeSendHooksList := []string{}
+
+	iterator := k.GetAllDenomsIterator(ctx)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		denom := string(iterator.Value())
+
+		beforeSendHook := k.GetBeforeSendHook(ctx, denom)
+		if beforeSendHook != "" {
+			denomsList = append(denomsList, denom)
+			beforeSendHooksList = append(beforeSendHooksList, beforeSendHook)
+		}
+	}
+	return denomsList, beforeSendHooksList
+}
+
 // Hooks wrapper struct for bank keeper
 type Hooks struct {
 	k Keeper

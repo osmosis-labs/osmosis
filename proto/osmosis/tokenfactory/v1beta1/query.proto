@@ -40,6 +40,17 @@ service Query {
     option (google.api.http).get =
         "/osmosis/tokenfactory/v1beta1/denoms/{denom}/before_send_hook";
   }
+
+  // AllBeforeSendHooksAddresses defines a gRPC query method for
+  // getting all addresses with before send hook registered.
+  // The response returns two arrays, an array with a list of denom and an array
+  // of before send hook addresses. The idx of denom corresponds to before send
+  // hook addresse's idx.
+  rpc AllBeforeSendHooksAddresses(QueryAllBeforeSendHooksAddressesRequest)
+      returns (QueryAllBeforeSendHooksAddressesResponse) {
+    option (google.api.http).get =
+        "/osmosis/tokenfactory/v1beta1/all_before_send_hooks";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -87,4 +98,14 @@ message QueryBeforeSendHookAddressRequest {
 message QueryBeforeSendHookAddressResponse {
   string cosmwasm_address = 1
       [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
+}
+
+message QueryAllBeforeSendHooksAddressesRequest {}
+
+// QueryAllBeforeSendHooksAddressesResponse defines the response structure for
+// the AllBeforeSendHooksAddresses gRPC query.
+message QueryAllBeforeSendHooksAddressesResponse {
+  repeated string denoms = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];
+  repeated string before_send_hook_addresses = 2
+      [ (gogoproto.moretags) = "yaml:\"before_send_addresses\"" ];
 }

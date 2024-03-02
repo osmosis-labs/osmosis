@@ -478,21 +478,14 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return types.UpdatePositionData{}, err
 	}
 
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return types.UpdatePositionData{}, err
-	}
-
-	currentTick := pool.GetCurrentTick()
-
 	// update lower tickInfo state
-	lowerTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
+	lowerTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
 
 	// update upper tickInfo state
-	upperTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
+	upperTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
@@ -505,7 +498,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// Refetch pool to get the updated pool.
 	// Note that updateUptimeAccumulatorsToNow may modify the pool state and rewrite it to the store.
-	pool, err = k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}

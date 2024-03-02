@@ -13,6 +13,8 @@ const (
 	TypeEvtMoveRewards               = "move_rewards"
 	TypeEvtCrossTick                 = "cross_tick"
 	TypeEvtTransferPositions         = "transfer_positions"
+	TypeEvtInitTick                  = "init_tick"
+	TypeEvtRemoveTick                = "remove_tick"
 
 	AttributeValueCategory                                         = ModuleName
 	AttributeKeyPositionId                                         = "position_id"

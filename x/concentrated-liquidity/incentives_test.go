@@ -1393,7 +1393,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 				s.SetupTest()
 
 				pool := s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick()
 
 				// Note: we scale all these values up as addToUptimeAccums(...) does the same for the global uptime accums.
 				tc.lowerTickUptimeGrowthOutside = s.scaleUptimeAccumulators(tc.lowerTickUptimeGrowthOutside)
@@ -1406,8 +1405,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 				s.Require().NoError(err)
 
 				// Update tick-level uptime trackers
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
+				s.initializeTick(s.Ctx, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
+				s.initializeTick(s.Ctx, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
 				pool.SetCurrentTick(tc.currentTick)
 				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 				s.Require().NoError(err)
@@ -1684,8 +1683,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				clPool := s.PrepareConcentratedPool()
 
 				// Initialize lower, upper, and current ticksosmomath.ZeroDec
-				s.initializeTick(s.Ctx, test.currentTickIndex, test.lowerTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.lowerTick.uptimeTrackers, true)
-				s.initializeTick(s.Ctx, test.currentTickIndex, test.upperTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.upperTick.uptimeTrackers, false)
+				s.initializeTick(s.Ctx, test.lowerTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.lowerTick.uptimeTrackers, true)
+				s.initializeTick(s.Ctx, test.upperTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.upperTick.uptimeTrackers, false)
 				clPool.SetCurrentTick(test.currentTickIndex)
 				err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
@@ -1700,8 +1699,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 					s.Require().NoError(err)
 					err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
 					s.Require().NoError(err)
-					s.initializeTick(s.Ctx, test.currentTickIndex, test.newLowerTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
-					s.initializeTick(s.Ctx, test.currentTickIndex, test.newUpperTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
+					s.initializeTick(s.Ctx, test.newLowerTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
+					s.initializeTick(s.Ctx, test.newUpperTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
 					clPool.SetCurrentTick(test.currentTickIndex)
 					err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 					s.Require().NoError(err)
@@ -2262,8 +2261,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 				if tc.numPositions > 0 {
 					// Initialize lower and upper ticks with empty uptime trackers
-					s.initializeTick(s.Ctx, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), true)
-					s.initializeTick(s.Ctx, tc.currentTick, tc.positionParams.upperTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), false)
+					s.initializeTick(s.Ctx, tc.positionParams.lowerTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), true)
+					s.initializeTick(s.Ctx, tc.positionParams.upperTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), false)
 
 					if tc.existingAccumLiquidity != nil {
 						s.addLiquidityToUptimeAccumulators(s.Ctx, validPoolId, tc.existingAccumLiquidity, tc.positionParams.positionId+1)

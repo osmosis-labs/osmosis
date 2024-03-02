@@ -25,64 +25,64 @@ edit_genesis () {
     GENESIS=$CONFIG_FOLDER/genesis.json
 
     # Update staking module
-    dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '240s'
+    dasel put -t string -f $GENESIS '.app_state.staking.params.bond_denom' -v 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.staking.params.unbonding_time' -v '240s'
 
     # Update bank module
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].description' 'Registered denom uion for localosmosis testing'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].denom' 'uion'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].exponent' 0
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].base' 'uion'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].display' 'uion'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].name' 'uion'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].symbol' 'uion'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[].description' -v 'Registered denom uion for localosmosis testing'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[].denom' -v 'uion'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].exponent' -v 0
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[0].base' -v 'uion'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[0].display' -v 'uion'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[0].name' -v 'uion'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[0].symbol' -v 'uion'
 
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].description' 'Registered denom uosmo for localosmosis testing'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].denom' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].exponent' 0
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].base' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].display' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].name' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].symbol' 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[].description' -v 'Registered denom uosmo for localosmosis testing'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[].denom' -v 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].exponent' -v 0
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[1].base' -v 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[1].display' -v 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[1].name' -v 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.bank.denom_metadata.[1].symbol' -v 'uosmo'
 
     # Update crisis module
-    dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.crisis.constant_fee.denom' -v 'uosmo'
 
     # Update gov module
-    dasel put string -f $GENESIS '.app_state.gov.voting_params.voting_period' '60s'
-    dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.gov.voting_params.voting_period' -v '60s'
+    dasel put -t string -f $GENESIS '.app_state.gov.params.min_deposit.[0].denom' -v 'uosmo'
 
     # Update epochs module
-    dasel put string -f $GENESIS '.app_state.epochs.epochs.[1].duration' "60s"
+    dasel put -t string -f $GENESIS '.app_state.epochs.epochs.[1].duration' -v "60s"
 
     # Update poolincentives module
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' "120s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' "180s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' "240s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.params.minted_denom' -v "uosmo"
 
     # Update incentives module
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' "1s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' "120s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' "180s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' "240s"
-    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "hour"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' -v "1s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' -v "hour"
 
     # Update mint module
-    dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
-    dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "hour"
+    dasel put -t string -f $GENESIS '.app_state.mint.params.mint_denom' -v "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.mint.params.epoch_identifier' -v "hour"
 
     # Update poolmanager module
-    dasel put string -f $GENESIS '.app_state.poolmanager.params.pool_creation_fee.[0].denom' "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.poolmanager.params.pool_creation_fee.[0].denom' -v "uosmo"
 
     # Update txfee basedenom
-    dasel put string -f $GENESIS '.app_state.txfees.basedenom' "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.txfees.basedenom' -v "uosmo"
 
     # Update wasm permission (Nobody or Everybody)
-    dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+    dasel put -t string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' -v "Everybody"
 
     # Update concentrated-liquidity (enable pool creation)
-    dasel put bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' true
+    dasel put -t bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' -v true
 }
 
 add_genesis_accounts () {
@@ -111,39 +111,39 @@ add_genesis_accounts () {
 edit_config () {
 
     # Remove seeds
-    dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' -v ''
 
     # Expose the rpc
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' -v "tcp://0.0.0.0:26657"
     
     # Expose pprof for debugging
     # To make the change enabled locally, make sure to add 'EXPOSE 6060' to the root Dockerfile
     # and rebuild the image.
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.pprof_laddr' "0.0.0.0:6060"
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.pprof_laddr' -v "0.0.0.0:6060"
 }
 
 enable_cors () {
 
     # Enable cors on RPC
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "*" '.rpc.cors_allowed_origins.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "Accept-Encoding" '.rpc.cors_allowed_headers.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "DELETE" '.rpc.cors_allowed_methods.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "OPTIONS" '.rpc.cors_allowed_methods.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "PATCH" '.rpc.cors_allowed_methods.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "PUT" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "*" '.rpc.cors_allowed_origins.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "Accept-Encoding" '.rpc.cors_allowed_headers.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "DELETE" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "OPTIONS" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "PATCH" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "PUT" '.rpc.cors_allowed_methods.[]'
 
     # Enable unsafe cors and swagger on the api
-    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.swagger'
-    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.enabled-unsafe-cors'
+    dasel put -t bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.swagger'
+    dasel put -t bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.enabled-unsafe-cors'
 
     # Enable cors on gRPC Web
-    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
+    dasel put -t bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
 
     # Enable SQS & route caching
-    dasel put string -f $CONFIG_FOLDER/app.toml -v "true" '.osmosis-sqs.is-enabled'
-    dasel put string -f $CONFIG_FOLDER/app.toml -v "true" '.osmosis-sqs.route-cache-enabled'
+    dasel put -t string -f $CONFIG_FOLDER/app.toml -v "true" '.osmosis-sqs.is-enabled'
+    dasel put -t string -f $CONFIG_FOLDER/app.toml -v "true" '.osmosis-sqs.route-cache-enabled'
 
-    dasel put string -f $CONFIG_FOLDER/app.toml -v "redis" '.osmosis-sqs.db-host'
+    dasel put -t string -f $CONFIG_FOLDER/app.toml -v "redis" '.osmosis-sqs.db-host'
 }
 
 run_with_retries() {
