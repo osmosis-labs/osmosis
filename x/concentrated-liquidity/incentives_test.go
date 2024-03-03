@@ -2844,7 +2844,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 			numShares:        osmomath.OneDec(),
 
-			expectedError: types.NegativeDurationError{Duration: time.Hour * 336 * -1},
+			expectedError: types.NegativeDurationError{Duration: time.Hour * 648 * -1},
 		},
 	}
 

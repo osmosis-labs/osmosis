@@ -645,8 +645,8 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 			}
 
-			// Move block time forward one day to claim and forfeit part of the incentives.
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+			// Move block time forward one hour to claim and forfeit part of the incentives.
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
 			if !tc.isLastPositionInPool {
 				// Setup a far out of range position that we do not touch, so when we transfer positions we do not transfer the last position in the pool.
