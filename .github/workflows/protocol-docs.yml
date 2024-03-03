@@ -7,7 +7,6 @@ on:
       - main
 
 jobs:
-
   build:
     name: Render and deploy protocol and API docs
     timeout-minutes: 30

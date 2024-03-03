@@ -1,5 +1,5 @@
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
-v                               ✰  Thanks for creating a PR! ✰    
+v                               ✰  Thanks for creating a PR! ✰
 v    Before smashing the submit button please review the checkboxes.
 v    If a checkbox is n/a - please still include it but + a little note why
 v    If your PR doesn't close an issue, that's OK!  Just remove the Closes: #XXX line!
@@ -38,7 +38,7 @@ This change added tests and can be verified as follows:
   - [ ] Does this pull request introduce a new feature or user-facing behavior changes?
   - [ ] Changelog entry added to `Unreleased` section of `CHANGELOG.md`?
 
-Where is the change documented? 
+Where is the change documented?
   - [ ] Specification (`x/{module}/README.md`)
   - [ ] Osmosis documentation site
   - [ ] Code comments?

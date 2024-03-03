@@ -2,7 +2,6 @@ syntax = "proto3";
 package osmosis.concentratedliquidity;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types";

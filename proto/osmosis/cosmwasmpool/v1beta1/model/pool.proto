@@ -4,7 +4,6 @@ package osmosis.cosmwasmpool.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model";
 
