@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	s.Require().NoError(err)
 	s.Require().True(resp.Success)
 
-	// assert event emited
+	// assert event emitted
 	s.Require().Equal(s.Ctx.EventManager().Events(), sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
