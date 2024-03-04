@@ -33,7 +33,7 @@ func TestUpdateBaseFee(t *testing.T) {
 		ctx := sdk.NewContext(nil, tmproto.Header{Height: int64(i)}, false, log.NewNopLogger())
 
 		// start the new block
-		eip.startBlock(int64(i))
+		eip.startBlock(int64(i), ctx.Logger())
 
 		// generate transactions
 		if i%10 == 0 {
