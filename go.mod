@@ -27,7 +27,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.9
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240304213932-3b0fada53ea1
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240304213932-3b0fada53ea1
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.4
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
@@ -77,6 +77,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
