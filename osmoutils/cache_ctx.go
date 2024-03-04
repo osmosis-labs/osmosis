@@ -42,7 +42,7 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	return err
 }
 
-// ApplyFuncIfNoErrorLogToDebug is the same as ApplyFuncIfNoError, bug logs to debug instead of error.
+// ApplyFuncIfNoErrorLogToDebug is the same as ApplyFuncIfNoError, but sends logs to debug instead of error if there is an error.
 func ApplyFuncIfNoErrorLogToDebug(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
 	// Add a panic safeguard
 	defer func() {
