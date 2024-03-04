@@ -972,6 +972,7 @@ github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee h1:s+21KNqlpePfkah
 github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee/go.mod h1:L0fX3K22YWvt/FAX9NnzrNzcI4wNYi9Yku4O0LKYflo=
 github.com/gobwas/pool v0.2.0 h1:QEmUOlnSjWtnpRGHF3SauEiOsy82Cup83Vf2LcMlnc8=
 github.com/gobwas/pool v0.2.0/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
+github.com/gobwas/ws v1.0.2 h1:CoAavW/wd/kulfZmSIBt6p24n4j7tHgNVCjsfHVNUbo=
 github.com/gobwas/ws v1.0.2/go.mod h1:szmBTxLgaFppYjEmNtny/v3w89xOydFnnZMcgRRu/EM=
 github.com/gobwas/ws v1.1.0 h1:7RFti/xnNkMJnrK7D1yQ/iCIB5OrrY/54/H930kIbHA=
 github.com/gobwas/ws v1.1.0/go.mod h1:nzvNcVha5eUziGrbxFCo6qFIojQHjJV5cLYIbezhfL0=
@@ -1490,8 +1491,12 @@ github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:Ylmch
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240222171503-685566578734 h1:o30q2J2Q/QZv7g9rwDJHK5e6tvd87GsY1uZ79lTdo5A=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240222171503-685566578734/go.mod h1:SuNYa8LXsQDYy9aRU0yrXQpkiZ8lDJmXDwthLyR5N+w=
+github.com/osmosis-labs/osmosis/osmomath v0.0.9 h1:AaGvVnpjXQcWfDNizYSe7YWavYa/JF+eba1ZHq6R4B0=
+github.com/osmosis-labs/osmosis/osmomath v0.0.9/go.mod h1:t7FYmqJ03xAmE1D+UoZf0LCKFhpF1xrvMZE3ruClhJQ=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059 h1:2PyAblTdr9l5GacEuQY/CitAAUdA60UH43qD9FChdXQ=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059/go.mod h1:uClYVpeXbVKOHRA0n55kfP1jJz1lv66k+V5N0w/vi5M=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240304213932-3b0fada53ea1 h1:QW7JtoD3VfyKPecJtzDf55jJ34pBP8fiStJOEVSGCDY=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240304213932-3b0fada53ea1/go.mod h1:RXLN24Nsy1NXMY0cNDdS00DJsysZt+m9sNz60+JItN8=
 github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0 h1:HNmPE7IN3dRzu/1UlAI0ymio39VHdqRikP+xRLBFmXY=
 github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0/go.mod h1:+pcbJEj6kt6ZNOPlYTxAMajuzEGBwgXLUoeTSvprQBg=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.4 h1:5c5LQpjN+XpbhXobC4VG3V6/+4O3bm26NP0BKvHsQdg=
