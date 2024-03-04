@@ -28,15 +28,15 @@ func (mfd LimitFeePayerDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 
 	msgs := tx.GetMsgs()
 	if len(msgs) == 0 {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must contain at least one message")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must contain at least one message")
 	}
 	signers := msgs[0].GetSigners()
 	if len(signers) == 0 {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx message must contain at least one signer")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx message must contain at least one signer")
 	}
 
 	if !bytes.Equal(feePayer, signers[0]) {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee payer must be the first signer")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "fee payer must be the first signer")
 	}
 
 	return next(ctx, tx, simulate)
