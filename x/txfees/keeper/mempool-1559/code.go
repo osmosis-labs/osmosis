@@ -237,6 +237,6 @@ func (e *EipState) tryLoad(logger log.Logger) osmomath.Dec {
 		return MinBaseFee.Clone()
 	}
 
-	logger.Debug("Loaded eip1559 state", "CurBaseFee", loaded.CurBaseFee)
+	logger.Info("Loaded eip1559 state", "CurBaseFee", loaded.CurBaseFee)
 	return loaded.CurBaseFee.Clone()
 }
