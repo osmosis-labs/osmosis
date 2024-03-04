@@ -134,7 +134,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	)
 	anteHandler := sdk.ChainAnteDecorators(cbd)
 
-	// Here we test when smart accoutns are active and there is not selected authenticator
+	// Here we test when smart accounts are active and there is not selected authenticator
 	ctx, err := anteHandler(s.Ctx, tx, false)
 	s.Require().Equal(int64(1), ctx.Priority(), "Did not call the correct decorator, will only go this way when a TxExtension is not included in the tx")
 	s.Require().NoError(err)
