@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'The desired tag for the release (e.g. v0.1.0).'
+        description: "The desired tag for the release (e.g. v0.1.0)."
         required: true
 
 permissions:
@@ -18,19 +18,16 @@ jobs:
     name: Create release
     runs-on: buildjet-4vcpu-ubuntu-2204
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.inputs.release_tag }}
-      - 
-        name: Make release
+      - name: Make release
         run: |
           make release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: 🧹 Clean release folder
+      - name: 🧹 Clean release folder
         run: |
           sudo rm -rf dist

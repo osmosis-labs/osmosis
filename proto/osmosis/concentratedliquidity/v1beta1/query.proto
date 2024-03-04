@@ -3,15 +3,13 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/concentratedliquidity/params.proto";
-import "osmosis/concentratedliquidity/v1beta1/tickInfo.proto";
+import "osmosis/concentratedliquidity/v1beta1/tick_info.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 
 import "osmosis/concentratedliquidity/v1beta1/position.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";

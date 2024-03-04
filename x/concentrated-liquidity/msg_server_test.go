@@ -636,8 +636,8 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			}
 
 			if tc.hasIncentivesToClaim {
-				s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.positionIds)
-				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+				s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.positionIds)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 			}
 
 			if tc.hasSpreadRewardsToClaim {

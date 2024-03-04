@@ -46,7 +46,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   # Compare current mainnet osmosis major version with the major version of github branch
   # Skip the next job if the current github major is greater than the current mainnet major
   compare_versions:
@@ -55,8 +54,7 @@ jobs:
       should_i_run: ${{ steps.compare_versions.outputs.should_i_run }}
       mainnet_major_version: ${{ steps.mainnet_version.outputs.mainnet_major_version }}
     steps:
-      -
-        name: Get mainnet major version
+      - name: Get mainnet major version
         id: mainnet_version
         run: |
           RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
@@ -64,15 +62,14 @@ jobs:
 
           echo "MAINNET_MAJOR_VERSION=$MAINNET_MAJOR_VERSION" >> $GITHUB_ENV
           echo "mainnet_major_version=$MAINNET_MAJOR_VERSION" >> $GITHUB_OUTPUT
-      -
-        name: Get GitHub branch major version
+      - name: Get GitHub branch major version
         id: compare_versions
         run: |
           CURRENT_BRANCH_MAJOR_VERSION=$(echo ${{ github.event.pull_request.base.ref }} | tr -dc '0-9')
           SHOULD_I_RUN=$(( $CURRENT_BRANCH_MAJOR_VERSION <= $MAINNET_MAJOR_VERSION ))
 
           echo -n "Mainnet version: $MAINNET_MAJOR_VERSION | Branch version: $CURRENT_BRANCH_MAJOR_VERSION | Should I run: "
-          if (( $CURRENT_BRANCH_MAJOR_VERSION <= $MAINNET_MAJOR_VERSION )); 
+          if (( $CURRENT_BRANCH_MAJOR_VERSION <= $MAINNET_MAJOR_VERSION ));
           then
             echo 'should_i_run=true' >> $GITHUB_OUTPUT;
             echo "true"
@@ -87,31 +84,25 @@ jobs:
     timeout-minutes: 20
     if: ${{ needs.compare_versions.outputs.should_i_run == 'true'}}
     steps:
-      -
-        name: Get chain major version
+      - name: Get chain major version
         run: |
           echo "MAINNET_MAJOR_VERSION=${{ needs.compare_versions.outputs.mainnet_major_version }}" >> $GITHUB_ENV
-      -
-        name: Checkout ref
+      - name: Checkout ref
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      -
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: buildjet/setup-go@v5
         with:
           go-version-file: go.mod
-      -
-        name: 🔨 Build the osmosisd binary
+      - name: 🔨 Build the osmosisd binary
         run: |
           make build
           build/osmosisd version
-      -
-        name: 🧪 Initialize Osmosis Node
-        run:  |
+      - name: 🧪 Initialize Osmosis Node
+        run: |
           build/osmosisd init runner -o --home ${{ runner.temp }}/.osmosisd/
-      -
-        name: ⏬ Download last pre-epoch snapshot
+      - name: ⏬ Download last pre-epoch snapshot
         run: |
           REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | sed 's/\.x//')
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
@@ -124,9 +115,8 @@ jobs:
           # Download snapshot
           sudo apt install lz4 -y
           wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C ${{ runner.temp }}/.osmosisd/ -xvf -
-      -
-        name: ⏬ Download genesis and addrbook
-        run:  |
+      - name: ⏬ Download genesis and addrbook
+        run: |
           CONFIG_FOLDER=${{ runner.temp }}/.osmosisd/config
 
           # Download genesis
@@ -134,8 +124,7 @@ jobs:
 
           # Download addrbook
           wget -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
-      -
-        name: 🧪 Configure Osmosis Node
+      - name: 🧪 Configure Osmosis Node
         run: |
           CONFIG_FOLDER=${{ runner.temp }}/.osmosisd/config
           REPO_MAJOR_VERSION=$(echo ${{ github.base_ref }} | tr -dc '0-9')
@@ -168,16 +157,14 @@ jobs:
           # Edit app.toml for pruning, and snapshot onfigurations
           sed -i '/^pruning =/c\pruning = "everything"' $CONFIG_FOLDER/app.toml
           sed -i '/^snapshot-interval =/c\snapshot-interval = 0' $CONFIG_FOLDER/app.toml
-      -
-        name: 🧪 Start Osmosis Node in the background
+      - name: 🧪 Start Osmosis Node in the background
         run: |
           mkdir ${{ runner.temp }}/logs
 
           build/osmosisd start \
             --home ${{ runner.temp }}/.osmosisd > ${{ runner.temp }}/logs/osmosis.log 2>&1 &
           echo $! > ${{ runner.temp }}/osmosis_pid.txt
-      -
-        name: ⏳ Wait for Chain to start
+      - name: ⏳ Wait for Chain to start
         run: |
           echo -n "Waiting for chain to start"
 
@@ -189,8 +176,7 @@ jobs:
               exit 1
             fi
           done
-      -
-        name: ⏳ Wait for Chain to reach target height
+      - name: ⏳ Wait for Chain to reach target height
         run: |
           until $(curl --output /dev/null --silent --head --fail http://localhost:26657/status) && [ $(curl -s http://localhost:26657/status | jq -r '.result.sync_info.latest_block_height') -ge $TARGET_HEIGHT ]; do
 
@@ -204,8 +190,7 @@ jobs:
 
             sleep 1
           done
-      -
-        name: 📤 Upload Upgrade Logs as Artifacts
+      - name: 📤 Upload Upgrade Logs as Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:

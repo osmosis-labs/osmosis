@@ -2367,11 +2367,11 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 
 			// For each position that is in range, add spread rewards and incentives to their respective addresses
 			totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
-			totalIncentives := s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.inRangePositions)
+			totalIncentives := s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.inRangePositions)
 			totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...)
 
 			// Add spread rewards and incentives to the pool
-			s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), oldOwner, apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+			s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 			s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 
 			// Move block time forward. In the event we have positions in range
@@ -2463,9 +2463,9 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 
 				// Test that adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything
 				totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
-				totalIncentives := s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.inRangePositions)
+				totalIncentives := s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.inRangePositions)
 				totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...)
-				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), oldOwner, apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 				for _, positionId := range tc.positionsToTransfer {
 					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
@@ -2517,7 +2517,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 //
 // Returns:
 // - totalExpectedRewards: The total expected rewards after funding all the positions.
-func (s *KeeperTestSuite) fundIncentiveAddr(ctx sdk.Context, incentivesAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
+func (s *KeeperTestSuite) fundIncentiveAddr(incentivesAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
 	expectedUptimes := getExpectedUptimes()
 	for i := 0; i < len(positionIds); i++ {
 		coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
