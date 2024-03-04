@@ -560,7 +560,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
-		var auth iface.Authenticator
+		var auth authenticator.Authenticator
 		if tc.compositeAuth.isAllOf() {
 			auth, err = s.AllOfAuth.Initialize(data)
 			s.Require().NoError(err)
@@ -583,15 +583,15 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		s.Require().NoError(err, "Should encode Any value successfully")
 
 		// mock the authentication request
-		authReq := iface.AuthenticationRequest{
+		authReq := authenticator.AuthenticationRequest{
 			AuthenticatorId:     tc.id,
 			Account:             s.TestAccAddress[0],
 			FeePayer:            s.TestAccAddress[0],
-			Msg:                 iface.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:                 authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
 			MsgIndex:            0,
 			Signature:           []byte{1, 1, 1, 1, 1},
-			SignModeTxData:      iface.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
-			SignatureData:       iface.SimplifiedSignatureData{Signers: []sdk.AccAddress{s.TestAccAddress[0]}, Signatures: [][]byte{{1, 1, 1, 1, 1}}},
+			SignModeTxData:      authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
+			SignatureData:       authenticator.SimplifiedSignatureData{Signers: []sdk.AccAddress{s.TestAccAddress[0]}, Signatures: [][]byte{{1, 1, 1, 1, 1}}},
 			Simulate:            false,
 			AuthenticatorParams: []byte{1, 1, 1, 1, 1},
 		}
