@@ -34,6 +34,17 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	resp, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
 	s.Require().NoError(err)
 	s.Require().True(resp.Success)
+
+	// assert event emited
+	s.Require().Equal(s.Ctx.EventManager().Events(), sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, "0"),
+		),
+	})
 }
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
