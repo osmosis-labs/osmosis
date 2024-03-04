@@ -78,13 +78,14 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
 	for i := 0; i < 5; i++ {
-		err := s.App.AuthenticatorKeeper.AddAuthenticator(
+		id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
 			ctx,
 			accAddress,
 			"SignatureVerificationAuthenticator",
 			priv.PubKey().Bytes(),
 		)
 		s.Require().NoError(err)
+		s.Require().Equal(uint64(i), id)
 	}
 
 	authenticators, err := s.App.AuthenticatorKeeper.GetAllAuthenticatorData(ctx)

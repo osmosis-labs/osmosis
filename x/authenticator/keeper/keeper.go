@@ -170,30 +170,30 @@ func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
 
 // AddAuthenticator adds an authenticator to an account, this function is used to add multiple
 // authenticators such as SignatureVerificationAuthenticators and AllOfAuthenticators
-func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) error {
+func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) (uint64, error) {
 	impl := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorType)
 	if impl == nil {
-		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
+		return 0, fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
 
-	nextId := k.GetNextAuthenticatorId(ctx)
-	stringId := strconv.FormatInt(int64(nextId), 10)
+	id := k.GetNextAuthenticatorId(ctx)
+	stringId := strconv.FormatUint(id, 10)
 	err := impl.OnAuthenticatorAdded(ctx, account, data, stringId)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	k.SetNextAuthenticatorId(ctx, nextId+1)
+	k.SetNextAuthenticatorId(ctx, id+1)
 
 	osmoutils.MustSet(ctx.KVStore(k.storeKey),
-		types.KeyAccountId(account, nextId),
+		types.KeyAccountId(account, id),
 		&types.AccountAuthenticator{
-			Id:   nextId,
+			Id:   id,
 			Type: authenticatorType,
 			Data: data,
 		})
-	return nil
+	return id, nil
 }
 
 // RemoveAuthenticator removes an authenticator from an account
