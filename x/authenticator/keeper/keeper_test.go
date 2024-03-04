@@ -50,21 +50,23 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
-	err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
 	s.Require().NoError(err)
@@ -83,27 +85,29 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorsForAccount() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
-	err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
 	s.Require().NoError(err)
 	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 
-	err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",

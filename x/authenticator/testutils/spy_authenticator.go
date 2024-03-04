@@ -3,14 +3,14 @@ package testutils
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
-
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 )
 
 var _ authenticator.Authenticator = &SpyAuthenticator{}

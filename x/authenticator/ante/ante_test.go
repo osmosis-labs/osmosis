@@ -140,13 +140,14 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -181,24 +182,26 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}
 
 	// fee payer is authenticated
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		alwaysHigher.Type(),
 		[]byte{},
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -252,21 +255,23 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	testCases := []struct {
 		name                  string
