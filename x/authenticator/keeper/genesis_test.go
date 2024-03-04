@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	for i := 0; i < 5; i++ {
+	for i := 1; i <= 5; i++ {
 		id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
 			ctx,
 			accAddress,

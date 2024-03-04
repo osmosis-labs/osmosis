@@ -147,7 +147,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(0), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -189,7 +189,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(0), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
@@ -201,7 +201,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		[]byte{},
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -262,7 +262,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(0), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
@@ -271,7 +271,7 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	testCases := []struct {
 		name                  string

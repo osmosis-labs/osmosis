@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(0), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	id, err = s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
 	s.Require().NoError(err)
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorsForAccount() {
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(0), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	id, err = s.App.AuthenticatorKeeper.AddAuthenticator(
 		ctx,
@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorsForAccount() {
 		priv.PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
 	s.Require().NoError(err)

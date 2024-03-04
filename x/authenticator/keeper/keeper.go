@@ -161,13 +161,6 @@ func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) 
 	osmoutils.MustSet(store, types.KeyNextAccountAuthenticatorId(), &gogotypes.UInt64Value{Value: authenticatorId})
 }
 
-// GetNextAuthenticatorIdAndIncrement returns the next authenticator id and increments it.
-func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
-	nextAuthenticatorId := k.GetNextAuthenticatorId(ctx)
-	k.SetNextAuthenticatorId(ctx, nextAuthenticatorId+1)
-	return nextAuthenticatorId
-}
-
 // AddAuthenticator adds an authenticator to an account, this function is used to add multiple
 // authenticators such as SignatureVerificationAuthenticators and AllOfAuthenticators
 func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) (uint64, error) {

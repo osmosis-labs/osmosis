@@ -96,7 +96,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
 	// Change account's authenticator
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(
+	sigVerAuthId, err := s.app.AuthenticatorKeeper.AddAuthenticator(
 		s.chainA.GetContext(),
 		s.Account.GetAddress(),
 		"SignatureVerificationAuthenticator",
@@ -113,7 +113,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	s.Require().NoError(err, "Sending from the original PrivKey failed. This should succeed")
 
 	// Remove the account's authenticator
-	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), 0)
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), sigVerAuthId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
 	// Sending from the default PrivKey now works again
@@ -347,7 +347,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 
 	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), alwaysLow.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigh.Type(), []byte{})
+	acc2authId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigh.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Both account 0 and account 1 can send
@@ -357,7 +357,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	s.Require().NoError(err)
 
 	// Remove account2's authenticator
-	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), account2.GetAddress(), 1)
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), account2.GetAddress(), acc2authId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
 	// Add two authenticators that are never high, and one always high.
@@ -461,7 +461,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	})
 
 	// Set the authenticator to our account
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOf.Type(), compositeData)
+	allOfAuthId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOf.Type(), compositeData)
 	s.Require().NoError(err)
 
 	// Send from account 1 using the AllOf authenticator
@@ -489,7 +489,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	s.Require().Error(err, "Should be rejected because the message filter rejects the transaction")
 
 	// Remove the first AllOf authenticator
-	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), 0)
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOfAuthId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
 	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
@@ -617,17 +617,17 @@ func (s *AuthenticatorSuite) TestAuthenticatorAddRemove() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Test authenticator that blocks removal
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, blockRemove.Type(), []byte{})
+	blockRemoveId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, blockRemove.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, 1)
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, blockRemoveId)
 	s.Require().Error(err, "Authenticator should not be removed")
 	s.Require().ErrorContains(err, "authenticator could not be removed")
 
 	// Test authenticator that allows removal
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, allowRemove.Type(), []byte{})
+	allowRemoveId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, allowRemove.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
-	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, 2)
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, allowRemoveId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 }
