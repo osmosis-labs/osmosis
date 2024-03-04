@@ -251,6 +251,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	// we ignore the decimal component, as token out amount must round down
 	tokenOutAmt := outAmtDec.TruncateInt()
 	if !tokenOutAmt.IsPositive() {
+		fmt.Println("balancer CalcOutAmtGivenIn, poolID", p.GetId(), "tokenOutAmt", tokenOutAmt, "tokenIn", tokenIn, "tokenOutDenom", tokenOutDenom, "spreadFactor", spreadFactor)
 		return sdk.Coin{}, errorsmod.Wrapf(types.ErrInvalidMathApprox,
 			fmt.Sprintf("token amount must be positive, got %v", tokenOutAmt))
 	}

@@ -271,6 +271,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 
 		tokenOutAmount = tokenOut.Amount
 		if !tokenOutAmount.IsPositive() {
+			fmt.Println("poolmanager MultihopEstimateOutGivenExactAmountIn, poolID", poolI.GetId(), "tokenIn", tokenIn, "tokenOut", tokenOut, "spreadFactor", spreadFactor)
 			return osmomath.Int{}, errors.New("token amount must be positive")
 		}
 

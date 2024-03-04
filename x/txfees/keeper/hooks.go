@@ -3,8 +3,11 @@ package keeper
 import (
 	"strconv"
 
+	"fmt"
+
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -114,6 +117,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 // CONTRACT: protorev must be configured to have a pool for the given denom pair. Otherwise, the denom will be skipped.
 func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) {
 	feeCollectorBalance := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
+	coinsNotSwapped := []string{}
 
 	for _, coin := range feeCollectorBalance {
 		if coin.Denom == denomToSwapTo {
@@ -128,27 +132,25 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		// the next epoch.
 		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
 		if err != nil {
-			if err != nil {
-				telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
-					{
-						Name:  "base_denom",
-						Value: denomToSwapTo,
-					},
-					{
-						Name:  "match_denom",
-						Value: coin.Denom,
-					},
-					{
-						Name:  "err",
-						Value: err.Error(),
-					},
-				})
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+				{
+					Name:  "base_denom",
+					Value: denomToSwapTo,
+				},
+				{
+					Name:  "match_denom",
+					Value: coin.Denom,
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
+				},
+			})
 
-				// The pool route either doesn't exist or is disabled in protorev.
-				// It will just accrue in the non-native fee collector account.
-				// Skip this denom and move on to the next one.
-				continue
-			}
+			// The pool route either doesn't exist or is disabled in protorev.
+			// It will just accrue in the non-native fee collector account.
+			// Skip this denom and move on to the next one.
+			continue
 		}
 
 		// Do the swap of this fee token denom to base denom.
@@ -162,7 +164,11 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
 			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
-			return err
+			if err != nil {
+				ctx.Logger().Debug(fmt.Sprintf("Error swapNonNativeFeeToDenom %s to %s: %s", coin.Denom, denomToSwapTo, err.Error()))
+				coinsNotSwapped = append(coinsNotSwapped, fmt.Sprintf("%s via pool %v", coin.String(), poolId))
+			}
+			return nil
 		})
 		if err != nil {
 			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
@@ -180,5 +186,10 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 				},
 			})
 		}
+	}
+
+	// Return a single log line with all the coins that were not swapped.
+	if len(coinsNotSwapped) > 0 {
+		ctx.Logger().Info(fmt.Sprintf("The following coins were not swapped to %s in swapNonNativeFeeToDenom txfees epoch hook: %v", denomToSwapTo, coinsNotSwapped))
 	}
 }

@@ -59,6 +59,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutAmount = tokenOutCoin.Amount
 
 	if !tokenOutAmount.IsPositive() {
+		fmt.Println("gamm SwapExactAmountIn, poolID", pool.GetId(), "tokenIn", tokenIn, "tokenOutAmount", tokenOutAmount, "tokenOutDenom", tokenOutDenom, "tokenOutMinAmount", tokenOutMinAmount, "spreadFactor", spreadFactor)
 		return osmomath.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
