@@ -1,0 +1,71 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+// Msg defines the tokefactory module's gRPC message service.
+service Msg {
+  // InboundTransfer is used for inbound transfers (<other_chain> -> OSMO).
+  rpc InboundTransfer(MsgInboundTransfer) returns (MsgInboundTransferResponse);
+
+  // OutboundTransfer is used for outbound transfers (OSMO -> <other_chain>) .
+  rpc OutboundTransfer(MsgOutboundTransfer) returns (MsgOutboundTransferResponse);
+}
+
+// Chain represents all available chains.
+enum Chain {
+  // CHAIN_UNSPECIFIED is introduced to satisfy
+  // the enum zero value requirements
+  // https://protobuf.dev/programming-guides/proto3/#enum.
+  CHAIN_UNSPECIFIED = 0;
+  CHAIN_OSMOSIS = 1;
+  CHAIN_BITCOIN = 2;
+}
+
+// MsgInboundTransfer defines the message structure for the InboundTransfer gRPC
+// service method. It allows a sender to perform an inbound cross-chain transfer,
+// i.e., to transfer their tokens from the source chain to Osmosis and get
+// the equivalent amount of the corresponding token (specified in subdenom)
+// on Osmosis in return. The tokens are minted through the x/tokenfactory module
+// to the destination address.
+message MsgInboundTransfer {
+  option (amino.name) = "osmosis/bridge/inbound-transfer";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Chain source_chain = 2
+      [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
+  string destination_address = 3
+      [ (gogoproto.moretags) = "yaml:\"destination_address\"" ];
+  string subdenom = 4 [ (gogoproto.moretags) = "yaml:\"asset_name\"" ];
+  string amount = 5 [
+    (gogoproto.customtype) = "github.com/osmosis-labs/osmosis/osmomath.Dec",
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgInboundTransferResponse {}
+
+// MsgOutboundTransfer defines the message structure for the OutboundTransfer gRPC
+// service method. It allows a sender to perform an outbound cross-chain transfer,
+// i.e., to transfer their tokens from Osmosis to the destination chain.
+// The tokens are burned through the x/tokenfactory module from the sender's address.
+message MsgOutboundTransfer {
+  option (amino.name) = "osmosis/bridge/outbound-transfer";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Chain destination_chain = 2
+      [ (gogoproto.moretags) = "yaml:\"destination_chain\"" ];
+  string destination_address = 3
+      [ (gogoproto.moretags) = "yaml:\"destination_address\"" ];
+  cosmos.base.v1beta1.Coin amount = 4 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgOutboundTransferResponse {}

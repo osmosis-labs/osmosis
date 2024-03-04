@@ -1,0 +1,14 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+// Subdenoms define subdenoms of tokenfactory denoms used for cross-chain transfers.
+// For each subdenom, the final tokenfactory denom looks like
+//    factory/<module_addr>/<subdenom>
+message Subdenoms {
+  // osmobtc_subdenom is a subdenom of a tokenfactory denom used for OSMO-BTC swaps.
+  string osmobtc_subdenom = 1;
+}
