@@ -124,8 +124,19 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Test e2e and Upgrade
-        run: make e2e-setup
+      - name: 🐿 Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build e2e image
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          tags: osmosis:debug
+          build-args: |
+            BASE_IMG_TAG=debug
+            BUILD_TAGS="netgo,muslc,excludeIncrement"
       - name: Test e2e and Upgrade
         run: make test-e2e-ci
       - name: Dump docker logs on failure
