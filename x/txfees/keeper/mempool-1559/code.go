@@ -8,6 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cometbft/cometbft/libs/log"
+
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -109,14 +111,14 @@ var CurEipState = EipState{
 
 // startBlock is executed at the start of each block and is responsible for resetting the state
 // of the CurBaseFee when the node reaches the reset interval
-func (e *EipState) startBlock(height int64) {
+func (e *EipState) startBlock(height int64, logger log.Logger) {
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
 
 	if e.CurBaseFee.Equal(sdk.NewDec(0)) {
 		// CurBaseFee has not been initialized yet. This only happens when the node has just started.
 		// Try to read the previous value from the backup file and if not available, set it to the default.
-		e.CurBaseFee = e.tryLoad()
+		e.CurBaseFee = e.tryLoad(logger)
 	}
 
 	// we reset the CurBaseFee every ResetInterval
@@ -217,24 +219,24 @@ func (e EipState) tryPersist() {
 
 // tryLoad reads eip1559 state from disk and initializes the CurEipState to
 // the previous state when a node is restarted
-func (e *EipState) tryLoad() osmomath.Dec {
+func (e *EipState) tryLoad(logger log.Logger) osmomath.Dec {
 	rwMtx.Lock()
 	defer rwMtx.Unlock()
 	bz, err := os.ReadFile(e.BackupFilePath)
 	if err != nil {
-		fmt.Println("Error reading eip1559 state", err)
-		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
+		logger.Debug("Error reading eip1559 state", "err", err)
+		logger.Debug("Setting eip1559 state to default value", "MinBaseFee", MinBaseFee)
 		return MinBaseFee.Clone()
 	}
 
 	var loaded EipState
 	err = json.Unmarshal(bz, &loaded)
 	if err != nil {
-		fmt.Println("Error unmarshalling eip1559 state", err)
-		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
+		logger.Debug("Error unmarshalling eip1559 state", "err", err)
+		logger.Debug("Setting eip1559 state to default value", "MinBaseFee", MinBaseFee)
 		return MinBaseFee.Clone()
 	}
 
-	fmt.Println("Loaded eip1559 state. CurBaseFee=", loaded.CurBaseFee)
+	logger.Info("Loaded eip1559 state", "CurBaseFee", loaded.CurBaseFee)
 	return loaded.CurBaseFee.Clone()
 }
