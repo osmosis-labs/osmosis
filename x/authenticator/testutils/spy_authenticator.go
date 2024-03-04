@@ -3,7 +3,7 @@ package testutils
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,13 +13,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ iface.Authenticator = &SpyAuthenticator{}
+var _ authenticator.Authenticator = &SpyAuthenticator{}
 
 type SpyTrackRequest struct {
-	AuthenticatorId string         `json:"authenticator_id"`
-	Account         sdk.AccAddress `json:"account"`
-	Msg             iface.LocalAny `json:"msg"`
-	MsgIndex        uint64         `json:"msg_index"`
+	AuthenticatorId string                 `json:"authenticator_id"`
+	Account         sdk.AccAddress         `json:"account"`
+	Msg             authenticator.LocalAny `json:"msg"`
+	MsgIndex        uint64                 `json:"msg_index"`
 }
 
 type SpyAddRequest struct {
@@ -35,9 +35,9 @@ type SpyRemoveRequest struct {
 }
 
 type LatestCalls struct {
-	Authenticate           iface.AuthenticationRequest
+	Authenticate           authenticator.AuthenticationRequest
 	Track                  SpyTrackRequest
-	ConfirmExecution       iface.AuthenticationRequest
+	ConfirmExecution       authenticator.AuthenticationRequest
 	OnAuthenticatorAdded   SpyAddRequest
 	OnAuthenticatorRemoved SpyRemoveRequest
 }
@@ -64,7 +64,7 @@ func (s SpyAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (s SpyAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
+func (s SpyAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
 	var spyData SpyAuthenticatorData
 	err := json.Unmarshal(data, &spyData)
 	if err != nil {
@@ -74,7 +74,7 @@ func (s SpyAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	return s, nil
 }
 
-func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.Authenticate = request
 		return calls
@@ -94,7 +94,7 @@ func (s SpyAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePaye
 		calls.Track = SpyTrackRequest{
 			AuthenticatorId: authenticatorId,
 			Account:         account,
-			Msg:             iface.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
 			MsgIndex:        msgIndex,
 		}
 		return calls
@@ -102,7 +102,7 @@ func (s SpyAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePaye
 	return nil
 }
 
-func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request iface.AuthenticationRequest) error {
+func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.ConfirmExecution = request
 		return calls

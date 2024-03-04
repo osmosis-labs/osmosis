@@ -63,6 +63,7 @@ func NewAnteHandler(
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewExtensionOptionsDecorator(nil),
 		v9.MsgFilterDecorator{},
+		authante.LimitFeePayerDecorator{},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,
