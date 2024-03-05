@@ -139,13 +139,14 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -180,24 +181,26 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}
 
 	// fee payer is authenticated
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sigId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(sigId, uint64(1), "Adding authenticator returning incorrect id")
 
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	excessGasId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		alwaysHigher.Type(),
 		[]byte{},
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(excessGasId, uint64(2), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -205,7 +208,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
-	}, []uint64{1})
+	}, []uint64{excessGasId})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -230,7 +233,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
 		s.TestPrivKeys[1],
-	}, []uint64{0, 0})
+	}, []uint64{sigId, excessGasId})
 
 	// This authentication should succeed and consume gas over the 20_000 limit (because the fee payer
 	// is authenticated in under 20k in the first message)
@@ -251,21 +254,23 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sig1Id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(sig1Id, uint64(1), "Adding authenticator returning incorrect id")
 
-	err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sig2Id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(sig2Id, uint64(2), "Adding authenticator returning incorrect id")
 
 	testCases := []struct {
 		name                  string
@@ -275,10 +280,10 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 		shouldPass            bool
 		checks                int
 	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{0}, true, 1},
-		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{1}, true, 1},
-		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{1}, false, 1},
-		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{0}, false, 1},
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, 1},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, 1},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, 1},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, 1},
 		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, 0},
 		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, 0},
 		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 1},

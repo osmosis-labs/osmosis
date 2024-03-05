@@ -22,6 +22,7 @@ const (
 
 	AttributeValueCategory        = ModuleName
 	AttributeKeyAuthenticatorType = "authenticator_type"
+	AttributeKeyAuthenticatorId   = "authenticator_id"
 )
 
 var (

@@ -158,7 +158,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution
 		Confirm:        testutils.Never,
 	}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(approveAndBlock)
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(s.Ctx, s.TestAccAddress[0], approveAndBlock.Type(), []byte{})
+	approveAndBlockId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(s.Ctx, s.TestAccAddress[0], approveAndBlock.Type(), []byte{})
 	s.Require().NoError(err, "Should have been able to add an authenticator")
 
 	// Create a test messages for signing
@@ -176,7 +176,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
-	}, []uint64{0})
+	}, []uint64{approveAndBlockId})
 
 	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)
 	_, err = postHandler(s.Ctx, tx, false, true)
