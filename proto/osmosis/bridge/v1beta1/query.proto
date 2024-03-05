@@ -10,21 +10,10 @@ option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
 
 // Query provides defines the gRPC querier service.
 service Query {
-  // Assets returns all specified assets used for cross-chain transfers.
-  rpc Assets(AssetsRequest) returns (AssetsResponse) {
-    option (google.api.http).get = "/osmosis/bridge/v1beta1/assets";
-  }
-
   // Params returns x/bridge module params.
   rpc Params(ParamsRequest) returns (ParamsResponse) {
     option (google.api.http).get = "/osmosis/bridge/v1beta1/params";
   }
-}
-
-message AssetsRequest {}
-
-message AssetsResponse {
-  repeated Asset assets = 1 [ (gogoproto.nullable) = false ];
 }
 
 message ParamsRequest {}
