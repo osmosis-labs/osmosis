@@ -9,7 +9,8 @@ import (
 	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
-// CircuitBreakerDecorator for
+// CircuitBreakerDecorator routes transactions through appropriate ante handlers based on
+// the IsCircuitBreakActive function.
 type CircuitBreakerDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	auth                sdk.AnteHandler
@@ -29,18 +30,20 @@ func NewCircuitBreakerDecorator(
 	}
 }
 
-// AnteHandle checks if a
+// AnteHandle checks if a tx is a smart account tx and routes it through the correct series of ante handlers.
 func (ad CircuitBreakerDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// Check that the authenticator flow is active by querying the params
+	// Check that the authenticator flow is active
 	if active, _ := IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper); active {
+		// Return and call the AnteHandle function on all the original decorators.
 		return ad.classic(ctx, tx, simulate)
 	}
 
+	// Return and call the AnteHandle function on all the authenticator decorators.
 	return ad.auth(ctx, tx, simulate)
 }
 

@@ -76,12 +76,12 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 	}
 }
 
-var _ sdk.AnteDecorator = &MockAnteDecorator{}
-
+// MockAnteDecorator used to test the CircuitBreaker flow
 type MockAnteDecorator struct {
 	Called int
 }
 
+// AnteHandle increments the ctx.Priority() differently based on what flow is active
 func (m MockAnteDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
 	prio := ctx.Priority()
@@ -134,20 +134,25 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	)
 	anteHandler := sdk.ChainAnteDecorators(cbd)
 
-	// Here we test when smart accounts are active and there is not selected authenticator
-	ctx, err := anteHandler(s.Ctx, tx, false)
-	s.Require().Equal(int64(1), ctx.Priority(), "Did not call the correct decorator, will only go this way when a TxExtension is not included in the tx")
-	s.Require().NoError(err)
-
 	// Deactivate smart accounts
-	params := s.OsmosisApp.AuthenticatorKeeper.GetParams(ctx)
+	params := s.OsmosisApp.AuthenticatorKeeper.GetParams(s.Ctx)
 	params.AreSmartAccountsActive = false
+	s.OsmosisApp.AuthenticatorKeeper.SetParams(s.Ctx, params)
+
+	// Here we test when smart accounts are deactivated
+	ctx, err := anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1), ctx.Priority(), "Should have disabled the full authentication flow")
+
+	// Reeactivate smart accounts
+	params = s.OsmosisApp.AuthenticatorKeeper.GetParams(ctx)
+	params.AreSmartAccountsActive = true
 	s.OsmosisApp.AuthenticatorKeeper.SetParams(ctx, params)
 
-	// here we test when smart accounts are fully deactivated
+	// Here we test when smart accounts are active and there is not selected authenticator
 	ctx, err = anteHandler(ctx, tx, false)
+	s.Require().Equal(int64(2), ctx.Priority(), "Will only go this way when a TxExtension is not included in the tx")
 	s.Require().NoError(err)
-	s.Require().Equal(int64(2), ctx.Priority(), "Did not call the correct decorator, should have disabled the full authentication flow")
 
 	// Generate a test transaction with a selected authenticator
 	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
@@ -161,12 +166,8 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 		s.TestPrivKeys[1],
 	}, []uint64{1})
 
-	params = s.OsmosisApp.AuthenticatorKeeper.GetParams(ctx)
-	params.AreSmartAccountsActive = true
-	s.OsmosisApp.AuthenticatorKeeper.SetParams(ctx, params)
-
 	// Test is smart accounts are active and the authenticator flow is selected
 	ctx, err = anteHandler(ctx, tx, false)
 	s.Require().NoError(err)
-	s.Require().Equal(int64(4), ctx.Priority(), "Did not call the correct decorator, should have disabled the full authentication flow")
+	s.Require().Equal(int64(4), ctx.Priority(), "Should have used the full authentication flow")
 }
