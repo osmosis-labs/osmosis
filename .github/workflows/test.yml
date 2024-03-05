@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      # Setup Golang based on the go.mod file.
+      # This is needed when the go version has changed and the code uses features from the new version.gi
       - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
