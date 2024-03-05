@@ -31,7 +31,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
-type AutherticatorAnteSuite struct {
+type AuthenticatorAnteSuite struct {
 	suite.Suite
 	OsmosisApp             *app.OsmosisApp
 	Ctx                    sdk.Context
@@ -42,11 +42,11 @@ type AutherticatorAnteSuite struct {
 	TestPrivKeys           []*secp256k1.PrivKey
 }
 
-func TestAutherticatorAnteSuite(t *testing.T) {
-	suite.Run(t, new(AutherticatorAnteSuite))
+func TestAuthenticatorAnteSuite(t *testing.T) {
+	suite.Run(t, new(AuthenticatorAnteSuite))
 }
 
-func (s *AutherticatorAnteSuite) SetupTest() {
+func (s *AuthenticatorAnteSuite) SetupTest() {
 	// Test data for authenticator signature verification
 	TestKeys := []string{
 		"6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159",
@@ -80,14 +80,13 @@ func (s *AutherticatorAnteSuite) SetupTest() {
 		s.OsmosisApp.AuthenticatorKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
-		sdk.ChainAnteDecorators(sdk.Terminator{}),
 	)
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 }
 
 // TestSignatureVerificationNoAuthenticatorInStore test a non-smart account signature verification
 // with no authenticator in the store
-func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore() {
+func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -113,17 +112,17 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []uint64{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err := anteHandler(s.Ctx, tx, false)
 
-	s.Require().NoError(err)
+	s.Require().NoError(err, "Failed but should have passed as we return the default authenticator")
 }
 
 // TestSignatureVerificationWithAuthenticatorInStore test a non-smart account signature verification
 // with a single authenticator in the store
-func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInStore() {
+func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInStore() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -158,7 +157,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []uint64{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -169,7 +168,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 // TestSignatureVerificationOutOfGas tests that the ante handler exits early by running out of gas if the
 // fee payer has not been authenticated before consuming the 20_000 low gas limit (even if the specified limit is 300k)
 // This is to ensure that the amount of compute a non-authenticated user can execute is limited.
-func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
+func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
@@ -182,26 +181,26 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}
 
 	// fee payer is authenticated
-	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sigId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+	s.Require().Equal(sigId, uint64(1), "Adding authenticator returning incorrect id")
 
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
-	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	excessGasId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		alwaysHigher.Type(),
 		[]byte{},
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
+	s.Require().Equal(excessGasId, uint64(2), "Adding authenticator returning incorrect id")
 
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
@@ -209,7 +208,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
-	}, []int32{1})
+	}, []uint64{excessGasId})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -234,7 +233,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []uint64{sigId, excessGasId})
 
 	// This authentication should succeed and consume gas over the 20_000 limit (because the fee payer
 	// is authenticated in under 20k in the first message)
@@ -243,7 +242,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(20_000))
 }
 
-func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
+func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -255,39 +254,39 @@ func (s *AutherticatorAnteSuite) TestSpecificAuthenticator() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sig1Id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+	s.Require().Equal(sig1Id, uint64(1), "Adding authenticator returning incorrect id")
 
-	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sig2Id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
+	s.Require().Equal(sig2Id, uint64(2), "Adding authenticator returning incorrect id")
 
 	testCases := []struct {
 		name                  string
 		senderKey             cryptotypes.PrivKey
 		signKey               cryptotypes.PrivKey
-		selectedAuthenticator []int32
+		selectedAuthenticator []uint64
 		shouldPass            bool
 		checks                int
 	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{0}, true, 1},
-		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{1}, true, 1},
-		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{1}, false, 1},
-		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{0}, false, 1},
-		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{}, true, 0},
-		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []int32{}, true, 0},
-		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []int32{3}, false, 0},
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, 1},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, 1},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, 1},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, 1},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, 0},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, 0},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 1},
 	}
 
 	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
@@ -334,7 +333,7 @@ func GenTx(
 	chainID string,
 	accNums, accSeqs []uint64,
 	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []int32,
+	selectedAuthenticators []uint64,
 ) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(signers))
 
