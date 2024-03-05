@@ -19,6 +19,9 @@ func NewQueryServerImpl(keeper Keeper) types.QueryServer {
 }
 
 func (q queryServer) Params(ctx context.Context, _ *types.ParamsRequest) (*types.ParamsResponse, error) {
-	q.Keeper.GetParams(ctx)
-	panic("implement me")
+	params, err := q.Keeper.GetParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &types.ParamsResponse{Params: params}, nil
 }

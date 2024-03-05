@@ -14,7 +14,7 @@ var (
 	KeyAssets  = []byte("Assets")
 )
 
-func NewParams(signers []string, assets []Asset) Params {
+func NewParams(signers []string, assets []AssetWithStatus) Params {
 	return Params{
 		Signers: signers,
 		Assets:  assets,
@@ -25,7 +25,7 @@ func NewParams(signers []string, assets []Asset) Params {
 func DefaultParams() Params {
 	return Params{
 		Signers: []string{}, // TODO: what to use as the default?
-		Assets:  DefaultAssets(),
+		Assets:  DefaultAssetsWithStatuses(),
 	}
 }
 

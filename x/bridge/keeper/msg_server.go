@@ -39,16 +39,9 @@ func (m msgServer) UpdateParams(
 	return new(types.MsgUpdateParamsResponse), m.Keeper.UpdateParams(ctx, *msg)
 }
 
-func (m msgServer) EnableBridge(
+func (m msgServer) ChangeAssetStatus(
 	ctx context.Context,
-	msg *types.MsgEnableBridge,
-) (*types.MsgEnableBridgeResponse, error) {
-	return new(types.MsgEnableBridgeResponse), m.Keeper.EnableBridge(ctx, *msg)
-}
-
-func (m msgServer) DisableBridge(
-	ctx context.Context,
-	msg *types.MsgDisableBridge,
-) (*types.MsgDisableBridgeResponse, error) {
-	return new(types.MsgDisableBridgeResponse), m.Keeper.DisableBridge(ctx, *msg)
+	msg *types.MsgChangeAssetStatus,
+) (*types.MsgChangeAssetStatusResponse, error) {
+	return new(types.MsgChangeAssetStatusResponse), m.Keeper.ChangeAssetStatus(ctx, *msg)
 }

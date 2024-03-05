@@ -2,7 +2,7 @@ syntax = "proto3";
 package osmosis.bridge.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/bridge/v1beta1/params.proto";
+import "osmosis/bridge/v1beta1/bridge.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
 
