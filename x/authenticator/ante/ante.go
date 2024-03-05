@@ -205,7 +205,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	tx sdk.Tx,
 	msgCount int,
-) ([]int64, error) {
+) ([]uint64, error) {
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx to use Authenticators")
@@ -215,7 +215,7 @@ func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 	if txOptions == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
-			"Cannot get tx ext")
+			"Cannot get tx ext, tx is formatted incorrectly")
 	}
 	// Retrieve the selected authenticators from the extension.
 	selectedAuthenticators := txOptions.GetSelectedAuthenticators()

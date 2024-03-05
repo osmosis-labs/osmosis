@@ -5,21 +5,12 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-)
-
-var (
-	// simulation signature values used to estimate gas consumption
-	key                = make([]byte, secp256k1.PubKeySize)
-	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
-	// simSecp256k1Sig    [64]byte
-
 )
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
@@ -41,21 +32,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
-	pubkeys, err := sigTx.GetPubKeys()
-	if err != nil {
-		return ctx, err
-	}
 	signers := sigTx.GetSigners()
-
-	for _, pk := range pubkeys {
-		// PublicKey was omitted from slice since it has already been set in context
-		if pk == nil {
-			if !simulate {
-				continue
-			}
-			pk = simSecp256k1Pubkey
-		}
-	}
 
 	// Also emit the following events, so that txs can be indexed by these
 	// indices:
