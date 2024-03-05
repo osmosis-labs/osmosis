@@ -174,7 +174,7 @@ func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
 func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []int64,
+	selectedAuthenticators []uint64,
 	msgs ...sdk.Msg,
 ) (*sdk.Result, error) {
 	// ensure the chain has the latest time
@@ -241,7 +241,7 @@ func SignAndDeliverWithAuthenticator(
 	accNums,
 	accSeqs []uint64,
 	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []int64,
+	selectedAuthenticators []uint64,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	tx, err := SignAuthenticatorMsg(
 		txCfg,
@@ -274,7 +274,7 @@ func SignAuthenticatorMsg(
 	chainID string,
 	accNums, accSeqs []uint64,
 	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []int64,
+	selectedAuthenticators []uint64,
 ) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(signers))
 
@@ -361,7 +361,7 @@ func SignAuthenticatorMsg(
 func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 	signers []cryptotypes.PrivKey,
 	signatures [][]cryptotypes.PrivKey, // Adjusted for compound signatures
-	selectedAuthenticators []int64,
+	selectedAuthenticators []uint64,
 	msgs ...sdk.Msg,
 ) (*sdk.Result, error) {
 	// ensure the chain has the latest time
@@ -426,7 +426,7 @@ func SignAndDeliverWithAuthenticatorAndCompoundSigs(
 	accNums, accSeqs []uint64,
 	signers []cryptotypes.PrivKey,
 	signatures [][]cryptotypes.PrivKey, // Adjusted for compound signatures
-	selectedAuthenticators []int64,
+	selectedAuthenticators []uint64,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	// Now passing `signers` to the function
 	tx, err := SignAuthenticatorMsgWithCompoundSigs(
@@ -461,7 +461,7 @@ func SignAuthenticatorMsgWithCompoundSigs(
 	accNums, accSeqs []uint64,
 	signers []cryptotypes.PrivKey, // Reintroduced signers parameter
 	signatures [][]cryptotypes.PrivKey, // Each inner slice are the privkeys for a message's signatures
-	selectedAuthenticators []int64,
+	selectedAuthenticators []uint64,
 ) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(signers))
 

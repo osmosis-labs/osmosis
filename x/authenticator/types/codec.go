@@ -7,8 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// AuthenticatorTxOptions
 type AuthenticatorTxOptions interface {
-	GetSelectedAuthenticators() []int64
+	GetSelectedAuthenticators() []uint64
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {

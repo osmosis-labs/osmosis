@@ -49,14 +49,31 @@ func NewAnteHandler(
 	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
 	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, accountKeeper, bankKeeper, nil)
-	// classicSignatureVerificationDecorator is the old flow that's enbedded into the authenticator ante
-	// to enable a circuit breaker
+
+	// classicSignatureVerificationDecorator is the old flow to enable a circuit breaker
 	classicSignatureVerificationDecorator := sdk.ChainAnteDecorators(
+		// We use the old pubkey decorator here to ensure that accounts work as expected,
+		// in SetPubkeyDecorator we set a pubkey in the account store, for authenticators
+		// we avoid this code path completely.
+		ante.NewSetPubKeyDecorator(accountKeeper),
+		ante.NewValidateSigCountDecorator(accountKeeper),
 		ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
 		ante.NewSigVerificationDecorator(accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)
+
+	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
+	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
+		authante.NewSetPubKeyDecorator(accountKeeper),
+		ante.NewValidateSigCountDecorator(accountKeeper),
+		// Both the signature verification and gas consumption functionality
+		// is enbedded in the authenticator decorator
+		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
+		ante.NewIncrementSequenceDecorator(accountKeeper),
+		ibcante.NewRedundantRelayDecorator(channelKeeper),
+	)
+
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
@@ -72,15 +89,10 @@ func NewAnteHandler(
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
 		deductFeeDecorator,
-		authante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewValidateSigCountDecorator(accountKeeper),
-		// Both the signature verification and gas consumption functionality
-		// is enbedded in the authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler,
-			// the classicSignatureVerificationDecorator enables the circuit breaker pattern
+		authante.NewCircuitBreakerDecorator(
+			authenticatorKeeper,
+			authenticatorVerificationDecorator,
 			classicSignatureVerificationDecorator,
 		),
-		ante.NewIncrementSequenceDecorator(accountKeeper),
-		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)
 }
