@@ -9,6 +9,7 @@ import (
 // x/bridge module sentinel errors
 var (
 	ErrInvalidAsset       = errorsmod.Register(ModuleName, 2, "invalid asset")
-	ErrInvalidDenom       = errorsmod.Register(ModuleName, 3, "invalid denom")
-	ErrInvalidSourceChain = errorsmod.Register(ModuleName, 3, "invalid source chain")
+	ErrInvalidParams      = errorsmod.Register(ModuleName, 3, "invalid params")
+	ErrInvalidDenom       = errorsmod.Register(ModuleName, 4, "invalid denom")
+	ErrInvalidSourceChain = errorsmod.Register(ModuleName, 5, "invalid source chain")
 )

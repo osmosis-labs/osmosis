@@ -11,6 +11,9 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgInboundTransfer{}, "osmosis/bridge/inbound-transfer")
 	legacy.RegisterAminoMsg(cdc, &MsgOutboundTransfer{}, "osmosis/bridge/outbound-transfer")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "osmosis/bridge/update-params")
+	legacy.RegisterAminoMsg(cdc, &MsgEnableBridge{}, "osmosis/bridge/enable-bridge")
+	legacy.RegisterAminoMsg(cdc, &MsgDisableBridge{}, "osmosis/bridge/disable-bridge")
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -18,6 +21,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgInboundTransfer{},
 		&MsgOutboundTransfer{},
+		&MsgUpdateParams{},
+		&MsgEnableBridge{},
+		&MsgDisableBridge{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

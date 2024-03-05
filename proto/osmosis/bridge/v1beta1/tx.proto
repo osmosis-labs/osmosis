@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/bridge/v1beta1/asset.proto";
+import "osmosis/bridge/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
 
@@ -15,6 +16,9 @@ service Msg {
 
   // OutboundTransfer is used for outbound transfers (OSMO -> <other_chain>).
   rpc OutboundTransfer(MsgOutboundTransfer) returns (MsgOutboundTransferResponse);
+
+  // UpdateParams is used for updating module params.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
   // EnableBridge enables bridging with the specified chain.
   rpc EnableBridge(MsgEnableBridge) returns (MsgEnableBridgeResponse);
@@ -74,6 +78,19 @@ message MsgOutboundTransfer {
 }
 
 message MsgOutboundTransferResponse {}
+
+// MsgUpdateParams allows to update module params.
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/bridge/update-params";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [
+    (gogoproto.moretags) = "yaml:\"params\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateParamsResponse {}
 
 // MsgEnableBridge enables bridging between the specified chain
 // and its Osmosis representation.

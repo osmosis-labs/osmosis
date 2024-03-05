@@ -8,7 +8,6 @@ import (
 
 var _ sdk.Msg = &MsgInboundTransfer{}
 
-// NewMsgInboundTransfer creates a message to transfer tokens from the source chain
 func NewMsgInboundTransfer(
 	sender string,
 	destination string,
@@ -53,7 +52,6 @@ func (m MsgInboundTransfer) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgOutboundTransfer{}
 
-// NewMsgInboundTransfer creates a message to transfer tokens from the source chain
 func NewMsgOutboundTransfer(
 	sender string,
 	destination string,
@@ -96,6 +94,33 @@ func (m MsgOutboundTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
+var _ sdk.Msg = &MsgUpdateParams{}
+
+func NewMsgUpdateParams(
+	sender string,
+	params Params,
+) *MsgUpdateParams {
+	return &MsgUpdateParams{
+		Sender: sender,
+		Params: params,
+	}
+}
+
+func (m MsgUpdateParams) ValidateBasic() error {
+	err := m.Params.Validate()
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidParams, err.Error())
+	}
+	return nil
+}
+
+func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgEnableBridge{}
+
 func NewMsgEnableBridge(
 	sender string,
 	asset Asset,
@@ -118,6 +143,8 @@ func (m MsgEnableBridge) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }
+
+var _ sdk.Msg = &MsgDisableBridge{}
 
 func NewMsgDisableBridge(
 	sender string,
