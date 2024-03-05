@@ -36,38 +36,33 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// Create a cache context to execute the posthandler such that
 	// 1. If there is an error, then the cache context is discarded
 	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
-	cacheCtx, write := ctx.CacheContext()
 	// CacheCtx's by default _share_ their gas meter with the parent.
 	// In our case, the cache ctx is given a new gas meter instance entirely,
 	// so gas usage is not counted towards tx gas usage.
 	//
 	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
 	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
-	upperGasLimitMeter := sdk.NewGasMeter(sdk.Gas(50_000_000))
-	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
-	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
+	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(ctx); err != nil {
 		return next(ctx, tx, success, simulate)
 	}
 
 	// Extract all of the pools that were swapped in the tx
-	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx)
+	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(ctx)
 	if len(swappedPools) == 0 {
 		return next(ctx, tx, success, simulate)
 	}
 
 	// Attempt to execute arbitrage trades
-	if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(cacheCtx, swappedPools); err == nil {
-		write()
-	} else {
+	if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(ctx, swappedPools); err != nil {
 		ctx.Logger().Error("ProtoRevTrade failed with error: " + err.Error())
 	}
 
-	// Delete swaps to backrun for next transaction without consuming gas
-	// from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
-	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
-	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
+	// // Delete swaps to backrun for next transaction without consuming gas
+	// // from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
+	// // 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
+	// protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
 
 	return next(ctx, tx, success, simulate)
 }

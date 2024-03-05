@@ -31,7 +31,7 @@ func (e timeTooOldError) Error() string {
 // just has to not be empty, for store to work / not register as a delete.
 var sentinelExistsValue = []byte{1}
 
-// trackChangedPool places an entry into a transient store,
+// trackChangedPool places an entry into a transient store,x
 // to track that this pool changed this block.
 // This tracking is for use in EndBlock, to create new TWAP records.
 func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {

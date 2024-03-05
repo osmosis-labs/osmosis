@@ -384,6 +384,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	protorevKeeper := protorevkeeper.NewKeeper(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],
+		appKeepers.tkeys[protorevtypes.TransientStoreKey],
 		appKeepers.GetSubspace(protorevtypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
