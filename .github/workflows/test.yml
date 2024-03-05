@@ -124,6 +124,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: 🐿 Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - name: Build e2e image
         uses: docker/build-push-action@v5
         with:
