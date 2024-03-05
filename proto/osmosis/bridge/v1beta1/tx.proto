@@ -4,6 +4,7 @@ package osmosis.bridge.v1beta1;
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/bridge/v1beta1/asset.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
 
@@ -12,18 +13,14 @@ service Msg {
   // InboundTransfer is used for inbound transfers (<other_chain> -> OSMO).
   rpc InboundTransfer(MsgInboundTransfer) returns (MsgInboundTransferResponse);
 
-  // OutboundTransfer is used for outbound transfers (OSMO -> <other_chain>) .
+  // OutboundTransfer is used for outbound transfers (OSMO -> <other_chain>).
   rpc OutboundTransfer(MsgOutboundTransfer) returns (MsgOutboundTransferResponse);
-}
 
-// Chain represents all available chains.
-enum Chain {
-  // CHAIN_UNSPECIFIED is introduced to satisfy
-  // the enum zero value requirements
-  // https://protobuf.dev/programming-guides/proto3/#enum.
-  CHAIN_UNSPECIFIED = 0;
-  CHAIN_OSMOSIS = 1;
-  CHAIN_BITCOIN = 2;
+  // EnableBridge enables bridging with the specified chain.
+  rpc EnableBridge(MsgEnableBridge) returns (MsgEnableBridgeResponse);
+
+  // DisableBridge disables bridging with the specified chain.
+  rpc DisableBridge(MsgDisableBridge) returns (MsgDisableBridgeResponse);
 }
 
 // MsgInboundTransfer defines the message structure for the InboundTransfer gRPC
@@ -35,14 +32,17 @@ enum Chain {
 message MsgInboundTransfer {
   option (amino.name) = "osmosis/bridge/inbound-transfer";
 
+  // Sender is a sender's address
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  Chain source_chain = 2
-      [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
-  string destination_address = 3
-      [ (gogoproto.moretags) = "yaml:\"destination_address\"" ];
-  string subdenom = 4 [ (gogoproto.moretags) = "yaml:\"asset_name\"" ];
-  string amount = 5 [
-    (gogoproto.customtype) = "github.com/osmosis-labs/osmosis/osmomath.Dec",
+  // Destination is a destination Osmosis address
+  string destination = 2 [ (gogoproto.moretags) = "yaml:\"destination\"" ];
+  // Asset contains a source chain and a target denom
+  Asset asset = 3 [
+    (gogoproto.moretags) = "yaml:\"asset\"",
+    (gogoproto.nullable) = false
+  ];
+  // Amount of coins to transfer, may be decimal
+  cosmos.base.v1beta1.DecCoin amount = 4 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
@@ -57,11 +57,16 @@ message MsgInboundTransferResponse {}
 message MsgOutboundTransfer {
   option (amino.name) = "osmosis/bridge/outbound-transfer";
 
+  // Sender is a sender's Osmosis address
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  Chain destination_chain = 2
-      [ (gogoproto.moretags) = "yaml:\"destination_chain\"" ];
-  string destination_address = 3
-      [ (gogoproto.moretags) = "yaml:\"destination_address\"" ];
+  // Destination is a destination address
+  string destination = 2 [ (gogoproto.moretags) = "yaml:\"destination\"" ];
+  // Asset contains a target chain and a source denom
+  Asset asset = 3 [
+    (gogoproto.moretags) = "yaml:\"asset\"",
+    (gogoproto.nullable) = false
+  ];
+  // Amount of coins to transfer
   cosmos.base.v1beta1.Coin amount = 4 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
@@ -69,3 +74,31 @@ message MsgOutboundTransfer {
 }
 
 message MsgOutboundTransferResponse {}
+
+// MsgEnableBridge enables bridging between the specified chain
+// and its Osmosis representation.
+message MsgEnableBridge {
+  option (amino.name) = "osmosis/bridge/enable-bridge";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Asset asset = 2 [
+    (gogoproto.moretags) = "yaml:\"asset\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgEnableBridgeResponse {}
+
+// MsgEnableBridge disables bridging between the specified chain
+// and its Osmosis representation.
+message MsgDisableBridge {
+  option (amino.name) = "osmosis/bridge/enable-bridge";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Asset asset = 2 [
+    (gogoproto.moretags) = "yaml:\"asset\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgDisableBridgeResponse {}

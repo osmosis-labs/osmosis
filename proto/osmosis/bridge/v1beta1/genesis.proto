@@ -2,13 +2,12 @@ syntax = "proto3";
 package osmosis.bridge.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/bridge/v1beta1/denoms.proto";
+import "osmosis/bridge/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
 
 // GenesisState defines the mint module's genesis state.
 message GenesisState {
-  // subdenoms is a list of subdenoms used to create tokenfactory denoms
-  // for corresponding trading pairs.
-  Subdenoms subdenoms = 1 [ (gogoproto.nullable) = false ];
+  // Params defines params for x/bridge module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
