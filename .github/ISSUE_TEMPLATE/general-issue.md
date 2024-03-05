@@ -5,7 +5,7 @@ title: ''
 assignees: ''
 ---
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
-v                               ✰  Thanks for creating an issue! ✰    
+v                               ✰  Thanks for creating an issue! ✰
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
 ## Background

@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - 
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
           go-version: '^1.21'

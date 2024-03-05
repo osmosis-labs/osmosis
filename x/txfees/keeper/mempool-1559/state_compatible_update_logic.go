@@ -11,7 +11,7 @@ func DeliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 // BeginBlockCode runs at the start of every block and it
 // reset the CurEipStates lastBlockHeight and totalGasWantedThisBlock
 func BeginBlockCode(ctx sdk.Context) {
-	CurEipState.startBlock(ctx.BlockHeight())
+	CurEipState.startBlock(ctx.BlockHeight(), ctx.Logger())
 }
 
 // EndBlockCode runs at the end of every block and it

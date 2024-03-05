@@ -6,14 +6,14 @@ body:
   - type: markdown
     attributes:
       value: |
-       ✰  Thanks for opening an issue! ✰  
+        ✰  Thanks for opening an issue! ✰
   - type: textarea
     id: summary
     attributes:
       label: Summary
       description: |
         What are the user needs?
-        How could this solution fix the user facing problem? 
+        How could this solution fix the user facing problem?
       placeholder: Short, concise description of the proposed feature/changes to the repository
     validations:
       required: true
@@ -23,7 +23,7 @@ body:
       label: Problem Definition
       description: |
         If applicable please answer the below questions
-        Why do we need this feature? 
+        Why do we need this feature?
         What problems may be addressed by introducing this feature?
         What benefits does the Osmosis stand to gain by including this feature?
         Are there any disadvantages of including this feature?
