@@ -23,10 +23,6 @@ func (k Keeper) Mint(ctx sdk.Context, sender string, amount sdk.Coin, mintTo str
 		return types.ErrUnauthorized
 	}
 
-	if mintTo == "" {
-		mintTo = sender
-	}
-
 	err = k.mintTo(ctx, amount, mintTo)
 	if err != nil {
 		return err
@@ -65,10 +61,6 @@ func (k Keeper) Burn(ctx sdk.Context, sender string, amount sdk.Coin, burnFrom s
 
 	if sender != authorityMetadata.GetAdmin() {
 		return types.ErrUnauthorized
-	}
-
-	if burnFrom == "" {
-		burnFrom = sender
 	}
 
 	accountI := k.accountKeeper.GetAccount(ctx, sdk.AccAddress(burnFrom))

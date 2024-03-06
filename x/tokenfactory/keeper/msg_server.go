@@ -43,6 +43,10 @@ func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateD
 func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if msg.MintToAddress == "" {
+		msg.MintToAddress = msg.Sender
+	}
+
 	err := server.Keeper.Mint(ctx, msg.Sender, msg.Amount, msg.MintToAddress)
 	if err != nil {
 		return nil, err
@@ -61,6 +65,10 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 
 func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if msg.BurnFromAddress == "" {
+		msg.BurnFromAddress = msg.Sender
+	}
 
 	err := server.Keeper.Burn(ctx, msg.Sender, msg.Amount, msg.BurnFromAddress)
 	if err != nil {
