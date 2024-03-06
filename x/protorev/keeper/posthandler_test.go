@@ -429,18 +429,18 @@ func (s *KeeperTestSuite) TestPostHandle() {
 			// Set pools to backrun
 			s.App.AppKeepers.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, tc.params.trades)
 
-			// gasBefore := s.Ctx.GasMeter().GasConsumed()
+			gasBefore := s.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := s.Ctx.GasMeter().Limit()
 
 			_, err = posthandlerProtoRev(s.Ctx, tx, false, true)
 
-			// gasAfter := s.Ctx.GasMeter().GasConsumed()
+			gasAfter := s.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := s.Ctx.GasMeter().Limit()
 
 			if tc.expectPass {
 				s.Require().NoError(err)
 				// Check that the gas consumed is the same before and after the posthandler
-				// s.Require().Equal(gasBefore, gasAfter)
+				s.Require().Equal(gasBefore, gasAfter)
 				// Check that the gas limit is the same before and after the posthandler
 				s.Require().Equal(gasLimitBefore, gasLimitAfter)
 

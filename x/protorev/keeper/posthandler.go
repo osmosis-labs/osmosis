@@ -37,7 +37,6 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// 1. If there is an error, then the cache context is discarded
 	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
 	cacheCtx, write := ctx.CacheContext()
-
 	// CacheCtx's by default _share_ their gas meter with the parent.
 	// In our case, the cache ctx is given a new gas meter instance entirely,
 	// so gas usage is not counted towards tx gas usage.
@@ -48,12 +47,12 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
-	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(ctx); err != nil {
+	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
 		return next(ctx, tx, success, simulate)
 	}
 
 	// Extract all of the pools that were swapped in the tx
-	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(ctx)
+	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx)
 	if len(swappedPools) == 0 {
 		return next(ctx, tx, success, simulate)
 	}
@@ -65,9 +64,9 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 		ctx.Logger().Error("ProtoRevTrade failed with error: " + err.Error())
 	}
 
-	// // Delete swaps to backrun for next transaction without consuming gas
-	// // from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
-	// // 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
+	// Delete swaps to backrun for next transaction without consuming gas
+	// from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
+	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
 	// protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
 
 	return next(ctx, tx, success, simulate)
