@@ -3,8 +3,6 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types";

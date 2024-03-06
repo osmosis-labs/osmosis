@@ -111,16 +111,38 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
 	resp, _, err := n.containerManager.ExecTxCmdWithSuccessStringJSON(n.t, n.chainId, n.Name, cmd, "\"code\":0,")
 	require.NoError(n.t, err)
+	response := formatNonJsonResponse(resp.String())
 
-	positionID, err := extractPositionIdFromResponse(resp.Bytes())
-	require.NoError(n.t, err)
+	// Extract the position_id from the response
+	r := regexp.MustCompile(`"position_id","value":"(\d+)"`)
+	matches := r.FindStringSubmatch(response)
 
-	liquidity, err := extractLiquidityFromResponse(resp.Bytes())
-	require.NoError(n.t, err)
+	// Check if we found a match
+	if len(matches) < 2 {
+		return 0, sdk.ZeroDec()
+	}
+
+	// Convert the position_id from string to int
+	positionID, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, sdk.ZeroDec()
+	}
+
+	// Extract the liquidity from the response
+	r = regexp.MustCompile(`"liquidity","value":"(\d+\.\d+)"`)
+	matches = r.FindStringSubmatch(response)
+
+	// Check if we found a match
+	if len(matches) < 2 {
+		return 0, sdk.ZeroDec()
+	}
+
+	// Convert the liquidity from string to Dec
+	liquidityStr := matches[1]
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 
-	return positionID, liquidity
+	return uint64(positionID), sdk.MustNewDecFromStr(liquidityStr)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
@@ -404,16 +426,19 @@ func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int
 
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
+	response := formatNonJsonResponse(resp.String())
 
 	// Extract the lock ID from the response
-	startIndex := strings.Index(resp.String(), `[{"key":"period_lock_id","value":"`) + len(`[{"key":"period_lock_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
+	r := regexp.MustCompile(`period_lock_id value: "(\d+)"`)
+	matches := r.FindStringSubmatch(response)
 
-	// Extract the lock ID substring
-	lockIDStr := resp.String()[startIndex : startIndex+endIndex]
+	// Check if we found a match
+	if len(matches) < 2 {
+		require.Fail(n.t, "period_lock_id not found")
+	}
 
 	// Convert the lock ID from string to int
-	lockID, err := strconv.Atoi(lockIDStr)
+	lockID, err := strconv.Atoi(matches[1])
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created lock")
@@ -829,15 +854,19 @@ func AllValsVoteOnProposal(chain *Config, propNumber int) {
 }
 
 func extractProposalIdFromResponse(response string) (int, error) {
-	// Extract the proposal ID from the response
-	startIndex := strings.Index(response, `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
-	endIndex := strings.Index(response[startIndex:], `"`)
+	response = formatNonJsonResponse(response)
 
-	// Extract the proposal ID substring
-	proposalIDStr := response[startIndex : startIndex+endIndex]
+	// Extract the proposal ID from the response
+	r := regexp.MustCompile(`proposal_id value: "(\d+)"`)
+	matches := r.FindStringSubmatch(response)
+
+	// Check if we found a match
+	if len(matches) < 2 {
+		return 0, errors.New("proposal_id not found")
+	}
 
 	// Convert the proposal ID from string to int
-	proposalID, err := strconv.Atoi(proposalIDStr)
+	proposalID, err := strconv.Atoi(matches[1])
 	if err != nil {
 		return 0, err
 	}
@@ -846,15 +875,20 @@ func extractProposalIdFromResponse(response string) (int, error) {
 }
 
 func extractPoolIdFromResponse(response string) (uint64, error) {
+	response = formatNonJsonResponse(response)
+
 	// Extract the pool ID from the response
-	startIndex := strings.Index(response, `{"key":"pool_id","value":"`) + len(`{"key":"pool_id","value":"`)
-	endIndex := strings.Index(response[startIndex:], `"`)
+	//fmt.Println(response)
+	r := regexp.MustCompile(`pool_id value: "(\d+)"`)
+	matches := r.FindStringSubmatch(response)
 
-	// Extract the pool ID substring
-	codeIdStr := response[startIndex : startIndex+endIndex]
+	// Check if we found a match
+	if len(matches) < 2 {
+		return 0, errors.New("pool_id not found")
+	}
 
-	// Convert the pool ID from string to int
-	poolID, err := strconv.ParseUint(codeIdStr, 10, 64)
+	// Convert the pool ID from string to uint64
+	poolID, err := strconv.ParseUint(matches[1], 10, 64)
 	if err != nil {
 		return 0, err
 	}
@@ -862,55 +896,19 @@ func extractPoolIdFromResponse(response string) (uint64, error) {
 	return poolID, nil
 }
 
-func extractPositionIdFromResponse(responseBytes []byte) (uint64, error) {
-	var txResponse map[string]interface{}
-	err := json.Unmarshal(responseBytes, &txResponse)
-	if err != nil {
-		return 0, err
-	}
-
-	positionIDString, err := GetPositionID(txResponse)
-	if err != nil {
-		return 0, err
-	}
-
-	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-
-	return positionID, nil
-}
-
-func extractLiquidityFromResponse(responseBytes []byte) (osmomath.Dec, error) {
-	var txResponse map[string]interface{}
-	err := json.Unmarshal(responseBytes, &txResponse)
-	if err != nil {
-		return osmomath.Dec{}, err
-	}
-
-	liquidityString, err := GetLiquidity(txResponse)
-	if err != nil {
-		return osmomath.Dec{}, err
-	}
-
-	positionID, err := osmomath.NewDecFromStr(liquidityString)
-	if err != nil {
-		return osmomath.Dec{}, err
-	}
-
-	return positionID, nil
-}
-
 func extractCodeIdFromResponse(response string) (int, error) {
-	startIndex := strings.Index(response, `{"key":"code_id","value":"`) + len(`{"key":"code_id","value":"`)
-	endIndex := strings.Index(response[startIndex:], `"`)
+	response = formatNonJsonResponse(response)
 
-	// Extract the proposal ID substring
-	codeIdStr := response[startIndex : startIndex+endIndex]
+	r := regexp.MustCompile(`code_id value: "(\d+)"`)
+	matches := r.FindStringSubmatch(response)
 
-	// Convert the proposal ID from string to int
-	codeId, err := strconv.Atoi(codeIdStr)
+	// Check if we found a match
+	if len(matches) < 2 {
+		return 0, errors.New("code_id not found")
+	}
+
+	// Convert the code ID from string to int
+	codeId, err := strconv.Atoi(matches[1])
 	if err != nil {
 		return 0, err
 	}
@@ -937,4 +935,10 @@ func pullMnemonicFromResponse(response string) (string, error) {
 	}
 
 	return mnemonicMatch, nil
+}
+
+func formatNonJsonResponse(resp string) string {
+	resp = strings.ReplaceAll(resp, "\n", " ")
+	resp = strings.ReplaceAll(resp, "-", " ")
+	return strings.Join(strings.Fields(resp), " ")
 }

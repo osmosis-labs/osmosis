@@ -64,7 +64,11 @@ func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
 		currentSuite.iteration = i
 
 		t.Run(fmt.Sprintf("Fuzz %d, seed: %d", i, currentSeed), func(t *testing.T) {
-			t.Parallel()
+			// This is commented out temporarily to avoid issues with the wasmStoreKey being
+			// a global in the wasm light client.
+			// See https://github.com/cosmos/ibc-go/blob/modules/light-clients/08-wasm/v0.1.0%2Bibc-go-v7.3-wasmvm-v1.5/modules/light-clients/08-wasm/internal/ibcwasm/wasm.go#L15-L17
+			// Once we move to ibc v8 we can make these tests run in parallel again.
+			//t.Parallel()
 
 			currentSuite.individualFuzz(r, i, numSwaps, numPositions)
 		})

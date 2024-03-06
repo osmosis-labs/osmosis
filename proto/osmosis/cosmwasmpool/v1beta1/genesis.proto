@@ -4,8 +4,6 @@ package osmosis.cosmwasmpool.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/protobuf/duration.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
 import "osmosis/cosmwasmpool/v1beta1/params.proto";
 

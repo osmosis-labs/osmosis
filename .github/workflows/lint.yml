@@ -7,33 +7,31 @@ on:
       - concentrated-liquidity-main
 
 env:
-  GO_VERSION: '1.20.5'
+  GO_VERSION: "1.21"
+  GIT_DIFF:
+
 
 jobs:
   golangci:
     name: Run golangci-lint
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v4
-      -
-        uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
-            PATTERNS: |
-             **/**.go
-             go.mod
-             go.sum
-             .github/**
-             Makefile
-      -
-        name: 🐿 Setup Golang
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+            .github/**
+            Makefile
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
           go-version: ${{env.GO_VERSION}}
 
-      -
-        name: Run golangci-lint
+      - name: Run golangci-lint
         if: env.GIT_DIFF
         run: make lint-all
 
@@ -41,15 +39,13 @@ jobs:
     name: Run super-linter
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v4
         with:
           # Full git history is needed to get a proper list of changed files
           # within `super-linter`.
           fetch-depth: 0
-      -
-        name: Get git diff
+      - name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -57,7 +53,6 @@ jobs:
             go.mod
             go.sum
             Makefile
-      -
-        name: Run documentation linter
+      - name: Run documentation linter
         if: env.GIT_DIFF
         run: make lint-mdlint
