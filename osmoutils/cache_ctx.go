@@ -18,32 +18,15 @@ import (
 // If its an out of gas panic, this function will also panic like in normal tx execution flow.
 // This is still safe for beginblock / endblock code though, as they do not have out of gas panics.
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
-	// Add a panic safeguard
-	defer func() {
-		if recoveryError := recover(); recoveryError != nil {
-			if isErr, _ := IsOutOfGasError(recoveryError); isErr {
-				// We panic with the same error, to replicate the normal tx execution flow.
-				panic(recoveryError)
-			} else {
-				PrintPanicRecoveryError(ctx, recoveryError)
-				err = errors.New("panic occurred during execution")
-			}
-		}
-	}()
-	// makes a new cache context, which all state changes get wrapped inside of.
-	cacheCtx, write := ctx.CacheContext()
-	err = f(cacheCtx)
-	if err != nil {
-		ctx.Logger().Error(err.Error())
-	} else {
-		// no error, write the output of f
-		write()
-	}
-	return err
+	return applyFunc(ctx, f, ctx.Logger().Error)
 }
 
 // ApplyFuncIfNoErrorLogToDebug is the same as ApplyFuncIfNoError, but sends logs to debug instead of error if there is an error.
 func ApplyFuncIfNoErrorLogToDebug(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
+	return applyFunc(ctx, f, ctx.Logger().Debug)
+}
+
+func applyFunc(ctx sdk.Context, f func(ctx sdk.Context) error, logFunc func(string, ...interface{})) (err error) {
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
@@ -60,7 +43,7 @@ func ApplyFuncIfNoErrorLogToDebug(ctx sdk.Context, f func(ctx sdk.Context) error
 	cacheCtx, write := ctx.CacheContext()
 	err = f(cacheCtx)
 	if err != nil {
-		ctx.Logger().Debug(err.Error())
+		logFunc(err.Error())
 	} else {
 		// no error, write the output of f
 		write()
