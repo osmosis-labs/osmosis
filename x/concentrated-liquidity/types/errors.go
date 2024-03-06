@@ -19,6 +19,7 @@ var (
 	ErrZeroLiquidity                      = errors.New("liquidity cannot be 0")
 	ErrNextTickInfoNil                    = errors.New("next tick info cannot be nil")
 	ErrPoolNil                            = errors.New("pool cannot be nil")
+	ErrCalculateSqrtPriceToTick           = errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 )
 
 // x/concentrated-liquidity module sentinel errors.
