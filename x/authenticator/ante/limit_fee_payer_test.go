@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func (s *AutherticatorAnteSuite) TestCustomFeePayerBlocked() {
+func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -33,7 +33,7 @@ func (s *AutherticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	_, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
@@ -50,7 +50,7 @@ func (s *AutherticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0})
+	}, []uint64{0, 0})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -66,7 +66,7 @@ func (s *AutherticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0},
+	}, []uint64{0, 0},
 		s.TestAccAddress[1],
 	)
 
@@ -83,7 +83,7 @@ func (s *AutherticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []int32{0, 0},
+	}, []uint64{0, 0},
 		s.TestAccAddress[0],
 	)
 
@@ -101,7 +101,7 @@ func GenTxWithCustomFeePayer(
 	chainID string,
 	accNums, accSeqs []uint64,
 	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []int32,
+	selectedAuthenticators []uint64,
 	feePayer sdk.AccAddress,
 ) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(signers))
