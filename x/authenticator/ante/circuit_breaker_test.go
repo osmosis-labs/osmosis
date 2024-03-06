@@ -18,8 +18,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 )
 
-// AutherticatorSetPubKeyAnteSuite is a test suite for the authenticator and SetPubKey AnteDecorator.
-type AutherticatorSetPubKeyAnteSuite struct {
+// AuthenticatorCircuitBreakerAnteSuite is a test suite for the authenticator and CircuitBreaker AnteDecorator.
+type AuthenticatorCircuitBreakerAnteSuite struct {
 	suite.Suite
 	OsmosisApp             *app.OsmosisApp
 	Ctx                    sdk.Context
@@ -30,13 +30,13 @@ type AutherticatorSetPubKeyAnteSuite struct {
 	TestPrivKeys           []*secp256k1.PrivKey
 }
 
-// TestAutherticatorSetPubKeyAnteSuite runs the test suite for the authenticator and SetPubKey AnteDecorator.
-func TestAutherticatorSetPubKeyAnteSuite(t *testing.T) {
-	suite.Run(t, new(AutherticatorSetPubKeyAnteSuite))
+// TestAuthenticatorCircuitBreakerAnteSuite runs the test suite for the authenticator and CircuitBreaker AnteDecorator.
+func TestAuthenticatorCircuitBreakerAnteSuite(t *testing.T) {
+	suite.Run(t, new(AuthenticatorCircuitBreakerAnteSuite))
 }
 
 // SetupTest initializes the test data and prepares the test environment.
-func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
+func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 	// Test data for authenticator signature verification
 	TestKeys := []string{
 		"6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159",
@@ -76,8 +76,25 @@ func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
 	}
 }
 
-// TestSetPubKeyAnte verifies that the SetPubKey AnteDecorator functions correctly.
-func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
+// MockAnteDecorator used to test the CircuitBreaker flow
+type MockAnteDecorator struct {
+	Called int
+}
+
+// AnteHandle increments the ctx.Priority() differently based on what flow is active
+func (m MockAnteDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler,
+) (newCtx sdk.Context, err error) {
+	prio := ctx.Priority()
+
+	if m.Called == 1 {
+		return ctx.WithPriority(prio + 1), nil
+	} else {
+		return ctx.WithPriority(prio + 2), nil
+	}
+}
+
+// TestCircuitBreakerAnte verifies that the CircuitBreaker AnteDecorator functions correctly.
+func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -106,46 +123,51 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 		s.TestPrivKeys[1],
 	}, []uint64{})
 
-	// Create a SetPubKey AnteDecorator
-	spkd := ante.NewSetPubKeyDecorator(s.OsmosisApp.AccountKeeper)
-	antehandler := sdk.ChainAnteDecorators(spkd)
+	mockTestClassic := MockAnteDecorator{Called: 1}
+	mockTestAuthenticator := MockAnteDecorator{Called: 0}
 
-	// Run the AnteDecorator on the transaction
-	_, err := antehandler(s.Ctx, tx, false)
+	// Create a CircuitBreaker AnteDecorator
+	cbd := ante.NewCircuitBreakerDecorator(
+		s.OsmosisApp.AuthenticatorKeeper,
+		sdk.ChainAnteDecorators(mockTestAuthenticator),
+		sdk.ChainAnteDecorators(mockTestClassic),
+	)
+	anteHandler := sdk.ChainAnteDecorators(cbd)
+
+	// Deactivate smart accounts
+	params := s.OsmosisApp.AuthenticatorKeeper.GetParams(s.Ctx)
+	params.AreSmartAccountsActive = false
+	s.OsmosisApp.AuthenticatorKeeper.SetParams(s.Ctx, params)
+
+	// Here we test when smart accounts are deactivated
+	ctx, err := anteHandler(s.Ctx, tx, false)
 	s.Require().NoError(err)
-}
+	s.Require().Equal(int64(1), ctx.Priority(), "Should have disabled the full authentication flow")
 
-// TestSetPubKeyAnteWithSenderNotSigner verifies that SetPubKey AnteDecorator correctly handles a non-signer sender.
-func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnteWithSenderNotSigner() {
-	osmoToken := "osmo"
-	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	// Reeactivate smart accounts
+	params = s.OsmosisApp.AuthenticatorKeeper.GetParams(ctx)
+	params.AreSmartAccountsActive = true
+	s.OsmosisApp.AuthenticatorKeeper.SetParams(ctx, params)
 
-	// Create a test message with a sender that is not a signer
-	testMsg1 := &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[4]),
-		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[3]),
-		Amount:      coins,
-	}
-	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	// Here we test when smart accounts are active and there is not selected authenticator
+	ctx, err = anteHandler(ctx, tx, false)
+	s.Require().Equal(int64(2), ctx.Priority(), "Will only go this way when a TxExtension is not included in the tx")
+	s.Require().NoError(err)
 
-	// Generate a test transaction
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	// Generate a test transaction with a selected authenticator
+	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
+		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
-		s.TestPrivKeys[3],
+		s.TestPrivKeys[0],
+		s.TestPrivKeys[1],
 	}, []cryptotypes.PrivKey{
-		s.TestPrivKeys[3],
-	}, []uint64{})
+		s.TestPrivKeys[0],
+		s.TestPrivKeys[1],
+	}, []uint64{1})
 
-	// Create a SetPubKey AnteDecorator
-	spkd := ante.NewSetPubKeyDecorator(s.OsmosisApp.AccountKeeper)
-	antehandler := sdk.ChainAnteDecorators(spkd)
-
-	// Run the AnteDecorator on the transaction
-	ctx, err := antehandler(s.Ctx, tx, false)
+	// Test is smart accounts are active and the authenticator flow is selected
+	ctx, err = anteHandler(ctx, tx, false)
 	s.Require().NoError(err)
-
-	// Ensure that the public key has not been set for a non-signer sender
-	pk, err := s.OsmosisApp.AccountKeeper.GetPubKey(ctx, s.TestAccAddress[4])
-	s.Require().Equal(pk, nil, "Public Key has not been set")
+	s.Require().Equal(int64(4), ctx.Priority(), "Should have used the full authentication flow")
 }

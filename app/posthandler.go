@@ -19,12 +19,12 @@ func NewPostHandler(
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
-		authpost.NewAuthenticatorDecorator(
+		authpost.NewAuthenticatorPostDecorator(
 			authenticatorKeeper,
 			accountKeeper,
 			sigModeHandler,
 			// Add an empty handler here to enable a circuit breaker pattern
-			sdk.ChainAnteDecorators(sdk.Terminator{}),
+			sdk.ChainPostDecorators(sdk.Terminator{}),
 		),
 	)
 }

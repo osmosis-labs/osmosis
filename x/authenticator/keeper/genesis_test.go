@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	)
 	s.Require().NoError(err)
 
-	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, accAddress)
+	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
 	s.Require().NoError(err)
 	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 
@@ -77,14 +77,15 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	for i := 0; i < 5; i++ {
-		err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	for i := 1; i <= 5; i++ {
+		id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
 			ctx,
 			accAddress,
 			"SignatureVerificationAuthenticator",
 			priv.PubKey().Bytes(),
 		)
 		s.Require().NoError(err)
+		s.Require().Equal(uint64(i), id)
 	}
 
 	authenticators, err := s.App.AuthenticatorKeeper.GetAllAuthenticatorData(ctx)

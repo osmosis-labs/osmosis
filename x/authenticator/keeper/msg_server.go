@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -35,7 +36,7 @@ func (m msgServer) AddAuthenticator(
 		return nil, err
 	}
 
-	authenticators, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
+	authenticators, err := m.Keeper.GetAuthenticatorDataForAccount(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -46,17 +47,19 @@ func (m msgServer) AddAuthenticator(
 	}
 
 	// Finally, add the authenticator to the store.
-	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type, msg.Data)
+	id, err := m.Keeper.AddAuthenticator(ctx, sender, msg.Type, msg.Data)
 	if err != nil {
 		return nil, err
 	}
 
+	stringId := strconv.FormatUint(id, 10)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, stringId),
 		),
 	})
 

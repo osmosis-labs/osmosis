@@ -34,6 +34,17 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	resp, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
 	s.Require().NoError(err)
 	s.Require().True(resp.Success)
+
+	// assert event emitted
+	s.Require().Equal(s.Ctx.EventManager().Events(), sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, "1"),
+		),
+	})
 }
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
@@ -83,7 +94,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 	// Now attempt to remove it
 	removeMsg := &types.MsgRemoveAuthenticator{
 		Sender: accAddress.String(),
-		Id:     0,
+		Id:     1,
 	}
 
 	resp, err := msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)

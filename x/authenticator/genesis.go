@@ -10,6 +10,13 @@ import (
 // InitGenesis initializes the module's state from a provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
+
+	// if there is no NextAuthenticatorId set in genstate, go will set it to 0
+	// we need to set it to FirstAuthenticatorId in that case
+	if genState.NextAuthenticatorId == 0 {
+		genState.NextAuthenticatorId = keeper.FirstAuthenticatorId
+	}
+
 	k.SetNextAuthenticatorId(ctx, genState.NextAuthenticatorId)
 
 	for i := range genState.AuthenticatorData {

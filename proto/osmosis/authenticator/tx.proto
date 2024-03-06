@@ -37,5 +37,5 @@ message MsgRemoveAuthenticatorResponse { bool success = 1; }
 message TxExtension {
   // selected_authenticators holds indices for the chosen authenticators per
   // message.
-  repeated int32 selected_authenticators = 1;
+  repeated uint64 selected_authenticators = 1;
 }
