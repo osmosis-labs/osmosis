@@ -236,8 +236,8 @@ func (m *MsgRemoveAuthenticatorResponse) GetSuccess() bool {
 // TxExtension allows for additional authenticator-specific data in
 // transactions.
 type TxExtension struct {
-	// selected_authenticators holds indices for the chosen authenticators per
-	// message.
+	// selected_authenticators holds the authenticator_id for the chosen
+	// authenticator per message.
 	SelectedAuthenticators []uint64 `protobuf:"varint,1,rep,packed,name=selected_authenticators,json=selectedAuthenticators,proto3" json:"selected_authenticators,omitempty"`
 }
 
