@@ -1,4 +1,4 @@
-keeper: 
+keeper:
   path: "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
   struct: "Keeper"
 client_path: "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/client"

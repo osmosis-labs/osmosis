@@ -2277,12 +2277,12 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 					// Add to uptime growth inside range
 					if tc.addedUptimeGrowthInside != nil {
-						s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
+						s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
 					}
 
 					// Add to uptime growth outside range
 					if tc.addedUptimeGrowthOutside != nil {
-						s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthOutside)
+						s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthOutside)
 					}
 				}
 
@@ -2868,11 +2868,11 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 				clPool.SetCurrentTick(DefaultCurrTick)
 				if tc.growthOutside != nil {
-					s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
+					s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
 				}
 
 				if tc.growthInside != nil {
-					s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthInside)
+					s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthInside)
 				}
 
 				err = s.Clk.SetPool(s.Ctx, clPool)
