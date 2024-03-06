@@ -277,23 +277,127 @@ the fee payer has been authenticated.
 
 This limit is set to a fixed amount controlled by the param of this module as `maximum_unauthenticated_gas`
 
+## Authenticator Ids
+
+Each authenticator associated with an account has a unique id that is used to identify it. This id is an incrementing
+number that is globally unique. For example, if user1 and user2 add authenticators to their accounts, these will have 
+ids 1 and 2 respectively. If user1 adds a second authenticator, it will have id 3.
+
 ## Composite authenticators
-- Composite id
-- Composition logic and expected behaviour (between authenticate and confirm)
-- State commit / reversion conditions for sub authenticators
+
+Composite authenticators are authenticators that can use other "sub-authenticators" to authenticate a message.
+
+There are two composite authenticators implemented in this module: `AnyOf` and `AllOf` authenticators. These take a
+list of authenticators and authenticate a message if any or all of the authenticators in the list authenticate the
+message. A similar logic applies to track and confirm.
+
+### Composite Ids 
+
+When a composite authenticator calls a sub authenticator, it is its responsibility to update the authenticator id
+passed down to the callee so that it can identify itself. This is done by combining the id of the top level 
+authenticator with the position of the sub-authenticator in the list. For example, if a user has 
+`AllOf(AnyOf(sig1, sig2), CosmwasmAuthenticator(contract1, params))` as it's authenticator, and it has a 
+global id of 86, the cosmwasm authenticator will receive `86.1` as its authenticator id. If that instead was another
+composite authenticator, its first sub-authenticator would receive `86.1.0` as its authenticator id.
+
+### Composition Logic
+
+#### AllOf
+
+When using an AllOf authenticator `AllOf(a,b,...)`, the msg will be authenticated iff `authenticate(a) && authenticate(b) && ...` is true.
+
+The track function will be called for all the sub-authenticators. Any state changes made in track will be committed if 
+authentication and track succeeds, regardless of the outcome of the message execution.  
+
+If the message execution succeeds, the confirm function will be called for all the sub-authenticators.
+
+The message will succeed and its state changes be committed iff `confirm(a) && confirm(b) && ...` is true. Otherwise, 
+the all state changes will be reverted except the ones made in track, which are always committed.
+
+#### AnyOf
+
+When using an AnyOf authenticator `AnyOf(a,b,...)`, the msg will be authenticated iff `authenticate(a) || authenticate(b) || ...` is true.
+
+In this case, because we are not tracking which sub-authenticators authenticated the message, the track function must be
+called on *all* the sub-authenticators. Any state changes made in track will be committed if authentication and track
+succeeds, regardless of the outcome of the message execution.
+
+Similarly, when calling confirm on an AnyOf authenticator, we call confirm on *all* the sub-authenticators.
+
+The message will succeed and its state changes be committed iff `confirm(a) || confirm(b) || ...` is true. Otherwise,
+the all state changes will be reverted except the ones made in track, which are always committed.
+
+### Selecting sub-authenticators
+
+At the moment, we do not support selecting sub-authenticators when submitting a tx. This would be useful when dealing 
+with an `AnyOf` so that a user can specify which sub-authenticator to select. This would also allow us to avoid calling
+all sub-authenticators when during the track and confirm steps. This is a feature that could be added in the future.
+
+### Composite signatures
+
+There are two ways in which we may want to provide signatures to a composite authenticator:
+
+ * Simple: the same signature is passed to all sub-authenticators
+ * Partitioned: the signatures are encoded as a json array, and each sub-authenticator is given its own part of the signature
+
+As an example, consider a simple multi-sig implemented through composite authenticators. In this case, a user would assign
+an authenticator that looks like `PartitionedAllOf(pubkey1, pubkey2)` to their account. If this authenticator were a 
+simple `AnyOf` there would be no way of providing a signature that satisfies both pubkeys. Here, however, we can
+provide each signature encoded in a json array. 
+
+The user provides the bytes `"[sig1, sig2]"` as their signature. The `PartitionedAllOf` authenticator will then decode
+this json array and pass `sig1` to the first sub-authenticator and `sig2` to the second sub-authenticator.
+
+# Constructing composite authenticators
+
+As a user, you may want to combine composite authenticators to create more complex authentication logic. Here are some 
+examples of how to do that:
+
+## One Click trading
+
+A hot key can be configured so that it is only allowed to execute swap messages, and fail if the transaction leaves the 
+user with a lower balance than a certain threshold. This can be done by using the following authenticator:
+
+`AllOf(SignatureVerificationAuthenticator(usersPubKey), AnyOf(MessageFilter(SwapMsg1), MessageFilter(SwapMsg2)), CosmwasmAuthenticator(spendLimitContract, params))`
+
+## Multisig
+
+A simple multisig design can be done by using a `PartitionedAllOf` authenticator. This authenticator will take a list of
+pubkeys and authenticate the message if signatures for the pubkeys are present in the signature.
+
+`PartitionedAllOf(pubkey1, pubkey2, pubkey3)`
+
+## Cosigner 
+
+An off chain cosigner can be configured to be required for all messages on an account. This way, an api (cosigner service)
+can analyze and simulate the transactions for security and provide their signature iff the transaction is safe.
+This could be achieved by using the following authenticator:
+
+`AllOf(SignatureVerificationAuthenticator(cosignerPubKey), AnyOf(...)` where the rest of the user's authenticators are
+under the `AnyOf`.
+
+For a more complex cosigner, the user could use a `CosmwasmAuthenticator` that calls a contract that implements the
+cosigner logic. This would allow some manager to rotate the cosigner key or implement some recovery logic in case the 
+cosigner is unavailable or misbehaving. 
+
+## Succession/Inheritance protocol
+
+A user can configure an inheritance authenticator so that a beneficiary can take over their account if the account has 
+been inactive for a certain period of time. This can be done by using the following authenticator:
+
+`AnyOf(CosmwasmAuthenticator(inheritanceContract, params), ...other_authenticators)` 
+
 
 # Authentication Lifecycle examples 
 - Which hook runs and when
 - State commit / reversion conditions
 
-# Building composite authenticators
-
-Examples
-
 
 # Circuit Breaker
 
-# Cosigner Flow
+For the initial release, this module will be provided behind a "circuit breaker" or feature switch. This means that
+the feature will be controlled by the `are_smart_accounts_active` parameter. If that parameter is set to false,
+the authenticator module will not be used and the classic cosmos sdk authentication will be used instead.g
 
 # Using authenticators from JS
 
