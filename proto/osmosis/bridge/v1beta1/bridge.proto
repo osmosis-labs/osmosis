@@ -8,10 +8,26 @@ option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
 // Params defines params for x/bridge module.
 message Params {
   // Signers used to sign inbound and release outbound transactions
-  repeated string signers = 1;
+  repeated string signers = 1 [ (gogoproto.moretags) = "yaml:\"signers\"" ];
   // Assets is a list used to create tokenfactory denoms
   // for corresponding trading pairs
-  repeated AssetWithStatus assets = 2 [ (gogoproto.nullable) = false ];
+  repeated AssetWithStatus assets = 2 [
+    (gogoproto.moretags) = "yaml:\"assets\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// UpdateParams defines a message that is used for params modification.
+// The only difference with Params is that this message can't modify assets' statuses.
+message UpdateParams {
+  // Signers used to sign inbound and release outbound transactions
+  repeated string signers = 1 [ (gogoproto.moretags) = "yaml:\"signers\"" ];
+  // Assets is a list used to create tokenfactory denoms
+  // for corresponding trading pairs
+  repeated Asset assets = 2 [
+    (gogoproto.moretags) = "yaml:\"assets\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 enum AssetStatus {
@@ -26,17 +42,20 @@ enum AssetStatus {
 
 // AssetWithStatus defines a pair of the asset and its current status.
 message AssetWithStatus {
-  Asset asset = 1 [ (gogoproto.nullable) = false ];
-  AssetStatus asset_status = 2;
+  Asset asset = 1 [
+    (gogoproto.moretags) = "yaml:\"asset\"",
+    (gogoproto.nullable) = false
+  ];
+  AssetStatus asset_status = 2 [ (gogoproto.moretags) = "yaml:\"asset_status\"" ];
 }
 
 // Asset defines a pair of the source chain name and its Osmosis representation denoted by denom.
 // It also includes a precision used for coins representation.
 message Asset {
   // SourceChain is a source chain name
-  string source_chain = 1;
+  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
   // Denom is the Osmosis representation of the SourceChain
-  string denom = 2;
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
   // Precision used for coins representation
-  uint64 precision = 3;
+  uint64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
 }

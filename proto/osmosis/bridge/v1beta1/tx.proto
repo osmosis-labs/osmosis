@@ -77,14 +77,17 @@ message MsgOutboundTransfer {
 
 message MsgOutboundTransferResponse {}
 
-// MsgUpdateParams allows to update module params.
+// MsgUpdateParams allows to update module params. It contains UpdateParams
+// instead of just Params to forbid status updating using this method.
+// All new assets introduced with this method have ASSET_STATUS_BLOCKED_BOTH
+// status by default.
 message MsgUpdateParams {
   option (amino.name) = "osmosis/bridge/update-params";
 
   // Sender is a sender's address
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // NewParams should be fully populated
-  Params new_params = 2 [
+  UpdateParams new_params = 2 [
     (gogoproto.moretags) = "yaml:\"new_params\"",
     (gogoproto.nullable) = false
   ];

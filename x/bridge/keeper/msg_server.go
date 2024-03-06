@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
@@ -19,29 +20,54 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (m msgServer) InboundTransfer(
-	ctx context.Context,
+	goCtx context.Context,
 	msg *types.MsgInboundTransfer,
 ) (*types.MsgInboundTransferResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	return new(types.MsgInboundTransferResponse), m.Keeper.InboundTransfer(ctx, *msg)
 }
 
 func (m msgServer) OutboundTransfer(
-	ctx context.Context,
+	goCtx context.Context,
 	msg *types.MsgOutboundTransfer,
 ) (*types.MsgOutboundTransferResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	return new(types.MsgOutboundTransferResponse), m.Keeper.OutboundTransfer(ctx, *msg)
 }
 
 func (m msgServer) UpdateParams(
-	ctx context.Context,
+	goCtx context.Context,
 	msg *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
-	return new(types.MsgUpdateParamsResponse), m.Keeper.UpdateParams(ctx, *msg)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	result := m.Keeper.UpdateParams(ctx, types.UpdateParams{
+		Signers: msg.NewParams.Signers,
+		Assets:  msg.NewParams.Assets,
+	})
+
+	err := ctx.EventManager().EmitTypedEvent(&types.EventUpdateParams{
+		NewSigners:     msg.NewParams.Signers,
+		CreatedSigners: result.signersToCreate,
+		DeletedSigners: result.signersToDelete,
+		NewAssets:      msg.NewParams.Assets,
+		CreatedAssets:  result.assetsToCreate,
+		DeletedAssets:  result.assetsToDelete,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return new(types.MsgUpdateParamsResponse), nil
 }
 
 func (m msgServer) ChangeAssetStatus(
-	ctx context.Context,
+	goCtx context.Context,
 	msg *types.MsgChangeAssetStatus,
 ) (*types.MsgChangeAssetStatusResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	return new(types.MsgChangeAssetStatusResponse), m.Keeper.ChangeAssetStatus(ctx, *msg)
 }

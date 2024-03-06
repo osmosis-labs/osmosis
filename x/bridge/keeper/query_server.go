@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
@@ -18,10 +19,10 @@ func NewQueryServerImpl(keeper Keeper) types.QueryServer {
 	return &queryServer{Keeper: keeper}
 }
 
-func (q queryServer) Params(ctx context.Context, _ *types.ParamsRequest) (*types.ParamsResponse, error) {
-	params, err := q.Keeper.GetParams(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &types.ParamsResponse{Params: params}, nil
+func (q queryServer) Params(goCtx context.Context, _ *types.ParamsRequest) (*types.ParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	return &types.ParamsResponse{
+		Params: q.Keeper.GetParams(ctx),
+	}, nil
 }

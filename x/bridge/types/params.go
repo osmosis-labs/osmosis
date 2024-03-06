@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 var (
@@ -31,18 +32,61 @@ func DefaultParams() Params {
 
 // Validate x/bridge params.
 func (p Params) Validate() error {
+	if len(p.Signers) == 0 {
+		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are empty")
+	}
 	for _, signer := range p.Signers {
 		_, err := sdk.AccAddressFromBech32(signer)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
 		}
 	}
+	if ok := osmoutils.IsDistinct(p.Signers); !ok {
+		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
+	}
 
+	if len(p.Assets) == 0 {
+		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are empty")
+	}
 	for _, asset := range p.Assets {
 		err := asset.Validate()
 		if err != nil {
 			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 		}
+	}
+	if ok := osmoutils.IsDistinct(p.Assets); !ok {
+		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
+	}
+
+	return nil
+}
+
+// Validate x/bridge params.
+func (p UpdateParams) Validate() error {
+	if len(p.Signers) == 0 {
+		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are empty")
+	}
+	for _, signer := range p.Signers {
+		_, err := sdk.AccAddressFromBech32(signer)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
+		}
+	}
+	if ok := osmoutils.IsDistinct(p.Signers); !ok {
+		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
+	}
+
+	if len(p.Assets) == 0 {
+		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are empty")
+	}
+	for _, asset := range p.Assets {
+		err := asset.Validate()
+		if err != nil {
+			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+		}
+	}
+	if ok := osmoutils.IsDistinct(p.Assets); !ok {
+		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
 	}
 
 	return nil

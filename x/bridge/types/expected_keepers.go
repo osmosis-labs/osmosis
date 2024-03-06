@@ -18,8 +18,11 @@ type AccountKeeper interface {
 	// GetModuleAccount is used to get x/bridge module account
 	// to use it as the admin for denoms in x/tokenfactory.
 	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+	GetModuleAddress(name string) sdk.AccAddress
 }
 
 type TokenFactoryKeeper interface {
-	// TODO: Expose TokenFactory methods?
+	CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error)
+	Mint(ctx sdk.Context, sender string, amount sdk.Coin, mintTo string) error
+	Burn(ctx sdk.Context, sender string, amount sdk.Coin, burnFrom string) error
 }

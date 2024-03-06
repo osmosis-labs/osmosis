@@ -172,3 +172,108 @@ func contains(slice interface{}, element interface{}) bool {
 	}
 	return false
 }
+
+func TestSetsDifference(t *testing.T) {
+	type tc struct {
+		name     string
+		sliceA   []string
+		sliceB   []string
+		expected []string
+	}
+
+	testCases := []tc{
+		{
+			name:     "equal slices",
+			sliceA:   []string{"a", "aa", "aaa"},
+			sliceB:   []string{"a", "aa", "aaa"},
+			expected: []string{},
+		},
+		{
+			name:     "B is a subset of A",
+			sliceA:   []string{"a", "aa", "aaa"},
+			sliceB:   []string{"a", "aa"},
+			expected: []string{"aaa"},
+		},
+		{
+			name:     "A is a subset of B",
+			sliceA:   []string{"a", "aa"},
+			sliceB:   []string{"a", "aa", "aaa"},
+			expected: []string{},
+		},
+		{
+			name:     "A is empty",
+			sliceA:   []string{},
+			sliceB:   []string{"a", "aa", "aaa"},
+			expected: []string{},
+		},
+		{
+			name:     "B is empty",
+			sliceA:   []string{"a", "aa", "aaa"},
+			sliceB:   []string{},
+			expected: []string{"a", "aa", "aaa"},
+		},
+		{
+			name:     "A and B are empty",
+			sliceA:   []string{},
+			sliceB:   []string{},
+			expected: []string{},
+		},
+		{
+			name:     "A and B are different",
+			sliceA:   []string{"a", "aa", "aaa"},
+			sliceB:   []string{"b", "bb", "bbb"},
+			expected: []string{"a", "aa", "aaa"},
+		},
+		{
+			name:     "partial intersection",
+			sliceA:   []string{"a", "aa", "aaa"},
+			sliceB:   []string{"b", "aa", "bbb"},
+			expected: []string{"a", "aaa"},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, osmoutils.Difference(tc.sliceA, tc.sliceB))
+		})
+	}
+}
+
+func TestIsDistinct(t *testing.T) {
+	type tc struct {
+		name     string
+		slice    []string
+		expected bool
+	}
+
+	testCases := []tc{
+		{
+			name:     "all unique",
+			slice:    []string{"a", "aa", "aaa"},
+			expected: true,
+		},
+		{
+			name:     "not unique",
+			slice:    []string{"a", "aa", "aaa", "a"},
+			expected: false,
+		},
+		{
+			name:     "multiple not unique",
+			slice:    []string{"a", "a", "a", "a"},
+			expected: false,
+		},
+		{
+			name:     "empty slice",
+			slice:    []string{},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, osmoutils.IsDistinct(tc.slice))
+		})
+	}
+}
