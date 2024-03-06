@@ -1,0 +1,11 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+  }"ghcr.io/roost-io/features/roost:1": {}
+}"ghcr.io/itsmechlark/features/1password:1": {}
+"ghcr.io/wxw-matt/devcontainer-features/command_runner:0": {}
+"ghcr.io/wxw-matt/devcontainer-features/script_runner:0": {}
+"ghcr.io/devcontainers-contrib/features/actions-runner-noexternals:1": {}
+"ghcr.io/lee-orr/rusty-dev-containers/wasm-server-runner:0": {}
+"ghcr.io/devcontainers/features/node:1": {}
+"ghcr.io/devcontainers-contrib/features/node-asdf:0": {}
