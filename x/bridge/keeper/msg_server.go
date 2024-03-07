@@ -44,10 +44,7 @@ func (m msgServer) UpdateParams(
 ) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	result := m.Keeper.UpdateParams(ctx, types.UpdateParams{
-		Signers: msg.NewParams.Signers,
-		Assets:  msg.NewParams.Assets,
-	})
+	result := m.Keeper.UpdateParams(ctx, msg.NewParams)
 
 	err := ctx.EventManager().EmitTypedEvent(&types.EventUpdateParams{
 		NewSigners:     msg.NewParams.Signers,
