@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -42,14 +43,27 @@ type LatestCalls struct {
 	OnAuthenticatorRemoved SpyRemoveRequest
 }
 
+type FailureFlag = uint8
+
+const (
+	AUTHENTICATE_FAIL FailureFlag = 1 << iota
+	CONFIRM_EXECUTION_FAIL
+)
+
+func Has(fixed, toCheck FailureFlag) bool {
+	return fixed&toCheck != 0
+}
+
 type SpyAuthenticatorData struct {
-	Name string `json:"name"`
+	Name    string      `json:"name"`
+	Failure FailureFlag `json:"failure"` // bit flag representing authenticator failure
 }
 
 // SpyAuthenticator tracks latest call and can be used to test the authenticator
 type SpyAuthenticator struct {
 	KvStoreKey storetypes.StoreKey
 	Name       string
+	Failure    FailureFlag
 }
 
 func NewSpyAuthenticator(kvStoreKey storetypes.StoreKey) SpyAuthenticator {
@@ -71,6 +85,7 @@ func (s SpyAuthenticator) Initialize(data []byte) (authenticator.Authenticator, 
 		return nil, err
 	}
 	s.Name = spyData.Name
+	s.Failure = spyData.Failure
 	return s, nil
 }
 
@@ -79,6 +94,10 @@ func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request authenticator.Au
 		calls.Authenticate = request
 		return calls
 	})
+
+	if Has(s.Failure, AUTHENTICATE_FAIL) {
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not authenticated")
+	}
 	return nil
 }
 
@@ -103,10 +122,17 @@ func (s SpyAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePaye
 }
 
 func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+	// intentionlly call update before check to test state revert
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.ConfirmExecution = request
 		return calls
 	})
+
+	fmt.Printf("spy %s has failure %v\n", s.Name, s.Failure)
+
+	if Has(s.Failure, CONFIRM_EXECUTION_FAIL) {
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not authenticated")
+	}
 	return nil
 }
 
