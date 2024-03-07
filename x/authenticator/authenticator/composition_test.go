@@ -563,7 +563,8 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 	}
 
 	for _, tc := range testCases {
-		s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000))
+		originalCtx := s.Ctx
+		s.Ctx, _ = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000)).CacheContext()
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
@@ -576,12 +577,6 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			s.Require().NoError(err)
 		} else {
 			panic("top lv must be allOf or anyOf")
-		}
-
-		// reset all spy authenticators that the test is checking
-		for _, name := range tc.names {
-			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
-			spy.ResetLatestCalls(s.Ctx)
 		}
 
 		msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
@@ -649,6 +644,8 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 				latestCalls.OnAuthenticatorRemoved,
 			)
 		}
+
+		s.Ctx = originalCtx
 	}
 
 }
