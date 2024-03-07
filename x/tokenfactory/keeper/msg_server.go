@@ -4,8 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 )
 
@@ -45,26 +43,11 @@ func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateD
 func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// pay some extra gas cost to give a better error here.
-	_, denomExists := server.bankKeeper.GetDenomMetaData(ctx, msg.Amount.Denom)
-	if !denomExists {
-		return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
-	}
-
-	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Amount.GetDenom())
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Sender != authorityMetadata.GetAdmin() {
-		return nil, types.ErrUnauthorized
-	}
-
 	if msg.MintToAddress == "" {
 		msg.MintToAddress = msg.Sender
 	}
 
-	err = server.Keeper.mintTo(ctx, msg.Amount, msg.MintToAddress)
+	err := server.Keeper.Mint(ctx, msg.Sender, msg.Amount, msg.MintToAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -83,26 +66,11 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Amount.GetDenom())
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Sender != authorityMetadata.GetAdmin() {
-		return nil, types.ErrUnauthorized
-	}
-
 	if msg.BurnFromAddress == "" {
 		msg.BurnFromAddress = msg.Sender
 	}
 
-	accountI := server.Keeper.accountKeeper.GetAccount(ctx, sdk.AccAddress(msg.BurnFromAddress))
-	_, ok := accountI.(authtypes.ModuleAccountI)
-	if ok {
-		return nil, types.ErrBurnFromModuleAccount
-	}
-
-	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.BurnFromAddress)
+	err := server.Keeper.Burn(ctx, msg.Sender, msg.Amount, msg.BurnFromAddress)
 	if err != nil {
 		return nil, err
 	}
