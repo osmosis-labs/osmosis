@@ -65,6 +65,7 @@ func NewAnteHandler(
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
+		authante.LimitFeePayerDecorator{},
 		authante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
@@ -80,7 +81,6 @@ func NewAnteHandler(
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewExtensionOptionsDecorator(nil),
 		v9.MsgFilterDecorator{},
-		authante.LimitFeePayerDecorator{},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,

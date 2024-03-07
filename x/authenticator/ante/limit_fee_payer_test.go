@@ -11,6 +11,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 	"math/rand"
 	"time"
@@ -52,7 +53,7 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 		s.TestPrivKeys[1],
 	}, []uint64{0, 0})
 
-	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
+	anteHandler := sdk.ChainAnteDecorators(ante.LimitFeePayerDecorator{}, s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
 	s.Require().NoError(err)
 

@@ -76,15 +76,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	cacheCtx, writeCache := ctx.CacheContext()
 
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
-
-	// By default, the fee payer is the first signer of the transaction
-	feePayer := feeTx.FeePayer()
-
 	msgs := tx.GetMsgs()
+	if len(msgs) == 0 {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no messages in transaction")
+	}
+	// The fee payer is the first signer of the transaction. This should have been enforced by the
+	// LimitFeePayerDecorator
+	feePayer := msgs[0].GetSigners()[0]
+
 	selectedAuthenticators, err := ad.GetSelectedAuthenticators(tx, len(msgs))
 	if err != nil {
 		return ctx, err
@@ -101,7 +100,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		signers := msg.GetSigners()
-
 		// Enforce only one signer per message
 		if len(signers) != 1 {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
@@ -109,11 +107,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		// By default, the first signer is the account that is used
 		account := signers[0]
-
-		// Ensure the feePayer is the signer of the first message
-		if msgIndex == 0 && !feePayer.Equals(account) {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "feePayer must be the signer of the first message")
-		}
 
 		// Get the currently selected authenticator
 		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
