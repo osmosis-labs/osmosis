@@ -72,12 +72,3 @@ func Difference[T comparable](a, b []T) []T {
 	}
 	return diff
 }
-
-// Map TODO: Placed here temporarily. Delete after releasing the new osmoutils version.
-func Map[E, V any](s []E, f func(E) V) []V {
-	res := make([]V, 0, len(s))
-	for _, v := range s {
-		res = append(res, f(v))
-	}
-	return res
-}
