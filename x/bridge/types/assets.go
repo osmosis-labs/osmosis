@@ -14,7 +14,7 @@ func DefaultAssetsWithStatuses() []AssetWithStatus {
 				Denom:       DefaultBitcoinDenomName,
 				Precision:   DefaultBitcoinPrecision,
 			},
-			AssetStatus: AssetStatus_ASSET_STATUS_OK,
+			AssetStatus: AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
 		},
 	}
 }

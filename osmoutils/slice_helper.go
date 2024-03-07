@@ -40,14 +40,13 @@ func ReverseSlice[T any](s []T) []T {
 
 // ContainsDuplicate checks if there are any duplicate
 // elements in the slice.
-func ContainsDuplicate[T any](arr []T) bool {
-	visited := make(map[any]bool, 0)
+func ContainsDuplicate[T comparable](arr []T) bool {
+	visited := make(map[T]struct{}, 0)
 	for i := 0; i < len(arr); i++ {
-		if visited[arr[i]] {
+		if _, ok := visited[arr[i]]; ok {
 			return true
-		} else {
-			visited[arr[i]] = true
 		}
+		visited[arr[i]] = struct{}{}
 	}
 	return false
 }
@@ -131,18 +130,6 @@ func Difference[T comparable](a, b []T) []T {
 		}
 	}
 	return diff
-}
-
-// IsDistinct checks whether provided slice contains only unique elements.
-func IsDistinct[T comparable](s []T) bool {
-	m := make(map[T]struct{}, len(s))
-	for i := range s {
-		if _, ok := m[s[i]]; ok {
-			return false
-		}
-		m[s[i]] = struct{}{}
-	}
-	return true
 }
 
 func Map[E, V any](s []E, f func(E) V) []V {

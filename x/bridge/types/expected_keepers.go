@@ -23,6 +23,6 @@ type AccountKeeper interface {
 
 type TokenFactoryKeeper interface {
 	CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error)
-	Mint(ctx sdk.Context, sender string, amount sdk.Coin, mintTo string) error
-	Burn(ctx sdk.Context, sender string, amount sdk.Coin, burnFrom string) error
+	//Mint(ctx sdk.Context, sender string, amount sdk.Coin, mintTo string) error
+	//Burn(ctx sdk.Context, sender string, amount sdk.Coin, burnFrom string) error
 }
