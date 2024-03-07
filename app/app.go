@@ -880,24 +880,34 @@ func ExportKVStores(rs sdk.CommitMultiStore, keys map[string]*storetypes.KVStore
 			return err
 		}
 
-		kvStore := rs.GetKVStore(kvStoreKey)
-
-		// Iterate over each key-value pair in the KVStore.
-		iterator := kvStore.Iterator(nil, nil)
-		for ; iterator.Valid(); iterator.Next() {
-			// Export the key-value pair to the BoltDB file.
-			err = db.Update(func(tx *bolt.Tx) error {
-				b := tx.Bucket([]byte(name))
-				err := b.Put(iterator.Key(), iterator.Value())
-				if err != nil {
-					return fmt.Errorf("failed to put key-value pair: %w", err)
+		// Use a deferred function to recover from a panic.
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("Recovered from panic while getting KVStore for key %s: %v\n", name, r)
 				}
-				return nil
-			})
-			if err != nil {
-				return err
+			}()
+
+			kvStore := rs.GetKVStore(kvStoreKey)
+			fmt.Printf("Successfully got KVStore for key %s\n", name)
+
+			// Iterate over each key-value pair in the KVStore.
+			iterator := kvStore.Iterator(nil, nil)
+			for ; iterator.Valid(); iterator.Next() {
+				// Export the key-value pair to the BoltDB file.
+				err = db.Update(func(tx *bolt.Tx) error {
+					b := tx.Bucket([]byte(name))
+					err := b.Put(iterator.Key(), iterator.Value())
+					if err != nil {
+						return fmt.Errorf("failed to put key-value pair: %w", err)
+					}
+					return nil
+				})
+				if err != nil {
+					panic(err)
+				}
 			}
-		}
+		}()
 	}
 
 	return nil
