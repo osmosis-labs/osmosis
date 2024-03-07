@@ -360,7 +360,7 @@ require (
 	github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac // indirect
 	github.com/zondax/hid v0.9.2 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go.etcd.io/bbolt v1.3.8 // indirect
+	go.etcd.io/bbolt v1.3.8
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect

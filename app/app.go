@@ -11,6 +11,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,6 +32,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
@@ -363,6 +365,16 @@ func NewOsmosisApp(
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
+
+	fmt.Println("creating db")
+	cms := app.CommitMultiStore()
+	keys := app.GetKVStoreKey()
+	filePath := filepath.Join(app.homePath, "testing")
+	err = ExportKVStores(cms, keys, filePath)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("done creating db")
 
 	anteHandler := NewAnteHandler(
 		appOpts,
@@ -843,4 +855,50 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
+}
+
+// ExportKVStores exports all KVStores to a BoltDB database file.
+func ExportKVStores(rs sdk.CommitMultiStore, keys map[string]*storetypes.KVStoreKey, filePath string) error {
+	// Open the BoltDB file.
+	db, err := bolt.Open(filePath, 0600, nil)
+	if err != nil {
+		return fmt.Errorf("failed to open BoltDB file: %w", err)
+	}
+	defer db.Close()
+
+	// Iterate over each store.
+	for name, kvStoreKey := range keys {
+		// Create a bucket in the BoltDB file for this store.
+		err = db.Update(func(tx *bolt.Tx) error {
+			_, err := tx.CreateBucket([]byte(name))
+			if err != nil {
+				return fmt.Errorf("failed to create bucket: %w", err)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		kvStore := rs.GetKVStore(kvStoreKey)
+
+		// Iterate over each key-value pair in the KVStore.
+		iterator := kvStore.Iterator(nil, nil)
+		for ; iterator.Valid(); iterator.Next() {
+			// Export the key-value pair to the BoltDB file.
+			err = db.Update(func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte(name))
+				err := b.Put(iterator.Key(), iterator.Value())
+				if err != nil {
+					return fmt.Errorf("failed to put key-value pair: %w", err)
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
