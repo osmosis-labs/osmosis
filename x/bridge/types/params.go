@@ -65,37 +65,6 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// Validate x/bridge params.
-func (p UpdateParams) Validate() error {
-	if len(p.Signers) == 0 {
-		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are empty")
-	}
-	for _, signer := range p.Signers {
-		_, err := sdk.AccAddressFromBech32(signer)
-		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
-		}
-	}
-	if ok := osmoutils.ContainsDuplicate(p.Signers); ok {
-		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
-	}
-
-	if len(p.Assets) == 0 {
-		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are empty")
-	}
-	for _, asset := range p.Assets {
-		err := asset.Validate()
-		if err != nil {
-			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
-		}
-	}
-	if ok := osmoutils.ContainsDuplicate(p.Assets); ok {
-		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
-	}
-
-	return nil
-}
-
 // ParamKeyTable for the x/bridge module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})

@@ -19,7 +19,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 
-	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -68,8 +68,6 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge"
-	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
@@ -90,7 +88,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid"
+	superfluid "github.com/osmosis-labs/osmosis/v23/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
@@ -131,7 +129,6 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.TakerFeeCollectorName:        nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
-	bridgetypes.ModuleName:                   nil,
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
@@ -193,7 +190,6 @@ func appModules(
 			app.ConcentratedLiquidityKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		bridge.NewAppModule(*app.BridgeKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
@@ -278,8 +274,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
-		// bridge should be inited after tokenfactory
-		bridgetypes.ModuleName,
 		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
