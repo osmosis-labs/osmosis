@@ -410,10 +410,9 @@ func NewOsmosisApp(
 	}
 
 	fmt.Println("creating db")
-	cms := app.CommitMultiStore()
 	keys := app.GetKVStoreKey()
 	filePath := filepath.Join(app.homePath, "testing")
-	err = ExportKVStores(cms, keys, filePath)
+	err = ExportKVStores(app.CommitMultiStore(), keys, filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -888,7 +887,7 @@ func ExportKVStores(rs sdk.CommitMultiStore, keys map[string]*storetypes.KVStore
 				}
 			}()
 
-			kvStore := rs.GetKVStore(kvStoreKey)
+			kvStore := rs.GetCommitKVStore(kvStoreKey)
 			fmt.Printf("Successfully got KVStore for key %s\n", kvStoreKey.Name())
 
 			// Iterate over each key-value pair in the KVStore.
