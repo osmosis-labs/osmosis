@@ -672,25 +672,75 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 			names:           []string{"fail", "pass"},
 			isStateReverted: []bool{true, false},
 		},
+		{
+			name: "AnyOf(fail_1, fail_2, pass)",
+			compositeAuth: *anyOf(
+				spyWithFailure("fail_1", testutils.CONFIRM_EXECUTION_FAIL),
+				spyWithFailure("fail_2", testutils.CONFIRM_EXECUTION_FAIL),
+				spy("pass"),
+			),
+			names:           []string{"fail_1", "fail_2", "pass"},
+			isStateReverted: []bool{true, true, false},
+		},
+		{
+			name: "AnyOf(fail, AllOf(fail_2, pass_1), pass_2)",
+			compositeAuth: *anyOf(
+				spyWithFailure("fail_1", testutils.CONFIRM_EXECUTION_FAIL),
+				allOf(
+					spyWithFailure("fail_2", testutils.CONFIRM_EXECUTION_FAIL),
+					spy("pass_1"),
+				),
+				spy("pass_2"),
+			),
+			names: []string{"fail_1", "fail_2", "pass_1", "pass_2"},
+			// pass_1 reverted since it's inside all of with failed auth
+			isStateReverted: []bool{true, true, true, false},
+		},
+		{
+			name: "AllOf(pass_1, AnyOf(fail_1, pass_2)",
+			compositeAuth: *allOf(
+				spy("pass_1"),
+				anyOf(
+					spyWithFailure("fail_1", testutils.CONFIRM_EXECUTION_FAIL),
+					spy("pass_2"),
+				),
+			),
+			names:           []string{"pass_1", "fail_1", "pass_2"},
+			isStateReverted: []bool{false, true, false},
+		},
+		{
+			name: "AnyOf(AnyOf(AllOf(pass_1, fail_1), pass_2), pass_3)",
+			compositeAuth: *anyOf(
+				anyOf(
+					allOf(
+						spy("pass_1"),
+						spyWithFailure("fail_1", testutils.CONFIRM_EXECUTION_FAIL),
+					),
+					spy("pass_2"),
+				),
+				spy("pass_3"),
+			),
+			// pass_3 is short circuited, so ignored here
+			names:           []string{"pass_1", "fail_1", "pass_2"},
+			isStateReverted: []bool{true, true, false},
+		},
 	}
 
 	for _, tc := range testCases {
-		s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000))
+		originalCtx := s.Ctx
+		s.Ctx, _ = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000)).CacheContext()
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
 		var auth authenticator.Authenticator
-		if tc.compositeAuth.isAnyOf() {
+		if tc.compositeAuth.isAllOf() {
+			auth, err = s.AllOfAuth.Initialize(data)
+			s.Require().NoError(err)
+		} else if tc.compositeAuth.isAnyOf() {
 			auth, err = s.AnyOfAuth.Initialize(data)
 			s.Require().NoError(err)
 		} else {
 			panic("top lv must be  anyOf")
-		}
-
-		// reset all spy authenticators that the test is checking
-		for _, name := range tc.names {
-			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
-			spy.ResetLatestCalls(s.Ctx)
 		}
 
 		msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
@@ -720,6 +770,13 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 			latestCalls := spy.GetLatestCalls(s.Ctx)
 			latestConfirmExecuion := latestCalls.ConfirmExecution
 
+			// NOTE: This assertion relying on the fact that latestCalls are stored in kv store
+			// so if state is reverted, latest call will be empty.
+			// This is not ideal since it could be interpreted as not being called at all
+			// but it's good enough for now.
+			//
+			// Maybe using in mem naked Map to track calls instead and having kvstore
+			// for actual state tracking would be better
 			if tc.isStateReverted[i] {
 				s.Require().Empty(latestConfirmExecuion)
 			} else {
@@ -728,6 +785,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 
 		}
 
+		s.Ctx = originalCtx
 	}
 }
 

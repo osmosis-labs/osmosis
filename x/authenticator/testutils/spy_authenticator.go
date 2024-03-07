@@ -2,7 +2,6 @@ package testutils
 
 import (
 	"encoding/json"
-	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -127,8 +126,6 @@ func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticato
 		calls.ConfirmExecution = request
 		return calls
 	})
-
-	fmt.Printf("spy %s has failure %v\n", s.Name, s.Failure)
 
 	if Has(s.Failure, CONFIRM_EXECUTION_FAIL) {
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not authenticated")
