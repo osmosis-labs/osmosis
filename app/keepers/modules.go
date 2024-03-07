@@ -2,8 +2,8 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
-	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
@@ -35,6 +35,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v23/x/bridge"
 	clclient "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
 	cwpoolclient "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/client"
@@ -52,7 +53,7 @@ import (
 	poolmanagerclient "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client"
 	poolmanager "github.com/osmosis-labs/osmosis/v23/x/poolmanager/module"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v23/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v23/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v23/x/superfluid/client"
 	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/twapmodule"
@@ -120,6 +121,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
+	bridge.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	icq.AppModuleBasic{},

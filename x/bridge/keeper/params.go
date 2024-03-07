@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
@@ -18,7 +18,7 @@ type UpdateParamsResult struct {
 // UpdateParams properly updates params of the module.
 func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.UpdateParams) UpdateParamsResult {
 	var (
-		newAssets = osmoutils.Map(newParams.Assets, func(v types.Asset) types.AssetWithStatus {
+		newAssets = Map(newParams.Assets, func(v types.Asset) types.AssetWithStatus {
 			return types.AssetWithStatus{
 				Asset:       v,
 				AssetStatus: types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
@@ -27,13 +27,13 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.UpdateParams) Upda
 
 		oldParams = k.GetParams(ctx)
 
-		signersToCreate = osmoutils.Difference(newParams.Signers, oldParams.Signers)
-		signersToDelete = osmoutils.Difference(oldParams.Signers, newParams.Signers)
-		assetsToCreate  = osmoutils.Difference(newAssets, oldParams.Assets)
-		assetsToDelete  = osmoutils.Difference(oldParams.Assets, newAssets)
-	)
+		signersToCreate = Difference(newParams.Signers, oldParams.Signers)
+		signersToDelete = Difference(oldParams.Signers, newParams.Signers)
+		assetsToCreate  = Difference(newAssets, oldParams.Assets)
+		assetsToDelete  = Difference(oldParams.Assets, newAssets)
 
-	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+		bridgeModuleAddr = k.accountKeeper.GetModuleAddress(types.ModuleName)
+	)
 
 	// create denoms for all new assets
 	for _, asset := range assetsToCreate {
@@ -62,4 +62,29 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
+}
+
+// Difference returns the slice of elements that are elements of a but not elements of b.
+// TODO: Placed here temporarily. Delete after releasing the new osmoutils version.
+func Difference[T comparable](a, b []T) []T {
+	mb := make(map[T]struct{}, len(a))
+	for _, x := range b {
+		mb[x] = struct{}{}
+	}
+	diff := make([]T, 0)
+	for _, x := range a {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+	return diff
+}
+
+// Map TODO: Placed here temporarily. Delete after releasing the new osmoutils version.
+func Map[E, V any](s []E, f func(E) V) []V {
+	res := make([]V, 0, len(s))
+	for _, v := range s {
+		res = append(res, f(v))
+	}
+	return res
 }

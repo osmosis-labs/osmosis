@@ -4,12 +4,15 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
 // InitGenesis initializes the bridge module's state from a provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx)
+
+	// TODO: handle signers creation
 
 	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	for _, asset := range genState.Params.Assets {

@@ -18,11 +18,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
-
-	// TODO: tokenfactory packages are temporary stubs, delete them
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v23/x/bridge/client/cli"
+	"github.com/osmosis-labs/osmosis/v23/x/bridge/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
 var (
@@ -41,7 +39,7 @@ func NewAppModuleBasic() AppModuleBasic {
 	return AppModuleBasic{}
 }
 
-// Name returns the x/tokenfactory module's name.
+// Name returns the x/bridge module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
@@ -55,12 +53,12 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
 
-// DefaultGenesis returns the x/tokenfactory module's default genesis state.
+// DefaultGenesis returns the x/bridge module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the x/tokenfactory module.
+// ValidateGenesis performs genesis state validation for the x/bridge module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
@@ -72,15 +70,15 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
-// GetTxCmd returns the x/tokenfactory module's root tx command.
+// GetTxCmd returns the x/bridge module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
 
-// GetQueryCmd returns the x/tokenfactory module's root query command.
+// GetQueryCmd returns the x/bridge module's root query command.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
@@ -92,44 +90,35 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule implements the AppModule interface for the capability module.
 type AppModule struct {
 	AppModuleBasic
-
-	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	keeper keeper.Keeper
 }
 
-func NewAppModule(
-	keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper,
-) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
 	}
 }
 
-// Name returns the x/tokenfactory module's name.
+// Name returns the x/bridge module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// QuerierRoute returns the x/tokenfactory module's query routing key.
+// QuerierRoute returns the x/bridge module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 }
 
-// RegisterInvariants registers the x/tokenfactory module's invariants.
+// RegisterInvariants registers the x/bridge module's invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// InitGenesis performs the x/tokenfactory module's genesis initialization. It
+// InitGenesis performs the x/bridge module's genesis initialization. It
 // returns no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
@@ -140,7 +129,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the x/tokenfactory module's exported genesis state as raw
+// ExportGenesis returns the x/bridge module's exported genesis state as raw
 // JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.keeper.ExportGenesis(ctx)
@@ -150,10 +139,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock executes all ABCI BeginBlock logic respective to the tokenfactory module.
+// BeginBlock executes all ABCI BeginBlock logic respective to the bridge module.
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock executes all ABCI EndBlock logic respective to the tokenfactory module. It
+// EndBlock executes all ABCI EndBlock logic respective to the bridge module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
@@ -163,7 +152,7 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 
 // AppModuleSimulationV2 functions
 
-// GenerateGenesisState creates a randomized GenState of the tokenfactory module.
+// GenerateGenesisState creates a randomized GenState of the bridge module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	tfDefaultGen := types.DefaultGenesis()
 	tfDefaultGenJson := simState.Cdc.MustMarshalJSON(tfDefaultGen)
