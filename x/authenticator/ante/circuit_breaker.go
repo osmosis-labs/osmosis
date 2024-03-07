@@ -12,9 +12,9 @@ import (
 // CircuitBreakerDecorator routes transactions through appropriate ante handlers based on
 // the IsCircuitBreakActive function.
 type CircuitBreakerDecorator struct {
-	authenticatorKeeper *authenticatorkeeper.Keeper
-	auth                sdk.AnteHandler
-	classic             sdk.AnteHandler
+	authenticatorKeeper          *authenticatorkeeper.Keeper
+	authenticatorAnteHandlerFlow sdk.AnteHandler
+	originalAnteHandlerFlow      sdk.AnteHandler
 }
 
 // NewCircuitBreakerDecorator creates a new instance of CircuitBreakerDecorator with the provided parameters.
@@ -24,9 +24,9 @@ func NewCircuitBreakerDecorator(
 	classic sdk.AnteHandler,
 ) CircuitBreakerDecorator {
 	return CircuitBreakerDecorator{
-		authenticatorKeeper: authenticatorKeeper,
-		auth:                auth,
-		classic:             classic,
+		authenticatorKeeper:          authenticatorKeeper,
+		authenticatorAnteHandlerFlow: auth,
+		originalAnteHandlerFlow:      classic,
 	}
 }
 
@@ -40,11 +40,11 @@ func (ad CircuitBreakerDecorator) AnteHandle(
 	// Check that the authenticator flow is active
 	if active, _ := IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper); active {
 		// Return and call the AnteHandle function on all the original decorators.
-		return ad.classic(ctx, tx, simulate)
+		return ad.originalAnteHandlerFlow(ctx, tx, simulate)
 	}
 
 	// Return and call the AnteHandle function on all the authenticator decorators.
-	return ad.auth(ctx, tx, simulate)
+	return ad.authenticatorAnteHandlerFlow(ctx, tx, simulate)
 }
 
 // IsCircuitBreakActive checks if smart account are active and if there is a
@@ -64,7 +64,7 @@ func IsCircuitBreakActive(
 }
 
 // IsSelectedAuthenticatorTxExtensionMissing checks to see if the transaction has the correct
-// extension, it returns
+// extension, it returns false if we continue to the authenticator flow.
 func IsSelectedAuthenticatorTxExtensionMissing(
 	tx sdk.Tx,
 	authenticatorKeeper *authenticatorkeeper.Keeper,
@@ -76,17 +76,12 @@ func IsSelectedAuthenticatorTxExtensionMissing(
 
 	// Get the selected authenticator options from the transaction.
 	txOptions := authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
-	if txOptions == nil {
+
+	// Check if authenticator transaction options are present and there is at least 1 selected.
+	if txOptions == nil || len(txOptions.GetSelectedAuthenticators()) < 1 {
 		return true, nil
 	}
 
-	// Retrieve the selected authenticators from the extension.
-	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
-
-	if len(selectedAuthenticators) < 1 {
-		// Return true if the number of selected authenticators is less than 1.
-		return true, nil
-	}
-
+	// Return false with the txOptions if there are authenticator transaction options.
 	return false, txOptions
 }
