@@ -500,9 +500,9 @@ func (p Pool) CalcOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 
-	tokenAmountInAfterFee := tokenIn.Amount.ToLegacyDec().Mul(osmomath.OneDec().Sub(spreadFactor))
+	tokenAmountInAfterFee := tokenIn.Amount.ToLegacyDec().MulMut(oneDec.Sub(spreadFactor))
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToLegacyDec()
-	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
+	poolPostSwapInBalance := tokenAmountInAfterFee.AddMut(poolTokenInBalance)
 
 	// deduct spread factor on the tokensIn
 	// delta balanceOut is positive(tokens inside the pool decreases)
