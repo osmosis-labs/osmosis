@@ -366,16 +366,6 @@ func NewOsmosisApp(
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
-	fmt.Println("creating db")
-	cms := app.CommitMultiStore()
-	keys := app.GetKVStoreKey()
-	filePath := filepath.Join(app.homePath, "testing")
-	err = ExportKVStores(cms, keys, filePath)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("done creating db")
-
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
@@ -418,6 +408,16 @@ func NewOsmosisApp(
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
+
+	fmt.Println("creating db")
+	cms := app.CommitMultiStore()
+	keys := app.GetKVStoreKey()
+	filePath := filepath.Join(app.homePath, "testing")
+	err = ExportKVStores(cms, keys, filePath)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("done creating db")
 
 	return app
 }
@@ -867,10 +867,10 @@ func ExportKVStores(rs sdk.CommitMultiStore, keys map[string]*storetypes.KVStore
 	defer db.Close()
 
 	// Iterate over each store.
-	for name, kvStoreKey := range keys {
+	for _, kvStoreKey := range keys {
 		// Create a bucket in the BoltDB file for this store.
 		err = db.Update(func(tx *bolt.Tx) error {
-			_, err := tx.CreateBucket([]byte(name))
+			_, err := tx.CreateBucket([]byte(kvStoreKey.Name()))
 			if err != nil {
 				return fmt.Errorf("failed to create bucket: %w", err)
 			}
@@ -884,19 +884,19 @@ func ExportKVStores(rs sdk.CommitMultiStore, keys map[string]*storetypes.KVStore
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					fmt.Printf("Recovered from panic while getting KVStore for key %s: %v\n", name, r)
+					fmt.Printf("Recovered from panic while getting KVStore for key %s: %v\n", kvStoreKey.Name(), r)
 				}
 			}()
 
 			kvStore := rs.GetKVStore(kvStoreKey)
-			fmt.Printf("Successfully got KVStore for key %s\n", name)
+			fmt.Printf("Successfully got KVStore for key %s\n", kvStoreKey.Name())
 
 			// Iterate over each key-value pair in the KVStore.
 			iterator := kvStore.Iterator(nil, nil)
 			for ; iterator.Valid(); iterator.Next() {
 				// Export the key-value pair to the BoltDB file.
 				err = db.Update(func(tx *bolt.Tx) error {
-					b := tx.Bucket([]byte(name))
+					b := tx.Bucket([]byte(kvStoreKey.Name()))
 					err := b.Put(iterator.Key(), iterator.Value())
 					if err != nil {
 						return fmt.Errorf("failed to put key-value pair: %w", err)
