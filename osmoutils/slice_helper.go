@@ -117,3 +117,38 @@ func GetRandomSubset[T any](slice []T) []T {
 	n := rand.Intn(len(slice))
 	return slice[:n]
 }
+
+// Difference returns the slice of elements that are elements of a but not elements of b.
+func Difference[T comparable](a, b []T) []T {
+	mb := make(map[T]struct{}, len(a))
+	for _, x := range b {
+		mb[x] = struct{}{}
+	}
+	diff := make([]T, 0)
+	for _, x := range a {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+	return diff
+}
+
+// IsDistinct checks whether provided slice contains only unique elements.
+func IsDistinct[T comparable](s []T) bool {
+	m := make(map[T]struct{}, len(s))
+	for i := range s {
+		if _, ok := m[s[i]]; ok {
+			return false
+		}
+		m[s[i]] = struct{}{}
+	}
+	return true
+}
+
+func Map[E, V any](s []E, f func(E) V) []V {
+	res := make([]V, 0, len(s))
+	for _, v := range s {
+		res = append(res, f(v))
+	}
+	return res
+}
