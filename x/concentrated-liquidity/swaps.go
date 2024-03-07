@@ -669,7 +669,6 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 		return swapState, err
 	}
 	if updateAccumulators {
-
 		if *uptimeAccums == nil {
 			uptimeAccumsRaw, err := k.GetUptimeAccumulators(ctx, p.GetId())
 			if err != nil {
