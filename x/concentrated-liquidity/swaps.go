@@ -592,7 +592,7 @@ func (k Keeper) computeInAmtGivenOut(
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
 		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, &uptimeAccums, tokenInDenom, true)
+				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, &uptimeAccums, tokenInDenom, updateAccumulators)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
 			}
@@ -626,7 +626,9 @@ func (k Keeper) computeInAmtGivenOut(
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
-	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)))
+	if updateAccumulators {
+		spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)))
+	}
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
