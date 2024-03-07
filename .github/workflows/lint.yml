@@ -7,8 +7,9 @@ on:
       - concentrated-liquidity-main
 
 env:
-  GO_VERSION: "1.20.5"
+  GO_VERSION: "1.21"
   GIT_DIFF:
+
 
 jobs:
   golangci:

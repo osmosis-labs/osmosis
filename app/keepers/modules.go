@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
@@ -125,6 +126,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
+	ibcwasm.AppModuleBasic{},
 	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
