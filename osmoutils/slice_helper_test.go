@@ -240,7 +240,7 @@ func TestSetsDifference(t *testing.T) {
 	}
 }
 
-func TestIsDistinct(t *testing.T) {
+func TestContainsDuplicate(t *testing.T) {
 	type tc struct {
 		name     string
 		slice    []string
@@ -251,29 +251,29 @@ func TestIsDistinct(t *testing.T) {
 		{
 			name:     "all unique",
 			slice:    []string{"a", "aa", "aaa"},
-			expected: true,
+			expected: false,
 		},
 		{
 			name:     "not unique",
 			slice:    []string{"a", "aa", "aaa", "a"},
-			expected: false,
+			expected: true,
 		},
 		{
 			name:     "multiple not unique",
 			slice:    []string{"a", "a", "a", "a"},
-			expected: false,
+			expected: true,
 		},
 		{
 			name:     "empty slice",
 			slice:    []string{},
-			expected: true,
+			expected: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expected, osmoutils.IsDistinct(tc.slice))
+			require.Equal(t, tc.expected, osmoutils.ContainsDuplicate(tc.slice))
 		})
 	}
 }

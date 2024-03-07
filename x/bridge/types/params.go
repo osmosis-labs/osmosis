@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -41,7 +42,10 @@ func (p Params) Validate() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
 		}
 	}
-	if ok := osmoutils.IsDistinct(p.Signers); !ok {
+
+	_ = osmoutils.DecNotFoundError{}
+
+	if ok := osmoutils.ContainsDuplicate(p.Signers); !ok {
 		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
 	}
 
@@ -54,7 +58,7 @@ func (p Params) Validate() error {
 			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 		}
 	}
-	if ok := osmoutils.IsDistinct(p.Assets); !ok {
+	if ok := osmoutils.ContainsDuplicate(p.Assets); !ok {
 		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
 	}
 
@@ -72,7 +76,7 @@ func (p UpdateParams) Validate() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
 		}
 	}
-	if ok := osmoutils.IsDistinct(p.Signers); !ok {
+	if ok := osmoutils.ContainsDuplicate(p.Signers); ok {
 		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
 	}
 
@@ -85,7 +89,7 @@ func (p UpdateParams) Validate() error {
 			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 		}
 	}
-	if ok := osmoutils.IsDistinct(p.Assets); !ok {
+	if ok := osmoutils.ContainsDuplicate(p.Assets); ok {
 		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
 	}
 
@@ -122,7 +126,7 @@ func validateSigners(i interface{}) error {
 }
 
 func validateAssets(i interface{}) error {
-	assets, ok := i.([]Asset)
+	assets, ok := i.([]AssetWithStatus)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
