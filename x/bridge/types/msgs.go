@@ -99,7 +99,7 @@ var _ sdk.Msg = &MsgUpdateParams{}
 
 func NewMsgUpdateParams(
 	sender string,
-	newParams UpdateParams,
+	newParams Params,
 ) *MsgUpdateParams {
 	return &MsgUpdateParams{
 		Sender:    sender,

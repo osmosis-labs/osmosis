@@ -16,21 +16,14 @@ type UpdateParamsResult struct {
 }
 
 // UpdateParams properly updates params of the module.
-func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.UpdateParams) UpdateParamsResult {
+func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) UpdateParamsResult {
 	var (
-		newAssets = Map(newParams.Assets, func(v types.Asset) types.AssetWithStatus {
-			return types.AssetWithStatus{
-				Asset:       v,
-				AssetStatus: types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
-			}
-		})
-
 		oldParams = k.GetParams(ctx)
 
 		signersToCreate = Difference(newParams.Signers, oldParams.Signers)
 		signersToDelete = Difference(oldParams.Signers, newParams.Signers)
-		assetsToCreate  = Difference(newAssets, oldParams.Assets)
-		assetsToDelete  = Difference(oldParams.Assets, newAssets)
+		assetsToCreate  = Difference(newParams.Assets, oldParams.Assets)
+		assetsToDelete  = Difference(oldParams.Assets, newParams.Assets)
 
 		bridgeModuleAddr = k.accountKeeper.GetModuleAddress(types.ModuleName)
 	)
