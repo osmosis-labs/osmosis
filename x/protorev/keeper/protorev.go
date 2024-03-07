@@ -199,8 +199,7 @@ func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
 
 // SetSwapsToBackrun sets the swaps to backrun, updated via hooks
 func (k Keeper) SetSwapsToBackrun(ctx sdk.Context, swapsToBackrun types.Route) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
-
+	store := prefix.NewStore(ctx.TransientStore(k.transientKey), types.KeyPrefixSwapsToBackrun)
 	bz, err := swapsToBackrun.Marshal()
 	if err != nil {
 		return err
@@ -213,7 +212,7 @@ func (k Keeper) SetSwapsToBackrun(ctx sdk.Context, swapsToBackrun types.Route) e
 
 // GetSwapsToBackrun returns the swaps to backrun, updated via hooks
 func (k Keeper) GetSwapsToBackrun(ctx sdk.Context) (types.Route, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	store := prefix.NewStore(ctx.TransientStore(k.transientKey), types.KeyPrefixSwapsToBackrun)
 	bz := store.Get(types.KeyPrefixSwapsToBackrun)
 
 	swapsToBackrun := types.Route{}
@@ -227,7 +226,7 @@ func (k Keeper) GetSwapsToBackrun(ctx sdk.Context) (types.Route, error) {
 
 // DeleteSwapsToBackrun deletes the swaps to backrun
 func (k Keeper) DeleteSwapsToBackrun(ctx sdk.Context) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	store := prefix.NewStore(ctx.TransientStore(k.transientKey), types.KeyPrefixSwapsToBackrun)
 	store.Delete(types.KeyPrefixSwapsToBackrun)
 }
 
