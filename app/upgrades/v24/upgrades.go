@@ -1,6 +1,8 @@
 package v24
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -38,6 +40,12 @@ func CreateUpgradeHandler(
 		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
 		// since we only need the pool indexed TWAPs.
 		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)
+
+		// restrict lockable durations to 2 weeks per
+		// https://wallet.keplr.app/chains/osmosis/proposals/400
+		keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
+			time.Hour * 24 * 14,
+		})
 
 		return migrations, nil
 	}

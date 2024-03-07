@@ -131,6 +131,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	oldBaseDenoms, err = s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Empty(oldBaseDenoms)
+
+	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(lockableDurations), 1)
+	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
