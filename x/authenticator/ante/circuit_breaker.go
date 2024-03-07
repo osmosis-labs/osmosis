@@ -59,6 +59,16 @@ func IsCircuitBreakActive(
 		return true, nil
 	}
 
+	// Get the selected authenticator options from the transaction.
+	return IsSelectedAuthenticatorTxExtensionMissing(tx, authenticatorKeeper)
+}
+
+// IsSelectedAuthenticatorTxExtensionMissing checks to see if the transaction has the correct
+// extension, it returns
+func IsSelectedAuthenticatorTxExtensionMissing(
+	tx sdk.Tx,
+	authenticatorKeeper *authenticatorkeeper.Keeper,
+) (bool, authenticatortypes.AuthenticatorTxOptions) {
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
 		return true, nil
@@ -67,6 +77,14 @@ func IsCircuitBreakActive(
 	// Get the selected authenticator options from the transaction.
 	txOptions := authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 	if txOptions == nil {
+		return true, nil
+	}
+
+	// Retrieve the selected authenticators from the extension.
+	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
+
+	if len(selectedAuthenticators) < 1 {
+		// Return true if the number of selected authenticators is less than 1.
 		return true, nil
 	}
 

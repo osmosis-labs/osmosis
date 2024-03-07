@@ -91,10 +91,6 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request Authentic
 		return errorsmod.Wrapf(err, "failed to sudo")
 	}
 
-	if err != nil {
-		return errorsmod.Wrapf(err, "failed to unmarshal authentication result")
-	}
-
 	return nil
 }
 
