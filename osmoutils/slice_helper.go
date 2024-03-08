@@ -40,13 +40,14 @@ func ReverseSlice[T any](s []T) []T {
 
 // ContainsDuplicate checks if there are any duplicate
 // elements in the slice.
-func ContainsDuplicate[T comparable](arr []T) bool {
-	visited := make(map[T]struct{}, 0)
+func ContainsDuplicate[T any](arr []T) bool {
+	visited := make(map[any]bool, 0)
 	for i := 0; i < len(arr); i++ {
-		if _, ok := visited[arr[i]]; ok {
+		if visited[arr[i]] {
 			return true
+		} else {
+			visited[arr[i]] = true
 		}
-		visited[arr[i]] = struct{}{}
 	}
 	return false
 }
@@ -115,29 +116,4 @@ func GetRandomSubset[T any](slice []T) []T {
 
 	n := rand.Intn(len(slice))
 	return slice[:n]
-}
-
-// Difference returns the slice of elements that are elements of a but not elements of b.
-func Difference[T comparable](a, b []T) []T {
-	mb := make(map[T]struct{}, len(a))
-	for _, x := range b {
-		mb[x] = struct{}{}
-	}
-	diff := make([]T, 0)
-	for _, x := range a {
-		if _, found := mb[x]; !found {
-			diff = append(diff, x)
-		}
-	}
-	return diff
-}
-
-// Map returns a slice that contains the result of applying function f
-// to every element of the slice s.
-func Map[E, V any](s []E, f func(E) V) []V {
-	res := make([]V, 0, len(s))
-	for _, v := range s {
-		res = append(res, f(v))
-	}
-	return res
 }
