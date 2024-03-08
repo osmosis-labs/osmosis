@@ -1,7 +1,7 @@
 package types
 
 const (
-	DefaultBitcoinChainName = "Bitcoin"
+	DefaultBitcoinChainName = "bitcoin"
 	DefaultBitcoinDenomName = "osmobtc"
 	DefaultBitcoinPrecision = 10 // TODO: decide
 )
