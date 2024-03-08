@@ -381,7 +381,6 @@ func GenTx(
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(feeAmt)
 	txBuilder.SetGasLimit(gas)
-	// TODO: set fee payer
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range signatures {

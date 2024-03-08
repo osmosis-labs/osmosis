@@ -65,6 +65,7 @@ func NewAnteHandler(
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
+		authante.LimitFeePayerDecorator{},
 		authante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
