@@ -109,7 +109,14 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, fee
 
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
-		return auth.ConfirmExecution(ctx, request)
+		cacheCtx, write := ctx.CacheContext()
+		err := auth.ConfirmExecution(cacheCtx, request)
+		if err != nil {
+			return err
+		}
+
+		write()
+		return nil
 	})
 }
 
