@@ -13,6 +13,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewInboundTransferCmd(),
 		NewOutboundTransferCmd(),
+		NewUpdateParamsCmd(),
 		NewChangeAssetStatusCmd(),
 	)
 

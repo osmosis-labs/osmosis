@@ -12,17 +12,15 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx)
 
-	// TODO: handle signers creation
-
-	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	for _, asset := range genState.Params.Assets {
-		_, err := k.tokenFactoryKeeper.CreateDenom(ctx, bridgeModuleAddr.String(), asset.Asset.Denom)
-		if err != nil {
-			panic(fmt.Sprintf("can't create a new denom %s: %s", asset.Asset.Denom, err))
-		}
+	// create denoms for all new assets
+	err := k.createAssets(ctx, genState.Params.Assets)
+	if err != nil {
+		panic(fmt.Errorf("can't create assets on x/bridge genesis: %w", err))
 	}
 
-	k.setParams(ctx, genState.Params)
+	// don't need to specifically create the signers, just save them
+
+	k.SetParams(ctx, genState.Params)
 }
 
 // ExportGenesis returns the bridge module's exported genesis.
