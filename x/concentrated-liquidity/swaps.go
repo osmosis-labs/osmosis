@@ -494,7 +494,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Coin amounts require int values
 	// Round amountIn up to avoid under charging
-	amountIn := (tokenInMin.Amount.ToLegacyDec().Sub(swapState.amountSpecifiedRemaining)).Ceil().TruncateInt()
+	amountIn := (tokenInMin.Amount.ToLegacyDec().SubMut(swapState.amountSpecifiedRemaining)).Ceil().TruncateInt()
 	// Round amountOut down to avoid over distributing.
 	amountOut := swapState.amountCalculated.TruncateInt()
 
@@ -622,7 +622,7 @@ func (k Keeper) computeInAmtGivenOut(
 	amountIn := swapState.amountCalculated.Ceil().TruncateInt()
 
 	// Round amount out down to avoid over charging the pool.
-	amountOut := desiredTokenOut.Amount.ToLegacyDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
+	amountOut := desiredTokenOut.Amount.ToLegacyDec().SubMut(swapState.amountSpecifiedRemaining).TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amountIn)
 	ctx.Logger().Debug("final amount out", amountOut)
