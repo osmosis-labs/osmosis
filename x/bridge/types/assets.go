@@ -43,6 +43,34 @@ func (m Asset) Validate() error {
 	return nil
 }
 
+func (m Asset) Name() string {
+	return fmt.Sprintf("%s-%s", m.SourceChain, m.Denom)
+}
+
+func (m AssetStatus) InboundActive() bool {
+	switch m {
+	case AssetStatus_ASSET_STATUS_OK,
+		AssetStatus_ASSET_STATUS_BLOCKED_OUTBOUND:
+		return true
+	case AssetStatus_ASSET_STATUS_BLOCKED_INBOUND,
+		AssetStatus_ASSET_STATUS_BLOCKED_BOTH:
+		return false
+	}
+	return false
+}
+
+func (m AssetStatus) OutboundActive() bool {
+	switch m {
+	case AssetStatus_ASSET_STATUS_OK,
+		AssetStatus_ASSET_STATUS_BLOCKED_INBOUND:
+		return true
+	case AssetStatus_ASSET_STATUS_BLOCKED_OUTBOUND,
+		AssetStatus_ASSET_STATUS_BLOCKED_BOTH:
+		return false
+	}
+	return false
+}
+
 func (m AssetStatus) Validate() error {
 	switch m {
 	case AssetStatus_ASSET_STATUS_OK,

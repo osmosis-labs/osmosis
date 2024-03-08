@@ -122,13 +122,15 @@ func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgChangeAssetStatus{}
 
-func NewMsgEnableBridge(
+func NewMsgChangeAssetStatus(
 	sender string,
-	asset AssetWithStatus,
+	asset Asset,
+	newAssetStatus AssetStatus,
 ) *MsgChangeAssetStatus {
 	return &MsgChangeAssetStatus{
 		Sender:         sender,
-		NewAssetStatus: asset,
+		Asset:          asset,
+		NewAssetStatus: newAssetStatus,
 	}
 }
 

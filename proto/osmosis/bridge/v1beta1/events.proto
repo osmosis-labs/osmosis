@@ -45,9 +45,8 @@ message EventUpdateParams {
 }
 
 message EventChangeAssetStatus {
-  // Sender is a sender's address
   string sender = 1;
-  // NewAssetStatus is a pair of the asset and its new status
-  AssetWithStatus old_asset_status = 2 [ (gogoproto.nullable) = false ];
-  AssetWithStatus new_asset_status = 3 [ (gogoproto.nullable) = false ];
+  Asset asset = 2 [ (gogoproto.nullable) = false ];
+  AssetStatus old_asset_status = 3;
+  AssetStatus new_asset_status = 4;
 }

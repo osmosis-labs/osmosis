@@ -26,7 +26,7 @@ func NewParams(signers []string, assets []AssetWithStatus) Params {
 // DefaultParams creates default x/bridge params.
 func DefaultParams() Params {
 	return Params{
-		Signers: []string{}, // TODO: what to use as the default?
+		Signers: []string{}, // TODO: what to use as default?
 		Assets:  DefaultAssetsWithStatuses(),
 	}
 }
@@ -42,10 +42,7 @@ func (p Params) Validate() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
 		}
 	}
-
-	_ = osmoutils.DecNotFoundError{}
-
-	if ok := osmoutils.ContainsDuplicate(p.Signers); !ok {
+	if osmoutils.ContainsDuplicate(p.Signers) {
 		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
 	}
 
@@ -58,11 +55,20 @@ func (p Params) Validate() error {
 			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 		}
 	}
-	if ok := osmoutils.ContainsDuplicate(p.Assets); !ok {
+	if osmoutils.ContainsDuplicate(p.Assets) {
 		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
 	}
 
 	return nil
+}
+
+func (p Params) GetAsset(a Asset) (AssetWithStatus, bool) {
+	for i := range p.Assets {
+		if p.Assets[i].Asset.Name() == a.Name() {
+			return p.Assets[i], true
+		}
+	}
+	return AssetWithStatus{}, false
 }
 
 // ParamKeyTable for the x/bridge module.

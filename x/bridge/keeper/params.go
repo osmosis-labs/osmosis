@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"fmt"
-
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
@@ -16,7 +15,7 @@ type UpdateParamsResult struct {
 }
 
 // UpdateParams properly updates params of the module.
-func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) UpdateParamsResult {
+func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdateParamsResult, error) {
 	var (
 		oldParams = k.GetParams(ctx)
 
@@ -24,30 +23,37 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) UpdatePara
 		signersToDelete = Difference(oldParams.Signers, newParams.Signers)
 		assetsToCreate  = Difference(newParams.Assets, oldParams.Assets)
 		assetsToDelete  = Difference(oldParams.Assets, newParams.Assets)
-
-		bridgeModuleAddr = k.accountKeeper.GetModuleAddress(types.ModuleName)
 	)
 
 	// create denoms for all new assets
-	for _, asset := range assetsToCreate {
-		_, err := k.tokenFactoryKeeper.CreateDenom(ctx, bridgeModuleAddr.String(), asset.Asset.Denom)
+	err := k.createAssets(ctx, assetsToCreate)
+	if err != nil {
+		return UpdateParamsResult{}, err
+	}
+
+	// disable deleted assets
+	for _, asset := range assetsToDelete {
+		_, err = k.ChangeAssetStatus(ctx, asset.Asset, types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH)
 		if err != nil {
-			panic(fmt.Sprintf("can't create a new denom %s: %s", asset.Asset.Denom, err))
+			return UpdateParamsResult{},
+				errorsmod.Wrapf(types.ErrCantChangeAssetStatus, "Can't disable asset %v: %s", asset.Asset, err)
 		}
 	}
 
-	// TODO: handle signers creation and deletion and asset deletion
+	// don't need to specifically update the signers, just save them
+
+	k.SetParams(ctx, newParams)
 
 	return UpdateParamsResult{
 		signersToCreate: signersToCreate,
 		signersToDelete: signersToDelete,
 		assetsToCreate:  assetsToCreate,
 		assetsToDelete:  assetsToDelete,
-	}
+	}, nil
 }
 
-// setParams sets the total set of params.
-func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
+// SetParams sets the total set of params.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
@@ -55,20 +61,4 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
-}
-
-// Difference returns the slice of elements that are elements of a but not elements of b.
-// TODO: Placed here temporarily. Delete after releasing the new osmoutils version.
-func Difference[T comparable](a, b []T) []T {
-	mb := make(map[T]struct{}, len(a))
-	for _, x := range b {
-		mb[x] = struct{}{}
-	}
-	diff := make([]T, 0)
-	for _, x := range a {
-		if _, found := mb[x]; !found {
-			diff = append(diff, x)
-		}
-	}
-	return diff
 }
