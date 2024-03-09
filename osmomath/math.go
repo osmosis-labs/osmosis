@@ -79,7 +79,7 @@ func Pow(base Dec, exp Dec) Dec {
 
 	fractionalPow := PowApprox(base, fractional, powPrecision)
 
-	return integerPow.Mul(fractionalPow)
+	return integerPow.MulMut(fractionalPow)
 }
 
 // Contract: 0 < base <= 2
