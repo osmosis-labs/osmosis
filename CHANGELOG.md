@@ -42,11 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-<<<<<<< HEAD
-### State Compatible
-
-* [#7590](https://github.com/osmosis-labs/osmosis/pull/7590) fix cwpool migration prop disallowing only one of code id or bytecode.
-=======
 ### State Breaking
 
 * [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution
@@ -99,7 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7598](https://github.com/osmosis-labs/osmosis/pull/7598) Remove extra code path in tickToPrice
 * [#3](https://github.com/osmosis-labs/cometbft/pull/3) Avoid double-calling types.BlockFromProto
 * [#4](https://github.com/osmosis-labs/cometbft/pull/4) Do not validatorBlock twice
->>>>>>> a655440a (chore: updates to changelog (#7696))
 
 ## v23.0.0
 
