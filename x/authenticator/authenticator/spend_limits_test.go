@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -9,23 +10,33 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 
 	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/post"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
 type SpendLimitAuthenticatorTest struct {
 	BaseAuthenticatorSuite
 
-	Store        prefix.Store
-	CosmwasmAuth authenticator.CosmwasmAuthenticator
+	Store                      prefix.Store
+	CosmwasmAuth               authenticator.CosmwasmAuthenticator
+	AlwaysPassAuth             testutils.TestingAuthenticator
+	AuthenticatorAnteDecorator ante.AuthenticatorDecorator
+	AuthenticatorPostDecorator post.AuthenticatorPostDecorator
 }
 
 type InstantiateMsg struct {
@@ -39,7 +50,7 @@ type TrackedDenom struct {
 }
 
 type SwapAmountInRoute struct {
-	PoolID        uint64 `json:"pool_id"`
+	PoolID        string `json:"pool_id"` // as u64
 	TokenOutDenom string `json:"token_out_denom"`
 }
 
@@ -65,6 +76,8 @@ func TestSpendLimitAuthenticatorTest(t *testing.T) {
 	suite.Run(t, new(SpendLimitAuthenticatorTest))
 }
 
+const UUSDC = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
 func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.SetupKeys()
 
@@ -76,14 +89,38 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
 
-	amount := 1000000000
-	coins := sdk.NewCoins(sdk.NewInt64Coin("uosmo", int64(amount)))
-	err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, coins)
-	s.Require().NoError(err, "Failed mint coins")
+	s.AlwaysPassAuth = testutils.TestingAuthenticator{Approve: testutils.Always, Confirm: testutils.Always, GasConsumption: 0}
+	s.OsmosisApp.AuthenticatorKeeper.AuthenticatorManager.RegisterAuthenticator(s.AlwaysPassAuth)
 
+	s.AuthenticatorAnteDecorator = ante.NewAuthenticatorDecorator(
+		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.AccountKeeper,
+		s.EncodingConfig.TxConfig.SignModeHandler(),
+	)
+
+	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
+		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.AccountKeeper,
+		s.EncodingConfig.TxConfig.SignModeHandler(),
+		// Add an empty handler here to enable a circuit breaker pattern
+		sdk.ChainPostDecorators(sdk.Terminator{}),
+	)
 }
 
 func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
+	usdcOsmoPoolId := s.preparePool(
+		[]balancer.PoolAsset{
+			{
+				Weight: sdk.NewInt(100000),
+				Token:  sdk.NewCoin(UUSDC, sdk.NewInt(1500000000)),
+			},
+			{
+				Weight: sdk.NewInt(100000),
+				Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
+			},
+		},
+	)
+
 	// always update file name to reflect the version
 	// current: https://github.com/osmosis-labs/spend-limit-authenticator/tree/1.0.0-alpha.1
 	// most test cases exists the repo above, this test file is intended to ensure that latest osmosis code
@@ -92,12 +129,25 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 
 	msg := InstantiateMsg{
 		PriceResolutionConfig: PriceResolutionConfig{
-			QuoteDenom:         "uosmo",
-			StalenessThreshold: "1000",
-			TwapDuration:       "1000",
+			QuoteDenom:         UUSDC,
+			StalenessThreshold: "3600000000000",
+			TwapDuration:       "3600000000000",
 		},
-		TrackedDenoms: []TrackedDenom{},
+		TrackedDenoms: []TrackedDenom{
+			{
+				Denom: "uosmo",
+				SwapRoutes: []SwapAmountInRoute{
+					{
+						PoolID:        fmt.Sprintf("%d", usdcOsmoPoolId),
+						TokenOutDenom: UUSDC,
+					},
+				},
+			},
+		},
 	}
+
+	// increase time for 1hr to ensure twap price is available
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
 	bz, err := json.Marshal(msg)
 	s.Require().NoError(err)
@@ -106,10 +156,11 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	// add new authenticator
 	ak := s.OsmosisApp.AppKeepers.AuthenticatorKeeper
 
-	acc := s.TestAccAddress[0]
+	authAcc := s.TestAccAddress[1]
+	authAccPriv := s.TestPrivKeys[1]
 
 	params := SpendLimitParams{
-		Limit:       "1000000000",
+		Limit:       "5000000000",
 		ResetPeriod: "day",
 	}
 	bz, err = json.Marshal(params)
@@ -124,9 +175,51 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	bz, err = json.Marshal(initData)
 	s.Require().NoError(err)
 
-	id, err := ak.AddAuthenticator(s.Ctx, acc, authenticator.CosmwasmAuthenticator{}.Type(), bz)
+	// hack to get fee payer authenticated
+	id, err := ak.AddAuthenticator(s.Ctx, authAcc, s.AlwaysPassAuth.Type(), []byte{})
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(1), id)
+
+	id, err = ak.AddAuthenticator(s.Ctx, authAcc, authenticator.CosmwasmAuthenticator{}.Type(), bz)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(2), id)
+
+	// fund acc
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
+	s.FundAcc(s.TestAccAddress[2], sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
+
+	// a hack for setting fee payer
+	selfSend := banktypes.MsgSend{
+		FromAddress: authAcc.String(),
+		ToAddress:   authAcc.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(1))),
+	}
+
+	// swap over the limit
+	swapMsg := poolmanagertypes.MsgSwapExactAmountIn{
+		Sender:            authAcc.String(),
+		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: "uosmo"}},
+		TokenIn:           sdk.NewCoin(UUSDC, sdk.NewInt(5000000001)),
+		TokenOutMinAmount: sdk.OneInt(),
+	}
+
+	tx, err := s.GenSimpleTxWithSelectedAuthenticators([]sdk.Msg{&selfSend, &swapMsg}, []cryptotypes.PrivKey{authAccPriv}, []uint64{1, 2})
+	s.Require().NoError(err)
+
+	// ante
+	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorAnteDecorator)
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// swap
+	_, err = s.OsmosisApp.MsgServiceRouter().Handler(&swapMsg)(s.Ctx, &swapMsg)
+	s.Require().NoError(err)
+
+	// post
+	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)
+	_, err = postHandler(s.Ctx, tx, false, true)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "Spend limit error: Overspend: remaining qouta 5000000000, requested 5000000001: execute wasm contract failed: unauthorized")
 }
 
 func (s *SpendLimitAuthenticatorTest) StoreContractCode(path string) uint64 {
@@ -137,7 +230,7 @@ func (s *SpendLimitAuthenticatorTest) StoreContractCode(path string) uint64 {
 	wasmCode, err := os.ReadFile(path)
 	s.Require().NoError(err)
 	accessEveryone := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody}
-	codeID, _, err := govKeeper.Create(s.Ctx.WithBlockTime(time.Now()), creator, wasmCode, &accessEveryone)
+	codeID, _, err := govKeeper.Create(s.Ctx, creator, wasmCode, &accessEveryone)
 	s.Require().NoError(err)
 	return codeID
 }
@@ -146,16 +239,32 @@ func (s *SpendLimitAuthenticatorTest) InstantiateContract(msg string, codeID uin
 	osmosisApp := s.OsmosisApp
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-	addr, _, err := contractKeeper.Instantiate(s.Ctx.WithBlockTime(time.Now()), codeID, creator, creator, []byte(msg), "contract", nil)
+	addr, _, err := contractKeeper.Instantiate(s.Ctx, codeID, creator, creator, []byte(msg), "contract", nil)
 	s.Require().NoError(err)
 	return addr
 }
 
-// func (s *CosmwasmAuthenticatorTest) QueryContract(msg string, contractAddr sdk.AccAddress) []byte {
-// 	// Query the contract
-// 	osmosisApp := s.OsmosisApp
-// 	res, err := osmosisApp.WasmKeeper.QuerySmart(s.Ctx.WithBlockTime(time.Now()), contractAddr, []byte(msg))
-// 	s.Require().NoError(err)
+func (s *SpendLimitAuthenticatorTest) preparePool(
+	poolAssets []balancer.PoolAsset,
+) uint64 {
+	poolCreator := s.TestAccAddress[0]
 
-// 	return res
-// }
+	s.FundAcc(poolCreator, s.OsmosisApp.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
+
+	for _, asset := range poolAssets {
+		s.FundAcc(poolCreator, sdk.NewCoins(asset.Token))
+	}
+
+	poolParams := balancer.PoolParams{
+		SwapFee: sdk.ZeroDec(),
+		ExitFee: sdk.ZeroDec(),
+	}
+
+	poolID, err := s.OsmosisApp.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		balancer.NewMsgCreateBalancerPool(poolCreator, poolParams, poolAssets, ""),
+	)
+	s.Require().NoError(err)
+
+	return poolID
+}

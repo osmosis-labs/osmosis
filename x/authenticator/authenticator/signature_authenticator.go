@@ -88,9 +88,13 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 		pubKey = acc.GetPubKey()
 	}
 
+	fmt.Println("SignatureVerificationAuthenticator.Authenticate: pubKey", pubKey)
+	fmt.Println("SignatureVerificationAuthenticator.Authenticate: request.Signature", request.Signature)
+	fmt.Println("SignatureVerificationAuthenticator.Authenticate: request.TxData", request.TxData.AccountNumber, request.TxData.AccountSequence, request.TxData.ChainID, request.TxData.Memo)
+
 	// after gas consumption continue to verify signatures
 	if !request.Simulate && pubKey == nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on not set on account or authenticator")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey is not set on account or authenticator")
 	}
 
 	// No need to verify signatures on recheck tx
