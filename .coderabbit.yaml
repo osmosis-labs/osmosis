@@ -3,7 +3,7 @@ early_access: false
 reviews:
   request_changes_workflow: false
   high_level_summary: true
-  poem: true
+  poem: false
   review_status: true
   collapse_walkthrough: false
   auto_review:
@@ -16,4 +16,4 @@ reviews:
       - "main"
       - "v*.x"
 chat:
-  auto_reply: false
+  auto_reply: true
