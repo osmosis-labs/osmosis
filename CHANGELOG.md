@@ -40,8 +40,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
 ## Unreleased
 
 ### State Breaking
@@ -63,7 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7625](https://github.com/osmosis-labs/osmosis/pull/7625) Remove duplicate CL accumulator update logic.
 * [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
->>>>>>> a655440a (chore: updates to changelog (#7696))
 
 ## v23.0.4-iavl-v1 (contains everything in v23.0.4)
 
@@ -81,8 +78,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v23.0.3-iavl-v1 (contains everything in v23.0.3)
 
 * [#7582](https://github.com/osmosis-labs/osmosis/pull/7582) IAVL v1
-<<<<<<< HEAD
-=======
 * [#537](https://github.com/osmosis-labs/cosmos-sdk/pull/537) Fix IAVL db grow issue
 
 ## v23.0.3
@@ -99,7 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7598](https://github.com/osmosis-labs/osmosis/pull/7598) Remove extra code path in tickToPrice
 * [#3](https://github.com/osmosis-labs/cometbft/pull/3) Avoid double-calling types.BlockFromProto
 * [#4](https://github.com/osmosis-labs/cometbft/pull/4) Do not validatorBlock twice
->>>>>>> a655440a (chore: updates to changelog (#7696))
 
 ## v23.0.0
 
@@ -121,10 +115,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
-  
 * [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
 * [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
-
 * [#7417](https://github.com/osmosis-labs/osmosis/pull/7417) Update CL gauges to use gauge duration as uptime, falling back to default if unauthorized or invalid
 * [#7419](https://github.com/osmosis-labs/osmosis/pull/7419) Use new module param for internal incentive uptimes
 * [#7427](https://github.com/osmosis-labs/osmosis/pull/7427) Prune TWAP records over multiple blocks, instead of all at once at epoch
