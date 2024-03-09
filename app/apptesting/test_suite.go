@@ -108,6 +108,7 @@ func (s *KeeperTestHelper) Setup() {
 		signingInfo := slashingtypes.NewValidatorSigningInfo(
 			consAddr,
 			s.Ctx.BlockHeight(),
+			0,
 			time.Unix(0, 0),
 			false,
 			0,
@@ -131,6 +132,7 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 		consAddr, _ := val.GetConsAddr()
 		signingInfo := slashingtypes.NewValidatorSigningInfo(
 			consAddr,
+			0,
 			s.Ctx.BlockHeight(),
 			time.Unix(0, 0),
 			false,
@@ -347,6 +349,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
 		consAddr,
+		0,
 		s.Ctx.BlockHeight(),
 		time.Unix(0, 0),
 		false,
