@@ -14,5 +14,6 @@ reviews:
     drafts: false
     base_branches:
       - "main"
+      - "v*.x"
 chat:
   auto_reply: true
