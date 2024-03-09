@@ -108,6 +108,9 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 }
 
 func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
+	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorAnteDecorator)
+	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)
+
 	usdcOsmoPoolId := s.preparePool(
 		[]balancer.PoolAsset{
 			{
@@ -162,7 +165,12 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	params := SpendLimitParams{
 		Limit:       "5000000000",
 		ResetPeriod: "day",
+		TimeLimit: &TimeLimit{
+			Start: nil,
+			End:   fmt.Sprintf("%d", time.Now().Add(time.Hour*25).UnixNano()),
+		},
 	}
+
 	bz, err = json.Marshal(params)
 
 	s.Require().NoError(err)
@@ -186,7 +194,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 
 	// fund acc
 	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
-	s.FundAcc(s.TestAccAddress[2], sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000000000))))
 
 	// a hack for setting fee payer
 	selfSend := banktypes.MsgSend{
@@ -195,11 +203,11 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 		Amount:      sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(1))),
 	}
 
-	// swap over the limit
+	// swap within limit
 	swapMsg := poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            authAcc.String(),
-		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: "uosmo"}},
-		TokenIn:           sdk.NewCoin(UUSDC, sdk.NewInt(5000000001)),
+		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: UUSDC}},
+		TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(3333333333)), // ~ 4,999,999,999 uusdc
 		TokenOutMinAmount: sdk.OneInt(),
 	}
 
@@ -207,7 +215,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	s.Require().NoError(err)
 
 	// ante
-	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorAnteDecorator)
+
 	_, err = anteHandler(s.Ctx, tx, false)
 	s.Require().NoError(err)
 
@@ -216,10 +224,68 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	s.Require().NoError(err)
 
 	// post
-	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)
+
+	_, err = postHandler(s.Ctx, tx, false, true)
+	s.Require().NoError(err)
+
+	// swap over the limit
+	swapMsg = poolmanagertypes.MsgSwapExactAmountIn{
+		Sender:            authAcc.String(),
+		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: "uosmo"}},
+		TokenIn:           sdk.NewCoin(UUSDC, sdk.NewInt(2)),
+		TokenOutMinAmount: sdk.OneInt(),
+	}
+
+	tx, err = s.GenSimpleTxWithSelectedAuthenticators([]sdk.Msg{&selfSend, &swapMsg}, []cryptotypes.PrivKey{authAccPriv}, []uint64{1, 2})
+	s.Require().NoError(err)
+
+	// ante
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// swap
+	_, err = s.OsmosisApp.MsgServiceRouter().Handler(&swapMsg)(s.Ctx, &swapMsg)
+	s.Require().NoError(err)
+
+	// post
 	_, err = postHandler(s.Ctx, tx, false, true)
 	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "Spend limit error: Overspend: remaining qouta 5000000000, requested 5000000001: execute wasm contract failed: unauthorized")
+	s.Require().Contains(err.Error(), "Spend limit error: Overspend: remaining qouta 1, requested 2: execute wasm contract failed: unauthorized")
+
+	// advance time to next day, and resend the prev tx should have no error
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+
+	// ante
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// swap
+	_, err = s.OsmosisApp.MsgServiceRouter().Handler(&swapMsg)(s.Ctx, &swapMsg)
+	s.Require().NoError(err)
+
+	// post
+	_, err = postHandler(s.Ctx, tx, false, true)
+	s.Require().NoError(err)
+
+	// advance time to end time, that should fail
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
+
+	// ante
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().Error(err)
+
+	nanoDigits := 9
+	endTimeSecsStr := params.TimeLimit.End[:len(params.TimeLimit.End)-nanoDigits]
+	endTimeNanosStr := params.TimeLimit.End[len(params.TimeLimit.End)-nanoDigits:]
+
+	s.Require().Contains(
+		err.Error(),
+		fmt.Sprintf(
+			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed: unauthorized",
+			s.Ctx.BlockTime().Unix(), s.Ctx.BlockTime().Nanosecond(),
+			endTimeSecsStr, endTimeNanosStr,
+		),
+	)
 }
 
 func (s *SpendLimitAuthenticatorTest) StoreContractCode(path string) uint64 {
