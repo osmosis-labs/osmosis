@@ -107,8 +107,8 @@ func solveConstantFunctionInvariant(
 
 	// amountY = balanceY * (1 - (y ^ weightRatio))
 	yToWeightRatio := osmomath.Pow(y, weightRatio)
-	paranthetical := osmomath.OneDec().Sub(yToWeightRatio)
-	amountY := tokenBalanceUnknownBefore.Mul(paranthetical)
+	paranthetical := oneDec.Sub(yToWeightRatio)
+	amountY := paranthetical.MulMut(tokenBalanceUnknownBefore)
 	return amountY
 }
 
