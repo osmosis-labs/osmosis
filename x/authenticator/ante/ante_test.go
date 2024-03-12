@@ -117,7 +117,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err := anteHandler(s.Ctx, tx, false)
 
-	s.Require().NoError(err, "Failed but should have passed as we return the default authenticator")
+	s.Require().Error(err, "Expected error when no authenticator is in the store")
 }
 
 // TestSignatureVerificationWithAuthenticatorInStore test a non-smart account signature verification
@@ -148,6 +148,15 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	s.Require().NoError(err)
 	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
+	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[1],
+		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[1].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
+
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
@@ -157,7 +166,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []uint64{0, 0})
+	}, []uint64{1, 2})
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -183,7 +192,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	// fee payer is authenticated
 	sigId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
 		s.Ctx,
-		s.TestAccAddress[0],
+		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)

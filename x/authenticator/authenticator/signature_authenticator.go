@@ -11,9 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // Compile time type assertion for the SignatureData using the
@@ -28,9 +25,8 @@ const (
 
 // signature authenticator
 type SignatureVerificationAuthenticator struct {
-	ak      *authkeeper.AccountKeeper
-	Handler authsigning.SignModeHandler
-	PubKey  cryptotypes.PubKey
+	ak     *authkeeper.AccountKeeper
+	PubKey cryptotypes.PubKey
 }
 
 func (sva SignatureVerificationAuthenticator) Type() string {
@@ -43,22 +39,11 @@ func (sva SignatureVerificationAuthenticator) StaticGas() uint64 {
 }
 
 // NewSignatureVerificationAuthenticator creates a new SignatureVerificationAuthenticator
-// when the app starts a SignatureVerificationAuthenticator is passed to the authentication manager,
-// it will only be instantiated once then used for each signature authentication.
-func NewSignatureVerificationAuthenticator(
-	ak *authkeeper.AccountKeeper,
-	Handler authsigning.SignModeHandler,
-) SignatureVerificationAuthenticator {
-	return SignatureVerificationAuthenticator{
-		ak:      ak,
-		Handler: Handler,
-	}
+func NewSignatureVerificationAuthenticator(ak *authkeeper.AccountKeeper) SignatureVerificationAuthenticator {
+	return SignatureVerificationAuthenticator{ak: ak}
 }
 
-// Initialize is used when a secondary account is used as an authenticator,
-// this is used to verify a signature from an account that does not have a public key
-// in the store. In this case we Initialize the authenticator from the authenticators store
-// which should have a public key in the data field.
+// Initialize sets up the public key to the data supplied from the account-authenticator configuration
 func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	if len(data) != secp256k1.PubKeySize {
 		sva.PubKey = nil
@@ -73,43 +58,28 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
-
-	// Retrieve pubkey we use either the public key from the authenticator store
-	// if that's not available query the original auth store for the public key
-	// the public key is added to the sva struct by the Initialize function
-	pubKey := sva.PubKey
-	if pubKey == nil {
-		// Having a default here keeps this authenticator stateless,
-		// that way we don't have to create specific authenticators with the pubkey of each existing account
-		acc, err := authante.GetSignerAcc(ctx, sva.ak, request.Account)
-		if err != nil {
-			return errorsmod.Wrap(err, "couldn't get signer account")
-		}
-		pubKey = acc.GetPubKey()
-	}
-
 	// after gas consumption continue to verify signatures
-	if !request.Simulate && pubKey == nil {
+
+	if request.Simulate || ctx.IsReCheckTx() {
+		return nil
+	}
+	if sva.PubKey == nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on not set on account or authenticator")
 	}
 
-	// No need to verify signatures on recheck tx
-	if !request.Simulate && !ctx.IsReCheckTx() {
-		if !pubKey.VerifySignature(request.SignModeTxData.Direct, request.Signature) {
-			return errorsmod.Wrapf(
-				sdkerrors.ErrUnauthorized,
-				"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
-				request.TxData.AccountNumber,
-				request.TxData.AccountSequence,
-				request.TxData.ChainID,
-			)
-		}
+	if !sva.PubKey.VerifySignature(request.SignModeTxData.Direct, request.Signature) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
+			request.TxData.AccountNumber,
+			request.TxData.AccountSequence,
+			request.TxData.ChainID,
+		)
 	}
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
+func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
 	return nil
 }
 

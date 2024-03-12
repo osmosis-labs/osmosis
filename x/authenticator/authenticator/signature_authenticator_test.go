@@ -33,14 +33,11 @@ func (s *SigVerifyAuthenticationSuite) SetupTest() {
 	s.SetupKeys()
 
 	s.EncodingConfig = app.MakeEncodingConfig()
-	txConfig := s.EncodingConfig.TxConfig
-	signModeHandler := txConfig.SignModeHandler()
 	ak := s.OsmosisApp.AccountKeeper
 
 	// Create a new Secp256k1SignatureAuthenticator for testing
 	s.SigVerificationAuthenticator = authenticator.NewSignatureVerificationAuthenticator(
 		ak,
-		signModeHandler,
 	)
 }
 
@@ -110,6 +107,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				true,
 			},
 		},
+
 		{
 			Description: "Test: successfully verified authenticator: multiple signers: PASS",
 			TestData: SignatureVerificationAuthenticatorTestData{
@@ -136,6 +134,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				true,
 			},
 		},
+
 		{
 			// This test case tests if there is two messages with the same signer
 			// with two successful signatures.
@@ -162,57 +161,61 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				true,
 			},
 		},
-		//{
-		//	Description: "Test: unsuccessful signature authentication not enough signers: FAIL",
-		//	TestData: SignatureVerificationAuthenticatorTestData{
-		//		[]sdk.Msg{
-		//			testMsg1,
-		//			testMsg2,
-		//			testMsg3,
-		//			testMsg4,
-		//		},
-		//		[]uint64{0, 0, 0, 0},
-		//		[]uint64{0, 0, 0, 0},
-		//		[]cryptotypes.PrivKey{
-		//			s.TestPrivKeys[0],
-		//			s.TestPrivKeys[1],
-		//			s.TestPrivKeys[2],
-		//		},
-		//		[]cryptotypes.PrivKey{
-		//			s.TestPrivKeys[0],
-		//			s.TestPrivKeys[2],
-		//		},
-		//		3,
-		//		3,
-		//		true,
-		//		false,
-		//	},
-		//},
-		//{
-		//	Description: "Test: unsuccessful signature authentication not enough signatures: FAIL",
-		//	TestData: SignatureVerificationAuthenticatorTestData{
-		//		[]sdk.Msg{
-		//			testMsg1,
-		//			testMsg2,
-		//			testMsg3,
-		//			testMsg4,
-		//		},
-		//		[]uint64{0, 0},
-		//		[]uint64{0, 0},
-		//		[]cryptotypes.PrivKey{
-		//			s.TestPrivKeys[0],
-		//			s.TestPrivKeys[1],
-		//		},
-		//		[]cryptotypes.PrivKey{
-		//			s.TestPrivKeys[0],
-		//			s.TestPrivKeys[2],
-		//		},
-		//		0,
-		//		0,
-		//		false,
-		//		false,
-		//	},
-		//},
+
+		{
+			// This test case tests if there is two messages with the same signer
+			// with two successful signatures.
+			Description: "Test: verified authenticator with 2 messages but only first signed signed correctly: Fail",
+			TestData: SignatureVerificationAuthenticatorTestData{
+				[]sdk.Msg{
+					testMsg1,
+					testMsg2,
+					testMsg2,
+				},
+				[]uint64{0, 0},
+				[]uint64{0, 0},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+					s.TestPrivKeys[1],
+				},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+					s.TestPrivKeys[0],
+				},
+				2,
+				2,
+				true,
+				false,
+			},
+		},
+
+		{
+			// This test case tests if there is two messages with the same signer
+			// with two successful signatures.
+			Description: "Test: verified authenticator with 2 messages but only second signed signed correctly: Fail",
+			TestData: SignatureVerificationAuthenticatorTestData{
+				[]sdk.Msg{
+					testMsg1,
+					testMsg2,
+					testMsg2,
+				},
+				[]uint64{0, 0},
+				[]uint64{0, 0},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+					s.TestPrivKeys[1],
+				},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[1],
+					s.TestPrivKeys[1],
+				},
+				2,
+				2,
+				true,
+				false,
+			},
+		},
+
 		{
 			Description: "Test: unsuccessful signature authentication invalid signatures: FAIL",
 			TestData: SignatureVerificationAuthenticatorTestData{
@@ -255,33 +258,27 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 			ak := s.OsmosisApp.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 
+			// Only the first message is tested for authenticate
+			addr := sdk.AccAddress(tc.TestData.Signers[0].PubKey().Address())
+
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, addr, addr, tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().NoError(err)
 
 				// Test Authenticate method
 				if tc.TestData.ShouldSucceedSignatureVerification {
-					err = s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
+					initialized, err := s.SigVerificationAuthenticator.Initialize(tc.TestData.Signers[0].PubKey().Bytes())
 					s.Require().NoError(err)
-
+					err = initialized.Authenticate(s.Ctx, request)
+					s.Require().NoError(err)
 				} else {
 					err = s.SigVerificationAuthenticator.Authenticate(s.Ctx, request)
 					s.Require().Error(err)
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				_, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, addr, addr, tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().Error(err)
-
-				//// cast the interface as a concrete struct
-				//sigData := authData.(authenticator.SignatureData)
-				//
-				//// the signer data should contain x signers
-				//s.Require().Equal(tc.TestData.NumberOfExpectedSigners, len(sigData.Signers))
-				//
-				//// the signature data should contain x signatures
-				//s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
-				//
 			}
 		})
 	}
