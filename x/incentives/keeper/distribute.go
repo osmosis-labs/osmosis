@@ -774,8 +774,12 @@ func (k Keeper) distributeInternal(
 					} else {
 						// Cache hit, use the value
 
+						// This route does not exist in protorev so a zero value has been added when a cache miss occurred 
+						if value.IsZero() {
+							continue
+						}
 						// Check if the underlying is worth enough in the token to be distributed.
-						if amtInt.LT(value) || value.IsZero() {
+						if amtInt.LT(value) {
 							continue
 						}
 					}
