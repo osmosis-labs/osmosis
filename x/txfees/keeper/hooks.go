@@ -112,10 +112,19 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 // If an error in swap occurs for a given denom, it will be silently skipped.
 // CONTRACT: a pool must exist between each denom in the balance and denomToSwapTo. If doesn't exist. Silently skip swap.
 // CONTRACT: protorev must be configured to have a pool for the given denom pair. Otherwise, the denom will be skipped.
+<<<<<<< HEAD
 func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) {
 	feeCollectorBalance := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
 
 	for _, coin := range feeCollectorBalance {
+=======
+func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) sdk.Coin {
+	coinsToSwap := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
+	totalCoinOut := sdk.NewCoin(denomToSwapTo, osmomath.ZeroInt())
+	coinsNotSwapped := []string{}
+
+	for _, coin := range coinsToSwap {
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 		if coin.Denom == denomToSwapTo {
 			continue
 		}
@@ -152,7 +161,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		}
 
 		// Do the swap of this fee token denom to base denom.
-		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err = osmoutils.ApplyFuncIfNoErrorLogToDebug(ctx, func(cacheCtx sdk.Context) error {
 			// We allow full slippage. There's not really an effective way to bound slippage until TWAP's land,
 			// but even then the point is a bit moot.
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
@@ -161,7 +170,16 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
+<<<<<<< HEAD
 			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
+=======
+			amtOutInt, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
+			if err != nil {
+				coinsNotSwapped = append(coinsNotSwapped, fmt.Sprintf("%s via pool %v", coin.String(), poolId))
+			} else {
+				totalCoinOut = totalCoinOut.Add(sdk.NewCoin(denomToSwapTo, amtOutInt))
+			}
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 			return err
 		})
 		if err != nil {
@@ -179,6 +197,9 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 					Value: err.Error(),
 				},
 			})
+		}
+		if len(coinsNotSwapped) > 0 {
+			ctx.Logger().Info("The following non-native tokens were not swapped (see debug logs for further details): %s", coinsNotSwapped)
 		}
 	}
 }

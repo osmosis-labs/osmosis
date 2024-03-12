@@ -527,8 +527,8 @@ cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
 cosmossdk.io/errors v1.0.1/go.mod h1:MeelVSZThMi4bEakzhhhE/CKqVv3nOJDA25bIqRDu/U=
 cosmossdk.io/log v1.3.0 h1:L0Z0XstClo2kOU4h3V1iDoE5Ji64sg5HLOogzGg67Oo=
 cosmossdk.io/log v1.3.0/go.mod h1:HIDyvWLqZe2ovlWabsDN4aPMpY/nUEquAhgfTf2ZzB8=
-cosmossdk.io/math v1.2.0 h1:8gudhTkkD3NxOP2YyyJIYYmt6dQ55ZfJkDOaxXpy7Ig=
-cosmossdk.io/math v1.2.0/go.mod h1:l2Gnda87F0su8a/7FEKJfFdJrM0JZRXQaohlgJeyQh0=
+cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4 h1:YVXqcsZcHmFWA2IPSqOFbOpmbEAm8gAsr5FmEV3kv5s=
+cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
 cosmossdk.io/tools/rosetta v0.2.1 h1:ddOMatOH+pbxWbrGJKRAawdBkPYLfKXutK9IETnjYxw=
 cosmossdk.io/tools/rosetta v0.2.1/go.mod h1:Pqdc1FdvkNV3LcNIkYWt2RQY6IP1ge6YWZk8MhhO9Hw=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
@@ -1253,6 +1253,7 @@ github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2 h1:967/6vaO8l/eSzkB5rcCAZjxl
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-2-iavl-v1 h1:znGVTrQKVV2bKzZPSvC+RwX7tu+hf+WUCkgPHWGOiEc=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-2-iavl-v1/go.mod h1:4WHIpz3iRefLvpqKD9oRNWD10AQbDt0tj6MmWcuY1QI=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.8 h1:jm6D5UgzQ0GQGtyFezs7tQRgwakf3cTBsE8oJIQdPZE=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8/go.mod h1:4iPfmy6R0qbImLe5urBLS0thndfLxfmHOdnYboDS1Qo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059 h1:2PyAblTdr9l5GacEuQY/CitAAUdA60UH43qD9FChdXQ=
@@ -1265,6 +1266,12 @@ github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8 h1:MN9x
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8/go.mod h1:1KGyG16V+4BNcAY9P2hvWKD5HPpV2zEL22PJN2No4xM=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e h1:wMbjfdBY8T8dfiC/llpyvrTmZ+85eO3BVGTXFoGYP8Q=
+github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e/go.mod h1:u3sHQAPLDss2DovMB/4SCkiau85jVGv6Vsp8L7kSCcM=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e h1:fn4rXlW2Qp6Zga/1bBrXxUwZ5fF+HKX221TFxNTpkJ8=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e/go.mod h1:c/lE4YlUAEGRszC+l0rSd5ypkzlgyx3FHDg8RZNwmYA=
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
@@ -2283,6 +2290,6 @@ rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
-sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
-sigs.k8s.io/yaml v1.3.0/go.mod h1:GeOyir5tyXNByN85N/dRIT9es5UQNerPYEKK56eTBm8=
+sigs.k8s.io/yaml v1.4.0 h1:Mk1wCc2gy/F0THH0TAp1QYyJNzRm2KCLy3o5ASXVI5E=
+sigs.k8s.io/yaml v1.4.0/go.mod h1:Ejl7/uTz7PSA4eKMyQCUTnhZYNmLIl+5c2lQPGR2BPY=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=
