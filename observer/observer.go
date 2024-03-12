@@ -3,54 +3,75 @@ package observer
 import (
 	"context"
 	"fmt"
-	"time"
+	"sync"
 
+	"github.com/cometbft/cometbft/libs/pubsub/query"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/cometbft/cometbft/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
 type Observer struct {
-	tmRpc *rpchttp.HTTP
+	tmRpc      *rpchttp.HTTP
+	cancelChan chan struct{}
+	wg         *sync.WaitGroup
 }
 
-func NewObesrver() Observer {
-	rpc, err := rpchttp.New("https://rpc.testnet.osmosis.zone:26657", "/websocket") // local node
-	fmt.Println(err)
+func NewObesrver(rpcUrl string) (Observer, error) {
+	rpc, err := rpchttp.New(rpcUrl, "/websocket")
 	if err != nil {
-		panic("Tendermint RPC client failed to create")
+		return Observer{}, err
 	}
 
 	return Observer{
-		tmRpc: rpc,
-	}
+		tmRpc:      rpc,
+		cancelChan: make(chan struct{}),
+		wg:         &sync.WaitGroup{},
+	}, nil
 }
 
-func (o *Observer) Start() {
+func (o *Observer) Start(queryStr string) error {
 	err := o.tmRpc.Start()
-	fmt.Println("Start err: ", err)
 	if err != nil {
-		panic(err)
-	}
-	defer o.tmRpc.Stop()
-
-	fmt.Println("prectx")
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	fmt.Println("ctx: ", ctx)
-	defer cancel()
-
-	health, err := o.tmRpc.Health(ctx)
-	fmt.Println("health: ", health)
-	fmt.Println("err: ", err)
-
-	query := "tm.event='Tx'" // test event
-	txs, err := o.tmRpc.Subscribe(ctx, "observer", query)
-	if err != nil {
-		panic("Tendermint RPC client failed to subscribe")
+		return err
 	}
 
-	go func() {
-		for e := range txs {
-			fmt.Println("got", e.Data.(types.EventDataTx))
+	query, err := query.New(queryStr)
+	if err != nil {
+		return err
+	}
+
+	txs, err := o.tmRpc.Subscribe(context.Background(), "observer", query.String())
+	if err != nil {
+		return err
+	}
+
+	o.wg.Add(1)
+	go o.observeEvents(txs)
+
+	return nil
+}
+
+func (o *Observer) Stop() error {
+	close(o.cancelChan)
+	o.wg.Wait()
+	return o.tmRpc.Stop()
+}
+
+func (o *Observer) observeEvents(txs <-chan coretypes.ResultEvent) {
+	defer o.wg.Done()
+	for {
+		select {
+		case <-o.cancelChan:
+			return
+		case event := <-txs:
+			e, ok := event.Data.(types.EventOutboundTransfer)
+			if ok {
+				fmt.Println("Got OutboundTransfer: ", e)
+			} else {
+				fmt.Println("Got unknown event", event)
+			}
 		}
-	}()
+	}
 }
