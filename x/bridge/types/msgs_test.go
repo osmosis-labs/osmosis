@@ -101,7 +101,7 @@ func TestMsgInboundTransfer(t *testing.T) {
 		expectedValid   bool
 	}{
 		{
-			name: "valid",
+			name: "expectedValid",
 			msg: types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
@@ -248,7 +248,7 @@ func TestMsgOutboundTransfer(t *testing.T) {
 		expectedValid   bool
 	}{
 		{
-			name: "valid",
+			name: "expectedValid",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
@@ -393,6 +393,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		}
 	)
 
+	// don't check the invalid asset case here since it is already tested in a different case
 	var testCases = []struct {
 		name            string
 		msg             types.MsgUpdateParams
@@ -400,7 +401,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		expectedValid   bool
 	}{
 		{
-			name: "valid",
+			name: "expectedValid",
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
@@ -516,7 +517,93 @@ func TestMsgUpdateParams(t *testing.T) {
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
 			expectedValid:   false,
 		},
-		// don't check the invalid asset case here since it is already tested in a different case
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.ElementsMatch(t, tc.msg.GetSigners(), tc.expectedSigners, "test: %v", tc.name)
+
+			if tc.expectedValid {
+				require.NoError(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
+			} else {
+				require.Error(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
+			}
+		})
+	}
+}
+
+// TestMsgChangeAssetStatus tests if MsgChangeAssetStatus messages are properly validated
+// and contain proper signers.
+func TestMsgChangeAssetStatus(t *testing.T) {
+	var (
+		pk1        = ed25519.GenPrivKey().PubKey()
+		addr1Bytes = sdk.AccAddress(pk1.Address())
+		addr1      = addr1Bytes.String()
+
+		asset1 = types.Asset{
+			SourceChain: "bitcoin",
+			Denom:       "wbtc1",
+			Precision:   10,
+		}
+	)
+
+	// don't check the invalid asset case here since it is already tested in a different case
+	var testCases = []struct {
+		name            string
+		msg             types.MsgChangeAssetStatus
+		expectedSigners []sdk.AccAddress
+		expectedValid   bool
+	}{
+		{
+			name: "expectedValid",
+			msg: types.MsgChangeAssetStatus{
+				Sender:         addr1,
+				Asset:          asset1,
+				NewAssetStatus: types.AssetStatus_ASSET_STATUS_OK,
+			},
+			expectedSigners: []sdk.AccAddress{addr1Bytes},
+			expectedValid:   true,
+		},
+		{
+			name: "empty sender",
+			msg: types.MsgChangeAssetStatus{
+				Sender:         "",
+				Asset:          asset1,
+				NewAssetStatus: types.AssetStatus_ASSET_STATUS_OK,
+			},
+			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
+			expectedValid:   false,
+		},
+		{
+			name: "invalid sender",
+			msg: types.MsgChangeAssetStatus{
+				Sender:         "qwerty",
+				Asset:          asset1,
+				NewAssetStatus: types.AssetStatus_ASSET_STATUS_OK,
+			},
+			expectedSigners: []sdk.AccAddress{nil},
+			expectedValid:   false,
+		},
+		{
+			name: "invalid asset status",
+			msg: types.MsgChangeAssetStatus{
+				Sender:         addr1,
+				Asset:          asset1,
+				NewAssetStatus: 10,
+			},
+			expectedSigners: []sdk.AccAddress{addr1Bytes},
+			expectedValid:   false,
+		},
+		{
+			name: "unspecified asset status",
+			msg: types.MsgChangeAssetStatus{
+				Sender:         addr1,
+				Asset:          asset1,
+				NewAssetStatus: types.AssetStatus_ASSET_STATUS_UNSPECIFIED,
+			},
+			expectedSigners: []sdk.AccAddress{addr1Bytes},
+			expectedValid:   false,
+		},
 	}
 
 	for _, tc := range testCases {

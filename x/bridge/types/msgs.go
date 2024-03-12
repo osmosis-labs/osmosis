@@ -110,10 +110,16 @@ func NewMsgUpdateParams(
 }
 
 func (m MsgUpdateParams) ValidateBasic() error {
-	err := m.NewParams.Validate()
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = m.NewParams.Validate()
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidParams, err.Error())
 	}
+
 	return nil
 }
 
@@ -137,10 +143,16 @@ func NewMsgChangeAssetStatus(
 }
 
 func (m MsgChangeAssetStatus) ValidateBasic() error {
-	err := m.NewAssetStatus.Validate()
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = m.NewAssetStatus.Validate()
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 	}
+
 	return nil
 }
 

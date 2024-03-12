@@ -68,6 +68,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
@@ -129,6 +130,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.TakerFeeCollectorName:        nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	bridgetypes.ModuleName:                   nil,
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
@@ -274,6 +276,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		// bridge should be inited after tokenfactory
+		bridgetypes.ModuleName,
 		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
