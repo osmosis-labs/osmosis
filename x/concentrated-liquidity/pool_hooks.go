@@ -13,6 +13,8 @@ import (
 
 // --- Pool Hooks ---
 
+type msgBuilderFn func(poolId uint64) ([]byte, error)
+
 // BeforeCreatePosition is a hook that is called before a position is created.
 func (k Keeper) BeforeCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
 	msgBuilderFn := func(poolId uint64) ([]byte, error) {
@@ -92,7 +94,7 @@ func (k Keeper) AfterSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender s
 //
 // Since it is possible for this function to be triggered in begin block code, we need to directly meter its execution and set a limit.
 // If no contract is linked to the hook, this function is a no-op.
-func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn func(poolId uint64) ([]byte, error), poolId uint64, actionPrefix string) (err error) {
+func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn msgBuilderFn, poolId uint64, actionPrefix string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = types.ContractHookOutOfGasError{GasLimit: k.GetParams(ctx).HookGasLimit}
