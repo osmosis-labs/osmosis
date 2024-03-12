@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/armon/go-metrics"
@@ -114,6 +115,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 // CONTRACT: protorev must be configured to have a pool for the given denom pair. Otherwise, the denom will be skipped.
 func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) {
 	feeCollectorBalance := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
+	coinsNotSwapped := []string{}
 
 	for _, coin := range feeCollectorBalance {
 		if coin.Denom == denomToSwapTo {
@@ -128,31 +130,29 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		// the next epoch.
 		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
 		if err != nil {
-			if err != nil {
-				telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
-					{
-						Name:  "base_denom",
-						Value: denomToSwapTo,
-					},
-					{
-						Name:  "match_denom",
-						Value: coin.Denom,
-					},
-					{
-						Name:  "err",
-						Value: err.Error(),
-					},
-				})
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+				{
+					Name:  "base_denom",
+					Value: denomToSwapTo,
+				},
+				{
+					Name:  "match_denom",
+					Value: coin.Denom,
+				},
+				{
+					Name:  "err",
+					Value: err.Error(),
+				},
+			})
 
-				// The pool route either doesn't exist or is disabled in protorev.
-				// It will just accrue in the non-native fee collector account.
-				// Skip this denom and move on to the next one.
-				continue
-			}
+			// The pool route either doesn't exist or is disabled in protorev.
+			// It will just accrue in the non-native fee collector account.
+			// Skip this denom and move on to the next one.
+			continue
 		}
 
 		// Do the swap of this fee token denom to base denom.
-		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		err = osmoutils.ApplyFuncIfNoErrorLogToDebug(ctx, func(cacheCtx sdk.Context) error {
 			// We allow full slippage. There's not really an effective way to bound slippage until TWAP's land,
 			// but even then the point is a bit moot.
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
@@ -165,6 +165,8 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			return err
 		})
 		if err != nil {
+			coinsNotSwapped = append(coinsNotSwapped, fmt.Sprintf("%s via pool %v", coin.String(), poolId))
+
 			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
 				{
 					Name:  "coin_in",
@@ -180,5 +182,8 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 				},
 			})
 		}
+	}
+	if len(coinsNotSwapped) > 0 {
+		ctx.Logger().Info("The following non-native tokens were not swapped (see debug logs for further details): %s", coinsNotSwapped)
 	}
 }
