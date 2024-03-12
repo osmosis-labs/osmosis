@@ -774,7 +774,7 @@ func (k Keeper) distributeInternal(
 					} else {
 						// Cache hit, use the value
 
-						// This route does not exist in protorev so a zero value has been added when a cache miss occurred 
+						// This route does not exist in protorev so a zero value has been added when a cache miss occurred
 						if value.IsZero() {
 							continue
 						}
