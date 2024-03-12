@@ -75,9 +75,6 @@ const (
 	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	usdtDenom   = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
 	oneOSMO     = 1_000_000
-
-	// code ID of the broken WhiteWhale cosmwasm pools on mainnet.
-	whiteWhalePoolCodeID = uint64(503)
 )
 
 var (
@@ -202,7 +199,6 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 	}
 
 	for _, pool := range cosmWasmPools {
-
 		// Parse cosmwasm pool to the standard SQS types.
 		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 		if err != nil {
