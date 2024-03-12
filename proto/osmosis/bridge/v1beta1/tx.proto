@@ -102,14 +102,11 @@ message MsgChangeAssetStatus {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // Asset is an asset to update.
   // The asset should be known; otherwise, the method will failed.
-  Asset asset = 2 [
-    (gogoproto.moretags) = "yaml:\"asset\"",
-    (gogoproto.nullable) = false
-  ];
+  Asset asset = 2
+      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
   // NewAssetStatus is a new asset's status.
-  AssetStatus new_asset_status = 3 [
-    (gogoproto.moretags) = "yaml:\"new_asset_status\""
-  ];
+  AssetStatus new_asset_status = 3
+      [ (gogoproto.moretags) = "yaml:\"new_asset_status\"" ];
 }
 
 message MsgChangeAssetStatusResponse {}
