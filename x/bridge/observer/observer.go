@@ -1,21 +1,16 @@
-package observer
+package keeper
 
 import (
 	"context"
-	"fmt"
-	"sync"
 
 	"github.com/cometbft/cometbft/libs/pubsub/query"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
 type Observer struct {
 	tmRpc      *rpchttp.HTTP
-	cancelChan chan struct{}
-	wg         *sync.WaitGroup
+	eventsChan <-chan coretypes.ResultEvent
 }
 
 func NewObesrver(rpcUrl string) (Observer, error) {
@@ -25,9 +20,7 @@ func NewObesrver(rpcUrl string) (Observer, error) {
 	}
 
 	return Observer{
-		tmRpc:      rpc,
-		cancelChan: make(chan struct{}),
-		wg:         &sync.WaitGroup{},
+		tmRpc: rpc,
 	}, nil
 }
 
@@ -46,32 +39,15 @@ func (o *Observer) Start(queryStr string) error {
 	if err != nil {
 		return err
 	}
-
-	o.wg.Add(1)
-	go o.observeEvents(txs)
+	o.eventsChan = txs
 
 	return nil
 }
 
 func (o *Observer) Stop() error {
-	close(o.cancelChan)
-	o.wg.Wait()
 	return o.tmRpc.Stop()
 }
 
-func (o *Observer) observeEvents(txs <-chan coretypes.ResultEvent) {
-	defer o.wg.Done()
-	for {
-		select {
-		case <-o.cancelChan:
-			return
-		case event := <-txs:
-			e, ok := event.Data.(types.EventOutboundTransfer)
-			if ok {
-				fmt.Println("Got OutboundTransfer: ", e)
-			} else {
-				fmt.Println("Got unknown event", event)
-			}
-		}
-	}
+func (o *Observer) GetEvents() <-chan coretypes.ResultEvent {
+	return o.eventsChan
 }

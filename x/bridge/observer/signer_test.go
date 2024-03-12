@@ -1,4 +1,4 @@
-package observer
+package keeper
 
 import (
 	"testing"
@@ -11,16 +11,15 @@ import (
 // osmosis.bridge.v1beta1.EventInboundTransfer
 
 func TestObserver(t *testing.T) {
-	// rpcUrl := "https://rpc.testnet.osmosis.zone:443" // Osmosis testnet
+	t.Skip("Requires connection to a node")
+
 	rpcUrl := "http://localhost:26657" // Local net
-	observer, err := NewObesrver(rpcUrl)
+	signer, err := NewSigner(rpcUrl)
 	require.NoError(t, err)
 
-	// query := "tm.event = 'osmosis.bridge.v1beta1.EventOutboundTransfer'"
-	query := "tm.event = 'NewBlock'"
-	observer.Start(query)
+	signer.Start()
 
 	time.Sleep(time.Second * 10)
 
-	require.NoError(t, observer.Stop())
+	require.NoError(t, signer.Stop())
 }
