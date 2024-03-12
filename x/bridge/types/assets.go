@@ -55,8 +55,9 @@ func (m AssetStatus) InboundActive() bool {
 	case AssetStatus_ASSET_STATUS_BLOCKED_INBOUND,
 		AssetStatus_ASSET_STATUS_BLOCKED_BOTH:
 		return false
+	default:
+		return false
 	}
-	return false
 }
 
 func (m AssetStatus) OutboundActive() bool {
@@ -67,8 +68,9 @@ func (m AssetStatus) OutboundActive() bool {
 	case AssetStatus_ASSET_STATUS_BLOCKED_OUTBOUND,
 		AssetStatus_ASSET_STATUS_BLOCKED_BOTH:
 		return false
+	default:
+		return false
 	}
-	return false
 }
 
 func (m AssetStatus) Validate() error {
@@ -77,10 +79,10 @@ func (m AssetStatus) Validate() error {
 		AssetStatus_ASSET_STATUS_BLOCKED_INBOUND,
 		AssetStatus_ASSET_STATUS_BLOCKED_OUTBOUND,
 		AssetStatus_ASSET_STATUS_BLOCKED_BOTH:
+		return nil
 	case AssetStatus_ASSET_STATUS_UNSPECIFIED:
 		return fmt.Errorf("invalid asset status: %v", m)
 	default:
 		return fmt.Errorf("unknown asset status: %v", m)
 	}
-	return nil
 }

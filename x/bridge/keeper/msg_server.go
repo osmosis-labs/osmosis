@@ -29,7 +29,7 @@ func (m msgServer) InboundTransfer(
 ) (*types.MsgInboundTransferResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !m.k.validateSender(ctx, msg.Sender) {
+	if !m.k.validateSenderIsSigner(ctx, msg.Sender) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
 	}
 
@@ -57,7 +57,6 @@ func (m msgServer) OutboundTransfer(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Don't need to check the signature here since every user could be the sender
-	// TODO: DestAddr must be a part of the TSS valset?
 
 	err := m.k.OutboundTransfer(ctx, msg.Sender, msg.Asset, msg.Amount)
 	if err != nil {

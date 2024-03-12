@@ -2,6 +2,6 @@ package types
 
 const (
 	DefaultBitcoinChainName = "bitcoin"
-	DefaultBitcoinDenomName = "osmobtc"
+	DefaultBitcoinDenomName = "wbtc"
 	DefaultBitcoinPrecision = 10 // TODO: decide
 )

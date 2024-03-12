@@ -26,7 +26,7 @@ func NewParams(signers []string, assets []AssetWithStatus) Params {
 // DefaultParams creates default x/bridge params.
 func DefaultParams() Params {
 	return Params{
-		Signers: []string{}, // TODO: what to use as default?
+		Signers: []string{},
 		Assets:  DefaultAssetsWithStatuses(),
 	}
 }
