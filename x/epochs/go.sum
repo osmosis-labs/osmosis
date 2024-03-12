@@ -1247,9 +1247,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2 h1:967/6vaO8l/eSzkB5rcCAZjxla1V/Z3HFUtBPPYv+PY=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
-<<<<<<< HEAD
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1 h1:UYiiBscq1prLXTG785ra9EbYSZr+byG7PLaq4q2qm14=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-3 h1:d+0id4sMX9yiP5iMHK8rkv15MP12T+UfQn4XuBWzK/8=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-3/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8 h1:jm6D5UgzQ0GQGtyFezs7tQRgwakf3cTBsE8oJIQdPZE=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8/go.mod h1:4iPfmy6R0qbImLe5urBLS0thndfLxfmHOdnYboDS1Qo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059 h1:2PyAblTdr9l5GacEuQY/CitAAUdA60UH43qD9FChdXQ=
@@ -1262,14 +1261,6 @@ github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8 h1:MN9x
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8/go.mod h1:1KGyG16V+4BNcAY9P2hvWKD5HPpV2zEL22PJN2No4xM=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
-=======
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-2-iavl-v1 h1:znGVTrQKVV2bKzZPSvC+RwX7tu+hf+WUCkgPHWGOiEc=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-2-iavl-v1/go.mod h1:4WHIpz3iRefLvpqKD9oRNWD10AQbDt0tj6MmWcuY1QI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e h1:wMbjfdBY8T8dfiC/llpyvrTmZ+85eO3BVGTXFoGYP8Q=
-github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e/go.mod h1:u3sHQAPLDss2DovMB/4SCkiau85jVGv6Vsp8L7kSCcM=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e h1:fn4rXlW2Qp6Zga/1bBrXxUwZ5fF+HKX221TFxNTpkJ8=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e/go.mod h1:c/lE4YlUAEGRszC+l0rSd5ypkzlgyx3FHDg8RZNwmYA=
->>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
