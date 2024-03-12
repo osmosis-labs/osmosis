@@ -3,7 +3,12 @@ module github.com/osmosis-labs/osmosis/osmoutils
 go 1.21
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
+=======
+	cosmossdk.io/log v1.3.0
+	cosmossdk.io/math v1.3.0
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.11.0
@@ -11,8 +16,12 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ibc-go/v7 v7.3.2
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.9
 	github.com/osmosis-labs/osmosis/v23 v23.0.1
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -69,7 +78,12 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
+<<<<<<< HEAD
 	github.com/felixge/httpsnoop v1.0.2 // indirect
+=======
+	github.com/emicklei/dot v1.4.2 // indirect
+	github.com/felixge/httpsnoop v1.0.4 // indirect
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
@@ -121,6 +135,10 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/onsi/gomega v1.28.1 // indirect
+<<<<<<< HEAD
+=======
+	github.com/opencontainers/runc v1.1.12 // indirect
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
