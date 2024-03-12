@@ -102,6 +102,25 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
+	// Add the authenticators for the accounts
+	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[0].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
+
+	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[1],
+		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[1].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
+
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
@@ -111,10 +130,10 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []uint64{0, 0})
+	}, []uint64{1, 2})
 
 	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)
-	_, err := postHandler(s.Ctx, tx, false, true)
+	_, err = postHandler(s.Ctx, tx, false, true)
 
 	s.Require().NoError(err, "Failed but should have passed as ConfirmExecution passed")
 }

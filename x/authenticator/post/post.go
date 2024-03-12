@@ -48,7 +48,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 	success bool,
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
-	// Ensure that the transaction is a authenticator transaction
+	// Ensure that the transaction is an authenticator transaction
 	active, txOptions := authenticatorante.IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper)
 	if active {
 		return ad.next(ctx, tx, simulate, success)
