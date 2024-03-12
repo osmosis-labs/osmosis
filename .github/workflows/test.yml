@@ -15,15 +15,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+
 jobs:
   get_diff:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v4
-      -
-        name: Get git diff
+      - name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -34,8 +33,7 @@ jobs:
             Makefile
             Dockerfile
             .github/workflows/test.yml
-      -
-        name: Set output
+      - name: Set output
         id: vars
         run: echo "::set-output name=git_diff::$GIT_DIFF"
     outputs:
@@ -46,16 +44,15 @@ jobs:
     if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository
+      - name: Check out repository
         uses: actions/checkout@v4
-      -
-        name: 🐿 Setup Golang
+      # Setup Golang based on the go.mod file.
+      # This is needed when the go version has changed and the code uses features from the new version.gi
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      -
-        name: Create a file with all core Cosmos SDK pkgs
+      - name: Create a file with all core Cosmos SDK pkgs
         run: |
           go list \
             ./... \
@@ -65,27 +62,22 @@ jobs:
             ./x/epochs \
             | grep -E -v 'tests/simulator|e2e' \
             > pkgs.txt
-      -
-        name: Split pkgs into 4 files
+      - name: Split pkgs into 4 files
         run: |
           split -d -n l/4 pkgs.txt pkgs.txt.part.
-      -
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ github.sha }}-00"
           path: ./pkgs.txt.part.00
-      -
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ github.sha }}-01"
           path: ./pkgs.txt.part.01
-      -
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ github.sha }}-02"
           path: ./pkgs.txt.part.02
-      -
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ github.sha }}-03"
           path: ./pkgs.txt.part.03
@@ -99,23 +91,18 @@ jobs:
       matrix:
         part: ["00", "01", "02", "03"]
     steps:
-      -
-        name: Check out repository
+      - name: Check out repository
         uses: actions/checkout@v4
-      -
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      -
-        name: Display go version
+      - name: Display go version
         run: go version
-      -
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
-      -
-        name: Test & coverage report creation
+      - name: Test & coverage report creation
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
           TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
@@ -127,25 +114,24 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 20
     steps:
-      -
-        name: Check out repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
-        name: Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build e2e image
+      - name: 🐿 Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build e2e image
         uses: docker/build-push-action@v5
         with:
           load: true
@@ -154,22 +140,18 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
             BUILD_TAGS="netgo,muslc,excludeIncrement"
-      -
-        name: Test e2e and Upgrade
+      - name: Test e2e and Upgrade
         run: make test-e2e-ci
-      -
-        name: Dump docker logs on failure
+      - name: Dump docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2
         with:
           dest: "./logs"
-      -
-        name: Tar logs
+      - name: Tar logs
         if: failure()
         run: |
           tar cvzf ./logs.tgz ./logs
-      -
-        name: Upload logs to GitHub
+      - name: Upload logs to GitHub
         if: failure()
         uses: actions/upload-artifact@v4
         with:

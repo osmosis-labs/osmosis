@@ -7,6 +7,7 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
 
@@ -17,7 +18,7 @@ func (appKeepers *AppKeepers) GenerateKeys() {
 	appKeepers.keys = sdk.NewKVStoreKeys(KVStoreKeys()...)
 
 	// Define transient store keys
-	appKeepers.tkeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey, twaptypes.TransientStoreKey)
+	appKeepers.tkeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey, twaptypes.TransientStoreKey, protorevtypes.TransientStoreKey)
 
 	// MemKeys are for information that is stored only in RAM.
 	appKeepers.memKeys = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)

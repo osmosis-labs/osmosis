@@ -2,7 +2,7 @@ name: Update Docs
 
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -10,46 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.18 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.18
 
-    - name: Install Protoc
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y protobuf-compiler
+      - name: Install Protoc
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y protobuf-compiler
 
-    - name: Install Protoc-gen-swagger
-      run: |
-        go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
+      - name: Install Protoc-gen-swagger
+        run: |
+          go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
 
-    - name: Install Statik
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y golang-statik
+      - name: Install Statik
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y golang-statik
 
-    - name: Install Buf
-      run: |
-        curl -sSL https://github.com/bufbuild/buf/releases/download/v1.0.0-rc5/buf-Linux-x86_64 -o buf
-        chmod +x buf
-        sudo mv buf /usr/local/bin
+      - name: Install Buf
+        run: |
+          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.0.0-rc5/buf-Linux-x86_64 -o buf
+          chmod +x buf
+          sudo mv buf /usr/local/bin
 
-    - name: Download dependencies
-      run: go mod download
+      - name: Download dependencies
+        run: go mod download
 
-    - name: Run make docs
-      run: |
-        make docs
+      - name: Run make docs
+        run: |
+          make docs
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: Update docs
-        title: 'Update docs'
-        body: 'Update docs'
-        branch: 'docs-update-branch'
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update docs
+          title: "Update docs"
+          body: "Update docs"
+          branch: "docs-update-branch"

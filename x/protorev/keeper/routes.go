@@ -191,7 +191,7 @@ func (k Keeper) BuildTwoPoolRoute(
 	}
 
 	if pool1 == pool2 {
-		return RouteMetaData{}, fmt.Errorf("cannot be trading on the same pool twice")
+		return RouteMetaData{}, types.ErrRouteDoubleContainsPool
 	}
 
 	newRoute := poolmanagertypes.SwapAmountInRoutes{
