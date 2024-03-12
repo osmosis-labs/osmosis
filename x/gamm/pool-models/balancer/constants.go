@@ -19,4 +19,5 @@ var (
 	GuaranteedWeightPrecision int64 = 1 << 30
 
 	PoolTypeName string = "Balancer"
+	oneDec              = osmomath.OneDec()
 )

@@ -18,6 +18,15 @@ import (
 // If its an out of gas panic, this function will also panic like in normal tx execution flow.
 // This is still safe for beginblock / endblock code though, as they do not have out of gas panics.
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
+	return applyFunc(ctx, f, ctx.Logger().Error)
+}
+
+// ApplyFuncIfNoErrorLogToDebug is the same as ApplyFuncIfNoError, but sends logs to debug instead of error if there is an error.
+func ApplyFuncIfNoErrorLogToDebug(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
+	return applyFunc(ctx, f, ctx.Logger().Debug)
+}
+
+func applyFunc(ctx sdk.Context, f func(ctx sdk.Context) error, logFunc func(string, ...interface{})) (err error) {
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
@@ -34,7 +43,7 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	cacheCtx, write := ctx.CacheContext()
 	err = f(cacheCtx)
 	if err != nil {
-		ctx.Logger().Error(err.Error())
+		logFunc(err.Error())
 	} else {
 		// no error, write the output of f
 		write()

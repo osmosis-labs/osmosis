@@ -39,7 +39,8 @@ func (m MsgInboundTransfer) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 	}
 
-	if !m.Amount.IsZero() {
+	// check if amount > 0
+	if !m.Amount.IsPositive() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
@@ -83,7 +84,8 @@ func (m MsgOutboundTransfer) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 	}
 
-	if !m.Amount.IsZero() {
+	// check if amount > 0
+	if !m.Amount.IsPositive() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 

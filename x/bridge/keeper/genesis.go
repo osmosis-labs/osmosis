@@ -10,8 +10,6 @@ import (
 
 // InitGenesis initializes the bridge module's state from a provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
-	k.CreateModuleAccount(ctx)
-
 	// create denoms for all new assets
 	err := k.createAssets(ctx, genState.Params.Assets)
 	if err != nil {
