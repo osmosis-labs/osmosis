@@ -1,0 +1,13 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/bridge/v1beta1/bridge.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+// GenesisState defines the mint module's genesis state.
+message GenesisState {
+  // Params defines params for x/bridge module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

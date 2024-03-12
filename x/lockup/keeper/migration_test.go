@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) TestLockupMergeMigration() {
 			if rand.Intn(3) == 0 {
 				duration = baseDuration
 			}
-			amount := rand.Int63n(100000)
+			amount := rand.Int63n(99999) + 1 // ensure amount is never 0
 			add(addr, denom, baseDuration, amount)
 			s.LockTokens(addr, sdk.Coins{sdk.NewInt64Coin(denom, amount)}, duration)
 		}

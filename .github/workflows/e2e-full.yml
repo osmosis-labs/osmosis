@@ -13,11 +13,9 @@ jobs:
   get_diff:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v4
-      -
-        name: Get git diff
+      - name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -28,8 +26,7 @@ jobs:
             Makefile
             Dockerfile
             .github/workflows/e2e-full.yml
-      -
-        name: Set output
+      - name: Set output
         id: vars
         run: echo "::set-output name=git_diff::$GIT_DIFF"
     outputs:
@@ -41,19 +38,15 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 20
     steps:
-      -
-        name: Check out repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
-        name: Build e2e image
+      - name: Build e2e image
         uses: docker/build-push-action@v5
         with:
           load: true
@@ -62,25 +55,20 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
             BUILD_TAGS="netgo,muslc,excludeIncrement"
-      -
-        name: Test e2e and Upgrade
+      - name: Test e2e and Upgrade
         run: make test-e2e-ci-scheduled
-      -
-        name: Dump docker logs on failure
+      - name: Dump docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2
         with:
           dest: "./logs"
-      -
-        name: Tar logs
+      - name: Tar logs
         if: failure()
         run: |
           tar cvzf ./logs.tgz ./logs
-      -
-        name: Upload logs to GitHub
+      - name: Upload logs to GitHub
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: logs.tgz
           path: ./logs.tgz
-  

@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, pool
 //   - If lowerTick <= currentTick < upperTick, we add to just the global accumulators.
 //
 //   - If lowerTick < upperTick <= currentTick, we add to the upper tick's trackers, but not the lower's.
-func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Add spread rewards and incentives to the pool
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 //   - If lowerTick < upperTick <= currentTick, we add to both lowerTick and upperTick's uptime trackers,
 //     the former to put the growth below the tick range and the latter to keep both ticks consistent (since
 //     lowerTick's uptime trackers are a subset of upperTick's in this case).
-func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Add spread rewards and incentives to the pool

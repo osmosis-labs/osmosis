@@ -11,6 +11,8 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
@@ -162,6 +164,7 @@ func appModules(
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcwasm.NewAppModule(*app.IBCWasmClientKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, *app.AppKeepers.ConsensusParamsKeeper),
@@ -280,6 +283,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibcratelimittypes.ModuleName,
 		// wasm after ibc transfer
 		wasmtypes.ModuleName,
+		ibcwasmtypes.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
 		icqtypes.ModuleName,

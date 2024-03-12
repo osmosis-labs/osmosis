@@ -1,0 +1,111 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/bridge/v1beta1/bridge.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+// Msg defines the bridge module's gRPC message service.
+service Msg {
+  // InboundTransfer is used for inbound transfers (<other_chain> -> OSMO).
+  rpc InboundTransfer(MsgInboundTransfer) returns (MsgInboundTransferResponse);
+
+  // OutboundTransfer is used for outbound transfers (OSMO -> <other_chain>).
+  rpc OutboundTransfer(MsgOutboundTransfer)
+      returns (MsgOutboundTransferResponse);
+
+  // UpdateParams is used for updating module params.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // ChangeAssetStatus will change the provided asset's status.
+  rpc ChangeAssetStatus(MsgChangeAssetStatus)
+      returns (MsgChangeAssetStatusResponse);
+}
+
+// MsgInboundTransfer defines the message structure for the InboundTransfer gRPC
+// service method. It allows a sender to perform an inbound cross-chain
+// transfer, i.e., to transfer their tokens from the source chain to Osmosis and
+// get the equivalent amount of the corresponding token (specified in subdenom)
+// on Osmosis in return. The tokens are minted through the x/tokenfactory module
+// to the destination address.
+message MsgInboundTransfer {
+  option (amino.name) = "osmosis/bridge/inbound-transfer";
+
+  // Sender is a sender's address
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // DestAddr is a destination Osmosis address
+  string dest_addr = 2 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
+  // Asset contains a source chain and a target denom
+  Asset asset = 3
+      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
+  // Amount of coins to transfer
+  string amount = 4 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgInboundTransferResponse {}
+
+// MsgOutboundTransfer defines the message structure for the OutboundTransfer
+// gRPC service method. It allows a sender to perform an outbound cross-chain
+// transfer, i.e., to transfer their tokens from Osmosis to the destination
+// chain. The tokens are burned through the x/tokenfactory module from the
+// sender's address.
+message MsgOutboundTransfer {
+  option (amino.name) = "osmosis/bridge/outbound-transfer";
+
+  // Sender is a sender's Osmosis address
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // DestAddr is a destination address
+  string dest_addr = 2 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
+  // Asset contains a target chain and a source denom
+  Asset asset = 3
+      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
+  // Amount of coins to transfer
+  string amount = 4 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgOutboundTransferResponse {}
+
+// MsgUpdateParams allows to update module params. It contains UpdateParams
+// instead of just Params to forbid status updating using this method.
+// All new assets introduced with this method have ASSET_STATUS_BLOCKED_BOTH
+// status by default.
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/bridge/update-params";
+
+  // Sender is a sender's address
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // NewParams should be fully populated
+  Params new_params = 2 [
+    (gogoproto.moretags) = "yaml:\"new_params\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateParamsResponse {}
+
+// MsgChangeAssetStatus changes the status of the provided asset.
+message MsgChangeAssetStatus {
+  option (amino.name) = "osmosis/bridge/change-asset-status";
+
+  // Sender is a sender's address
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // NewAssetStatus is a pair of the asset and its new status.
+  // The asset should be known; otherwise, the method will failed.
+  AssetWithStatus new_asset_status = 2 [
+    (gogoproto.moretags) = "yaml:\"new_asset_status\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgChangeAssetStatusResponse {}
