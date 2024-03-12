@@ -652,7 +652,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 
 // any_of can have failed sub-authenticators's confirm_execution but not failing the whole transaction
 // that means that the failed sub-authenticators could write to the store if not handled properly
-// which we don't want to happen since it breaks the semantics of not commiting failed tx state
+// which we don't want to happen since it breaks the semantics of not committing failed tx state
 func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 	// Define test cases
 	type testCase struct {
