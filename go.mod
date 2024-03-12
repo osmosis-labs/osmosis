@@ -27,11 +27,19 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240222171503-685566578734
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.4
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240306055140-d7dfe8e8669e
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240306055140-d7dfe8e8669e
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.4.0
@@ -82,7 +90,12 @@ require (
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
+<<<<<<< HEAD
 	github.com/cockroachdb/errors v1.10.0 // indirect
+=======
+	github.com/cockroachdb/datadriven v1.0.3-0.20230801171734-e384cf455877 // indirect
+	github.com/cockroachdb/errors v1.11.1 // indirect
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.0.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
@@ -105,6 +118,12 @@ require (
 	github.com/ghostiam/protogetter v0.2.3 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+<<<<<<< HEAD
+=======
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
@@ -132,7 +151,10 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.14.1 // indirect
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0 // indirect
+=======
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -157,7 +179,12 @@ require (
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
+<<<<<<< HEAD
 	google.golang.org/api v0.153.0 // indirect
+=======
+	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
+	google.golang.org/api v0.155.0 // indirect
+>>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
