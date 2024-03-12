@@ -464,8 +464,7 @@ cloud.google.com/go/storage v1.22.1/go.mod h1:S8N1cAStu7BOeFfE8KAQzmyyLkK8p/vmRq
 cloud.google.com/go/storage v1.23.0/go.mod h1:vOEEDNFnciUMhBeT6hsJIn3ieU5cFRmzeLgDvXzfIXc=
 cloud.google.com/go/storage v1.27.0/go.mod h1:x9DOL8TK/ygDUMieqwfhdpQryTeEkhGKMi80i/iqR2s=
 cloud.google.com/go/storage v1.28.1/go.mod h1:Qnisd4CqDdo6BGs2AD5LLnEsmSQ80wQ5ogcBBKhU86Y=
-cloud.google.com/go/storage v1.35.1 h1:B59ahL//eDfx2IIKFBeT5Atm9wnNmj3+8xG/W4WB//w=
-cloud.google.com/go/storage v1.35.1/go.mod h1:M6M/3V/D3KpzMTJyPOR/HU6n2Si5QdaXYEsng2xgOs8=
+cloud.google.com/go/storage v1.36.0 h1:P0mOkAcaJxhCTvAkMhxMfrTKiNcub4YmmPBtlhAyTr8=
 cloud.google.com/go/storagetransfer v1.5.0/go.mod h1:dxNzUopWy7RQevYFHewchb29POFv3/AaBgnhqzqiK0w=
 cloud.google.com/go/storagetransfer v1.6.0/go.mod h1:y77xm4CQV/ZhFZH75PLEXY0ROiS7Gh6pSKrM8dJyg6I=
 cloud.google.com/go/storagetransfer v1.7.0/go.mod h1:8Giuj1QNb1kfLAiWM1bN6dHzfdlDAVC9rv9abHot2W4=
@@ -732,24 +731,17 @@ github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOG
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/cockroachdb/datadriven v1.0.3-0.20230801171734-e384cf455877 h1:1MLK4YpFtIEo3ZtMA5C795Wtv5VuUnrXX7mQG+aHg6o=
 github.com/cockroachdb/datadriven v1.0.3-0.20230801171734-e384cf455877/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
-<<<<<<< HEAD
-github.com/cockroachdb/errors v1.10.0 h1:lfxS8zZz1+OjtV4MtNWgboi/W5tyLEB6VQZBXN+0VUU=
-github.com/cockroachdb/errors v1.10.0/go.mod h1:lknhIsEVQ9Ss/qKDBQS/UqFSvPQjOwNq2qyKAxtHRqE=
-=======
 github.com/cockroachdb/errors v1.11.1 h1:xSEW75zKaKCWzR3OfxXUxgrk/NtT4G1MiOv5lWZazG8=
-github.com/cockroachdb/errors v1.11.1/go.mod h1:8MUxA3Gi6b25tYlFEBGLf+D8aISL+M4MIpiWMSNRfxw=
->>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b h1:r6VH0faHjZeQy818SGhaone5OnYfxFR/+AzdY3sf5aE=
 github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b/go.mod h1:Vz9DsVWQQhf3vs21MhPMZpMGSht7O/2vFW2xusFUVOs=
-github.com/cockroachdb/pebble v1.0.0 h1:WZWlV/s78glZbY2ylUITDOWSVBD3cLjcWPLRPFbHNYg=
-github.com/cockroachdb/pebble v1.0.0/go.mod h1:bynZ3gvVyhlvjLI7PT6dmZ7g76xzJ7HpxfjgkzCGz6s=
+github.com/cockroachdb/pebble v1.1.0 h1:pcFh8CdCIt2kmEpK0OIatq67Ln9uGDYY3d5XnE0LJG4=
 github.com/cockroachdb/redact v1.1.5 h1:u1PMllDkdFfPWaNGMyLD1+so+aq3uUItthCFqzwPJ30=
 github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
+github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 h1:zuQyyAKVxetITBuuhv3BI9cMrmStnpT18zmgmTxunpo=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0 h1:jpVIwLcPoOeCR6o1tU+Xv7r5bMONNbHU7MuEHboiFuA=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
-github.com/cometbft/cometbft-db v0.10.0 h1:VMBQh88zXn64jXVvj39tlu/IgsGR84T7ImjS523DCiU=
-github.com/cometbft/cometbft-db v0.10.0/go.mod h1:7RR7NRv99j7keWJ5IkE9iZibUTKYdtepXTp7Ra0FxKk=
+github.com/cometbft/cometbft-db v0.11.0 h1:M3Lscmpogx5NTbb1EGyGDaFRdsoLWrUWimFEyf7jej8=
 github.com/confio/ics23/go v0.9.1 h1:3MV46eeWwO3xCauKyAtuAdJYMyPnnchW4iLr2bTw6/U=
 github.com/confio/ics23/go v0.9.1/go.mod h1:4LPZ2NYqnYIVRklaozjNR1FScgDJ2s5Xrp+e/mYVRak=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
@@ -874,8 +866,7 @@ github.com/fatih/color v1.15.0/go.mod h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBD
 github.com/fatih/structtag v1.2.0 h1:/OdNE99OxoI/PqaW/SuSK9uxxT3f/tcSZgon/ssNSx4=
 github.com/fatih/structtag v1.2.0/go.mod h1:mBJUNpUnHmRKrKlQQlmCrh5PuhftFbNv8Ys4/aAZl94=
 github.com/felixge/httpsnoop v1.0.1/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
-github.com/felixge/httpsnoop v1.0.2 h1:+nS9g82KMXccJ/wp0zyRW9ZBHFETmMGtkk+2CTTrW4o=
-github.com/felixge/httpsnoop v1.0.2/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
+github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/firefart/nonamedreturns v1.0.4 h1:abzI1p7mAEPYuR4A+VLKn4eNDOycjYo2phmY9sfv40Y=
 github.com/firefart/nonamedreturns v1.0.4/go.mod h1:TDhe/tjI1BXo48CmYbUduTV7BdIga8MAO/xbKdcVsGI=
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
@@ -975,10 +966,8 @@ github.com/gobwas/glob v0.2.3 h1:A4xDbljILXROh+kObIiy5kIaPYD8e96x1tgBhUI5J+Y=
 github.com/gobwas/glob v0.2.3/go.mod h1:d3Ez4x06l9bZtSvzIay5+Yzi0fmZzPgnTbPcKjJAkT8=
 github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee/go.mod h1:L0fX3K22YWvt/FAX9NnzrNzcI4wNYi9Yku4O0LKYflo=
 github.com/gobwas/httphead v0.1.0 h1:exrUm0f4YX0L7EBwZHuCF4GDp8aJfVeBrlLQrs6NqWU=
-github.com/gobwas/httphead v0.1.0/go.mod h1:O/RXo79gxV8G+RqlR/otEwx4Q36zl9rqC5u12GKvMCM=
 github.com/gobwas/pool v0.2.0/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
 github.com/gobwas/pool v0.2.1 h1:xfeeEhW7pwmX8nuLVlqbzVc7udMDrwetjEv+TZIz1og=
-github.com/gobwas/pool v0.2.1/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
 github.com/gobwas/ws v1.0.2/go.mod h1:szmBTxLgaFppYjEmNtny/v3w89xOydFnnZMcgRRu/EM=
 github.com/gobwas/ws v1.1.0 h1:7RFti/xnNkMJnrK7D1yQ/iCIB5OrrY/54/H930kIbHA=
 github.com/gobwas/ws v1.1.0/go.mod h1:nzvNcVha5eUziGrbxFCo6qFIojQHjJV5cLYIbezhfL0=
@@ -998,8 +987,7 @@ github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGw
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/glog v1.0.0/go.mod h1:EWib/APOK0SL3dFbYqvxE3UYd8E6s1ouQ7iEp/0LWV4=
 github.com/golang/glog v1.1.0/go.mod h1:pfYeQZ3JWZoXTV5sFc986z3HTpwQs9At6P4ImfuP3NQ=
-github.com/golang/glog v1.1.2 h1:DVjP2PbBOzHyzA+dn3WhHIq4NdVu3Q+pvivFICf/7fo=
-github.com/golang/glog v1.1.2/go.mod h1:zR+okUeTbrL6EL3xHUDxZuEtGv04p5shwip1+mL/rLQ=
+github.com/golang/glog v1.2.0 h1:uCdmnmatrKCgMBlM4rMuJZWOkPDqdbZPnrMXDY4gI68=
 github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
@@ -1344,8 +1332,7 @@ github.com/libp2p/go-buffer-pool v0.1.0 h1:oK4mSFcQz7cTQIfqbe4MIj9gLW+mnanjyFtc6
 github.com/libp2p/go-buffer-pool v0.1.0/go.mod h1:N+vh8gMqimBzdKkSMVuydVDq+UV5QTWy5HSiZacSbPg=
 github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-bc2310a04743/go.mod h1:qklhhLq1aX+mtWk9cPHPzaBjWImj5ULL6C7HFJtXQMM=
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
-github.com/linxGnu/grocksdb v1.8.11 h1:BGol9e5gB1BrsTvOxloC88pe70TCqgrfLNwkyWW0kD8=
-github.com/linxGnu/grocksdb v1.8.11/go.mod h1:xZCIb5Muw+nhbDK4Y5UJuOrin5MceOuiXkVUR7vp4WY=
+github.com/linxGnu/grocksdb v1.8.12 h1:1/pCztQUOa3BX/1gR3jSZDoaKFpeHFvQ1XrqZpSvZVo=
 github.com/lufeee/execinquery v1.2.1 h1:hf0Ems4SHcUGBxpGN7Jz78z1ppVkP/837ZlETPCEtOM=
 github.com/lufeee/execinquery v1.2.1/go.mod h1:EC7DrEKView09ocscGHC+apXMIaorh4xqSxS/dy8SbM=
 github.com/lyft/protoc-gen-star v0.6.0/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuzJYeZuUPFPNwA=
@@ -1495,33 +1482,17 @@ github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-4-iavl-v1 h1:9OHG/uakHWmLdHB
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-4-iavl-v1/go.mod h1:4WHIpz3iRefLvpqKD9oRNWD10AQbDt0tj6MmWcuY1QI=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240222171503-685566578734 h1:o30q2J2Q/QZv7g9rwDJHK5e6tvd87GsY1uZ79lTdo5A=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240222171503-685566578734/go.mod h1:SuNYa8LXsQDYy9aRU0yrXQpkiZ8lDJmXDwthLyR5N+w=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059 h1:2PyAblTdr9l5GacEuQY/CitAAUdA60UH43qD9FChdXQ=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059/go.mod h1:uClYVpeXbVKOHRA0n55kfP1jJz1lv66k+V5N0w/vi5M=
-github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0 h1:HNmPE7IN3dRzu/1UlAI0ymio39VHdqRikP+xRLBFmXY=
-github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0/go.mod h1:+pcbJEj6kt6ZNOPlYTxAMajuzEGBwgXLUoeTSvprQBg=
+github.com/osmosis-labs/osmosis/v22 v22.0.5 h1:HXTjhUXNZHm322NF6ayusifqAi/0PN8LYhOdC8mYmjk=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.4 h1:5c5LQpjN+XpbhXobC4VG3V6/+4O3bm26NP0BKvHsQdg=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.4/go.mod h1:mTga2OJuy+RBhYvJUDJe9fdCZ4RBtM6ISvJrQzvFFAI=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10 h1:s4Y1ZeOmQ+iTgODCbnuge0mcBeyOtZF80Q5nmqu8Tio=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10/go.mod h1:G3FNk7hOfmKKHP5aaDShRi93i3c7s6jok+gPS7It9rI=
-github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4 h1:9eDKKZ3xmz+idc+XO/GkMSNwnFuDBg0uguvXAlPp8O0=
-github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4/go.mod h1:tvG1qt+zMgJQlO9WgXeLFRTrdAJwn+6dCP+kD++XlSc=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927 h1:W6Lku84w46SwDE3goes4Nczyssu8hNdc79s8qNOrjmU=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927/go.mod h1:c9HXAhpU4krtKreNGWNJoQR+9utkHBV2u8ENwwqkkT4=
-=======
-github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e h1:wMbjfdBY8T8dfiC/llpyvrTmZ+85eO3BVGTXFoGYP8Q=
-github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240306055140-d7dfe8e8669e/go.mod h1:u3sHQAPLDss2DovMB/4SCkiau85jVGv6Vsp8L7kSCcM=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e h1:fn4rXlW2Qp6Zga/1bBrXxUwZ5fF+HKX221TFxNTpkJ8=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240306055140-d7dfe8e8669e/go.mod h1:c/lE4YlUAEGRszC+l0rSd5ypkzlgyx3FHDg8RZNwmYA=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240306055140-d7dfe8e8669e h1:5ncDRrqv90OcdXCNnyuIUVYPyypAzassK8qjJ4xMjFk=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240306055140-d7dfe8e8669e/go.mod h1:OgeD5QfesfM6jOO/7egGo6QTxy6KnDCE0gBXa1n0JC0=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240306055140-d7dfe8e8669e h1:NmgCMKvQPHt9M8FNYp9dr23SwAGIFZbogPfAU5beFdM=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240306055140-d7dfe8e8669e/go.mod h1:t2IKIkpM3HzLXr72yK38yDKnGqEeBFCaYEnuhDFsJk4=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463 h1:eeGZ0A/Z0c4wstIg8G/0VGQJyYnu6/1tlOpKDnflePM=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463/go.mod h1:GNHf6+eQpoud7bV0dqJ3YVxov331z+jp9vbVuZPj14s=
->>>>>>> 9269f6fa (chore: reduce more epoch log noise (#7660))
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
@@ -2310,9 +2281,8 @@ golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df/go.mod h1:K8+ghG5WaK9qNqU5K3HdILfMLy1f3aNYFI/wnl100a8=
 golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f/go.mod h1:K8+ghG5WaK9qNqU5K3HdILfMLy1f3aNYFI/wnl100a8=
+golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 h1:H2TDz8ibqkAF6YGhCdN3jS9O0/s90v0rJh3X/OLHEUk=
 golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2/go.mod h1:K8+ghG5WaK9qNqU5K3HdILfMLy1f3aNYFI/wnl100a8=
-golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 h1:+cNy6SZtPcJQH3LJVLOSmiC7MMxXNOb3PU/VUEz+EhU=
-golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028/go.mod h1:NDW/Ps6MPRej6fsCIbMTohpP40sJ/P/vI1MoTEGwX90=
 gonum.org/v1/gonum v0.0.0-20180816165407-929014505bf4/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
 gonum.org/v1/gonum v0.8.2/go.mod h1:oe/vMfY3deqTw+1EZJhuvEW2iwGF1bW9wwu7XCu0+v0=
 gonum.org/v1/gonum v0.9.3/go.mod h1:TZumC3NeyVQskjXqmyWt4S3bINhy7B4eYwW69EbyX+0=
