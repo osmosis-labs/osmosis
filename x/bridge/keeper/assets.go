@@ -14,6 +14,8 @@ type ChangeAssetStatusResult struct {
 	NewStatus types.AssetStatus
 }
 
+// ChangeAssetStatus changes the status of the provided asset to newStatus.
+// Returns error if the provided asset is not found in the module params.
 func (k Keeper) ChangeAssetStatus(
 	ctx sdk.Context,
 	asset types.Asset,
@@ -23,21 +25,22 @@ func (k Keeper) ChangeAssetStatus(
 	params := k.GetParams(ctx)
 
 	// check if the specified asset is known
-	const notFound = -1
-	var found = notFound
+	const notFoundIdx = -1
+	var assetIdx = notFoundIdx
 	for i := range params.Assets {
 		if params.Assets[i].Asset == asset {
-			found = i
+			assetIdx = i
+			break
 		}
 	}
-	if found == notFound {
+	if assetIdx == notFoundIdx {
 		return ChangeAssetStatusResult{}, errorsmod.Wrapf(types.ErrInvalidAsset, "Asset not found")
 	}
 
-	// update found asset status
-	oldStatus := params.Assets[found].AssetStatus
-	params.Assets[found].AssetStatus = newStatus
-	k.SetParams(ctx, params)
+	// update assetIdx asset status
+	oldStatus := params.Assets[assetIdx].AssetStatus
+	params.Assets[assetIdx].AssetStatus = newStatus
+	k.SetParam(ctx, types.KeyAssets, params.Assets)
 
 	return ChangeAssetStatusResult{
 		OldStatus: oldStatus,

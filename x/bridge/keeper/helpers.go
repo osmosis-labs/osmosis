@@ -21,8 +21,7 @@ func Difference[T comparable](a, b []T) []T {
 	return diff
 }
 
-// validateSigners ensures that the actualSigners set
-// is a non-empty subset of the validSigners set
-func (k Keeper) validateSender(ctx sdk.Context, sender string) bool {
+// validateSenderIsSigner ensures that the sender is a part of the signers set.
+func (k Keeper) validateSenderIsSigner(ctx sdk.Context, sender string) bool {
 	return slices.Contains(k.GetParams(ctx).Signers, sender)
 }
