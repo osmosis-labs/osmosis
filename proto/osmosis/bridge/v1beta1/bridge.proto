@@ -1,0 +1,45 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+// Params defines params for x/bridge module.
+message Params {
+  // Signers used to sign inbound and release outbound transactions
+  repeated string signers = 1 [ (gogoproto.moretags) = "yaml:\"signers\"" ];
+  // Assets is a list used to create tokenfactory denoms
+  // for corresponding trading pairs
+  repeated AssetWithStatus assets = 2 [
+    (gogoproto.moretags) = "yaml:\"assets\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+enum AssetStatus {
+  ASSET_STATUS_UNSPECIFIED = 0;
+  ASSET_STATUS_OK = 1;
+  ASSET_STATUS_BLOCKED_INBOUND = 2;
+  ASSET_STATUS_BLOCKED_OUTBOUND = 3;
+  ASSET_STATUS_BLOCKED_BOTH = 4;
+}
+
+// AssetWithStatus defines a pair of the asset and its current status.
+message AssetWithStatus {
+  Asset asset = 1
+      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
+  AssetStatus asset_status = 2
+      [ (gogoproto.moretags) = "yaml:\"asset_status\"" ];
+}
+
+// Asset defines a pair of the source chain name and its Osmosis representation
+// denoted by denom. It also includes a precision used for coins representation.
+message Asset {
+  // SourceChain is a source chain name
+  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
+  // Denom is the Osmosis representation of the SourceChain
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  // Precision used for coins representation
+  uint64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
+}
