@@ -9,13 +9,13 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312050001-5a9c40207072
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312200410-a7cc6376cdec
 	github.com/osmosis-labs/osmosis/v22 v22.0.5
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
-	google.golang.org/grpc v1.60.1
+	google.golang.org/grpc v1.61.1
 	google.golang.org/protobuf v1.32.0
 )
 
@@ -30,7 +30,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.0 // indirect
-	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4 // indirect
+	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/tools/rosetta v0.2.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -144,8 +144,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312050001-5a9c40207072 // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312050001-5a9c40207072 // indirect
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312200410-a7cc6376cdec // indirect
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
@@ -208,7 +208,7 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
 	// cometbft is replaced to print custom app hash logs. Using branch osmo-v23/v0.37.4.
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2

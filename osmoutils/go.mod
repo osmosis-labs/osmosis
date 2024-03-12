@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ibc-go/v7 v7.3.2
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312050001-5a9c40207072
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
 	github.com/osmosis-labs/osmosis/v23 v23.0.1
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
@@ -171,7 +171,7 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
 	// cometbft is replaced to print custom app hash logs. Using branch osmo-v23/v0.37.4.
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-2
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
