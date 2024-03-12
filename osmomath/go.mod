@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 	github.com/cosmos/cosmos-sdk v0.47.8
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240222004208-b602d1901059
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312034407-ccb00fed0d68
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 
@@ -83,9 +83,9 @@ require (
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	go.etcd.io/bbolt v1.3.8 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
