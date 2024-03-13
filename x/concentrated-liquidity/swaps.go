@@ -239,8 +239,6 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-// swapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
-// new tick, liquidity, and sqrtPrice to the respective pool
 func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -302,6 +300,8 @@ func (k *Keeper) swapInAmtGivenOut(
 	return tokenIn, tokenOut, poolUpdates, nil
 }
 
+var unboundedPriceLimit = osmomath.ZeroBigDec()
+
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
 	poolI poolmanagertypes.PoolI,
@@ -310,7 +310,11 @@ func (k Keeper) CalcOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
+<<<<<<< HEAD
 	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, osmomath.ZeroBigDec())
+=======
+	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, unboundedPriceLimit, false)
+>>>>>>> 274c46aa (Use a singleton for indicating unbounded price limit (#7731))
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -325,7 +329,11 @@ func (k Keeper) CalcInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 ) (sdk.Coin, error) {
 	cacheCtx, _ := ctx.CacheContext()
+<<<<<<< HEAD
 	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, osmomath.ZeroBigDec(), poolI.GetId())
+=======
+	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, unboundedPriceLimit, poolI.GetId(), false)
+>>>>>>> 274c46aa (Use a singleton for indicating unbounded price limit (#7731))
 	if err != nil {
 		return sdk.Coin{}, err
 	}
