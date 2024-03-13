@@ -1,270 +1,336 @@
 package authenticator_test
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+
+	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/post"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
 )
 
 type SpendLimitAuthenticatorTest struct {
 	BaseAuthenticatorSuite
 
-	Store      prefix.Store
-	SpendLimit authenticator.SpendLimitAuthenticator
+	Store                      prefix.Store
+	CosmwasmAuth               authenticator.CosmwasmAuthenticator
+	AlwaysPassAuth             testutils.TestingAuthenticator
+	AuthenticatorAnteDecorator ante.AuthenticatorDecorator
+	AuthenticatorPostDecorator post.AuthenticatorPostDecorator
+}
+
+type InstantiateMsg struct {
+	PriceResolutionConfig PriceResolutionConfig `json:"price_resolution_config"`
+	TrackedDenoms         []TrackedDenom        `json:"tracked_denoms"`
+}
+
+type TrackedDenom struct {
+	Denom      string              `json:"denom"`
+	SwapRoutes []SwapAmountInRoute `json:"swap_routes"`
+}
+
+type SwapAmountInRoute struct {
+	PoolID        string `json:"pool_id"` // as u64
+	TokenOutDenom string `json:"token_out_denom"`
+}
+
+type PriceResolutionConfig struct {
+	QuoteDenom         string `json:"quote_denom"`
+	StalenessThreshold string `json:"staleness_threshold"` // as u64
+	TwapDuration       string `json:"twap_duration"`       // as u64
+}
+
+// params
+type SpendLimitParams struct {
+	Limit       string     `json:"limit"`        // as u128
+	ResetPeriod string     `json:"reset_period"` // day | week | month | year
+	TimeLimit   *TimeLimit `json:"time_limit,omitempty"`
+}
+
+type TimeLimit struct {
+	Start *string `json:"start,omitempty"` // as u64 or None
+	End   string  `json:"end"`             // as u64
 }
 
 func TestSpendLimitAuthenticatorTest(t *testing.T) {
 	suite.Run(t, new(SpendLimitAuthenticatorTest))
 }
 
+const UUSDC = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
 func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.SetupKeys()
 
-	authenticatorsStoreKey := s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
-	//s.Store = prefix.NewStore(s.Ctx.KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
-	s.SpendLimit = authenticator.NewSpendLimitAuthenticator(authenticatorsStoreKey, "uosmo", authenticator.AbsoluteValue, s.OsmosisApp.BankKeeper, s.OsmosisApp.PoolManagerKeeper, s.OsmosisApp.TwapKeeper)
+	s.OsmosisApp = app.Setup(false)
+	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
+	s.Ctx = s.Ctx.WithBlockTime(time.Now())
+	s.EncodingConfig = app.MakeEncodingConfig()
+
+	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
+
+	s.AlwaysPassAuth = testutils.TestingAuthenticator{Approve: testutils.Always, Confirm: testutils.Always, GasConsumption: 0}
+	s.OsmosisApp.AuthenticatorKeeper.AuthenticatorManager.RegisterAuthenticator(s.AlwaysPassAuth)
+
+	s.AuthenticatorAnteDecorator = ante.NewAuthenticatorDecorator(
+		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.AccountKeeper,
+		s.EncodingConfig.TxConfig.SignModeHandler(),
+	)
+
+	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
+		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.AccountKeeper,
+		s.EncodingConfig.TxConfig.SignModeHandler(),
+		// Add an empty handler here to enable a circuit breaker pattern
+		sdk.ChainPostDecorators(sdk.Terminator{}),
+	)
 }
 
-func (s *SpendLimitAuthenticatorTest) TestInitialize() {
-	tests := []struct {
-		name string // name
-		data []byte // initData
-		pass bool   // wantErr
-	}{
-		{"Valid day", []byte(`{"allowed": 100, "period": "day"}`), true},
-		{"Valid month", []byte(`{"allowed": 100, "period": "week"}`), true},
-		{"Neg allowed", []byte(`{"allowed": -100, "period": "year"}`), false},
-		{"Invalid period", []byte(`{"allowed": 100, "period": "decade"}`), false},
-		{"Missing allowed", []byte(`{"period": "day"}`), false},
-		{"Missing period", []byte(`{"allowed": 100}`), false},
+func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
+	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorAnteDecorator)
+	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)
+
+	usdcOsmoPoolId := s.preparePool(
+		[]balancer.PoolAsset{
+			{
+				Weight: sdk.NewInt(100000),
+				Token:  sdk.NewCoin(UUSDC, sdk.NewInt(1500000000)),
+			},
+			{
+				Weight: sdk.NewInt(100000),
+				Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
+			},
+		},
+	)
+
+	// always update file name to reflect the version
+	// current: https://github.com/osmosis-labs/spend-limit-authenticator/tree/1.0.0-alpha.1
+	// most test cases exists the repo above, this test file is intended to ensure that latest osmosis code
+	// does not break existing contract
+	codeId := s.StoreContractCode("../testutils/bytecode/spend_limit_v1.0.0-alpha.1.wasm")
+
+	msg := InstantiateMsg{
+		PriceResolutionConfig: PriceResolutionConfig{
+			QuoteDenom:         UUSDC,
+			StalenessThreshold: "3600000000000",
+			TwapDuration:       "3600000000000",
+		},
+		TrackedDenoms: []TrackedDenom{
+			{
+				Denom: "uosmo",
+				SwapRoutes: []SwapAmountInRoute{
+					{
+						PoolID:        fmt.Sprintf("%d", usdcOsmoPoolId),
+						TokenOutDenom: UUSDC,
+					},
+				},
+			},
+		},
 	}
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			_, err := s.SpendLimit.Initialize(tt.data)
-			if tt.pass {
-				s.Require().NoError(err, "Should succeed")
-			} else {
-				s.Require().Error(err, "Should fail")
-			}
-		})
+	// increase time for 1hr to ensure twap price is available
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
+
+	bz, err := json.Marshal(msg)
+	s.Require().NoError(err)
+	contractAddr := s.InstantiateContract(string(bz), codeId)
+
+	// add new authenticator
+	ak := s.OsmosisApp.AppKeepers.AuthenticatorKeeper
+
+	authAcc := s.TestAccAddress[1]
+	authAccPriv := s.TestPrivKeys[1]
+
+	params := SpendLimitParams{
+		Limit:       "5000000000",
+		ResetPeriod: "day",
+		TimeLimit: &TimeLimit{
+			Start: nil,
+			End:   fmt.Sprintf("%d", time.Now().Add(time.Hour*25).UnixNano()),
+		},
 	}
+
+	bz, err = json.Marshal(params)
+
+	s.Require().NoError(err)
+
+	initData := authenticator.CosmwasmAuthenticatorInitData{
+		Contract: contractAddr.String(),
+		Params:   bz,
+	}
+
+	bz, err = json.Marshal(initData)
+	s.Require().NoError(err)
+
+	// hack to get fee payer authenticated
+	id, err := ak.AddAuthenticator(s.Ctx, authAcc, s.AlwaysPassAuth.Type(), []byte{})
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(1), id)
+
+	id, err = ak.AddAuthenticator(s.Ctx, authAcc, authenticator.CosmwasmAuthenticator{}.Type(), bz)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(2), id)
+
+	// fund acc
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000000000))))
+
+	// a hack for setting fee payer
+	selfSend := banktypes.MsgSend{
+		FromAddress: authAcc.String(),
+		ToAddress:   authAcc.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(1))),
+	}
+
+	// swap within limit
+	swapMsg := poolmanagertypes.MsgSwapExactAmountIn{
+		Sender:            authAcc.String(),
+		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: UUSDC}},
+		TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(3333333333)), // ~ 4,999,999,999 uusdc
+		TokenOutMinAmount: sdk.OneInt(),
+	}
+
+	tx, err := s.GenSimpleTxWithSelectedAuthenticators([]sdk.Msg{&selfSend, &swapMsg}, []cryptotypes.PrivKey{authAccPriv}, []uint64{1, 2})
+	s.Require().NoError(err)
+
+	// ante
+
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// swap
+	_, err = s.OsmosisApp.MsgServiceRouter().Handler(&swapMsg)(s.Ctx, &swapMsg)
+	s.Require().NoError(err)
+
+	// post
+
+	_, err = postHandler(s.Ctx, tx, false, true)
+	s.Require().NoError(err)
+
+	// swap over the limit
+	swapMsg = poolmanagertypes.MsgSwapExactAmountIn{
+		Sender:            authAcc.String(),
+		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: "uosmo"}},
+		TokenIn:           sdk.NewCoin(UUSDC, sdk.NewInt(2)),
+		TokenOutMinAmount: sdk.OneInt(),
+	}
+
+	tx, err = s.GenSimpleTxWithSelectedAuthenticators([]sdk.Msg{&selfSend, &swapMsg}, []cryptotypes.PrivKey{authAccPriv}, []uint64{1, 2})
+	s.Require().NoError(err)
+
+	// ante
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// swap
+	_, err = s.OsmosisApp.MsgServiceRouter().Handler(&swapMsg)(s.Ctx, &swapMsg)
+	s.Require().NoError(err)
+
+	// post
+	_, err = postHandler(s.Ctx, tx, false, true)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "Spend limit error: Overspend: remaining qouta 1, requested 2: execute wasm contract failed: unauthorized")
+
+	// advance time to next day, and resend the prev tx should have no error
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+
+	// ante
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// swap
+	_, err = s.OsmosisApp.MsgServiceRouter().Handler(&swapMsg)(s.Ctx, &swapMsg)
+	s.Require().NoError(err)
+
+	// post
+	_, err = postHandler(s.Ctx, tx, false, true)
+	s.Require().NoError(err)
+
+	// advance time to end time, that should fail
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
+
+	// ante
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().Error(err)
+
+	nanoDigits := 9
+	endTimeSecsStr := params.TimeLimit.End[:len(params.TimeLimit.End)-nanoDigits]
+	endTimeNanosStr := params.TimeLimit.End[len(params.TimeLimit.End)-nanoDigits:]
+
+	s.Require().Contains(
+		err.Error(),
+		fmt.Sprintf(
+			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed: unauthorized",
+			s.Ctx.BlockTime().Unix(), s.Ctx.BlockTime().Nanosecond(),
+			endTimeSecsStr, endTimeNanosStr,
+		),
+	)
 }
 
-func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
-	// Mock an account
-	account, err := sdk.AccAddressFromBech32("osmo1s43st0ev6zuvu8ck64jumtjsz06tzqvqqmfspg")
-	accountSet := authtypes.NewBaseAccount(account, nil, 0, 0)
-	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, accountSet)
+func (s *SpendLimitAuthenticatorTest) StoreContractCode(path string) uint64 {
+	osmosisApp := s.OsmosisApp
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
-	supply := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(2_000_000_000)))
-	err = s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
+	wasmCode, err := os.ReadFile(path)
 	s.Require().NoError(err)
-	initialBalance := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1_000)))
-	err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, account, initialBalance)
+	accessEveryone := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody}
+	codeID, _, err := govKeeper.Create(s.Ctx, creator, wasmCode, &accessEveryone)
 	s.Require().NoError(err)
-
-	tests := []struct {
-		name string    // name
-		data []byte    // initData
-		t1   time.Time // initial time
-		t2   time.Time // time after transition
-		amt  int64     // spending amount
-		pass bool      // expect block
-	}{
-		{"Day Dec31 to Jan1", []byte(`{"allowed": 100, "period": "day"}`),
-			time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
-			time.Date(2024, 1, 1, 0, 0, 1, 0, time.UTC), 50, true},
-
-		{"Week Dec to Jan", []byte(`{"allowed": 100, "period": "week"}`),
-			time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
-			time.Date(2024, 1, 7, 0, 0, 1, 0, time.UTC), 101, true},
-
-		{"Year Dec31 to Jan1", []byte(`{"allowed": 100, "period": "year"}`),
-			time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
-			time.Date(2024, 1, 1, 0, 0, 1, 0, time.UTC), 50, true},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			// Initialize SpendLimitAuthenticator
-			spendLimit, err := s.SpendLimit.Initialize(tt.data)
-			s.Require().NoError(err, "Initialization failed")
-
-			ak := s.OsmosisApp.AccountKeeper
-			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			// sample msg
-			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
-			// sample tx
-			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
-			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
-			s.Require().NoError(err)
-
-			// Set initial time
-			s.Ctx = s.Ctx.WithBlockTime(tt.t1)
-			spendLimit.Authenticate(s.Ctx, request)
-
-			// simulate spending
-			err = s.OsmosisApp.BankKeeper.SendCoins(s.Ctx, account, account, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(tt.amt))))
-			s.Require().NoError(err)
-
-			// Simulate time transition
-			s.Ctx = s.Ctx.WithBlockTime(tt.t2)
-
-			// Execute ConfirmExecution and check if it's confirmed or blocked
-			err = spendLimit.ConfirmExecution(s.Ctx, request)
-			if tt.pass {
-				s.Require().NoError(err, "Should succeed")
-			} else {
-				s.Require().Error(err, "Should fail")
-			}
-		})
-	}
+	return codeID
 }
 
-func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends() {
-	// Mock an account
-	account := s.TestAccAddress[0]
-	receiver := s.TestAccAddress[1]
-
-	supply := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(2_000_000_000)))
-	err := s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, supply)
+func (s *SpendLimitAuthenticatorTest) InstantiateContract(msg string, codeID uint64) sdk.AccAddress {
+	osmosisApp := s.OsmosisApp
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	addr, _, err := contractKeeper.Instantiate(s.Ctx, codeID, creator, creator, []byte(msg), "contract", nil)
 	s.Require().NoError(err)
-	initialBalance := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10_000)))
-	err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, account, initialBalance)
-	s.Require().NoError(err)
+	return addr
+}
 
-	tests := []struct {
-		name             string
-		initData         []byte
-		timeSpendingList []struct {
-			timePoint    time.Time
-			spendingAmt  int64
-			expectToPass bool
-		}
-	}{
-		{
-			name:     "Day with accumulated spendings",
-			initData: []byte(`{"allowed": 100, "period": "day"}`),
-			timeSpendingList: []struct {
-				timePoint    time.Time
-				spendingAmt  int64
-				expectToPass bool
-			}{
-				{time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), 150, false},
-				{time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), 30, true},
-				{time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC), 40, true},
-				{time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC), 31, true},
-				{time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC), 50, true},
-				{time.Date(2024, 1, 3, 12, 0, 0, 0, time.UTC), 50, true},
-				{time.Date(2024, 1, 3, 12, 0, 0, 0, time.UTC), 50, true},
-				{time.Date(2024, 1, 3, 12, 0, 0, 0, time.UTC), 1, false},
-				{time.Date(2024, 1, 4, 12, 0, 0, 0, time.UTC), 1, true},
-			},
-		},
-		{
-			name:     "Week with accumulated spendings",
-			initData: []byte(`{"allowed": 200, "period": "week"}`),
-			timeSpendingList: []struct {
-				timePoint    time.Time
-				spendingAmt  int64
-				expectToPass bool
-			}{
-				{time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), 100, true},
-				{time.Date(2024, 1, 4, 0, 0, 0, 0, time.UTC), 50, true},
-				{time.Date(2024, 1, 7, 0, 0, 0, 0, time.UTC), 51, false},
-				{time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC), 150, true},
-				{time.Date(2024, 2, 8, 0, 0, 0, 0, time.UTC), 200, true},
-				{time.Date(2024, 2, 11, 15, 0, 6, 0, time.UTC), 200, false},
-				{time.Date(2024, 2, 12, 15, 0, 6, 0, time.UTC), 200, true},
-			},
-		},
-		{
-			name:     "Month with accumulated spendings",
-			initData: []byte(`{"allowed": 300, "period": "month"}`),
-			timeSpendingList: []struct {
-				timePoint    time.Time
-				spendingAmt  int64
-				expectToPass bool
-			}{
-				{time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), 100, true},
-				{time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), 100, true},
-				{time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC), 101, false},
-				{time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC), 150, true},
-				{time.Date(2025, 2, 1, 0, 0, 0, 0, time.UTC), 300, true},
-			},
-		},
-		{
-			name:     "Year with accumulated spendings",
-			initData: []byte(`{"allowed": 500, "period": "year"}`),
-			timeSpendingList: []struct {
-				timePoint    time.Time
-				spendingAmt  int64
-				expectToPass bool
-			}{
-				{time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), 200, true},
-				{time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), 200, true},
-				{time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC), 101, false},
-				{time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC), 300, false},
-				{time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC), 99, true},
-				{time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC), 300, true},
-				{time.Date(2028, 1, 1, 0, 0, 0, 0, time.UTC), 500, true},
-				{time.Date(2028, 6, 10, 0, 0, 0, 0, time.UTC), 1, false},
-			},
-		},
+func (s *SpendLimitAuthenticatorTest) preparePool(
+	poolAssets []balancer.PoolAsset,
+) uint64 {
+	poolCreator := s.TestAccAddress[0]
+
+	s.FundAcc(poolCreator, s.OsmosisApp.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
+
+	for _, asset := range poolAssets {
+		s.FundAcc(poolCreator, sdk.NewCoins(asset.Token))
 	}
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			// Reset gas
-			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
-
-			// Initialize SpendLimitAuthenticator
-			spendLimit, err := s.SpendLimit.Initialize(tt.initData)
-			s.Require().NoError(err, "Initialization failed")
-
-			for _, pair := range tt.timeSpendingList {
-				// Simulate time transition
-				s.Ctx = s.Ctx.WithBlockTime(pair.timePoint)
-
-				ak := s.OsmosisApp.AccountKeeper
-				sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-				// sample msg
-				msg := &bank.MsgSend{FromAddress: account.String(), ToAddress: receiver.String(), Amount: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(pair.spendingAmt)))}
-				// sample tx
-				tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
-				s.Require().NoError(err)
-				request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, account, account, msg, tx, 0, false, authenticator.SequenceMatch)
-				s.Require().NoError(err)
-
-				spendLimit.Authenticate(s.Ctx, request)
-				err = spendLimit.Track(s.Ctx, account, account, nil, 0, "0")
-				s.Require().NoError(err)
-
-				// Simulate spending
-				err = s.OsmosisApp.BankKeeper.SendCoins(s.Ctx, account, receiver, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(pair.spendingAmt))))
-				s.Require().NoError(err)
-
-				// Execute ConfirmExecution and check if it's confirmed or blocked
-				result := spendLimit.ConfirmExecution(s.Ctx, request)
-				if pair.expectToPass {
-					s.Require().NoError(result, "Should succeed")
-				} else {
-					s.Require().Error(result, "Should fail")
-				}
-			}
-		})
+	poolParams := balancer.PoolParams{
+		SwapFee: sdk.ZeroDec(),
+		ExitFee: sdk.ZeroDec(),
 	}
+
+	poolID, err := s.OsmosisApp.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		balancer.NewMsgCreateBalancerPool(poolCreator, poolParams, poolAssets, ""),
+	)
+	s.Require().NoError(err)
+
+	return poolID
 }
