@@ -213,15 +213,15 @@ func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 	if txOptions == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
-			"Cannot get tx ext, tx is formatted incorrectly")
+			"Cannot get AuthenticatorTxOptions from tx")
 	}
 	// Retrieve the selected authenticators from the extension.
 	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
 
 	if len(selectedAuthenticators) != msgCount {
 		// Return an error if the number of selected authenticators does not match the number of messages.
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
-			"Mismatch between the number of selected authenticators and messages")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
+			"Mismatch between the number of selected authenticators and messages, msg count %d, got %d selected authenticators", msgCount, len(selectedAuthenticators))
 	}
 
 	return selectedAuthenticators, nil
