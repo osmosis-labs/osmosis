@@ -88,7 +88,7 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request Authentic
 
 	_, err = cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
 	if err != nil {
-		return errorsmod.Wrapf(err, "failed to sudo")
+		return err
 	}
 
 	return nil

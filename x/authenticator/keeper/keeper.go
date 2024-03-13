@@ -127,7 +127,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 		return authenticator.InitializedAuthenticator{},
 			errorsmod.Wrapf(
 				sdkerrors.ErrLogic,
-				"authenticator %d failed to initialize, authenticator type %s not registered in manager",
+				"authenticator id %d failed to initialize, authenticator type %s not registered in manager",
 				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}

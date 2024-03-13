@@ -281,7 +281,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	s.Require().Contains(
 		err.Error(),
 		fmt.Sprintf(
-			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed: unauthorized",
+			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed",
 			s.Ctx.BlockTime().Unix(), s.Ctx.BlockTime().Nanosecond(),
 			endTimeSecsStr, endTimeNanosStr,
 		),

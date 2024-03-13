@@ -205,7 +205,7 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	// Try to get an authenticator that has been removed from the store
 	selectedAuthenticator, err = s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
 	s.Require().Error(err)
-	s.Require().ErrorContains(err, "authenticator not registered in manager")
+	s.Require().ErrorContains(err, "authenticator id 2 failed to initialize, authenticator type MessageFilterAuthenticator not registered in manager: internal logic error")
 
 	// Reset the authenticator manager to see how GetInitializedAuthenticatorForAccount behaves
 	s.App.AuthenticatorManager.ResetAuthenticators()

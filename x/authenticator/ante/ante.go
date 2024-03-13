@@ -178,7 +178,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if authErr != nil {
 			return ctx, errorsmod.Wrapf(
 				authErr,
-				"authentication failed for message %d, authenticator id %d type %s", msgIndex, selectedAuthenticator.Id, selectedAuthenticator.Authenticator.Type(),
+				"authentication failed for message %d, authenticator id %d, type %s", msgIndex, selectedAuthenticator.Id, selectedAuthenticator.Authenticator.Type(),
 			)
 		}
 	}

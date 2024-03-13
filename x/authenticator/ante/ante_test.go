@@ -213,7 +213,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
 	s.Require().Error(err)
-	s.Require().ErrorContains(err, "FeePayer not authenticated yet. The gas limit has been reduced to 20000. Consumed")
+	s.Require().ErrorContains(err, "FeePayer must be authenticated first because gas consumption has exceeded the free gas limit for authentication process. The gas limit has been reduced to 20000. Gas consumed: ")
 	// Now, let's ensure the fee payer has been authenticated before checking all authenticators for s.TestPrivKeys[1]
 
 	// This is a message that can only be aithenticated by its default authenticator (s.TestAccAddress[1])
