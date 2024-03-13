@@ -65,7 +65,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			switch r.(type) {
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
-					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
+					"FeePayer must be authenticated first because gas consumption has exceeded the free gas limit for authentication process. The gas limit has been reduced to %d. Gas consumed: %d",
 					authenticatorParams.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
 				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
