@@ -133,7 +133,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		)
 		if err != nil {
 			return sdk.Context{},
-				err
+				errorsmod.Wrap(err, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
 		}
 
 		a11r := selectedAuthenticator.Authenticator
