@@ -12,6 +12,9 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gogotypes "github.com/gogo/protobuf/types"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
@@ -117,10 +120,15 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 
 	uninitializedAuthenticator := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorFromStore.Type)
 	if uninitializedAuthenticator == nil {
+		// This should never happen, but if it does, it means that stored authenticator is not registered
+		// or somehow the registered authenticator was removed / malformed
+		k.Logger(ctx).Error("account asscoicated authenticator not registered in manager", "type", authenticatorFromStore.Type, "id", selectedAuthenticator)
+
 		return authenticator.InitializedAuthenticator{},
-			fmt.Errorf(
-				"authenticator %d failed to initialize, authenticator not registered in manager",
-				selectedAuthenticator,
+			errorsmod.Wrapf(
+				sdkerrors.ErrLogic,
+				"authenticator %d failed to initialize, authenticator type %s not registered in manager",
+				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}
 	// Ensure that initialization of each authenticator works as expected
@@ -129,9 +137,9 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Data)
 	if err != nil || initializedAuthenticator == nil {
 		return authenticator.InitializedAuthenticator{},
-			fmt.Errorf(
-				"authenticator %d failed to initialize",
-				selectedAuthenticator,
+			errorsmod.Wrapf(err,
+				"authenticator %d with type %s failed to initialize",
+				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}
 
