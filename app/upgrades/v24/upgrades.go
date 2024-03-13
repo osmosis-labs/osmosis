@@ -1,12 +1,25 @@
 package v24
 
 import (
+	"fmt"
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+)
+
+const (
+	mainnetChainID = "osmosis-1"
+	// Edgenet is to function exactly the samas mainnet, and expected
+	// to be state-exported from mainnet state.
+	edgenetChainID = "edgenet"
 )
 
 func CreateUpgradeHandler(
@@ -39,6 +52,43 @@ func CreateUpgradeHandler(
 		// since we only need the pool indexed TWAPs.
 		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)
 
+		chainID := ctx.ChainID()
+		// We only perform the migration on mainnet pools since we hard-coded the pool IDs to migrate
+		// in the types package. To ensure correctness, we will spin up a state-exported mainnet testnet
+		// with the same chain ID.
+		if chainID == mainnetChainID || chainID == edgenetChainID {
+			if err := migrateMainnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
+				return nil, err
+			}
+		}
 		return migrations, nil
 	}
+}
+
+// migrateMainnetPools migrates the specified mainnet pools to the new accumulator scaling factor.
+func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
+	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrated))
+	for poolID := range concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrated {
+		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
+	}
+
+	// Sort for determinism
+	sort.Slice(poolIDsToMigrate, func(i, j int) bool {
+		return poolIDsToMigrate[i] < poolIDsToMigrate[j]
+	})
+
+	// Migrate concentrated pools
+	thresholdId, err := concentratedKeeper.GetIncentivePoolIDMigrationThreshold(ctx)
+	if err != nil {
+		return err
+	}
+	fmt.Println(thresholdId)
+	for _, poolId := range poolIDsToMigrate {
+		fmt.Println(poolId)
+		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolId); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

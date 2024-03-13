@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -16,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
@@ -79,6 +81,68 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Len(twapRecords, 1)
 	s.Require().Equal(twap, twapRecords[0])
 
+	// INCENTIVES Setup
+	//
+
+	// Set the migration pool ID threshold to far away to simulate pre-migration state.
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, 1000)
+
+	concentratedPoolIDs := []uint64{}
+
+	// Create two sets of all pools
+	allPoolsOne := s.PrepareAllSupportedPools()
+	allPoolsTwo := s.PrepareAllSupportedPools()
+
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsOne.ConcentratedPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsTwo.ConcentratedPoolID)
+
+	// Update authorized quote denoms
+	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
+
+	// Create two more concentrated pools with positions
+	secondLastPoolID := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
+	lastPoolID := secondLastPoolID + 1
+	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
+	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
+		{"uion", "uosmo"},
+		{apptesting.ETH, apptesting.USDC},
+	})
+
+	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
+
+	// Create incentive record for last pool
+	incentiveCoin := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Create incentive record for second last pool
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, secondLastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Make 60 seconds pass
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, lastPoolID)
+	s.Require().NoError(err)
+
+	// Migrated pool claim
+	migratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(migratedPoolBeforeUpgradeIncentives)
+
+	// Non-migrated pool claim
+	nonMigratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
+
+	// Overwrite the migration list with the desired pool ID.
+	//oldMigrationList := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[lastPoolID] = struct{}{}
+
 	// PROTOREV Setup
 	//
 
@@ -131,6 +195,19 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	oldBaseDenoms, err = s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Empty(oldBaseDenoms)
+
+	// INCENTIVES Tests
+	//
+
+	// Migrated pool: ensure that the claimable incentives are the same before and after migration
+	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
+
+	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
+	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
