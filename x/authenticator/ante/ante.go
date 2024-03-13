@@ -171,9 +171,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		// If authentication failed, return an error
 		if authErr != nil {
-			return ctx, errorsmod.Wrap(
-				sdkerrors.ErrUnauthorized,
-				fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr),
+			return ctx, errorsmod.Wrapf(
+				authErr,
+				"authentication failed for message %d, authenticator id %d type %s", msgIndex, selectedAuthenticator.Id, selectedAuthenticator.Authenticator.Type(),
 			)
 		}
 	}
