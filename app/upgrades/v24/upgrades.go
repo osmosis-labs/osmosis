@@ -44,7 +44,7 @@ func CreateUpgradeHandler(
 		// proposal in x/cosmwasmpool
 		// However, there was a problem in the migration logic where the CosmWasmpool state CodeId  did not get updated.
 		// As a result, the CodeID for the contract that is tracked in x/wasmd  was migrated correctly. However, the code ID that we track in the x/cosmwasmpool  state did not.
-		// Therefore, we should perform a migration for each of the harcoded white whale pools.
+		// Therefore, we should perform a migration for each of the hardcoded white whale pools.
 		poolIds := []uint64{1463, 1462, 1461}
 		for _, poolId := range poolIds {
 			pool, err := keepers.CosmwasmPoolKeeper.GetPool(ctx, poolId)
