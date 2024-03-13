@@ -49,7 +49,8 @@ func CreateUpgradeHandler(
 		for _, poolId := range poolIds {
 			pool, err := keepers.CosmwasmPoolKeeper.GetPool(ctx, poolId)
 			if err != nil {
-				return nil, err
+				// Skip non-existent pools. This way we don't need to create the pools on E2E tests
+				continue
 			}
 			cwPool, ok := pool.(cwpooltypes.CosmWasmExtension)
 			if !ok {
