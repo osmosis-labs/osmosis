@@ -2,15 +2,22 @@ package authenticator_test
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/stretchr/testify/suite"
 
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+
+	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app"
 	"github.com/osmosis-labs/osmosis/v23/app/params"
@@ -89,4 +96,57 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 	}
 	return tx, nil
 
+}
+
+func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sdk.Msg, signers []cryptotypes.PrivKey, selectedAuthenticators []uint64) (sdk.Tx, error) {
+	txconfig := app.MakeEncodingConfig().TxConfig
+	feeCoins := sdk.Coins{sdk.NewInt64Coin("osmo", 2500)}
+	var accNums []uint64
+	var accSeqs []uint64
+
+	ak := s.OsmosisApp.AccountKeeper
+
+	for _, signer := range signers {
+		account := ak.GetAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address()))
+		accNums = append(accNums, account.GetAccountNumber())
+		accSeqs = append(accSeqs, account.GetSequence())
+	}
+
+	baseTxBuilder, err := MakeTxBuilder(
+		txconfig,
+		msgs,
+		feeCoins,
+		300000,
+		"",
+		accNums,
+		accSeqs,
+		signers,
+		signers,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	txBuilder, ok := baseTxBuilder.(authtx.ExtensionOptionsTxBuilder)
+	if !ok {
+		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
+	}
+	if len(selectedAuthenticators) > 0 {
+		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+			SelectedAuthenticators: selectedAuthenticators,
+		})
+		if err != nil {
+			return nil, err
+		}
+		txBuilder.SetNonCriticalExtensionOptions(value)
+	}
+
+	tx := txBuilder.GetTx()
+	return tx, nil
+}
+
+// FundAcc funds target address with specified amount.
+func (s *BaseAuthenticatorSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, acc, amounts)
+	s.Require().NoError(err)
 }
