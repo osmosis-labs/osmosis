@@ -1,22 +1,19 @@
 package authenticator
 
 type AuthenticatorManager struct {
-	registeredAuthenticators  []Authenticator
-	defaultAuthenticatorIndex int
+	registeredAuthenticators []Authenticator
 }
 
 // NewAuthenticatorManager creates a new AuthenticatorManager.
 func NewAuthenticatorManager() *AuthenticatorManager {
 	return &AuthenticatorManager{
-		registeredAuthenticators:  []Authenticator{},
-		defaultAuthenticatorIndex: -1,
+		registeredAuthenticators: []Authenticator{},
 	}
 }
 
 // ResetAuthenticators resets all registered authenticators.
 func (am *AuthenticatorManager) ResetAuthenticators() {
 	am.registeredAuthenticators = []Authenticator{}
-	am.defaultAuthenticatorIndex = -1
 }
 
 // InitializeAuthenticators initializes authenticators. If already initialized, it will not overwrite.
@@ -65,20 +62,4 @@ func (am *AuthenticatorManager) GetAuthenticatorByType(authenticatorType string)
 		}
 	}
 	return nil
-}
-
-// SetDefaultAuthenticatorIndex sets the default authenticator index.
-func (am *AuthenticatorManager) SetDefaultAuthenticatorIndex(index int) {
-	am.defaultAuthenticatorIndex = index
-	if am.defaultAuthenticatorIndex < 0 || am.defaultAuthenticatorIndex >= len(am.registeredAuthenticators) {
-		panic("Invalid default authenticator index")
-	}
-}
-
-// GetDefaultAuthenticator retrieves the default authenticator.
-func (am *AuthenticatorManager) GetDefaultAuthenticator() Authenticator {
-	if am.defaultAuthenticatorIndex < 0 {
-		return nil
-	}
-	return am.registeredAuthenticators[am.defaultAuthenticatorIndex]
 }

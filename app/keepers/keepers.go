@@ -228,7 +228,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authenticator.NewPartitionedAnyOfAuthenticator(appKeepers.AuthenticatorManager),
 		authenticator.NewPartitionedAllOfAuthenticator(appKeepers.AuthenticatorManager),
 	})
-	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 
 	authenticatorKeeper := authenticatorkeeper.NewKeeper(
 		appCodec,

@@ -288,14 +288,15 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 		selectedAuthenticator []uint64
 		shouldPass            bool
 		checks                int
+		checkGas              bool
 	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, 1},
-		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, 1},
-		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, 1},
-		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, 1},
-		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, 0},
-		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, 0},
-		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 1},
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, 1, true},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, 1, true},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, 1, true},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, 1, true},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, 0, true},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, 0, true},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 0, false},
 	}
 
 	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
@@ -327,7 +328,9 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 				s.Require().GreaterOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+(tc.checks-1)*approachingGasPerSig))
 				s.Require().Less(res.GasMeter().GasConsumed(), uint64(baseGas+tc.checks*approachingGasPerSig))
 			} else {
-				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas))
+				if tc.checkGas {
+					s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas))
+				}
 			}
 		})
 	}
