@@ -673,7 +673,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			}
 
 			// System under test
-			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveSpreadFactor, spreadRewardAccum.GetValue(), uptimeAccums)
+			err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveSpreadFactor, spreadRewardAccum.GetValue(), uptimeAccums)
+			liquidityDelta := nextTickInfo.LiquidityNet
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &test.expectedErr)
