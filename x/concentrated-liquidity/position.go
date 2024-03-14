@@ -708,7 +708,9 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 		if _, err := k.collectSpreadRewards(ctx, sender, positionId); err != nil {
 			return err
 		}
-		if _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
+
+		// TODO: handle redepositing of forfeited incentives
+		if _, _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
 			return err
 		}
 

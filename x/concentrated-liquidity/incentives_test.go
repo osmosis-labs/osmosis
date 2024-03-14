@@ -2311,7 +2311,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 					s.Require().Equal(tc.expectedIncentivesClaimed, incentivesClaimedQuery)
 					s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
 				}
-				actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(s.Ctx, ownerWithValidPosition, DefaultPositionId)
+				actualIncentivesClaimed, actualIncetivesForfeited, _, err := clKeeper.CollectIncentives(s.Ctx, ownerWithValidPosition, DefaultPositionId)
 
 				// Assertions
 				s.Require().Equal(incentivesClaimedQuery, actualIncentivesClaimed)
@@ -2775,6 +2775,26 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 	})
 }
 
+// checkForfeitedCoinsByUptime checks that the sum of forfeited coins by uptime matches the expected total forfeited coins.
+// It adds up the Coins corresponding to each uptime in the map and asserts that the result is equal to the input totalForfeitedCoins.
+func (s *KeeperTestSuite) checkForfeitedCoinsByUptime(totalForfeitedCoins sdk.Coins, scaledForfeitedCoinsByUptime map[int]sdk.Coins) {
+	forfeitedCoins := sdk.NewCoins()
+	// Iterate through the constant uptime indexes
+	for uptimeIndex := range types.SupportedUptimes {
+		// If there are forfeited coins for the current uptime, add them to the sum
+		if coins, ok := scaledForfeitedCoinsByUptime[uptimeIndex]; ok {
+			for _, coin := range coins {
+				// Scale down the actual forfeited coin amount
+				scaledDownAmount := cl.ScaleDownIncentiveAmount(coin.Amount, cl.PerUnitLiqScalingFactor)
+				forfeitedCoins = forfeitedCoins.Add(sdk.NewCoin(coin.Denom, scaledDownAmount))
+			}
+		}
+	}
+
+	// Use Equal for assertion to compare the totalForfeitedCoins with the scaled down summedCoins
+	s.Require().Equal(totalForfeitedCoins, forfeitedCoins, "Total forfeited coins do not match the sum of forfeited coins by uptime after scaling down")
+}
+
 // Note that the non-forfeit cases are thoroughly tested in `TestCollectIncentives`
 func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
@@ -2905,7 +2925,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				s.Require().Equal(initSenderBalances, newSenderBalances)
 				s.Require().Equal(initPoolBalances, newPoolBalances)
 
-				amountClaimed, amountForfeited, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
+				amountClaimed, totalAmountForfeited, scaledAmountForfeitedByUptime, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 				// --- Assertions ---
 
@@ -2914,7 +2934,8 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				newPoolBalances = s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
 				s.Require().Equal(amountClaimedQuery, amountClaimed)
-				s.Require().Equal(amountForfeitedQuery, amountForfeited)
+				s.Require().Equal(amountForfeitedQuery, totalAmountForfeited)
+				s.checkForfeitedCoinsByUptime(totalAmountForfeited, scaledAmountForfeitedByUptime)
 
 				if tc.expectedError != nil {
 					s.Require().ErrorIs(err, tc.expectedError)
@@ -2939,7 +2960,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 						expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 					}
 					s.Require().Equal(expectedCoins.String(), amountClaimed.String())
-					s.Require().Equal(sdk.Coins{}, amountForfeited)
+					s.Require().Equal(sdk.Coins{}, totalAmountForfeited)
 				}
 
 				// Ensure balances have not been mutated
@@ -3078,10 +3099,11 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 			}
 
 			// System under test
-			collectedInc, forfeitedIncentives, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionOneData.ID)
+			collectedInc, totalForfeitedIncentives, scaledForfeitedIncentivesByUptime, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionOneData.ID)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedCoins.String(), collectedInc.String())
-			s.Require().Equal(expectedForfeitedIncentives.String(), forfeitedIncentives.String())
+			s.Require().Equal(expectedForfeitedIncentives.String(), totalForfeitedIncentives.String())
+			s.checkForfeitedCoinsByUptime(totalForfeitedIncentives, scaledForfeitedIncentivesByUptime)
 
 			// The difference accumulator value should have increased if we forfeited incentives by claiming.
 			uptimeAccumsDiffPostClaim := sdk.NewDecCoins()
@@ -3169,7 +3191,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 		// Claim incentives.
-		collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionOneData.ID)
+		collected, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionOneData.ID)
 		s.Require().NoError(err)
 		s.Require().Equal(expectedCoinsPerFullCharge.String(), collected.String())
 
@@ -3184,13 +3206,13 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 		// Claim for second position. Must only claim half of the original expected amount since now there are 2 positions.
-		collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionTwoData.ID)
+		collected, _, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionTwoData.ID)
 		s.Require().NoError(err)
 		s.Require().Equal(expectedHalfOfExpectedCoinsPerFullCharge.String(), collected.String())
 
 		// Claim for first position and observe that claims full expected charge for the period between 1st claim and 2nd position creation
 		// and half of the full charge amount since the 2nd position was created.
-		collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionOneData.ID)
+		collected, _, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionOneData.ID)
 		s.Require().NoError(err)
 		// Note, adding one since both expected amounts already subtract one (-2 in total)
 		s.Require().Equal(expectedCoinsPerFullCharge.Add(expectedHalfOfExpectedCoinsPerFullCharge.Add(oneUUSDCCoin)...).String(), collected.String())
@@ -3667,13 +3689,13 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 
 	// The check below shows that the incentive is not claimed due to truncation
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 50))
-	incentives, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
+	incentives, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
 	s.Require().True(incentives.IsZero())
 
 	// Incentives should now be claimed due to lack of truncation
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 6))
-	incentives, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
+	incentives, _, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], positionData.ID)
 	s.Require().NoError(err)
 	s.Require().False(incentives.IsZero())
 }
