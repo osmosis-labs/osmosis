@@ -71,7 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v23.0.6
 
 * [#7716](https://github.com/osmosis-labs/osmosis/pull/7716) Unblock WW Pools
-* [#7716](https://github.com/osmosis-labs/osmosis/pull/7716) Unblock WW Pools
 * [#7726](https://github.com/osmosis-labs/osmosis/pull/7726) Bump comet for improved P2P logic
 * [#7599](https://github.com/osmosis-labs/osmosis/pull/7599) Reduce sqrt calls in TickToSqrtPrice
 * [#7692](https://github.com/osmosis-labs/osmosis/pull/7692) Make CL operation mutative
