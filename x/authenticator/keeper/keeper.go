@@ -57,7 +57,7 @@ func (k Keeper) unmarshalAccountAuthenticator(bz []byte) (*types.AccountAuthenti
 	var accountAuthenticator types.AccountAuthenticator
 	err := k.cdc.Unmarshal(bz, &accountAuthenticator)
 	if err != nil {
-		return &types.AccountAuthenticator{}, err
+		return &types.AccountAuthenticator{}, errorsmod.Wrap(err, "failed to unmarshal account authenticator")
 	}
 	return &accountAuthenticator, nil
 }
@@ -189,7 +189,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	// Each authenticator has a custom OnAuthenticatorAdded function
 	err := impl.OnAuthenticatorAdded(ctx, account, data, stringId)
 	if err != nil {
-		return 0, err
+		return 0, errorsmod.Wrapf(err, "`OnAuthenticatorAdded` failed on authenticator type %s", authenticatorType)
 	}
 
 	k.SetNextAuthenticatorId(ctx, id+1)
@@ -212,7 +212,7 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	var existing types.AccountAuthenticator
 	found, err := osmoutils.Get(store, key, &existing)
 	if err != nil {
-		return err
+		return errorsmod.Wrap(err, "failed to get authenticator")
 	}
 	if !found {
 		return fmt.Errorf("authenticator with id %d does not exist for account %s", authenticatorId, account)
@@ -227,7 +227,7 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	// Authenticators can prevent removal. This should be used sparingly
 	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data, stringId)
 	if err != nil {
-		return err
+		return errorsmod.Wrapf(err, "`OnAuthenticatorRemoved` failed on authenticator type %s", existing.Type)
 	}
 
 	store.Delete(key)
