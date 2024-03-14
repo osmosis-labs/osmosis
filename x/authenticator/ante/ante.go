@@ -170,13 +170,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			tracks = append(tracks, func() error {
 				err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
 
-				// track should not fail in normal circumstances, since it is intended to update track state before execution.
-				// If it does fail, we log the error.
-				telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
-				ad.authenticatorKeeper.Logger(ctx).Error(
-					"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
-
 				if err != nil {
+					// track should not fail in normal circumstances, since it is intended to update track state before execution.
+					// If it does fail, we log the error.
+					telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
+					ad.authenticatorKeeper.Logger(ctx).Error(
+						"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
+
 					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
 				}
 				return nil
