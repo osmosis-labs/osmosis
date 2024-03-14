@@ -7,6 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 )
 
 func CreateUpgradeHandler(
@@ -38,6 +40,10 @@ func CreateUpgradeHandler(
 		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
 		// since we only need the pool indexed TWAPs.
 		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)
+
+		// Set the new min value for distribution for the incentives module.
+		// https://www.mintscan.io/osmosis/proposals/733
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
 
 		return migrations, nil
 	}

@@ -50,6 +50,9 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 		expectedDenomSuffix  = "/transmuter/poolshare"
 	)
 
+	// Set base denom
+	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("uosmo", osmomath.NewInt(10000)))
+
 	// Create Transmuter pool
 	transmuter := s.PrepareCosmWasmPool()
 

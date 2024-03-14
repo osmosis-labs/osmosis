@@ -12,6 +12,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v23/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -27,6 +28,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 	lockableDurations = append(lockableDurations, 2*time.Second)
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, lockableDurations)
+	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("stake", osmomath.NewInt(1)))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

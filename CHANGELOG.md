@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7555](https://github.com/osmosis-labs/osmosis/pull/7555) Refactor taker fees, distribute via a single module account, track once at epoch
 * [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
 * [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
+* [#7615](https://github.com/osmosis-labs/osmosis/pull/7615) Min value param for epoch distribution.
 * [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
 * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
 * [#7623](https://github.com/osmosis-labs/osmosis/pull/7623) Add query for querying all before send hooks
