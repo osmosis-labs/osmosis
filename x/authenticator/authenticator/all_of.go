@@ -50,7 +50,7 @@ func (aoa AllOfAuthenticator) StaticGas() uint64 {
 func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
 
 	if len(initDatas) == 0 {
@@ -62,7 +62,7 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				instance, err := authenticatorCode.Initialize(initData.Data)
 				if err != nil {
-					return nil, err
+					return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.AuthenticatorType)
 				}
 				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
 				continue

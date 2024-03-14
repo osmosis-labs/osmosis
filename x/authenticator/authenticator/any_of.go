@@ -58,7 +58,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	// Decode the initialization data for each sub-authenticator
 	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
 
 	// Call Initialize on each sub-authenticator with its appropriate data using AuthenticatorManager
@@ -67,7 +67,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				instance, err := authenticatorCode.Initialize(initData.Data)
 				if err != nil {
-					return nil, err // Handling the error by returning it
+					return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.AuthenticatorType)
 				}
 				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
 				break

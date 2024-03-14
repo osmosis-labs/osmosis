@@ -49,7 +49,7 @@ type CosmwasmAuthenticatorInitData struct {
 func (cwa CosmwasmAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	contractAddr, params, err := parseInitData(data)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "failed to parse initialization data")
 	}
 	cwa.contractAddr = contractAddr
 	cwa.authenticatorParams = params
