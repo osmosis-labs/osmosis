@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Introduces a look up table function for computing order of magnitude of an Int for better performance.
+* [#7742](https://github.com/osmosis-labs/osmosis/pull/7742) Introduces a look up table function for computing order of magnitude of an Int for better performance.
 
 ## v23.0.6-iavl-v1 (contains everything in v23.0.6)
 
