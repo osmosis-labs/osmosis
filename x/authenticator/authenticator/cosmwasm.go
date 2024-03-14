@@ -2,7 +2,6 @@ package authenticator
 
 import (
 	"encoding/json"
-	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -137,7 +136,7 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request Authe
 	}
 	bz, err := json.Marshal(SudoMsg{ConfirmExecution: &confirmExecutionRequest})
 	if err != nil {
-		return fmt.Errorf("failed to marshall ConfirmExecutionRequest: %w", err)
+		return errorsmod.Wrap(err, "failed to marshall ConfirmExecutionRequest")
 	}
 
 	_, err = cwa.contractKeeper.Sudo(ctx, cwa.contractAddr, bz)
@@ -217,7 +216,7 @@ func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
 	// check if contract address is valid
 	contractAddr, err := sdk.AccAddressFromBech32(initData.Contract)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrap(err, "invalid contract address")
 	}
 
 	// params are optional, early return if they are not present
@@ -229,7 +228,7 @@ func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
 	var jsonTest map[string]interface{}
 	err = json.Unmarshal(initData.Params, &jsonTest)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrap(err, "params must be valid json bytes")
 	}
 
 	return contractAddr, initData.Params, nil
