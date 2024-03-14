@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,16 +89,20 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
+	subAuthErrors := ""
+
 	err := subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
 		err := auth.Authenticate(ctx, request)
-		if err != nil {
-			ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
+
+		if subAuthErrors != "" {
+			subAuthErrors += "; "
 		}
+		subAuthErrors += fmt.Sprintf("[%s (id = %s)] %s", auth.Type(), request.AuthenticatorId, err)
 
 		return err
 	})
 	if err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate: %s", subAuthErrors)
 	}
 
 	return nil
