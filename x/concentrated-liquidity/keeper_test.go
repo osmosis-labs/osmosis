@@ -71,7 +71,7 @@ var (
 	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
 	DefaultAuthorizedUptimes                       = []time.Duration{time.Nanosecond}
 	ThreeOrderedConsecutiveAuthorizedUptimes       = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
-	ThreeUnorderedNonConsecutiveAuthorizedUptimes  = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
+	ThreeUnorderedNonConsecutiveAuthorizedUptimes  = []time.Duration{time.Nanosecond, time.Hour * 24, time.Minute}
 	AllUptimesAuthorized                           = types.SupportedUptimes
 )
 

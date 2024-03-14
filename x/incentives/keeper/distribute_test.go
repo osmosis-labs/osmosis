@@ -556,13 +556,13 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		"non-perpetual, 2 coins, paid over 3 epochs": withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3),
 
 		// We expect incentives with the set uptime to be created
-		"non-perpetual, 1 coin, paid over 1 epoch, authorized 1d uptime":   withAuthorizedUptime(defaultTest, time.Hour*24),
-		"non-perpetual, 2 coins, paid over 3 epochs, authorized 7d uptime": withAuthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*24*7),
+		"non-perpetual, 1 coin, paid over 1 epoch, authorized 1h uptime":   withAuthorizedUptime(defaultTest, time.Hour),
+		"non-perpetual, 2 coins, paid over 3 epochs, authorized 1d uptime": withAuthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*24),
 		"perpetual, 2 coins, authorized 1h uptime":                         withAuthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), time.Hour),
 
 		// We expect incentives to fall back to default uptime of 1ns
-		"non-perpetual, 1 coin, paid over 1 epoch, unauthorized 1d uptime":   withUnauthorizedUptime(defaultTest, time.Hour*24),
-		"non-perpetual, 2 coins, paid over 3 epochs, unauthorized 7d uptime": withUnauthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*24*7),
+		"non-perpetual, 1 coin, paid over 1 epoch, unauthorized 1h uptime":   withUnauthorizedUptime(defaultTest, time.Hour),
+		"non-perpetual, 2 coins, paid over 3 epochs, unauthorized 1d uptime": withUnauthorizedUptime(withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3), time.Hour*24),
 		"perpetual, 2 coins, unauthorized 1h uptime":                         withUnauthorizedUptime(withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true), time.Hour),
 
 		// 3h is not a valid uptime, so we expect this to fall back to 1ns

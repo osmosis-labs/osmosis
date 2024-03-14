@@ -84,10 +84,8 @@ var (
 		Options:               nil,
 	}
 
-	// five records because we have 5 supported uptimes
+	// four records because we have 4 supported uptimes
 	testUptimeAccumRecord = []accum.Record{
-		accumRecord,
-		accumRecord,
 		accumRecord,
 		accumRecord,
 		accumRecord,
@@ -238,8 +236,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1000), osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, hundredDec, osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, tenDec, osmomath.NewInt(100), osmomath.NewInt(50)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
 							},
 						},
 					},
@@ -300,8 +296,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1000), osmomath.NewInt(100), osmomath.NewInt(50)),
 						accumRecordWithDefinedValues(accumRecord, hundredDec, osmomath.NewInt(100), osmomath.NewInt(50)),
 						accumRecordWithDefinedValues(accumRecord, tenDec, osmomath.NewInt(100), osmomath.NewInt(50)),
-						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
-						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(1), osmomath.NewInt(100), osmomath.NewInt(50)),
 					},
 				},
 			},
@@ -387,8 +381,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9999), osmomath.NewInt(10), osmomath.NewInt(5)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(999), osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(99), osmomath.NewInt(50), osmomath.NewInt(25)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9), osmomath.NewInt(50), osmomath.NewInt(25)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9), osmomath.NewInt(50), osmomath.NewInt(25)),
 							},
 						},
 					},
@@ -480,8 +472,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9999), osmomath.NewInt(10), osmomath.NewInt(5)),
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(999), osmomath.NewInt(100), osmomath.NewInt(50)),
 						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(99), osmomath.NewInt(50), osmomath.NewInt(25)),
-						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9), osmomath.NewInt(50), osmomath.NewInt(25)),
-						accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9), osmomath.NewInt(50), osmomath.NewInt(25)),
 					},
 				},
 			},
@@ -750,8 +740,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9999), osmomath.NewInt(10), osmomath.NewInt(5)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(999), osmomath.NewInt(100), osmomath.NewInt(50)),
 								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(99), osmomath.NewInt(50), osmomath.NewInt(25)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9), osmomath.NewInt(50), osmomath.NewInt(25)),
-								accumRecordWithDefinedValues(accumRecord, osmomath.NewDec(9), osmomath.NewInt(50), osmomath.NewInt(25)),
 							},
 						},
 					},
