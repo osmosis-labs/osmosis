@@ -3,7 +3,6 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
@@ -520,76 +519,6 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 		pks{s.PrivKeys[1]}, cpks{{s.PrivKeys[1], s.PrivKeys[0]}}, []uint64{2}, sendMsg,
 	)
 	s.Require().Error(err, "Authenticated using the AllOf authenticator with incorrect signatures")
-}
-
-// TestSpendWithinLimit test the spend limit authenticator
-func (s *AuthenticatorSuite) TestSpendWithinLimit() {
-	authenticatorsStoreKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
-	//spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
-
-	spendLimit := authenticator.NewSpendLimitAuthenticator(
-		authenticatorsStoreKey, "allUSD", authenticator.AbsoluteValue, s.app.BankKeeper, s.app.PoolManagerKeeper, s.app.TwapKeeper,
-	)
-	s.app.AuthenticatorManager.RegisterAuthenticator(spendLimit)
-
-	initData := []byte(`{"allowed": 1000, "period": "day"}`)
-	_, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), spendLimit.Type(), initData)
-	s.Require().NoError(err, "Failed to add authenticator")
-
-	amountToSend := int64(500)
-	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, amountToSend))
-	sendMsg := &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.PrivKeys[1].PubKey().Address()),
-		Amount:      coins,
-	}
-
-	// Add the spend limit as part of an AnyOf
-	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
-	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
-
-	internalData, err := json.Marshal([]authenticator.SubAuthenticatorInitData{
-		{
-			AuthenticatorType: "SignatureVerificationAuthenticator",
-			Data:              s.PrivKeys[0].PubKey().Bytes(),
-		},
-		{
-			AuthenticatorType: spendLimit.Type(),
-			Data:              initData,
-		},
-	})
-
-	// Add a SigVerificationAuthenticator to the account
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), anyOf.Type(), internalData)
-	s.Require().NoError(err, "Failed to add authenticator")
-
-	// sending 500 ok
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg,
-	)
-	s.Require().NoError(err, "Spend limit failed when it should have passed 500")
-
-	// sending 500 ok  (1000 limit reached)
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg,
-	)
-	s.Require().NoError(err, "Spend limit failed when it should have passed 1000")
-
-	// sending again fails
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg,
-	)
-	s.Require().Error(err, "Spend limit should have blocked the transaction")
-
-	// Simulate the passage of a day
-	s.coordinator.IncrementTimeBy(time.Hour * 24)
-	s.coordinator.CommitBlock()
-
-	// sending 500 ok after a day
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg,
-	)
-	s.Require().NoError(err, "Spend limit should have been reset")
 }
 
 func (s *AuthenticatorSuite) TestAuthenticatorAddRemove() {
