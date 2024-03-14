@@ -3,8 +3,10 @@ package ante
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
@@ -44,6 +47,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyAnteHandler)
+
 	// Performing fee payer authentication with minimal gas allocation
 	// serves as a spam-prevention strategy to prevent users from adding multiple
 	// authenticators that may excessively consume computational resources.
@@ -52,6 +57,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// are not compelled to expend resources on executing authenticators for transactions
 	// that will never be executed.
 	originalGasMeter := ctx.GasMeter()
+	prevGasConsumed := originalGasMeter.GasConsumed()
 
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
@@ -166,6 +172,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 				// track should not fail in normal circumstances, since it is intended to update track state before execution.
 				// If it does fail, we log the error.
+				telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
 				ad.authenticatorKeeper.Logger(ctx).Error(
 					"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
 
@@ -194,6 +201,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	writeCache()
+
+	updatedGasConsumed := ctx.GasMeter().GasConsumed()
+	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.GaugeKeyAnteHandlerGasConsumed)
 	return next(ctx, tx, simulate)
 }
 

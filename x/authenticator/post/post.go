@@ -2,9 +2,11 @@ package post
 
 import (
 	"strconv"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -13,6 +15,7 @@ import (
 	authenticatorante "github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // AuthenticatorPostDecorator handles post-transaction tasks for smart accounts.
@@ -47,6 +50,9 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 	success bool,
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyPostHandler)
+	prevGasConsumed := ctx.GasMeter().GasConsumed()
+
 	// Ensure that the transaction is a authenticator transaction
 	active, txOptions := authenticatorante.IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper)
 	if active {
@@ -111,5 +117,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		success = err == nil
 	}
 
+	updatedGasConsumed := ctx.GasMeter().GasConsumed()
+	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.ModuleName, types.GaugeKeyPostHandlerGasConsumed)
 	return next(ctx, tx, simulate, success)
 }

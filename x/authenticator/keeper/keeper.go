@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -122,6 +123,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	if uninitializedAuthenticator == nil {
 		// This should never happen, but if it does, it means that stored authenticator is not registered
 		// or somehow the registered authenticator was removed / malformed
+		telemetry.IncrCounter(1, types.CounterKeyMissingRegisteredAuthenticator)
 		k.Logger(ctx).Error("account asscoicated authenticator not registered in manager", "type", authenticatorFromStore.Type, "id", selectedAuthenticator)
 
 		return authenticator.InitializedAuthenticator{},
