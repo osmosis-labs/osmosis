@@ -109,13 +109,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		account := signers[0]
 
 		// Get the currently selected authenticator
+		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
 		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
 			cacheCtx,
 			account,
-			int(selectedAuthenticators[msgIndex]),
+			selectedAuthenticatorId,
 		)
 		if err != nil {
-			return sdk.Context{}, err
+			return sdk.Context{},
+				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		// Generate the authentication request data
@@ -133,7 +135,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		)
 		if err != nil {
 			return sdk.Context{},
-				errorsmod.Wrap(err, fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
+				errorsmod.Wrapf(err, "failed to generate authentication data (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		a11r := selectedAuthenticator.Authenticator
@@ -165,10 +167,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				// track should not fail in normal circumstances, since it is intended to update track state before execution.
 				// If it does fail, we log the error.
 				ad.authenticatorKeeper.Logger(ctx).Error(
-					"track failed", "account", account, "feePayer", feePayer, "msg", msg, "msgIndex", msgIndex, "authenticatorId", stringId, "error", err)
+					"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
 
 				if err != nil {
-					return errorsmod.Wrapf(err, "track failed for message %d, authenticator id %d type %s", msgIndex, selectedAuthenticator.Id, selectedAuthenticator.Authenticator.Type())
+					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
 				}
 				return nil
 			})
