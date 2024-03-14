@@ -33,9 +33,6 @@ func DefaultParams() Params {
 
 // Validate x/bridge params.
 func (p Params) Validate() error {
-	if len(p.Signers) == 0 {
-		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are empty")
-	}
 	for _, signer := range p.Signers {
 		_, err := sdk.AccAddressFromBech32(signer)
 		if err != nil {

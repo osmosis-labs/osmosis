@@ -70,9 +70,9 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
-
+	updateAccumulators bool,
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
-	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
+	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit, updateAccumulators)
 }
 
 func (k Keeper) SwapInAmtGivenOut(
@@ -93,9 +93,9 @@ func (k Keeper) ComputeInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 	poolId uint64,
-
+	updateAccumulators bool,
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
-	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
+	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId, updateAccumulators)
 }
 
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn osmomath.Dec, upper bool) (tickIsEmpty bool, err error) {
@@ -336,8 +336,8 @@ func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 	return k.setPoolHookContract(ctx, poolID, actionPrefix, cosmwasmAddress)
 }
 
-func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
-	return k.callPoolActionListener(ctx, msgBz, poolId, actionPrefix)
+func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBuilderFn func(poolId uint64) ([]byte, error), poolId uint64, actionPrefix string) (err error) {
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, actionPrefix)
 }
 
 func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {

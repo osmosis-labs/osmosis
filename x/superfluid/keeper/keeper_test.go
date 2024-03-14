@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
@@ -78,6 +79,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	distributionParams.BonusProposerReward = osmomath.ZeroDec()
 	distributionParams.CommunityTax = osmomath.ZeroDec()
 	s.App.DistrKeeper.SetParams(s.Ctx, distributionParams)
+	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("stake", osmomath.NewInt(1)))
 }
 
 func (s *KeeperTestSuite) SetupDefaultPool() {

@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
@@ -131,6 +132,13 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	oldBaseDenoms, err = s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Empty(oldBaseDenoms)
+
+	// INCENTIVES Tests
+	//
+
+	// Check that the new min value for distribution has been set
+	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {

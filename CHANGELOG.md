@@ -55,19 +55,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7555](https://github.com/osmosis-labs/osmosis/pull/7555) Refactor taker fees, distribute via a single module account, track once at epoch
 * [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
 * [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
+* [#7615](https://github.com/osmosis-labs/osmosis/pull/7615) Min value param for epoch distribution.
 * [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
 * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
 * [#7623](https://github.com/osmosis-labs/osmosis/pull/7623) Add query for querying all before send hooks
+* [#7651](https://github.com/osmosis-labs/osmosis/pull/7651) Remove 1W and 2W supported uptimes for performance.
 * [#7625](https://github.com/osmosis-labs/osmosis/pull/7625) Remove duplicate CL accumulator update logic.
 * [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
+* [#7685](https://github.com/osmosis-labs/osmosis/pull/7685) Speedup CL actions by only marshalling for CL hooks if they will be used.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
+* [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
+* [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
 
-## v23.0.4-iavl-v1 (contains everything in v23.0.4)
+## v23.0.6-iavl-v1 (contains everything in v23.0.6)
 
 * [#558](https://github.com/osmosis-labs/cosmos-sdk/pull/558) Gracefully log when there is a pruning error instead of panic
 
-## v23.0.4
+## v23.0.6
 
+* [#7716](https://github.com/osmosis-labs/osmosis/pull/7716) Unblock WW Pools
+* [#7726](https://github.com/osmosis-labs/osmosis/pull/7726) Bump comet for improved P2P logic
 * [#7599](https://github.com/osmosis-labs/osmosis/pull/7599) Reduce sqrt calls in TickToSqrtPrice
 * [#7692](https://github.com/osmosis-labs/osmosis/pull/7692) Make CL operation mutative
 * [#530](https://github.com/osmosis-labs/cosmos-sdk/pull/530) Bump sdk fork Go to 1.20
