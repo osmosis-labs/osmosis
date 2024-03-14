@@ -1,11 +1,12 @@
 package post
 
 import (
-	"fmt"
 	"strconv"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -14,6 +15,7 @@ import (
 	authenticatorante "github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // AuthenticatorPostDecorator handles post-transaction tasks for smart accounts.
@@ -48,6 +50,9 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 	success bool,
 	next sdk.PostHandler,
 ) (newCtx sdk.Context, err error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyPostHandler)
+	prevGasConsumed := ctx.GasMeter().GasConsumed()
+
 	// Ensure that the transaction is an authenticator transaction
 	active, txOptions := authenticatorante.IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper)
 	if active {
@@ -70,13 +75,15 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		// if the AnteHandler is updated to account for more signers the changes need to be reflected here.
 		account := msg.GetSigners()[0]
 
+		selectedAuthenticatorId := int(selectedAuthenticatorsFromExtension[msgIndex])
 		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
 			ctx,
 			account,
-			int(selectedAuthenticatorsFromExtension[msgIndex]),
+			selectedAuthenticatorId,
 		)
 		if err != nil {
-			return sdk.Context{}, err
+			return sdk.Context{},
+				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		// We skip replay protection here as it was already checked on authenticate.
@@ -94,8 +101,8 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 			authenticator.NoReplayProtection,
 		)
 		if err != nil {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized,
-				fmt.Sprintf("failed to get authentication data for message %d", msgIndex))
+			return sdk.Context{},
+				errorsmod.Wrapf(err, "failed to generate authentication data (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		authenticationRequest.AuthenticatorId = strconv.FormatUint(selectedAuthenticator.Id, 10)
@@ -103,13 +110,14 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		// Run ConfirmExecution on the selected authenticator
 		err = selectedAuthenticator.Authenticator.ConfirmExecution(ctx, authenticationRequest)
 		if err != nil {
-			err = errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, id = %d)", account, selectedAuthenticator.Id)
-			err = errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s", err)
-			return sdk.Context{}, err
+			return sdk.Context{},
+				errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		success = err == nil
 	}
 
+	updatedGasConsumed := ctx.GasMeter().GasConsumed()
+	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.ModuleName, types.GaugeKeyPostHandlerGasConsumed)
 	return next(ctx, tx, simulate, success)
 }

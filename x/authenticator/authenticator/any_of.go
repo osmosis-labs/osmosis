@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	// Decode the initialization data for each sub-authenticator
 	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
 
 	// Call Initialize on each sub-authenticator with its appropriate data using AuthenticatorManager
@@ -67,7 +68,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				instance, err := authenticatorCode.Initialize(initData.Data)
 				if err != nil {
-					return nil, err // Handling the error by returning it
+					return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.AuthenticatorType)
 				}
 				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
 				break
@@ -88,16 +89,20 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
+	subAuthErrors := ""
+
 	err := subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
 		err := auth.Authenticate(ctx, request)
-		if err != nil {
-			ctx.Logger().Error("sub-authenticator failed to authenticate", "id", request.AuthenticatorId, "authenticator", auth.Type(), "error", err.Error())
+
+		if subAuthErrors != "" {
+			subAuthErrors += "; "
 		}
+		subAuthErrors += fmt.Sprintf("[%s (id = %s)] %s", auth.Type(), request.AuthenticatorId, err)
 
 		return err
 	})
 	if err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate")
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate: %s", subAuthErrors)
 	}
 
 	return nil

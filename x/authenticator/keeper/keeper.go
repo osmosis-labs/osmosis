@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"strconv"
 
-	errorsmod "cosmossdk.io/errors"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gogotypes "github.com/gogo/protobuf/types"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -58,7 +58,7 @@ func (k Keeper) unmarshalAccountAuthenticator(bz []byte) (*types.AccountAuthenti
 	var accountAuthenticator types.AccountAuthenticator
 	err := k.cdc.Unmarshal(bz, &accountAuthenticator)
 	if err != nil {
-		return &types.AccountAuthenticator{}, err
+		return &types.AccountAuthenticator{}, errorsmod.Wrap(err, "failed to unmarshal account authenticator")
 	}
 	return &accountAuthenticator, nil
 }
@@ -116,10 +116,16 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 
 	uninitializedAuthenticator := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorFromStore.Type)
 	if uninitializedAuthenticator == nil {
+		// This should never happen, but if it does, it means that stored authenticator is not registered
+		// or somehow the registered authenticator was removed / malformed
+		telemetry.IncrCounter(1, types.CounterKeyMissingRegisteredAuthenticator)
+		k.Logger(ctx).Error("account asscoicated authenticator not registered in manager", "type", authenticatorFromStore.Type, "id", selectedAuthenticator)
+
 		return authenticator.InitializedAuthenticator{},
-			fmt.Errorf(
-				"authenticator %d failed to initialize, authenticator not registered in manager",
-				selectedAuthenticator,
+			errorsmod.Wrapf(
+				sdkerrors.ErrLogic,
+				"authenticator id %d failed to initialize, authenticator type %s not registered in manager",
+				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}
 	// Ensure that initialization of each authenticator works as expected
@@ -128,9 +134,9 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Data)
 	if err != nil || initializedAuthenticator == nil {
 		return authenticator.InitializedAuthenticator{},
-			fmt.Errorf(
-				"authenticator %d failed to initialize",
-				selectedAuthenticator,
+			errorsmod.Wrapf(err,
+				"authenticator %d with type %s failed to initialize",
+				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}
 
@@ -180,7 +186,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	// Each authenticator has a custom OnAuthenticatorAdded function
 	err := impl.OnAuthenticatorAdded(ctx, account, data, stringId)
 	if err != nil {
-		return 0, err
+		return 0, errorsmod.Wrapf(err, "`OnAuthenticatorAdded` failed on authenticator type %s", authenticatorType)
 	}
 
 	k.SetNextAuthenticatorId(ctx, id+1)
@@ -203,7 +209,7 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	var existing types.AccountAuthenticator
 	found, err := osmoutils.Get(store, key, &existing)
 	if err != nil {
-		return err
+		return errorsmod.Wrap(err, "failed to get authenticator")
 	}
 	if !found {
 		return fmt.Errorf("authenticator with id %d does not exist for account %s", authenticatorId, account)
@@ -218,7 +224,7 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	// Authenticators can prevent removal. This should be used sparingly
 	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data, stringId)
 	if err != nil {
-		return err
+		return errorsmod.Wrapf(err, "`OnAuthenticatorRemoved` failed on authenticator type %s", existing.Type)
 	}
 
 	store.Delete(key)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
@@ -33,12 +34,12 @@ func (m msgServer) AddAuthenticator(
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "invalid sender address")
 	}
 
 	authenticators, err := m.Keeper.GetAuthenticatorDataForAccount(ctx, sender)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrapf(err, "failed to get authenticators for account %s", sender)
 	}
 
 	// Limit the number of authenticators to prevent excessive iteration in the ante handler.
@@ -74,7 +75,7 @@ func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemo
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "invalid sender address")
 	}
 
 	// At this point, we assume that verification has occurred on the account, and we

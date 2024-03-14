@@ -250,7 +250,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	// post
 	_, err = postHandler(s.Ctx, tx, false, true)
 	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "Spend limit error: Overspend: remaining qouta 1, requested 2: execute wasm contract failed: unauthorized")
+	s.Require().Contains(err.Error(), "Spend limit error: Overspend: remaining qouta 1, requested 2: execute wasm contract failed")
 
 	// advance time to next day, and resend the prev tx should have no error
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
@@ -281,7 +281,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	s.Require().Contains(
 		err.Error(),
 		fmt.Sprintf(
-			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed: unauthorized",
+			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed",
 			s.Ctx.BlockTime().Unix(), s.Ctx.BlockTime().Nanosecond(),
 			endTimeSecsStr, endTimeNanosStr,
 		),

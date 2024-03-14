@@ -3,8 +3,10 @@ package ante
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
@@ -44,6 +47,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyAnteHandler)
+
 	// Performing fee payer authentication with minimal gas allocation
 	// serves as a spam-prevention strategy to prevent users from adding multiple
 	// authenticators that may excessively consume computational resources.
@@ -52,6 +57,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// are not compelled to expend resources on executing authenticators for transactions
 	// that will never be executed.
 	originalGasMeter := ctx.GasMeter()
+	prevGasConsumed := originalGasMeter.GasConsumed()
 
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
@@ -65,7 +71,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			switch r.(type) {
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
-					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
+					"FeePayer must be authenticated first because gas consumption has exceeded the free gas limit for authentication process. The gas limit has been reduced to %d. Gas consumed: %d",
 					authenticatorParams.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
 				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
@@ -109,13 +115,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		account := signers[0]
 
 		// Get the currently selected authenticator
+		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
 		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
 			cacheCtx,
 			account,
-			int(selectedAuthenticators[msgIndex]),
+			selectedAuthenticatorId,
 		)
 		if err != nil {
-			return sdk.Context{}, err
+			return sdk.Context{},
+				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		// Generate the authentication request data
@@ -133,7 +141,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		)
 		if err != nil {
 			return sdk.Context{},
-				err
+				errorsmod.Wrapf(err, "failed to generate authentication data (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		a11r := selectedAuthenticator.Authenticator
@@ -163,7 +171,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
 
 				if err != nil {
-					return err
+					// track should not fail in normal circumstances, since it is intended to update track state before execution.
+					// If it does fail, we log the error.
+					telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
+					ad.authenticatorKeeper.Logger(ctx).Error(
+						"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
+
+					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
 				}
 				return nil
 			})
@@ -171,9 +185,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		// If authentication failed, return an error
 		if authErr != nil {
-			return ctx, errorsmod.Wrap(
-				sdkerrors.ErrUnauthorized,
-				fmt.Sprintf("authentication failed for message %d: %s", msgIndex, authErr),
+			return ctx, errorsmod.Wrapf(
+				authErr,
+				"authentication failed for message %d, authenticator id %d, type %s", msgIndex, selectedAuthenticator.Id, selectedAuthenticator.Authenticator.Type(),
 			)
 		}
 	}
@@ -187,6 +201,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	writeCache()
+
+	updatedGasConsumed := ctx.GasMeter().GasConsumed()
+	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.GaugeKeyAnteHandlerGasConsumed)
 	return next(ctx, tx, simulate)
 }
 
@@ -208,15 +225,15 @@ func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 	if txOptions == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
-			"Cannot get tx ext, tx is formatted incorrectly")
+			"Cannot get AuthenticatorTxOptions from tx")
 	}
 	// Retrieve the selected authenticators from the extension.
 	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
 
 	if len(selectedAuthenticators) != msgCount {
 		// Return an error if the number of selected authenticators does not match the number of messages.
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
-			"Mismatch between the number of selected authenticators and messages")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
+			"Mismatch between the number of selected authenticators and messages, msg count %d, got %d selected authenticators", msgCount, len(selectedAuthenticators))
 	}
 
 	return selectedAuthenticators, nil

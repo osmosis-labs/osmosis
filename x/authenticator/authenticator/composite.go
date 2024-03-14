@@ -21,9 +21,10 @@ func subTrack(
 	subAuthenticators []Authenticator,
 ) error {
 	for id, auth := range subAuthenticators {
-		err := auth.Track(ctx, account, feePayer, msg, msgIndex, compositeId(authenticatorId, id))
+		subId := compositeId(authenticatorId, id)
+		err := auth.Track(ctx, account, feePayer, msg, msgIndex, subId)
 		if err != nil {
-			return err
+			return errorsmod.Wrapf(err, "sub-authenticator track failed (sub-authenticator id = %s)", subId)
 		}
 	}
 	return nil
@@ -95,7 +96,7 @@ func subHandleRequest(ctx sdk.Context, request AuthenticationRequest, subAuthent
 func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string, am *AuthenticatorManager) error {
 	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return err
+		return errorsmod.Wrapf(err, "failed to unmarshal sub-authenticator init data")
 	}
 
 	if len(initDatas) == 0 {
@@ -107,9 +108,10 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 	for id, initData := range initDatas {
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
-				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, compositeId(baseId, id))
+				subId := compositeId(baseId, id)
+				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, subId)
 				if err != nil {
-					return err
+					return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorAdded` failed (sub-authenticator id = %s)", subId)
 				}
 
 				subAuthenticatorCount++
@@ -136,9 +138,10 @@ func onSubAuthenticatorsRemoved(ctx sdk.Context, account sdk.AccAddress, data []
 	for id, initData := range initDatas {
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
-				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, compositeId(baseId, id))
+				subId := compositeId(baseId, id)
+				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, subId)
 				if err != nil {
-					return err
+					return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorRemoved` failed (sub-authenticator id = %s)", subId)
 				}
 				break
 			}
