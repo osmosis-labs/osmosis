@@ -290,14 +290,11 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	}
 
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
-	// process also clears position records from spread factor and incentive accumulators.
+	// Ensure we collect any outstanding spread factors prior to deleting the position from state. Outstanding incentives
+	// should already be fully claimed by this point. This claiming process also clears position records from spread factor
+	// and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
-			return osmomath.Int{}, osmomath.Int{}, err
-		}
-
-		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return osmomath.Int{}, osmomath.Int{}, err
 		}
 
