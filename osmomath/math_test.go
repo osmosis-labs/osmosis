@@ -241,3 +241,49 @@ func TestOrderOfMagnitudeWithoutLog(t *testing.T) {
 		})
 	}
 }
+
+// Tests the precomputed order of magnitude function
+// by comparing it to the OrderOfMagnitude version.
+func TestGetPrecomputeOrderOfMagnitude(t *testing.T) {
+
+	tests := map[string]struct {
+		amount Int
+	}{
+		"0 = 0": {
+			amount: ZeroInt(),
+		},
+		"1 = 0": {
+			amount: OneInt(),
+		},
+		"9.99 = 0": {
+			amount: NewInt(9),
+		},
+		"10^9 - 1": {
+			amount: TenE9.Sub(OneInt()),
+		},
+		"10^9": {
+			amount: TenE9,
+		},
+		"10^9 +1": {
+			amount: TenE9.Add(OneInt()),
+		},
+		"10^18 +1": {
+			amount: TenE9.Mul(TenE9).Add(OneInt()),
+		},
+		"10^15 +5": {
+			amount: TenE9.Mul(TenE6).Add(OneInt()),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			// Test the function by comparing it to the OrderOfMagnitude function
+			actual := GetPrecomputeOrderOfMagnitude(tc.amount)
+			expected := OrderOfMagnitude(tc.amount.ToLegacyDec())
+
+			require.Equal(t, expected, actual)
+		})
+	}
+
+}
