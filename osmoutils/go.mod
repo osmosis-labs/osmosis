@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/log v1.3.0
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.10.0

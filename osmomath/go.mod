@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/osmomath
 go 1.21
 
 require (
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
 	github.com/stretchr/testify v1.8.4
