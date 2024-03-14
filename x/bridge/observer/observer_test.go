@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,7 @@ import (
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/log"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -96,13 +98,14 @@ func TestObserver(t *testing.T) {
 	defer s.Close()
 
 	eventsOut := make(chan abcitypes.Event)
-	observer, err := NewObserver(s.URL, eventsOut)
+	observer, err := NewObserver(log.NewNopLogger(), s.URL, eventsOut)
 	require.NoError(t, err)
 
+	ctx := context.Background()
 	query := cmttypes.QueryForEvent(cmttypes.EventNewBlock)
 	observeEvents := []string{proto.MessageName(&bridge.EventOutboundTransfer{})}
 
-	err = observer.Start(query.String(), observeEvents)
+	err = observer.Start(ctx, query.String(), observeEvents)
 	require.NoError(t, err)
 
 	// We expect Observer to receive 3 Txs with `EventOutboundTransferType` events in this test
@@ -121,14 +124,14 @@ func TestObserver(t *testing.T) {
 	require.Equal(t, EventOutboundTransferType, events[1].Type)
 	require.Equal(t, 0, len(eventsOut))
 
-	observer.Stop()
+	observer.Stop(ctx)
 	close(eventsOut)
 }
 
 func TestObserverInvalidQuery(t *testing.T) {
-	observer, err := NewObserver("http://localhost:26657", make(chan abcitypes.Event))
+	observer, err := NewObserver(log.NewNopLogger(), "http://localhost:26657", make(chan abcitypes.Event))
 	require.NoError(t, err)
 	query := "invalid"
-	err = observer.Start(query, []string{})
+	err = observer.Start(context.Background(), query, []string{})
 	require.Error(t, err)
 }

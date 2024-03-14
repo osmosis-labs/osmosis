@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	cmttypes "github.com/cometbft/cometbft/types"
 	proto "github.com/cosmos/gogoproto/proto"
 
@@ -12,30 +13,32 @@ import (
 )
 
 type Signer struct {
+	logger        log.Logger
 	eventObserver Observer
 	stopChan      chan struct{}
 	eventsOutChan chan abcitypes.Event
 }
 
-func NewSigner(rpcUrl string) (Signer, error) {
+func NewSigner(logger log.Logger, rpcUrl string) (Signer, error) {
 	eventsOutChan := make(chan abcitypes.Event)
-	obs, err := NewObserver(rpcUrl, eventsOutChan)
+	obs, err := NewObserver(logger, rpcUrl, eventsOutChan)
 	if err != nil {
 		return Signer{}, err
 	}
 
 	return Signer{
+		logger:        logger,
 		eventObserver: obs,
 		stopChan:      make(chan struct{}),
 		eventsOutChan: eventsOutChan,
 	}, nil
 }
 
-func (s *Signer) Start() error {
+func (s *Signer) Start(ctx context.Context) error {
 	query := cmttypes.QueryForEvent(cmttypes.EventNewBlock)
 	events := []string{proto.MessageName(&bridge.EventOutboundTransfer{})}
 
-	err := s.eventObserver.Start(query.String(), events)
+	err := s.eventObserver.Start(ctx, query.String(), events)
 	if err != nil {
 		return err
 	}
@@ -45,9 +48,10 @@ func (s *Signer) Start() error {
 	return nil
 }
 
-func (s *Signer) Stop() error {
+func (s *Signer) Stop(ctx context.Context) error {
 	close(s.stopChan)
-	return s.eventObserver.Stop()
+	close(s.eventsOutChan)
+	return s.eventObserver.Stop(ctx)
 }
 
 func (s *Signer) processEvents() {
@@ -60,7 +64,7 @@ func (s *Signer) processEvents() {
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(string(js))
+			s.logger.Debug("Observed event", string(js))
 		}
 	}
 }
