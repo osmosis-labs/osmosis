@@ -1,12 +1,11 @@
 package keeper
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 )
 
 type ChangeAssetStatusResult struct {
@@ -52,10 +51,22 @@ func (k Keeper) ChangeAssetStatus(
 func (k Keeper) createAssets(ctx sdk.Context, assets []types.AssetWithStatus) error {
 	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
+	handler := k.router.Handler(new(tokenfactorytypes.MsgCreateDenom))
+	if handler == nil {
+		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a create denom message")
+	}
+
 	for _, asset := range assets {
-		_, err := k.tokenFactoryKeeper.CreateDenom(ctx, bridgeModuleAddr.String(), asset.Asset.Name())
+		msgCreateDenom := &tokenfactorytypes.MsgCreateDenom{
+			Sender:   bridgeModuleAddr.String(),
+			Subdenom: asset.Asset.Name(),
+		}
+
+		// ignore resp since it is not needed in this method
+		// TODO: double-check if we need to handle the response
+		_, err := handler(ctx, msgCreateDenom)
 		if err != nil {
-			return fmt.Errorf("can't create a new denom %s: %s", asset.Asset.Name(), err)
+			return errorsmod.Wrapf(types.ErrTokenfactory, "Can't execute a create denom message: %s", err)
 		}
 	}
 

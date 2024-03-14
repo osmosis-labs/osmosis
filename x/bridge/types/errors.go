@@ -16,4 +16,5 @@ var (
 	ErrInvalidSourceChain    = errorsmod.Register(ModuleName, 7, "invalid source chain")
 	ErrInvalidSigners        = errorsmod.Register(ModuleName, 8, "invalid signers")
 	ErrCantChangeAssetStatus = errorsmod.Register(ModuleName, 9, "can't change asset status")
+	ErrTokenfactory          = errorsmod.Register(ModuleName, 10, "tokenfactory error")
 )
