@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240314192736-6962eee914c6
 	github.com/osmosis-labs/osmosis/v22 v22.0.5
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
@@ -146,8 +146,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e // indirect
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240314192736-6962eee914c6 // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240314192736-6962eee914c6 // indirect
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect

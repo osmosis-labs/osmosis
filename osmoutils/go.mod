@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/log v1.3.0
-	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
+	cosmossdk.io/math v1.3.0
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.10.0
@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.0.2-0.20240221171955-e019f7411ec7
 	github.com/cosmos/ibc-go/v7 v7.3.2
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240314192736-6962eee914c6
 	github.com/osmosis-labs/osmosis/v23 v23.0.1
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
@@ -189,6 +189,7 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	cosmossdk.io/math => cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath

@@ -27,10 +27,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240312201712-59e5f097899e
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240314192736-6962eee914c6
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240314192736-6962eee914c6
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240314192736-6962eee914c6
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240314192736-6962eee914c6
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -384,6 +384,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/math => cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 	// adds expedited proposal support and 1000MB cache default
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo

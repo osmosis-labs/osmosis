@@ -3,9 +3,9 @@ module github.com/osmosis-labs/osmosis/osmomath
 go 1.21
 
 require (
-	cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
+	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-sdk v0.47.8
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240314192736-6962eee914c6
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 
@@ -108,6 +108,7 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	cosmossdk.io/math => cosmossdk.io/math v1.2.1-0.20240219164559-72eae6dc50e4
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmoutils => ../osmoutils
