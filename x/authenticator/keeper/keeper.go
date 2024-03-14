@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -89,6 +93,9 @@ func (k Keeper) GetSelectedAuthenticatorData(
 	selectedAuthenticator int,
 ) (*types.AccountAuthenticator, error) {
 	bz := ctx.KVStore(k.storeKey).Get(types.KeyAccountId(account, uint64(selectedAuthenticator)))
+	if bz == nil {
+		return &types.AccountAuthenticator{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("authenticator %d not found for account %s", selectedAuthenticator, account))
+	}
 	authenticatorFromStore, err := k.unmarshalAccountAuthenticator(bz)
 	if err != nil {
 		return &types.AccountAuthenticator{}, err
@@ -109,14 +116,6 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	authenticatorFromStore, err := k.GetSelectedAuthenticatorData(ctx, account, selectedAuthenticator)
 	if err != nil {
 		return authenticator.InitializedAuthenticator{}, err
-	}
-
-	// Return the default authenticator here if there is nothing in the store
-	if authenticatorFromStore.Type == "" {
-		return authenticator.InitializedAuthenticator{
-			Id:            0,
-			Authenticator: k.AuthenticatorManager.GetDefaultAuthenticator(),
-		}, nil
 	}
 
 	uninitializedAuthenticator := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorFromStore.Type)

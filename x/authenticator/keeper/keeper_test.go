@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	// Reset the authenticator manager to see how GetInitializedAuthenticatorForAccount behaves
 	s.App.AuthenticatorManager.ResetAuthenticators()
 	selectedAuthenticator, err = s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2323)
-	s.Require().NoError(err)
+	s.Require().Error(err)
 	s.Require().Equal(selectedAuthenticator.Id, uint64(0), "Incorrect ID returned from store")
 	s.Require().Equal(selectedAuthenticator.Authenticator, nil, "Returned authenticator from store but nothing registered in manager")
 }

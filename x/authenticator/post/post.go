@@ -53,7 +53,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyPostHandler)
 	prevGasConsumed := ctx.GasMeter().GasConsumed()
 
-	// Ensure that the transaction is a authenticator transaction
+	// Ensure that the transaction is an authenticator transaction
 	active, txOptions := authenticatorante.IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper)
 	if active {
 		return ad.next(ctx, tx, simulate, success)

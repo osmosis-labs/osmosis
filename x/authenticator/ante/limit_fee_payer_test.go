@@ -42,6 +42,14 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	)
 	s.Require().NoError(err)
 
+	_, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[1],
+		"SignatureVerificationAuthenticator",
+		s.TestPrivKeys[1].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+
 	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
@@ -51,7 +59,7 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []uint64{0, 0})
+	}, []uint64{1, 2})
 
 	anteHandler := sdk.ChainAnteDecorators(ante.LimitFeePayerDecorator{}, s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -67,7 +75,7 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []uint64{0, 0},
+	}, []uint64{1, 2},
 		s.TestAccAddress[1],
 	)
 
@@ -84,7 +92,7 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 		s.TestPrivKeys[1],
-	}, []uint64{0, 0},
+	}, []uint64{1, 2},
 		s.TestAccAddress[0],
 	)
 
