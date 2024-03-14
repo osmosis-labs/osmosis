@@ -40,7 +40,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return ctx, err
+		return ctx, errorsmod.Wrap(err, "failed to get signatures from tx")
 	}
 
 	var events sdk.Events
@@ -52,7 +52,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 		sigBzs, err := signatureDataToBz(sig.Data)
 		if err != nil {
-			return ctx, err
+			return ctx, errorsmod.Wrap(err, "failed to convert signature data to raw bytes")
 		}
 		for _, sigBz := range sigBzs {
 			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
