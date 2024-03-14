@@ -66,7 +66,10 @@ func (k Keeper) createAssets(ctx sdk.Context, assets []types.AssetWithStatus) er
 		// TODO: double-check if we need to handle the response
 		_, err := handler(ctx, msgCreateDenom)
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrTokenfactory, "Can't execute a create denom message: %s", err)
+			return errorsmod.Wrapf(
+				types.ErrTokenfactory,
+				"Can't execute a create denom message for asset %s: %s", asset.Asset.Name(), err,
+			)
 		}
 	}
 

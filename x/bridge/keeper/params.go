@@ -28,7 +28,8 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdatePar
 	// create denoms for all new assets
 	err := k.createAssets(ctx, assetsToCreate)
 	if err != nil {
-		return UpdateParamsResult{}, err
+		return UpdateParamsResult{},
+			errorsmod.Wrapf(types.ErrCantCreateAsset, "Can't create new assets: %s", err)
 	}
 
 	// disable deleted assets
@@ -36,7 +37,7 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdatePar
 		_, err = k.ChangeAssetStatus(ctx, asset.Asset, types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH)
 		if err != nil {
 			return UpdateParamsResult{},
-				errorsmod.Wrapf(types.ErrCantChangeAssetStatus, "Can't disable asset %v: %s", asset.Asset, err)
+				errorsmod.Wrapf(types.ErrCantChangeAssetStatus, "Can't disable asset %s: %s", asset.Asset.Name(), err)
 		}
 	}
 
