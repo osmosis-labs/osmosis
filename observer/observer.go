@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -18,7 +19,12 @@ type Observer struct {
 	eventsOutChan chan<- abcitypes.Event
 }
 
+// NewObserver returns new instance of `Observer` with RPC client created
 func NewObserver(logger log.Logger, rpcUrl string, eventsOutChan chan<- abcitypes.Event) (Observer, error) {
+	if len(rpcUrl) == 0 {
+		return Observer{}, errors.New("RPC URL can't be empty")
+	}
+
 	rpc, err := rpchttp.New(rpcUrl, "/websocket")
 	if err != nil {
 		return Observer{}, err
@@ -32,6 +38,7 @@ func NewObserver(logger log.Logger, rpcUrl string, eventsOutChan chan<- abcitype
 	}, nil
 }
 
+// Starts RPC client, subscribes to events for provided query and starts listening to the events
 func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
 	err := o.tmRpc.Start()
 	if err != nil {
@@ -57,6 +64,7 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 	return nil
 }
 
+// Stops listening to events, unsubscribes from RPC client and stops RPC channel
 func (o *Observer) Stop(ctx context.Context) error {
 	if err := o.tmRpc.UnsubscribeAll(ctx, "observer"); err != nil {
 		o.logger.Error("Observer failed to unsubscribe from RPC client", err.Error())

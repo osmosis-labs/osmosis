@@ -128,6 +128,11 @@ func TestObserver(t *testing.T) {
 	close(eventsOut)
 }
 
+func TestObserverEmptyRpcUrl(t *testing.T) {
+	_, err := NewObserver(log.NewNopLogger(), "", make(chan abcitypes.Event))
+	require.Error(t, err)
+}
+
 func TestObserverInvalidQuery(t *testing.T) {
 	observer, err := NewObserver(log.NewNopLogger(), "http://localhost:26657", make(chan abcitypes.Event))
 	require.NoError(t, err)
