@@ -17,7 +17,7 @@ const ModuleNameObserver = "observer"
 
 type Observer struct {
 	logger        log.Logger
-	tmRpc         *rpchttp.HTTP
+	cometRpc      *rpchttp.HTTP
 	stopChan      chan struct{}
 	eventsOutChan chan abcitypes.Event
 }
@@ -35,7 +35,7 @@ func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
 
 	return Observer{
 		logger:        logger.With("module", ModuleNameObserver),
-		tmRpc:         rpc,
+		cometRpc:      rpc,
 		stopChan:      make(chan struct{}),
 		eventsOutChan: make(chan abcitypes.Event),
 	}, nil
@@ -43,7 +43,7 @@ func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
 
 // Start starts the RPC client, subscribes to events for provided query and starts listening to the events
 func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
-	err := o.tmRpc.Start()
+	err := o.cometRpc.Start()
 	if err != nil {
 		return errorsmod.Wrapf(err, "Failed to start RPC client")
 	}
@@ -53,12 +53,12 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 		return errorsmod.Wrapf(err, "Invalid query")
 	}
 
-	txs, err := o.tmRpc.Subscribe(ctx, ModuleNameObserver, query.String())
+	txs, err := o.cometRpc.Subscribe(ctx, ModuleNameObserver, query.String())
 	if err != nil {
 		return errorsmod.Wrapf(err, "Failed to subscribe to RPC client")
 	}
 
-	o.logger.Info("Observer starting listening for events at RPC", o.tmRpc.Remote())
+	o.logger.Info("Observer starting listening for events at RPC", o.cometRpc.Remote())
 	go o.processEvents(ctx, txs, observeEvents)
 
 	return nil
@@ -67,10 +67,10 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 // Stop stops listening to events, unsubscribes from the RPC client and stops the RPC channel
 func (o *Observer) Stop(ctx context.Context) error {
 	close(o.stopChan)
-	if err := o.tmRpc.UnsubscribeAll(ctx, ModuleNameObserver); err != nil {
+	if err := o.cometRpc.UnsubscribeAll(ctx, ModuleNameObserver); err != nil {
 		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
 	}
-	return o.tmRpc.Stop()
+	return o.cometRpc.Stop()
 }
 
 // Events returns receive-only part of the observed events
@@ -91,7 +91,7 @@ func (o *Observer) processEvents(ctx context.Context, txs <-chan coretypes.Resul
 			return
 		case event := <-txs:
 			if newBlock, ok := event.Data.(comettypes.EventDataNewBlock); ok {
-				results, err := o.tmRpc.BlockResults(ctx, &newBlock.Block.Height)
+				results, err := o.cometRpc.BlockResults(ctx, &newBlock.Block.Height)
 				if err != nil {
 					o.logger.Error("Observer failed to fetch block results for block", newBlock.Block.Height)
 					continue
