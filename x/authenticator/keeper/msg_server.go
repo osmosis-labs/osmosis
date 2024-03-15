@@ -93,20 +93,14 @@ func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemo
 func (m msgServer) SetActiveState(goCtx context.Context, msg *types.MsgSetActiveState) (*types.MsgSetActiveStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Get the account address from the message
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "invalid sender address")
-	}
+	// `MsgSetActiveState` must have only one signer
+	signer := msg.GetSigners()[0]
 
 	// TODO: check if sender is one of circuit breaker controller accounts
-	_ = sender
+	_ = signer
 
 	// Set the active state of the authenticator
-	err = m.Keeper.SetActiveState(ctx, msg.Active)
-	if err != nil {
-		return nil, err
-	}
+	m.Keeper.SetActiveState(ctx, msg.Active)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

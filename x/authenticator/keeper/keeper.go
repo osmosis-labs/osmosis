@@ -244,7 +244,8 @@ func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.Authenti
 	return nil
 }
 
-func (k Keeper) SetActiveState(ctx sdk.Context, active bool) error {
-	// TODO: Implement
-	return nil
+func (k Keeper) SetActiveState(ctx sdk.Context, active bool) {
+	params := k.GetParams(ctx)
+	params.AreSmartAccountsActive = active
+	k.SetParams(ctx, params)
 }
