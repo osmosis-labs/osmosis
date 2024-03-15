@@ -1,4 +1,4 @@
-package keeper
+package observer
 
 import (
 	"context"
@@ -97,8 +97,7 @@ func TestObserver(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(success))
 	defer s.Close()
 
-	eventsOut := make(chan abcitypes.Event)
-	observer, err := NewObserver(log.NewNopLogger(), s.URL, eventsOut)
+	observer, err := NewObserver(log.NewNopLogger(), s.URL)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -110,6 +109,7 @@ func TestObserver(t *testing.T) {
 
 	// We expect Observer to receive 3 Txs with `EventOutboundTransferType` events in this test
 	// Only 3 of the Txs are successful, so we should receive only 2 event through the channel
+	eventsOut := observer.Events()
 	events := [2]abcitypes.Event{}
 	for i := 0; i < len(events); i++ {
 		select {
@@ -125,16 +125,15 @@ func TestObserver(t *testing.T) {
 	require.Equal(t, 0, len(eventsOut))
 
 	observer.Stop(ctx)
-	close(eventsOut)
 }
 
 func TestObserverEmptyRpcUrl(t *testing.T) {
-	_, err := NewObserver(log.NewNopLogger(), "", make(chan abcitypes.Event))
+	_, err := NewObserver(log.NewNopLogger(), "")
 	require.Error(t, err)
 }
 
 func TestObserverInvalidQuery(t *testing.T) {
-	observer, err := NewObserver(log.NewNopLogger(), "http://localhost:26657", make(chan abcitypes.Event))
+	observer, err := NewObserver(log.NewNopLogger(), "http://localhost:26657")
 	require.NoError(t, err)
 	query := "invalid"
 	err = observer.Start(context.Background(), query, []string{})

@@ -1,4 +1,4 @@
-package keeper
+package observer
 
 import (
 	"context"
@@ -12,25 +12,24 @@ import (
 	bridge "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
+const ModuleNameSigner = "signer"
+
 type Signer struct {
 	logger        log.Logger
 	eventObserver Observer
 	stopChan      chan struct{}
-	eventsOutChan chan abcitypes.Event
 }
 
 func NewSigner(logger log.Logger, rpcUrl string) (Signer, error) {
-	eventsOutChan := make(chan abcitypes.Event)
-	obs, err := NewObserver(logger, rpcUrl, eventsOutChan)
+	obs, err := NewObserver(logger, rpcUrl)
 	if err != nil {
 		return Signer{}, err
 	}
 
 	return Signer{
-		logger:        logger,
+		logger:        logger.With("module", ModuleNameSigner),
 		eventObserver: obs,
 		stopChan:      make(chan struct{}),
-		eventsOutChan: eventsOutChan,
 	}, nil
 }
 
@@ -43,28 +42,22 @@ func (s *Signer) Start(ctx context.Context) error {
 		return err
 	}
 
-	go s.processEvents()
+	go s.processEvents(s.eventObserver.Events())
 
 	return nil
 }
 
 func (s *Signer) Stop(ctx context.Context) error {
-	close(s.stopChan)
-	close(s.eventsOutChan)
 	return s.eventObserver.Stop(ctx)
 }
 
-func (s *Signer) processEvents() {
-	for {
-		select {
-		case <-s.stopChan:
-			return
-		case event := <-s.eventsOutChan:
-			js, err := json.MarshalIndent(event, "", "  ")
-			if err != nil {
-				panic(err)
-			}
-			s.logger.Debug("Observed event", string(js))
+func (s *Signer) processEvents(events <-chan abcitypes.Event) {
+	for event := range events {
+		// Start TSS process here
+		js, err := json.MarshalIndent(event, "", "  ")
+		if err != nil {
+			panic(err)
 		}
+		s.logger.Debug("Observed event", string(js))
 	}
 }

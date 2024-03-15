@@ -1,9 +1,10 @@
-package keeper
+package observer
 
 import (
 	"context"
 	"errors"
 
+	errorsmod "cosmossdk.io/errors"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/libs/pubsub/query"
@@ -12,29 +13,31 @@ import (
 	comettypes "github.com/cometbft/cometbft/types"
 )
 
+const ModuleNameObserver = "observer"
+
 type Observer struct {
 	logger        log.Logger
 	tmRpc         *rpchttp.HTTP
 	stopChan      chan struct{}
-	eventsOutChan chan<- abcitypes.Event
+	eventsOutChan chan abcitypes.Event
 }
 
 // NewObserver returns new instance of `Observer` with RPC client created
-func NewObserver(logger log.Logger, rpcUrl string, eventsOutChan chan<- abcitypes.Event) (Observer, error) {
+func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
 	if len(rpcUrl) == 0 {
 		return Observer{}, errors.New("RPC URL can't be empty")
 	}
 
 	rpc, err := rpchttp.New(rpcUrl, "/websocket")
 	if err != nil {
-		return Observer{}, err
+		return Observer{}, errorsmod.Wrapf(err, "Failed to create RPC client")
 	}
 
 	return Observer{
-		logger:        logger,
+		logger:        logger.With("module", ModuleNameObserver),
 		tmRpc:         rpc,
 		stopChan:      make(chan struct{}),
-		eventsOutChan: eventsOutChan,
+		eventsOutChan: make(chan abcitypes.Event),
 	}, nil
 }
 
@@ -42,20 +45,17 @@ func NewObserver(logger log.Logger, rpcUrl string, eventsOutChan chan<- abcitype
 func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
 	err := o.tmRpc.Start()
 	if err != nil {
-		o.logger.Error("Observer failed to start RPC client", err.Error())
 		return err
 	}
 
 	query, err := query.New(queryStr)
 	if err != nil {
-		o.logger.Error("Invalid query expression", err.Error())
-		return err
+		return errorsmod.Wrapf(err, "Invalid query")
 	}
 
 	txs, err := o.tmRpc.Subscribe(ctx, "observer", query.String())
 	if err != nil {
-		o.logger.Error("Observer failed to subscribe to RPC client", err.Error())
-		return err
+		return errorsmod.Wrapf(err, "Failed to subscribe to RPC client")
 	}
 
 	o.logger.Info("Observer starting listening for events at RPC", o.tmRpc.Remote())
@@ -66,12 +66,16 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 
 // Stops listening to events, unsubscribes from RPC client and stops RPC channel
 func (o *Observer) Stop(ctx context.Context) error {
-	if err := o.tmRpc.UnsubscribeAll(ctx, "observer"); err != nil {
-		o.logger.Error("Observer failed to unsubscribe from RPC client", err.Error())
-		return err
-	}
 	close(o.stopChan)
+	if err := o.tmRpc.UnsubscribeAll(ctx, "observer"); err != nil {
+		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
+	}
+	close(o.eventsOutChan)
 	return o.tmRpc.Stop()
+}
+
+func (o *Observer) Events() <-chan abcitypes.Event {
+	return o.eventsOutChan
 }
 
 func (o *Observer) processEvents(ctx context.Context, txs <-chan coretypes.ResultEvent, observeEvents []string) {
