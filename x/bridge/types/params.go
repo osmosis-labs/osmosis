@@ -52,7 +52,9 @@ func (p Params) Validate() error {
 			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
 		}
 	}
-	if osmoutils.ContainsDuplicate(p.Assets) {
+	// check if p.Assets contains duplicated assets by ID
+	assetIDs := Map(p.Assets, func(v Asset) AssetID { return v.Id })
+	if osmoutils.ContainsDuplicate(assetIDs) {
 		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
 	}
 
