@@ -150,7 +150,7 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 		c, cneg := AbsDifferenceWithSign(a, bigK)
 		// On this line, bigK == i.
 		bigK.SetInt64(i)
-		term.MulMut(c).MulMut(x).QuoMut(bigK)
+		term.MulMut(c).MulMut(x).QuoInt64Mut(i)
 
 		// a is mutated on absDifferenceWithSign, reset
 		a.Set(exp)
