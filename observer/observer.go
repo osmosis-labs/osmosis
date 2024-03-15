@@ -45,7 +45,7 @@ func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
 func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
 	err := o.tmRpc.Start()
 	if err != nil {
-		return err
+		return errorsmod.Wrapf(err, "Failed to start RPC client")
 	}
 
 	query, err := query.New(queryStr)
@@ -70,7 +70,6 @@ func (o *Observer) Stop(ctx context.Context) error {
 	if err := o.tmRpc.UnsubscribeAll(ctx, "observer"); err != nil {
 		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
 	}
-	close(o.eventsOutChan)
 	return o.tmRpc.Stop()
 }
 
@@ -79,6 +78,7 @@ func (o *Observer) Events() <-chan abcitypes.Event {
 }
 
 func (o *Observer) processEvents(ctx context.Context, txs <-chan coretypes.ResultEvent, observeEvents []string) {
+	defer close(o.eventsOutChan)
 	events := make(map[string]struct{})
 	for _, e := range observeEvents {
 		events[e] = struct{}{}

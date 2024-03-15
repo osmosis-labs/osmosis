@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/log"
 	cmttypes "github.com/cometbft/cometbft/types"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -15,21 +15,19 @@ import (
 const ModuleNameSigner = "signer"
 
 type Signer struct {
-	logger        log.Logger
-	eventObserver Observer
-	stopChan      chan struct{}
+	logger   log.Logger
+	observer Observer
 }
 
 func NewSigner(logger log.Logger, rpcUrl string) (Signer, error) {
 	obs, err := NewObserver(logger, rpcUrl)
 	if err != nil {
-		return Signer{}, err
+		return Signer{}, errorsmod.Wrapf(err, "Failed to create Observer")
 	}
 
 	return Signer{
-		logger:        logger.With("module", ModuleNameSigner),
-		eventObserver: obs,
-		stopChan:      make(chan struct{}),
+		logger:   logger.With("module", ModuleNameSigner),
+		observer: obs,
 	}, nil
 }
 
@@ -37,26 +35,27 @@ func (s *Signer) Start(ctx context.Context) error {
 	query := cmttypes.QueryForEvent(cmttypes.EventNewBlock)
 	events := []string{proto.MessageName(&bridge.EventOutboundTransfer{})}
 
-	err := s.eventObserver.Start(ctx, query.String(), events)
+	err := s.observer.Start(ctx, query.String(), events)
 	if err != nil {
-		return err
+		return errorsmod.Wrapf(err, "Failed to start observer")
 	}
 
-	go s.processEvents(s.eventObserver.Events())
+	go s.processEvents()
 
 	return nil
 }
 
 func (s *Signer) Stop(ctx context.Context) error {
-	return s.eventObserver.Stop(ctx)
+	return s.observer.Stop(ctx)
 }
 
-func (s *Signer) processEvents(events <-chan abcitypes.Event) {
-	for event := range events {
+func (s *Signer) processEvents() {
+	for event := range s.observer.Events() {
 		// Start TSS process here
 		js, err := json.MarshalIndent(event, "", "  ")
 		if err != nil {
-			panic(err)
+			s.logger.Error("Failed to marshal event")
+			continue
 		}
 		s.logger.Debug("Observed event", string(js))
 	}
