@@ -38,9 +38,11 @@ message MsgInboundTransfer {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // DestAddr is a destination Osmosis address
   string dest_addr = 2 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
-  // Asset contains a source chain and a target denom
-  Asset asset = 3
-      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
+  // AssetID is the ID of the asset being transferred
+  AssetID asset_id = 3 [
+    (gogoproto.moretags) = "yaml:\"asset_id\"",
+    (gogoproto.nullable) = false
+  ];
   // Amount of coins to transfer
   string amount = 4 [
     (gogoproto.moretags) = "yaml:\"amount\"",
@@ -63,9 +65,11 @@ message MsgOutboundTransfer {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // DestAddr is a destination address
   string dest_addr = 2 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
-  // Asset contains a target chain and a source denom
-  Asset asset = 3
-      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
+  // AssetID is the ID of the asset being transferred
+  AssetID asset_id = 3 [
+    (gogoproto.moretags) = "yaml:\"asset_id\"",
+    (gogoproto.nullable) = false
+  ];
   // Amount of coins to transfer
   string amount = 4 [
     (gogoproto.moretags) = "yaml:\"amount\"",
@@ -100,13 +104,14 @@ message MsgChangeAssetStatus {
 
   // Sender is a sender's address
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  // Asset is an asset to update.
+  // AssetID is the ID of the asset to update.
   // The asset should be known; otherwise, the method will failed.
-  Asset asset = 2
-      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
-  // NewAssetStatus is a new asset's status.
-  AssetStatus new_asset_status = 3
-      [ (gogoproto.moretags) = "yaml:\"new_asset_status\"" ];
+  AssetID asset_id = 2 [
+    (gogoproto.moretags) = "yaml:\"asset_id\"",
+    (gogoproto.nullable) = false
+  ];
+  // NewStatus is a new asset's status.
+  AssetStatus new_status = 3 [ (gogoproto.moretags) = "yaml:\"new_status\"" ];
 }
 
 message MsgChangeAssetStatusResponse {}

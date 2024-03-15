@@ -11,10 +11,39 @@ message Params {
   repeated string signers = 1 [ (gogoproto.moretags) = "yaml:\"signers\"" ];
   // Assets is a list used to create tokenfactory denoms
   // for corresponding trading pairs
-  repeated AssetWithStatus assets = 2 [
+  repeated Asset assets = 2 [
     (gogoproto.moretags) = "yaml:\"assets\"",
     (gogoproto.nullable) = false
   ];
+}
+
+// AssetID defines a pair of the source chain name and its Osmosis representation
+// denoted by denom. AssetID is a primary key for Asset.
+message AssetID {
+  // SourceChain is a source chain name
+  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
+  // Denom is the Osmosis representation of the SourceChain
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+
+// Asset is a representation of the asset.
+message Asset {
+  // ID is the asset's primary key
+  AssetID id = 1 [
+    (gogoproto.moretags) = "yaml:\"id\"",
+    (gogoproto.nullable) = false
+  ];
+  // Status is a current status of the asset
+  AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
+  // Precision used for coins representation
+  uint64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
+  // VotedNeeded marks how many signers out of the list of signers need
+  // to sign until a tx with this asset can be considered finalized
+  uint64 votes_needed = 4 [ (gogoproto.moretags) = "yaml:\"votes_needed\"" ];
+  // Fee defines a param for fee that go towards the validator set
+  // signing the incoming/outgoing txs with this asset. The fee is
+  // measured as a percentage, so its value lies between 0 and 100.
+  uint32 fee = 5 [ (gogoproto.moretags) = "yaml:\"fee\"" ];
 }
 
 enum AssetStatus {
@@ -23,23 +52,4 @@ enum AssetStatus {
   ASSET_STATUS_BLOCKED_INBOUND = 2;
   ASSET_STATUS_BLOCKED_OUTBOUND = 3;
   ASSET_STATUS_BLOCKED_BOTH = 4;
-}
-
-// AssetWithStatus defines a pair of the asset and its current status.
-message AssetWithStatus {
-  Asset asset = 1
-      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
-  AssetStatus asset_status = 2
-      [ (gogoproto.moretags) = "yaml:\"asset_status\"" ];
-}
-
-// Asset defines a pair of the source chain name and its Osmosis representation
-// denoted by denom. It also includes a precision used for coins representation.
-message Asset {
-  // SourceChain is a source chain name
-  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
-  // Denom is the Osmosis representation of the SourceChain
-  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-  // Precision used for coins representation
-  uint64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
 }
