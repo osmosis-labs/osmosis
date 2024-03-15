@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/libs/log"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -12,21 +12,22 @@ import (
 )
 
 type Keeper struct {
-	storeKey   storetypes.StoreKey
+	// paramSpace stores module's params
 	paramSpace paramtypes.Subspace
-
-	accountKeeper      types.AccountKeeper
-	tokenFactoryKeeper types.TokenFactoryKeeper
-
+	// router is used to access tokenfactory methods
+	router *baseapp.MsgServiceRouter
+	// accountKeeper helps get the module's address
+	accountKeeper types.AccountKeeper
+	// govModuleAddr is used in UpdateParams method since it is
+	// the only addr that can update bridge module params
 	govModuleAddr string
 }
 
 // NewKeeper returns a new instance of the x/bridge keeper.
 func NewKeeper(
-	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
+	router *baseapp.MsgServiceRouter,
 	accountKeeper types.AccountKeeper,
-	tokenFactoryKeeper types.TokenFactoryKeeper,
 	govModuleAddr string,
 ) Keeper {
 	// ensure bridge module account is set
@@ -39,11 +40,10 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:           storeKey,
-		paramSpace:         paramSpace,
-		accountKeeper:      accountKeeper,
-		tokenFactoryKeeper: tokenFactoryKeeper,
-		govModuleAddr:      govModuleAddr,
+		paramSpace:    paramSpace,
+		router:        router,
+		accountKeeper: accountKeeper,
+		govModuleAddr: govModuleAddr,
 	}
 }
 
