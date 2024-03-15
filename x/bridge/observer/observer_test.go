@@ -19,7 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/observer"
+	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer"
 	bridge "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
