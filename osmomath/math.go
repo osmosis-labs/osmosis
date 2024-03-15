@@ -140,8 +140,10 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 
 	a := exp.Clone()
 	bigK := NewDec(0)
+	iter := 0
 	// TODO: Document this computation via taylor expansion
 	for i := int64(1); term.GTE(precision); i++ {
+		iter++
 		// At each iteration, we need two values, i and i-1.
 		// To avoid expensive big.Int allocation, we reuse bigK variable.
 		// On this line, bigK == i-1.
@@ -174,6 +176,8 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 			panic(fmt.Errorf("failed to reach precision within %d iterations, best guess: %s for %s^%s", powIterationLimit, sum, originalBase, exp))
 		}
 	}
+	fmt.Println("iter", iter)
+	fmt.Println("POWAPPROX", "originalBase", originalBase, "exp", exp, "precision", precision, "sum", sum)
 	return sum
 }
 

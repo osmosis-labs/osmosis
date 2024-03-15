@@ -452,6 +452,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	fmt.Println("POWAPPROX", "EstimateSwapExactAmountIn", "tokenIn", req.TokenIn, "routes", req.Routes, "height", sdkCtx.BlockHeight())
 	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
