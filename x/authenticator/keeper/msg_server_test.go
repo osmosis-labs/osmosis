@@ -136,7 +136,8 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	params := ak.GetParams(ctx)
 	s.Require().False(params.AreSmartAccountsActive)
 	// other params should remain the same
-	s.Require().Equal(initialParams.MaximumUnauthenticatedGas, params.MaximumUnauthenticatedGas)
+	params.AreSmartAccountsActive = initialParams.AreSmartAccountsActive
+	s.Require().Equal(params, initialParams)
 
 	// reactivate
 	_, err = msgServer.SetActiveState(
@@ -152,5 +153,6 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	params = ak.GetParams(ctx)
 	s.Require().True(params.AreSmartAccountsActive)
 	// other params should remain the same
-	s.Require().Equal(initialParams.MaximumUnauthenticatedGas, params.MaximumUnauthenticatedGas)
+	params.AreSmartAccountsActive = initialParams.AreSmartAccountsActive
+	s.Require().Equal(params, initialParams)
 }
