@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// activated by default
 	initialParams := ak.GetParams(ctx)
-	s.Require().True(initialParams.AreSmartAccountsActive)
+	s.Require().True(initialParams.AuthenticatorActiveState)
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
@@ -134,9 +134,9 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// active state should be false
 	params := ak.GetParams(ctx)
-	s.Require().False(params.AreSmartAccountsActive)
+	s.Require().False(params.AuthenticatorActiveState)
 	// other params should remain the same
-	params.AreSmartAccountsActive = initialParams.AreSmartAccountsActive
+	params.AuthenticatorActiveState = initialParams.AuthenticatorActiveState
 	s.Require().Equal(params, initialParams)
 
 	// reactivate
@@ -151,8 +151,8 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// active state should be true
 	params = ak.GetParams(ctx)
-	s.Require().True(params.AreSmartAccountsActive)
+	s.Require().True(params.AuthenticatorActiveState)
 	// other params should remain the same
-	params.AreSmartAccountsActive = initialParams.AreSmartAccountsActive
+	params.AuthenticatorActiveState = initialParams.AuthenticatorActiveState
 	s.Require().Equal(params, initialParams)
 }

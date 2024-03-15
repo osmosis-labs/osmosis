@@ -17,7 +17,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams() Params {
 	return Params{
 		MaximumUnauthenticatedGas: 20000,
-		AreSmartAccountsActive:    true,
+		AuthenticatorActiveState:  true,
 	}
 }
 
@@ -30,7 +30,7 @@ func DefaultParams() Params {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMaximumUnauthenticatedGas, &p.MaximumUnauthenticatedGas, validateMaximumUnauthenticatedGas),
-		paramtypes.NewParamSetPair(KeyAreSmartAccountsActive, &p.AreSmartAccountsActive, validateAreSmartAccountsActive),
+		paramtypes.NewParamSetPair(KeyAuthenticatorActiveState, &p.AuthenticatorActiveState, validateAuthenticatorActiveState),
 	}
 }
 
@@ -50,7 +50,7 @@ func validateMaximumUnauthenticatedGas(i interface{}) error {
 	return nil
 }
 
-func validateAreSmartAccountsActive(i interface{}) error {
+func validateAuthenticatorActiveState(i interface{}) error {
 	// Convert the given parameter to a bool.
 	_, ok := i.(bool)
 	if !ok {

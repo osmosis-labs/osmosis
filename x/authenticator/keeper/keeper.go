@@ -246,6 +246,6 @@ func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.Authenti
 
 func (k Keeper) SetActiveState(ctx sdk.Context, active bool) {
 	params := k.GetParams(ctx)
-	params.AreSmartAccountsActive = active
+	params.AuthenticatorActiveState = active
 	k.SetParams(ctx, params)
 }
