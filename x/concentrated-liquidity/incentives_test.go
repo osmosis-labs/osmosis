@@ -2341,7 +2341,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				s.Require().Equal(tc.expectedForfeitedIncentives.String(), actualIncetivesForfeited.String())
 
 				// Ensure balances are updated by the correct amounts
-				s.Require().Equal(tc.expectedIncentivesClaimed.Add(tc.expectedForfeitedIncentives...).String(), (incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect...)).String())
+				// Note that we expect the forfeited incentives to remain in the pool incentives balance since they are
+				// redeposited, so we only expect the diff in incentives balance to be the amount successfully claimed.
+				s.Require().Equal(tc.expectedIncentivesClaimed.String(), (incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect...)).String())
 				s.Require().Equal(tc.expectedIncentivesClaimed.String(), (ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect...)).String())
 			})
 		}
