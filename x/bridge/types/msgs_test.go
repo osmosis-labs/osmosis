@@ -379,8 +379,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{addr2},
-					Assets:  []types.Asset{asset1, asset2},
+					Signers:     []string{addr1},
+					Assets:      []types.Asset{asset1, asset2},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
@@ -391,8 +393,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: "",
 				NewParams: types.Params{
-					Signers: []string{addr2},
-					Assets:  []types.Asset{asset1, asset2},
+					Signers:     []string{addr1},
+					Assets:      []types.Asset{asset1, asset2},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
@@ -403,8 +407,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: "qwerty",
 				NewParams: types.Params{
-					Signers: []string{addr2},
-					Assets:  []types.Asset{asset1, asset2},
+					Signers:     []string{addr1},
+					Assets:      []types.Asset{asset1, asset2},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{nil},
@@ -415,8 +421,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{},
-					Assets:  []types.Asset{asset1, asset2},
+					Signers:     []string{},
+					Assets:      []types.Asset{asset1, asset2},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
@@ -427,8 +435,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{"qwerty"},
-					Assets:  []types.Asset{asset1, asset2},
+					Signers:     []string{"qwerty"},
+					Assets:      []types.Asset{asset1, asset2},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
@@ -439,8 +449,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{addr2, addr2},
-					Assets:  []types.Asset{asset1, asset2},
+					Signers:     []string{addr2, addr2},
+					Assets:      []types.Asset{asset1, asset2},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
@@ -451,8 +463,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{addr2, addr2},
-					Assets:  []types.Asset{},
+					Signers:     []string{addr1, addr2},
+					Assets:      []types.Asset{},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
@@ -463,14 +477,14 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{addr2, addr2},
+					Signers: []string{addr1, addr2},
 					Assets: []types.Asset{{
-						Id:          assetID1,
-						Status:      types.AssetStatus_ASSET_STATUS_OK,
-						Precision:   10,
-						VotesNeeded: 1,
-						Fee:         200, // fee > 100
+						Id:       assetID1,
+						Status:   types.AssetStatus_ASSET_STATUS_UNSPECIFIED, // invalid status
+						Exponent: types.DefaultBitcoinExponent,
 					}},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
@@ -481,8 +495,10 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: types.MsgUpdateParams{
 				Sender: addr1,
 				NewParams: types.Params{
-					Signers: []string{addr2, addr2},
-					Assets:  []types.Asset{asset1, asset1},
+					Signers:     []string{addr1, addr2},
+					Assets:      []types.Asset{asset1, asset1},
+					VotesNeeded: types.DefaultVotesNeeded,
+					Fee:         math.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},

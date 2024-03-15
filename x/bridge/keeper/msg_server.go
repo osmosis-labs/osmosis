@@ -99,6 +99,8 @@ func (m msgServer) UpdateParams(
 		NewAssets:      msg.NewParams.Assets,
 		CreatedAssets:  result.assetsToCreate,
 		DeletedAssets:  result.assetsToDelete,
+		NewVotesNeeded: msg.NewParams.VotesNeeded,
+		NewFee:         msg.NewParams.Fee,
 	})
 	if err != nil {
 		return nil, err

@@ -42,6 +42,12 @@ message EventUpdateParams {
   repeated Asset new_assets = 4 [ (gogoproto.nullable) = false ];
   repeated Asset created_assets = 5 [ (gogoproto.nullable) = false ];
   repeated Asset deleted_assets = 6 [ (gogoproto.nullable) = false ];
+
+  uint64 new_votes_needed = 7;
+  string new_fee = 8 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message EventChangeAssetStatus {

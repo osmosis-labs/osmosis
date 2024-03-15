@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	math "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -41,46 +42,94 @@ func TestParams(t *testing.T) {
 		{
 			name: "valid",
 			params: types.Params{
-				Signers: []string{addr1},
-				Assets:  []types.Asset{asset1, asset2},
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{asset1, asset2},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(5, 1),
 			},
 			expectedValid: true,
 		},
 		{
 			name: "duplicated signers",
 			params: types.Params{
-				Signers: []string{addr1, addr1},
-				Assets:  []types.Asset{asset1, asset2},
+				Signers:     []string{addr1, addr1},
+				Assets:      []types.Asset{asset1, asset2},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(5, 1),
 			},
 			expectedValid: false,
 		},
 		{
 			name: "empty assets",
 			params: types.Params{
-				Signers: []string{addr1, addr1},
-				Assets:  []types.Asset{},
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(5, 1),
 			},
 			expectedValid: false,
 		},
 		{
 			name: "invalid asset",
 			params: types.Params{
-				Signers: []string{addr1, addr1},
+				Signers: []string{addr1},
 				Assets: []types.Asset{{
-					Id:          assetID1,
-					Status:      types.AssetStatus_ASSET_STATUS_OK,
-					Precision:   10,
-					VotesNeeded: 1,
-					Fee:         200, // fee > 100
+					Id:       assetID1,
+					Status:   types.AssetStatus_ASSET_STATUS_UNSPECIFIED, // invalid status
+					Exponent: types.DefaultBitcoinExponent,
 				}},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(5, 1),
 			},
 			expectedValid: false,
 		},
 		{
 			name: "duplicated assets",
 			params: types.Params{
-				Signers: []string{addr1, addr1},
-				Assets:  []types.Asset{asset1, asset1},
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{asset1, asset1},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(5, 1),
+			},
+			expectedValid: false,
+		},
+		{
+			name: "fee == 0 valid",
+			params: types.Params{
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{asset1},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyZeroDec(),
+			},
+			expectedValid: true,
+		},
+		{
+			name: "fee == 1 valid",
+			params: types.Params{
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{asset1},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyOneDec(),
+			},
+			expectedValid: true,
+		},
+		{
+			name: "fee < 0",
+			params: types.Params{
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{asset1},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(-5, 1),
+			},
+			expectedValid: false,
+		},
+		{
+			name: "fee > 1",
+			params: types.Params{
+				Signers:     []string{addr1},
+				Assets:      []types.Asset{asset1},
+				VotesNeeded: types.DefaultVotesNeeded,
+				Fee:         math.LegacyNewDecWithPrec(11, 1),
 			},
 			expectedValid: false,
 		},

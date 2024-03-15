@@ -13,10 +13,8 @@ func DefaultAssets() []Asset {
 				SourceChain: DefaultBitcoinChainName,
 				Denom:       DefaultBitcoinDenomName,
 			},
-			Status:      AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
-			Precision:   DefaultBitcoinPrecision,
-			VotesNeeded: DefaultAssetVotesNeeded,
-			Fee:         DefaultAssetFee,
+			Status:   AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+			Exponent: DefaultBitcoinExponent,
 		},
 	}
 }
@@ -36,12 +34,7 @@ func (m Asset) Validate() error {
 		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 
-	// Fee is uint32, so it's always > 0
-	if m.Fee > 100 {
-		return errorsmod.Wrapf(ErrInvalidAsset, "Fee should be between 0 and 100")
-	}
-
-	// Don't check m.Precision nor m.VotesNeeded since all their values are valid
+	// don't check m.Exponent since it's always valid
 
 	return nil
 }
