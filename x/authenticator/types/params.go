@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -32,6 +33,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMaximumUnauthenticatedGas, &p.MaximumUnauthenticatedGas, validateMaximumUnauthenticatedGas),
 		paramtypes.NewParamSetPair(KeyAuthenticatorActiveState, &p.AuthenticatorActiveState, validateAuthenticatorActiveState),
+		paramtypes.NewParamSetPair(KeyCircuitBreakerControllers, &p.CircuitBreakerControllers, validateCircuitBreakerControllers),
 	}
 }
 
@@ -56,6 +58,24 @@ func validateAuthenticatorActiveState(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateCircuitBreakerControllers(i interface{}) error {
+	// Convert the given parameter to a []string.
+	controllers, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// each string in the array should be a valid address
+	for _, addr := range controllers {
+		_, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return fmt.Errorf("invalid address: %s", addr)
+		}
 	}
 
 	return nil

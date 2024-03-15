@@ -32,6 +32,7 @@ var (
 	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
 	KeyMaximumUnauthenticatedGas        = []byte("MaximumUnauthenticatedGas")
 	KeyAuthenticatorActiveState         = []byte("AuthenticatorActiveState")
+	KeyCircuitBreakerControllers        = []byte("CircuitBreakerControllers")
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {

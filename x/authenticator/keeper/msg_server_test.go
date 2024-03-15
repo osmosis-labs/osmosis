@@ -103,30 +103,47 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+	ak := *s.App.AuthenticatorKeeper
+	msgServer := keeper.NewMsgServerImpl(ak)
 	ctx := s.Ctx
-
-	// prep params: circuit breaker controllers
-	// keeper.Keeper.SetParams(ctx, types.Params {
-	// })
-
-	ak := s.App.AuthenticatorKeeper
-
-	// activated by default
-	initialParams := ak.GetParams(ctx)
-	s.Require().True(initialParams.AuthenticatorActiveState)
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
 	bz, _ := hex.DecodeString(key)
 	priv := &secp256k1.PrivKey{Key: bz}
-	accAddress := sdk.AccAddress(priv.PubKey().Address())
+	authorizedAccAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	// deactivate
+	key = "0dd4d1506e18a5712080708c338eb51ecf2afdceae01e8162e890b126ac190fe"
+	bz, _ = hex.DecodeString(key)
+	priv = &secp256k1.PrivKey{Key: bz}
+	unauthorizedAccAddress := sdk.AccAddress(priv.PubKey().Address())
+
+	// activated by default
+	initialParams := s.App.AuthenticatorKeeper.GetParams(ctx)
+	s.Require().True(initialParams.AuthenticatorActiveState)
+
+	// Set the authorized account as the circuit breaker controller
+	initialParams = s.App.AuthenticatorKeeper.GetParams(ctx)
+	initialParams.CircuitBreakerControllers = []string{authorizedAccAddress.String()}
+	s.App.AuthenticatorKeeper.SetParams(ctx, initialParams)
+
+	// deactivate by unauthorized account
 	_, err := msgServer.SetActiveState(
 		sdk.WrapSDKContext(ctx),
 		&types.MsgSetActiveState{
-			Sender: accAddress.String(),
+			Sender: unauthorizedAccAddress.String(),
+			Active: false,
+		})
+
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "signer is not a circuit breaker controller: unauthorized")
+
+	// deactivate
+	_, err = msgServer.SetActiveState(
+		sdk.WrapSDKContext(ctx),
+
+		&types.MsgSetActiveState{
+			Sender: authorizedAccAddress.String(),
 			Active: false,
 		})
 
@@ -143,7 +160,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	_, err = msgServer.SetActiveState(
 		sdk.WrapSDKContext(ctx),
 		&types.MsgSetActiveState{
-			Sender: accAddress.String(),
+			Sender: authorizedAccAddress.String(),
 			Active: true,
 		})
 
