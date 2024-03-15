@@ -53,7 +53,7 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 		return errorsmod.Wrapf(err, "Invalid query")
 	}
 
-	txs, err := o.tmRpc.Subscribe(ctx, "observer", query.String())
+	txs, err := o.tmRpc.Subscribe(ctx, ModuleNameObserver, query.String())
 	if err != nil {
 		return errorsmod.Wrapf(err, "Failed to subscribe to RPC client")
 	}
@@ -67,7 +67,7 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 // Stop stops listening to events, unsubscribes from the RPC client and stops the RPC channel
 func (o *Observer) Stop(ctx context.Context) error {
 	close(o.stopChan)
-	if err := o.tmRpc.UnsubscribeAll(ctx, "observer"); err != nil {
+	if err := o.tmRpc.UnsubscribeAll(ctx, ModuleNameObserver); err != nil {
 		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
 	}
 	return o.tmRpc.Stop()
@@ -105,7 +105,12 @@ func (o *Observer) processEvents(ctx context.Context, txs <-chan coretypes.Resul
 						if _, ok := events[e.Type]; !ok {
 							continue
 						}
-						o.eventsOutChan <- e
+						select {
+						case o.eventsOutChan <- e:
+						case <-o.stopChan:
+							o.logger.Info("Observer exiting early, event skipped: ", e)
+							return
+						}
 					}
 				}
 			}
