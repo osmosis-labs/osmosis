@@ -18,6 +18,7 @@ func NewParams() Params {
 	return Params{
 		MaximumUnauthenticatedGas: 20000,
 		AuthenticatorActiveState:  true,
+		CircuitBreakerControllers: []string{},
 	}
 }
 
