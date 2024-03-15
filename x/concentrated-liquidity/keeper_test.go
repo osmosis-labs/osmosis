@@ -380,7 +380,7 @@ func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickInde
 	s.Require().NoError(err)
 
 	// Cross the tick to update it.
-	_, err = s.Clk.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
+	err = s.Clk.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
 	s.Require().NoError(err)
 	s.AddToSpreadRewardAccumulator(poolId, DefaultSpreadRewardAccumCoins[0])
 }
