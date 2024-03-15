@@ -19,6 +19,7 @@ type Signer struct {
 	observer Observer
 }
 
+// NewSigner returns new instance of `Signer` with `Observer` created
 func NewSigner(logger log.Logger, rpcUrl string) (Signer, error) {
 	obs, err := NewObserver(logger, rpcUrl)
 	if err != nil {
@@ -31,6 +32,8 @@ func NewSigner(logger log.Logger, rpcUrl string) (Signer, error) {
 	}, nil
 }
 
+// Start starts the observer listening to `NewBlock` events
+// and filtering `EventOutboundTransfer` events
 func (s *Signer) Start(ctx context.Context) error {
 	query := cmttypes.QueryForEvent(cmttypes.EventNewBlock)
 	events := []string{proto.MessageName(&bridge.EventOutboundTransfer{})}
@@ -45,6 +48,7 @@ func (s *Signer) Start(ctx context.Context) error {
 	return nil
 }
 
+// Stop stops the observer
 func (s *Signer) Stop(ctx context.Context) error {
 	return s.observer.Stop(ctx)
 }

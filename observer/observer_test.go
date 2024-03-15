@@ -1,4 +1,4 @@
-package observer
+package observer_test
 
 import (
 	"context"
@@ -19,85 +19,68 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v23/observer"
 	bridge "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
-)
-
-const (
-	EventOutboundTransferType = "osmosis.bridge.v1beta1.EventOutboundTransfer"
 )
 
 var upgrader = websocket.Upgrader{}
 
-func readNewBlockEvent(path string) coretypes.ResultEvent {
+func readNewBlockEvent(t *testing.T, path string) coretypes.ResultEvent {
 	dataStr, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	result := coretypes.ResultEvent{}
 	err = cmtjson.Unmarshal([]byte(dataStr), &result)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	return result
 }
 
-func readBlockResults(path string) coretypes.ResultBlockResults {
+func readBlockResults(t *testing.T, path string) coretypes.ResultBlockResults {
 	dataStr, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	result := coretypes.ResultBlockResults{}
 	err = json.Unmarshal([]byte(dataStr), &result)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	return result
 }
 
-func success(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		c, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			panic(err)
-		}
-		defer c.Close()
-		newBlock := readNewBlockEvent("./test_events/new_block_event.json")
-		newBlockResp := types.NewRPCSuccessResponse(
-			types.JSONRPCIntID(1),
-			newBlock,
-		)
-		newBlockRaw, err := json.Marshal(newBlockResp)
-		if err != nil {
-			panic(err)
-		}
-
-		err = c.WriteMessage(1, newBlockRaw)
-		if err != nil {
-			panic(err)
-		}
-	} else if r.Method == "POST" {
-		blockResults := readBlockResults("./test_events/block_results.json")
-		blockResultsResp := types.NewRPCSuccessResponse(
-			types.JSONRPCIntID(0),
-			blockResults,
-		)
-		blockResultsRaw, err := json.Marshal(blockResultsResp)
-		if err != nil {
-			panic(err)
-		}
-		_, err = w.Write(blockResultsRaw)
-		if err != nil {
-			panic(err)
+func success(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			c, err := upgrader.Upgrade(w, r, nil)
+			require.NoError(t, err)
+			defer c.Close()
+			newBlock := readNewBlockEvent(t, "./test_events/new_block_event.json")
+			newBlockResp := types.NewRPCSuccessResponse(
+				types.JSONRPCIntID(1),
+				newBlock,
+			)
+			newBlockRaw, err := json.Marshal(newBlockResp)
+			require.NoError(t, err)
+			err = c.WriteMessage(1, newBlockRaw)
+			require.NoError(t, err)
+		case http.MethodPost:
+			blockResults := readBlockResults(t, "./test_events/block_results.json")
+			blockResultsResp := types.NewRPCSuccessResponse(
+				types.JSONRPCIntID(0),
+				blockResults,
+			)
+			blockResultsRaw, err := json.Marshal(blockResultsResp)
+			require.NoError(t, err)
+			_, err = w.Write(blockResultsRaw)
+			require.NoError(t, err)
+		default:
+			t.Fatal("Unexpected request method", r.Method)
 		}
 	}
 }
 
-// Verify Observer properly reads subscribed messages and filters events
+// TestObserver verifies Observer properly reads subscribed messages and filters events
 func TestObserver(t *testing.T) {
-	s := httptest.NewServer(http.HandlerFunc(success))
+	s := httptest.NewServer(http.HandlerFunc(success(t)))
 	defer s.Close()
 
-	observer, err := NewObserver(log.NewNopLogger(), s.URL)
+	observer, err := observer.NewObserver(log.NewNopLogger(), s.URL)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -112,28 +95,30 @@ func TestObserver(t *testing.T) {
 	eventsOut := observer.Events()
 	events := [2]abcitypes.Event{}
 	for i := 0; i < len(events); i++ {
-		select {
-		case e := <-eventsOut:
-			events[i] = e
-		case <-time.After(1 * time.Second):
-			panic("Channel read timeout")
-		}
+		require.Eventually(t, func() bool {
+			events[i] = <-eventsOut
+			return true
+		}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
 	}
 
-	require.Equal(t, EventOutboundTransferType, events[0].Type)
-	require.Equal(t, EventOutboundTransferType, events[1].Type)
+	expectedEventType := proto.MessageName(&bridge.EventOutboundTransfer{})
+	require.Equal(t, expectedEventType, events[0].Type)
+	require.Equal(t, expectedEventType, events[1].Type)
 	require.Equal(t, 0, len(eventsOut))
 
-	observer.Stop(ctx)
+	err = observer.Stop(ctx)
+	require.NoError(t, err)
 }
 
+// TestObserverEmptyRpcUrl verifies NewObserver returns an error if RPC URL is empty
 func TestObserverEmptyRpcUrl(t *testing.T) {
-	_, err := NewObserver(log.NewNopLogger(), "")
+	_, err := observer.NewObserver(log.NewNopLogger(), "")
 	require.Error(t, err)
 }
 
+// TestObserverInvalidQuery verifies observer Start returns an error if query is invalid
 func TestObserverInvalidQuery(t *testing.T) {
-	observer, err := NewObserver(log.NewNopLogger(), "http://localhost:26657")
+	observer, err := observer.NewObserver(log.NewNopLogger(), "http://localhost:26657")
 	require.NoError(t, err)
 	query := "invalid"
 	err = observer.Start(context.Background(), query, []string{})

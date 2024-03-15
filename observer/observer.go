@@ -41,7 +41,7 @@ func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
 	}, nil
 }
 
-// Starts RPC client, subscribes to events for provided query and starts listening to the events
+// Start starts the RPC client, subscribes to events for provided query and starts listening to the events
 func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
 	err := o.tmRpc.Start()
 	if err != nil {
@@ -64,7 +64,7 @@ func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []s
 	return nil
 }
 
-// Stops listening to events, unsubscribes from RPC client and stops RPC channel
+// Stop stops listening to events, unsubscribes from the RPC client and stops the RPC channel
 func (o *Observer) Stop(ctx context.Context) error {
 	close(o.stopChan)
 	if err := o.tmRpc.UnsubscribeAll(ctx, "observer"); err != nil {
@@ -73,6 +73,7 @@ func (o *Observer) Stop(ctx context.Context) error {
 	return o.tmRpc.Stop()
 }
 
+// Events returns receive-only part of the observed events
 func (o *Observer) Events() <-chan abcitypes.Event {
 	return o.eventsOutChan
 }
