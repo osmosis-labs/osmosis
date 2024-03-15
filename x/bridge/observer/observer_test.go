@@ -91,7 +91,7 @@ func TestObserver(t *testing.T) {
 	require.NoError(t, err)
 
 	// We expect Observer to receive 3 Txs with `EventOutboundTransferType` events in this test
-	// Only 3 of the Txs are successful, so we should receive only 2 event through the channel
+	// Only 2 of the Txs are successful, so we should receive only 2 event through the channel
 	eventsOut := observer.Events()
 	events := [2]abcitypes.Event{}
 	for i := 0; i < len(events); i++ {
