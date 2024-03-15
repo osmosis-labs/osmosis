@@ -15,7 +15,7 @@ message Params {
     (gogoproto.moretags) = "yaml:\"assets\"",
     (gogoproto.nullable) = false
   ];
-  // VotedNeeded marks how many signers out of the list of signers need
+  // VotesNeeded marks how many signers out of the list of signers need
   // to sign until a tx can be considered finalized
   uint64 votes_needed = 3 [ (gogoproto.moretags) = "yaml:\"votes_needed\"" ];
   // Fee defines a param for fee that go towards the validator set
@@ -40,10 +40,8 @@ message AssetID {
 // Asset is a representation of the asset.
 message Asset {
   // ID is the asset's primary key
-  AssetID id = 1 [
-    (gogoproto.moretags) = "yaml:\"id\"",
-    (gogoproto.nullable) = false
-  ];
+  AssetID id = 1
+      [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
   // Status is a current status of the asset
   AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
   // Exponent represents the power of 10 used for coin representation
