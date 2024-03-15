@@ -36,7 +36,7 @@ message Asset {
   // Status is a current status of the asset
   AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
   // Precision used for coins representation
-  uint64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
+  int64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
   // VotedNeeded marks how many signers out of the list of signers need
   // to sign until a tx with this asset can be considered finalized
   uint64 votes_needed = 4 [ (gogoproto.moretags) = "yaml:\"votes_needed\"" ];

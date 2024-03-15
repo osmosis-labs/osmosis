@@ -16,7 +16,7 @@ var (
 	KeyAssets  = []byte("Assets")
 )
 
-func NewParams(signers []string, assets []AssetWithStatus) Params {
+func NewParams(signers []string, assets []Asset) Params {
 	return Params{
 		Signers: signers,
 		Assets:  assets,
@@ -27,7 +27,7 @@ func NewParams(signers []string, assets []AssetWithStatus) Params {
 func DefaultParams() Params {
 	return Params{
 		Signers: []string{},
-		Assets:  DefaultAssetsWithStatuses(),
+		Assets:  DefaultAssets(),
 	}
 }
 
@@ -59,13 +59,13 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func (p Params) GetAsset(a Asset) (AssetWithStatus, bool) {
+func (p Params) GetAsset(id AssetID) (Asset, bool) {
 	for i := range p.Assets {
-		if p.Assets[i].Asset.Name() == a.Name() {
+		if p.Assets[i].Id == id {
 			return p.Assets[i], true
 		}
 	}
-	return AssetWithStatus{}, false
+	return Asset{}, false
 }
 
 // ParamKeyTable for the x/bridge module.
@@ -98,7 +98,7 @@ func validateSigners(i interface{}) error {
 }
 
 func validateAssets(i interface{}) error {
-	assets, ok := i.([]AssetWithStatus)
+	assets, ok := i.([]Asset)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
