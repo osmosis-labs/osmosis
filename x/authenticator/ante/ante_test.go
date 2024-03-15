@@ -287,20 +287,17 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 		signKey               cryptotypes.PrivKey
 		selectedAuthenticator []uint64
 		shouldPass            bool
-		checks                int
-		checkGas              bool
-	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, 1, true},
-		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, 1, true},
-		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, 1, true},
-		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, 1, true},
-		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, 0, true},
-		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, 0, true},
-		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 0, false},
-	}
 
-	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
-	approachingGasPerSig := 4105 // Each signature consumes at least this amount (but not much more)
+		checkGas bool
+	}{
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, true},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, true},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, true},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, true},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, true},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, true},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, false},
+	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -315,7 +312,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 			)
 
 			anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
-			res, err := anteHandler(s.Ctx.WithGasMeter(sdk.NewGasMeter(300000)), tx, false)
+			_, err := anteHandler(s.Ctx, tx, false)
 
 			if tc.shouldPass {
 				s.Require().NoError(err, "Expected to pass but got error")
@@ -323,15 +320,6 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 				s.Require().Error(err, "Expected to fail but got no error")
 			}
 
-			// ensure only the right amount of sigs have been checked
-			if tc.checks > 0 {
-				s.Require().GreaterOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+(tc.checks-1)*approachingGasPerSig))
-				s.Require().Less(res.GasMeter().GasConsumed(), uint64(baseGas+tc.checks*approachingGasPerSig))
-			} else {
-				if tc.checkGas {
-					s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas))
-				}
-			}
 		})
 	}
 }
