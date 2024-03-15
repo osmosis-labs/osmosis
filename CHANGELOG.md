@@ -62,6 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
 
+## v23.0.7-iavl-v1
+
+* [#7750](https://github.com/osmosis-labs/osmosis/pull/7750) IAVL bump to improve pruning
+
 ## v23.0.6-iavl-v1 (contains everything in v23.0.6)
 
 * [#558](https://github.com/osmosis-labs/cosmos-sdk/pull/558) Gracefully log when there is a pruning error instead of panic
