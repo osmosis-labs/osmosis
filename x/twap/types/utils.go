@@ -23,7 +23,7 @@ func GetAllUniqueDenomPairs(denoms []string) []DenomPair {
 	// get denoms in ascending order
 	sort.Strings(denoms)
 
-	denomPairs := []DenomPair{}
+	denomPairs := make([]DenomPair, 0, len(denoms))
 
 	for i := 0; i < len(denoms); i++ {
 		for j := i + 1; j < len(denoms); j++ {

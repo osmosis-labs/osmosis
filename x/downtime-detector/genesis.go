@@ -33,8 +33,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 }
 
 func (k *Keeper) getGenDowntimes(ctx sdk.Context) []types.GenesisDowntimeEntry {
-	downtimes := []types.GenesisDowntimeEntry{}
-	for _, downtime := range types.DowntimeToDuration.Keys() {
+	keys := types.DowntimeToDuration.Keys()
+	downtimes := make([]types.GenesisDowntimeEntry, 0, len(keys))
+	for _, downtime := range keys {
 		t, err := k.GetLastDowntimeOfLength(ctx, downtime)
 		if err != nil {
 			panic(err)

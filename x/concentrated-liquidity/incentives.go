@@ -47,7 +47,7 @@ func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 
 // getUptimeTrackerValues extracts the values of an array of uptime trackers
 func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {
-	trackerValues := []sdk.DecCoins{}
+	trackerValues := make([]sdk.DecCoins, 0, len(uptimeTrackers))
 	for _, uptimeTracker := range uptimeTrackers {
 		trackerValues = append(trackerValues, uptimeTracker.UptimeGrowthOutside)
 	}
@@ -79,7 +79,7 @@ func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 		return []sdk.DecCoins{}, err
 	}
 
-	uptimeValues := []sdk.DecCoins{}
+	uptimeValues := make([]sdk.DecCoins, 0, len(uptimeAccums))
 	for _, uptimeAccum := range uptimeAccums {
 		uptimeValues = append(uptimeValues, uptimeAccum.GetValue())
 	}
@@ -108,7 +108,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 	}
 
 	// If currentTick < tick, we return len(SupportedUptimes) empty DecCoins
-	emptyUptimeValues := []sdk.DecCoins{}
+	emptyUptimeValues := make([]sdk.DecCoins, 0, len(types.SupportedUptimes))
 	for range types.SupportedUptimes {
 		emptyUptimeValues = append(emptyUptimeValues, emptyCoins)
 	}

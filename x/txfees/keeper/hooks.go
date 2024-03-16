@@ -224,7 +224,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) sdk.Coin {
 	coinsToSwap := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
 	totalCoinOut := sdk.NewCoin(denomToSwapTo, osmomath.ZeroInt())
-	coinsNotSwapped := []string{}
+	coinsNotSwapped := make([]string, 0, len(coinsToSwap))
 
 	for _, coin := range coinsToSwap {
 		if coin.Denom == denomToSwapTo {

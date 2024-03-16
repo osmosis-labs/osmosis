@@ -97,7 +97,7 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 	gauges := k.ik.GetActiveGauges(ctx)
 
 	// only distribute to active gauges that are for perpetual synthetic denoms
-	distrGauges := []incentivestypes.Gauge{}
+	distrGauges := make([]incentivestypes.Gauge, 0, len(gauges))
 	for _, gauge := range gauges {
 		// we filter superfluid gauges by using the distributeTo denom in the gauge.
 		// If the denom in the gauge is a synthetic denom, we append the gauge to the gauge list to distribute to.

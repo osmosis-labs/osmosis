@@ -625,7 +625,7 @@ func swapAmountOutRoutes(fs *flag.FlagSet) ([]poolmanagertypes.SwapAmountOutRout
 		return nil, errors.New("swap route pool ids and denoms mismatch")
 	}
 
-	routes := []poolmanagertypes.SwapAmountOutRoute{}
+	routes := make([]poolmanagertypes.SwapAmountOutRoute, 0, len(swapRoutePoolIdsArray))
 	for index, poolIDStr := range swapRoutePoolIdsArray {
 		pID, err := strconv.Atoi(poolIDStr)
 		if err != nil {
@@ -722,7 +722,7 @@ func parseMigrationRecords(cmd *cobra.Command) ([]gammmigration.BalancerToConcen
 		return nil, errors.New("migration records should be a list of balancer pool id and concentrated pool id pairs")
 	}
 
-	replaceMigrations := []gammmigration.BalancerToConcentratedPoolLink{}
+	replaceMigrations := make([]gammmigration.BalancerToConcentratedPoolLink, 0, len(assets))
 	i := 0
 	for i < len(assets) {
 		balancerPoolId, err := strconv.Atoi(assets[i])
@@ -831,7 +831,7 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 		return nil, fmt.Errorf("poolRecordswithCFMMLink must be a list of denom0, denom1, tickSpacing, exponentAtPriceOne, spreadFactor and balancerPoolId")
 	}
 
-	finalPoolRecords := []types.PoolRecordWithCFMMLink{}
+	finalPoolRecords := make([]types.PoolRecordWithCFMMLink, 0, len(poolRecordsWithCFMMLink))
 	i := 0
 	for i < len(poolRecordsWithCFMMLink) {
 		denom0 := poolRecordsWithCFMMLink[i]

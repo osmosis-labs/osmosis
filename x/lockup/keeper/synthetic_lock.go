@@ -67,8 +67,8 @@ func (k Keeper) GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uin
 
 // GetAllSyntheticLockupsByAddr gets all the synthetic lockups from all the locks owned by the given address.
 func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []types.SyntheticLock {
-	synthLocks := []types.SyntheticLock{}
 	locks := k.GetAccountPeriodLocks(ctx, owner)
+	synthLocks := make([]types.SyntheticLock, 0, len(locks))
 	for _, lock := range locks {
 		synthLock, found, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 		if err != nil {

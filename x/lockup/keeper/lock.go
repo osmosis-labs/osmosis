@@ -615,7 +615,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
 	// We then save these once to the accumulation store at the end.
 	accumulationStoreEntries := make(map[string]map[time.Duration]osmomath.Int)
-	denoms := []string{}
+	denoms := make([]string, 0, len(locks))
 	for i, lock := range locks {
 		if i%25000 == 0 {
 			msg := fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID)
@@ -679,7 +679,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
 	// We then save these once to the accumulation store at the end.
 	accumulationStoreEntries := make(map[string]map[time.Duration]osmomath.Int)
-	denoms := []string{}
+	denoms := make([]string, 0, len(syntheticLocks))
 	for i, synthLock := range syntheticLocks {
 		if i%25000 == 0 {
 			msg := fmt.Sprintf("Reset %d synthetic lock refs", i)

@@ -287,7 +287,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []gammmigration.
 		recordsMap[record.BalancerPoolId] = record
 	}
 
-	newRecords := []gammmigration.BalancerToConcentratedPoolLink{}
+	newRecords := make([]gammmigration.BalancerToConcentratedPoolLink, 0, len(recordsMap))
 
 	// Iterate through the map and add all the records to a new list
 	// if the clPoolId is 0, we remove the entire record

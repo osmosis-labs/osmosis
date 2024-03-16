@@ -35,7 +35,7 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	}
 
 	totalWeight := osmomath.ZeroDec()
-	validatorAddrs := []string{}
+	validatorAddrs := make([]string, 0, len(m.Preferences))
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
 		if err != nil {
@@ -221,7 +221,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	}
 
 	totalWeight := osmomath.NewDec(0)
-	validatorAddrs := []string{}
+	validatorAddrs := make([]string, 0, len(m.Preferences))
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
 		if err != nil {

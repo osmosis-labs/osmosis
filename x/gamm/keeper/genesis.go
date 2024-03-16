@@ -16,7 +16,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 
 	// Sums up the liquidity in all genesis state pools to find the total liquidity across all pools.
 	// Also adds each genesis state pool to the x/gamm module's state
-	liquidity := sdk.Coins{}
+	liquidity := make(sdk.Coins, 0, len(genState.Pools)*5)
 	for _, any := range genState.Pools {
 		var pool types.CFMMPoolI
 		err := unpacker.UnpackAny(any, &pool)
@@ -53,7 +53,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
-	poolAnys := []*codectypes.Any{}
+	poolAnys := make([]*codectypes.Any, 0, len(pools))
 	for _, poolI := range pools {
 		any, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {

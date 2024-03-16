@@ -150,7 +150,7 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 	minimalDuration := time.Millisecond
 	unpoolLocks := server.keeper.lk.GetAccountLockedLongerDurationDenom(ctx, sender, lpShareDenom, minimalDuration)
 
-	allExitedLockIDs := []uint64{}
+	allExitedLockIDs := make([]uint64, 0, len(unpoolLocks))
 	for _, lock := range unpoolLocks {
 		exitedLockIDs, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, lock.ID)
 		if err != nil {

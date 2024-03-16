@@ -54,7 +54,7 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 
 func (k Keeper) GetIntermediaryAccountsForVal(ctx sdk.Context, valAddr sdk.ValAddress) []types.SuperfluidIntermediaryAccount {
 	accs := k.GetAllIntermediaryAccounts(ctx)
-	valAccs := []types.SuperfluidIntermediaryAccount{}
+	valAccs := make([]types.SuperfluidIntermediaryAccount, 0, len(accs))
 	for _, acc := range accs {
 		if acc.ValAddr != valAddr.String() { // only apply for slashed validator
 			continue

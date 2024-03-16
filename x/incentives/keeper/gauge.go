@@ -289,7 +289,7 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 
 // GetGaugeFromIDs returns multiple gauges from a gaugeIDs array.
 func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gauge, error) {
-	gauges := []types.Gauge{}
+	gauges := make([]types.Gauge, 0, len(gaugeIDs))
 	for _, gaugeID := range gaugeIDs {
 		gauge, err := k.GetGaugeByID(ctx, gaugeID)
 		if err != nil {
@@ -341,7 +341,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 			denomSet[c.Denom] = true
 		}
 	}
-	gauges := []types.Gauge{}
+	gauges := make([]types.Gauge, 0, len(denomSet))
 	// initialize gauges to active and upcomings if not set
 	for s := range denomSet {
 		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)

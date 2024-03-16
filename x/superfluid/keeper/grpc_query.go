@@ -496,7 +496,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 
 	var intermediaryAccount types.SuperfluidIntermediaryAccount
 
-	delegationsByValidator := []types.Delegations{}
+	delegationsByValidator := make([]types.Delegations, 0, len(intermediaryAccounts))
 	intermediaryAccounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
 	for _, intermediaryAccount = range intermediaryAccounts {
 		if intermediaryAccount.Denom != req.Denom {

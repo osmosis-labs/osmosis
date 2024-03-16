@@ -251,7 +251,7 @@ func parsePoolIdToTickSpacingRecords(cmd *cobra.Command) ([]types.PoolIdToTickSp
 		return nil, fmt.Errorf("poolIdToTickSpacingRecords must be a list of pairs of poolId and newTickSpacing")
 	}
 
-	poolIdToTickSpacingRecords := []types.PoolIdToTickSpacingRecord{}
+	poolIdToTickSpacingRecords := make([]types.PoolIdToTickSpacingRecord, 0, len(assets))
 	i := 0
 	for i < len(assets) {
 		poolId, err := strconv.Atoi(assets[i])
@@ -287,7 +287,7 @@ func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
 		return nil, fmt.Errorf("poolRecords must be a list of denom0, denom1, tickSpacing, and spreadFactor")
 	}
 
-	finalPoolRecords := []types.PoolRecord{}
+	finalPoolRecords := make([]types.PoolRecord, 0, len(poolRecords))
 	i := 0
 	for i < len(poolRecords) {
 		denom0 := poolRecords[i]
