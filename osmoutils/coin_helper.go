@@ -14,9 +14,9 @@ func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoi
 		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be subtracted")
 	}
 
-	finalDecCoinArray := []sdk.DecCoins{}
+	finalDecCoinArray := make([]sdk.DecCoins, len(decCoinsArrayA))
 	for i := range decCoinsArrayA {
-		finalDecCoinArray = append(finalDecCoinArray, decCoinsArrayA[i].Sub(decCoinsArrayB[i]))
+		finalDecCoinArray[i] = decCoinsArrayA[i].Sub(decCoinsArrayB[i])
 	}
 
 	return finalDecCoinArray, nil
@@ -30,10 +30,10 @@ func SafeSubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.De
 		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be subtracted")
 	}
 
-	finalDecCoinArray := []sdk.DecCoins{}
+	finalDecCoinArray := make([]sdk.DecCoins, len(decCoinsArrayA))
 	for i := range decCoinsArrayA {
 		subResult, _ := decCoinsArrayA[i].SafeSub(decCoinsArrayB[i])
-		finalDecCoinArray = append(finalDecCoinArray, subResult)
+		finalDecCoinArray[i] = subResult
 	}
 
 	return finalDecCoinArray, nil
