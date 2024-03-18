@@ -2,6 +2,9 @@ package osmomath
 
 import (
 	"fmt"
+	"math/big"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 // Don't EVER change after initializing
@@ -202,4 +205,83 @@ func OrderOfMagnitude(num Dec) int {
 	}
 
 	return order
+}
+
+var legacyPrecisionReuse = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdkmath.LegacyPrecision), nil)
+var legacyDecPrecisions = []*big.Int{nil}
+
+func init() {
+	for i := 0; i < 5; i++ {
+		cur := new(big.Int).Exp(legacyPrecisionReuse, big.NewInt(int64(i+1)), nil)
+		legacyDecPrecisions = append(legacyDecPrecisions, cur)
+	}
+}
+
+// LegacyMultiMulMut does the equivalent of base * exps[0] * exps[1] * ... * exps[n]
+// while mutating base.
+//
+// Right now this is done via enlarging the base, and doing a single "chop precision and round" for the batch.
+// Ideally in the future we do something smarter that intelligently figures out when to chop precision and round
+// based on the magnitudes/growth of the intermediate result.
+func LegacyMultiMulMut(base Dec, exps ...Dec) Dec {
+	resultBi := base.BigIntMut()
+	for i, exp := range exps {
+		resultBi.Mul(resultBi, exp.BigIntMut())
+		if (i+1)%5 == 0 {
+			resultBi = chopPrecisionAndRoundCopy(resultBi, legacyDecPrecisions[5])
+		}
+	}
+	// Final batch handling for cases where the total number of exps is not a multiple of 5
+	if len(exps)%5 != 0 {
+		finalBatchSize := len(exps) % 5
+		resultBi = chopPrecisionAndRoundCopy(resultBi, legacyDecPrecisions[finalBatchSize])
+	}
+	return base
+}
+
+//     ____
+//  __|    |__   "chop 'em
+//       ` \     round!"
+// ___||  ~  _     -bankers
+// |         |      __
+// |       | |   __|__|__
+// |_____:  /   | $$$    |
+//              |________|
+
+// Remove a Precision amount of rightmost digits and perform bankers rounding
+// on the remainder (gaussian rounding) on the digits which have been removed.
+//
+// Mutates the input. Use the non-mutative version if that is undesired
+//
+// This is a copy from the SDK
+func chopPrecisionAndRoundCopy(d *big.Int, precisionReuse *big.Int) *big.Int {
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		d = chopPrecisionAndRound(d)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo, rem := d, big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+
+	if rem.Sign() == 0 { // remainder is zero
+		return quo
+	}
+
+	switch rem.Cmp(fivePrecision) {
+	case -1:
+		return quo
+	case 1:
+		return quo.Add(quo, oneInt)
+	default: // bankers rounding must take place
+		// always round to an even number
+		if quo.Bit(0) == 0 {
+			return quo
+		}
+		return quo.Add(quo, oneInt)
+	}
 }
