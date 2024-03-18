@@ -151,7 +151,7 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 		c, cneg := AbsDifferenceWithSign(a, bigK)
 		// On this line, bigK == i.
 		bigK.SetInt64(i)
-		term.MulMut(c).MulMut(x).QuoInt64Mut(i)
+		LegacyMultiMulMut(term, c, x).QuoInt64Mut(i)
 
 		// a is mutated on absDifferenceWithSign, reset
 		a.Set(exp)
@@ -207,13 +207,14 @@ func OrderOfMagnitude(num Dec) int {
 	return order
 }
 
-var legacyPrecisionReuse = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdkmath.LegacyPrecision), nil)
-var legacyDecPrecisions = []*big.Int{nil}
+var legacyPrecisionOf5sReuse = new(big.Int).Exp(big.NewInt(5), big.NewInt(sdkmath.LegacyPrecision), nil)
+var twoFactorsToRemovePerStep = uint(sdkmath.LegacyPrecision) - 1
+var divisorsNoPowersOfTwo = []*big.Int{nil}
 
 func init() {
 	for i := 0; i < 5; i++ {
-		cur := new(big.Int).Exp(legacyPrecisionReuse, big.NewInt(int64(i+1)), nil)
-		legacyDecPrecisions = append(legacyDecPrecisions, cur)
+		cur := new(big.Int).Exp(legacyPrecisionOf5sReuse, big.NewInt(int64(i+1)), nil)
+		divisorsNoPowersOfTwo = append(divisorsNoPowersOfTwo, cur)
 	}
 }
 
@@ -227,61 +228,40 @@ func LegacyMultiMulMut(base Dec, exps ...Dec) Dec {
 	resultBi := base.BigIntMut()
 	for i, exp := range exps {
 		resultBi.Mul(resultBi, exp.BigIntMut())
+		resultBi.Rsh(resultBi, twoFactorsToRemovePerStep)
 		if (i+1)%5 == 0 {
-			resultBi = chopPrecisionAndRoundCopy(resultBi, legacyDecPrecisions[5])
+			resultBi.Rsh(resultBi, 4)
+			resultBi = chopPrecisionUsingParity(resultBi, divisorsNoPowersOfTwo[5])
 		}
 	}
 	// Final batch handling for cases where the total number of exps is not a multiple of 5
 	if len(exps)%5 != 0 {
 		finalBatchSize := len(exps) % 5
-		resultBi = chopPrecisionAndRoundCopy(resultBi, legacyDecPrecisions[finalBatchSize])
+		resultBi.Rsh(resultBi, uint(finalBatchSize-1))
+		resultBi = chopPrecisionUsingParity(resultBi, divisorsNoPowersOfTwo[finalBatchSize])
 	}
 	return base
 }
 
-//     ____
-//  __|    |__   "chop 'em
-//       ` \     round!"
-// ___||  ~  _     -bankers
-// |         |      __
-// |       | |   __|__|__
-// |_____:  /   | $$$    |
-//              |________|
-
-// Remove a Precision amount of rightmost digits and perform bankers rounding
-// on the remainder (gaussian rounding) on the digits which have been removed.
-//
-// Mutates the input. Use the non-mutative version if that is undesired
-//
-// This is a copy from the SDK
-func chopPrecisionAndRoundCopy(d *big.Int, precisionReuse *big.Int) *big.Int {
+// Divides by 2*precision. It rounds based on the direction of dividing by precision.
+func chopPrecisionUsingParity(d *big.Int, precisionReuse *big.Int) *big.Int {
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
-		d = chopPrecisionAndRound(d)
+		d = chopPrecisionUsingParity(d, precisionReuse)
 		d = d.Neg(d)
 		return d
 	}
 
 	// get the truncated quotient and remainder
-	quo, rem := d, big.NewInt(0)
-	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+	quo := d
+	quo = quo.Quo(d, precisionReuse)
+	roundDir := quo.Bit(0)
+	quo = quo.Rsh(quo, 1)
 
-	if rem.Sign() == 0 { // remainder is zero
-		return quo
-	}
-
-	switch rem.Cmp(fivePrecision) {
-	case -1:
-		return quo
-	case 1:
-		return quo.Add(quo, oneInt)
-	default: // bankers rounding must take place
-		// always round to an even number
-		if quo.Bit(0) == 0 {
-			return quo
-		}
+	if roundDir == 1 {
 		return quo.Add(quo, oneInt)
 	}
+	return quo
 }
