@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -2279,6 +2280,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 		positionsToTransfer  []uint64
 		setupUnownedPosition bool
 		isLastPositionInPool bool
+		isGovAddress         bool
 
 		expectedError error
 	}{
@@ -2313,6 +2315,13 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			inRangePositions:    []uint64{DefaultPositionId},
 			outOfRangePositions: []uint64{DefaultPositionId + 1, DefaultPositionId + 2},
 			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 2},
+		},
+		"three position IDs, not an owner of one of them but caller is gov address": {
+			inRangePositions:     []uint64{DefaultPositionId, DefaultPositionId + 1},
+			outOfRangePositions:  []uint64{DefaultPositionId + 2},
+			positionsToTransfer:  []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			setupUnownedPosition: true,
+			isGovAddress:         true,
 		},
 		"error: two position IDs, second ID does not exist": {
 			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
@@ -2387,8 +2396,13 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			// Account funds of new owner
 			preTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
 
+			transferCaller := oldOwner
+			if tc.isGovAddress {
+				transferCaller = s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+			}
+
 			// System under test
-			err = s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, tc.positionsToTransfer, oldOwner, newOwner)
+			err = s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, tc.positionsToTransfer, transferCaller, newOwner)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
