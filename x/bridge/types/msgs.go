@@ -41,7 +41,7 @@ func (m MsgInboundTransfer) ValidateBasic() error {
 
 	// check if amount > 0
 	if !m.Amount.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "Amount should be positive: %s", m.Amount.String())
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func (m MsgOutboundTransfer) ValidateBasic() error {
 
 	// check if amount > 0
 	if !m.Amount.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "Amount should be positive: %s", m.Amount.String())
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (m MsgChangeAssetStatus) ValidateBasic() error {
 
 	err = m.NewStatus.Validate()
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 	return nil
 }

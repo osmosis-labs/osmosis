@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
@@ -14,19 +14,6 @@ import (
 
 // Test authz serialize and de-serializes for bridge msg.
 func TestAuthzMsg(t *testing.T) {
-	var (
-		pk1     = ed25519.GenPrivKey().PubKey()
-		pk2     = ed25519.GenPrivKey().PubKey()
-		addr1   = sdk.AccAddress(pk1.Address()).String()
-		addr2   = sdk.AccAddress(pk2.Address()).String()
-		assetID = types.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		}
-	)
-	asset := types.DefaultAssets()[0]
-	asset.Id = assetID
-
 	testCases := []struct {
 		name string
 		msg  sdk.Msg
@@ -36,7 +23,7 @@ func TestAuthzMsg(t *testing.T) {
 			msg: &types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 		},
@@ -45,7 +32,7 @@ func TestAuthzMsg(t *testing.T) {
 			msg: &types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 		},
@@ -55,7 +42,7 @@ func TestAuthzMsg(t *testing.T) {
 				Sender: addr1,
 				NewParams: types.Params{
 					Signers: []string{"s1", "s2", "s3"},
-					Assets:  []types.Asset{asset},
+					Assets:  []types.Asset{asset1},
 				},
 			},
 		},
@@ -63,7 +50,7 @@ func TestAuthzMsg(t *testing.T) {
 			name: "MsgChangeAssetStatus",
 			msg: &types.MsgChangeAssetStatus{
 				Sender:    addr1,
-				AssetId:   assetID,
+				AssetId:   assetID1,
 				NewStatus: types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
 			},
 		},
@@ -79,83 +66,66 @@ func TestAuthzMsg(t *testing.T) {
 // TestMsgInboundTransfer tests if MsgInboundTransfer messages are properly validated
 // and contain proper signers.
 func TestMsgInboundTransfer(t *testing.T) {
-	var (
-		pk1        = ed25519.GenPrivKey().PubKey()
-		addr1Bytes = sdk.AccAddress(pk1.Address())
-		addr1      = addr1Bytes.String()
-
-		pk2        = ed25519.GenPrivKey().PubKey()
-		addr2Bytes = sdk.AccAddress(pk2.Address())
-		addr2      = addr2Bytes.String()
-
-		assetID = types.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		}
-	)
-	asset := types.DefaultAssets()[0]
-	asset.Id = assetID
-
 	var testCases = []struct {
 		name            string
 		msg             types.MsgInboundTransfer
 		expectedSigners []sdk.AccAddress
-		expectedValid   bool
+		expectedErr     error
 	}{
 		{
 			name: "valid",
 			msg: types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   true,
+			expectedErr:     nil,
 		},
 		{
 			name: "empty sender",
 			msg: types.MsgInboundTransfer{
 				Sender:   "",
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid sender",
 			msg: types.MsgInboundTransfer{
 				Sender:   "qwerty",
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{nil},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "empty destination addr",
 			msg: types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: "",
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid destination addr",
 			msg: types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: "qwerty",
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid asset id",
@@ -169,29 +139,29 @@ func TestMsgInboundTransfer(t *testing.T) {
 				Amount: math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidAssetID,
 		},
 		{
 			name: "zero amount",
 			msg: types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(0),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "negative amount",
 			msg: types.MsgInboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(-100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidCoins,
 		},
 	}
 
@@ -199,11 +169,8 @@ func TestMsgInboundTransfer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			require.ElementsMatch(t, tc.msg.GetSigners(), tc.expectedSigners, "test: %v", tc.name)
 
-			if tc.expectedValid {
-				require.NoError(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			} else {
-				require.Error(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			}
+			err := tc.msg.ValidateBasic()
+			require.ErrorIsf(t, err, tc.expectedErr, "test: %v", tc.name)
 		})
 	}
 }
@@ -211,83 +178,66 @@ func TestMsgInboundTransfer(t *testing.T) {
 // TestMsgOutboundTransfer tests if MsgOutboundTransfer messages are properly validated
 // and contain proper signers.
 func TestMsgOutboundTransfer(t *testing.T) {
-	var (
-		pk1        = ed25519.GenPrivKey().PubKey()
-		addr1Bytes = sdk.AccAddress(pk1.Address())
-		addr1      = addr1Bytes.String()
-
-		pk2        = ed25519.GenPrivKey().PubKey()
-		addr2Bytes = sdk.AccAddress(pk2.Address())
-		addr2      = addr2Bytes.String()
-
-		assetID = types.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		}
-	)
-	asset := types.DefaultAssets()[0]
-	asset.Id = assetID
-
 	var testCases = []struct {
 		name            string
 		msg             types.MsgOutboundTransfer
 		expectedSigners []sdk.AccAddress
-		expectedValid   bool
+		expectedErr     error
 	}{
 		{
 			name: "valid",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   true,
+			expectedErr:     nil,
 		},
 		{
 			name: "empty sender",
 			msg: types.MsgOutboundTransfer{
 				Sender:   "",
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid sender",
 			msg: types.MsgOutboundTransfer{
 				Sender:   "qwerty",
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{nil},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "empty destination addr",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: "",
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid destination addr",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: "qwerty",
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "empty asset id",
@@ -301,29 +251,29 @@ func TestMsgOutboundTransfer(t *testing.T) {
 				Amount: math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidAssetID,
 		},
 		{
 			name: "zero amount",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(0),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "negative amount",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,
 				DestAddr: addr2,
-				AssetId:  assetID,
+				AssetId:  assetID1,
 				Amount:   math.NewInt(-100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidCoins,
 		},
 	}
 
@@ -331,11 +281,8 @@ func TestMsgOutboundTransfer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			require.ElementsMatch(t, tc.msg.GetSigners(), tc.expectedSigners, "test: %v", tc.name)
 
-			if tc.expectedValid {
-				require.NoError(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			} else {
-				require.Error(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			}
+			err := tc.msg.ValidateBasic()
+			require.ErrorIsf(t, err, tc.expectedErr, "test: %v", tc.name)
 		})
 	}
 }
@@ -343,36 +290,11 @@ func TestMsgOutboundTransfer(t *testing.T) {
 // TestMsgUpdateParams tests if MsgUpdateParams messages are properly validated
 // and contain proper signers.
 func TestMsgUpdateParams(t *testing.T) {
-	var (
-		pk1        = ed25519.GenPrivKey().PubKey()
-		addr1Bytes = sdk.AccAddress(pk1.Address())
-		addr1      = addr1Bytes.String()
-
-		pk2        = ed25519.GenPrivKey().PubKey()
-		addr2Bytes = sdk.AccAddress(pk2.Address())
-		addr2      = addr2Bytes.String()
-
-		assetID1 = types.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc1",
-		}
-		assetID2 = types.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc2",
-		}
-	)
-	asset1 := types.DefaultAssets()[0]
-	asset1.Id = assetID1
-
-	asset2 := types.DefaultAssets()[0]
-	asset2.Id = assetID2
-
-	// don't check the invalid asset case here since it is already tested in a different case
 	var testCases = []struct {
 		name            string
 		msg             types.MsgUpdateParams
 		expectedSigners []sdk.AccAddress
-		expectedValid   bool
+		expectedErr     error
 	}{
 		{
 			name: "valid",
@@ -386,7 +308,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   true,
+			expectedErr:     nil,
 		},
 		{
 			name: "empty sender",
@@ -400,7 +322,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid sender",
@@ -414,7 +336,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{nil},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "empty signers are valid",
@@ -428,7 +350,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   true,
+			expectedErr:     nil,
 		},
 		{
 			name: "invalid signer",
@@ -442,7 +364,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidParams,
 		},
 		{
 			name: "duplicated signers",
@@ -456,7 +378,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidParams,
 		},
 		{
 			name: "empty assets",
@@ -470,7 +392,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidParams,
 		},
 		{
 			name: "invalid asset",
@@ -488,7 +410,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidParams,
 		},
 		{
 			name: "duplicated assets",
@@ -502,7 +424,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidParams,
 		},
 	}
 
@@ -510,11 +432,8 @@ func TestMsgUpdateParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			require.ElementsMatch(t, tc.msg.GetSigners(), tc.expectedSigners, "test: %v", tc.name)
 
-			if tc.expectedValid {
-				require.NoError(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			} else {
-				require.Error(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			}
+			err := tc.msg.ValidateBasic()
+			require.ErrorIsf(t, err, tc.expectedErr, "test: %v", tc.name)
 		})
 	}
 }
@@ -522,55 +441,41 @@ func TestMsgUpdateParams(t *testing.T) {
 // TestMsgChangeAssetStatus tests if MsgChangeAssetStatus messages are properly validated
 // and contain proper signers.
 func TestMsgChangeAssetStatus(t *testing.T) {
-	var (
-		pk1        = ed25519.GenPrivKey().PubKey()
-		addr1Bytes = sdk.AccAddress(pk1.Address())
-		addr1      = addr1Bytes.String()
-
-		assetID = types.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		}
-	)
-	asset := types.DefaultAssets()[0]
-	asset.Id = assetID
-
-	// don't check the invalid asset case here since it is already tested in a different case
 	var testCases = []struct {
 		name            string
 		msg             types.MsgChangeAssetStatus
 		expectedSigners []sdk.AccAddress
-		expectedValid   bool
+		expectedErr     error
 	}{
 		{
 			name: "valid",
 			msg: types.MsgChangeAssetStatus{
 				Sender:    addr1,
-				AssetId:   assetID,
+				AssetId:   assetID1,
 				NewStatus: types.AssetStatus_ASSET_STATUS_OK,
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   true,
+			expectedErr:     nil,
 		},
 		{
 			name: "empty sender",
 			msg: types.MsgChangeAssetStatus{
 				Sender:    "",
-				AssetId:   assetID,
+				AssetId:   assetID1,
 				NewStatus: types.AssetStatus_ASSET_STATUS_OK,
 			},
 			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid sender",
 			msg: types.MsgChangeAssetStatus{
 				Sender:    "qwerty",
-				AssetId:   assetID,
+				AssetId:   assetID1,
 				NewStatus: types.AssetStatus_ASSET_STATUS_OK,
 			},
 			expectedSigners: []sdk.AccAddress{nil},
-			expectedValid:   false,
+			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid asset id",
@@ -583,27 +488,27 @@ func TestMsgChangeAssetStatus(t *testing.T) {
 				NewStatus: 10,
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidAssetID,
 		},
 		{
 			name: "invalid asset status",
 			msg: types.MsgChangeAssetStatus{
 				Sender:    addr1,
-				AssetId:   assetID,
+				AssetId:   assetID1,
 				NewStatus: 10,
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidAssetStatus,
 		},
 		{
 			name: "unspecified asset status",
 			msg: types.MsgChangeAssetStatus{
 				Sender:    addr1,
-				AssetId:   assetID,
+				AssetId:   assetID1,
 				NewStatus: types.AssetStatus_ASSET_STATUS_UNSPECIFIED,
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedValid:   false,
+			expectedErr:     types.ErrInvalidAssetStatus,
 		},
 	}
 
@@ -611,11 +516,8 @@ func TestMsgChangeAssetStatus(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			require.ElementsMatch(t, tc.msg.GetSigners(), tc.expectedSigners, "test: %v", tc.name)
 
-			if tc.expectedValid {
-				require.NoError(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			} else {
-				require.Error(t, tc.msg.ValidateBasic(), "test: %v", tc.name)
-			}
+			err := tc.msg.ValidateBasic()
+			require.ErrorIsf(t, err, tc.expectedErr, "test: %v", tc.name)
 		})
 	}
 }

@@ -61,7 +61,7 @@ func (p Params) Validate() error {
 	for _, asset := range p.Assets {
 		err := asset.Validate()
 		if err != nil {
-			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+			return errorsmod.Wrapf(ErrInvalidAssets, err.Error())
 		}
 	}
 	// check if p.Assets contains duplicated assets by ID
@@ -71,7 +71,7 @@ func (p Params) Validate() error {
 	}
 
 	if p.Fee.IsNegative() || p.Fee.GT(math.LegacyOneDec()) {
-		return errorsmod.Wrapf(ErrInvalidAsset, "Fee should be between 0 and 1")
+		return errorsmod.Wrapf(ErrInvalidFee, "Fee should be between 0 and 1")
 	}
 
 	// don't p.VotesNeeded since it's always valid
@@ -115,6 +115,9 @@ func validateSigners(i interface{}) error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid signer address (%s)", err)
 		}
 	}
+	if osmoutils.ContainsDuplicate(signers) {
+		return errorsmod.Wrapf(ErrInvalidSigners, "Signers are duplicated")
+	}
 
 	return nil
 }
@@ -128,8 +131,13 @@ func validateAssets(i interface{}) error {
 	for _, asset := range assets {
 		err := asset.Validate()
 		if err != nil {
-			return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+			return errorsmod.Wrapf(ErrInvalidAssets, err.Error())
 		}
+	}
+	// check if p.Assets contains duplicated assets by ID
+	assetIDs := Map(assets, func(v Asset) AssetID { return v.Id })
+	if osmoutils.ContainsDuplicate(assetIDs) {
+		return errorsmod.Wrapf(ErrInvalidAssets, "Assets are duplicated")
 	}
 
 	return nil
@@ -150,7 +158,7 @@ func validateFee(i interface{}) error {
 	}
 
 	if fee.IsNegative() || fee.GT(math.LegacyOneDec()) {
-		return errorsmod.Wrapf(ErrInvalidAsset, "Fee should be between 0 and 1")
+		return errorsmod.Wrapf(ErrInvalidFee, "Fee should be between 0 and 1")
 	}
 
 	return nil

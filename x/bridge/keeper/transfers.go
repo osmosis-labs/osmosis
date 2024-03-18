@@ -17,12 +17,12 @@ func (k Keeper) InboundTransfer(
 ) error {
 	params := k.GetParams(ctx)
 
-	assetWithStatus, ok := params.GetAsset(assetID)
+	asset, ok := params.GetAsset(assetID)
 	if !ok {
-		return errorsmod.Wrapf(types.ErrInvalidAsset, "Asset not found %s", assetID.Name())
+		return errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
 
-	if !assetWithStatus.Status.InboundActive() {
+	if !asset.Status.InboundActive() {
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Inbound transfers are disabled for this asset")
 	}
 
@@ -61,12 +61,12 @@ func (k Keeper) OutboundTransfer(
 ) error {
 	params := k.GetParams(ctx)
 
-	assetWithStatus, ok := params.GetAsset(assetID)
+	asset, ok := params.GetAsset(assetID)
 	if !ok {
-		return errorsmod.Wrapf(types.ErrInvalidAsset, "Asset not found %s", assetID.Name())
+		return errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
 
-	if !assetWithStatus.Status.OutboundActive() {
+	if !asset.Status.OutboundActive() {
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Outbound transfers are disabled for this asset")
 	}
 

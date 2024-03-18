@@ -31,7 +31,7 @@ func (k Keeper) ChangeAssetStatus(
 		return v.Id == assetID
 	})
 	if assetIdx == notFoundIdx {
-		return ChangeAssetStatusResult{}, errorsmod.Wrapf(types.ErrInvalidAsset, "Asset not found")
+		return ChangeAssetStatusResult{}, errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found")
 	}
 
 	// update assetIdx asset status

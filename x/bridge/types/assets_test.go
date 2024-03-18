@@ -11,14 +11,14 @@ import (
 // TestAsset tests if Asset is properly validated.
 func TestAsset(t *testing.T) {
 	testCases := []struct {
-		name          string
-		asset         types.Asset
-		expectedValid bool
+		name        string
+		asset       types.Asset
+		expectedErr error
 	}{
 		{
-			name:          "default is valid",
-			asset:         types.DefaultAssets()[0],
-			expectedValid: true,
+			name:        "default is valid",
+			asset:       types.DefaultAssets()[0],
+			expectedErr: nil,
 		},
 		{
 			name: "empty source chain",
@@ -30,7 +30,7 @@ func TestAsset(t *testing.T) {
 				Status:   types.AssetStatus_ASSET_STATUS_OK,
 				Exponent: types.DefaultBitcoinExponent,
 			},
-			expectedValid: false,
+			expectedErr: types.ErrInvalidAssetID,
 		},
 		{
 			name: "empty denom",
@@ -42,7 +42,7 @@ func TestAsset(t *testing.T) {
 				Status:   types.AssetStatus_ASSET_STATUS_OK,
 				Exponent: types.DefaultBitcoinExponent,
 			},
-			expectedValid: false,
+			expectedErr: types.ErrInvalidAssetID,
 		},
 		{
 			name: "invalid status",
@@ -54,7 +54,7 @@ func TestAsset(t *testing.T) {
 				Status:   types.AssetStatus_ASSET_STATUS_UNSPECIFIED,
 				Exponent: types.DefaultBitcoinExponent,
 			},
-			expectedValid: false,
+			expectedErr: types.ErrInvalidAssetStatus,
 		},
 		{
 			name: "unknown status",
@@ -66,18 +66,14 @@ func TestAsset(t *testing.T) {
 				Status:   999,
 				Exponent: types.DefaultBitcoinExponent,
 			},
-			expectedValid: false,
+			expectedErr: types.ErrInvalidAssetStatus,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.asset.Validate()
-			if tc.expectedValid {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-			}
+			require.ErrorIsf(t, err, tc.expectedErr, "test: %v", tc.name)
 		})
 	}
 }
