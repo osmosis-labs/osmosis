@@ -81,6 +81,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v23/wasmbinding"
+	bridgekeeper "github.com/osmosis-labs/osmosis/v23/x/bridge/keeper"
+	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v23/x/gamm/keeper"
@@ -165,6 +167,7 @@ type AppKeepers struct {
 	WasmKeeper                   *wasmkeeper.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
+	BridgeKeeper                 *bridgekeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
@@ -499,6 +502,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
+	bridgeKeeper := bridgekeeper.NewKeeper(
+		appKeepers.keys[bridgetypes.StoreKey],
+		appCodec,
+		appKeepers.GetSubspace(bridgetypes.ModuleName),
+		bApp.MsgServiceRouter(),
+		appKeepers.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	appKeepers.BridgeKeeper = &bridgeKeeper
+
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],
 		appKeepers.GetSubspace(valsetpreftypes.ModuleName),
@@ -745,6 +758,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(bridgetypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
@@ -868,6 +882,7 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasmtypes.StoreKey,
 		tokenfactorytypes.StoreKey,
+		bridgetypes.StoreKey,
 		valsetpreftypes.StoreKey,
 		protorevtypes.StoreKey,
 		ibchookstypes.StoreKey,

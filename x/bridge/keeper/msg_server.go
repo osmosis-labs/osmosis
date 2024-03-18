@@ -101,7 +101,7 @@ func (m msgServer) UpdateParams(
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.Sender != m.k.govModuleAddr {
+	if msg.Sender != m.k.authority {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Only the gov module can update params")
 	}
 

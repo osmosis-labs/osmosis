@@ -23,9 +23,9 @@ type Keeper struct {
 	router *baseapp.MsgServiceRouter
 	// accountKeeper helps get the module's address
 	accountKeeper types.AccountKeeper
-	// govModuleAddr is used in UpdateParams method since it is
+	// authority is used in UpdateParams method. It is
 	// the only addr that can update bridge module params
-	govModuleAddr string
+	authority string
 }
 
 // NewKeeper returns a new instance of the x/bridge keeper.
@@ -35,11 +35,15 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	router *baseapp.MsgServiceRouter,
 	accountKeeper types.AccountKeeper,
-	govModuleAddr string,
+	authority string,
 ) Keeper {
 	// ensure bridge module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the bridge module account has not been set")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Errorf("invalid bridge authority address: %w", err))
 	}
 
 	if !paramSpace.HasKeyTable() {
@@ -52,7 +56,7 @@ func NewKeeper(
 		paramSpace:    paramSpace,
 		router:        router,
 		accountKeeper: accountKeeper,
-		govModuleAddr: govModuleAddr,
+		authority:     authority,
 	}
 }
 
