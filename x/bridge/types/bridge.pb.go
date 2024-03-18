@@ -65,7 +65,7 @@ type Params struct {
 	// Assets is a list used to create tokenfactory denoms
 	// for corresponding trading pairs
 	Assets []Asset `protobuf:"bytes,2,rep,name=assets,proto3" json:"assets" yaml:"assets"`
-	// VotedNeeded marks how many signers out of the list of signers need
+	// VotesNeeded marks how many signers out of the list of signers need
 	// to sign until a tx can be considered finalized
 	VotesNeeded uint64 `protobuf:"varint,3,opt,name=votes_needed,json=votesNeeded,proto3" json:"votes_needed,omitempty" yaml:"votes_needed"`
 	// Fee defines a param for fee that go towards the validator set
@@ -128,8 +128,8 @@ func (m *Params) GetVotesNeeded() uint64 {
 	return 0
 }
 
-// AssetID defines a pair of the source chain name and its Osmosis representation
-// denoted by denom. AssetID is a primary key for Asset.
+// AssetID defines a pair of the source chain name and its Osmosis
+// representation denoted by denom. AssetID is a primary key for Asset.
 type AssetID struct {
 	// SourceChain is a source chain name
 	SourceChain string `protobuf:"bytes,1,opt,name=source_chain,json=sourceChain,proto3" json:"source_chain,omitempty" yaml:"source_chain"`

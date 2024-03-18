@@ -28,8 +28,8 @@ message Params {
   ];
 }
 
-// AssetID defines a pair of the source chain name and its Osmosis representation
-// denoted by denom. AssetID is a primary key for Asset.
+// AssetID defines a pair of the source chain name and its Osmosis
+// representation denoted by denom. AssetID is a primary key for Asset.
 message AssetID {
   // SourceChain is a source chain name
   string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
