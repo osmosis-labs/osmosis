@@ -68,6 +68,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v23/x/bridge"
+	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
@@ -129,6 +131,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.TakerFeeCollectorName:        nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	bridgetypes.ModuleName:                   nil,
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
@@ -190,6 +193,7 @@ func appModules(
 			app.ConcentratedLiquidityKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		bridge.NewAppModule(*app.BridgeKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
@@ -246,6 +250,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
+	// NOTE: Bridge module must occue after tokenfactory so that it can create all
+	// denoms available for bridging.
 	return []string{
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -274,6 +280,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		bridgetypes.ModuleName,
 		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
