@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
 * [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
 * [#7747](https://github.com/osmosis-labs/osmosis/pull/7747) Remove redundant call to incentive collection in CL position withdrawal logic
+* [#7768](https://github.com/osmosis-labs/osmosis/pull/7768) Allow governance module account to transfer any CL position
 
 ## v23.0.7-iavl-v1
 
