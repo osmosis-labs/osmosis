@@ -1,6 +1,8 @@
 package types
 
-import "cosmossdk.io/math"
+import (
+	"cosmossdk.io/math"
+)
 
 func NewInboundTransfer(
 	externalID string,
