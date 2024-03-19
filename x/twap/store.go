@@ -19,6 +19,8 @@ import (
 // not too small where it would take all the way to the next epoch.
 var NumRecordsToPrunePerBlock uint16 = 200
 
+var PruneLimitPerBlock uint16 = 200
+
 type timeTooOldError struct {
 	Time time.Time
 }
@@ -268,13 +270,11 @@ func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
 	defer iter.Close()
 
-	pruneLimitPerBlock := 200
-
-	iterationCounter := 0
+	iterationCounter := uint16(0)
 	for iter.Valid() {
 		store.Delete(iter.Key())
 		iterationCounter++
-		if iterationCounter >= pruneLimitPerBlock {
+		if iterationCounter >= PruneLimitPerBlock {
 			ctx.Logger().Info("Deleted deprecated historical time indexed twaps", "count", iterationCounter)
 			return
 		}
