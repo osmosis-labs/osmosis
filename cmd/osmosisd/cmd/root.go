@@ -705,6 +705,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 				// overwrite config.toml and app.toml values, if rejectConfigDefaults is false
 				if !rejectConfigDefaults {
+					// Add ctx logger line to indicate that config.toml and app.toml values are being overwritten
+					serverCtx.Logger.Info("Overwriting config.toml and app.toml values with some recommended defaults. To prevent this, set the --reject-config-defaults flag to true.")
+
 					err := overwriteConfigTomlValues(serverCtx)
 					if err != nil {
 						return err
