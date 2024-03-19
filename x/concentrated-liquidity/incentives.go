@@ -855,40 +855,45 @@ func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, own
 	}
 	activeLiquidity := pool.GetLiquidity()
 
-	// If pool has active liquidity on current tick, redeposit forfeited incentives into uptime accumulators.
-	if activeLiquidity.GT(sdk.OneDec()) {
-		uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
-		if err != nil {
-			return err
-		}
-
-		for uptimeIndex := range uptimeAccums {
-			curUptimeForfeited := scaledForfeitedIncentivesByUptime[uptimeIndex]
-			if curUptimeForfeited.IsZero() {
-				continue
-			}
-
-			incentivesToAddToCurAccum := sdk.NewDecCoins()
-			for _, forfeitedCoin := range curUptimeForfeited {
-				// Calculate the amount to add to the accumulator by dividing the forfeited coin amount by the current uptime duration
-				forfeitedAmountPerLiquidity := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(activeLiquidity)
-
-				// Create a DecCoin from the calculated amount
-				decCoinToAdd := sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedAmountPerLiquidity)
-
-				// Add the calculated DecCoin to the incentives to add to current accumulator
-				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(decCoinToAdd)
-			}
-
-			// Emit incentives to current uptime accumulator
-			uptimeAccums[uptimeIndex].AddToAccumulator(incentivesToAddToCurAccum)
-		}
-	} else {
-		// If no active liquidity, give the forfeited incentives to the sender.
+	// If no active liquidity, give the forfeited incentives to the sender.
+	if activeLiquidity.LT(sdk.OneDec()) {
 		err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), owner, totalForefeitedIncentives)
 		if err != nil {
 			return err
 		}
+		return nil
+	}
+
+	// If pool has active liquidity on current tick, redeposit forfeited incentives into uptime accumulators.
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Loop through each uptime accumulator for the pool and redeposit forfeited incentives.
+	for uptimeIndex := range uptimeAccums {
+		curUptimeForfeited := scaledForfeitedIncentivesByUptime[uptimeIndex]
+		if curUptimeForfeited.IsZero() {
+			continue
+		}
+
+		// Note that this logic is a simplified version of the regular incentive distribution logic.
+		// It leans on the fact that the tracked forfeited incentives are already scaled appropriately
+		// so we do not need to run any additional computations beyond diving by the active liquidity.
+		incentivesToAddToCurAccum := sdk.NewDecCoins()
+		for _, forfeitedCoin := range curUptimeForfeited {
+			// Calculate the amount to add to the accumulator by dividing the forfeited coin amount by the current uptime duration
+			forfeitedAmountPerLiquidity := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(activeLiquidity)
+
+			// Create a DecCoin from the calculated amount
+			decCoinToAdd := sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedAmountPerLiquidity)
+
+			// Add the calculated DecCoin to the incentives to add to current accumulator
+			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(decCoinToAdd)
+		}
+
+		// Emit incentives to current uptime accumulator
+		uptimeAccums[uptimeIndex].AddToAccumulator(incentivesToAddToCurAccum)
 	}
 
 	return nil
