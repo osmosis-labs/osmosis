@@ -1,6 +1,7 @@
 package cosmwasm_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 )
 
@@ -19,26 +21,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-// uploadAndInstantiateContract is a helper function to upload and instantiate a contract from a given file path.
-// It calls an empty Instantiate message on the created contract and returns the bech32 address after instantiation.
-func (s *KeeperTestSuite) uploadAndInstantiateContract(filePath string) (rawCWAddr sdk.AccAddress, bech32CWAddr string) {
-	// We use a gov permissioned contract keeper to avoid having to manually set permissions
-	contractKeeper := wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
-
-	// Upload and instantiate wasm code
-	wasmCode, err := os.ReadFile(filePath)
-	s.Require().NoError(err)
-	codeID, _, err := contractKeeper.Create(s.Ctx, s.TestAccs[0], wasmCode, nil)
-	s.Require().NoError(err)
-	rawCWAddr, _, err = contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
-	s.Require().NoError(err)
-	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("osmo", rawCWAddr)
-	s.Require().NoError(err)
-
-	return rawCWAddr, bech32CWAddr
-}
-
-func (s *KeeperTestSuite) TestSudoHelper() {
+func (s *KeeperTestSuite) TestSudoGasLimit() {
 	// Skip test if there is system-side incompatibility
 	s.SkipIfWSL()
 
@@ -50,6 +33,8 @@ func (s *KeeperTestSuite) TestSudoHelper() {
 	// Message structs for the test CW contract
 	type CountMsg struct {
 		Amount int64 `json:"amount"`
+	}
+	type CountMsgResponse struct {
 	}
 	type CountSudoMsg struct {
 		Count CountMsg `json:"count"`
@@ -71,48 +56,54 @@ func (s *KeeperTestSuite) TestSudoHelper() {
 				},
 			},
 		},
-		// "no contract set in state": {
-		// 	wasmFile: counterContractPath,
-		// 	msg: CountSudoMsg{
-		// 		Count: CountMsg{
-		// 			// Consumes roughly 100k gas, which should be comfortably under the limit.
-		// 			Amount: 10,
-		// 		},
-		// 	},
-
-		// 	// We expect this to fail quietly and be a no-op
-		// 	noContractSet: true,
-		// },
-		// "empty message": {
-		// 	wasmFile: counterContractPath,
-		// 	// We expect this to be a no-op without error
-		// 	msg: CountSudoMsg{},
-		// },
-		// "error: contract that consumes more than limit": {
-		// 	wasmFile: counterContractPath,
-		// 	msg: CountSudoMsg{
-		// 		Count: CountMsg{
-		// 			// Each loop in the contract consumes on the order of 1k-10k gas,
-		// 			// so this should push consumed gas over the limit.
-		// 			Amount: int64(types.DefaultContractHookGasLimit) / 1000,
-		// 		},
-		// 	},
-
-		// 	expectedError: types.ContractHookOutOfGasError{GasLimit: types.DefaultContractHookGasLimit},
-		// },
+		"valid contract that consumes more than limit": {
+			wasmFile: counterContractPath,
+			msg: CountSudoMsg{
+				Count: CountMsg{
+					// Consumes roughly 1B gas, which is well above the 30M limit.
+					Amount: 100000,
+				},
+			},
+			expectedError: fmt.Errorf("contract call ran out of gas"),
+		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.Setup()
+
+			// We use a gov permissioned contract keeper to avoid having to manually set permissions
+			contractKeeper := wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
+
 			// Upload and instantiate wasm code
-			_, cosmwasmAddressBech32 := s.uploadAndInstantiateContract(tc.wasmFile)
+			_, cosmwasmAddressBech32 := s.uploadAndInstantiateContract(contractKeeper, tc.wasmFile)
+
+			// System under test
+			response, err := cosmwasm.Sudo[CountSudoMsg, CountMsgResponse](s.Ctx, contractKeeper, cosmwasmAddressBech32, tc.msg)
+
+			fmt.Println("response: ", response)
 
 			if tc.expectedError != nil {
-				s.Require().ErrorIs(err, tc.expectedError)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
 
 			s.Require().NoError(err)
 		})
 	}
+}
+
+// uploadAndInstantiateContract is a helper function to upload and instantiate a contract from a given file path.
+// It calls an empty Instantiate message on the created contract and returns the bech32 address after instantiation.
+func (s *KeeperTestSuite) uploadAndInstantiateContract(contractKeeper *wasmkeeper.PermissionedKeeper, filePath string) (rawCWAddr sdk.AccAddress, bech32CWAddr string) {
+	// Upload and instantiate wasm code
+	wasmCode, err := os.ReadFile(filePath)
+	s.Require().NoError(err)
+	codeID, _, err := contractKeeper.Create(s.Ctx, s.TestAccs[0], wasmCode, nil)
+	s.Require().NoError(err)
+	rawCWAddr, _, err = contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
+	s.Require().NoError(err)
+	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("osmo", rawCWAddr)
+	s.Require().NoError(err)
+
+	return rawCWAddr, bech32CWAddr
 }

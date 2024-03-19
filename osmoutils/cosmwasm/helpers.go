@@ -2,6 +2,7 @@ package cosmwasm
 
 import (
 	"encoding/json"
+	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -119,6 +120,14 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 	if err != nil {
 		return response, err
 	}
+
+	// Defer to catch panics in case the sudo call runs out of gas.
+	defer func() {
+		if r := recover(); r != nil {
+			response = *new(K) // Create an empty version of response type K
+			err = fmt.Errorf("contract call ran out of gas")
+		}
+	}()
 
 	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
 	gasLimit := min(ctx.GasMeter().Limit(), DefaultContractCallGasLimit)
