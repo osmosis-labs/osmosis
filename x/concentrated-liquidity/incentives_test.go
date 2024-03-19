@@ -2787,14 +2787,10 @@ func (s *KeeperTestSuite) checkForfeitedCoinsByUptime(totalForfeitedCoins sdk.Co
 	// We unfortunately need to through each coin individually to properly scale down the amount
 	// (doing it in bulk leads to inconsistent rounding error)
 	for uptimeIndex := range types.SupportedUptimes {
-		// Check if the slice at the current uptime index is not empty, then add the coins to the sum
-		forfeitedCurrentUptime := scaledForfeitedCoinsByUptime[uptimeIndex]
-		if !forfeitedCurrentUptime.IsZero() {
-			for _, coin := range forfeitedCurrentUptime {
-				// Scale down the actual forfeited coin amount
-				scaledDownAmount := cl.ScaleDownIncentiveAmount(coin.Amount, cl.PerUnitLiqScalingFactor)
-				forfeitedCoins = forfeitedCoins.Add(sdk.NewCoin(coin.Denom, scaledDownAmount))
-			}
+		for _, coin := range scaledForfeitedCoinsByUptime[uptimeIndex] {
+			// Scale down the actual forfeited coin amount
+			scaledDownAmount := cl.ScaleDownIncentiveAmount(coin.Amount, cl.PerUnitLiqScalingFactor)
+			forfeitedCoins = forfeitedCoins.Add(sdk.NewCoin(coin.Denom, scaledDownAmount))
 		}
 	}
 
