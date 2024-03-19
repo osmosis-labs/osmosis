@@ -2,7 +2,6 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -658,7 +657,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			for _, coin := range expectedOwnerBalanceDelta {
 				expected := expectedOwnerBalanceDelta.AmountOf(coin.Denom)
 				actual := actualOwnerBalancerDelta.AmountOf(coin.Denom)
-				s.Require().True(expected.Equal(actual), fmt.Sprintf("expected: %s, got: %s", expected.String(), actual.String()))
+				s.Require().True(expected.Equal(actual))
 			}
 
 			if tc.timeElapsed > 0 {

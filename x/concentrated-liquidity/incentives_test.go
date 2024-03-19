@@ -2784,6 +2784,8 @@ func (s *KeeperTestSuite) checkForfeitedCoinsByUptime(totalForfeitedCoins sdk.Co
 
 	forfeitedCoins := sdk.NewCoins()
 	// Iterate through uptime indexes and add up the forfeited coins from each
+	// We unfortunately need to through each coin individually to properly scale down the amount
+	// (doing it in bulk leads to inconsistent rounding error)
 	for uptimeIndex := range types.SupportedUptimes {
 		// Check if the slice at the current uptime index is not empty, then add the coins to the sum
 		forfeitedCurrentUptime := scaledForfeitedCoinsByUptime[uptimeIndex]
@@ -2796,7 +2798,6 @@ func (s *KeeperTestSuite) checkForfeitedCoinsByUptime(totalForfeitedCoins sdk.Co
 		}
 	}
 
-	// Use Equal for assertion to compare the totalForfeitedCoins with the scaled down summedCoins
 	s.Require().Equal(totalForfeitedCoins, forfeitedCoins, "Total forfeited coins do not match the sum of forfeited coins by uptime after scaling down")
 }
 
