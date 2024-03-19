@@ -2788,7 +2788,7 @@ func (s *KeeperTestSuite) checkForfeitedCoinsByUptime(totalForfeitedCoins sdk.Co
 
 	forfeitedCoins := sdk.NewCoins()
 	// Iterate through uptime indexes and add up the forfeited coins from each
-	// We unfortunately need to through each coin individually to properly scale down the amount
+	// We unfortunately need to iterate through each coin individually to properly scale down the amount
 	// (doing it in bulk leads to inconsistent rounding error)
 	for uptimeIndex := range types.SupportedUptimes {
 		for _, coin := range scaledForfeitedCoinsByUptime[uptimeIndex] {
