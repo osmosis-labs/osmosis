@@ -440,7 +440,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		// It does not exist, so we update the default config.toml to update
 		// We modify the default config.toml to have faster block times
 		// It will be written by server.InterceptConfigsPreRunHandler
-		tmcConfig.Consensus.TimeoutCommit = 4 * time.Second
+		tmcConfig.Consensus.TimeoutCommit = 3 * time.Second
 	} else {
 		// config.toml exists
 
@@ -734,6 +734,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
+	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended defaults from overriding the config.toml and app.toml")
 }
 
 // queryCommand adds transaction and account querying commands.
