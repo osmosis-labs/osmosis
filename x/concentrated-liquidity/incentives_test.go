@@ -3891,7 +3891,6 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 
 				// Assert that uptime accumulators remain empty
 				s.assertUptimeAccumsEmpty(poolId)
-
 				return
 			}
 
@@ -3902,7 +3901,6 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 
 				// Assert that uptime accumulators remain empty
 				s.assertUptimeAccumsEmpty(poolId)
-
 				return
 			}
 
@@ -3913,7 +3911,6 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 			// Refetch updated pool and accumulators
 			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 			s.Require().NoError(err)
-			activeLiquidity := pool.GetLiquidity()
 			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
 			s.Require().NoError(err)
 
@@ -3922,7 +3919,7 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 				// Check that each accumulator has the correct value of scaledForfeitedIncentives / activeLiquidity
 				// Note that the function assumed the input slice is already scaled to avoid unnecessary recomputation.
 				for _, forfeitedCoin := range coins {
-					expectedAmount := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(activeLiquidity)
+					expectedAmount := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(pool.GetLiquidity())
 					accumAmount := uptimeAccums[i].GetValue().AmountOf(forfeitedCoin.Denom)
 					s.Require().Equal(expectedAmount, accumAmount, "Forfeited incentive amount mismatch in uptime accumulator")
 				}
