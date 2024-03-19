@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -12,6 +13,7 @@ import (
 )
 
 type Keeper struct {
+	storeKey storetypes.StoreKey
 	// paramSpace stores module's params
 	paramSpace paramtypes.Subspace
 	// router is used to access tokenfactory methods
@@ -25,6 +27,7 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of the x/bridge keeper.
 func NewKeeper(
+	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	router *baseapp.MsgServiceRouter,
 	accountKeeper types.AccountKeeper,
@@ -40,6 +43,7 @@ func NewKeeper(
 	}
 
 	return Keeper{
+		storeKey:      storeKey,
 		paramSpace:    paramSpace,
 		router:        router,
 		accountKeeper: accountKeeper,
