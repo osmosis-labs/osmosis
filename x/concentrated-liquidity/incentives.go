@@ -828,8 +828,7 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 				// We track forfeited incentives by uptime accumulator to allow for efficient redepositing.
 				// To avoid descaling and rescaling, we keep the forfeited incentives in scaled form.
 				// This is slightly unwieldy as it means we return a slice of scaled coins, but doing it this way
-				// allows us to efficiently handle all cases related to forfeited incentives without recomputing
-				// expensive operations.
+				// allows us to efficiently handle all cases related to forfeited incentives.
 				scaledForfeitedIncentivesByUptime[uptimeIndex] = collectedIncentivesForUptimeScaled
 
 				// If the age of the position is less than the current uptime we are iterating through, then the position's
@@ -846,8 +845,19 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, scaledForfeitedIncentivesByUptime, nil
 }
 
-// redepositForfeitedIncentives redeposits forfeited incentives into uptime accumulators or sends them to the owner if there's no active liquidity.
-func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {
+// redepositForfeitedIncentives handles logic for redepositing forfeited incentives for a given pool.
+// Specifically, it implements the following flows:
+//   - If there is no remaining active liquidity, the forfeited incentives are sent back to the sender.
+//   - If there is active liquidity, the forfeited incentives are redeposited into the uptime accumulators.
+//     Since forfeits are already being tracked in "scaled form", we do not need to do any additional scaling
+//     and simply deposit amount / activeLiquidity into the uptime accumulators.
+//
+// Returns error if:
+// * Pool with the given ID does not exist
+// * Uptime accumulators for the pool cannot be retrieved
+// * Forfeited incentives length does not match the supported uptimes (defense in depth, should never happen)
+// * Bank send fails
+func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {
 	if len(scaledForfeitedIncentivesByUptime) != len(types.SupportedUptimes) {
 		return types.InvalidForfeitedIncentivesLengthError{ForfeitedIncentivesLength: len(scaledForfeitedIncentivesByUptime), ExpectedLength: len(types.SupportedUptimes)}
 	}
@@ -861,7 +871,7 @@ func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, own
 
 	// If no active liquidity, give the forfeited incentives to the sender.
 	if activeLiquidity.LT(sdk.OneDec()) {
-		err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), owner, totalForefeitedIncentives)
+		err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), sender, totalForefeitedIncentives)
 		if err != nil {
 			return err
 		}
