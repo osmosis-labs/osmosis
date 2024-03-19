@@ -700,16 +700,20 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 			cmd.RunE = func(cmd *cobra.Command, args []string) error {
 				serverCtx := server.GetServerContextFromCmd(cmd)
 
-				// overwrite config.toml values
-				err := overwriteConfigTomlValues(serverCtx)
-				if err != nil {
-					return err
-				}
+				// Get flag value for rejecting config defaults
+				rejectConfigDefaults := serverCtx.Viper.GetBool(FlagRejectConfigDefaults)
 
-				// overwrite app.toml values
-				err = overwriteAppTomlValues(serverCtx)
-				if err != nil {
-					return err
+				// overwrite config.toml and app.toml values, if rejectConfigDefaults is false
+				if !rejectConfigDefaults {
+					err := overwriteConfigTomlValues(serverCtx)
+					if err != nil {
+						return err
+					}
+
+					err = overwriteAppTomlValues(serverCtx)
+					if err != nil {
+						return err
+					}
 				}
 
 				return startRunE(cmd, args)
