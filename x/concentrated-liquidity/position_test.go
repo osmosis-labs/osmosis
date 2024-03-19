@@ -2316,7 +2316,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			outOfRangePositions: []uint64{DefaultPositionId + 1, DefaultPositionId + 2},
 			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 2},
 		},
-		"three position IDs, not an owner of one of them but caller is gov address": {
+		"three position IDs, not an owner of any of them but caller is gov address": {
 			inRangePositions:     []uint64{DefaultPositionId, DefaultPositionId + 1},
 			outOfRangePositions:  []uint64{DefaultPositionId + 2},
 			positionsToTransfer:  []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
