@@ -30,7 +30,7 @@ deps-draw:
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
 
-dpes-clean:
+deps-clean:
 	rm -rf $(CURDIR)/artifacts/
 
 deps-distclean: clean
