@@ -275,6 +275,7 @@ func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 		store.Delete(iter.Key())
 		iterationCounter++
 		if iterationCounter >= pruneLimitPerBlock {
+			ctx.Logger().Info("Deleted deprecated historical time indexed twaps", "count", iterationCounter)
 			return
 		}
 		iter.Next()
