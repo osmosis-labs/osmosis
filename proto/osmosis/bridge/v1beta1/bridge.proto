@@ -1,0 +1,57 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+// Params defines params for x/bridge module.
+message Params {
+  // Signers used to sign inbound and release outbound transactions
+  repeated string signers = 1 [ (gogoproto.moretags) = "yaml:\"signers\"" ];
+  // Assets is a list used to create tokenfactory denoms
+  // for corresponding trading pairs
+  repeated Asset assets = 2 [
+    (gogoproto.moretags) = "yaml:\"assets\"",
+    (gogoproto.nullable) = false
+  ];
+  // VotesNeeded marks how many signers out of the list of signers need
+  // to sign until a tx can be considered finalized
+  uint64 votes_needed = 3 [ (gogoproto.moretags) = "yaml:\"votes_needed\"" ];
+  // Fee defines a param for fee that go towards the validator set
+  // signing the incoming/outgoing txs. The fee is measured as a ratio,
+  // so its value lies between 0 and 1.
+  string fee = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// AssetID defines a pair of the source chain name and its Osmosis
+// representation denoted by denom. AssetID is a primary key for Asset.
+message AssetID {
+  // SourceChain is a source chain name
+  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
+  // Denom is the Osmosis representation of the SourceChain
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+
+// Asset is a representation of the asset.
+message Asset {
+  // ID is the asset's primary key
+  AssetID id = 1
+      [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
+  // Status is a current status of the asset
+  AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
+  // Exponent represents the power of 10 used for coin representation
+  uint64 exponent = 3 [ (gogoproto.moretags) = "yaml:\"exponent\"" ];
+}
+
+enum AssetStatus {
+  ASSET_STATUS_UNSPECIFIED = 0;
+  ASSET_STATUS_OK = 1;
+  ASSET_STATUS_BLOCKED_INBOUND = 2;
+  ASSET_STATUS_BLOCKED_OUTBOUND = 3;
+  ASSET_STATUS_BLOCKED_BOTH = 4;
+}

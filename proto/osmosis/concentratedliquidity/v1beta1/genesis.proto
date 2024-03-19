@@ -3,12 +3,11 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/any.proto";
 import "osmosis/accum/v1beta1/accum.proto";
 import "osmosis/concentratedliquidity/params.proto";
 import "osmosis/concentratedliquidity/v1beta1/position.proto";
-import "osmosis/concentratedliquidity/v1beta1/tickInfo.proto";
+import "osmosis/concentratedliquidity/v1beta1/tick_info.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis";

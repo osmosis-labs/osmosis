@@ -13,92 +13,78 @@ import (
 
 // --- Pool Hooks ---
 
+type msgBuilderFn func(poolId uint64) ([]byte, error)
+
 // BeforeCreatePosition is a hook that is called before a position is created.
 func (k Keeper) BeforeCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.BeforeCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
-	msgBz, err := json.Marshal(types.BeforeCreatePositionSudoMsg{BeforeCreatePosition: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.BeforeCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
+		return json.Marshal(types.BeforeCreatePositionSudoMsg{BeforeCreatePosition: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.CreatePositionPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.BeforeActionPrefix(types.CreatePositionPrefix))
 }
 
 // AfterCreatePosition is a hook that is called after a position is created.
 func (k Keeper) AfterCreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min osmomath.Int, amount1Min osmomath.Int, lowerTick int64, upperTick int64) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.AfterCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
-	msgBz, err := json.Marshal(types.AfterCreatePositionSudoMsg{AfterCreatePosition: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.AfterCreatePositionMsg{PoolId: poolId, Owner: owner, TokensProvided: osmoutils.CWCoinsFromSDKCoins(tokensProvided), Amount0Min: amount0Min, Amount1Min: amount1Min, LowerTick: lowerTick, UpperTick: upperTick}
+		return json.Marshal(types.AfterCreatePositionSudoMsg{AfterCreatePosition: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.CreatePositionPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.AfterActionPrefix(types.CreatePositionPrefix))
 }
 
 // BeforeWithdrawPosition is a hook that is called before liquidity is withdrawn from a position.
 func (k Keeper) BeforeWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amountToWithdraw osmomath.Dec) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.BeforeWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
-	msgBz, err := json.Marshal(types.BeforeWithdrawPositionSudoMsg{BeforeWithdrawPosition: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.BeforeWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
+		return json.Marshal(types.BeforeWithdrawPositionSudoMsg{BeforeWithdrawPosition: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.WithdrawPositionPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.BeforeActionPrefix(types.WithdrawPositionPrefix))
 }
 
 // AfterWithdrawPosition is a hook that is called after liquidity is withdrawn from a position.
 func (k Keeper) AfterWithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, positionId uint64, amountToWithdraw osmomath.Dec) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.AfterWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
-	msgBz, err := json.Marshal(types.AfterWithdrawPositionSudoMsg{AfterWithdrawPosition: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.AfterWithdrawPositionMsg{PoolId: poolId, Owner: owner, PositionId: positionId, AmountToWithdraw: amountToWithdraw}
+		return json.Marshal(types.AfterWithdrawPositionSudoMsg{AfterWithdrawPosition: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.WithdrawPositionPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.AfterActionPrefix(types.WithdrawPositionPrefix))
 }
 
 // BeforeSwapExactAmountIn is a hook that is called before a swap is executed (exact amount in).
 func (k Keeper) BeforeSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.BeforeSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
-	msgBz, err := json.Marshal(types.BeforeSwapExactAmountInSudoMsg{BeforeSwapExactAmountIn: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.BeforeSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
+		return json.Marshal(types.BeforeSwapExactAmountInSudoMsg{BeforeSwapExactAmountIn: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.SwapExactAmountInPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.BeforeActionPrefix(types.SwapExactAmountInPrefix))
 }
 
 // AfterSwapExactAmountIn is a hook that is called after a swap is executed (exact amount in).
 func (k Keeper) AfterSwapExactAmountIn(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.AfterSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
-	msgBz, err := json.Marshal(types.AfterSwapExactAmountInSudoMsg{AfterSwapExactAmountIn: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.AfterSwapExactAmountInMsg{PoolId: poolId, Sender: sender, TokenIn: osmoutils.CWCoinFromSDKCoin(tokenIn), TokenOutDenom: tokenOutDenom, TokenOutMinAmount: tokenOutMinAmount, SpreadFactor: spreadFactor}
+		return json.Marshal(types.AfterSwapExactAmountInSudoMsg{AfterSwapExactAmountIn: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.SwapExactAmountInPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.AfterActionPrefix(types.SwapExactAmountInPrefix))
 }
 
 // BeforeSwapExactAmountOut is a hook that is called before a swap is executed (exact amount out).
 func (k Keeper) BeforeSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut sdk.Coin, spreadFactor osmomath.Dec) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.BeforeSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
-	msgBz, err := json.Marshal(types.BeforeSwapExactAmountOutSudoMsg{BeforeSwapExactAmountOut: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.BeforeSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
+		return json.Marshal(types.BeforeSwapExactAmountOutSudoMsg{BeforeSwapExactAmountOut: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.BeforeActionPrefix(types.SwapExactAmountOutPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.BeforeActionPrefix(types.SwapExactAmountOutPrefix))
 }
 
 // AfterSwapExactAmountOut is a hook that is called after a swap is executed (exact amount out).
 func (k Keeper) AfterSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut sdk.Coin, spreadFactor osmomath.Dec) error {
-	// Build and marshal the message to be passed to the contract
-	msg := types.AfterSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
-	msgBz, err := json.Marshal(types.AfterSwapExactAmountOutSudoMsg{AfterSwapExactAmountOut: msg})
-	if err != nil {
-		return err
+	msgBuilderFn := func(poolId uint64) ([]byte, error) {
+		msg := types.AfterSwapExactAmountOutMsg{PoolId: poolId, Sender: sender, TokenInDenom: tokenInDenom, TokenInMaxAmount: tokenInMaxAmount, TokenOut: osmoutils.CWCoinFromSDKCoin(tokenOut), SpreadFactor: spreadFactor}
+		return json.Marshal(types.AfterSwapExactAmountOutSudoMsg{AfterSwapExactAmountOut: msg})
 	}
-	return k.callPoolActionListener(ctx, msgBz, poolId, types.AfterActionPrefix(types.SwapExactAmountOutPrefix))
+	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, types.AfterActionPrefix(types.SwapExactAmountOutPrefix))
 }
 
 // callPoolActionListener processes and dispatches the passed in message to the contract corresponding to the hook
@@ -108,7 +94,7 @@ func (k Keeper) AfterSwapExactAmountOut(ctx sdk.Context, poolId uint64, sender s
 //
 // Since it is possible for this function to be triggered in begin block code, we need to directly meter its execution and set a limit.
 // If no contract is linked to the hook, this function is a no-op.
-func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
+func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn msgBuilderFn, poolId uint64, actionPrefix string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = types.ContractHookOutOfGasError{GasLimit: k.GetParams(ctx).HookGasLimit}
@@ -118,6 +104,11 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 	cosmwasmAddress := k.getPoolHookContract(ctx, poolId, actionPrefix)
 	if cosmwasmAddress == "" {
 		return nil
+	}
+
+	msgBz, err := msgBuilderFn(poolId)
+	if err != nil {
+		return err
 	}
 
 	cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)

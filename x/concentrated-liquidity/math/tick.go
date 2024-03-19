@@ -1,7 +1,6 @@
 package math
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -254,10 +253,9 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	}
 
 	// We have a candidate bucket index `t`. We discern here if:
-	// * sqrtPrice in [TickToSqrtPrice(t - 1), TickToSqrtPrice(t))
-	// * sqrtPrice in [TickToSqrtPrice(t), TickToSqrtPrice(t + 1))
-	// * sqrtPrice in [TickToSqrtPrice(t+1), TickToSqrtPrice(t + 2))
-	// * sqrtPrice not in either.
+	// * sqrtPrice in [ TickToSqrtPrice(t - 1), TickToSqrtPrice(t)     ) => bucket t - 1
+	// * sqrtPrice in [ TickToSqrtPrice(t),     TickToSqrtPrice(t + 1) ) => bucket t
+	// * sqrtPrice in [ TickToSqrtPrice(t + 1), TickToSqrtPrice(t + 2) ) => bucket t + 1
 	// We handle boundary checks, by saying that if our candidate is the min tick,
 	// set the candidate to min tick + 1.
 	// If our candidate is at or above max tick - 1, set the candidate to max tick - 2.
@@ -274,34 +272,55 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 		outOfBounds = true
 	}
 
-	sqrtPriceTmin1, errM1 := TickToSqrtPrice(tick - 1)
-	sqrtPriceT, errT := TickToSqrtPrice(tick)
-	sqrtPriceTplus1, errP1 := TickToSqrtPrice(tick + 1)
-	sqrtPriceTplus2, errP2 := TickToSqrtPrice(tick + 2)
-	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
-		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
+	sqrtPriceTplus1, err := TickToSqrtPrice(tick + 1)
+	if err != nil {
+		return 0, types.ErrCalculateSqrtPriceToTick
 	}
-
-	// We error if sqrtPriceT is above sqrtPriceTplus2 or below sqrtPriceTmin1.
-	// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
-	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
-	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
-	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
-	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
-		return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
-	}
-
-	// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
-	if sqrtPrice.Equal(sqrtPriceTplus2) {
-		return tick + 2, nil
-	}
-
-	// The remaining cases handle shifting tick index by +/- 1.
+	// code path where sqrtPrice is either in tick t + 1, or out of bounds.
 	if sqrtPrice.GTE(sqrtPriceTplus1) {
+		// out of bounds check
+		sqrtPriceTplus2, err := TickToSqrtPrice(tick + 2)
+		if err != nil {
+			return 0, types.ErrCalculateSqrtPriceToTick
+		}
+		// We error if sqrtPriceT is above sqrtPriceTplus2
+		// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
+		// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
+		// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
+		// We do this primary for code simplicity, as alternatives would require more branching and special cases.
+		if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) {
+			return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
+		}
+
+		// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
+		if sqrtPrice.Equal(sqrtPriceTplus2) {
+			return tick + 2, nil
+		}
+		// we are not out of bounds, therefore its tick t+1!
 		return tick + 1, nil
 	}
+
+	// code path where sqrtPrice is either in tick t - 1, t, or out of bounds.
+	// The out of bounds case here should never be possible, but we need to more rigorously check this
+	// to delete that sqrt call.
+	sqrtPriceT, err := TickToSqrtPrice(tick)
+	if err != nil {
+		return 0, types.ErrCalculateSqrtPriceToTick
+	}
+	// sqrtPriceT <= sqrtPrice < sqrtPriceTplus1, this were in bucket t
 	if sqrtPrice.GTE(sqrtPriceT) {
 		return tick, nil
 	}
+
+	// check we are not out of bounds from below.
+	// TODO: Validate this case is impossible, and delete it
+	sqrtPriceTmin1, err := TickToSqrtPrice(tick - 1)
+	if err != nil {
+		return 0, types.ErrCalculateSqrtPriceToTick
+	}
+	if sqrtPrice.LT(sqrtPriceTmin1) {
+		return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
+	}
+
 	return tick - 1, nil
 }

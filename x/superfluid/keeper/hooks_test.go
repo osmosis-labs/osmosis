@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
@@ -67,7 +69,10 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 			// run epoch actions
 			// run begin block for each validator so that both validator gets block rewards
-			for _, valAddr := range valAddrs {
+			for i, valAddr := range valAddrs {
+				// ensure we are at a block height that is a multiple of the distribution block height
+				blockHeight := distribution.BlockMultipleToDistributeRewards * int64(i+1)
+				s.Ctx = s.Ctx.WithBlockHeight(blockHeight - 1)
 				s.BeginNewBlockWithProposer(true, valAddr)
 			}
 
@@ -81,10 +86,10 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				intermediaryAcc := s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, intermediaryAccAddr)
 				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, intermediaryAcc.GaugeId)
 				s.Require().NoError(err)
-				s.Require().Equal(gauge.Id, intermediaryAcc.GaugeId)
-				s.Require().Equal(gauge.IsPerpetual, true)
-				s.Require().Equal(gauge.Coins, tc.expRewards[index])
-				s.Require().Equal(gauge.DistributedCoins.String(), tc.expRewards[index].String())
+				s.Require().Equal(intermediaryAcc.GaugeId, gauge.Id)
+				s.Require().Equal(true, gauge.IsPerpetual)
+				s.Require().Equal(tc.expRewards[index], gauge.Coins)
+				s.Require().Equal(tc.expRewards[index].String(), gauge.DistributedCoins.String())
 			}
 
 			// check delegation changes

@@ -9,44 +9,40 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Current Version that we want to change (without v prefix)'
-        default: '10'
+        description: "Current Version that we want to change (without v prefix)"
+        default: "10"
         required: true
       target-branch:
-        description: 'Target Branch'
-        default: 'main'
+        description: "Target Branch"
+        default: "main"
         required: true
       source-branch:
-        description: 'Source Branch'
-        default: 'update-paths'
+        description: "Source Branch"
+        default: "update-paths"
         required: true
 
 env:
-  GO_VERSION: '1.20.5'
+  GO_VERSION: '1.21'
+
 
 jobs:
   update-import-paths:
     runs-on: ubuntu-latest
 
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.target-branch }}
-      -
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
           go-version: ${{env.GO_VERSION}}
-      -
-        name: Display go version
+      - name: Display go version
         run: go version
-      -
-        name: Run find & replace script
+      - name: Run find & replace script
         run: ./scripts/replace_import_paths.sh ${{ inputs.version }}
-      -
-        name: Create Pull Request
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.COMMIT_TO_BRANCH }}

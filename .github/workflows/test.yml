@@ -15,9 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+
 jobs:
   get_diff:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2204
     steps:
       -
         name: Check out repository code
@@ -37,14 +38,14 @@ jobs:
       -
         name: Set output
         id: vars
-        run: echo "::set-output name=git_diff::$GIT_DIFF"
+        run: echo "git_diff=$GIT_DIFF" >> $GITHUB_OUTPUT
     outputs:
       git_diff: ${{ steps.vars.outputs.git_diff }}
 
   go-split-test-files:
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
-    runs-on: ubuntu-latest
+    if: ${{ needs.get_diff.outputs.git_diff || github.actor == 'dependabot[bot]' || github.actor == 'mergify[bot]' }}
+    runs-on: buildjet-4vcpu-ubuntu-2204
     steps:
       -
         name: Check out repository
@@ -92,8 +93,8 @@ jobs:
 
   go:
     needs: [go-split-test-files, get_diff]
-    if: needs.get_diff.outputs.git_diff
-    runs-on: ubuntu-latest
+    if: ${{ needs.get_diff.outputs.git_diff || github.actor == 'dependabot[bot]' || github.actor == 'mergify[bot]' }}
+    runs-on: buildjet-4vcpu-ubuntu-2204
     strategy:
       fail-fast: false
       matrix:
@@ -123,7 +124,7 @@ jobs:
 
   e2e:
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
+    if: ${{ needs.get_diff.outputs.git_diff || github.actor == 'dependabot[bot]' || github.actor == 'mergify[bot]' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 20
     steps:
@@ -144,6 +145,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: 🐿 Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       -
         name: Build e2e image
         uses: docker/build-push-action@v5

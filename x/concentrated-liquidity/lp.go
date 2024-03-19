@@ -290,14 +290,11 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	}
 
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
-	// process also clears position records from spread factor and incentive accumulators.
+	// Ensure we collect any outstanding spread factors prior to deleting the position from state. Outstanding incentives
+	// should already be fully claimed by this point. This claiming process also clears position records from spread factor
+	// and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
-			return osmomath.Int{}, osmomath.Int{}, err
-		}
-
-		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return osmomath.Int{}, osmomath.Int{}, err
 		}
 
@@ -478,21 +475,14 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return types.UpdatePositionData{}, err
 	}
 
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return types.UpdatePositionData{}, err
-	}
-
-	currentTick := pool.GetCurrentTick()
-
 	// update lower tickInfo state
-	lowerTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
+	lowerTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
 
 	// update upper tickInfo state
-	upperTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
+	upperTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
@@ -505,7 +495,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// Refetch pool to get the updated pool.
 	// Note that updateUptimeAccumulatorsToNow may modify the pool state and rewrite it to the store.
-	pool, err = k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
