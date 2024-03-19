@@ -111,10 +111,9 @@ const (
 
 var (
 	//go:embed "osmosis-1-assetlist.json" "osmo-test-5-assetlist.json"
-	assetFS           embed.FS
-	mainnetId         = "osmosis-1"
-	testnetId         = "osmo-test-5"
-	fiveSecondsString = (5 * time.Second).String()
+	assetFS   embed.FS
+	mainnetId = "osmosis-1"
+	testnetId = "osmo-test-5"
 )
 
 func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
