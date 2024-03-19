@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestSudoGasLimit() {
 
 		expectedError error
 	}{
-		"valid contract that consumes less than limit": {
+		"contract consumes less than limit": {
 			wasmFile: counterContractPath,
 			msg: CountSudoMsg{
 				Count: CountMsg{
@@ -56,7 +56,7 @@ func (s *KeeperTestSuite) TestSudoGasLimit() {
 				},
 			},
 		},
-		"valid contract that consumes more than limit": {
+		"contract that consumes more than limit": {
 			wasmFile: counterContractPath,
 			msg: CountSudoMsg{
 				Count: CountMsg{
