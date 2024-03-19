@@ -12,25 +12,25 @@ import (
 func (k Keeper) InboundTransfer(
 	ctx sdk.Context,
 	destAddr string,
-	asset types.Asset,
+	assetID types.AssetID,
 	amount math.Int,
 ) error {
 	params := k.GetParams(ctx)
 
-	assetWithStatus, ok := params.GetAsset(asset)
+	asset, ok := params.GetAsset(assetID)
 	if !ok {
-		return errorsmod.Wrapf(types.ErrInvalidAsset, "Asset not found %s", asset.Name())
+		return errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
 
-	if !assetWithStatus.AssetStatus.InboundActive() {
+	if !asset.Status.InboundActive() {
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Inbound transfers are disabled for this asset")
 	}
 
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
-	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr.String(), asset.Name())
+	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr.String(), assetID.Name())
 	if err != nil {
-		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't create a tokenfacroty denom for %s", asset.Name())
+		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't create a tokenfacroty denom for %s", assetID.Name())
 	}
 
 	msgMint := &tokenfactorytypes.MsgMint{
@@ -45,7 +45,6 @@ func (k Keeper) InboundTransfer(
 	}
 
 	// ignore resp since it is empty in this method
-	// TODO: double-check if we need to handle the response
 	_, err = handler(ctx, msgMint)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't execute a mint message: %s", err)
@@ -57,25 +56,25 @@ func (k Keeper) InboundTransfer(
 func (k Keeper) OutboundTransfer(
 	ctx sdk.Context,
 	sourceAddr string,
-	asset types.Asset,
+	assetID types.AssetID,
 	amount math.Int,
 ) error {
 	params := k.GetParams(ctx)
 
-	assetWithStatus, ok := params.GetAsset(asset)
+	asset, ok := params.GetAsset(assetID)
 	if !ok {
-		return errorsmod.Wrapf(types.ErrInvalidAsset, "Asset not found %s", asset.Name())
+		return errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
 
-	if !assetWithStatus.AssetStatus.OutboundActive() {
+	if !asset.Status.OutboundActive() {
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Outbound transfers are disabled for this asset")
 	}
 
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
-	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr.String(), asset.Name())
+	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr.String(), assetID.Name())
 	if err != nil {
-		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't create a tokenfacroty denom for %s", asset.Name())
+		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't create a tokenfacroty denom for %s", assetID.Name())
 	}
 
 	msgBurn := &tokenfactorytypes.MsgBurn{
@@ -90,7 +89,6 @@ func (k Keeper) OutboundTransfer(
 	}
 
 	// ignore resp since it is empty in this method
-	// TODO: double-check if we need to handle the response
 	_, err = handler(ctx, msgBurn)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't execute a burn message: %s", err)

@@ -10,8 +10,8 @@ import (
 type UpdateParamsResult struct {
 	signersToCreate []string
 	signersToDelete []string
-	assetsToCreate  []types.AssetWithStatus
-	assetsToDelete  []types.AssetWithStatus
+	assetsToCreate  []types.Asset
+	assetsToDelete  []types.Asset
 }
 
 // UpdateParams properly updates params of the module.
@@ -34,10 +34,10 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdatePar
 
 	// disable deleted assets
 	for _, asset := range assetsToDelete {
-		_, err = k.ChangeAssetStatus(ctx, asset.Asset, types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH)
+		_, err = k.ChangeAssetStatus(ctx, asset.Id, types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH)
 		if err != nil {
 			return UpdateParamsResult{},
-				errorsmod.Wrapf(types.ErrCantChangeAssetStatus, "Can't disable asset %s: %s", asset.Asset.Name(), err)
+				errorsmod.Wrapf(types.ErrCantChangeAssetStatus, "Can't disable asset %s: %s", asset.Name(), err)
 		}
 	}
 
