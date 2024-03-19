@@ -3818,27 +3818,27 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 	}{
 		"No forfeited incentives": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
 		},
 		"With active liquidity - forfeited incentives redeposited": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(12345))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(12345))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
 		},
 		"Multiple forfeited incentives redeposited": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), {sdk.NewCoin("bar", sdk.NewInt(54321))}, sdk.NewCoins(), {sdk.NewCoin("foo", sdk.NewInt(12345))}},
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), {sdk.NewCoin("bar", sdk.NewInt(54321))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), {sdk.NewCoin("foo", sdk.NewInt(12345))}},
 		},
 		"All slots filled with forfeited incentives": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, {sdk.NewCoin("bar", sdk.NewInt(20000))}, {sdk.NewCoin("baz", sdk.NewInt(30000))}, {sdk.NewCoin("qux", sdk.NewInt(40000))}},
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, {sdk.NewCoin("bar", sdk.NewInt(20000))}, {sdk.NewCoin("baz", sdk.NewInt(30000))}, {sdk.NewCoin("qux", sdk.NewInt(40000))}, {sdk.NewCoin("quux", sdk.NewInt(50000))}, {sdk.NewCoin("corge", sdk.NewInt(60000))}},
 		},
 		"No active liquidity with no forfeited incentives": {
 			setupPoolWithActiveLiquidity: false,
-			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
 		},
 		"No active liquidity with forfeited incentives sent to owner": {
 			setupPoolWithActiveLiquidity: false,
-			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
 		},
 		"Incorrect forfeited incentives length": {
 			setupPoolWithActiveLiquidity: true,
@@ -3894,6 +3894,8 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 				return
 			}
 
+			s.Require().NoError(err)
+
 			// If there is no active liquidity, the forfeited incentives should be sent to the owner
 			if !tc.setupPoolWithActiveLiquidity {
 				// Check if the owner received the forfeited incentives
@@ -3915,12 +3917,12 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 			s.Require().NoError(err)
 
 			// Check if the forfeited incentives were redeposited into the uptime accumulators
-			for i, coins := range tc.forfeitedIncentives {
+			for i, accum := range uptimeAccums {
 				// Check that each accumulator has the correct value of scaledForfeitedIncentives / activeLiquidity
 				// Note that the function assumed the input slice is already scaled to avoid unnecessary recomputation.
-				for _, forfeitedCoin := range coins {
+				for _, forfeitedCoin := range tc.forfeitedIncentives[i] {
 					expectedAmount := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(pool.GetLiquidity())
-					accumAmount := uptimeAccums[i].GetValue().AmountOf(forfeitedCoin.Denom)
+					accumAmount := accum.GetValue().AmountOf(forfeitedCoin.Denom)
 					s.Require().Equal(expectedAmount, accumAmount, "Forfeited incentive amount mismatch in uptime accumulator")
 				}
 			}
