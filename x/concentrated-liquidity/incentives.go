@@ -848,6 +848,10 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 
 // redepositForfeitedIncentives redeposits forfeited incentives into uptime accumulators or sends them to the owner if there's no active liquidity.
 func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {
+	if len(scaledForfeitedIncentivesByUptime) != len(types.SupportedUptimes) {
+		return types.InvalidForfeitedIncentivesLengthError{ForfeitedIncentivesLength: len(scaledForfeitedIncentivesByUptime), ExpectedLength: len(types.SupportedUptimes)}
+	}
+
 	// Fetch pool from state to check active liquidity.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {

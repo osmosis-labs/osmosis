@@ -3794,3 +3794,139 @@ func (s *KeeperTestSuite) scaleUptimeAccumulators(uptimeAccumulatorsToScale []sd
 
 	return growthCopy
 }
+
+// assertUptimeAccumsEmpty asserts that the uptime accumulators for the given pool are empty.
+func (s *KeeperTestSuite) assertUptimeAccumsEmpty(poolId uint64) {
+	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	// Ensure uptime accums remain empty
+	for _, accum := range uptimeAccums {
+		s.Require().Equal(sdk.NewDecCoins(), sdk.NewDecCoins(accum.GetValue()...))
+	}
+}
+
+// TestRedepositForfeitedIncentives tests the redeposit of forfeited incentives into uptime accumulators.
+// In the cases where the pool has active liquidity and the incentives need to be redeposited,
+// it asserts that forfeitedIncentives / activeLiquidity was deposited into the accumulators.
+// In the cases where the pool has no active liquidity, it asserts that the forfeited incentives were sent to the owner.
+func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
+	tests := map[string]struct {
+		setupPoolWithActiveLiquidity bool
+		forfeitedIncentives          []sdk.Coins
+		expectedError                error
+	}{
+		"No forfeited incentives": {
+			setupPoolWithActiveLiquidity: true,
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+		},
+		"With active liquidity - forfeited incentives redeposited": {
+			setupPoolWithActiveLiquidity: true,
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(12345))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+		},
+		"Multiple forfeited incentives redeposited": {
+			setupPoolWithActiveLiquidity: true,
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), {sdk.NewCoin("bar", sdk.NewInt(54321))}, sdk.NewCoins(), {sdk.NewCoin("foo", sdk.NewInt(12345))}},
+		},
+		"All slots filled with forfeited incentives": {
+			setupPoolWithActiveLiquidity: true,
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, {sdk.NewCoin("bar", sdk.NewInt(20000))}, {sdk.NewCoin("baz", sdk.NewInt(30000))}, {sdk.NewCoin("qux", sdk.NewInt(40000))}},
+		},
+		"No active liquidity with no forfeited incentives": {
+			setupPoolWithActiveLiquidity: false,
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+		},
+		"No active liquidity with forfeited incentives sent to owner": {
+			setupPoolWithActiveLiquidity: false,
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+		},
+		"Incorrect forfeited incentives length": {
+			setupPoolWithActiveLiquidity: true,
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins()}, // Incorrect length, should be len(types.SupportedUptimes)
+			expectedError:                types.InvalidForfeitedIncentivesLengthError{ForfeitedIncentivesLength: 1, ExpectedLength: len(types.SupportedUptimes)},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// --- Setup ---
+
+			// Setup pool
+			pool := s.PrepareConcentratedPool()
+			poolId := pool.GetId()
+			owner := s.TestAccs[0]
+
+			if tc.setupPoolWithActiveLiquidity {
+				// Add position to ensure pool has active liquidity
+				s.SetupDefaultPosition(poolId)
+			}
+
+			// Fund pool with forfeited incentives and track total
+			totalForfeitedIncentives := sdk.NewCoins()
+			for _, coins := range tc.forfeitedIncentives {
+				s.FundAcc(pool.GetIncentivesAddress(), coins)
+				totalForfeitedIncentives = totalForfeitedIncentives.Add(coins...)
+			}
+
+			// Get balances before the operation to compare after
+			balancesBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
+
+			// --- System under test ---
+
+			err := s.App.ConcentratedLiquidityKeeper.RedepositForfeitedIncentives(s.Ctx, poolId, owner, tc.forfeitedIncentives, totalForfeitedIncentives)
+
+			// --- Assertions ---
+
+			balancesAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
+			balanceChange := balancesAfter.Sub(balancesBefore...)
+
+			// If an error is expected, check if it matches the expected error
+			if tc.expectedError != nil {
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Check if the owner's balance did not change
+				s.Require().Equal(sdk.NewCoins(), sdk.NewCoins(balanceChange...))
+
+				// Assert that uptime accumulators remain empty
+				s.assertUptimeAccumsEmpty(poolId)
+
+				return
+			}
+
+			// If there is no active liquidity, the forfeited incentives should be sent to the owner
+			if !tc.setupPoolWithActiveLiquidity {
+				// Check if the owner received the forfeited incentives
+				s.Require().Equal(totalForfeitedIncentives, balanceChange)
+
+				// Assert that uptime accumulators remain empty
+				s.assertUptimeAccumsEmpty(poolId)
+
+				return
+			}
+
+			// If there is active liquidity, the forfeited incentives should not
+			// be sent to the owner, but instead redeposited into the uptime accumulators.
+			s.Require().Equal(sdk.NewCoins(), sdk.NewCoins(balanceChange...))
+
+			// Refetch updated pool and accumulators
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+			s.Require().NoError(err)
+			activeLiquidity := pool.GetLiquidity()
+			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
+			s.Require().NoError(err)
+
+			// Check if the forfeited incentives were redeposited into the uptime accumulators
+			for i, coins := range tc.forfeitedIncentives {
+				// Check that each accumulator has the correct value of scaledForfeitedIncentives / activeLiquidity
+				// Note that the function assumed the input slice is already scaled to avoid unnecessary recomputation.
+				for _, forfeitedCoin := range coins {
+					expectedAmount := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(activeLiquidity)
+					accumAmount := uptimeAccums[i].GetValue().AmountOf(forfeitedCoin.Denom)
+					s.Require().Equal(expectedAmount, accumAmount, "Forfeited incentive amount mismatch in uptime accumulator")
+				}
+			}
+		})
+	}
+}
