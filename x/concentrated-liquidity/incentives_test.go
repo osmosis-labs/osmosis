@@ -2780,6 +2780,12 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 // checkForfeitedCoinsByUptime checks that the sum of forfeited coins by uptime matches the expected total forfeited coins.
 // It adds up the Coins corresponding to each uptime in the map and asserts that the result is equal to the input totalForfeitedCoins.
 func (s *KeeperTestSuite) checkForfeitedCoinsByUptime(totalForfeitedCoins sdk.Coins, scaledForfeitedCoinsByUptime []sdk.Coins) {
+	// Exit early if scaledForfeitedCoinsByUptime is empty
+	if len(scaledForfeitedCoinsByUptime) == 0 {
+		s.Require().Equal(totalForfeitedCoins, sdk.NewCoins())
+		return
+	}
+
 	forfeitedCoins := sdk.NewCoins()
 	// Iterate through uptime indexes and add up the forfeited coins from each
 	for uptimeIndex := range types.SupportedUptimes {

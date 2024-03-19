@@ -846,6 +846,55 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, scaledForfeitedIncentivesByUptime, nil
 }
 
+// redepositForfeitedIncentives redeposits forfeited incentives into uptime accumulators or sends them to the owner if there's no active liquidity.
+func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {
+	// Fetch pool from state to check active liquidity.
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	activeLiquidity := pool.GetLiquidity()
+
+	// If pool has active liquidity on current tick, redeposit forfeited incentives into uptime accumulators.
+	if activeLiquidity.GT(sdk.OneDec()) {
+		uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		for uptimeIndex := range uptimeAccums {
+			fmt.Println("scaledForfeitedIncentivesByUptime: ", scaledForfeitedIncentivesByUptime)
+			curUptimeForfeited := scaledForfeitedIncentivesByUptime[uptimeIndex]
+			if curUptimeForfeited.IsZero() {
+				continue
+			}
+
+			incentivesToAddToCurAccum := sdk.NewDecCoins()
+			for _, forfeitedCoin := range curUptimeForfeited {
+				// Calculate the amount to add to the accumulator by dividing the forfeited coin amount by the current uptime duration
+				forfeitedAmountPerLiquidity := forfeitedCoin.Amount.ToLegacyDec().QuoTruncate(activeLiquidity)
+
+				// Create a DecCoin from the calculated amount
+				decCoinToAdd := sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedAmountPerLiquidity)
+
+				// Add the calculated DecCoin to the incentives to add to current accumulator
+				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(decCoinToAdd)
+			}
+
+			// Emit incentives to current uptime accumulator
+			uptimeAccums[uptimeIndex].AddToAccumulator(incentivesToAddToCurAccum)
+		}
+	} else {
+		// If no active liquidity, give the forfeited incentives to the sender.
+		err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), owner, totalForefeitedIncentives)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
