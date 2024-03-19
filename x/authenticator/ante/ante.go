@@ -127,7 +127,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		// Generate the authentication request data
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(
+		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
 			ak,
 			ad.sigModeHandler,

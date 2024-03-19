@@ -75,7 +75,7 @@ func GetSignerAndSignatures(
 	return signers, signatures, nil
 }
 
-func GenerateAuthenticationData(
+func GenerateAuthenticationRequest(
 	ctx sdk.Context,
 	ak *keeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,

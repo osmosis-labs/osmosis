@@ -304,7 +304,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 	request.AuthenticatorId = "0"
 
@@ -430,7 +430,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	s.T().Skip("TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better cosigner implementation later?")
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)

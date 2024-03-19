@@ -185,7 +185,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -309,7 +309,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -403,7 +403,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationData(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			err = initializedTop.Authenticate(s.Ctx, request)

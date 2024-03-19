@@ -88,7 +88,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 
 		// We skip replay protection here as it was already checked on authenticate.
 		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
-		authenticationRequest, err := authenticator.GenerateAuthenticationData(
+		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
 			ad.accountKeeper,
 			ad.sigModeHandler,
