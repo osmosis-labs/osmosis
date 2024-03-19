@@ -863,7 +863,6 @@ func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, own
 		}
 
 		for uptimeIndex := range uptimeAccums {
-			fmt.Println("scaledForfeitedIncentivesByUptime: ", scaledForfeitedIncentivesByUptime)
 			curUptimeForfeited := scaledForfeitedIncentivesByUptime[uptimeIndex]
 			if curUptimeForfeited.IsZero() {
 				continue
