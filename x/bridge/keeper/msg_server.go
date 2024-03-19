@@ -33,14 +33,14 @@ func (m msgServer) InboundTransfer(
 		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
 	}
 
-	err := m.k.InboundTransfer(ctx, msg.DestAddr, msg.Asset, msg.Amount)
+	err := m.k.InboundTransfer(ctx, msg.DestAddr, msg.AssetId, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
 	err = ctx.EventManager().EmitTypedEvent(&types.EventInboundTransfer{
 		Sender:   msg.Sender,
 		DestAddr: msg.DestAddr,
-		Asset:    msg.Asset,
+		AssetId:  msg.AssetId,
 		Amount:   msg.Amount,
 	})
 	if err != nil {
@@ -58,14 +58,14 @@ func (m msgServer) OutboundTransfer(
 
 	// Don't need to check the signature here since every user could be the sender
 
-	err := m.k.OutboundTransfer(ctx, msg.Sender, msg.Asset, msg.Amount)
+	err := m.k.OutboundTransfer(ctx, msg.Sender, msg.AssetId, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
 	err = ctx.EventManager().EmitTypedEvent(&types.EventOutboundTransfer{
 		Sender:   msg.Sender,
 		DestAddr: msg.DestAddr,
-		Asset:    msg.Asset,
+		AssetId:  msg.AssetId,
 		Amount:   msg.Amount,
 	})
 	if err != nil {
@@ -99,6 +99,8 @@ func (m msgServer) UpdateParams(
 		NewAssets:      msg.NewParams.Assets,
 		CreatedAssets:  result.assetsToCreate,
 		DeletedAssets:  result.assetsToDelete,
+		NewVotesNeeded: msg.NewParams.VotesNeeded,
+		NewFee:         msg.NewParams.Fee,
 	})
 	if err != nil {
 		return nil, err
@@ -113,16 +115,16 @@ func (m msgServer) ChangeAssetStatus(
 ) (*types.MsgChangeAssetStatusResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	result, err := m.k.ChangeAssetStatus(ctx, msg.Asset, msg.NewAssetStatus)
+	result, err := m.k.ChangeAssetStatus(ctx, msg.AssetId, msg.NewStatus)
 	if err != nil {
 		return nil, err
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventChangeAssetStatus{
-		Sender:         msg.Sender,
-		Asset:          msg.Asset,
-		OldAssetStatus: result.OldStatus,
-		NewAssetStatus: result.NewStatus,
+		Sender:    msg.Sender,
+		AssetId:   msg.AssetId,
+		OldStatus: result.OldStatus,
+		NewStatus: result.NewStatus,
 	})
 	if err != nil {
 		return nil, err

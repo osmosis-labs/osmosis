@@ -6,34 +6,44 @@ import (
 	errorsmod "cosmossdk.io/errors"
 )
 
-func DefaultAssetsWithStatuses() []AssetWithStatus {
-	return []AssetWithStatus{
+func DefaultAssets() []Asset {
+	return []Asset{
 		{
-			Asset: Asset{
+			Id: AssetID{
 				SourceChain: DefaultBitcoinChainName,
 				Denom:       DefaultBitcoinDenomName,
-				Precision:   DefaultBitcoinPrecision,
 			},
-			AssetStatus: AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+			Status:   AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+			Exponent: DefaultBitcoinExponent,
 		},
 	}
 }
 
-func (m AssetWithStatus) Validate() error {
-	err := m.Asset.Validate()
+func (m Asset) Name() string {
+	return m.Id.Name()
+}
+
+func (m Asset) Validate() error {
+	err := m.Id.Validate()
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+		return errorsmod.Wrapf(ErrInvalidAssetID, err.Error())
 	}
 
-	err = m.AssetStatus.Validate()
+	err = m.Status.Validate()
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 
+	// don't check m.Exponent since it's always valid
+
 	return nil
 }
 
-func (m Asset) Validate() error {
+func (m AssetID) Name() string {
+	return fmt.Sprintf("%s-%s", m.SourceChain, m.Denom)
+}
+
+func (m AssetID) Validate() error {
 	if len(m.SourceChain) == 0 {
 		return errorsmod.Wrap(ErrInvalidSourceChain, "Source chain is empty")
 	}
@@ -41,10 +51,6 @@ func (m Asset) Validate() error {
 		return errorsmod.Wrap(ErrInvalidDenom, "Denom is empty")
 	}
 	return nil
-}
-
-func (m Asset) Name() string {
-	return fmt.Sprintf("%s-%s", m.SourceChain, m.Denom)
 }
 
 func (m AssetStatus) InboundActive() bool {
