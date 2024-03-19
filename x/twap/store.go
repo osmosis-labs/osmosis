@@ -260,15 +260,45 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	return twap, nil
 }
 
-// DeleteAllHistoricalTimeIndexedTWAPs deletes every historical twap record indexed by time.
+// DeleteHistoricalTimeIndexedTWAPs deletes every historical twap record indexed by time up till the limit.
 // This is to be used in the upgrade handler, to clear out the now-obsolete historical twap records
 // that were indexed by time.
-func (k Keeper) DeleteAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
+func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
 	defer iter.Close()
+
+	pruneLimitPerBlock := 200
+
+	iterationCounter := 0
 	for iter.Valid() {
 		store.Delete(iter.Key())
+		iterationCounter++
+		if iterationCounter >= pruneLimitPerBlock {
+			return
+		}
 		iter.Next()
 	}
+
+	ctx.Logger().Info("Deleted deprecated historical time indexed twaps", "count", iterationCounter)
+
+	if iterationCounter == 0 {
+		// We have pruned all records, so we can delete the pruning key.
+		ctx.Logger().Info("All deprecated historical time indexed twaps have been deleted")
+		store.Delete(types.DeprecatedHistoricalTWAPsIsPruningKey)
+	}
+}
+
+// IsDeprecatedHistoricalTWAPsPruning returns whether the deprecated historical twaps are being pruned.
+func (k Keeper) IsDeprecatedHistoricalTWAPsPruning(ctx sdk.Context) bool {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.DeprecatedHistoricalTWAPsIsPruningKey)
+	return bz != nil
+}
+
+// SetDeprecatedHistoricalTWAPsIsPruning sets the state entry that determines if we are still
+// executing pruning logic in the end blocker.
+func (k Keeper) SetDeprecatedHistoricalTWAPsIsPruning(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.DeprecatedHistoricalTWAPsIsPruningKey, sentinelExistsValue)
 }
