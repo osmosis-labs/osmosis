@@ -741,7 +741,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
-	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended defaults from overriding the config.toml and app.toml")
+	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
 }
 
 // queryCommand adds transaction and account querying commands.
