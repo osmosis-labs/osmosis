@@ -827,7 +827,7 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 			if positionAge < supportedUptimes[uptimeIndex] {
 				// We track forfeited incentives by uptime accumulator to allow for efficient redepositing.
 				// To avoid descaling and rescaling, we keep the forfeited incentives in scaled form.
-				// This is slightly unwieldy as it means we return a map of scaled coins, but doing it this way
+				// This is slightly unwieldy as it means we return a slice of scaled coins, but doing it this way
 				// allows us to efficiently handle all cases related to forfeited incentives without recomputing
 				// expensive operations.
 				scaledForfeitedIncentivesByUptime[uptimeIndex] = collectedIncentivesForUptimeScaled
