@@ -121,12 +121,7 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 	}
 
 	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
-	var gasLimit sdk.Gas
-	if ctx.GasMeter().Limit() <= DefaultContractCallGasLimit {
-		gasLimit = ctx.GasMeter().Limit()
-	} else {
-		gasLimit = DefaultContractCallGasLimit
-	}
+	gasLimit := min(ctx.GasMeter().Limit(), DefaultContractCallGasLimit)
 	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
 	responseBz, err := contractKeeper.Sudo(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
