@@ -771,8 +771,8 @@ github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiK
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
-github.com/cosmos/iavl v1.0.2-0.20240221171955-e019f7411ec7 h1:RUVbQo6VsQJQWPZr0N7kTX+RlnA5NhCn8N3UqOjU+m8=
-github.com/cosmos/iavl v1.0.2-0.20240221171955-e019f7411ec7/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
+github.com/cosmos/iavl v1.1.1-0.20240314205139-ca1d22d11bbb h1:GxCx+R2Q2u8657rYDyHpy+MO2gl17VGMT+q4QxDn89A=
+github.com/cosmos/iavl v1.1.1-0.20240314205139-ca1d22d11bbb/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3-0.20240228213828-cce7f56d000b h1:VwhHRRIPdMshBMb2TP7xrkY4Ee8CJWsHZvucYeJ56no=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3-0.20240228213828-cce7f56d000b/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 h1:02RCbih5lQ8aGdDMSvxhTnk5JDLEDitn17ytEE1Qhko=
@@ -1486,8 +1486,8 @@ github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4a
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c h1:RpMTLOn+flnC85P2WkyeUlhtXo3KclJ/ZrTRurHGA3k=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
-github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240309220415-76d3c64545ba h1:ym3RdD1EmGSTayuYXJZGYVms0nTBKvsngAf6vO54sKA=
-github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240309220415-76d3c64545ba/go.mod h1:FBibzY5m5FUDfl/bs6/E+4pCnNAb1Do6LXb4gHNN/1c=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240315035500-9c12971eb6ba h1:4sqgoWSV9U42LgVOTe5z0OfWtGMNtgL82cLcWIph0FY=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240315035500-9c12971eb6ba/go.mod h1:XWUrSs1ie/FBNhJ9i4tt3NxuB6JxIJybEY+sxPuiUGY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60 h1:n4Zw/bWkooNPrAskOxTZcFWj/f4H5DIPuGUoGlQPiGE=

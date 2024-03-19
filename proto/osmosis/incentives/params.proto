@@ -44,4 +44,11 @@ message Params {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"internal_uptime\""
   ];
+  // min_value_for_distribution is the minimum amount a token must be worth
+  // in order to be eligible for distribution. If the token is worth
+  // less than this amount (or the route between the two denoms is not
+  // registered), it will not be distributed and is forfeited to the remaining
+  // distributees that are eligible.
+  cosmos.base.v1beta1.Coin min_value_for_distribution = 5
+      [ (gogoproto.nullable) = false ];
 }
