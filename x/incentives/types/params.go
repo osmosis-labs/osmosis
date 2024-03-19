@@ -19,6 +19,7 @@ var (
 	KeyGroupCreationFee     = []byte("GroupCreationFee")
 	KeyCreatorWhitelist     = []byte("CreatorWhitelist")
 	KeyInternalUptime       = []byte("InternalUptime")
+	KeyMinValueForDistr     = []byte("MinValueForDistr")
 
 	// 100 OSMO
 	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
@@ -30,12 +31,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams takes an epoch distribution identifier and group creation fee, then returns an incentives Params struct.
-func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins, internalUptime time.Duration) Params {
+func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins, internalUptime time.Duration, minValueForDistr sdk.Coin) Params {
 	return Params{
 		DistrEpochIdentifier:         distrEpochIdentifier,
 		GroupCreationFee:             groupCreationFee,
 		UnrestrictedCreatorWhitelist: []string{},
 		InternalUptime:               internalUptime,
+		MinValueForDistribution:      minValueForDistr,
 	}
 }
 
@@ -46,6 +48,7 @@ func DefaultParams() Params {
 		GroupCreationFee:             DefaultGroupCreationFee,
 		UnrestrictedCreatorWhitelist: []string{},
 		InternalUptime:               DefaultConcentratedUptime,
+		MinValueForDistribution:      DefaultMinValueForDistr,
 	}
 }
 
@@ -64,6 +67,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := ValidateInternalUptime(p.InternalUptime); err != nil {
+		return err
+	}
+
+	if err := ValidateMinValueForDistr(p.MinValueForDistribution); err != nil {
 		return err
 	}
 
@@ -109,6 +116,14 @@ func ValidateInternalUptime(i interface{}) error {
 	return nil
 }
 
+func ValidateMinValueForDistr(i interface{}) error {
+	_, ok := i.(sdk.Coin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
 // ParamSetPairs takes the parameter struct and associates the paramsubspace key and field of the parameters as a KVStore.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
@@ -116,5 +131,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyGroupCreationFee, &p.GroupCreationFee, ValidateGroupCreaionFee),
 		paramtypes.NewParamSetPair(KeyCreatorWhitelist, &p.UnrestrictedCreatorWhitelist, osmoutils.ValidateAddressList),
 		paramtypes.NewParamSetPair(KeyInternalUptime, &p.InternalUptime, ValidateInternalUptime),
+		paramtypes.NewParamSetPair(KeyMinValueForDistr, &p.MinValueForDistribution, ValidateMinValueForDistr),
 	}
 }

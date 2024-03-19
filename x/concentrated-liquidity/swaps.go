@@ -239,8 +239,6 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-// swapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
-// new tick, liquidity, and sqrtPrice to the respective pool
 func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -302,6 +300,8 @@ func (k *Keeper) swapInAmtGivenOut(
 	return tokenIn, tokenOut, poolUpdates, nil
 }
 
+var unboundedPriceLimit = osmomath.ZeroBigDec()
+
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
 	poolI poolmanagertypes.PoolI,
@@ -310,7 +310,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, osmomath.ZeroBigDec(), false)
+	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, unboundedPriceLimit, false)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -325,7 +325,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 ) (sdk.Coin, error) {
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, osmomath.ZeroBigDec(), poolI.GetId(), false)
+	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, unboundedPriceLimit, poolI.GetId(), false)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -685,7 +685,7 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 
 		// Retrieve the liquidity held in the next closest initialized tick
 		spreadRewardGrowth := sdk.DecCoin{Denom: tokenInDenom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
-		_, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), *uptimeAccums)
+		err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), *uptimeAccums)
 		if err != nil {
 			return swapState, err
 		}
