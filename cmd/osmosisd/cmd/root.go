@@ -466,10 +466,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}
 
 		// The original default is 5s and is set in Cosmos SDK.
-		// We lower it to 4s for faster block times.
-		if timeoutCommitValue == fiveSecondsString {
-			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
-		}
+		// We lower it to 3s for faster block times.
+		serverCtx.Config.Consensus.TimeoutCommit = 3 * time.Second
 
 		defer func() {
 			if err := recover(); err != nil {
