@@ -395,7 +395,7 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	uc.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
 
 	for _, node := range chainConfig.NodeConfigs {
-		if err := node.Run(); err != nil {
+		if err := node.Run(true); err != nil {
 			return err
 		}
 	}
