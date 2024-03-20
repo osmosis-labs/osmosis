@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	chainANode.WaitUntil(hasSnapshotsAvailable)
 
 	// start the state synchin node.
-	err = stateSynchingNode.Run()
+	err = stateSynchingNode.Run(true)
 	s.Require().NoError(err)
 
 	// ensure that the state syncing node cathes up to the running node.

@@ -472,10 +472,15 @@ func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnem
 
 // RunNodeResource runs a node container. Assigns containerName to the container.
 // Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
-func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir string, rejectConfigDefaults bool) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
+	}
+
+	cmd := []string{"start"}
+	if rejectConfigDefaults {
+		cmd = append(cmd, "--reject-config-defaults=true")
 	}
 
 	runOpts := &dockertest.RunOptions{
@@ -484,7 +489,7 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 		Tag:        m.OsmosisTag,
 		NetworkID:  m.network.Network.ID,
 		User:       "root:root",
-		Cmd:        []string{"start", "--reject-config-defaults=true"},
+		Cmd:        cmd,
 		Mounts: []string{
 			fmt.Sprintf("%s/:/osmosis/.osmosisd", valCondifDir),
 			fmt.Sprintf("%s/scripts:/osmosis", pwd),
