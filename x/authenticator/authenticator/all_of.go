@@ -83,9 +83,29 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
-	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAllPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
-		return auth.Authenticate(ctx, request)
-	})
+	var signatures [][]byte
+	var err error
+	if aoa.signatureAssignment == Partitioned {
+		// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+		signatures, err = splitSignatures(request.Signature, len(aoa.SubAuthenticators))
+		if err != nil {
+			return err
+		}
+	}
+
+	baseId := request.AuthenticatorId
+	for i, auth := range aoa.SubAuthenticators {
+		// update the authenticator id to include the sub-authenticator id
+		request.AuthenticatorId = compositeId(baseId, i)
+		// update the request to include the sub-authenticator signature
+		if aoa.signatureAssignment == Partitioned {
+			request.Signature = signatures[i]
+		}
+		if err := auth.Authenticate(ctx, request); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
@@ -93,9 +113,30 @@ func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, fee
 }
 
 func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
-	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAllPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
-		return auth.ConfirmExecution(ctx, request)
-	})
+	var signatures [][]byte
+	var err error
+	if aoa.signatureAssignment == Partitioned {
+		// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+		signatures, err = splitSignatures(request.Signature, len(aoa.SubAuthenticators))
+		if err != nil {
+			return err
+		}
+	}
+
+	baseId := request.AuthenticatorId
+	for i, auth := range aoa.SubAuthenticators {
+		// update the authenticator id to include the sub-authenticator id
+		request.AuthenticatorId = compositeId(baseId, i)
+		// update the request to include the sub-authenticator signature
+		if aoa.signatureAssignment == Partitioned {
+			request.Signature = signatures[i]
+		}
+
+		if err := auth.ConfirmExecution(ctx, request); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
