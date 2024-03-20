@@ -10,20 +10,26 @@ import (
 var _ sdk.Msg = &MsgInboundTransfer{}
 
 func NewMsgInboundTransfer(
+	externalID string,
 	sender string,
 	destAddr string,
 	assetID AssetID,
 	amount math.Int,
 ) *MsgInboundTransfer {
 	return &MsgInboundTransfer{
-		Sender:   sender,
-		DestAddr: destAddr,
-		AssetId:  assetID,
-		Amount:   amount,
+		ExternalId: externalID,
+		Sender:     sender,
+		DestAddr:   destAddr,
+		AssetId:    assetID,
+		Amount:     amount,
 	}
 }
 
 func (m MsgInboundTransfer) ValidateBasic() error {
+	if len(m.ExternalId) == 0 {
+		return errorsmod.Wrapf(ErrInvalidExternalID, "Empty external id")
+	}
+
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)

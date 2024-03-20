@@ -34,17 +34,21 @@ service Msg {
 message MsgInboundTransfer {
   option (amino.name) = "osmosis/bridge/inbound-transfer";
 
+  // ExternalId is a unique ID of the transfer coming from outside.
+  // Serves the purpose of uniquely identifying the transfer in another chain
+  // (e.g., this might be the BTC tx hash)
+  string external_id = 1 [ (gogoproto.moretags) = "yaml:\"external_id\"" ];
   // Sender is a sender's address
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // DestAddr is a destination Osmosis address
-  string dest_addr = 2 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
+  string dest_addr = 3 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
   // AssetID is the ID of the asset being transferred
-  AssetID asset_id = 3 [
+  AssetID asset_id = 4 [
     (gogoproto.moretags) = "yaml:\"asset_id\"",
     (gogoproto.nullable) = false
   ];
   // Amount of coins to transfer
-  string amount = 4 [
+  string amount = 5 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false

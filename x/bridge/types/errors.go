@@ -20,4 +20,5 @@ var (
 	ErrTokenfactory          = errorsmod.Register(ModuleName, 11, "tokenfactory error")
 	ErrInvalidAssetID        = errorsmod.Register(ModuleName, 12, "invalid asset id")
 	ErrInvalidFee            = errorsmod.Register(ModuleName, 13, "invalid fee")
+	ErrInvalidExternalID     = errorsmod.Register(ModuleName, 14, "invalid external id")
 )

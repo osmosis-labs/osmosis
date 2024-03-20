@@ -27,13 +27,18 @@ func (m msgServer) InboundTransfer(
 	goCtx context.Context,
 	msg *types.MsgInboundTransfer,
 ) (*types.MsgInboundTransferResponse, error) {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !m.k.validateSenderIsSigner(ctx, msg.Sender) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
 	}
 
-	err := m.k.InboundTransfer(ctx, msg.DestAddr, msg.AssetId, msg.Amount)
+	err = m.k.InboundTransfer(ctx, msg.ExternalId, msg.Sender, msg.DestAddr, msg.AssetId, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +59,16 @@ func (m msgServer) OutboundTransfer(
 	goCtx context.Context,
 	msg *types.MsgOutboundTransfer,
 ) (*types.MsgOutboundTransferResponse, error) {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Don't need to check the signature here since every user could be the sender
 
-	err := m.k.OutboundTransfer(ctx, msg.Sender, msg.AssetId, msg.Amount)
+	err = m.k.OutboundTransfer(ctx, msg.Sender, msg.AssetId, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +91,11 @@ func (m msgServer) UpdateParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if msg.Sender != m.k.govModuleAddr {
@@ -113,6 +128,11 @@ func (m msgServer) ChangeAssetStatus(
 	goCtx context.Context,
 	msg *types.MsgChangeAssetStatus,
 ) (*types.MsgChangeAssetStatusResponse, error) {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	result, err := m.k.ChangeAssetStatus(ctx, msg.AssetId, msg.NewStatus)
