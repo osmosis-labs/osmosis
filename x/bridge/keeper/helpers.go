@@ -5,6 +5,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const notFoundIdx = -1
+
 // Difference returns the slice of elements that are elements of a but not elements of b.
 // TODO: Placed here temporarily. Delete after releasing the new osmoutils version.
 func Difference[T comparable](a, b []T) []T {

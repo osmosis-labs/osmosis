@@ -31,11 +31,11 @@ func (k Keeper) InboundTransfer(
 	params := k.GetParams(ctx)
 
 	// Check if the asset accepts inbound transfers
-	asset, ok := params.GetAsset(assetID)
-	if !ok {
+	assetIdx := params.GetAssetIndex(assetID)
+	if assetIdx == notFoundIdx {
 		return errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
-	if !asset.Status.InboundActive() {
+	if !params.Assets[assetIdx].Status.InboundActive() {
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Inbound transfers are disabled for this asset")
 	}
 
@@ -52,10 +52,15 @@ func (k Keeper) InboundTransfer(
 		return errorsmod.Wrapf(sdkerrors.ErrLogic, "Can't finalize inbound trander: %s", err.Error())
 	}
 
+	// Perform tokenfactory mint
 	err = k.mint(ctx, destAddr, assetID, amount)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrTokenfactory, err.Error())
 	}
+
+	// Update the last transfer height value
+	params.Assets[assetIdx].LastTransferHeight = ctx.BlockHeight()
+	k.SetParam(ctx, types.KeyAssets, params.Assets)
 
 	return nil
 }

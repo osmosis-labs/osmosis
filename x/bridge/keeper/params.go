@@ -26,11 +26,12 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdatePar
 	)
 
 	// create denoms for all new assets
-	err := k.createAssets(ctx, assetsToCreate)
+	createdAssets, err := k.createAssets(ctx, assetsToCreate)
 	if err != nil {
 		return UpdateParamsResult{},
 			errorsmod.Wrapf(types.ErrCantCreateAsset, "Can't create new assets: %s", err)
 	}
+	newParams.Assets = createdAssets
 
 	// disable deleted assets
 	for _, asset := range assetsToDelete {
