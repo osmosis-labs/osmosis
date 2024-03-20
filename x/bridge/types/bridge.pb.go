@@ -248,7 +248,7 @@ func (m *Asset) GetExponent() uint64 {
 	return 0
 }
 
-// InboundTransferInfo is a representation of the inbound transfer.
+// InboundTransfer is a representation of the inbound transfer.
 type InboundTransfer struct {
 	// ExternalId is a unique ID of the transfer coming from outside.
 	// Serves the purpose of uniquely identifying the transfer in another chain
@@ -257,15 +257,14 @@ type InboundTransfer struct {
 	// DestAddr is a destination Osmosis address
 	DestAddr string `protobuf:"bytes,2,opt,name=dest_addr,json=destAddr,proto3" json:"dest_addr,omitempty" yaml:"dest_addr"`
 	// AssetID is the ID of the asset being transferred
-	// AssetID is the ID of the asset being transferred
 	AssetId AssetID `protobuf:"bytes,3,opt,name=asset_id,json=assetId,proto3" json:"asset_id" yaml:"asset_id"`
 	// Amount of coins to transfer
 	Amount cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount" yaml:"amount"`
 	// Voters is a list of validators signed this transfer
 	Voters []string `protobuf:"bytes,5,rep,name=voters,proto3" json:"voters,omitempty" yaml:"voters"`
 	// Finalized indicates whether the transfer needs more votes or has
-	// already accumulated a sufficient number. Literally, the finalised flag
-	// is set to true as soon as length(voters) is greater than or equal to
+	// already accumulated a sufficient number. The finalised flag is set
+	// to true as soon as length(voters) is greater than or equal to
 	// the module's param votes_needed.
 	Finalized bool `protobuf:"varint,6,opt,name=finalized,proto3" json:"finalized,omitempty" yaml:"finalized"`
 }

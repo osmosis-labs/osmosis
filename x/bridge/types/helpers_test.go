@@ -10,6 +10,8 @@ import (
 )
 
 var (
+	externalID = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
+
 	pk1        = ed25519.GenPrivKey().PubKey()
 	addr1Bytes = sdk.AccAddress(pk1.Address())
 	addr1      = addr1Bytes.String()
