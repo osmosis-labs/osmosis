@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"slices"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -26,10 +24,7 @@ func (k Keeper) ChangeAssetStatus(
 	params := k.GetParams(ctx)
 
 	// check if the specified asset is known
-	const notFoundIdx = -1
-	assetIdx := slices.IndexFunc(params.Assets, func(v types.Asset) bool {
-		return v.Id == assetID
-	})
+	assetIdx := params.GetAssetIndex(assetID)
 	if assetIdx == notFoundIdx {
 		return ChangeAssetStatusResult{}, errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found")
 	}
@@ -45,14 +40,16 @@ func (k Keeper) ChangeAssetStatus(
 	}, nil
 }
 
-// createAssets creates tokenfactory denoms for all provided assets
-func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) error {
-	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-
+// createAssets creates tokenfactory denoms for all provided assets and properly sets
+// last_transfer_height values.
+func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) ([]types.Asset, error) {
 	handler := k.router.Handler(new(tokenfactorytypes.MsgCreateDenom))
 	if handler == nil {
-		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a create denom message")
+		return nil, errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a create denom message")
 	}
+
+	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	createdAssets := make([]types.Asset, 0, len(assets))
 
 	for _, asset := range assets {
 		msgCreateDenom := &tokenfactorytypes.MsgCreateDenom{
@@ -64,12 +61,18 @@ func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) error {
 		// TODO: double-check if we need to handle the response
 		_, err := handler(ctx, msgCreateDenom)
 		if err != nil {
-			return errorsmod.Wrapf(
+			return nil, errorsmod.Wrapf(
 				types.ErrTokenfactory,
 				"Can't execute a create denom message for %s: %s", asset.Name(), err,
 			)
 		}
+
+		// TODO: set the last_transfer_height to the latest external blockchain height, since using 0
+		//  doesn't really make sense. Should use corresponding chain clients here after they are implemented.
+		asset.LastTransferHeight = 0
+
+		createdAssets = append(createdAssets, asset)
 	}
 
-	return nil
+	return createdAssets, nil
 }

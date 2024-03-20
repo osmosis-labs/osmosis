@@ -10,11 +10,11 @@ import (
 
 // InitGenesis initializes the bridge module's state from a provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
-	// create denoms for all new assets
-	err := k.createAssets(ctx, genState.Params.Assets)
+	createdAssets, err := k.createAssets(ctx, genState.Params.Assets)
 	if err != nil {
 		panic(fmt.Errorf("can't create assets on x/bridge genesis: %w", err))
 	}
+	genState.Params.Assets = createdAssets
 
 	// don't need to specifically create the signers, just save them
 
