@@ -893,7 +893,7 @@ func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, sen
 
 		// Note that this logic is a simplified version of the regular incentive distribution logic.
 		// It leans on the fact that the tracked forfeited incentives are already scaled appropriately
-		// so we do not need to run any additional computations beyond diving by the active liquidity.
+		// so we do not need to run any additional computations beyond dividing by the active liquidity.
 		incentivesToAddToCurAccum := sdk.NewDecCoins()
 		for _, forfeitedCoin := range curUptimeForfeited {
 			// Calculate the amount to add to the accumulator by dividing the forfeited coin amount by the current uptime duration
