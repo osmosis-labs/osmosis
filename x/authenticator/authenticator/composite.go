@@ -30,13 +30,6 @@ func subTrack(
 	return nil
 }
 
-type PassingReq int
-
-const (
-	requireAllPass = iota
-	requireAnyPass
-)
-
 func splitSignatures(signature []byte, total int) ([][]byte, error) {
 	var signatures [][]byte
 	err := json.Unmarshal(signature, &signatures)
