@@ -2393,65 +2393,66 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedError)
-			}
-			s.Require().NoError(err)
-
-			// Check that the old owner's balance did not change due to the transfer
-			postTransferOriginalOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
-			s.Require().Equal(preTransferOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
-
-			// Check that the new owner's balance did not change due to the transfer
-			postTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
-			s.Require().Equal(preTransferNewOwnerFunds, postTransferNewOwnerFunds)
-
-			// Check that the positions we wanted transferred were modified appropriately
-			for _, positionId := range tc.positionsToTransfer {
-				newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			} else {
 				s.Require().NoError(err)
 
-				oldPosition := model.Position{}
-				for _, initialPosition := range initialUserPositions {
-					if initialPosition.PositionId == newPosition.PositionId {
-						oldPosition = initialPosition
-						break
+				// Check that the positions we wanted transferred were modified appropriately
+				for _, positionId := range tc.positionsToTransfer {
+					newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().NoError(err)
+
+					oldPosition := model.Position{}
+					for _, initialPosition := range initialUserPositions {
+						if initialPosition.PositionId == newPosition.PositionId {
+							oldPosition = initialPosition
+							break
+						}
 					}
+
+					// All position values except the owner should be the same in the new position as it was in the old one.
+					s.Require().Equal(oldPosition.UpperTick, newPosition.UpperTick)
+					s.Require().Equal(oldPosition.LowerTick, newPosition.LowerTick)
+					s.Require().Equal(oldPosition.PoolId, newPosition.PoolId)
+					s.Require().Equal(oldPosition.JoinTime, newPosition.JoinTime)
+					s.Require().Equal(oldPosition.Liquidity, newPosition.Liquidity)
+
+					// The new position should have the new owner
+					s.Require().Equal(newOwner.String(), newPosition.Address)
 				}
 
-				// All position values except the owner should be the same in the new position as it was in the old one.
-				s.Require().Equal(oldPosition.UpperTick, newPosition.UpperTick)
-				s.Require().Equal(oldPosition.LowerTick, newPosition.LowerTick)
-				s.Require().Equal(oldPosition.PoolId, newPosition.PoolId)
-				s.Require().Equal(oldPosition.JoinTime, newPosition.JoinTime)
-				s.Require().Equal(oldPosition.Liquidity, newPosition.Liquidity)
+				allPositions := append(tc.inRangePositions, tc.outOfRangePositions...)
+				positionsNotTransfered := osmoutils.DisjointArrays(allPositions, tc.positionsToTransfer)
 
-				// The new position should have the new owner
-				s.Require().Equal(newOwner.String(), newPosition.Address)
-			}
+				// Check that the positions not transferred were not modified
+				for _, positionId := range positionsNotTransfered {
+					oldPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().NoError(err)
 
-			allPositions := append(tc.inRangePositions, tc.outOfRangePositions...)
-			positionsNotTransfered := osmoutils.DisjointArrays(allPositions, tc.positionsToTransfer)
-
-			// Check that the positions not transferred were not modified
-			for _, positionId := range positionsNotTransfered {
-				oldPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
-				s.Require().NoError(err)
-
-				newPosition := model.Position{}
-				for _, initialPosition := range initialUserPositions {
-					if initialPosition.PositionId == oldPosition.PositionId {
-						newPosition = initialPosition
-						break
+					newPosition := model.Position{}
+					for _, initialPosition := range initialUserPositions {
+						if initialPosition.PositionId == oldPosition.PositionId {
+							newPosition = initialPosition
+							break
+						}
 					}
+
+					// All position values should be the same in the new position as it was in the old one.
+					s.Require().Equal(oldPosition, newPosition)
 				}
 
-				// All position values should be the same in the new position as it was in the old one.
-				s.Require().Equal(oldPosition, newPosition)
+				// Check that the old owner's balance did not change due to the transfer
+				postTransferOriginalOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
+				s.Require().Equal(preTransferOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
+
+				// Check that the new owner's balance did not change due to the transfer
+				postTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
+				s.Require().Equal(preTransferNewOwnerFunds, postTransferNewOwnerFunds)
 
 				// Claim rewards and ensure that previously accrued incentives and spread rewards go to the new owner
-				for _, positionId := range tc.positionsToTransfer {
-					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
+				for _, positionID := range tc.positionsToTransfer {
+					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionId)
+					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
 				}
 
