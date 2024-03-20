@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,6 +12,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+)
+
+var (
+	ErrAlreadyFinalized = errors.New("transfer already finalized")
+	ErrNeedMoreVotes    = errors.New("transfer needs more votes")
+	ErrTransferNotFound = errors.New("transfer info not found")
 )
 
 func (k Keeper) InboundTransfer(
@@ -32,23 +39,50 @@ func (k Keeper) InboundTransfer(
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Inbound transfers are disabled for this asset")
 	}
 
-	// Get the transfer info from the store and update it properly
-	transfer, err := k.GetInboundTransfer(ctx, externalID)
-	if err != nil && !errors.Is(err, ErrTransferNotFound) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrLogic,
-			"Can't get the transfer info from store %s: %s",
-			externalID, err.Error(),
-		)
+	// Try to finalize the transfer in store
+	err := k.finalizeInboundTransfer(ctx, externalID, sender, destAddr, assetID, amount, params.VotesNeeded)
+	switch {
+	case err == nil:
+		// Everything is fine, mint!
+	case errors.Is(err, ErrAlreadyFinalized), errors.Is(err, ErrNeedMoreVotes):
+		// Expected scenario, just return without minting
+		return nil
+	default:
+		// Unexpected error
+		return errorsmod.Wrapf(sdkerrors.ErrLogic, "Can't finalize inbound trander: %s", err.Error())
 	}
-	if err != nil && errors.Is(err, ErrTransferNotFound) {
+
+	err = k.mint(ctx, destAddr, assetID, amount)
+	if err != nil {
+		return errorsmod.Wrap(types.ErrTokenfactory, err.Error())
+	}
+
+	return nil
+}
+
+func (k Keeper) finalizeInboundTransfer(
+	ctx sdk.Context,
+	externalID string,
+	sender string,
+	destAddr string,
+	assetID types.AssetID,
+	amount math.Int,
+	votesNeeded uint64,
+) error {
+	// Get the transfer info from the store to update it properly
+	transfer, err := k.GetInboundTransfer(ctx, externalID)
+	switch {
+	case err == nil:
+	case errors.Is(err, ErrTransferNotFound):
 		// If the transfer is new, then create it
 		transfer = types.NewInboundTransfer(externalID, destAddr, assetID, amount)
+	default:
+		return fmt.Errorf("can't get the transfer info from store: %s", err.Error())
 	}
 
 	// Check if the sender has already signed this transfer
 	if slices.Contains(transfer.Voters, sender) {
-		return errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "The transfer has already been signed by this sender")
+		return fmt.Errorf("the transfer has already been signed by this sender")
 	}
 
 	// This variable is used to detect the right moment to process the transfer.
@@ -57,35 +91,38 @@ func (k Keeper) InboundTransfer(
 
 	// Add the new voter to the voter list and update the finalization flag
 	transfer.Voters = append(transfer.Voters, sender)
-	transfer.Finalized = uint64(len(transfer.Voters)) >= params.VotesNeeded
+	transfer.Finalized = uint64(len(transfer.Voters)) >= votesNeeded
 
 	// Save the updated transfer info
 	err = k.UpsertInboundTransfer(ctx, transfer)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrLogic, "Can't save the transfer to store: %s", err.Error())
+		return fmt.Errorf("can't save the transfer to store: %s", err.Error())
 	}
 
 	// If the transfer is already finalized, then we only need to add the sender
 	// to the voter list and return
 	if alreadyFinalized {
-		// TODO: do we need to return the error here?
-		return nil
+		return ErrAlreadyFinalized
 	}
 
 	// If the transfer is not finalized after adding the new voter,
 	// then it still needs more votes
 	if !transfer.Finalized {
-		return nil
+		return ErrNeedMoreVotes
 	}
 
-	// If the transfer was not finalized before adding the new voter to the voter list,
+	// If the transfer is not finalized before adding the new voter to the voter list,
 	// but is finalized after the addition, then it is time to process it
 
+	return nil
+}
+
+func (k Keeper) mint(ctx sdk.Context, destAddr string, assetID types.AssetID, amount math.Int) error {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
 	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr.String(), assetID.Name())
 	if err != nil {
-		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't create a tokenfacroty denom for %s", assetID.Name())
+		return fmt.Errorf("can't create a tokenfacroty denom for %s: %w", assetID.Name(), err)
 	}
 
 	msgMint := &tokenfactorytypes.MsgMint{
@@ -96,19 +133,17 @@ func (k Keeper) InboundTransfer(
 
 	handler := k.router.Handler(msgMint)
 	if handler == nil {
-		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a mint message")
+		return fmt.Errorf("can't route a mint message")
 	}
 
 	// Ignore resp since it is empty in this method
 	_, err = handler(ctx, msgMint)
 	if err != nil {
-		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't execute a mint message: %s", err)
+		return fmt.Errorf("can't execute a mint message for %s: %w", assetID.Name(), err)
 	}
 
 	return nil
 }
-
-var ErrTransferNotFound = errors.New("transfer info not found")
 
 // GetInboundTransfer returns the transfer by the external id.
 func (k Keeper) GetInboundTransfer(ctx sdk.Context, externalID string) (types.InboundTransfer, error) {
