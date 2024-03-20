@@ -2449,10 +2449,10 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				s.Require().Equal(preTransferNewOwnerFunds, postTransferNewOwnerFunds)
 
 				// Claim rewards and ensure that previously accrued incentives and spread rewards go to the new owner
-				for _, positionId := range tc.positionsToTransfer {
-					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
+				for _, positionID := range tc.positionsToTransfer {
+					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionId)
+					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
 				}
 
@@ -2467,7 +2467,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				// Test that adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything
 				totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
 				totalIncentives := s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.inRangePositions)
-				totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...).Add(totalExpectedRewards...)
+				totalExpectedRewards := totalExpectedRewards.Add(totalSpreadRewards...).Add(totalIncentives...)
 				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 				for _, positionId := range tc.positionsToTransfer {
