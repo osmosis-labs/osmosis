@@ -106,18 +106,14 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 	baseId := authenticatorId
 	subAuthenticatorCount := 0
 	for id, initData := range initDatas {
-		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
-			if authenticatorCode.Type() == initData.AuthenticatorType {
-				subId := compositeId(baseId, id)
-				err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, subId)
-				if err != nil {
-					return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorAdded` failed (sub-authenticator id = %s)", subId)
-				}
-
-				subAuthenticatorCount++
-				break
-			}
+		authenticatorCode := am.GetAuthenticatorByType(initData.AuthenticatorType)
+		subId := compositeId(baseId, id)
+		err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, subId)
+		if err != nil {
+			return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorAdded` failed (sub-authenticator id = %s)", subId)
 		}
+
+		subAuthenticatorCount++
 	}
 
 	// If not all sub-authenticators are registered, return an error
@@ -136,15 +132,11 @@ func onSubAuthenticatorsRemoved(ctx sdk.Context, account sdk.AccAddress, data []
 
 	baseId := authenticatorId
 	for id, initData := range initDatas {
-		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
-			if authenticatorCode.Type() == initData.AuthenticatorType {
-				subId := compositeId(baseId, id)
-				err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, subId)
-				if err != nil {
-					return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorRemoved` failed (sub-authenticator id = %s)", subId)
-				}
-				break
-			}
+		authenticatorCode := am.GetAuthenticatorByType(initData.AuthenticatorType)
+		subId := compositeId(baseId, id)
+		err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, subId)
+		if err != nil {
+			return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorRemoved` failed (sub-authenticator id = %s)", subId)
 		}
 	}
 	return nil

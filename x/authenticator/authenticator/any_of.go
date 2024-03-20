@@ -64,16 +64,12 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 
 	// Call Initialize on each sub-authenticator with its appropriate data using AuthenticatorManager
 	for _, initData := range initDatas {
-		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
-			if authenticatorCode.Type() == initData.AuthenticatorType {
-				instance, err := authenticatorCode.Initialize(initData.Data)
-				if err != nil {
-					return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.AuthenticatorType)
-				}
-				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
-				break
-			}
+		authenticatorCode := aoa.am.GetAuthenticatorByType(initData.AuthenticatorType)
+		instance, err := authenticatorCode.Initialize(initData.Data)
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.AuthenticatorType)
 		}
+		aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
 	}
 
 	// If not all sub-authenticators are registered, return an error
