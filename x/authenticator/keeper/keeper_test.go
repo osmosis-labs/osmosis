@@ -195,12 +195,7 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
 
 	// Remove a registered authenticator from the authenticator manager
-	ar := s.App.AuthenticatorManager.GetRegisteredAuthenticators()
-	for _, a := range ar {
-		if a.Type() == "MessageFilterAuthenticator" {
-			s.App.AuthenticatorManager.UnregisterAuthenticator(authenticator.MessageFilterAuthenticator{})
-		}
-	}
+	s.App.AuthenticatorManager.UnregisterAuthenticator(authenticator.MessageFilterAuthenticator{})
 
 	// Try to get an authenticator that has been removed from the store
 	selectedAuthenticator, err = s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
