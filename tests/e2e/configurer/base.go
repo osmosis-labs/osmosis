@@ -85,8 +85,10 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
 		go func(n *chain.NodeConfig) {
-			defer wg.Done()  // Decrement the WaitGroup counter when the goroutine is done
-			errCh <- n.Run() // Run the node and send any error to the channel
+			defer wg.Done() // Decrement the WaitGroup counter when the goroutine is done
+			// TODO: After v24, either set this to true or remove the entire logic added in https://github.com/osmosis-labs/osmosis/pull/7784
+			// and just set --reject-config-defaults=true directly here https://github.com/osmosis-labs/osmosis/blob/b106139bcfe5605fb2fedd6237d9467497cf3ded/tests/e2e/containers/containers.go#L492-L493
+			errCh <- n.Run(false) // Run the node and send any error to the channel
 		}(node)
 	}
 
