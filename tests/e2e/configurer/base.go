@@ -85,8 +85,8 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
 		go func(n *chain.NodeConfig) {
-			defer wg.Done()  // Decrement the WaitGroup counter when the goroutine is done
-			errCh <- n.Run() // Run the node and send any error to the channel
+			defer wg.Done()       // Decrement the WaitGroup counter when the goroutine is done
+			errCh <- n.Run(false) // Run the node and send any error to the channel
 		}(node)
 	}
 

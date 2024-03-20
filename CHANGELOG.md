@@ -61,6 +61,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7625](https://github.com/osmosis-labs/osmosis/pull/7625) Remove duplicate CL accumulator update logic.
 * [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
+* [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
+* [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
+* [#7747](https://github.com/osmosis-labs/osmosis/pull/7747) Remove redundant call to incentive collection in CL position withdrawal logic
+
+## v23.0.8-iavl-v1 & v23.0.8
+
+* [#7769](https://github.com/osmosis-labs/osmosis/pull/7769) Set and default timeout commit to 3s. Add flag to prevent custom overrides if not desired.
+
+## v23.0.7-iavl-v1
+
+* [#7750](https://github.com/osmosis-labs/osmosis/pull/7750) IAVL bump to improve pruning
 
 ## v23.0.6-iavl-v1 (contains everything in v23.0.6)
 
