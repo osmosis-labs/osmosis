@@ -916,7 +916,7 @@ func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, sen
 func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
-	// We omit the by-uptime forfeited incentives map as it is not needed for this query.
+	// We omit the by-uptime forfeited incentives slice as it is not needed for this query.
 	collectedIncentives, forfeitedIncentives, _, err := k.prepareClaimAllIncentivesForPosition(cacheCtx, positionId)
 	return collectedIncentives, forfeitedIncentives, err
 }

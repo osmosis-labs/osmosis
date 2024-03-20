@@ -3851,8 +3851,6 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			// --- Setup ---
-
 			// Setup pool
 			pool := s.PrepareConcentratedPool()
 			poolId := pool.GetId()
