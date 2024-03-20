@@ -46,6 +46,10 @@ message Asset {
   AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
   // Exponent represents the power of 10 used for coin representation
   uint64 exponent = 3 [ (gogoproto.moretags) = "yaml:\"exponent\"" ];
+  // LastTransferHeight is the height at which the last transfer with
+  // this asset was successfully completed (finalized)
+  int64 last_transfer_height = 4
+      [ (gogoproto.moretags) = "yaml:\"last_transfer_height\"" ];
 }
 
 enum AssetStatus {

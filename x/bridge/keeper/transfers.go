@@ -14,11 +14,7 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 )
 
-var (
-	ErrAlreadyFinalized = errors.New("transfer already finalized")
-	ErrNeedMoreVotes    = errors.New("transfer needs more votes")
-	ErrTransferNotFound = errors.New("transfer info not found")
-)
+var ErrTransferNotFound = errors.New("transfer info not found")
 
 func (k Keeper) InboundTransfer(
 	ctx sdk.Context,
@@ -31,35 +27,40 @@ func (k Keeper) InboundTransfer(
 	params := k.GetParams(ctx)
 
 	// Check if the asset accepts inbound transfers
-	asset, ok := params.GetAsset(assetID)
-	if !ok {
+	assetIdx := params.GetAssetIndex(assetID)
+	if assetIdx == notFoundIdx {
 		return errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
-	if !asset.Status.InboundActive() {
+	if !params.Assets[assetIdx].Status.InboundActive() {
 		return errorsmod.Wrapf(types.ErrInvalidAssetStatus, "Inbound transfers are disabled for this asset")
 	}
 
 	// Try to finalize the transfer in store
-	err := k.finalizeInboundTransfer(ctx, externalID, sender, destAddr, assetID, amount, params.VotesNeeded)
-	switch {
-	case err == nil:
-		// Everything is fine, mint!
-	case errors.Is(err, ErrAlreadyFinalized), errors.Is(err, ErrNeedMoreVotes):
-		// Expected scenario, just return without minting
-		return nil
-	default:
-		// Unexpected error
+	finalized, err := k.finalizeInboundTransfer(ctx, externalID, sender, destAddr, assetID, amount, params.VotesNeeded)
+	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrLogic, "Can't finalize inbound trander: %s", err.Error())
 	}
+	if !finalized {
+		// The transfer either doesn't have enough votes or has already been finalised before
+		return nil
+	}
 
+	// Perform tokenfactory mint
 	err = k.mint(ctx, destAddr, assetID, amount)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrTokenfactory, err.Error())
 	}
 
+	// Update the last transfer height value
+	params.Assets[assetIdx].LastTransferHeight = ctx.BlockHeight()
+	k.SetParam(ctx, types.KeyAssets, params.Assets)
+
 	return nil
 }
 
+// finalizeInboundTransfer returns true if the transfer is successfully finalized,
+// e.i., the transfer was not finalized before adding the new voter to the voter list,
+// but is finalized after the addition.
 func (k Keeper) finalizeInboundTransfer(
 	ctx sdk.Context,
 	externalID string,
@@ -68,7 +69,7 @@ func (k Keeper) finalizeInboundTransfer(
 	assetID types.AssetID,
 	amount math.Int,
 	votesNeeded uint64,
-) error {
+) (bool, error) {
 	// Get the transfer info from the store to update it properly
 	transfer, err := k.GetInboundTransfer(ctx, externalID)
 	switch {
@@ -77,12 +78,12 @@ func (k Keeper) finalizeInboundTransfer(
 		// If the transfer is new, then create it
 		transfer = types.NewInboundTransfer(externalID, destAddr, assetID, amount)
 	default:
-		return fmt.Errorf("can't get the transfer info from store: %s", err.Error())
+		return false, fmt.Errorf("can't get the transfer info from store: %s", err.Error())
 	}
 
 	// Check if the sender has already signed this transfer
 	if slices.Contains(transfer.Voters, sender) {
-		return fmt.Errorf("the transfer has already been signed by this sender")
+		return false, fmt.Errorf("the transfer has already been signed by this sender")
 	}
 
 	// This variable is used to detect the right moment to process the transfer.
@@ -96,25 +97,25 @@ func (k Keeper) finalizeInboundTransfer(
 	// Save the updated transfer info
 	err = k.UpsertInboundTransfer(ctx, transfer)
 	if err != nil {
-		return fmt.Errorf("can't save the transfer to store: %s", err.Error())
+		return false, fmt.Errorf("can't save the transfer to store: %s", err.Error())
 	}
 
 	// If the transfer is already finalized, then we only need to add the sender
 	// to the voter list and return
 	if alreadyFinalized {
-		return ErrAlreadyFinalized
+		return false, nil
 	}
 
 	// If the transfer is not finalized after adding the new voter,
 	// then it still needs more votes
 	if !transfer.Finalized {
-		return ErrNeedMoreVotes
+		return false, nil
 	}
 
 	// If the transfer is not finalized before adding the new voter to the voter list,
 	// but is finalized after the addition, then it is time to process it
 
-	return nil
+	return true, nil
 }
 
 func (k Keeper) mint(ctx sdk.Context, destAddr string, assetID types.AssetID, amount math.Int) error {

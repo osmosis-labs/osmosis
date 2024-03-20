@@ -1,4 +1,3 @@
-// Package keeper TODO: upgrade the signatures validation process
 package keeper
 
 import (
@@ -81,8 +80,6 @@ func (m msgServer) OutboundTransfer(
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: How to pass the outbound tx to the TSS valset?
 
 	return new(types.MsgOutboundTransferResponse), nil
 }
