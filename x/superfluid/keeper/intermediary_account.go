@@ -12,24 +12,8 @@ import (
 )
 
 func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
-
-	accounts := []types.SuperfluidIntermediaryAccount{}
-
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		account := types.SuperfluidIntermediaryAccount{}
-		err := proto.Unmarshal(iterator.Value(), &account)
-		if err != nil {
-			panic(err)
-		}
-
-		accounts = append(accounts, account)
-	}
-	return accounts
+	alwaysTrue := func(_ types.SuperfluidIntermediaryAccount) bool { return true }
+	return k.getAllIntermediaryAccountsSatisfyingCondition(ctx, alwaysTrue)
 }
 
 func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) types.SuperfluidIntermediaryAccount {
@@ -53,15 +37,33 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 }
 
 func (k Keeper) GetIntermediaryAccountsForVal(ctx sdk.Context, valAddr sdk.ValAddress) []types.SuperfluidIntermediaryAccount {
-	accs := k.GetAllIntermediaryAccounts(ctx)
-	valAccs := []types.SuperfluidIntermediaryAccount{}
-	for _, acc := range accs {
-		if acc.ValAddr != valAddr.String() { // only apply for slashed validator
-			continue
-		}
-		valAccs = append(valAccs, acc)
+	valAddrStr := valAddr.String()
+	restrictToThisVal := func(acc types.SuperfluidIntermediaryAccount) bool {
+		return acc.ValAddr == valAddrStr // only apply for slashed validator
 	}
-	return valAccs
+	return k.getAllIntermediaryAccountsSatisfyingCondition(ctx, restrictToThisVal)
+}
+
+func (k Keeper) getAllIntermediaryAccountsSatisfyingCondition(ctx sdk.Context, cond func(types.SuperfluidIntermediaryAccount) bool) []types.SuperfluidIntermediaryAccount {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
+
+	accounts := []types.SuperfluidIntermediaryAccount{}
+
+	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		account := types.SuperfluidIntermediaryAccount{}
+		err := proto.Unmarshal(iterator.Value(), &account)
+		if err != nil {
+			panic(err)
+		}
+		if cond(account) {
+			accounts = append(accounts, account)
+		}
+	}
+	return accounts
 }
 
 func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr string) (types.SuperfluidIntermediaryAccount, error) {

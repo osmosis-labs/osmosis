@@ -70,6 +70,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context, accs []typ
 			k.Logger(ctx).Debug(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
 				" It may have been previously bonded, but now unbonded.", mAddr.String(), acc.ValAddr))
 		} else {
+			// TODO: Evaluate if we can compute TokensFromShares off a single Validator instance.
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
 		}
 

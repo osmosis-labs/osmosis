@@ -27,7 +27,7 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	// the supplied epoch number is wrong at time of commit. hence we get from the info.
 	curEpoch := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).CurrentEpoch
 
-	accs := k.GetAllIntermediaryAccounts(ctx)
+	accs := k.GetAllDistrIntermediaryAccounts(ctx)
 	// Move delegation rewards to perpetual gauge
 	ctx.Logger().Info("Move delegation rewards to gauges")
 	k.MoveSuperfluidDelegationRewardToGauges(ctx, accs)
@@ -200,4 +200,36 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 	k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 
 	return nil
+}
+
+// Get all Intermediary accounts to distribute to. We check two conditions for this.
+// One: That the validator is found
+// Two: That the validator is unjailed
+// TODO: Delete unaccepted intermediary accounts
+func (k Keeper) GetAllDistrIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
+	// over-estimate of number of validators ever (jailed/tombstoned, etc) on Osmosis
+	sizeEstimate := 512
+	valAddrOkMap := make(map[string]bool, sizeEstimate)
+	isAcceptedCond := func(acc types.SuperfluidIntermediaryAccount) bool {
+		if isValAccepted, ok := valAddrOkMap[acc.ValAddr]; ok {
+			return isValAccepted
+		}
+
+		valAddrForStaking, err := sdk.ValAddressFromBech32(acc.ValAddr)
+		if err != nil {
+			panic(err)
+		}
+		val, found := k.sk.GetValidator(ctx, valAddrForStaking)
+		if !found {
+			valAddrOkMap[acc.ValAddr] = false
+			return false
+		}
+		if val.Jailed {
+			valAddrOkMap[acc.ValAddr] = false
+			return false
+		}
+		valAddrOkMap[acc.ValAddr] = true
+		return true
+	}
+	return k.getAllIntermediaryAccountsSatisfyingCondition(ctx, isAcceptedCond)
 }
