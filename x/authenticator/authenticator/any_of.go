@@ -3,8 +3,10 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -85,20 +87,40 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
-	subAuthErrors := ""
+	var subAuthErrors []string
+	var err error
 
-	err := subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
-		err := auth.Authenticate(ctx, request)
-
-		if subAuthErrors != "" {
-			subAuthErrors += "; "
+	// If the signature assignment is partitioned, we need to split the signatures and pass them to the sub-authenticators
+	var signatures [][]byte
+	if aoa.signatureAssignment == Partitioned {
+		// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+		signatures, err = splitSignatures(request.Signature, len(aoa.SubAuthenticators))
+		if err != nil {
+			return err
 		}
-		subAuthErrors += fmt.Sprintf("[%s (id = %s)] %s", auth.Type(), request.AuthenticatorId, err)
+	}
 
-		return err
-	})
+	baseId := request.AuthenticatorId
+	for i, auth := range aoa.SubAuthenticators {
+		// update the authenticator id to include the sub-authenticator id
+		request.AuthenticatorId = compositeId(baseId, i)
+		// update the request to include the sub-authenticator signature
+		if aoa.signatureAssignment == Partitioned {
+			request.Signature = signatures[i]
+		}
+		err = auth.Authenticate(ctx, request)
+		if err == nil { // Success!
+			return nil
+		}
+
+		// If the sub-authenticator fails, we want to continue to the next one.
+		// We accumulate any errors so that they can all be surfaced to the user
+		subAuthErrors = append(subAuthErrors, fmt.Sprintf("[%s (id = %s)] %s; ", auth.Type(), request.AuthenticatorId, err))
+	}
+
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate: %s", subAuthErrors)
+		// return all errors
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to authenticate: %s", strings.Join(subAuthErrors, "; "))
 	}
 
 	return nil
@@ -108,17 +130,41 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, fee
 	return subTrack(ctx, account, feePayer, msg, msgIndex, authenticatorId, aoa.SubAuthenticators)
 }
 
+// ConfirmExecution is called on all sub-authenticators, but only the changes made by the authenticator that succeeds are written.
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
-	return subHandleRequest(ctx, request, aoa.SubAuthenticators, requireAnyPass, aoa.signatureAssignment, func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error {
-		cacheCtx, write := ctx.CacheContext()
-		err := auth.ConfirmExecution(cacheCtx, request)
+	var signatures [][]byte
+	var err error
+
+	// If the signature assignment is partitioned, we need to split the signatures and pass them to the sub-authenticators
+	if aoa.signatureAssignment == Partitioned {
+		// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+		signatures, err = splitSignatures(request.Signature, len(aoa.SubAuthenticators))
 		if err != nil {
 			return err
 		}
+	}
+	var subAuthErrors []string
 
-		write()
-		return nil
-	})
+	baseId := request.AuthenticatorId
+	for i, auth := range aoa.SubAuthenticators {
+		// update the request to include the sub-authenticator id
+		request.AuthenticatorId = compositeId(baseId, i)
+		if aoa.signatureAssignment == Partitioned {
+			// update the request to include the sub-authenticator signature
+			request.Signature = signatures[i]
+		}
+		// We only want to write changes made by the authenticator that succeeds.
+		// If the authenticator fails,its changes are discarded, and we want to continue to the next one.
+		cacheCtx, write := ctx.CacheContext()
+		err = auth.ConfirmExecution(cacheCtx, request)
+		if err == nil {
+			write()
+			return nil
+		}
+		subAuthErrors = append(subAuthErrors, fmt.Sprintf("[%s (id = %s)] %s; ", auth.Type(), request.AuthenticatorId, err))
+	}
+
+	return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "all sub-authenticators failed to confirm execution: %s", strings.Join(subAuthErrors, "; "))
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {

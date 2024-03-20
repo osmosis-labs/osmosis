@@ -30,67 +30,16 @@ func subTrack(
 	return nil
 }
 
-type PassingReq int
-
-const (
-	requireAllPass = iota
-	requireAnyPass
-)
-
-func subHandleRequest(ctx sdk.Context, request AuthenticationRequest, subAuthenticators []Authenticator,
-	passingReq PassingReq, signatureAssignment SignatureAssignment,
-	f func(auth Authenticator, ctx sdk.Context, request AuthenticationRequest) error,
-) error {
-	if passingReq != requireAllPass && passingReq != requireAnyPass {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid passing req")
-	}
-
-	var err error
-
-	// Partitioned signatures are decoded and passed one by one as the signature of the sub-authenticator
+func splitSignatures(signature []byte, total int) ([][]byte, error) {
 	var signatures [][]byte
-	if signatureAssignment == Partitioned {
-		err = json.Unmarshal(request.Signature, &signatures)
-		if err != nil {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to parse signatures")
-		}
-		if len(signatures) != len(subAuthenticators) {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid number of signatures")
-		}
+	err := json.Unmarshal(signature, &signatures)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to parse signatures")
 	}
-
-	baseId := request.AuthenticatorId
-
-	for i, auth := range subAuthenticators {
-		// update the authenticator id to include the sub-authenticator id
-		request.AuthenticatorId = compositeId(baseId, i)
-
-		if signatureAssignment == Partitioned {
-			request.Signature = signatures[i]
-		}
-
-		err = f(auth, ctx, request)
-
-		if passingReq == requireAllPass && err != nil {
-			return err
-		}
-
-		if passingReq == requireAnyPass && err == nil {
-			return nil
-		}
+	if len(signatures) != total {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid number of signatures")
 	}
-
-	// require all pass return no error if it has not yet early returned
-	if passingReq == requireAllPass {
-		return nil
-	}
-
-	// require any pass return error it has not yet early returned
-	if passingReq == requireAnyPass {
-		return err
-	}
-
-	return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid passing req")
+	return signatures, nil
 }
 
 func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string, am *AuthenticatorManager) error {

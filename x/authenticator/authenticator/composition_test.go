@@ -365,22 +365,22 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 	}
 
 	testCases := []testCase{
-		//{
-		//	auth:    AnyOf(AllOf(always, always), AnyOf(always, never)),
-		//	success: true,
-		//},
-		//{
-		//	auth:    AllOf(AnyOf(always, never), AnyOf(never, always)),
-		//	success: true,
-		//},
-		//{
-		//	auth:    AllOf(AnyOf(never, never, never), AnyOf(never, always, never)),
-		//	success: false,
-		//},
-		//{
-		//	auth:    AnyOf(AnyOf(never, never, never), AnyOf(never, never, never)),
-		//	success: false,
-		//},
+		{
+			auth:    AnyOf(AllOf(always, always), AnyOf(always, never)),
+			success: true,
+		},
+		{
+			auth:    AllOf(AnyOf(always, never), AnyOf(never, always)),
+			success: true,
+		},
+		{
+			auth:    AllOf(AnyOf(never, never, never), AnyOf(never, always, never)),
+			success: false,
+		},
+		{
+			auth:    AnyOf(AnyOf(never, never, never), AnyOf(never, never, never)),
+			success: false,
+		},
 		{
 			auth:    AnyOf(AnyOf(never, never, never), AnyOf(never, never, never), AllOf(always)),
 			success: true,
