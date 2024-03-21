@@ -130,14 +130,13 @@ func (o *Observer) fetchBlock(height uint64) error {
 	}
 
 	for _, tx := range blockVerbose.Tx {
-		txIn, err := o.processTx(uint64(blockVerbose.Height), &tx)
-		if err != nil {
-			if !errors.Is(err, ErrTxInvalidDestination) {
-				o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
-			}
-			continue
+		txIn, isRelevant, err := o.processTx(uint64(blockVerbose.Height), &tx)
+		if isRelevant && err != nil {
+			o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
 		}
-		o.globalTxInChan <- txIn
+		if isRelevant && err == nil {
+			o.globalTxInChan <- txIn
+		}
 	}
 	return nil
 }
@@ -164,24 +163,21 @@ func (o *Observer) observeBlocks() {
 	}
 }
 
-func (o *Observer) processTx(height uint64, tx *btcjson.TxRawResult) (TxIn, error) {
+func (o *Observer) processTx(height uint64, tx *btcjson.TxRawResult) (TxIn, bool, error) {
 	sender, err := o.getSender(tx)
 	if err != nil {
-		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx sender")
+		return TxIn{}, false, errorsmod.Wrapf(err, "Failed to get Tx sender")
 	}
 
 	dest, amount, err := o.getOutput(sender, tx)
 	if err != nil {
-		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx output")
+		return TxIn{}, false, errorsmod.Wrapf(err, "Failed to get Tx output")
 	}
+	isRelevant := dest == o.vaultAddr
 
 	memo, err := o.getMemo(tx)
 	if err != nil {
-		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx memo")
-	}
-
-	if dest != o.vaultAddr {
-		return TxIn{}, ErrTxInvalidDestination
+		return TxIn{}, isRelevant, errorsmod.Wrapf(err, "Failed to get Tx memo")
 	}
 
 	return TxIn{
@@ -191,7 +187,7 @@ func (o *Observer) processTx(height uint64, tx *btcjson.TxRawResult) (TxIn, erro
 		Destination: dest,
 		Amount:      amount,
 		Memo:        memo,
-	}, err
+	}, isRelevant, nil
 }
 
 // getSender retrieves sender's address from Tx
