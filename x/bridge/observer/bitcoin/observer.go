@@ -22,7 +22,7 @@ const ModuleNameObserver = "btc-observer"
 
 type TxIn struct {
 	Id          string
-	Height      int64
+	Height      uint64
 	Sender      string
 	Destination string
 	Amount      math.Uint
@@ -51,7 +51,7 @@ func (o RpcConfig) Validate() error {
 type Observer struct {
 	logger             log.Logger
 	vaultAddr          string
-	currentHeight      int64
+	currentHeight      uint64
 	btcRpc             *rpcclient.Client
 	globalTxInChan     chan TxIn
 	stopChan           chan struct{}
@@ -63,7 +63,7 @@ func NewObserver(
 	logger log.Logger,
 	cfg RpcConfig,
 	vaultAddr string,
-	initialHeight int64,
+	initialHeight uint64,
 	observeSleepPeriod time.Duration,
 ) (Observer, error) {
 	err := cfg.Validate()
@@ -115,8 +115,8 @@ func (o *Observer) TxIns() <-chan TxIn {
 }
 
 // FetchBlock processes block transactions at the given `height`
-func (o *Observer) fetchBlock(height int64) error {
-	hash, err := o.btcRpc.GetBlockHash(height)
+func (o *Observer) fetchBlock(height uint64) error {
+	hash, err := o.btcRpc.GetBlockHash(int64(height))
 	if err != nil {
 		if rpcErr, ok := err.(*btcjson.RPCError); ok && rpcErr.Code == btcjson.ErrRPCInvalidParameter {
 			return ErrBlockUnavailable
@@ -130,7 +130,7 @@ func (o *Observer) fetchBlock(height int64) error {
 	}
 
 	for _, tx := range blockVerbose.Tx {
-		txIn, err := o.processTx(blockVerbose.Height, &tx)
+		txIn, err := o.processTx(uint64(blockVerbose.Height), &tx)
 		if err != nil {
 			if !errors.Is(err, ErrTxInvalidDestination) {
 				o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
@@ -164,7 +164,7 @@ func (o *Observer) observeBlocks() {
 	}
 }
 
-func (o *Observer) processTx(height int64, tx *btcjson.TxRawResult) (TxIn, error) {
+func (o *Observer) processTx(height uint64, tx *btcjson.TxRawResult) (TxIn, error) {
 	sender, err := o.getSender(tx)
 	if err != nil {
 		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx sender")

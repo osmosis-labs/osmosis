@@ -76,7 +76,7 @@ func TestObserverSuccess(t *testing.T) {
 		Pass:       "test",
 	}
 
-	initialHeight := int64(2582657)
+	initialHeight := uint64(2582657)
 	observer, err := bitcoin.NewObserver(
 		log.NewNopLogger(),
 		cfg,
@@ -160,7 +160,7 @@ func TestInvalidVaultAddress(t *testing.T) {
 		Pass:       "test",
 	}
 
-	initialHeight := int64(2582657)
+	initialHeight := uint64(2582657)
 	_, err := bitcoin.NewObserver(
 		log.NewNopLogger(),
 		cfg,
