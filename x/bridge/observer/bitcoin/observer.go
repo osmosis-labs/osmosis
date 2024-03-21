@@ -135,7 +135,12 @@ func (o *Observer) fetchBlock(height uint64) error {
 			o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
 		}
 		if isRelevant && err == nil {
-			o.globalTxInChan <- txIn
+			select {
+			case o.globalTxInChan <- txIn:
+			case <-o.stopChan:
+				o.logger.Info("Observer exiting early, tx skipped: ", tx.Txid)
+				return nil
+			}
 		}
 	}
 	return nil
