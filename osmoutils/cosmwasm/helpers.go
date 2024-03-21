@@ -124,7 +124,8 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 	// Defer to catch panics in case the sudo call runs out of gas.
 	defer func() {
 		if r := recover(); r != nil {
-			response = *new(K) // Create an empty version of response type K
+			var emptyResponse K
+			response = emptyResponse
 			err = fmt.Errorf("contract call ran out of gas")
 		}
 	}()

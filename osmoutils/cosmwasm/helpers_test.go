@@ -80,14 +80,13 @@ func (s *KeeperTestSuite) TestSudoGasLimit() {
 			// System under test
 			response, err := cosmwasm.Sudo[CountSudoMsg, CountMsgResponse](s.Ctx, contractKeeper, cosmwasmAddressBech32, tc.msg)
 
-			fmt.Println("response: ", response)
-
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
 
 			s.Require().NoError(err)
+			s.Require().Equal(CountMsgResponse{}, response)
 		})
 	}
 }
