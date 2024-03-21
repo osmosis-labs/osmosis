@@ -268,7 +268,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
-	_, _, err = k.collectIncentives(ctx, owner, positionId)
+	_, totalForefeitedIncentives, scaledForfeitedIncentivesByUptime, err := k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
@@ -285,6 +285,12 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// Transfer the actual amounts of tokens 0 and 1 from the pool to the position owner.
 	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), updateData.Amount0.Abs(), updateData.Amount1.Abs(), pool.GetAddress(), owner)
+	if err != nil {
+		return osmomath.Int{}, osmomath.Int{}, err
+	}
+
+	// If the position has any forfeited incentives, re-deposit them into the pool.
+	err = k.redepositForfeitedIncentives(ctx, position.PoolId, owner, scaledForfeitedIncentivesByUptime, totalForefeitedIncentives)
 	if err != nil {
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
