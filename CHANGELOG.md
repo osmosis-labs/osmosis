@@ -66,7 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
 * [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
 * [#7747](https://github.com/osmosis-labs/osmosis/pull/7747) Remove redundant call to incentive collection in CL position withdrawal logic
+* [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
+* [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
 * [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
+
+## v23.0.8-iavl-v1 & v23.0.8
+
+* [#7769](https://github.com/osmosis-labs/osmosis/pull/7769) Set and default timeout commit to 3s. Add flag to prevent custom overrides if not desired.
 
 ## v23.0.7-iavl-v1
 
