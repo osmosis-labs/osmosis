@@ -70,10 +70,10 @@ func TestObserverSuccess(t *testing.T) {
 
 	host, _ := strings.CutPrefix(s.URL, "http://")
 	cfg := bitcoin.RpcConfig{
-		Host: host,
-		Tls:  false,
-		User: "test",
-		Pass: "test",
+		Host:       host,
+		DisableTls: true,
+		User:       "test",
+		Pass:       "test",
 	}
 
 	initialHeight := int64(2582657)
@@ -120,28 +120,28 @@ func TestInvalidRpcCfg(t *testing.T) {
 		{
 			name: "Invalid Host URL",
 			cfg: bitcoin.RpcConfig{
-				Host: "",
-				Tls:  false,
-				User: "test",
-				Pass: "test",
+				Host:       "",
+				DisableTls: true,
+				User:       "test",
+				Pass:       "test",
 			},
 		},
 		{
 			name: "Invalid User",
 			cfg: bitcoin.RpcConfig{
-				Host: "127.0.0.1:1234",
-				Tls:  false,
-				User: "",
-				Pass: "test",
+				Host:       "127.0.0.1:1234",
+				DisableTls: true,
+				User:       "",
+				Pass:       "test",
 			},
 		},
 		{
 			name: "Invalid Pass",
 			cfg: bitcoin.RpcConfig{
-				Host: "127.0.0.1:1234",
-				Tls:  false,
-				User: "test",
-				Pass: "",
+				Host:       "127.0.0.1:1234",
+				DisableTls: true,
+				User:       "test",
+				Pass:       "",
 			},
 		},
 	}
@@ -154,10 +154,10 @@ func TestInvalidRpcCfg(t *testing.T) {
 
 func TestInvalidVaultAddress(t *testing.T) {
 	cfg := bitcoin.RpcConfig{
-		Host: "127.0.0.1:1234",
-		Tls:  false,
-		User: "test",
-		Pass: "test",
+		Host:       "127.0.0.1:1234",
+		DisableTls: true,
+		User:       "test",
+		Pass:       "test",
 	}
 
 	initialHeight := int64(2582657)

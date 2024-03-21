@@ -30,10 +30,10 @@ type TxIn struct {
 }
 
 type RpcConfig struct {
-	Host string
-	Tls  bool
-	User string
-	Pass string
+	Host       string
+	DisableTls bool
+	User       string
+	Pass       string
 }
 
 func (o RpcConfig) Validate() error {
@@ -77,7 +77,7 @@ func NewObserver(
 	btcRpc, err := rpcclient.New(&rpcclient.ConnConfig{
 		Host:         cfg.Host,
 		HTTPPostMode: true,
-		DisableTLS:   !cfg.Tls,
+		DisableTLS:   cfg.DisableTls,
 		User:         cfg.User,
 		Pass:         cfg.Pass,
 		Params:       chaincfg.TestNet3Params.Name,
