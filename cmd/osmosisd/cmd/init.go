@@ -39,6 +39,9 @@ const (
 
 	// FlagSetEnv defines a flag to create environment file & save current home directory into it.
 	FlagSetEnv = "set-env"
+
+	// FlagRejectConfigDefaults defines a flag to reject some select defaults that override what is in the config file.
+	FlagRejectConfigDefaults = "reject-config-defaults"
 )
 
 type printInfo struct {
@@ -109,8 +112,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.StateSync.TrustPeriod = 112 * time.Hour
 
 			// The original default is 5s and is set in Cosmos SDK.
-			// We lower it to 4s for faster block times.
-			config.Consensus.TimeoutCommit = 4 * time.Second
+			// We lower it to 3s for faster block times.
+			config.Consensus.TimeoutCommit = 3 * time.Second
 
 			config.SetRoot(clientCtx.HomeDir)
 

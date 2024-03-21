@@ -9,6 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 )
 
 func CreateUpgradeHandler(
@@ -46,6 +48,9 @@ func CreateUpgradeHandler(
 		keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
 			time.Hour * 24 * 14,
 		})
+		// Set the new min value for distribution for the incentives module.
+		// https://www.mintscan.io/osmosis/proposals/733
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
 
 		return migrations, nil
 	}

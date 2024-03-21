@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
@@ -139,6 +140,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 	s.Require().Equal(len(lockableDurations), 1)
 	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
+	// INCENTIVES Tests
+	//
+
+	// Check that the new min value for distribution has been set
+	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
