@@ -68,10 +68,10 @@ func NewObserver(
 ) (Observer, error) {
 	err := cfg.Validate()
 	if err != nil {
-		return Observer{}, errorsmod.Wrapf(err, "Invalid RPC configuration")
+		return Observer{}, errorsmod.Wrapf(ErrInvalidCfg, err.Error())
 	}
 	if len(vaultAddr) == 0 {
-		return Observer{}, fmt.Errorf("Empty vaultAddr")
+		return Observer{}, errorsmod.Wrapf(ErrInvalidCfg, "Invalid vaultAddr")
 	}
 
 	btcRpc, err := rpcclient.New(&rpcclient.ConnConfig{
@@ -83,7 +83,7 @@ func NewObserver(
 		Params:       chaincfg.TestNet3Params.Name,
 	}, nil)
 	if err != nil {
-		return Observer{}, errorsmod.Wrapf(err, "Failed to create RPC client")
+		return Observer{}, errorsmod.Wrapf(ErrRpcClient, err.Error())
 	}
 
 	return Observer{
@@ -118,6 +118,9 @@ func (o *Observer) TxIns() <-chan TxIn {
 func (o *Observer) fetchBlock(height int64) error {
 	hash, err := o.btcRpc.GetBlockHash(height)
 	if err != nil {
+		if rpcErr, ok := err.(*btcjson.RPCError); ok && rpcErr.Code == btcjson.ErrRPCInvalidParameter {
+			return ErrBlockUnavailable
+		}
 		return errorsmod.Wrapf(err, "Failed to get block hash")
 	}
 
@@ -129,7 +132,9 @@ func (o *Observer) fetchBlock(height int64) error {
 	for _, tx := range blockVerbose.Tx {
 		txIn, err := o.processTx(blockVerbose.Height, &tx)
 		if err != nil {
-			o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
+			if !errors.Is(err, ErrTxInvalidDestination) {
+				o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
+			}
 			continue
 		}
 		o.globalTxInChan <- txIn
@@ -147,7 +152,10 @@ func (o *Observer) observeBlocks() {
 		default:
 			err := o.fetchBlock(o.currentHeight)
 			if err != nil {
-				o.logger.Error("Failed to fetch block", err)
+				// Do not log error if block with this height doesn't exist yet
+				if !errors.Is(err, ErrBlockUnavailable) {
+					o.logger.Error(fmt.Sprintf("Failed to fetch block %d: %s", o.currentHeight, err.Error()))
+				}
 				time.Sleep(o.observeSleepPeriod)
 				continue
 			}
@@ -162,29 +170,18 @@ func (o *Observer) processTx(height int64, tx *btcjson.TxRawResult) (TxIn, error
 		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx sender")
 	}
 
-	output, err := o.getVout(sender, tx)
+	dest, amount, err := o.getOutput(sender, tx)
 	if err != nil {
-		o.logger.Error("Failed to get output from Tx", err)
-		fmt.Println("Failed output")
-		return TxIn{}, err
-	}
-
-	dest, err := o.getDestination(output)
-	if err != nil {
-		return TxIn{}, errorsmod.Wrapf(err, "Failed to get destination address")
-	}
-	if dest != o.vaultAddr {
-		return TxIn{}, fmt.Errorf("Invalid destination address")
-	}
-
-	amount, err := o.getAmount(output)
-	if err != nil {
-		return TxIn{}, errorsmod.Wrapf(err, "Failed to get amount")
+		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx output")
 	}
 
 	memo, err := o.getMemo(tx)
 	if err != nil {
-		return TxIn{}, errorsmod.Wrapf(err, "Failed to get memo")
+		return TxIn{}, errorsmod.Wrapf(err, "Failed to get Tx memo")
+	}
+
+	if dest != o.vaultAddr {
+		return TxIn{}, ErrTxInvalidDestination
 	}
 
 	return TxIn{
@@ -197,6 +194,18 @@ func (o *Observer) processTx(height int64, tx *btcjson.TxRawResult) (TxIn, error
 	}, err
 }
 
+// getSender retrieves sender's address from Tx
+// There is no straightforward way to determine sender of the Tx, the flow used in this impl goes like this:
+// 1. Get the `txid` and `Vout` index from `Vin[0]` from incoming Tx
+//   - if we have multiple `Vin` entries the best thing we can do is to assume
+//     that all of the Vins owned by the same person
+//
+// 2. Get Tx by `txid` to get the transaction the input is originated from
+// 3. Get the `Vout` entry from this Tx by its index
+// 4. Get the sender address from `Vout`
+//   - if `addresses` field is available - get the first address from it
+//     (again we assume that all of them are owned by the same person)
+//   - otherwise - try to decode address from the script
 func (o *Observer) getSender(tx *btcjson.TxRawResult) (string, error) {
 	if len(tx.Vin) == 0 {
 		return "", fmt.Errorf("Vin is empty for Tx %s", tx.Txid)
@@ -224,7 +233,11 @@ func (o *Observer) getSender(tx *btcjson.TxRawResult) (string, error) {
 	return addresses[0], nil
 }
 
-func (o *Observer) getVout(sender string, tx *btcjson.TxRawResult) (btcjson.Vout, error) {
+// getOutput retrieves receiver address and amount of tokens from Tx
+// We try to find a `Vout` with a single receiver address (our vault)
+// to get the Tx receiver and amount of tokens
+// We go through all of the `Vout`'s and pick the first one that is not addressed back to the sender
+func (o *Observer) getOutput(sender string, tx *btcjson.TxRawResult) (string, math.Uint, error) {
 	for _, vout := range tx.Vout {
 		if strings.EqualFold(vout.ScriptPubKey.Type, "nulldata") {
 			continue
@@ -239,23 +252,17 @@ func (o *Observer) getVout(sender string, tx *btcjson.TxRawResult) (btcjson.Vout
 		}
 
 		if addresses[0] != sender {
-			return vout, nil
+			amount, err := o.getAmount(vout)
+			if err != nil {
+				continue
+			}
+			return addresses[0], amount, nil
 		}
 	}
-	return btcjson.Vout{}, fmt.Errorf("Failed to get Vout")
+	return "", math.Uint{}, fmt.Errorf("Failed to get Vout")
 }
 
-func (o *Observer) getDestination(vout btcjson.Vout) (string, error) {
-	addresses, err := o.getAddressesFromScriptPubKey(vout.ScriptPubKey)
-	if err != nil {
-		return "", errorsmod.Wrapf(err, "Failed to get destination address")
-	}
-	if len(addresses) == 0 {
-		return "", errorsmod.Wrapf(err, "Destination address not found")
-	}
-	return addresses[0], nil
-}
-
+// getAmount retrieves amount of tokens sent
 func (o *Observer) getAmount(vout btcjson.Vout) (math.Uint, error) {
 	amount, err := btcutil.NewAmount(vout.Value)
 	if err != nil {
@@ -264,16 +271,19 @@ func (o *Observer) getAmount(vout btcjson.Vout) (math.Uint, error) {
 	return math.NewUint(uint64(amount.ToUnit(btcutil.AmountSatoshi))), nil
 }
 
+// getMemo retrieves data behind `OP_RETURN` Vout
 func (o *Observer) getMemo(tx *btcjson.TxRawResult) (string, error) {
 	for _, vout := range tx.Vout {
 		if !strings.EqualFold(vout.ScriptPubKey.Type, "nulldata") {
 			continue
 		}
 		fields := strings.Fields(vout.ScriptPubKey.Asm)
+		// We should have an array like ["OP_RETURN", "$MEMO_DATA$"]
 		if len(fields) == 2 {
+			// Decode $MEMO_DATA$ entry from the array
 			decoded, err := hex.DecodeString(fields[1])
 			if err != nil {
-				fmt.Println("Failed to decode field", fields[1])
+				o.logger.Error("Failed to decode OP_RETURN field", err)
 				continue
 			}
 			return string(decoded), nil

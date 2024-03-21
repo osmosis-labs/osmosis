@@ -148,7 +148,7 @@ func TestInvalidRpcCfg(t *testing.T) {
 
 	for _, tc := range tests {
 		_, err := bitcoin.NewObserver(log.NewNopLogger(), tc.cfg, "", 0, time.Second)
-		require.Error(t, err)
+		require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
 	}
 }
 
@@ -168,5 +168,5 @@ func TestInvalidVaultAddress(t *testing.T) {
 		initialHeight,
 		time.Second,
 	)
-	require.Error(t, err)
+	require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
 }
