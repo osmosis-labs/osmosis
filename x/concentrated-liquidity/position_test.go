@@ -2453,7 +2453,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				for _, positionID := range tc.positionsToTransfer {
 					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionID)
+					_, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
 				}
 
