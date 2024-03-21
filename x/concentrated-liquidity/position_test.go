@@ -2441,31 +2441,34 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 					s.Require().Equal(oldPosition, newPosition)
 				}
 
-				// Check that the incentives and spread rewards went to the old owner
+				// Check that the old owner's balance did not change due to the transfer
 				postTransferOriginalOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
-				expectedTransferOriginalOwnerFunds := preTransferOwnerFunds.Add(totalExpectedRewards...)
-				s.Require().Equal(expectedTransferOriginalOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
+				s.Require().Equal(preTransferOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
 
-				// Check that the new owner does not have any new funds
+				// Check that the new owner's balance did not change due to the transfer
 				postTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
 				s.Require().Equal(preTransferNewOwnerFunds, postTransferNewOwnerFunds)
 
-				// Test that claiming incentives/spread rewards with the new owner returns nothing
-				for _, positionId := range tc.positionsToTransfer {
-					fundsToClaim, fundsToForefeit, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionId)
+				// Claim rewards and ensure that previously accrued incentives and spread rewards go to the new owner
+				for _, positionID := range tc.positionsToTransfer {
+					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					s.Require().Equal(sdk.Coins{}, fundsToClaim)
-					s.Require().Equal(sdk.Coins{}, fundsToForefeit)
-
-					spreadRewards, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId)
+					_, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					s.Require().Equal(sdk.Coins(nil), spreadRewards)
 				}
+
+				// Ensure all rewards went to the new owner
+				postClaimRewardsNewOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
+				s.Require().Equal(totalExpectedRewards, postClaimRewardsNewOwnerBalance)
+
+				// Ensure no rewards went to the old owner
+				postClaimRewardsOldOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
+				s.Require().Equal(preTransferOwnerFunds.String(), postClaimRewardsOldOwnerBalance.String())
 
 				// Test that adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything
 				totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
 				totalIncentives := s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.inRangePositions)
-				totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...)
+				totalExpectedRewards := totalExpectedRewards.Add(totalSpreadRewards...).Add(totalIncentives...)
 				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 				for _, positionId := range tc.positionsToTransfer {

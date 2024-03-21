@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
 * [#7747](https://github.com/osmosis-labs/osmosis/pull/7747) Remove redundant call to incentive collection in CL position withdrawal logic
 * [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
+* [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
 
 ## v23.0.8-iavl-v1 & v23.0.8
 
