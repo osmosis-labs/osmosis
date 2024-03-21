@@ -99,6 +99,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
 
+	// check that old lockable durations were not single param
+	oldLockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(oldLockableDurations), 4)
+
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
