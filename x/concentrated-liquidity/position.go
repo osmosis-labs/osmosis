@@ -702,7 +702,7 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 		if positionHasActiveUnderlyingLock {
 			return types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
-
+    
 		// Delete the KVStore entries for the position.
 		err = k.deletePosition(ctx, positionId, sender, position.PoolId)
 		if err != nil {

@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               2, // 1 for collect send, 1 for forfeit send
+			expectedMessageEvents:               1, // 1 for collect send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               4, // 2 for collect send, 2 for forfeit send
+			expectedMessageEvents:               2, // 2 for collect send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               6, // 3 for collect send, 3 for forfeit send
+			expectedMessageEvents:               3, // 3 for collect send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
