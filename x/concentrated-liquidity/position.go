@@ -672,8 +672,7 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 // For each position ID, it retrieves the corresponding position and checks if the sender is the owner of the position.
 // If the sender is not the owner (or the governance module account), it returns an error.
 // It then checks if the position has an active underlying lock, and if so, returns an error.
-// It then collects any outstanding incentives and rewards for the position, deletes the KVStore entries for the position,
-// and restores the position under the recipient's account.
+// It then deletes the KVStore entries for the position, and restores the position under the recipient's account.
 // If any of these operations fail, it returns the corresponding error.
 // If all operations succeed, it returns nil.
 func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
