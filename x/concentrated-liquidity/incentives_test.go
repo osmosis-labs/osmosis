@@ -3707,51 +3707,6 @@ func (s *KeeperTestSuite) TestComputeTotalIncentivesToEmit() {
 	s.Require().ErrorContains(err, "overflow")
 }
 
-// This test shows that the scaling factor is applied correctly based on the pool ID.
-// If the pool ID is below or at the migration threshold, the scaling factor is 1.
-// If the pool ID is above the migration threshold, the scaling factor is the per unit liquidity scaling factor.
-// If he pool ID is in the overwrite map, the scaling factor is the per unit liquidity scaling factor.
-func (s *KeeperTestSuite) TestGetIncentiveScalingFactorForPool() {
-	// Grab an example of the overwrite pool from map
-	s.Require().NotZero(len(types.MigratedIncentiveAccumulatorPoolIDs))
-	var exampleOverwritePoolID uint64
-	for poolID := range types.MigratedIncentiveAccumulatorPoolIDs {
-		exampleOverwritePoolID = poolID
-		break
-	}
-
-	var (
-		oneDec = osmomath.OneDec()
-
-		// Make migration threshold 1000 pool IDs higher
-		migrationThreshold = exampleOverwritePoolID + 1000
-	)
-
-	s.SetupTest()
-
-	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, migrationThreshold)
-
-	// One below the threshold has scaling factor of 1 (non-migrated)
-	scalingFactor, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold-1)
-	s.Require().NoError(err)
-	s.Require().Equal(oneDec, scalingFactor)
-
-	// At threshold, scaling factor is 1 (non-migrated)
-	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold)
-	s.Require().NoError(err)
-	s.Require().Equal(oneDec, scalingFactor)
-
-	// One above the threshold has non-1 scaling factor (migrated)
-	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold+1)
-	s.Require().NoError(err)
-	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
-
-	// Overwrite pool ID has non-1 scaling factor (migrated)
-	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, exampleOverwritePoolID)
-	s.Require().NoError(err)
-	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
-}
-
 // scaleUptimeAccumulators scales the uptime accumulators by the scaling factor.
 // This is to avoid truncation to zero in core logic when the liquidity is large.
 func (s *KeeperTestSuite) scaleUptimeAccumulators(uptimeAccumulatorsToScale []sdk.DecCoins) []sdk.DecCoins {

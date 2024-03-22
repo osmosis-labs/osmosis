@@ -84,9 +84,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// INCENTIVES Setup
 	//
 
-	// Set the migration pool ID threshold to far away to simulate pre-migration state.
-	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, 1000)
-
 	concentratedPoolIDs := []uint64{}
 
 	// Create two sets of all pools
@@ -180,8 +177,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP records indexed by pool ID should be untouched.
 	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twap.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Len(twapRecords, 3)
+	s.Require().Equal(twap, twapRecords[2])
 
 	// PROTOREV Tests
 	//

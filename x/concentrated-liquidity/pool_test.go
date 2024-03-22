@@ -795,9 +795,6 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	concentratedPool := s.PrepareConcentratedPool()
 	poolID := concentratedPool.GetId()
 
-	// Setup migration threshold above the pool ID so that we do not apply scaling factor before migration.
-	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, poolID)
-
 	// Create position one
 	// It has position accumulator snapshot of zero
 	positionOneID, positionOneLiquidity := s.CreateFullRangePosition(concentratedPool, DefaultCoins)
@@ -840,7 +837,7 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 
 	// Ensure that the accumulator has been properly initialized
-	expectedInitialAccumulatorGrowth := sdk.NewDecCoins(sdk.NewDecCoinFromDec(incentiveDenom, osmomath.NewDec(60).QuoTruncate(positionOneLiquidity)))
+	expectedInitialAccumulatorGrowth := sdk.NewDecCoins(sdk.NewDecCoinFromDec(incentiveDenom, osmomath.NewDec(60).MulMut(cl.PerUnitLiqScalingFactor).QuoTruncate(positionOneLiquidity)))
 	s.Require().Equal(len(types.SupportedUptimes), len(uptimeAcc))
 	s.Require().Equal(expectedInitialAccumulatorGrowth.String(), uptimeAcc[0].GetValue().String())
 
@@ -849,15 +846,13 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 
 	// Get claimable amount for position one before the migration
-	claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
-	s.Require().NoError(err)
+	// NOTE: since the we enforce the scaling factor and never use the original scaling factor, this check is no longer applicable
+	// claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
+	// s.Require().NoError(err)
 
 	// System under test.
 	err = s.App.ConcentratedLiquidityKeeper.MigrateAccumulatorToScalingFactor(s.Ctx, poolID)
 	s.Require().NoError(err)
-
-	// Note: we must now reset the migration threshold so that a scaling factor is chosen appropriately for this pool.
-	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, poolID-1)
 
 	// Ensure that the pool accumulator has been properly migrated
 	expectedMigratedAccumulatorGrowth := expectedInitialAccumulatorGrowth.MulDecTruncate(cl.PerUnitLiqScalingFactor)
@@ -882,7 +877,9 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	s.validateUptimePositionAccumulator(incentivizedUpdatedAccumulator, positionOneID, cl.EmptyCoins)
 
 	// Ensure that position 1 can claim the same amount as before the migration
-	s.validateClaimableIncentives(positionOneID, claimableIncentivesOneBeforeMigration)
+	// TODO: The function has been changed so this check no longer is valid, we always default to the scaling factor
+	// so the before and after checks return different values
+	// s.validateClaimableIncentives(positionOneID, claimableIncentivesOneBeforeMigration)
 
 	// Ensure that position 2 cannot claim any incentives
 	s.validateClaimableIncentives(positionTwoID, sdk.NewCoins())

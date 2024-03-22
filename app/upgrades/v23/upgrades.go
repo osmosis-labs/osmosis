@@ -2,7 +2,6 @@ package v23
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"time"
 
@@ -95,10 +94,9 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 
 	// Migrate concentrated pools
 	for _, poolId := range poolIDsToMigrate {
-		fmt.Println(poolId)
-		//if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolId); err != nil {
-		//	return err
-		//}
+		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolId); err != nil {
+			return err
+		}
 	}
 
 	return nil

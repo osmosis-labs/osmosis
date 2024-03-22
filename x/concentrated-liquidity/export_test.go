@@ -351,7 +351,3 @@ func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor os
 func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
 	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
 }
-
-func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
-	return k.getIncentiveScalingFactorForPool(ctx, poolID)
-}

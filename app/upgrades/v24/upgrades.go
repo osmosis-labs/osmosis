@@ -1,7 +1,6 @@
 package v24
 
 import (
-	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,8 +53,7 @@ func CreateUpgradeHandler(
 
 		chainID := ctx.ChainID()
 		// We only perform the migration on mainnet pools since we hard-coded the pool IDs to migrate
-		// in the types package. To ensure correctness, we will spin up a state-exported mainnet testnet
-		// with the same chain ID.
+		// in the types package. And the testnet was migrated in v24
 		if chainID == mainnetChainID || chainID == edgenetChainID {
 			if err := migrateMainnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
 				return nil, err
@@ -82,10 +80,20 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 	if err != nil {
 		return err
 	}
-	fmt.Println(thresholdId)
-	for _, poolId := range poolIDsToMigrate {
-		fmt.Println(poolId)
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolId); err != nil {
+
+	for _, poolID := range poolIDsToMigrate {
+		// This should never happen, this check is defence in depth incase we have wrong data by accident
+		if poolID >= thresholdId {
+			continue
+		}
+
+		// This should never happen, this check is defence in depth incase we have wrong data by accident
+		_, isMigrated := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[poolID]
+		if isMigrated {
+			continue
+		}
+
+		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolID); err != nil {
 			return err
 		}
 	}
