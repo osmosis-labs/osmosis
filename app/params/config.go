@@ -21,6 +21,16 @@ const (
 	Bech32PrefixAccAddr = "osmo"
 )
 
+const (
+	MicroUnit = int64(1e6)
+
+	MicroSDRDenom = "usdr"
+
+	BlocksPerMinute = uint64(10)
+	BlocksPerHour   = BlocksPerMinute * 60
+	BlocksPerDay    = BlocksPerHour * 24
+)
+
 var (
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key.
 	Bech32PrefixAccPub = Bech32PrefixAccAddr + "pub"

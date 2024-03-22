@@ -1,0 +1,17 @@
+syntax = "proto3";
+package osmosis.market.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/market/v1beta1/market.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
+
+// GenesisState defines the market module's genesis state.
+message GenesisState {
+  // params defines all the paramaters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // the gap between the TerraPool and the BasePool
+  bytes terra_pool_delta = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

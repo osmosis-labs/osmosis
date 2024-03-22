@@ -33,6 +33,8 @@ import (
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	"github.com/osmosis-labs/osmosis/v23/x/market"
+
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
@@ -95,6 +97,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 			poolmanagerclient.DenomPairTakerFeeProposalHandler,
 			incentivesclient.HandleCreateGroupsProposal,
+			//marketclient.SwapProposalHandler,
 		},
 	),
 	params.AppModuleBasic{},
@@ -109,6 +112,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
 	poolmanager.AppModuleBasic{},
+	market.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
 	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},

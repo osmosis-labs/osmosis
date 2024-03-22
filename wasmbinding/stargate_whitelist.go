@@ -183,6 +183,10 @@ func init() {
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/IncentiveRecords", &concentratedliquidityquery.IncentiveRecordsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers", &concentratedliquidityquery.TickAccumulatorTrackersResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId", &concentratedliquidityquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse{})
+
+	// market
+	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/Swap", &marketqueryproto.QuerySwapResponse{})
+	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/TerraPoolDelta", &marketqueryproto.QueryTerraPoolDeltaResponse{})
 }
 
 // IsWhitelistedQuery returns if the query is not whitelisted.

@@ -8,6 +8,7 @@ import (
 
 	//nolint:staticcheck
 	"github.com/golang/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 	"github.com/spf13/cobra"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -410,6 +411,17 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			return v, nil
 		case "EstimateTradeBasedOnPriceImpactRequest":
 			return nil, fmt.Errorf("swap route parsing not supported yet")
+		}
+	case "market":
+		switch structName {
+		case "SwapRequest":
+			v := &types.QuerySwapRequest{}
+			v.OfferCoin = structArguments[0]
+			v.AskDenom = structArguments[1]
+			return v, nil
+		case "TerraPoolDeltaRequest":
+			v := &types.QueryTerraPoolDeltaRequest{}
+			return v, nil
 		}
 	case "txfees":
 		switch structName {
