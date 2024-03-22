@@ -2318,11 +2318,10 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 2},
 		},
 		"three position IDs, not an owner of any of them but caller is gov address": {
-			inRangePositions:     []uint64{DefaultPositionId, DefaultPositionId + 1},
-			outOfRangePositions:  []uint64{DefaultPositionId + 2},
-			positionsToTransfer:  []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			setupUnownedPosition: true,
-			isGovAddress:         true,
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			outOfRangePositions: []uint64{DefaultPositionId + 2},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			isGovAddress:        true,
 		},
 		"error: two position IDs, second ID does not exist": {
 			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
