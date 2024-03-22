@@ -61,7 +61,7 @@ func (k Keeper) InboundTransfer(
 
 	// Now when the transfer is finalized, update the state
 	k.SaveFinalizedTransfer(ctx, externalID)
-	k.UpsertLastAssetHeight(ctx, assetID, externalHeight)
+	k.UpdateLastAssetHeight(ctx, assetID, externalHeight)
 
 	return nil
 }
