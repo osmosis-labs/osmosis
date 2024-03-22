@@ -21,10 +21,11 @@ func TestAuthzMsg(t *testing.T) {
 		{
 			name: "MsgInboundTransfer",
 			msg: &types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: addr2,
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
 			},
 		},
 		{
@@ -75,10 +76,11 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: addr2,
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
 			expectedErr:     nil,
@@ -86,10 +88,11 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "empty sender",
 			msg: types.MsgInboundTransfer{
-				Sender:   "",
-				DestAddr: addr2,
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
+				ExternalId: externalID,
+				Sender:     "",
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{sdk.AccAddress("")},
 			expectedErr:     sdkerrors.ErrInvalidAddress,
@@ -97,21 +100,35 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "invalid sender",
 			msg: types.MsgInboundTransfer{
-				Sender:   "qwerty",
-				DestAddr: addr2,
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
+				ExternalId: externalID,
+				Sender:     "qwerty",
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{nil},
 			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
+			name: "empty external id",
+			msg: types.MsgInboundTransfer{
+				ExternalId: "",
+				Sender:     addr1,
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
+			},
+			expectedSigners: []sdk.AccAddress{addr1Bytes},
+			expectedErr:     types.ErrInvalidExternalID,
+		},
+		{
 			name: "empty destination addr",
 			msg: types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: "",
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   "",
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
 			expectedErr:     sdkerrors.ErrInvalidAddress,
@@ -119,10 +136,11 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "invalid destination addr",
 			msg: types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: "qwerty",
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   "qwerty",
+				AssetId:    assetID1,
+				Amount:     math.NewInt(100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
 			expectedErr:     sdkerrors.ErrInvalidAddress,
@@ -130,8 +148,9 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "invalid asset id",
 			msg: types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: addr2,
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   addr2,
 				AssetId: types.AssetID{
 					SourceChain: "",
 					Denom:       "btc",
@@ -144,10 +163,11 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: addr2,
-				AssetId:  assetID1,
-				Amount:   math.NewInt(0),
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(0),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
 			expectedErr:     sdkerrors.ErrInvalidCoins,
@@ -155,10 +175,11 @@ func TestMsgInboundTransfer(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: types.MsgInboundTransfer{
-				Sender:   addr1,
-				DestAddr: addr2,
-				AssetId:  assetID1,
-				Amount:   math.NewInt(-100),
+				ExternalId: externalID,
+				Sender:     addr1,
+				DestAddr:   addr2,
+				AssetId:    assetID1,
+				Amount:     math.NewInt(-100),
 			},
 			expectedSigners: []sdk.AccAddress{addr1Bytes},
 			expectedErr:     sdkerrors.ErrInvalidCoins,
