@@ -163,13 +163,16 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) (err error) {
 		goCtx, cancel := context.WithTimeout(goCtx, blockProcessTimeout)
 		defer cancel()
 
-		// Start processing block by sending block height and taker fee updates
-		if _, err := ingesterClient.StartBlockProcess(goCtx, &prototypes.StartBlockProcessRequest{
-			BlockHeight:  uint64(ctx.BlockHeight()),
-			TakerFeesMap: takerFeeMapBz,
-		}); err != nil {
-			return err
-		}
+		go func() {
+
+			// Start processing block by sending block height and taker fee updates
+			if _, err := ingesterClient.StartBlockProcess(goCtx, &prototypes.StartBlockProcessRequest{
+				BlockHeight:  uint64(ctx.BlockHeight()),
+				TakerFeesMap: takerFeeMapBz,
+			}); err != nil {
+				panic(err)
+			}
+		}()
 
 		// Stream pools
 		if err := i.streamPools(ctx, ingesterClient, pools); err != nil {
@@ -203,6 +206,8 @@ func (i *sqsIngester) streamPools(ctx sdk.Context, ingesterClient prototypes.SQS
 	chunk := &prototypes.ChainPoolsDataChunk{
 		Pools: make([]*prototypes.PoolData, 0),
 	}
+
+	wg := sync.WaitGroup{}
 
 	ctx.Logger().Info("begin sending pools", "height", ctx.BlockHeight(), "num_pools", len(pools))
 	byteCount := 0
@@ -250,9 +255,14 @@ func (i *sqsIngester) streamPools(ctx sdk.Context, ingesterClient prototypes.SQS
 		// Send chunk if it exceeds the threshold or if it is the last chunk
 		shouldSendChunk := byteCount > payloadThreshold || j == len(pools)-1
 		if shouldSendChunk {
-			if err := proceccChainPoolsClient.Send(chunk); err != nil {
-				return err
-			}
+			// Send chunk asynchronously
+			wg.Add(1)
+			go func(chunk *prototypes.ChainPoolsDataChunk) {
+				defer wg.Done()
+				if err := proceccChainPoolsClient.Send(chunk); err != nil {
+					panic(err)
+				}
+			}(chunk)
 
 			byteCount = 0
 
@@ -262,6 +272,9 @@ func (i *sqsIngester) streamPools(ctx sdk.Context, ingesterClient prototypes.SQS
 			}
 		}
 	}
+
+	// Wait for all chunks to be sent
+	wg.Wait()
 
 	// Close and receive the response
 	if _, err := proceccChainPoolsClient.CloseAndRecv(); err != nil {
