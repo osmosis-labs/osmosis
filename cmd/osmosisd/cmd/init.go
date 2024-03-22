@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,7 +18,6 @@ import (
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli"
 	tmos "github.com/cometbft/cometbft/libs/os"
-	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -90,8 +91,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			// An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+			// Add Osmosis specific defaults to config.toml
 
+			// P2P
 			seeds := []string{
 				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",                             // Notional
 				"44ff091135ef2c69421eacfa136860472ac26e60@65.21.141.212:2000",                              // Notional
@@ -108,21 +110,28 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.P2P.Seeds = strings.Join(seeds, ",")
 			config.P2P.MaxNumInboundPeers = 80
 			config.P2P.MaxNumOutboundPeers = 60
+			config.P2P.FlushThrottleTimeout = 10 * time.Millisecond
+
+			// Mempool
 			config.Mempool.Size = 10000
+
+			// State Sync
 			config.StateSync.TrustPeriod = 112 * time.Hour
 
-			// The original default is 5s and is set in Cosmos SDK.
-			// We lower it to 3s for faster block times.
+			// Consensus
 			config.Consensus.TimeoutCommit = 3 * time.Second
+			config.Consensus.PeerGossipSleepDuration = 10 * time.Millisecond
 
+			// Storage
+			config.Storage.DiscardABCIResponses = true
+
+			// TxIndex
+			config.TxIndex.Indexer = "null"
+
+			config.Moniker = args[0]
 			config.SetRoot(clientCtx.HomeDir)
 
-			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-			if chainID == "" {
-				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
-			}
-
-			// Get bip39 mnemonic
+			// Get bip39 mnemonic and initialize node validator files
 			var mnemonic string
 			recover, _ := cmd.Flags().GetBool(FlagRecover)
 			if recover {
@@ -136,53 +145,75 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 					return errors.New("invalid mnemonic")
 				}
 			}
-
 			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
 			if err != nil {
 				return err
 			}
 
-			config.Moniker = args[0]
-
-			genFile := config.GenesisFile()
+			genFilePath := config.GenesisFile()
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 
-			if !overwrite && tmos.FileExists(genFile) {
-				return fmt.Errorf("genesis.json file already exists: %v", genFile)
-			}
-			appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
-			if err != nil {
-				return errors.Wrap(err, "Failed to marshall default genesis state")
+			if !overwrite && tmos.FileExists(genFilePath) {
+				return fmt.Errorf("genesis.json file already exists: %v", genFilePath)
 			}
 
-			genDoc := &types.GenesisDoc{}
-			if _, err := os.Stat(genFile); err != nil {
-				if !os.IsNotExist(err) {
-					return err
-				}
-			} else {
-				genDoc, err = types.GenesisDocFromFile(genFile)
+			var toPrint printInfo
+
+			if chainID == "" || chainID == "osmosis-1" {
+				// If the chainID is blank or osmosis-1, prep this as a mainnet node
+
+				// Set chainID to osmosis-1 in the case of a blank chainID
+				chainID = "osmosis-1"
+
+				// Attempt to download the genesis file from the Osmosis GitHub repository
+				// If fail, generate a new genesis file
+				err := downloadGenesis(config)
 				if err != nil {
-					return errors.Wrap(err, "Failed to read genesis doc from file")
+					fmt.Println("Failed to download genesis file, using default")
 				}
+
+				// We dont print the app state for mainnet nodes because it's massive
+				fmt.Println("Not printing app state for mainnet node due to verbosity")
+				toPrint = newPrintInfo(config.Moniker, chainID, nodeID, "", nil)
+			} else {
+				// If the chainID is not blank, generate a new genesis file
+				var genDoc *types.GenesisDoc
+
+				appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
+				if err != nil {
+					return errors.Wrap(err, "Failed to marshall default genesis state")
+				}
+
+				if _, err := os.Stat(genFilePath); err != nil {
+					if !os.IsNotExist(err) {
+						return err
+					}
+				} else {
+					genDoc, err = types.GenesisDocFromFile(genFilePath)
+					if err != nil {
+						return errors.Wrap(err, "Failed to read genesis doc from file")
+					}
+				}
+
+				genDoc.ChainID = chainID
+				genDoc.Validators = nil
+				genDoc.AppState = appState
+				if err = genutil.ExportGenesisFile(genDoc, genFilePath); err != nil {
+					return errors.Wrap(err, "Failed to export genesis file")
+				}
+
+				toPrint = newPrintInfo(config.Moniker, chainID, nodeID, "", genDoc.AppState)
 			}
 
-			genDoc.ChainID = chainID
-			genDoc.Validators = nil
-			genDoc.AppState = appState
-			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export genesis file")
-			}
-
-			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
-
+			// Write both app.toml and config.toml to the app's config directory
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-
 			err = writeConfigToFile(filepath.Join(config.RootDir, "config", "client.toml"), nil)
 			if err != nil {
 				return errors.Wrap(err, "Failed to write client.toml file")
 			}
 
+			// Create .env file if FlagSetEnv is true
 			createEnv, _ := cmd.Flags().GetBool(FlagSetEnv)
 			if createEnv {
 				err = CreateEnvFile(cmd)
@@ -237,5 +268,57 @@ func CreateEnvFile(cmd *cobra.Command) error {
 			}
 		}
 	}
+	return nil
+}
+
+// downloadGenesis downloads the genesis file from a predefined URL and writes it to the genesis file path specified in the config.
+// It creates an HTTP client to send a GET request to the genesis file URL. If the request is successful, it reads the response body
+// and writes it to the destination genesis file path. If any step in this process fails, it generates the default genesis.
+//
+// Parameters:
+// - config: A pointer to a tmcfg.Config object that contains the configuration, including the genesis file path.
+//
+// Returns:
+// - An error if the download or file writing fails, otherwise nil.
+func downloadGenesis(config *tmcfg.Config) error {
+	// URL of the genesis file to download
+	genesisURL := "https://github.com/osmosis-labs/osmosis/raw/main/networks/osmosis-1/genesis.json?download"
+
+	// Determine the destination path for the genesis file
+	genFilePath := config.GenesisFile()
+
+	// Create a new HTTP client with default settings
+	client := &http.Client{}
+
+	// Create a new GET request
+	req, err := http.NewRequest("GET", genesisURL, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to create HTTP request for genesis file")
+	}
+
+	// Send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to download genesis file")
+	}
+	defer resp.Body.Close()
+
+	// Check if the HTTP request was successful
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed to download genesis file: HTTP status %d", resp.StatusCode)
+	}
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "failed to read genesis file response body")
+	}
+
+	// Write the body to the destination genesis file
+	err = os.WriteFile(genFilePath, body, 0644)
+	if err != nil {
+		return errors.Wrap(err, "failed to write genesis file to destination")
+	}
+
 	return nil
 }
