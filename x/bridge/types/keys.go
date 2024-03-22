@@ -20,12 +20,15 @@ var (
 	InboundTransfersKey   = []byte{0x01}
 	FinalizedTransfersKey = []byte{0x02}
 	LastHeightsKey        = []byte{0x03}
+
+	KeySeparator = "|"
 )
 
 // InboundTransferKey returns the store prefix key where all the data
 // associated with a specific InboundTransfer is stored
 func InboundTransferKey(externalID string, externalHeight uint64) []byte {
-	return binary.BigEndian.AppendUint64(append(InboundTransfersKey, []byte(externalID)...), externalHeight)
+	externalIDPrefix := append(InboundTransfersKey, []byte(externalID+KeySeparator)...)
+	return binary.BigEndian.AppendUint64(externalIDPrefix, externalHeight)
 }
 
 // FinalizedTransferKey returns the store prefix key where all the data

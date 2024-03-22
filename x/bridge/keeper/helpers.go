@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"golang.org/x/exp/slices"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
@@ -27,11 +26,6 @@ func Difference[T comparable](a, b []T) []T {
 		}
 	}
 	return diff
-}
-
-// validateSenderIsSigner ensures that the sender is a part of the signers set.
-func (k Keeper) validateSenderIsSigner(ctx sdk.Context, sender string) bool {
-	return slices.Contains(k.GetParams(ctx).Signers, sender)
 }
 
 // GetInboundTransfer returns the transfer by the external id and height.

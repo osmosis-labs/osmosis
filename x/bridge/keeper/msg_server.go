@@ -33,10 +33,6 @@ func (m msgServer) InboundTransfer(
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !m.k.validateSenderIsSigner(ctx, msg.Sender) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
-	}
-
 	err = m.k.InboundTransfer(
 		ctx,
 		msg.ExternalId,
