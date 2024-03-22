@@ -42,7 +42,8 @@ type MsgInboundTransfer struct {
 	// Serves the purpose of uniquely identifying the transfer in another chain
 	// (e.g., this might be the BTC tx hash)
 	ExternalId string `protobuf:"bytes,1,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty" yaml:"external_id"`
-	// ExternalHeight is the height at which the transfer occurred in the external chain
+	// ExternalHeight is the height at which the transfer occurred in the external
+	// chain
 	ExternalHeight uint64 `protobuf:"varint,2,opt,name=external_height,json=externalHeight,proto3" json:"external_height,omitempty" yaml:"external_height"`
 	// Sender is a sender's address
 	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`

@@ -111,7 +111,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// LastTransferHeightRequest is the request type for the Query/LastTransferHeight RPC method.
+// LastTransferHeightRequest is the request type for the
+// Query/LastTransferHeight RPC method.
 type LastTransferHeightRequest struct {
 	AssetId AssetID `protobuf:"bytes,1,opt,name=asset_id,json=assetId,proto3" json:"asset_id" yaml:"asset_id"`
 }
@@ -156,7 +157,8 @@ func (m *LastTransferHeightRequest) GetAssetId() AssetID {
 	return AssetID{}
 }
 
-// LastTransferHeightResponse is the response type for the Query/LastTransferHeight RPC method.
+// LastTransferHeightResponse is the response type for the
+// Query/LastTransferHeight RPC method.
 type LastTransferHeightResponse struct {
 	LastTransferHeight uint64 `protobuf:"varint,1,opt,name=last_transfer_height,json=lastTransferHeight,proto3" json:"last_transfer_height,omitempty" yaml:"last_transfer_height"`
 }
@@ -259,7 +261,8 @@ type QueryClient interface {
 	// Params returns x/bridge module params.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// LastTransferHeight returns the height of the external chain at which
-	// the last transfer with the given asset was successfully completed (finalized).
+	// the last transfer with the given asset was successfully completed
+	// (finalized).
 	LastTransferHeight(ctx context.Context, in *LastTransferHeightRequest, opts ...grpc.CallOption) (*LastTransferHeightResponse, error)
 }
 
@@ -294,7 +297,8 @@ type QueryServer interface {
 	// Params returns x/bridge module params.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// LastTransferHeight returns the height of the external chain at which
-	// the last transfer with the given asset was successfully completed (finalized).
+	// the last transfer with the given asset was successfully completed
+	// (finalized).
 	LastTransferHeight(context.Context, *LastTransferHeightRequest) (*LastTransferHeightResponse, error)
 }
 

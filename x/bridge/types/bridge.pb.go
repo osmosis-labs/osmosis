@@ -254,7 +254,8 @@ type InboundTransfer struct {
 	// Serves the purpose of uniquely identifying the transfer in another chain
 	// (e.g., this might be the BTC tx hash).
 	ExternalId string `protobuf:"bytes,1,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty" yaml:"external_id"`
-	// ExternalHeight is the height at which the transfer occurred in the external chain
+	// ExternalHeight is the height at which the transfer occurred in the external
+	// chain
 	ExternalHeight uint64 `protobuf:"varint,2,opt,name=external_height,json=externalHeight,proto3" json:"external_height,omitempty" yaml:"external_height"`
 	// DestAddr is a destination Osmosis address
 	DestAddr string `protobuf:"bytes,3,opt,name=dest_addr,json=destAddr,proto3" json:"dest_addr,omitempty" yaml:"dest_addr"`

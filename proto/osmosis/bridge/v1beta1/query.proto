@@ -15,9 +15,12 @@ service Query {
   }
 
   // LastTransferHeight returns the height of the external chain at which
-  // the last transfer with the given asset was successfully completed (finalized).
-  rpc LastTransferHeight(LastTransferHeightRequest) returns (LastTransferHeightResponse) {
-    option (google.api.http).get = "/osmosis/bridge/v1beta1/last-transfer-height";
+  // the last transfer with the given asset was successfully completed
+  // (finalized).
+  rpc LastTransferHeight(LastTransferHeightRequest)
+      returns (LastTransferHeightResponse) {
+    option (google.api.http).get =
+        "/osmosis/bridge/v1beta1/last-transfer-height";
   }
 }
 
@@ -32,7 +35,8 @@ message QueryParamsResponse {
   ];
 }
 
-// LastTransferHeightRequest is the request type for the Query/LastTransferHeight RPC method.
+// LastTransferHeightRequest is the request type for the
+// Query/LastTransferHeight RPC method.
 message LastTransferHeightRequest {
   AssetID asset_id = 1 [
     (gogoproto.moretags) = "yaml:\"asset_id\"",
@@ -40,7 +44,9 @@ message LastTransferHeightRequest {
   ];
 }
 
-// LastTransferHeightResponse is the response type for the Query/LastTransferHeight RPC method.
+// LastTransferHeightResponse is the response type for the
+// Query/LastTransferHeight RPC method.
 message LastTransferHeightResponse {
-  uint64 last_transfer_height = 1 [ (gogoproto.moretags) = "yaml:\"last_transfer_height\"" ];
+  uint64 last_transfer_height = 1
+      [ (gogoproto.moretags) = "yaml:\"last_transfer_height\"" ];
 }
