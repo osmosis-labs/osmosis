@@ -708,18 +708,8 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 			return types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
 
-<<<<<<< HEAD
-		// Collect any outstanding incentives and rewards for the position.
-		if _, err := k.collectSpreadRewards(ctx, sender, positionId); err != nil {
-			return err
-		}
-		if _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
-			return err
-		}
-=======
 		// Since the caller can be either the owner or the governance module (verified above), we can safely utilize the address directly from the position.
 		positionOwnerAddr := sdk.MustAccAddressFromBech32(position.Address)
->>>>>>> e3f06895 (feat: allow gov module account to transfer any CL position (#7768))
 
 		// Delete the KVStore entries for the position.
 		err = k.deletePosition(ctx, positionId, positionOwnerAddr, position.PoolId)
