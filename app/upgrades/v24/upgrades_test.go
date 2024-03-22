@@ -61,7 +61,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	}
 	twapRecord2 := twapRecord1
 	twapRecord2.Time = time.Date(2023, 0o2, 2, 0, 0, 0, 0, time.UTC)
-	twap.PruneLimitPerBlock = uint16(1)
+	twap.NumDeprecatedRecordsToPrunePerBlock = uint16(1)
 
 	// Set two records
 	poolIndexKey1 := types.FormatHistoricalPoolIndexTWAPKey(twapRecord1.PoolId, twapRecord1.Asset0Denom, twapRecord1.Asset1Denom, twapRecord1.Time)
