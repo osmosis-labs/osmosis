@@ -28,8 +28,8 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240312200410-a7cc6376cdec
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320221732-0054aa3a4f6c
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240321025008-53f35ce1b551
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312200410-a7cc6376cdec
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975
 	github.com/pkg/errors v0.9.1
@@ -399,7 +399,7 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// We explicitly use commits from the `v23.x` branch in https://github.com/osmosis-labs/sqs
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240320221519-4be8cde7ca15
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 

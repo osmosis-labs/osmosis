@@ -8,14 +8,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/redis/go-redis/v9"
 
-	redisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis"
-	chaininforedisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/chaininfo"
-	poolsredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/pools"
-	routerredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/router"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/ingest"
-	chaininfoingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/chaininfo/ingester"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
 )
@@ -78,21 +72,11 @@ func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers
 		return nil, err
 	}
 
-	txManager := redisrepo.NewTxManager(redisClient)
-
-	redisPoolsRepository := poolsredisrepo.New(appCodec, txManager)
-
-	redisRouterRepository := routerredisrepo.New(txManager, noRoutesCacheExpiry)
-
 	// Create pools ingester
-	poolsIngester := poolsingester.NewPoolIngester(redisPoolsRepository, redisRouterRepository, txManager, domain.NewAssetListGetter(), keepers)
-
-	// Create chain info ingester
-	chainInfoRepository := chaininforedisrepo.New(txManager)
-	chainInfoingester := chaininfoingester.New(chainInfoRepository, txManager)
+	poolsIngester := poolsingester.NewPoolIngester(keepers)
 
 	// Create sqs ingester that encapsulates all ingesters.
-	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)
+	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, c.StorageHost, c.StoragePort, appCodec)
 
 	return sqsIngester, nil
 }
