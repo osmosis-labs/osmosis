@@ -37,10 +37,19 @@ func (m msgServer) InboundTransfer(
 		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
 	}
 
-	err = m.k.InboundTransfer(ctx, msg.ExternalId, msg.Sender, msg.DestAddr, msg.AssetId, msg.Amount)
+	err = m.k.InboundTransfer(
+		ctx,
+		msg.ExternalId,
+		msg.ExternalHeight,
+		msg.Sender,
+		msg.DestAddr,
+		msg.AssetId,
+		msg.Amount,
+	)
 	if err != nil {
 		return nil, err
 	}
+
 	err = ctx.EventManager().EmitTypedEvent(&types.EventInboundTransfer{
 		Sender:   msg.Sender,
 		DestAddr: msg.DestAddr,
@@ -71,6 +80,7 @@ func (m msgServer) OutboundTransfer(
 	if err != nil {
 		return nil, err
 	}
+
 	err = ctx.EventManager().EmitTypedEvent(&types.EventOutboundTransfer{
 		Sender:   msg.Sender,
 		DestAddr: msg.DestAddr,

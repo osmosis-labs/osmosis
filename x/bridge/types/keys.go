@@ -1,5 +1,7 @@
 package types
 
+import "encoding/binary"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "bridge"
@@ -14,10 +16,26 @@ const (
 	QuerierRoute = ModuleName
 )
 
-var InboundTransfersKey = []byte{0x01}
+var (
+	InboundTransfersKey   = []byte{0x01}
+	FinalizedTransfersKey = []byte{0x02}
+	LastHeightsKey        = []byte{0x03}
+)
 
 // InboundTransferKey returns the store prefix key where all the data
 // associated with a specific InboundTransfer is stored
-func InboundTransferKey(externalID string) []byte {
-	return append(InboundTransfersKey, []byte(externalID)...)
+func InboundTransferKey(externalID string, externalHeight uint64) []byte {
+	return binary.BigEndian.AppendUint64(append(InboundTransfersKey, []byte(externalID)...), externalHeight)
+}
+
+// FinalizedTransferKey returns the store prefix key where all the data
+// associated with a specific InboundTransfer is stored
+func FinalizedTransferKey(externalID string) []byte {
+	return append(FinalizedTransfersKey, []byte(externalID)...)
+}
+
+// LastHeightKey returns the store prefix key where all the data
+// associated with a specific InboundTransfer is stored
+func LastHeightKey(assetID AssetID) []byte {
+	return append(LastHeightsKey, []byte(assetID.Name())...)
 }

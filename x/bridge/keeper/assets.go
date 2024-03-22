@@ -3,6 +3,7 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
@@ -26,7 +27,7 @@ func (k Keeper) ChangeAssetStatus(
 	// check if the specified asset is known
 	assetIdx := params.GetAssetIndex(assetID)
 	if assetIdx == notFoundIdx {
-		return ChangeAssetStatusResult{}, errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found")
+		return ChangeAssetStatusResult{}, sdkerrors.ErrNotFound
 	}
 
 	// update assetIdx asset status
@@ -40,16 +41,14 @@ func (k Keeper) ChangeAssetStatus(
 	}, nil
 }
 
-// createAssets creates tokenfactory denoms for all provided assets and properly sets
-// last_transfer_height values.
-func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) ([]types.Asset, error) {
+// createAssets creates tokenfactory denoms for all provided assets
+func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) error {
 	handler := k.router.Handler(new(tokenfactorytypes.MsgCreateDenom))
 	if handler == nil {
-		return nil, errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a create denom message")
+		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a create denom message")
 	}
 
 	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	createdAssets := make([]types.Asset, 0, len(assets))
 
 	for _, asset := range assets {
 		msgCreateDenom := &tokenfactorytypes.MsgCreateDenom{
@@ -61,18 +60,12 @@ func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) ([]types.Ass
 		// TODO: double-check if we need to handle the response
 		_, err := handler(ctx, msgCreateDenom)
 		if err != nil {
-			return nil, errorsmod.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrTokenfactory,
 				"Can't execute a create denom message for %s: %s", asset.Name(), err,
 			)
 		}
-
-		// TODO: set the last_transfer_height to the latest external blockchain height, since using 0
-		//  doesn't really make sense. Should use corresponding chain clients here after they are implemented.
-		asset.LastTransferHeight = 0
-
-		createdAssets = append(createdAssets, asset)
 	}
 
-	return createdAssets, nil
+	return nil
 }
