@@ -103,6 +103,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// check that old lockable durations were not single param
 	oldLockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 	s.Require().Equal(len(oldLockableDurations), 4)
+	oldLockableDurations = s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(oldLockableDurations), 4)
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -138,6 +140,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Empty(oldBaseDenoms)
 
 	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(lockableDurations), 1)
+	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
+
+	lockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
 	s.Require().Equal(len(lockableDurations), 1)
 	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
 	// INCENTIVES Tests
