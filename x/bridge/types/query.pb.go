@@ -111,9 +111,101 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// LastTransferHeightRequest is the request type for the Query/LastTransferHeight RPC method.
+type LastTransferHeightRequest struct {
+	AssetId AssetID `protobuf:"bytes,1,opt,name=asset_id,json=assetId,proto3" json:"asset_id" yaml:"asset_id"`
+}
+
+func (m *LastTransferHeightRequest) Reset()         { *m = LastTransferHeightRequest{} }
+func (m *LastTransferHeightRequest) String() string { return proto.CompactTextString(m) }
+func (*LastTransferHeightRequest) ProtoMessage()    {}
+func (*LastTransferHeightRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_05fd16bccc7396b4, []int{2}
+}
+func (m *LastTransferHeightRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *LastTransferHeightRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_LastTransferHeightRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *LastTransferHeightRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LastTransferHeightRequest.Merge(m, src)
+}
+func (m *LastTransferHeightRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *LastTransferHeightRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_LastTransferHeightRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LastTransferHeightRequest proto.InternalMessageInfo
+
+func (m *LastTransferHeightRequest) GetAssetId() AssetID {
+	if m != nil {
+		return m.AssetId
+	}
+	return AssetID{}
+}
+
+// LastTransferHeightResponse is the response type for the Query/LastTransferHeight RPC method.
+type LastTransferHeightResponse struct {
+	LastTransferHeight uint64 `protobuf:"varint,1,opt,name=last_transfer_height,json=lastTransferHeight,proto3" json:"last_transfer_height,omitempty" yaml:"last_transfer_height"`
+}
+
+func (m *LastTransferHeightResponse) Reset()         { *m = LastTransferHeightResponse{} }
+func (m *LastTransferHeightResponse) String() string { return proto.CompactTextString(m) }
+func (*LastTransferHeightResponse) ProtoMessage()    {}
+func (*LastTransferHeightResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_05fd16bccc7396b4, []int{3}
+}
+func (m *LastTransferHeightResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *LastTransferHeightResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_LastTransferHeightResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *LastTransferHeightResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LastTransferHeightResponse.Merge(m, src)
+}
+func (m *LastTransferHeightResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *LastTransferHeightResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_LastTransferHeightResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LastTransferHeightResponse proto.InternalMessageInfo
+
+func (m *LastTransferHeightResponse) GetLastTransferHeight() uint64 {
+	if m != nil {
+		return m.LastTransferHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "osmosis.bridge.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "osmosis.bridge.v1beta1.QueryParamsResponse")
+	proto.RegisterType((*LastTransferHeightRequest)(nil), "osmosis.bridge.v1beta1.LastTransferHeightRequest")
+	proto.RegisterType((*LastTransferHeightResponse)(nil), "osmosis.bridge.v1beta1.LastTransferHeightResponse")
 }
 
 func init() {
@@ -121,26 +213,35 @@ func init() {
 }
 
 var fileDescriptor_05fd16bccc7396b4 = []byte{
-	// 302 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xca, 0x2f, 0xce, 0xcd,
-	0x2f, 0xce, 0x2c, 0xd6, 0x4f, 0x2a, 0xca, 0x4c, 0x49, 0x4f, 0xd5, 0x2f, 0x33, 0x4c, 0x4a, 0x2d,
-	0x49, 0x34, 0xd4, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12,
-	0x83, 0xaa, 0xd1, 0x83, 0xa8, 0xd1, 0x83, 0xaa, 0x91, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0x2b,
-	0xd1, 0x07, 0xb1, 0x20, 0xaa, 0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b,
-	0x32, 0xf5, 0x13, 0xf3, 0xf2, 0xf2, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0xa1, 0xb2, 0xca,
-	0x38, 0xec, 0x83, 0x1a, 0x0d, 0x56, 0xa4, 0x24, 0xc2, 0x25, 0x14, 0x08, 0xb2, 0x3f, 0x20, 0xb1,
-	0x28, 0x31, 0xb7, 0x38, 0x28, 0xb5, 0xb0, 0x34, 0xb5, 0xb8, 0x44, 0x29, 0x85, 0x4b, 0x18, 0x45,
-	0xb4, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55, 0xc8, 0x97, 0x8b, 0xad, 0x00, 0x2c, 0x22, 0xc1, 0xa8,
-	0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xa7, 0x87, 0xdd, 0xb9, 0x7a, 0x10, 0x7d, 0x4e, 0xa2, 0x27, 0xee,
-	0xc9, 0x33, 0x7c, 0xba, 0x27, 0xcf, 0x5b, 0x99, 0x98, 0x9b, 0x63, 0xa5, 0x04, 0xd1, 0xab, 0x14,
-	0x04, 0x35, 0xc4, 0x68, 0x32, 0x23, 0x17, 0x2b, 0xd8, 0x1a, 0xa1, 0x4e, 0x46, 0x2e, 0x36, 0x88,
-	0x1e, 0x21, 0x2d, 0x5c, 0x66, 0x62, 0x3a, 0x53, 0x4a, 0x9b, 0x28, 0xb5, 0x10, 0xc7, 0x2b, 0xa9,
-	0x35, 0x5d, 0x7e, 0x32, 0x99, 0x49, 0x41, 0x48, 0x4e, 0x1f, 0x47, 0xb8, 0x40, 0x5c, 0xe5, 0xe4,
-	0x73, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c,
-	0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x46, 0xe9, 0x99, 0x25, 0x19,
-	0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0x30, 0x33, 0x74, 0x73, 0x12, 0x93, 0x8a, 0xe1, 0x06, 0x96,
-	0x19, 0x19, 0xeb, 0x57, 0xc0, 0x8c, 0x2d, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x07, 0xb3,
-	0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xef, 0x43, 0x48, 0x0e, 0xfd, 0x01, 0x00, 0x00,
+	// 437 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xcf, 0xca, 0xd3, 0x40,
+	0x14, 0xc5, 0x93, 0x0f, 0xad, 0x32, 0x22, 0xc2, 0x58, 0xff, 0x45, 0x99, 0x94, 0x11, 0x44, 0xd4,
+	0x66, 0x68, 0xea, 0xca, 0x9d, 0xc1, 0x85, 0x85, 0x0a, 0x36, 0xba, 0x72, 0x53, 0x26, 0x66, 0x4c,
+	0x03, 0x49, 0x26, 0xcd, 0x4c, 0x8b, 0xdd, 0xba, 0x73, 0x27, 0xf8, 0x24, 0x3e, 0x85, 0x5d, 0x16,
+	0xdc, 0xb8, 0x2a, 0xd2, 0xfa, 0x04, 0x7d, 0x02, 0xc9, 0xcc, 0x44, 0x90, 0x36, 0xe0, 0xb7, 0x0b,
+	0x73, 0xcf, 0x3d, 0xbf, 0x7b, 0xcf, 0x0d, 0xc0, 0x5c, 0xe4, 0x5c, 0xa4, 0x82, 0x44, 0x55, 0x1a,
+	0x27, 0x8c, 0x2c, 0x07, 0x11, 0x93, 0x74, 0x40, 0xe6, 0x0b, 0x56, 0xad, 0xbc, 0xb2, 0xe2, 0x92,
+	0xc3, 0x9b, 0x46, 0xe3, 0x69, 0x8d, 0x67, 0x34, 0x4e, 0x37, 0xe1, 0x09, 0x57, 0x12, 0x52, 0x7f,
+	0x69, 0xb5, 0x73, 0x2f, 0xe1, 0x3c, 0xc9, 0x18, 0xa1, 0x65, 0x4a, 0x68, 0x51, 0x70, 0x49, 0x65,
+	0xca, 0x0b, 0x61, 0xaa, 0xf7, 0x5b, 0x78, 0xc6, 0x5a, 0x89, 0x70, 0x17, 0xc0, 0x49, 0xcd, 0x7f,
+	0x4d, 0x2b, 0x9a, 0x8b, 0x90, 0xcd, 0x17, 0x4c, 0x48, 0x1c, 0x83, 0xeb, 0xff, 0xbc, 0x8a, 0x92,
+	0x17, 0x82, 0xc1, 0x57, 0xa0, 0x53, 0xaa, 0x97, 0xdb, 0x76, 0xcf, 0x7e, 0x78, 0xc5, 0x47, 0xde,
+	0xe9, 0x71, 0x3d, 0xdd, 0x17, 0xdc, 0x58, 0x6f, 0x5d, 0xeb, 0xb0, 0x75, 0xaf, 0xae, 0x68, 0x9e,
+	0x3d, 0xc3, 0xba, 0x17, 0x87, 0xc6, 0x04, 0x97, 0xe0, 0xce, 0x98, 0x0a, 0xf9, 0xb6, 0xa2, 0x85,
+	0xf8, 0xc0, 0xaa, 0x97, 0x2c, 0x4d, 0x66, 0xd2, 0x8c, 0x00, 0xdf, 0x80, 0xcb, 0x54, 0x08, 0x26,
+	0xa7, 0x69, 0x6c, 0x68, 0x6e, 0x1b, 0xed, 0x79, 0xad, 0x1b, 0xbd, 0x08, 0x6e, 0x19, 0xdc, 0x35,
+	0x8d, 0x6b, 0xda, 0x71, 0x78, 0x49, 0x7d, 0x8e, 0x62, 0xcc, 0x81, 0x73, 0x8a, 0x68, 0xd6, 0x9b,
+	0x80, 0x6e, 0x46, 0x85, 0x9c, 0x4a, 0x53, 0x9e, 0xce, 0x54, 0x5d, 0xe1, 0x2f, 0x04, 0xee, 0x61,
+	0xeb, 0xde, 0xd5, 0xce, 0xa7, 0x54, 0x38, 0x84, 0xd9, 0x91, 0xb5, 0xff, 0xfd, 0x0c, 0x5c, 0x54,
+	0x49, 0xc2, 0xcf, 0x36, 0xe8, 0xe8, 0x58, 0xe0, 0xa3, 0xb6, 0x45, 0x8e, 0x2f, 0xe1, 0x3c, 0xfe,
+	0x2f, 0xad, 0x5e, 0x00, 0x3f, 0xf8, 0xf4, 0xe3, 0xf7, 0xd7, 0xb3, 0x1e, 0x44, 0xa4, 0xe5, 0xf4,
+	0x3a, 0x78, 0xf8, 0xcd, 0x06, 0xf0, 0x38, 0x07, 0x38, 0x68, 0x63, 0xb5, 0x5e, 0xc9, 0xf1, 0xcf,
+	0xd3, 0x62, 0xa6, 0x7c, 0xaa, 0xa6, 0xf4, 0xe0, 0x93, 0xb6, 0x29, 0xeb, 0x1c, 0xfb, 0x4d, 0xbc,
+	0x7d, 0x1d, 0x6f, 0x30, 0x5e, 0xef, 0x90, 0xbd, 0xd9, 0x21, 0xfb, 0xd7, 0x0e, 0xd9, 0x5f, 0xf6,
+	0xc8, 0xda, 0xec, 0x91, 0xf5, 0x73, 0x8f, 0xac, 0x77, 0x7e, 0x92, 0xca, 0xd9, 0x22, 0xf2, 0xde,
+	0xf3, 0xbc, 0x71, 0xec, 0x67, 0x34, 0x12, 0x7f, 0xed, 0x97, 0xfe, 0x90, 0x7c, 0x6c, 0x20, 0x72,
+	0x55, 0x32, 0x11, 0x75, 0xd4, 0xdf, 0x3f, 0xfc, 0x13, 0x00, 0x00, 0xff, 0xff, 0x5d, 0x38, 0x37,
+	0x11, 0x94, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -157,6 +258,9 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns x/bridge module params.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// LastTransferHeight returns the height of the external chain at which
+	// the last transfer with the given asset was successfully completed (finalized).
+	LastTransferHeight(ctx context.Context, in *LastTransferHeightRequest, opts ...grpc.CallOption) (*LastTransferHeightResponse, error)
 }
 
 type queryClient struct {
@@ -176,10 +280,22 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) LastTransferHeight(ctx context.Context, in *LastTransferHeightRequest, opts ...grpc.CallOption) (*LastTransferHeightResponse, error) {
+	out := new(LastTransferHeightResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.bridge.v1beta1.Query/LastTransferHeight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params returns x/bridge module params.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// LastTransferHeight returns the height of the external chain at which
+	// the last transfer with the given asset was successfully completed (finalized).
+	LastTransferHeight(context.Context, *LastTransferHeightRequest) (*LastTransferHeightResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -188,6 +304,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) LastTransferHeight(ctx context.Context, req *LastTransferHeightRequest) (*LastTransferHeightResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastTransferHeight not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -212,6 +331,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_LastTransferHeight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LastTransferHeightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastTransferHeight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.bridge.v1beta1.Query/LastTransferHeight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastTransferHeight(ctx, req.(*LastTransferHeightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.bridge.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -219,6 +356,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "LastTransferHeight",
+			Handler:    _Query_LastTransferHeight_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -281,6 +422,67 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *LastTransferHeightRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LastTransferHeightRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *LastTransferHeightRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.AssetId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *LastTransferHeightResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LastTransferHeightResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *LastTransferHeightResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.LastTransferHeight != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.LastTransferHeight))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -309,6 +511,29 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *LastTransferHeightRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.AssetId.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *LastTransferHeightResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LastTransferHeight != 0 {
+		n += 1 + sovQuery(uint64(m.LastTransferHeight))
+	}
 	return n
 }
 
@@ -430,6 +655,158 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LastTransferHeightRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LastTransferHeightRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LastTransferHeightRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AssetId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LastTransferHeightResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LastTransferHeightResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LastTransferHeightResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastTransferHeight", wireType)
+			}
+			m.LastTransferHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastTransferHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
