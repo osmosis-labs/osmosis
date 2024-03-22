@@ -295,8 +295,10 @@ func downloadGenesis(config *tmcfg.Config) error {
 	// Determine the destination path for the genesis file
 	genFilePath := config.GenesisFile()
 
-	// Create a new HTTP client with default settings
-	client := &http.Client{}
+	// Create a new HTTP client with a 30-second timeout
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	// Create a new GET request
 	req, err := http.NewRequest("GET", genesisURL, nil)
@@ -305,6 +307,8 @@ func downloadGenesis(config *tmcfg.Config) error {
 	}
 
 	// Send the request
+	fmt.Println("Downloading genesis file from", genesisURL)
+	fmt.Println("If the download is not successful in 30 seconds, we will gracefully continue and the default genesis file will be used")
 	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to download genesis file")
