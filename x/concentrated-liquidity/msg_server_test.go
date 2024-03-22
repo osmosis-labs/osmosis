@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               2, // 1 for collect send, 1 for forfeit send
+			expectedMessageEvents:               1, // 1 for collect send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               4, // 2 for collect send, 2 for forfeit send
+			expectedMessageEvents:               2, // 2 for collect send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               6, // 3 for collect send, 3 for forfeit send
+			expectedMessageEvents:               3, // 3 for collect send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
@@ -572,11 +572,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasIncentivesToClaim:           true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-<<<<<<< HEAD
-			expectedMessageEvents:          2, // 1 for collect incentives claim send, 1 for collect incentives forfeit send
-=======
 			expectedMessageEvents:          0,
->>>>>>> d28ed22f (fix: Implement retaining rewards for transfers (#7785))
 		},
 		"single position ID with claimable spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
@@ -591,11 +587,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-<<<<<<< HEAD
-			expectedMessageEvents:          3, // 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
-=======
 			expectedMessageEvents:          0,
->>>>>>> d28ed22f (fix: Implement retaining rewards for transfers (#7785))
 		},
 		"two position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
@@ -613,11 +605,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-<<<<<<< HEAD
-			expectedMessageEvents:          9, // 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
-=======
 			expectedMessageEvents:          0,
->>>>>>> d28ed22f (fix: Implement retaining rewards for transfers (#7785))
 		},
 		"two position IDs, second ID does not exist": {
 			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},

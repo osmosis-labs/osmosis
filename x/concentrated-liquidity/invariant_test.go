@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 		//
 		// Balancer full range incentives are also not factored in because they are claimed and sent to
 		// gauge immediately upon distribution.
-		collectedIncentives, _, err := s.Clk.CollectIncentives(cachedCtx, owner, position.PositionId)
+		collectedIncentives, _, _, err := s.Clk.CollectIncentives(cachedCtx, owner, position.PositionId)
 		s.Require().NoError(err)
 
 		// Ensure position owner's balance was updated correctly

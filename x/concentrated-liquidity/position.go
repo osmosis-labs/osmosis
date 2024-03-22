@@ -703,17 +703,6 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 			return types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
 
-<<<<<<< HEAD
-		// Collect any outstanding incentives and rewards for the position.
-		if _, err := k.collectSpreadRewards(ctx, sender, positionId); err != nil {
-			return err
-		}
-		if _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
-			return err
-		}
-
-=======
->>>>>>> d28ed22f (fix: Implement retaining rewards for transfers (#7785))
 		// Delete the KVStore entries for the position.
 		err = k.deletePosition(ctx, positionId, sender, position.PoolId)
 		if err != nil {

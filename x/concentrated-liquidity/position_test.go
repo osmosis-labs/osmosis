@@ -82,16 +82,17 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 
 // ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
 // It also asserts that no more incentives can be claimed for the position.
-func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
+func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins, poolId uint64) {
 	// Initial claim and assertion
-	claimedRewards, forfeitedRewards, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, totalForfeitedRewards, scaledForfeitedRewardsByUptime, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedRewards, claimedRewards)
-	s.Require().Equal(expectedForfeited, forfeitedRewards)
+	s.Require().Equal(expectedForfeited, totalForfeitedRewards)
+	s.checkForfeitedCoinsByUptime(totalForfeitedRewards, scaledForfeitedRewardsByUptime)
 
 	// Sanity check that cannot claim again.
-	claimedRewards, _, err = s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, _, _, err = s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -2471,7 +2472,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 				for _, positionId := range tc.positionsToTransfer {
-					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
+					_, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
 					s.Require().NoError(err)
 					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionId)
 					s.Require().NoError(err)
