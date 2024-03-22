@@ -159,25 +159,31 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			}
 
 			var toPrint printInfo
+			isMainnet := chainID == "" || chainID == "osmosis-1"
+			genesisFileDownloadFailed := false
 
-			if chainID == "" || chainID == "osmosis-1" {
+			if isMainnet {
 				// If the chainID is blank or osmosis-1, prep this as a mainnet node
-
-				// Set chainID to osmosis-1 in the case of a blank chainID
-				chainID = "osmosis-1"
 
 				// Attempt to download the genesis file from the Osmosis GitHub repository
 				// If fail, generate a new genesis file
 				err := downloadGenesis(config)
 				if err != nil {
 					fmt.Println("Failed to download genesis file, using default")
-				}
+					genesisFileDownloadFailed = true
+				} else {
+					// Set chainID to osmosis-1 in the case of a blank chainID
+					chainID = "osmosis-1"
 
-				// We dont print the app state for mainnet nodes because it's massive
-				fmt.Println("Not printing app state for mainnet node due to verbosity")
-				toPrint = newPrintInfo(config.Moniker, chainID, nodeID, "", nil)
-			} else {
-				// If the chainID is not blank, generate a new genesis file
+					// We dont print the app state for mainnet nodes because it's massive
+					fmt.Println("Not printing app state for mainnet node due to verbosity")
+					toPrint = newPrintInfo(config.Moniker, chainID, nodeID, "", nil)
+				}
+			}
+
+			// If this is not a mainnet node, or the genesis file download failed, generate a new genesis file
+			if genesisFileDownloadFailed || !isMainnet {
+				// If the chainID is not blank or genesis file download failed, generate a new genesis file
 				var genDoc *types.GenesisDoc
 
 				appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
