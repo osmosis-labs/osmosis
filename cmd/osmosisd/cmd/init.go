@@ -18,6 +18,7 @@ import (
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli"
 	tmos "github.com/cometbft/cometbft/libs/os"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -171,6 +172,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				if err != nil {
 					fmt.Println("Failed to download genesis file, using default")
 					genesisFileDownloadFailed = true
+					chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 				} else {
 					// Set chainID to osmosis-1 in the case of a blank chainID
 					chainID = "osmosis-1"
