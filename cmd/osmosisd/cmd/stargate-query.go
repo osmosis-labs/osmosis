@@ -419,8 +419,8 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			v.OfferCoin = structArguments[0]
 			v.AskDenom = structArguments[1]
 			return v, nil
-		case "TerraPoolDeltaRequest":
-			v := &types.QueryTerraPoolDeltaRequest{}
+		case "OsmosisPoolDeltaRequest":
+			v := &types.QueryOsmosisPoolDeltaRequest{}
 			return v, nil
 		}
 	case "txfees":

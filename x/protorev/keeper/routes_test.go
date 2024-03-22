@@ -168,9 +168,9 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 			expectedRoutePointPoints: 6,
 		},
 		{
-			description:              "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
+			description:              "Route does not exist for swap in osmo and swap out Atom because the pool does not exist",
 			swapDenom:                types.OsmosisDenomination,
-			swapIn:                   "terra",
+			swapIn:                   "osmo",
 			swapOut:                  "Atom",
 			poolId:                   7,
 			expectedRoute:            []TestRoute{},
@@ -208,7 +208,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 		{
 			description:              "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
 			swapDenom:                "Atom",
-			swapIn:                   "terra",
+			swapIn:                   "osmo",
 			swapOut:                  types.OsmosisDenomination,
 			poolId:                   7,
 			expectedRoute:            []TestRoute{},

@@ -118,22 +118,22 @@ func (m *QuerySwapResponse) GetReturnCoin() types.Coin {
 	return types.Coin{}
 }
 
-// QueryTerraPoolDeltaRequest is the request type for the Query/TerraPoolDelta RPC method.
-type QueryTerraPoolDeltaRequest struct {
+// QueryOsmosisPoolDeltaRequest is the request type for the Query/OsmosisPoolDelta RPC method.
+type QueryOsmosisPoolDeltaRequest struct {
 }
 
-func (m *QueryTerraPoolDeltaRequest) Reset()         { *m = QueryTerraPoolDeltaRequest{} }
-func (m *QueryTerraPoolDeltaRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryTerraPoolDeltaRequest) ProtoMessage()    {}
-func (*QueryTerraPoolDeltaRequest) Descriptor() ([]byte, []int) {
+func (m *QueryOsmosisPoolDeltaRequest) Reset()         { *m = QueryOsmosisPoolDeltaRequest{} }
+func (m *QueryOsmosisPoolDeltaRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryOsmosisPoolDeltaRequest) ProtoMessage()    {}
+func (*QueryOsmosisPoolDeltaRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f495531fa36d269f, []int{2}
 }
-func (m *QueryTerraPoolDeltaRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryOsmosisPoolDeltaRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryTerraPoolDeltaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOsmosisPoolDeltaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryTerraPoolDeltaRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOsmosisPoolDeltaRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -143,36 +143,36 @@ func (m *QueryTerraPoolDeltaRequest) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *QueryTerraPoolDeltaRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryTerraPoolDeltaRequest.Merge(m, src)
+func (m *QueryOsmosisPoolDeltaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOsmosisPoolDeltaRequest.Merge(m, src)
 }
-func (m *QueryTerraPoolDeltaRequest) XXX_Size() int {
+func (m *QueryOsmosisPoolDeltaRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryTerraPoolDeltaRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryTerraPoolDeltaRequest.DiscardUnknown(m)
+func (m *QueryOsmosisPoolDeltaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOsmosisPoolDeltaRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryTerraPoolDeltaRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryOsmosisPoolDeltaRequest proto.InternalMessageInfo
 
-// QueryTerraPoolDeltaResponse is the response type for the Query/TerraPoolDelta RPC method.
-type QueryTerraPoolDeltaResponse struct {
-	// terra_pool_delta defines the gap between the TerraPool and the TerraBasePool
-	TerraPoolDelta github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=terra_pool_delta,json=terraPoolDelta,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"terra_pool_delta"`
+// QueryOsmosisPoolDeltaResponse is the response type for the Query/OsmosisPoolDelta RPC method.
+type QueryOsmosisPoolDeltaResponse struct {
+	// osmosis_pool_delta defines the gap between the OsmosisPool and the OsmosisBasePool
+	OsmosisPoolDelta github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=osmosis_pool_delta,json=osmosisPoolDelta,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"osmosis_pool_delta"`
 }
 
-func (m *QueryTerraPoolDeltaResponse) Reset()         { *m = QueryTerraPoolDeltaResponse{} }
-func (m *QueryTerraPoolDeltaResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryTerraPoolDeltaResponse) ProtoMessage()    {}
-func (*QueryTerraPoolDeltaResponse) Descriptor() ([]byte, []int) {
+func (m *QueryOsmosisPoolDeltaResponse) Reset()         { *m = QueryOsmosisPoolDeltaResponse{} }
+func (m *QueryOsmosisPoolDeltaResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryOsmosisPoolDeltaResponse) ProtoMessage()    {}
+func (*QueryOsmosisPoolDeltaResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f495531fa36d269f, []int{3}
 }
-func (m *QueryTerraPoolDeltaResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryOsmosisPoolDeltaResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryTerraPoolDeltaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOsmosisPoolDeltaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryTerraPoolDeltaResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOsmosisPoolDeltaResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -182,17 +182,17 @@ func (m *QueryTerraPoolDeltaResponse) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *QueryTerraPoolDeltaResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryTerraPoolDeltaResponse.Merge(m, src)
+func (m *QueryOsmosisPoolDeltaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOsmosisPoolDeltaResponse.Merge(m, src)
 }
-func (m *QueryTerraPoolDeltaResponse) XXX_Size() int {
+func (m *QueryOsmosisPoolDeltaResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryTerraPoolDeltaResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryTerraPoolDeltaResponse.DiscardUnknown(m)
+func (m *QueryOsmosisPoolDeltaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOsmosisPoolDeltaResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryTerraPoolDeltaResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryOsmosisPoolDeltaResponse proto.InternalMessageInfo
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
@@ -280,8 +280,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 func init() {
 	proto.RegisterType((*QuerySwapRequest)(nil), "osmosis.market.v1beta1.QuerySwapRequest")
 	proto.RegisterType((*QuerySwapResponse)(nil), "osmosis.market.v1beta1.QuerySwapResponse")
-	proto.RegisterType((*QueryTerraPoolDeltaRequest)(nil), "osmosis.market.v1beta1.QueryTerraPoolDeltaRequest")
-	proto.RegisterType((*QueryTerraPoolDeltaResponse)(nil), "osmosis.market.v1beta1.QueryTerraPoolDeltaResponse")
+	proto.RegisterType((*QueryOsmosisPoolDeltaRequest)(nil), "osmosis.market.v1beta1.QueryOsmosisPoolDeltaRequest")
+	proto.RegisterType((*QueryOsmosisPoolDeltaResponse)(nil), "osmosis.market.v1beta1.QueryOsmosisPoolDeltaResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "osmosis.market.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "osmosis.market.v1beta1.QueryParamsResponse")
 }
@@ -291,41 +291,41 @@ func init() {
 }
 
 var fileDescriptor_f495531fa36d269f = []byte{
-	// 541 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xcf, 0x4f, 0x13, 0x41,
-	0x14, 0xde, 0x45, 0x6c, 0xe8, 0x60, 0x08, 0x8e, 0xc4, 0xe0, 0x52, 0xa7, 0x64, 0x35, 0xa4, 0x62,
-	0x98, 0x91, 0xf6, 0x66, 0x3c, 0x98, 0xda, 0xa3, 0x07, 0x2c, 0x9a, 0x10, 0x2f, 0xcd, 0xb4, 0x1d,
-	0xea, 0xa6, 0xed, 0xbe, 0x65, 0x67, 0x0a, 0x72, 0xd4, 0x93, 0xde, 0x4c, 0xfc, 0x07, 0xb8, 0xfb,
-	0x77, 0x98, 0x70, 0x24, 0xf1, 0x62, 0x3c, 0x10, 0xd3, 0x7a, 0xf0, 0xcf, 0x30, 0xf3, 0xa3, 0x48,
-	0x49, 0x97, 0xc0, 0x69, 0x77, 0xdf, 0xfb, 0xde, 0xf7, 0x7d, 0xf9, 0xde, 0x5b, 0x14, 0x82, 0xec,
-	0x83, 0x8c, 0x24, 0xeb, 0xf3, 0xb4, 0x2b, 0x14, 0xdb, 0xdf, 0x6c, 0x0a, 0xc5, 0x37, 0xd9, 0xde,
-	0x40, 0xa4, 0x87, 0x34, 0x49, 0x41, 0x01, 0xbe, 0xeb, 0x30, 0xd4, 0x62, 0xa8, 0xc3, 0x04, 0x4b,
-	0x1d, 0xe8, 0x80, 0x81, 0x30, 0xfd, 0x66, 0xd1, 0x41, 0xa1, 0x03, 0xd0, 0xe9, 0x09, 0xc6, 0x93,
-	0x88, 0xf1, 0x38, 0x06, 0xc5, 0x55, 0x04, 0xb1, 0x74, 0xdd, 0x07, 0x19, 0x7a, 0x8e, 0xda, 0x82,
-	0x48, 0xcb, 0xa0, 0x58, 0x93, 0x4b, 0x71, 0x86, 0x68, 0x41, 0x14, 0xdb, 0x7e, 0xb8, 0x83, 0x16,
-	0x5f, 0x69, 0x7f, 0xdb, 0x07, 0x3c, 0xa9, 0x8b, 0xbd, 0x81, 0x90, 0x0a, 0xdf, 0x47, 0x08, 0x76,
-	0x77, 0x45, 0xda, 0xd0, 0xb8, 0x65, 0x7f, 0xd5, 0x2f, 0xe5, 0xeb, 0x79, 0x53, 0x79, 0x01, 0x51,
-	0x8c, 0x57, 0x50, 0x9e, 0xcb, 0x6e, 0xa3, 0x2d, 0x62, 0xe8, 0x2f, 0xcf, 0x98, 0xee, 0x1c, 0x97,
-	0xdd, 0x9a, 0xfe, 0x7e, 0x3a, 0xf7, 0xe9, 0xa8, 0xe8, 0xfd, 0x3d, 0x2a, 0x7a, 0xe1, 0x1b, 0x74,
-	0xfb, 0x1c, 0xb3, 0x4c, 0x20, 0x96, 0x02, 0x3f, 0x47, 0xf3, 0xa9, 0x50, 0x83, 0x34, 0xfe, 0xcf,
-	0x3d, 0x5f, 0xbe, 0x47, 0xad, 0x49, 0xaa, 0x4d, 0x8e, 0x23, 0xa1, 0x5a, 0xab, 0x3a, 0x7b, 0x7c,
-	0x5a, 0xf4, 0xea, 0xc8, 0xce, 0xe8, 0x4a, 0x58, 0x40, 0x81, 0xa1, 0x7d, 0x2d, 0xd2, 0x94, 0x6f,
-	0x01, 0xf4, 0x6a, 0xa2, 0xa7, 0xb8, 0xb3, 0x1e, 0x1e, 0xa0, 0x95, 0xa9, 0x5d, 0x27, 0xbf, 0x83,
-	0x16, 0x95, 0xee, 0x34, 0x12, 0x80, 0x5e, 0xa3, 0xad, 0x7b, 0xc6, 0xc3, 0xad, 0x2a, 0xd5, 0x42,
-	0xbf, 0x4e, 0x8b, 0x6b, 0x9d, 0x48, 0xbd, 0x1b, 0x34, 0x69, 0x0b, 0xfa, 0xcc, 0x45, 0x67, 0x1f,
-	0x1b, 0xb2, 0xdd, 0x65, 0xea, 0x30, 0x11, 0x92, 0xd6, 0x44, 0xab, 0xbe, 0xa0, 0x26, 0x14, 0xc2,
-	0x25, 0x84, 0x8d, 0xf0, 0x16, 0x4f, 0x79, 0x5f, 0x8e, 0xed, 0x6c, 0xa3, 0x3b, 0x13, 0x55, 0x67,
-	0xe3, 0x19, 0xca, 0x25, 0xa6, 0xe2, 0x02, 0x20, 0x74, 0xfa, 0x59, 0x50, 0x3b, 0xe7, 0x52, 0x70,
-	0x33, 0xe5, 0xef, 0x37, 0xd0, 0x4d, 0xc3, 0x8a, 0x3f, 0xf8, 0x68, 0x56, 0xc7, 0x8b, 0x4b, 0x59,
-	0x04, 0x17, 0x77, 0x1b, 0x3c, 0xba, 0x02, 0xd2, 0xba, 0x0c, 0x1f, 0x7e, 0xfc, 0xf1, 0xe7, 0xeb,
-	0x0c, 0xc1, 0x05, 0x96, 0x71, 0x68, 0x52, 0x4b, 0x7f, 0xf3, 0xd1, 0xc2, 0x64, 0xda, 0xb8, 0x7c,
-	0xa9, 0xc6, 0xd4, 0xc5, 0x05, 0x95, 0x6b, 0xcd, 0x38, 0x87, 0x4f, 0x8c, 0xc3, 0x75, 0x5c, 0xca,
-	0x72, 0x78, 0x71, 0xd9, 0xf8, 0xb3, 0x8f, 0x72, 0x36, 0x54, 0xbc, 0x7e, 0xa9, 0xe2, 0xc4, 0x1e,
-	0x83, 0xc7, 0x57, 0xc2, 0x3a, 0x57, 0x6b, 0xc6, 0xd5, 0x2a, 0x26, 0x59, 0xae, 0xec, 0x1e, 0xab,
-	0x2f, 0x8f, 0x87, 0xc4, 0x3f, 0x19, 0x12, 0xff, 0xf7, 0x90, 0xf8, 0x5f, 0x46, 0xc4, 0x3b, 0x19,
-	0x11, 0xef, 0xe7, 0x88, 0x78, 0x6f, 0xcb, 0xe7, 0x8e, 0xd0, 0x71, 0x6c, 0xf4, 0x78, 0x53, 0x9e,
-	0x11, 0xee, 0x97, 0x2b, 0xec, 0xfd, 0x98, 0xd6, 0x1c, 0x65, 0x33, 0x67, 0xfe, 0xe7, 0xca, 0xbf,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x08, 0x73, 0xff, 0xd2, 0x86, 0x04, 0x00, 0x00,
+	// 543 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xcf, 0x6b, 0x13, 0x41,
+	0x14, 0xde, 0xad, 0x35, 0x34, 0x53, 0x0f, 0x71, 0x2c, 0x52, 0x63, 0x3a, 0x29, 0xab, 0x94, 0x5a,
+	0xed, 0x0c, 0x4d, 0xf5, 0x22, 0x1e, 0x24, 0xe6, 0x28, 0x58, 0x53, 0x04, 0x11, 0x21, 0x4c, 0x92,
+	0x69, 0x5c, 0xb2, 0xbb, 0x6f, 0xbb, 0x33, 0xa9, 0xf6, 0xe0, 0x41, 0x4f, 0x7a, 0x13, 0xfc, 0x07,
+	0xfa, 0x3f, 0xf8, 0x4f, 0xf4, 0x22, 0x14, 0xbc, 0x88, 0x87, 0x22, 0x89, 0x07, 0xff, 0x0c, 0x99,
+	0x1f, 0xa9, 0x6d, 0x74, 0x4b, 0x7b, 0x4a, 0xf6, 0xbd, 0xef, 0x7d, 0xdf, 0xb7, 0xdf, 0x7b, 0x8b,
+	0x02, 0x90, 0x31, 0xc8, 0x50, 0xb2, 0x98, 0x67, 0x7d, 0xa1, 0xd8, 0xce, 0x5a, 0x5b, 0x28, 0xbe,
+	0xc6, 0xb6, 0x07, 0x22, 0xdb, 0xa5, 0x69, 0x06, 0x0a, 0xf0, 0x55, 0x87, 0xa1, 0x16, 0x43, 0x1d,
+	0xa6, 0x3c, 0xd7, 0x83, 0x1e, 0x18, 0x08, 0xd3, 0xff, 0x2c, 0xba, 0x5c, 0xe9, 0x01, 0xf4, 0x22,
+	0xc1, 0x78, 0x1a, 0x32, 0x9e, 0x24, 0xa0, 0xb8, 0x0a, 0x21, 0x91, 0xae, 0x7b, 0x23, 0x47, 0xcf,
+	0x51, 0x5b, 0x10, 0xe9, 0x18, 0x14, 0x6b, 0x73, 0x29, 0x8e, 0x10, 0x1d, 0x08, 0x13, 0xdb, 0x0f,
+	0x9e, 0xa3, 0xd2, 0x53, 0xed, 0x6f, 0xf3, 0x35, 0x4f, 0x9b, 0x62, 0x7b, 0x20, 0xa4, 0xc2, 0x0b,
+	0x08, 0xc1, 0xd6, 0x96, 0xc8, 0x5a, 0x1a, 0x37, 0xef, 0x2f, 0xfa, 0xcb, 0xc5, 0x66, 0xd1, 0x54,
+	0x1e, 0x41, 0x98, 0xe0, 0xeb, 0xa8, 0xc8, 0x65, 0xbf, 0xd5, 0x15, 0x09, 0xc4, 0xf3, 0x53, 0xa6,
+	0x3b, 0xc3, 0x65, 0xbf, 0xa1, 0x9f, 0xef, 0xcf, 0x7c, 0xd8, 0xab, 0x7a, 0xbf, 0xf7, 0xaa, 0x5e,
+	0xf0, 0x0c, 0x5d, 0x3e, 0xc6, 0x2c, 0x53, 0x48, 0xa4, 0xc0, 0x0f, 0xd1, 0x6c, 0x26, 0xd4, 0x20,
+	0x4b, 0xfe, 0x72, 0xcf, 0xd6, 0xae, 0x51, 0x6b, 0x92, 0x6a, 0x93, 0xe3, 0x48, 0xa8, 0xd6, 0xaa,
+	0x4f, 0xef, 0x1f, 0x56, 0xbd, 0x26, 0xb2, 0x33, 0xba, 0x12, 0x10, 0x54, 0x31, 0xb4, 0x4f, 0xec,
+	0xcb, 0x6f, 0x00, 0x44, 0x0d, 0x11, 0x29, 0xee, 0xcc, 0x07, 0x6f, 0xd1, 0x42, 0x4e, 0xdf, 0x59,
+	0x78, 0x89, 0xb0, 0x0b, 0xae, 0x95, 0x02, 0x44, 0xad, 0xae, 0xee, 0x1a, 0x27, 0x97, 0xea, 0x54,
+	0xcb, 0xfd, 0x38, 0xac, 0x2e, 0xf5, 0x42, 0xf5, 0x6a, 0xd0, 0xa6, 0x1d, 0x88, 0x99, 0x0b, 0xd0,
+	0xfe, 0xac, 0xca, 0x6e, 0x9f, 0xa9, 0xdd, 0x54, 0x48, 0xda, 0x10, 0x9d, 0x66, 0x09, 0x26, 0x54,
+	0x82, 0x39, 0x84, 0x8d, 0xfc, 0x06, 0xcf, 0x78, 0x2c, 0xc7, 0xa6, 0x36, 0xd1, 0x95, 0x13, 0x55,
+	0x67, 0xe5, 0x01, 0x2a, 0xa4, 0xa6, 0xe2, 0x82, 0x20, 0xf4, 0xff, 0xe7, 0x41, 0xed, 0x9c, 0x4b,
+	0xc3, 0xcd, 0xd4, 0xbe, 0x5e, 0x40, 0x17, 0x0d, 0x2b, 0x7e, 0xe7, 0xa3, 0x69, 0x1d, 0x33, 0x5e,
+	0xce, 0x23, 0x98, 0xdc, 0x71, 0xf9, 0xd6, 0x19, 0x90, 0xd6, 0x65, 0x70, 0xf3, 0xfd, 0xb7, 0x5f,
+	0x9f, 0xa7, 0x08, 0xae, 0xb0, 0x9c, 0x83, 0x93, 0x5a, 0xfa, 0x8b, 0x8f, 0x4a, 0x93, 0x99, 0xe3,
+	0xbb, 0xa7, 0xaa, 0xe4, 0xac, 0xb0, 0x7c, 0xef, 0x9c, 0x53, 0xce, 0x67, 0xcd, 0xf8, 0xbc, 0x83,
+	0x57, 0xf2, 0x7c, 0xfe, 0xbb, 0x76, 0xfc, 0xd1, 0x47, 0x05, 0x1b, 0x2e, 0x5e, 0x39, 0x55, 0xf5,
+	0xc4, 0x3e, 0xcb, 0xb7, 0xcf, 0x84, 0x75, 0xbe, 0x96, 0x8c, 0xaf, 0x45, 0x4c, 0xf2, 0x7c, 0xd9,
+	0x7d, 0xd6, 0x1f, 0xef, 0x0f, 0x89, 0x7f, 0x30, 0x24, 0xfe, 0xcf, 0x21, 0xf1, 0x3f, 0x8d, 0x88,
+	0x77, 0x30, 0x22, 0xde, 0xf7, 0x11, 0xf1, 0x5e, 0xd4, 0x8e, 0x9d, 0xa3, 0xe3, 0x58, 0x8d, 0x78,
+	0x5b, 0x1e, 0x11, 0xee, 0xd4, 0xd6, 0xd9, 0x9b, 0x31, 0xad, 0x39, 0xcf, 0x76, 0xc1, 0x7c, 0xdf,
+	0xeb, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xa1, 0x49, 0x36, 0x6b, 0x96, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -342,8 +342,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Swap returns simulated swap amount.
 	Swap(ctx context.Context, in *QuerySwapRequest, opts ...grpc.CallOption) (*QuerySwapResponse, error)
-	// TerraPoolDelta returns terra_pool_delta amount.
-	TerraPoolDelta(ctx context.Context, in *QueryTerraPoolDeltaRequest, opts ...grpc.CallOption) (*QueryTerraPoolDeltaResponse, error)
+	// OsmosisPoolDelta returns osmosis_pool_delta amount.
+	OsmosisPoolDelta(ctx context.Context, in *QueryOsmosisPoolDeltaRequest, opts ...grpc.CallOption) (*QueryOsmosisPoolDeltaResponse, error)
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
@@ -365,9 +365,9 @@ func (c *queryClient) Swap(ctx context.Context, in *QuerySwapRequest, opts ...gr
 	return out, nil
 }
 
-func (c *queryClient) TerraPoolDelta(ctx context.Context, in *QueryTerraPoolDeltaRequest, opts ...grpc.CallOption) (*QueryTerraPoolDeltaResponse, error) {
-	out := new(QueryTerraPoolDeltaResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.market.v1beta1.Query/TerraPoolDelta", in, out, opts...)
+func (c *queryClient) OsmosisPoolDelta(ctx context.Context, in *QueryOsmosisPoolDeltaRequest, opts ...grpc.CallOption) (*QueryOsmosisPoolDeltaResponse, error) {
+	out := new(QueryOsmosisPoolDeltaResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.market.v1beta1.Query/OsmosisPoolDelta", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -387,8 +387,8 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 type QueryServer interface {
 	// Swap returns simulated swap amount.
 	Swap(context.Context, *QuerySwapRequest) (*QuerySwapResponse, error)
-	// TerraPoolDelta returns terra_pool_delta amount.
-	TerraPoolDelta(context.Context, *QueryTerraPoolDeltaRequest) (*QueryTerraPoolDeltaResponse, error)
+	// OsmosisPoolDelta returns osmosis_pool_delta amount.
+	OsmosisPoolDelta(context.Context, *QueryOsmosisPoolDeltaRequest) (*QueryOsmosisPoolDeltaResponse, error)
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
@@ -400,8 +400,8 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) Swap(ctx context.Context, req *QuerySwapRequest) (*QuerySwapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Swap not implemented")
 }
-func (*UnimplementedQueryServer) TerraPoolDelta(ctx context.Context, req *QueryTerraPoolDeltaRequest) (*QueryTerraPoolDeltaResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TerraPoolDelta not implemented")
+func (*UnimplementedQueryServer) OsmosisPoolDelta(ctx context.Context, req *QueryOsmosisPoolDeltaRequest) (*QueryOsmosisPoolDeltaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OsmosisPoolDelta not implemented")
 }
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -429,20 +429,20 @@ func _Query_Swap_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_TerraPoolDelta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTerraPoolDeltaRequest)
+func _Query_OsmosisPoolDelta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOsmosisPoolDeltaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).TerraPoolDelta(ctx, in)
+		return srv.(QueryServer).OsmosisPoolDelta(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.market.v1beta1.Query/TerraPoolDelta",
+		FullMethod: "/osmosis.market.v1beta1.Query/OsmosisPoolDelta",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).TerraPoolDelta(ctx, req.(*QueryTerraPoolDeltaRequest))
+		return srv.(QueryServer).OsmosisPoolDelta(ctx, req.(*QueryOsmosisPoolDeltaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -474,8 +474,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Swap_Handler,
 		},
 		{
-			MethodName: "TerraPoolDelta",
-			Handler:    _Query_TerraPoolDelta_Handler,
+			MethodName: "OsmosisPoolDelta",
+			Handler:    _Query_OsmosisPoolDelta_Handler,
 		},
 		{
 			MethodName: "Params",
@@ -556,7 +556,7 @@ func (m *QuerySwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryTerraPoolDeltaRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryOsmosisPoolDeltaRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -566,12 +566,12 @@ func (m *QueryTerraPoolDeltaRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryTerraPoolDeltaRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOsmosisPoolDeltaRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryTerraPoolDeltaRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOsmosisPoolDeltaRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -579,7 +579,7 @@ func (m *QueryTerraPoolDeltaRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryTerraPoolDeltaResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryOsmosisPoolDeltaResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -589,20 +589,20 @@ func (m *QueryTerraPoolDeltaResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryTerraPoolDeltaResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOsmosisPoolDeltaResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryTerraPoolDeltaResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOsmosisPoolDeltaResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size := m.TerraPoolDelta.Size()
+		size := m.OsmosisPoolDelta.Size()
 		i -= size
-		if _, err := m.TerraPoolDelta.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.OsmosisPoolDelta.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintQuery(dAtA, i, uint64(size))
@@ -707,7 +707,7 @@ func (m *QuerySwapResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryTerraPoolDeltaRequest) Size() (n int) {
+func (m *QueryOsmosisPoolDeltaRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -716,13 +716,13 @@ func (m *QueryTerraPoolDeltaRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryTerraPoolDeltaResponse) Size() (n int) {
+func (m *QueryOsmosisPoolDeltaResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.TerraPoolDelta.Size()
+	l = m.OsmosisPoolDelta.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -950,7 +950,7 @@ func (m *QuerySwapResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryTerraPoolDeltaRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryOsmosisPoolDeltaRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -973,10 +973,10 @@ func (m *QueryTerraPoolDeltaRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryTerraPoolDeltaRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOsmosisPoolDeltaRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryTerraPoolDeltaRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOsmosisPoolDeltaRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1000,7 +1000,7 @@ func (m *QueryTerraPoolDeltaRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryTerraPoolDeltaResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryOsmosisPoolDeltaResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1023,15 +1023,15 @@ func (m *QueryTerraPoolDeltaResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryTerraPoolDeltaResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOsmosisPoolDeltaResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryTerraPoolDeltaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOsmosisPoolDeltaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TerraPoolDelta", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OsmosisPoolDelta", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -1058,7 +1058,7 @@ func (m *QueryTerraPoolDeltaResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TerraPoolDelta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.OsmosisPoolDelta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

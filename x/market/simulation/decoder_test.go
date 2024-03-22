@@ -21,7 +21,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: types.TerraPoolDeltaKey, Value: cdc.MustMarshal(&sdk.DecProto{Dec: terraDelta})},
+			{Key: types.OsmosisPoolDeltaKey, Value: cdc.MustMarshal(&sdk.DecProto{Dec: terraDelta})},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -30,7 +30,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"TerraPoolDelta", fmt.Sprintf("%v\n%v", terraDelta, terraDelta)},
+		{"OsmosisPoolDelta", fmt.Sprintf("%v\n%v", terraDelta, terraDelta)},
 		{"other", ""},
 	}
 

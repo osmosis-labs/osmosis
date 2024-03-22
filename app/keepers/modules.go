@@ -97,7 +97,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 			poolmanagerclient.DenomPairTakerFeeProposalHandler,
 			incentivesclient.HandleCreateGroupsProposal,
-			//marketclient.SwapProposalHandler,
 		},
 	),
 	params.AppModuleBasic{},

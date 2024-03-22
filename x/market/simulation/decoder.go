@@ -16,7 +16,7 @@ import (
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.TerraPoolDeltaKey):
+		case bytes.Equal(kvA.Key[:1], types.OsmosisPoolDeltaKey):
 			var deltaA, deltaB sdk.DecProto
 			cdc.MustUnmarshal(kvA.Value, &deltaA)
 			cdc.MustUnmarshal(kvB.Value, &deltaB)

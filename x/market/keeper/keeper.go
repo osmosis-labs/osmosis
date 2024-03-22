@@ -48,10 +48,10 @@ func NewKeeper(
 	}
 }
 
-// GetTerraPoolDelta returns the gap between the TerraPool and the TerraBasePool
-func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) sdk.Dec {
+// GetOsmosisPoolDelta returns the gap between the OsmosisPool and the OsmosisBasePool
+func (k Keeper) GetOsmosisPoolDelta(ctx sdk.Context) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.TerraPoolDeltaKey)
+	bz := store.Get(types.OsmosisPoolDeltaKey)
 	if bz == nil {
 		return sdk.ZeroDec()
 	}
@@ -61,16 +61,16 @@ func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) sdk.Dec {
 	return dp.Dec
 }
 
-// SetTerraPoolDelta updates TerraPoolDelta which is gap between the TerraPool and the BasePool
-func (k Keeper) SetTerraPoolDelta(ctx sdk.Context, delta sdk.Dec) {
+// SetOsmosisPoolDelta updates OsmosisPoolDelta which is gap between the OsmosisPool and the BasePool
+func (k Keeper) SetOsmosisPoolDelta(ctx sdk.Context, delta sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: delta})
-	store.Set(types.TerraPoolDeltaKey, bz)
+	store.Set(types.OsmosisPoolDeltaKey, bz)
 }
 
-// ReplenishPools replenishes each pool(Terra,Luna) to BasePool
+// ReplenishPools replenishes each pool(Osmo,Luna) to BasePool
 func (k Keeper) ReplenishPools(ctx sdk.Context) {
-	poolDelta := k.GetTerraPoolDelta(ctx)
+	poolDelta := k.GetOsmosisPoolDelta(ctx)
 
 	poolRecoveryPeriod := int64(k.PoolRecoveryPeriod(ctx))
 	poolRegressionAmt := poolDelta.QuoInt64(poolRecoveryPeriod)
@@ -79,5 +79,5 @@ func (k Keeper) ReplenishPools(ctx sdk.Context) {
 	// regressionAmt cannot make delta zero
 	poolDelta = poolDelta.Sub(poolRegressionAmt)
 
-	k.SetTerraPoolDelta(ctx, poolDelta)
+	k.SetOsmosisPoolDelta(ctx, poolDelta)
 }

@@ -15,9 +15,9 @@ service Query {
     option (google.api.http).get = "/osmosis/market/v1beta1/swap";
   }
 
-  // TerraPoolDelta returns terra_pool_delta amount.
-  rpc TerraPoolDelta(QueryTerraPoolDeltaRequest) returns (QueryTerraPoolDeltaResponse) {
-    option (google.api.http).get = "/osmosis/market/v1beta1/terra_pool_delta";
+  // OsmosisPoolDelta returns osmosis_pool_delta amount.
+  rpc OsmosisPoolDelta(QueryOsmosisPoolDeltaRequest) returns (QueryOsmosisPoolDeltaResponse) {
+    option (google.api.http).get = "/osmosis/market/v1beta1/osmosis_pool_delta";
   }
 
   // Params queries all parameters.
@@ -43,13 +43,13 @@ message QuerySwapResponse {
   cosmos.base.v1beta1.Coin return_coin = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryTerraPoolDeltaRequest is the request type for the Query/TerraPoolDelta RPC method.
-message QueryTerraPoolDeltaRequest {}
+// QueryOsmosisPoolDeltaRequest is the request type for the Query/OsmosisPoolDelta RPC method.
+message QueryOsmosisPoolDeltaRequest {}
 
-// QueryTerraPoolDeltaResponse is the response type for the Query/TerraPoolDelta RPC method.
-message QueryTerraPoolDeltaResponse {
-  // terra_pool_delta defines the gap between the TerraPool and the TerraBasePool
-  bytes terra_pool_delta = 1
+// QueryOsmosisPoolDeltaResponse is the response type for the Query/OsmosisPoolDelta RPC method.
+message QueryOsmosisPoolDeltaResponse {
+  // osmosis_pool_delta defines the gap between the OsmosisPool and the OsmosisBasePool
+  bytes osmosis_pool_delta = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 

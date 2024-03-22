@@ -107,11 +107,6 @@ func (AppModule) Name() string { return types.ModuleName }
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// // Route returns the message routing key for the market module. //TODO:Yurii
-// func (am AppModule) Route() sdk.Route {
-// 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-// }
-
 // QuerierRoute returns the market module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 

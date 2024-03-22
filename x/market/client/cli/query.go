@@ -24,7 +24,7 @@ func GetQueryCmd() *cobra.Command {
 
 	marketQueryCmd.AddCommand(
 		GetCmdQuerySwap(),
-		GetCmdQueryTerraPoolDelta(),
+		GetCmdQueryOsmosisPoolDelta(),
 		GetCmdQueryParams(),
 	)
 
@@ -40,7 +40,7 @@ func GetCmdQuerySwap() *cobra.Command {
 		Long: strings.TrimSpace(`
 Query a quote for how many coins can be received in a swap operation. Note; rates are dynamic and can quickly change.
 
-$ terrad query swap 5000000uluna usdr
+$ osmosisd query swap 5000000uluna usdr
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -73,16 +73,16 @@ $ terrad query swap 5000000uluna usdr
 	return cmd
 }
 
-// GetCmdQueryTerraPoolDelta implements the query mint pool delta command.
-func GetCmdQueryTerraPoolDelta() *cobra.Command {
+// GetCmdQueryOsmosisPoolDelta implements the query mint pool delta command.
+func GetCmdQueryOsmosisPoolDelta() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "terra-pool-delta",
+		Use:   "osmosis-pool-delta",
 		Args:  cobra.NoArgs,
-		Short: "Query terra pool delta",
-		Long: `Query terra pool delta, which is usdr amount used for swap operation from the TerraPool.
-It can be negative if the market wants more Terra than Luna, and vice versa if the market wants more Luna.
+		Short: "Query osmosis pool delta",
+		Long: `Query osmosis pool delta, which is usdr amount used for swap operation from the OsmosisPool.
+It can be negative if the market wants more Osmo than Luna, and vice versa if the market wants more Luna.
 
-$ terrad query market terra-pool-delta
+$ osmosis query market osmosis-pool-delta
 	`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -91,8 +91,8 @@ $ terrad query market terra-pool-delta
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.TerraPoolDelta(context.Background(),
-				&types.QueryTerraPoolDeltaRequest{},
+			res, err := queryClient.OsmosisPoolDelta(context.Background(),
+				&types.QueryOsmosisPoolDeltaRequest{},
 			)
 			if err != nil {
 				return err

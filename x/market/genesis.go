@@ -13,7 +13,7 @@ import (
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState) {
 	keeper.SetParams(ctx, data.Params)
-	keeper.SetTerraPoolDelta(ctx, data.TerraPoolDelta)
+	keeper.SetOsmosisPoolDelta(ctx, data.OsmosisPoolDelta)
 
 	// check if the module account exists
 	moduleAcc := keeper.GetMarketAccount(ctx)
@@ -27,7 +27,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 // with InitGenesis
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisState) {
 	params := keeper.GetParams(ctx)
-	terraPoolDelta := keeper.GetTerraPoolDelta(ctx)
+	osmosisPoolDelta := keeper.GetOsmosisPoolDelta(ctx)
 
-	return types.NewGenesisState(terraPoolDelta, params)
+	return types.NewGenesisState(osmosisPoolDelta, params)
 }

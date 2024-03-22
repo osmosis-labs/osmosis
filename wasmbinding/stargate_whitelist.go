@@ -186,7 +186,7 @@ func init() {
 
 	// market
 	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/Swap", &marketqueryproto.QuerySwapResponse{})
-	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/TerraPoolDelta", &marketqueryproto.QueryTerraPoolDeltaResponse{})
+	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/OsmosisPoolDelta", &marketqueryproto.QueryTerraPoolDeltaResponse{})
 }
 
 // IsWhitelistedQuery returns if the query is not whitelisted.

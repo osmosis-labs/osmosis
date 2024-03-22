@@ -4,19 +4,19 @@ order: 2
 
 # State
 
-## TerraPoolDelta
+## OsmosisPoolDelta
 
-Market module provides swap functionality based on constant product mechanism. Terra pool have to keep its delta to track the currency demands for swap spread. Luna pool can be retrived from Terra pool delta with following equation:
+Market module provides swap functionality based on constant product mechanism. Osmo pool have to keep its delta to track the currency demands for swap spread. Luna pool can be retrived from Osmo pool delta with following equation:
 
 ```go
-TerraPool := BasePool + delta
-LunaPool := (BasePool * BasePool) / TerraPool
+OsmoPool := BasePool + delta
+LunaPool := (BasePool * BasePool) / OsmoPool
 ```
 
 > Note that the all pool holds decimal unit of `usdr` amount, so delta is also `usdr` unit.
 
-- TerraPoolDelta: `0x01 -> amino(TerraPoolDelta)`
+- OsmosisPoolDelta: `0x01 -> amino(OsmosisPoolDelta)`
 
 ```go
-type TerraPoolDelta sdk.Dec // the gap between the TerraPool and the BasePool
+type OsmosisPoolDelta sdk.Dec // the gap between the OsmoPool and the BasePool
 ```

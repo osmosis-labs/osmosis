@@ -15,7 +15,7 @@ The price stability of TerraSDR's peg to the SDR is achieved through Terra<>Luna
     - [Swap Procedure](01_concepts.md#Swap-Procedure)
     - [Seigniorage](01_concepts.md#Seigniorage)
 2. **[State](02_state.md)**
-    - [TerraPoolDelta](02_state.md#TerraPoolDelta)
+    - [OsmosisPoolDelta](02_state.md#OsmosisPoolDelta)
 3. **[EndBlock](03_end_block.md)**
     - [Replenish Pool](03_end_block.md#Replenish-Pool)
 4. **[Messages](04_messages.md)**

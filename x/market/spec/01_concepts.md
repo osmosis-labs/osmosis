@@ -5,7 +5,7 @@ order: 1
 # Concepts
 
 ## Swap Fees
-Since Terra's price feed is derived from validator oracles, there is necessarily a delay between the on-chain reported price and the actual realtime price.
+Since Osmo's price feed is derived from validator oracles, there is necessarily a delay between the on-chain reported price and the actual realtime price.
 
 This difference is on the order of about 1 minute (our oracle VotePeriod is 30 seconds), which is negligible for nearly all practical transactions. However an attacker could take advantage of this lag and extract value out of the network through a front-running attack.
 
@@ -20,7 +20,7 @@ To defend against this, the Market module enforces the following swap fees
     Using the same exchange rates above, swapping 1 SDT will return 980 KRT worth of Luna (2% of 1000 is 20, taken as the swap fee). In the other direction, 1 Luna would give you 9.8 SDT (2% of 10 = 0.2), or 9800 KRT (2% of 10,000 = 200).
 
 ## Market Making Algorithm
-Terra uses a Constant Product market-making algorithm to ensure liquidity for Terra<>Luna swaps.
+Osmosis uses a Constant Product market-making algorithm to ensure liquidity for Osmo<>Luna swaps.
 
 With Constant Product, we define a value `CP` set to the size of the Terra pool multiplied by a set fiat value of Luna, and ensure our market-maker maintains it as invariant during any swaps through adjusting the spread.
 

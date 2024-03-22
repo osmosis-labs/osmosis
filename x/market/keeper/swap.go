@@ -13,12 +13,12 @@ import (
 // OfferPool = OfferPool + offerAmt (Fills the swap pool with offerAmt)
 // AskPool = AskPool - askAmt       (Uses askAmt from the swap pool)
 func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk.DecCoin) error {
-	// No delta update in case Terra to Terra swap
+	// No delta update in case uosmo to uosmo swap
 	if offerCoin.Denom != appParams.BaseCoinUnit && askCoin.Denom != appParams.BaseCoinUnit {
 		return nil
 	}
 
-	terraPoolDelta := k.GetTerraPoolDelta(ctx)
+	osmosisPoolDelta := k.GetOsmosisPoolDelta(ctx)
 
 	// In case swapping Terra to Luna, the terra swap pool(offer) must be increased and the luna swap pool(ask) must be decreased
 	if offerCoin.Denom != appParams.BaseCoinUnit && askCoin.Denom == appParams.BaseCoinUnit {
@@ -27,7 +27,7 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 			return err
 		}
 
-		terraPoolDelta = terraPoolDelta.Add(offerBaseCoin.Amount)
+		osmosisPoolDelta = osmosisPoolDelta.Add(offerBaseCoin.Amount)
 	}
 
 	// In case swapping Luna to Terra, the luna swap pool(offer) must be increased and the terra swap pool(ask) must be decreased
@@ -37,10 +37,10 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 			return err
 		}
 
-		terraPoolDelta = terraPoolDelta.Sub(askBaseCoin.Amount)
+		osmosisPoolDelta = osmosisPoolDelta.Sub(askBaseCoin.Amount)
 	}
 
-	k.SetTerraPoolDelta(ctx, terraPoolDelta)
+	k.SetOsmosisPoolDelta(ctx, osmosisPoolDelta)
 
 	return nil
 }
@@ -100,14 +100,14 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 
 	// constant-product, which by construction is square of base(equilibrium) pool
 	cp := basePool.Mul(basePool)
-	terraPoolDelta := k.GetTerraPoolDelta(ctx)
-	terraPool := basePool.Add(terraPoolDelta)
+	osmosisPoolDelta := k.GetOsmosisPoolDelta(ctx)
+	terraPool := basePool.Add(osmosisPoolDelta)
 	lunaPool := cp.Quo(terraPool)
 
 	var offerPool sdk.Dec // base denom(usdr) unit
 	var askPool sdk.Dec   // base denom(usdr) unit
 	if offerCoin.Denom != appParams.BaseCoinUnit {
-		// Terra->Luna swap
+		// Osmo->Luna swap
 		offerPool = terraPool
 		askPool = lunaPool
 	} else {
