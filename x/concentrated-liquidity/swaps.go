@@ -239,8 +239,6 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-// swapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
-// new tick, liquidity, and sqrtPrice to the respective pool
 func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -250,7 +248,7 @@ func (k Keeper) swapOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
-	swapResult, poolUpdates, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
+	swapResult, poolUpdates, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit, true)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
@@ -281,7 +279,7 @@ func (k *Keeper) swapInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
-	swapResult, poolUpdates, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
+	swapResult, poolUpdates, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId(), true)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
@@ -302,6 +300,8 @@ func (k *Keeper) swapInAmtGivenOut(
 	return tokenIn, tokenOut, poolUpdates, nil
 }
 
+var unboundedPriceLimit = osmomath.ZeroBigDec()
+
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
 	poolI poolmanagertypes.PoolI,
@@ -310,7 +310,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, osmomath.ZeroBigDec())
+	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, unboundedPriceLimit, false)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -325,7 +325,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 ) (sdk.Coin, error) {
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, osmomath.ZeroBigDec(), poolI.GetId())
+	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, unboundedPriceLimit, poolI.GetId(), false)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -335,7 +335,8 @@ func (k Keeper) CalcInAmtGivenOut(
 func (k Keeper) swapSetup(ctx sdk.Context,
 	poolId uint64,
 	tokenInDenom string,
-	tokenOutDenom string) (pool types.ConcentratedPoolExtension, spreadAccum *accum.AccumulatorObject, err error) {
+	tokenOutDenom string,
+	getAccumulators bool) (pool types.ConcentratedPoolExtension, spreadAccum *accum.AccumulatorObject, err error) {
 	pool, err = k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return pool, spreadAccum, err
@@ -343,7 +344,9 @@ func (k Keeper) swapSetup(ctx sdk.Context,
 	if err := checkDenomValidity(tokenInDenom, tokenOutDenom, pool.GetToken0(), pool.GetToken1()); err != nil {
 		return pool, spreadAccum, err
 	}
-	spreadAccum, err = k.GetSpreadRewardAccumulator(ctx, poolId)
+	if getAccumulators {
+		spreadAccum, err = k.GetSpreadRewardAccumulator(ctx, poolId)
+	}
 	return pool, spreadAccum, err
 }
 
@@ -387,8 +390,9 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
+	updateAccumulators bool,
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
-	p, spreadRewardAccumulator, err := k.swapSetup(ctx, poolId, tokenInMin.Denom, tokenOutDenom)
+	p, spreadRewardAccumulator, err := k.swapSetup(ctx, poolId, tokenInMin.Denom, tokenOutDenom, updateAccumulators)
 	if err != nil {
 		return SwapResult{}, PoolUpdates{}, err
 	}
@@ -434,11 +438,13 @@ func (k Keeper) computeOutAmtGivenIn(
 			return SwapResult{}, PoolUpdates{}, err
 		}
 
-		// Update the spread reward growth for the entire swap using the total spread factors charged.
-		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
+		if updateAccumulators {
+			// Update the spread reward growth for the entire swap using the total spread factors charged.
+			spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
 
-		// Emit telemetry to detect spread reward truncation.
-		emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", "true")
+			// Emit telemetry to detect spread reward truncation.
+			emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", "true")
+		}
 
 		ctx.Logger().Debug("cl calc out given in")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardCharge)
@@ -454,7 +460,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// bucket has been consumed and we must move on to the next bucket to complete the swap
 		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, &uptimeAccums, tokenInMin.Denom)
+				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, &uptimeAccums, tokenInMin.Denom, updateAccumulators)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
 			}
@@ -489,8 +495,10 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
-	spreadRewardGrowth := sdk.DecCoin{Denom: tokenInMin.Denom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
-	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
+	if updateAccumulators {
+		spreadRewardGrowth := sdk.DecCoin{Denom: tokenInMin.Denom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
+		spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
+	}
 
 	// Coin amounts require int values
 	// Round amountIn up to avoid under charging
@@ -519,8 +527,9 @@ func (k Keeper) computeInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 	priceLimit osmomath.BigDec,
 	poolId uint64,
+	updateAccumulators bool,
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
-	p, spreadRewardAccumulator, err := k.swapSetup(ctx, poolId, tokenInDenom, desiredTokenOut.Denom)
+	p, spreadRewardAccumulator, err := k.swapSetup(ctx, poolId, tokenInDenom, desiredTokenOut.Denom, updateAccumulators)
 	if err != nil {
 		return SwapResult{}, PoolUpdates{}, err
 	}
@@ -564,10 +573,12 @@ func (k Keeper) computeInAmtGivenOut(
 			return SwapResult{}, PoolUpdates{}, err
 		}
 
-		spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+		if updateAccumulators {
+			spreadFactorsAccruedPerUnitOfLiquidity := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
-		// Emit telemetry to detect spread reward truncation.
-		emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", "false")
+			// Emit telemetry to detect spread reward truncation.
+			emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, spreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", "false")
+		}
 
 		ctx.Logger().Debug("cl calc in given out")
 		emitSwapDebugLogs(ctx, swapState, computedSqrtPrice, amountIn, amountOut, spreadRewardChargeTotal)
@@ -581,7 +592,7 @@ func (k Keeper) computeInAmtGivenOut(
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
 		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, &uptimeAccums, tokenInDenom)
+				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, &uptimeAccums, tokenInDenom, updateAccumulators)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
 			}
@@ -615,7 +626,9 @@ func (k Keeper) computeInAmtGivenOut(
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
-	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)))
+	if updateAccumulators {
+		spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)))
+	}
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
@@ -652,29 +665,32 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	nextInitializedTick int64, nextTickIter db.Iterator,
 	p types.ConcentratedPoolExtension,
 	spreadRewardAccum *accum.AccumulatorObject, uptimeAccums *[]*accum.AccumulatorObject,
-	tokenInDenom string) (SwapState, error) {
+	tokenInDenom string, updateAccumulators bool) (SwapState, error) {
 	nextInitializedTickInfo, err := ParseTickFromBz(nextTickIter.Value())
 	if err != nil {
 		return swapState, err
 	}
-	if *uptimeAccums == nil {
-		uptimeAccumsRaw, err := k.GetUptimeAccumulators(ctx, p.GetId())
+	if updateAccumulators {
+		if *uptimeAccums == nil {
+			uptimeAccumsRaw, err := k.GetUptimeAccumulators(ctx, p.GetId())
+			if err != nil {
+				return swapState, err
+			}
+			uptimeAccums = &uptimeAccumsRaw
+		}
+
+		if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, *uptimeAccums); err != nil {
+			return swapState, err
+		}
+
+		// Retrieve the liquidity held in the next closest initialized tick
+		spreadRewardGrowth := sdk.DecCoin{Denom: tokenInDenom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
+		err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), *uptimeAccums)
 		if err != nil {
 			return swapState, err
 		}
-		uptimeAccums = &uptimeAccumsRaw
 	}
-
-	if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, *uptimeAccums); err != nil {
-		return swapState, err
-	}
-
-	// Retrieve the liquidity held in the next closest initialized tick
-	spreadRewardGrowth := sdk.DecCoin{Denom: tokenInDenom, Amount: swapState.globalSpreadRewardGrowthPerUnitLiquidity}
-	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, spreadRewardGrowth, spreadRewardAccum.GetValue(), *uptimeAccums)
-	if err != nil {
-		return swapState, err
-	}
+	liquidityNet := nextInitializedTickInfo.LiquidityNet
 
 	// Move next tick iterator to the next tick as the tick is crossed.
 	nextTickIter.Next()

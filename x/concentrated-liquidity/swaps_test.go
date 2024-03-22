@@ -2027,7 +2027,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				cacheCtx,
 				pool.GetId(),
 				test.TokenIn, test.TokenOutDenom,
-				test.SpreadFactor, test.PriceLimit)
+				test.SpreadFactor, test.PriceLimit, true)
 
 			if test.ExpectErr {
 				s.Require().Error(err)
@@ -2171,7 +2171,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			swapResult, poolUpdates, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				cacheCtx,
 				test.TokenOut, test.TokenInDenom,
-				test.SpreadFactor, test.PriceLimit, pool.GetId())
+				test.SpreadFactor, test.PriceLimit, pool.GetId(), true)
 			if test.ExpectErr {
 				s.Require().Error(err)
 			} else {
@@ -2671,7 +2671,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 				s.Ctx,
 				poolBeforeCalc.GetId(),
 				test.TokenIn, test.TokenOutDenom,
-				test.SpreadFactor, test.PriceLimit)
+				test.SpreadFactor, test.PriceLimit, true)
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
@@ -2756,7 +2756,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 			_, _, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.TokenOut, test.TokenInDenom,
-				test.SpreadFactor, test.PriceLimit, poolBeforeCalc.GetId())
+				test.SpreadFactor, test.PriceLimit, poolBeforeCalc.GetId(), true)
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc

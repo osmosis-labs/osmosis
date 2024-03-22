@@ -11,10 +11,41 @@ message Params {
   repeated string signers = 1 [ (gogoproto.moretags) = "yaml:\"signers\"" ];
   // Assets is a list used to create tokenfactory denoms
   // for corresponding trading pairs
-  repeated AssetWithStatus assets = 2 [
+  repeated Asset assets = 2 [
     (gogoproto.moretags) = "yaml:\"assets\"",
     (gogoproto.nullable) = false
   ];
+  // VotesNeeded marks how many signers out of the list of signers need
+  // to sign until a tx can be considered finalized
+  uint64 votes_needed = 3 [ (gogoproto.moretags) = "yaml:\"votes_needed\"" ];
+  // Fee defines a param for fee that go towards the validator set
+  // signing the incoming/outgoing txs. The fee is measured as a ratio,
+  // so its value lies between 0 and 1.
+  string fee = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// AssetID defines a pair of the source chain name and its Osmosis
+// representation denoted by denom. AssetID is a primary key for Asset.
+message AssetID {
+  // SourceChain is a source chain name
+  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
+  // Denom is the Osmosis representation of the SourceChain
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+
+// Asset is a representation of the asset.
+message Asset {
+  // ID is the asset's primary key
+  AssetID id = 1
+      [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
+  // Status is a current status of the asset
+  AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
+  // Exponent represents the power of 10 used for coin representation
+  uint64 exponent = 3 [ (gogoproto.moretags) = "yaml:\"exponent\"" ];
 }
 
 enum AssetStatus {
@@ -25,21 +56,30 @@ enum AssetStatus {
   ASSET_STATUS_BLOCKED_BOTH = 4;
 }
 
-// AssetWithStatus defines a pair of the asset and its current status.
-message AssetWithStatus {
-  Asset asset = 1
-      [ (gogoproto.moretags) = "yaml:\"asset\"", (gogoproto.nullable) = false ];
-  AssetStatus asset_status = 2
-      [ (gogoproto.moretags) = "yaml:\"asset_status\"" ];
-}
-
-// Asset defines a pair of the source chain name and its Osmosis representation
-// denoted by denom. It also includes a precision used for coins representation.
-message Asset {
-  // SourceChain is a source chain name
-  string source_chain = 1 [ (gogoproto.moretags) = "yaml:\"source_chain\"" ];
-  // Denom is the Osmosis representation of the SourceChain
-  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-  // Precision used for coins representation
-  uint64 precision = 3 [ (gogoproto.moretags) = "yaml:\"precision\"" ];
+// InboundTransfer is a representation of the inbound transfer.
+message InboundTransfer {
+  // ExternalId is a unique ID of the transfer coming from outside.
+  // Serves the purpose of uniquely identifying the transfer in another chain
+  // (e.g., this might be the BTC tx hash).
+  string external_id = 1 [ (gogoproto.moretags) = "yaml:\"external_id\"" ];
+  // DestAddr is a destination Osmosis address
+  string dest_addr = 2 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
+  // AssetID is the ID of the asset being transferred
+  AssetID asset_id = 3 [
+    (gogoproto.moretags) = "yaml:\"asset_id\"",
+    (gogoproto.nullable) = false
+  ];
+  // Amount of coins to transfer
+  string amount = 4 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // Voters is a list of validators signed this transfer
+  repeated string voters = 5 [ (gogoproto.moretags) = "yaml:\"voters\"" ];
+  // Finalized indicates whether the transfer needs more votes or has
+  // already accumulated a sufficient number. The finalised flag is set
+  // to true as soon as length(voters) is greater than or equal to
+  // the module's param votes_needed.
+  bool finalized = 6 [ (gogoproto.moretags) = "yaml:\"finalized\"" ];
 }

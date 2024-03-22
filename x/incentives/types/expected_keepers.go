@@ -71,4 +71,9 @@ type GAMMKeeper interface {
 type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 	GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int
+	GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModule poolmanagertypes.PoolModuleI, pool poolmanagertypes.PoolI, err error)
+}
+
+type ProtorevKeeper interface {
+	GetPoolForDenomPairNoOrder(ctx sdk.Context, denom1, denom2 string) (uint64, error)
 }

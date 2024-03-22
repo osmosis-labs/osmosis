@@ -253,13 +253,14 @@ enum QueryMessage {
     GetTotalPoolLiquidity {},
 
     /// Returns the spot price of the 'base asset' in terms of the 'quote asset' in the pool,
-    /// errors if either baseAssetDenom, or quoteAssetDenom does not exist.
-    /// For example, if this was a UniV2 50-50 pool, with 2 ETH, and 8000 UST
-    /// pool.SpotPrice(ctx, "eth", "ust") = 4000.00
+    /// errors if either `base_asset_denom`, or `quote_asset_denom` does not exist.
+    /// For example, if this was a UniV2 50-50 pool, with 2ubase and 8000uquot as total pool assets
+    /// `{ "spot_price": { "base_asset_denom": "ubase", "quote_asset_denom": "uquot" }`
+    /// = 8000 / 2 = 4000
     #[returns(SpotPriceResponse)]
     SpotPrice {
-        quote_asset_denom: String,
         base_asset_denom: String,
+        quote_asset_denom: String,
     },
 
     /// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
