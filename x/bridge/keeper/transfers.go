@@ -25,6 +25,11 @@ func (k Keeper) InboundTransfer(
 ) error {
 	params := k.GetParams(ctx)
 
+	// Check if the sender is part of the signer set
+	if !slices.Contains(params.Signers, sender) {
+		return errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
+	}
+
 	// Check if the asset accepts inbound transfers
 	asset, found := params.GetAsset(assetID)
 	if !found {
@@ -35,7 +40,7 @@ func (k Keeper) InboundTransfer(
 	}
 
 	// Try to finalize the transfer
-	finalized, err := k.finalizeInboundTransfer(
+	finalized, err := k.voteAndFinalize(
 		ctx,
 		externalID,
 		externalHeight,
@@ -66,10 +71,10 @@ func (k Keeper) InboundTransfer(
 	return nil
 }
 
-// finalizeInboundTransfer returns true if the transfer is successfully finalized,
+// voteAndFinalize returns true if the transfer is successfully finalized,
 // i.e., the transfer was not finalized before adding the new voter to the voter list,
 // but is finalized after the addition.
-func (k Keeper) finalizeInboundTransfer(
+func (k Keeper) voteAndFinalize(
 	ctx sdk.Context,
 	externalID string,
 	externalHeight uint64,
