@@ -1,6 +1,7 @@
 package v24
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,6 +49,9 @@ func CreateUpgradeHandler(
 		keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
 			time.Hour * 24 * 14,
 		})
+
+		fmt.Println("------------")
+		fmt.Println("lockable duration has been set")
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)

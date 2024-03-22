@@ -71,6 +71,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // CreateLockablePoolGauges create multiple gauges based on lockableDurations.
 func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 	// Create the same number of gauges as there are LockableDurations
+	a := k.GetLockableDurations(ctx)
+	ctx.Logger().Error("=======getting lockable durations=======")
+	ctx.Logger().Error(fmt.Sprint(len((a))))
+
 	for _, lockableDuration := range k.GetLockableDurations(ctx) {
 		gaugeId, err := k.incentivesKeeper.CreateGauge(
 			ctx,
