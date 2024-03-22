@@ -90,10 +90,21 @@ func (k Keeper) GetLastTransferHeight(ctx sdk.Context, assetID types.AssetID) (u
 	return binary.BigEndian.Uint64(b), nil
 }
 
-// UpsertLastAssetHeight updates or inserts the value depending on whether it is
-// already presented in the store or not.
-func (k Keeper) UpsertLastAssetHeight(ctx sdk.Context, assetID types.AssetID, height uint64) {
+// UpdateLastAssetHeight properly updates the last transfer height of the asset. If the height
+// of the asset is not found, then create it. Set the height as a maximum of the currently saved
+// height and the provided one since the latest height can't decrease.
+func (k Keeper) UpdateLastAssetHeight(ctx sdk.Context, assetID types.AssetID, height uint64) {
+	var currentHeight uint64 = 0
+
 	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.LastHeightKey(assetID))
+	if b != nil {
+		currentHeight = binary.BigEndian.Uint64(b)
+	}
+	// If the current height is not found, then assume that it is zero
+
+	height = max(height, currentHeight)
+
 	store.Set(
 		types.LastHeightKey(assetID),
 		binary.BigEndian.AppendUint64([]byte{}, height),
