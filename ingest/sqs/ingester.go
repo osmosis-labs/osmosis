@@ -20,6 +20,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v23/ingest"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
@@ -76,6 +77,30 @@ type IngestProcessBlockArgs struct {
 
 // ProcessBlock implements ingest.Ingester.
 func (i *sqsIngester) ProcessBlock(ctx sdk.Context) (err error) {
+	// Process block by reading and writing data and ingesting data into sinks
+	pools, takerFeeMap, err := i.poolsIngester.Process(ctx)
+	if err != nil {
+		return
+	}
+
+	return i.processChangedPools(ctx, pools, takerFeeMap)
+}
+
+// ProcessChangedBlockData implements ingest.Ingester.
+func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedConcentratedPools []model.Pool) error {
+	// Convert concentrated pools to sqs pools
+	changedPools := make([]sqsdomain.PoolI, len(changedConcentratedPools))
+	for i, pool := range changedConcentratedPools {
+		changedPools[i] = &sqsdomain.PoolWrapper{
+			ChainModel: &pool,
+		}
+	}
+
+	return i.processChangedPools(ctx, changedPools, sqsdomain.TakerFeeMap{})
+}
+
+// processChangedPools sends the changed pools to the SQS server.
+func (i *sqsIngester) processChangedPools(ctx sdk.Context, changedPools []sqsdomain.PoolI, takerFeeMap sqsdomain.TakerFeeMap) (err error) {
 	// This mechanism ensures that we do not process the next block while syncing.
 	if i.isProcessingBlock.Load() {
 		return nil
@@ -144,12 +169,6 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) (err error) {
 
 		ingesterClient := prototypes.NewSQSIngesterClient(i.grpcConn)
 
-		// Process block by reading and writing data and ingesting data into sinks
-		pools, takerFeeMap, err := i.poolsIngester.Process(ctx)
-		if err != nil {
-			return
-		}
-
 		// Serialize taker fee map
 		takerFeeMapBz, err := takerFeeMap.MarshalJSON()
 		if err != nil {
@@ -170,7 +189,7 @@ func (i *sqsIngester) ProcessBlock(ctx sdk.Context) (err error) {
 			}
 		}()
 
-		if err := i.streamPools(ctx, ingesterClient, pools); err != nil {
+		if err := i.streamPools(ctx, ingesterClient, changedPools); err != nil {
 			return
 		}
 

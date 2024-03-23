@@ -34,8 +34,13 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/service"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -290,8 +295,15 @@ func NewOsmosisApp(
 			panic(err)
 		}
 
-		// Set the sidecar query server ingester to the ingest manager.
-		app.IngestManager.RegisterIngester(sqsIngester)
+		writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+
+		poolTracker := service.NewPoolTracker()
+
+		writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
+			service.NewConcentratedWriteListerner(poolTracker),
+		}
+		sqsStreamingService := service.New(&app.AppKeepers, writeListeners, sqsIngester, poolTracker)
+		app.SetStreamingService(sqsStreamingService)
 	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then

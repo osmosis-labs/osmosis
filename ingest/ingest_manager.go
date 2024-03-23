@@ -2,6 +2,8 @@ package ingest
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 )
 
 // IngestManager is an interface that defines the methods for the ingest manager.
@@ -22,6 +24,9 @@ type Ingester interface {
 	// ProcessBlock processes the block and ingests data into a sink.
 	// Returns error if the ingester fails to ingest data.
 	ProcessBlock(ctx sdk.Context) error
+
+	// ProcessChangedBlockData processes only the pools that were changed in the block.
+	ProcessChangedBlockData(ctx sdk.Context, changedConcentratedPools []model.Pool) error
 
 	GetName() string
 }
