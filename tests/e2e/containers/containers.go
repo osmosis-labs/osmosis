@@ -253,7 +253,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				t.Log(outBuf.String())
 
 				t.Log("\nstdout:")
-				t.Log(outBuf.String())
+				t.Log(errBuf.String())
 				// N.B: We should not be returning false here
 				// because some applications such as Hermes might log
 				// "error" to stderr when they function correctly,
