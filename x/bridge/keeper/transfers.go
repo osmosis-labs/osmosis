@@ -182,7 +182,7 @@ func (k Keeper) burn(ctx sdk.Context, sourceAddr string, assetID types.AssetID, 
 
 	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr.String(), assetID.Name())
 	if err != nil {
-		return fmt.Errorf("can't create a tokenfacroty denom for %s", assetID.Name())
+		return fmt.Errorf("can't create a tokenfactory denom for %s", assetID.Name())
 	}
 
 	msgBurn := &tokenfactorytypes.MsgBurn{
