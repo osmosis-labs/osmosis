@@ -1,0 +1,68 @@
+@startuml
+start
+
+:Validator executes **MsgInboundTransfer**;
+
+if (Is the message valid?) then (no)
+    #Red:Error;
+    end
+else (yes)
+endif
+
+if (Is the validator part of the valset?) then (no)
+    #Red:Error;
+    end
+else (yes)
+endif
+
+if (Does the asset accept inbound transfers?) then (no)
+    #Red:Error;
+    end
+else (yes)
+endif
+
+#LightYellow:Try to finalize the transfer. If it is
+finalized, then we can start minting.;
+
+if (Is the transfer finalized already?) then (yes)
+    #LightGreen:The transfer was processed before;
+    end
+else (no)
+endif
+
+:Get transfer info from the store.
+It includes the voter list and the finalization flag.;
+
+if (Has this validator already signed this transfer?) then (yes)
+    #LightYellow:This might happen if the validator starts
+    signing from the already observed height;
+    #Red:Error;
+    end
+else (no)
+endif
+
+:Add the validator to the voter list;
+
+#LightYellow:Check if the transfer is finalized now:
+
+* finalized if the current number of votes is greater than
+or equal to the needed number of votes (module param)
+
+* not finalized otherwise;
+
+if (Is the transfer finalized) then (no)
+    #LightGreen:Waiting for more votes;
+    end
+else (yes)
+endif
+
+:Perform tokenfactory mint;
+
+:Add the transfer to the finalized transfers set;
+
+:Save the last transfer height. Its value is a maximum
+of the currently saved height and the new one
+since the latest height can't decrease;
+
+stop
+@enduml

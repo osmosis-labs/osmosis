@@ -34,7 +34,7 @@ func (m Asset) Validate() error {
 		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 
-	// don't check m.Exponent since it's always valid
+	// don't check m.Exponent and m.LastTransferHeight since they are always valid
 
 	return nil
 }
