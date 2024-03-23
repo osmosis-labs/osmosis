@@ -69,7 +69,15 @@ func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.Requ
 
 	// If cold start, we use SQS ingestert to process the intire block.
 	if s.isColdStart {
-		return s.sqsIngester.ProcessBlock(sdkCtx)
+
+		if err := s.sqsIngester.ProcessBlock(sdkCtx); err != nil {
+			return err
+		}
+
+		// Succesfully processed the block, no longer cold start.
+		s.isColdStart = false
+
+		return nil
 	}
 
 	// If not cold start, we only process the pools that were changed this block.
