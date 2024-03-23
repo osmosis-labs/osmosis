@@ -13,7 +13,7 @@ func (s *KeeperTestSuite) TestGetParams() {
 	s.Require().Equal(types.DefaultParams(), resp.GetParams())
 
 	// Append new asset to the assets list
-	s.AppendNewAsset(asset1)
+	s.AppendNewAssets(asset1)
 
 	// Fill expected values. Append new asset to the default assets list
 	newParams := types.DefaultParams()

@@ -13,6 +13,8 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	fee := math.LegacyNewDecWithPrec(8, 1)
 
 	s.Run("valid params", func() {
+		s.SetupTest()
+
 		newParams := types.Params{
 			Signers:     []string{addr1, addr2},
 			Assets:      []types.Asset{asset1, asset2},
@@ -36,20 +38,18 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 
 		// Get all tf denoms created by the bridge module
 		tfDenoms := s.GetBridgeTFDenoms()
-		// There should be 3 denoms since outdated denoms are not deleted from
-		// the tokenfactory
-		// TODO: validate denoms properly
+		// There should be 3 denoms since outdated denoms are not deleted from the tokenfactory
 		s.Require().Len(tfDenoms, 3)
 
 		// Get all denoms based on the assets stored in the module params
 		bridgeDenoms := s.GetBridgeDenoms()
-		// There should be 2 denoms since outdated denoms are deleted from
-		// the bridge module
-		// TODO: validate denoms properly
+		// There should be 2 denoms since outdated denoms are deleted from the bridge
 		s.Require().Len(bridgeDenoms, 2)
 	})
 
 	s.Run("sender is not the authority", func() {
+		s.SetupTest()
+
 		// Get initial params
 		initialParams := s.GetParams()
 
@@ -71,10 +71,13 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		actualParams := s.GetParams()
 		s.Require().Equal(initialParams, actualParams)
 
-		// TODO: check events were not emitted
+		eventType := proto.MessageName(new(types.EventUpdateParams))
+		s.Require().False(s.HasEvent(eventType))
 	})
 
 	s.Run("invalid params", func() {
+		s.SetupTest()
+
 		// Get initial params
 		initialParams := s.GetParams()
 
@@ -95,6 +98,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		actualParams := s.GetParams()
 		s.Require().Equal(initialParams, actualParams)
 
-		// TODO: check events were not emitted
+		eventType := proto.MessageName(new(types.EventUpdateParams))
+		s.Require().False(s.HasEvent(eventType))
 	})
 }

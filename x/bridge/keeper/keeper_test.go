@@ -39,14 +39,52 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.authority = s.App.GovKeeper.GetAuthority()
 }
 
-func (s *KeeperTestSuite) AppendNewAsset(asset types.Asset) {
-	resp, err := s.queryClient.Params(s.Ctx, new(types.QueryParamsRequest))
+func (s *KeeperTestSuite) AppendNewAssets(assets ...types.Asset) {
+	newParams := s.GetParams()
+	newParams.Assets = append(newParams.Assets, assets...)
+
+	_, err := s.msgServer.UpdateParams(s.Ctx, &types.MsgUpdateParams{
+		Sender:    s.authority,
+		NewParams: newParams,
+	})
 	s.Require().NoError(err)
 
-	newParams := resp.GetParams()
-	newParams.Assets = append(newParams.Assets, asset)
+	// Check that a new denom appeared in tokenfactory
+	tfDenoms := s.GetBridgeTFDenoms()
+	for _, asset := range assets {
+		expectedDenom, err := tokenfactorytypes.GetTokenDenom(s.GetModuleAddress(), asset.Name())
+		s.Require().NoError(err)
+		s.Require().Contains(tfDenoms, expectedDenom)
+	}
+}
 
-	_, err = s.msgServer.UpdateParams(s.Ctx, &types.MsgUpdateParams{
+func (s *KeeperTestSuite) AppendNewSigners(signers ...string) {
+	newParams := s.GetParams()
+	newParams.Signers = append(newParams.Signers, signers...)
+
+	_, err := s.msgServer.UpdateParams(s.Ctx, &types.MsgUpdateParams{
+		Sender:    s.authority,
+		NewParams: newParams,
+	})
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) EnableAssets(assetIDs ...types.AssetID) {
+	for _, assetID := range assetIDs {
+		_, err := s.msgServer.ChangeAssetStatus(s.Ctx, &types.MsgChangeAssetStatus{
+			Sender:    s.authority,
+			AssetId:   assetID,
+			NewStatus: types.AssetStatus_ASSET_STATUS_OK,
+		})
+		s.Require().NoError(err)
+	}
+}
+
+func (s *KeeperTestSuite) SetVotesNeeded(votesNeeded uint64) {
+	newParams := s.GetParams()
+	newParams.VotesNeeded = votesNeeded
+
+	_, err := s.msgServer.UpdateParams(s.Ctx, &types.MsgUpdateParams{
 		Sender:    s.authority,
 		NewParams: newParams,
 	})
@@ -57,6 +95,14 @@ func (s *KeeperTestSuite) GetParams() types.Params {
 	resp, err := s.queryClient.Params(s.Ctx, new(types.QueryParamsRequest))
 	s.Require().NoError(err)
 	return resp.GetParams()
+}
+
+func (s *KeeperTestSuite) GetLastTransferHeight(assetID types.AssetID) uint64 {
+	resp, err := s.queryClient.LastTransferHeight(s.Ctx, &types.LastTransferHeightRequest{
+		AssetId: assetID,
+	})
+	s.Require().NoError(err)
+	return resp.LastTransferHeight
 }
 
 func (s *KeeperTestSuite) GetModuleAddress() string {
@@ -85,6 +131,19 @@ func (s *KeeperTestSuite) GetBridgeDenoms() []string {
 		bridgeDenoms = append(bridgeDenoms, denom)
 	}
 	return bridgeDenoms
+}
+
+func (s *KeeperTestSuite) GetTFDenom(assetID types.AssetID) string {
+	moduleAddr := s.GetModuleAddress()
+	denom, err := tokenfactorytypes.GetTokenDenom(moduleAddr, assetID.Name())
+	s.Require().NoError(err)
+	return denom
+}
+
+func (s *KeeperTestSuite) GetAddrFromBech32(addr string) sdk.AccAddress {
+	result, err := sdk.AccAddressFromBech32(addr)
+	s.Require().NoError(err)
+	return result
 }
 
 func (s *KeeperTestSuite) HasEvent(eventType string) bool {
