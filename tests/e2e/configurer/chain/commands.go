@@ -825,6 +825,8 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 		return err
 	}
 
+	n.LogActionF("submitting param change proposal %s", proposalJson)
+
 	propNumber := n.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName, isLegacy)
 
 	AllValsVoteOnProposal(chain, propNumber)
