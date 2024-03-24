@@ -28,7 +28,7 @@ func (m msgServer) InboundTransfer(
 ) (*types.MsgInboundTransferResponse, error) {
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -65,7 +65,7 @@ func (m msgServer) OutboundTransfer(
 ) (*types.MsgOutboundTransferResponse, error) {
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -96,7 +96,7 @@ func (m msgServer) UpdateParams(
 ) (*types.MsgUpdateParamsResponse, error) {
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -133,7 +133,7 @@ func (m msgServer) ChangeAssetStatus(
 ) (*types.MsgChangeAssetStatusResponse, error) {
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

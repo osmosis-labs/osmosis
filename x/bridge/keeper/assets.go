@@ -3,7 +3,6 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
@@ -27,7 +26,8 @@ func (k Keeper) ChangeAssetStatus(
 	// check if the specified asset is known
 	assetIdx := params.GetAssetIndex(assetID)
 	if assetIdx == notFoundIdx {
-		return ChangeAssetStatusResult{}, sdkerrors.ErrNotFound
+		return ChangeAssetStatusResult{},
+			errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found %s", assetID.Name())
 	}
 
 	// update assetIdx asset status

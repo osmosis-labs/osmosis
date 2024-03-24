@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			Sender:    s.authority,
 			NewParams: newParams,
 		})
-		s.Require().ErrorIs(err, types.ErrInvalidParams)
+		s.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 		// Params have not changed
 		actualParams := s.GetParams()
