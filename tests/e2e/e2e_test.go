@@ -1056,7 +1056,8 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 				],
 				"burn_vote_quorum": false,
 				"burn_proposal_deposit_prevote": false,
-				"burn_vote_veto": true
+				"burn_vote_veto": true,
+				"min_deposit_ratio":"0.010000000000000000"
 			}
 		}
 	],
@@ -1114,8 +1115,8 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 				}
 				],
 				"burn_vote_quorum": false,
-				"burn_proposal_deposit_prevote": false,
-				"burn_vote_veto": true
+				"burn_vote_veto": true,
+				"min_deposit_ratio":"0.010000000000000000"
 			}
 		}
 	],
