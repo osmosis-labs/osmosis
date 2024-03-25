@@ -322,8 +322,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
-	var icaHostStack porttypes.IBCModule
-	icaHostStack = icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
+	icaHostStack := icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
 
 	// ICQ Keeper
 	icqKeeper := icqkeeper.NewKeeper(
