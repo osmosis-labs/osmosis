@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -16,7 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
@@ -100,11 +102,35 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
 
+	// INCENTIVE Setup
+	//
+
 	// check that old lockable durations were not single param
 	oldLockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 	s.Require().Equal(len(oldLockableDurations), 4)
-	oldLockableDurations = s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
-	s.Require().Equal(len(oldLockableDurations), 4)
+	oldLockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(oldLockableDurations), 3)
+
+	// fund test acc and create non-perpetual gauge
+	lockDuration := time.Hour
+	incentive := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)))
+	expectedShareDenom := "foo"
+	s.FundAcc(s.TestAccs[1], incentive)
+
+	shareLock := sdk.NewCoins(sdk.NewCoin(expectedShareDenom, osmomath.NewInt(1_000_000)))
+	s.FundAcc(s.TestAccs[1], shareLock)
+	shareCoins := sdk.NewCoins(sdk.NewInt64Coin(expectedShareDenom, int64(1_000_000)))
+	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[1], shareCoins, lockDuration)
+	s.Require().NoError(err)
+
+	gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, true, s.TestAccs[1], incentive, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         expectedShareDenom,
+		Duration:      lockDuration,
+	}, s.Ctx.BlockTime(), 1, 0)
+	s.Require().NoError(err)
+	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+	s.Require().NoError(err)
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -139,6 +165,13 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 	s.Require().Empty(oldBaseDenoms)
 
+	// INCENTIVES Tests
+	//
+
+	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivetypes.Gauge{*gauge})
+	s.Require().NoError(err)
+	s.Require().Equal(incentive.String(), coins.String())
+
 	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 	s.Require().Equal(len(lockableDurations), 1)
 	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
@@ -146,12 +179,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	lockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
 	s.Require().Equal(len(lockableDurations), 1)
 	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
-	// INCENTIVES Tests
-	//
 
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
-	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
+	s.Require().Equal(incentivetypes.DefaultMinValueForDistr, params.MinValueForDistribution)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
