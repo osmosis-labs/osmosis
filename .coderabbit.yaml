@@ -7,7 +7,7 @@ reviews:
   auto_review:
     enabled: false
     labels: 
-      - "request-code-rabbit-review "
+      - "request-code-rabbit-review"
     drafts: false
 chat:
   auto_reply: true
