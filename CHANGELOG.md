@@ -76,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
 * [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
 * [#7839](https://github.com/osmosis-labs/osmosis/pull/7839) Add ICA controller
-  
+* [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
+
 ### SDK
 
 * [#525](https://github.com/osmosis-labs/cosmos-sdk/pull/525) CacheKV speedups
