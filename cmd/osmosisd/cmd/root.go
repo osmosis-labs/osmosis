@@ -614,7 +614,7 @@ func initAppConfig() (string, interface{}) {
 [osmosis-mempool]
 # This is the max allowed gas any tx.
 # This is only for local mempool purposes, and thus	is only ran on check tx.
-max-gas-wanted-per-tx = "25000000"
+max-gas-wanted-per-tx = "60000000"
 
 # This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
 # Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
