@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

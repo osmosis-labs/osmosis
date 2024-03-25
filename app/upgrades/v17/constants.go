@@ -7,16 +7,16 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolManagerTypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/vv24/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/vv24/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/vv24/x/gamm/types"
+	poolManagerTypes "github.com/osmosis-labs/osmosis/vv24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/superfluid/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
+	"github.com/osmosis-labs/osmosis/vv24/app/keepers"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v17 upgrade.

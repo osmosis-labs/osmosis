@@ -8,10 +8,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
-	valsettypes "github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
+	gammtypes "github.com/osmosis-labs/osmosis/vv24/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/vv24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/superfluid/types"
+	valsettypes "github.com/osmosis-labs/osmosis/vv24/x/valset-pref/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

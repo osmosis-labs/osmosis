@@ -5,8 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/bridge/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/vv24/x/tokenfactory/types"
 )
 
 type ChangeAssetStatusResult struct {

@@ -6,8 +6,8 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/vv24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/vv24/x/protorev/types"
 )
 
 var (

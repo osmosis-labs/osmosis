@@ -9,8 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/wasmbinding"
+	"github.com/osmosis-labs/osmosis/vv24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/vv24/wasmbinding"
 )
 
 func TestFullDenom(t *testing.T) {

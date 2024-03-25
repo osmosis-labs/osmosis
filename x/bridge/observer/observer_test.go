@@ -19,8 +19,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer"
-	bridge "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/bridge/observer"
+	bridge "github.com/osmosis-labs/osmosis/vv24/x/bridge/types"
 )
 
 var upgrader = websocket.Upgrader{}

@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/vv24/x/superfluid/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

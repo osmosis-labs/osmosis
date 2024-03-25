@@ -1,7 +1,7 @@
 package genesis
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/concentrated-liquidity/types"
 )
 
 // DefaultGenesis returns the default GenesisState for the concentrated-liquidity module.

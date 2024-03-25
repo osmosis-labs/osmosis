@@ -8,8 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/vv24/x/txfees/types"
 )
 
 func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {

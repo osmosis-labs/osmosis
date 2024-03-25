@@ -14,14 +14,14 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/vv24/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/vv24/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/vv24/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/vv24/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/vv24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/vv24/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/vv24/x/superfluid/types"
 )
 
 var (
