@@ -2,10 +2,13 @@ package cosmwasm
 
 import (
 	"encoding/json"
+	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+const DefaultContractCallGasLimit = 30_000_000
 
 // ContracKeeper defines the interface needed to be fulfilled for
 // the ContractKeeper.
@@ -118,10 +121,25 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 		return response, err
 	}
 
-	responseBz, err := contractKeeper.Sudo(ctx, sdk.MustAccAddressFromBech32(contractAddress), bz)
+	// Defer to catch panics in case the sudo call runs out of gas.
+	defer func() {
+		if r := recover(); r != nil {
+			var emptyResponse K
+			response = emptyResponse
+			err = fmt.Errorf("contract call ran out of gas")
+		}
+	}()
+
+	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
+	gasLimit := min(ctx.GasMeter().Limit(), DefaultContractCallGasLimit)
+	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
+	responseBz, err := contractKeeper.Sudo(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err
 	}
+
+	// Consume gas used for calling contract to the parent ctx
+	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track contract call gas")
 
 	// valid empty response
 	if len(responseBz) == 0 {
