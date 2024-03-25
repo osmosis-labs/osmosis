@@ -2,7 +2,7 @@
 ###                                Localnet                                 ###
 ###############################################################################
 #
-# Please refer to https://github.com/osmosis-labs/osmosis/blob/main/tests/localosmosis/README.md for detailed 
+# Please refer to https://github.com/osmosis-labs/osmosis/blob/main/tests/localosmosis/README.md for detailed
 # usage of localnet.
 
 localnet-help:
@@ -17,7 +17,7 @@ localnet-help:
 	@echo "  cl-add-to-positions             Add to positions"
 	@echo "  cl-claim-spread-rewards         Claim spread rewards"
 	@echo "  cl-claim-incentives             Claim incentives"
-	@echo "  cl-create-bigbang-config        Create Big Bang configuration"
+	@echo "  cl-create-bigbang-config         Create Big Bang configuration"
 	@echo "  cl-create-pool                  Create concentrated liquidity pool"
 	@echo "  cl-create-positions             Create concentrated liquidity positions"
 	@echo "  cl-small-swap                   Perform small randomized swaps"
@@ -34,12 +34,6 @@ localnet-help:
 	@echo "  start-with-state                Start localnet with state"
 	@echo "  startd                          Start localnet in detached mode"
 	@echo "  startd-with-state               Start localnet in detached mode with state"
-	@echo "  state-export-init               Initialize localnet state export"
-	@echo "  state-export-build              Build localnet state export"
-	@echo "  state-export-start              Start localnet state export"
-	@echo "  state-export-startd             Start localnet state export in detached mode"
-	@echo "  state-export-stop               Stop localnet state export"
-	@echo "  state-export-clean              Clean localnet state export"
 	@echo "  stop                            Stop localnet"
 localnet: localnet-help
 
@@ -54,36 +48,14 @@ localnet-build:
 localnet-start:
 	@STATE="" docker compose -f tests/localosmosis/docker-compose.yml up
 
-localnet-start-with-state:
-	@STATE=-s docker compose -f tests/localosmosis/docker-compose.yml up
-
 localnet-startd:
 	@STATE="" docker compose -f tests/localosmosis/docker-compose.yml up -d
-
-localnet-startd-with-state:
-	@STATE=-s docker compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-stop:
 	@STATE="" docker compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-clean:
 	@rm -rfI $(HOME)/.osmosisd-local/
-
-localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
-
-localnet-state-export-build:
-	@export GIT_COMMIT=$(git log -1 --format='%H') && DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
-
-localnet-state-export-start:
-	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
-
-localnet-state-export-startd:
-	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up -d
-
-localnet-state-export-stop:
-	@docker-compose -f tests/localosmosis/docker-compose.yml down
-
-localnet-state-export-clean: localnet-clean
 
 # create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
