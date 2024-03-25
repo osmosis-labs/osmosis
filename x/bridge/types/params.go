@@ -88,6 +88,15 @@ func (p Params) GetAsset(id AssetID) (Asset, bool) {
 	return Asset{}, false
 }
 
+func (p Params) GetAssetIndex(id AssetID) int {
+	for i := range p.Assets {
+		if p.Assets[i].Id == id {
+			return i
+		}
+	}
+	return -1
+}
+
 // ParamKeyTable for the x/bridge module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})

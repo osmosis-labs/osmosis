@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
@@ -65,6 +66,9 @@ func CreateUpgradeHandler(
 				return nil, err
 			}
 		}
+		// Enable ICA controllers
+		keepers.ICAControllerKeeper.SetParams(ctx, icacontrollertypes.DefaultParams())
+
 		return migrations, nil
 	}
 }

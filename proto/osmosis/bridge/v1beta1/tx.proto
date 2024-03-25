@@ -38,17 +38,21 @@ message MsgInboundTransfer {
   // Serves the purpose of uniquely identifying the transfer in another chain
   // (e.g., this might be the BTC tx hash)
   string external_id = 1 [ (gogoproto.moretags) = "yaml:\"external_id\"" ];
+  // ExternalHeight is the height at which the transfer occurred in the external
+  // chain
+  uint64 external_height = 2
+      [ (gogoproto.moretags) = "yaml:\"external_height\"" ];
   // Sender is a sender's address
-  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string sender = 3 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // DestAddr is a destination Osmosis address
-  string dest_addr = 3 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
+  string dest_addr = 4 [ (gogoproto.moretags) = "yaml:\"dest_addr\"" ];
   // AssetID is the ID of the asset being transferred
-  AssetID asset_id = 4 [
+  AssetID asset_id = 5 [
     (gogoproto.moretags) = "yaml:\"asset_id\"",
     (gogoproto.nullable) = false
   ];
   // Amount of coins to transfer
-  string amount = 5 [
+  string amount = 6 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false

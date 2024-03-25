@@ -25,7 +25,6 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdatePar
 		assetsToDelete  = Difference(oldParams.Assets, newParams.Assets)
 	)
 
-	// create denoms for all new assets
 	err := k.createAssets(ctx, assetsToCreate)
 	if err != nil {
 		return UpdateParamsResult{},

@@ -1,10 +1,9 @@
 package keeper
 
 import (
-	"slices"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
@@ -26,12 +25,9 @@ func (k Keeper) ChangeAssetStatus(
 	params := k.GetParams(ctx)
 
 	// check if the specified asset is known
-	const notFoundIdx = -1
-	assetIdx := slices.IndexFunc(params.Assets, func(v types.Asset) bool {
-		return v.Id == assetID
-	})
+	assetIdx := params.GetAssetIndex(assetID)
 	if assetIdx == notFoundIdx {
-		return ChangeAssetStatusResult{}, errorsmod.Wrapf(types.ErrInvalidAssetID, "Asset not found")
+		return ChangeAssetStatusResult{}, sdkerrors.ErrNotFound
 	}
 
 	// update assetIdx asset status
@@ -47,12 +43,12 @@ func (k Keeper) ChangeAssetStatus(
 
 // createAssets creates tokenfactory denoms for all provided assets
 func (k Keeper) createAssets(ctx sdk.Context, assets []types.Asset) error {
-	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-
 	handler := k.router.Handler(new(tokenfactorytypes.MsgCreateDenom))
 	if handler == nil {
 		return errorsmod.Wrapf(types.ErrTokenfactory, "Can't route a create denom message")
 	}
+
+	bridgeModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
 	for _, asset := range assets {
 		msgCreateDenom := &tokenfactorytypes.MsgCreateDenom{
