@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7768](https://github.com/osmosis-labs/osmosis/pull/7768) Allow governance module account to transfer any CL position
 * [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
 * [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
+* [#7833](https://github.com/osmosis-labs/osmosis/pull/7883) Bump max gas wanted per tx to 6 mil
 
 ## v23.0.8-iavl-v1 & v23.0.8
 
