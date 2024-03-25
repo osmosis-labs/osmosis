@@ -26,9 +26,10 @@ const (
 )
 
 var (
-	PruningStateKey                    = []byte{0x01}
-	mostRecentTWAPsNoSeparator         = "recent_twap"
-	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+	PruningStateKey                       = []byte{0x01}
+	DeprecatedHistoricalTWAPsIsPruningKey = []byte{0x02}
+	mostRecentTWAPsNoSeparator            = "recent_twap"
+	historicalTWAPPoolIndexNoSeparator    = "historical_pool_index"
 
 	// We do key management to let us easily meet the goals of (AKA minimal iteration):
 	// * Get most recent twap for a (pool id, asset 1, asset 2) with no iteration

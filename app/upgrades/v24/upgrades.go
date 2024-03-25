@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
@@ -38,12 +39,16 @@ func CreateUpgradeHandler(
 		}
 
 		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
-		// since we only need the pool indexed TWAPs.
-		keepers.TwapKeeper.DeleteAllHistoricalTimeIndexedTWAPs(ctx)
+		// since we only need the pool indexed TWAPs. We set the is pruning store value to true
+		// and spread the pruning time across multiple blocks to avoid a single block taking too long.
+		keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
 
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
+
+		// Enable ICA controllers
+		keepers.ICAControllerKeeper.SetParams(ctx, icacontrollertypes.DefaultParams())
 
 		return migrations, nil
 	}
