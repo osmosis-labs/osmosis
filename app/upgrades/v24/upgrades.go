@@ -88,12 +88,12 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 	}
 
 	for _, poolID := range poolIDsToMigrate {
-		// This should never happen, this check is defence in depth incase we have wrong data by accident
+		// This should never happen, this check is defence in depth in case we have wrong data by accident
 		if poolID >= thresholdId {
 			continue
 		}
 
-		// This should never happen, this check is defence in depth incase we have wrong data by accident
+		// This should never happen, this check is defence in depth in case we have wrong data by accident
 		_, isMigrated := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[poolID]
 		if isMigrated {
 			continue

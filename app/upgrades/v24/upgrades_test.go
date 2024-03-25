@@ -224,10 +224,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Migrated pool: ensure that the claimable incentives are the same before and after migration
 	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
 	s.Require().NoError(err)
+
 	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
 
 	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
 	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+
 	s.Require().NoError(err)
 	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
 

@@ -847,8 +847,8 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 
 	// Get claimable amount for position one before the migration
 	// NOTE: since the we enforce the scaling factor and never use the original scaling factor, this check is no longer applicable
-	// claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
-	// s.Require().NoError(err)
+	claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
+	s.Require().NoError(err)
 
 	// System under test.
 	err = s.App.ConcentratedLiquidityKeeper.MigrateAccumulatorToScalingFactor(s.Ctx, poolID)
@@ -876,10 +876,31 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	// Ensure that position 1 accumulator is not updated (zero)
 	s.validateUptimePositionAccumulator(incentivizedUpdatedAccumulator, positionOneID, cl.EmptyCoins)
 
-	// Ensure that position 1 can claim the same amount as before the migration
-	// TODO: The function has been changed so this check no longer is valid, we always default to the scaling factor
-	// so the before and after checks return different values
-	// s.validateClaimableIncentives(positionOneID, claimableIncentivesOneBeforeMigration)
+	// Rerun the same swap to get the same result for the incentive
+	//
+	positionOneCompareID, _ := s.CreateFullRangePosition(concentratedPool, DefaultCoins)
+
+	// Create incentive
+	totalIncentiveAmount = sdk.NewCoin(incentiveDenom, osmomath.NewInt(1000000))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(totalIncentiveAmount))
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, poolID, s.TestAccs[0], totalIncentiveAmount, emissionRatePerSecDec, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Increate block time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	// Refetch pool
+	concentratedPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	// Cross next right tick to update the tick accumulator by swapping
+	amtIn, _, _ = s.computeSwapAmounts(poolID, concentratedPool.GetCurrentSqrtPrice(), currentTick+100, false, false)
+	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()))
+
+	claimableIncentivesCompareOneAfterMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneCompareID)
+
+	// Do the same swap as before the migration to get the same result
+	s.Require().Equal(claimableIncentivesCompareOneAfterMigration.String(), claimableIncentivesOneBeforeMigration.String())
 
 	// Ensure that position 2 cannot claim any incentives
 	s.validateClaimableIncentives(positionTwoID, sdk.NewCoins())
