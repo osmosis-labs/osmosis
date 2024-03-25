@@ -198,9 +198,6 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		return err
 	}
 
-	// Set the scaling factor to be the new scaling factor of 1e27
-	// incentiveScalingFactorForPool := perUnitLiqScalingFactor
-
 	// We optimistically assume that all liquidity on the active tick qualifies and handle
 	// uptime-related checks in forfeiting logic.
 
