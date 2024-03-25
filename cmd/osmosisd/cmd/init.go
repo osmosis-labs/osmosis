@@ -122,12 +122,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.Consensus.TimeoutCommit = 3 * time.Second
 			config.Consensus.PeerGossipSleepDuration = 10 * time.Millisecond
 
-			// Storage
-			config.Storage.DiscardABCIResponses = true
-
-			// TxIndex
-			config.TxIndex.Indexer = "null"
-
+			// Other
 			config.Moniker = args[0]
 			config.SetRoot(clientCtx.HomeDir)
 
