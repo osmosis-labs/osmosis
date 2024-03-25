@@ -83,7 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#543](https://github.com/osmosis-labs/cosmos-sdk/pull/543) Make slashing not write sign info every block
 * [#513](https://github.com/osmosis-labs/cosmos-sdk/pull/513) Limit expired authz grant pruning to 200 per block
 * [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
-* [#510](https://github.com/osmosis-labs/cosmos-sdk/pull/510) Implement a minimum amount per deposit
 * [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
 
 ## v23.0.8-iavl-v1 & v23.0.8
