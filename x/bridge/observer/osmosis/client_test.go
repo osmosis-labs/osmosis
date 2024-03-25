@@ -60,10 +60,10 @@ func (ts *TestSuite) Start(t *testing.T) {
 }
 
 func (ts *TestSuite) Close(t *testing.T) {
-	err := ts.Lis.Close()
 	ts.GrpcServer.Stop()
-	ts.Ctrl.Finish()
+	err := ts.Lis.Close()
 	require.NoError(t, err)
+	ts.Ctrl.Finish()
 }
 
 func (ts *TestSuite) Dialer() func(context.Context, string) (net.Conn, error) {
