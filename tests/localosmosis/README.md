@@ -96,7 +96,7 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
 
      You now have a network you own with the mainnet state on version X.
 
-   - **Mainnet is on version X, and you want to create a tesnet on version X+1.**
+   - **Mainnet is on version X, and you want to create a testnet on version X+1.**
 
      On version X, run:
 
