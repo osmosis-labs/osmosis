@@ -29,7 +29,6 @@ import (
 // https://hackmd.io/o3oqT8VhSPKAiqNl_mlxXQ
 var (
 	perUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
-	oneDecScalingFactor     = osmomath.OneDec()
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
