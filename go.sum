@@ -786,10 +786,17 @@ github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiK
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
+<<<<<<< HEAD
 github.com/cosmos/iavl v0.20.1 h1:rM1kqeG3/HBT85vsZdoSNsehciqUQPWrR4BYmqE2+zg=
 github.com/cosmos/iavl v0.20.1/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 h1:PqIK9vTr6zxCdQmrDZwxwL4KMAqg/GRGsiMEiaMP4wA=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
+=======
+github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd h1:tta7R0AxvI6QgSB4Rkbpvn+hkwG9PrOEfcXMPWoWx4s=
+github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3 h1:MZGDMETv72suFpTAD6VPGqSIm1FJcChtk2HmVh9D+Bo=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 h1:02RCbih5lQ8aGdDMSvxhTnk5JDLEDitn17ytEE1Qhko=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1/go.mod h1:LvVkEXTORVgd87W2Yu7ZY3acKKeTMq/txdTworn8EZI=
 github.com/cosmos/ibc-go/v7 v7.3.2 h1:FeUDcBX7VYY0e0iRmcVkPPUjYfAqIc//QuHXo8JHz9c=
@@ -1508,10 +1515,17 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
+<<<<<<< HEAD
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3 h1:HJItohXCYHMTd1x938+zpxswkzdKFikHPz9xkHFtpBk=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-4 h1:3BxMc6zxf1EF4WB0CxmnOkXuNQE4zxuZINcsWaOLNrA=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-4/go.mod h1:4BNXIoS9XecywMSdPr/DIwCgH2/Qjyr2+qhrHu8YSEo=
+=======
+github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c h1:RpMTLOn+flnC85P2WkyeUlhtXo3KclJ/ZrTRurHGA3k=
+github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-2 h1:msUuT+mPaml3mwBk1QuFbf+PAJE0jIEGxAlFeER+py4=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-2/go.mod h1:My+hyHX37Pe/6GKyo4veTXCHPu2vi5X3r18Y7E5AkPw=
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec h1:dro5fZ+cgvw1DTvMPDTe/vc6KVe3Rgk7RR0ghjoPRUw=

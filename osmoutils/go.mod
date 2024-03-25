@@ -9,7 +9,11 @@ require (
 	github.com/cometbft/cometbft-db v0.10.0
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.20.1
+=======
+	github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 	github.com/cosmos/ibc-go/v7 v7.3.2
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
 	github.com/osmosis-labs/osmosis/v23 v23.0.1
@@ -176,9 +180,15 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5, current branch: osmo-v23/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb40aefa29227875dfd8e9c3679450d652cc1ff3
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-4
+=======
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/0e8a343cc1854b59da403ff3c982ce9817fd2f7e
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-2
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

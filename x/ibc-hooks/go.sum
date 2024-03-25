@@ -699,8 +699,13 @@ github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiK
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
+<<<<<<< HEAD
 github.com/cosmos/iavl v0.20.1 h1:rM1kqeG3/HBT85vsZdoSNsehciqUQPWrR4BYmqE2+zg=
 github.com/cosmos/iavl v0.20.1/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
+=======
+github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd h1:tta7R0AxvI6QgSB4Rkbpvn+hkwG9PrOEfcXMPWoWx4s=
+github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 github.com/cosmos/ibc-go/v7 v7.3.2 h1:FeUDcBX7VYY0e0iRmcVkPPUjYfAqIc//QuHXo8JHz9c=
 github.com/cosmos/ibc-go/v7 v7.3.2/go.mod h1:IMeOXb7gwpZ+/nOG5BuUkdW4weM1ezvN4PQPws4uzOI=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
@@ -1233,6 +1238,7 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
+<<<<<<< HEAD
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3 h1:HJItohXCYHMTd1x938+zpxswkzdKFikHPz9xkHFtpBk=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-3 h1:d+0id4sMX9yiP5iMHK8rkv15MP12T+UfQn4XuBWzK/8=
@@ -1241,6 +1247,16 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec h
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec/go.mod h1:Ohy3v+dbNCHIQdGiwjEdQm6WggwBPaXyrN82iTgp2t8=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312200410-a7cc6376cdec h1:L7nyeYMKqqV8fySBQXFw8T5G5LgfTNOhiJI8khq1ZgM=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312200410-a7cc6376cdec/go.mod h1:fk75bjbDDIZKT1eA60tnPUv/XuVdRzRen1yQywhYSuY=
+=======
+github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c h1:RpMTLOn+flnC85P2WkyeUlhtXo3KclJ/ZrTRurHGA3k=
+github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-1 h1:4A1wE3r21NfvGXt8wXcHCgcUwIp4uFe7zmjvZfZgXdw=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-1/go.mod h1:My+hyHX37Pe/6GKyo4veTXCHPu2vi5X3r18Y7E5AkPw=
+github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60 h1:n4Zw/bWkooNPrAskOxTZcFWj/f4H5DIPuGUoGlQPiGE=
+github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60/go.mod h1:7QGFTgdTvlZLcYHUPuNuZJg1+G1mVrd0dWDpLiD4jOo=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60 h1:4iq0tvpzm6U0J4z6Fm95AmIFiEADE06lrBXr7HUMkdg=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60/go.mod h1:D2EoDxsaeILMe4YsCXE3CuhpQKoCosTCGaUaLYTgUY0=
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=

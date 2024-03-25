@@ -89,7 +89,11 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.20.1 // indirect
+=======
+	github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd // indirect
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
@@ -392,9 +396,15 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5, current branch: osmo-v23/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb40aefa29227875dfd8e9c3679450d652cc1ff3
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-4
+=======
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/0e8a343cc1854b59da403ff3c982ce9817fd2f7e
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-2
+>>>>>>> 900c0a0f (chore: bump sdk fork (#7821))
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
