@@ -13,6 +13,13 @@ import (
 	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 )
 
+const (
+	mainnetChainID = "osmosis-1"
+	// Edgenet is to function exactly the samas mainnet, and expected
+	// to be state-exported from mainnet state.
+	edgenetChainID = "edgenet"
+)
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -45,12 +52,17 @@ func CreateUpgradeHandler(
 
 		// restrict lockable durations to 2 weeks per
 		// https://wallet.keplr.app/chains/osmosis/proposals/400
-		keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
-			time.Hour * 24 * 14,
-		})
-		keepers.PoolIncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
-			time.Hour * 24 * 14,
-		})
+		chainID := ctx.ChainID()
+
+		if chainID == mainnetChainID || chainID == edgenetChainID {
+			keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
+				time.Hour * 24 * 14,
+			})
+			keepers.PoolIncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
+				time.Hour * 24 * 14,
+			})
+		}
+
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
