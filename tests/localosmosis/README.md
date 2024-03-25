@@ -91,6 +91,9 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
       osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj
       ```
 
+      Where the first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
+      The address provided above is included in the localosmosis keyring under the name 'val'.
+
      You now have a network you own with the mainnet state on version X.
 
    - **Mainnet is on version X, and you want to create a tesnet on version X+1.**
@@ -100,6 +103,9 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
       ```bash
       osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade
       ```
+
+      Where the first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
+      The address provided above is included in the localosmosis keyring under the name 'val'.
 
      The network will start and hit 10 blocks, at which point the upgrade will trigger and the network will halt.
 
