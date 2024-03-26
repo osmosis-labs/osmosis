@@ -150,7 +150,7 @@ _Detailed description is to be done._
 The `x/bridge` module keeps state of the following objects:
 
 ### Inbound transfer
-When accepting the inbound transfer, the new `InboundTransfer` record in the state is created. This record stores all information about the transfer along with the voter list and finalization flag. This object is stored in the state until the transfer **finalized**. After thar, the object should be garbage-collected.
+When accepting the inbound transfer, the new `InboundTransfer` record in the state is created. This record stores all information about the transfer along with the voter list and finalization flag. This object is stored in the state until the transfer **finalized**. After that, the object should be garbage-collected.
 
 * Inbound transfer: `0x01 | external_id | external height -> ProtocolBuffer(InboundTransfer)`
 
