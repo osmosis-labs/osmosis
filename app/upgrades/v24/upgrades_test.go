@@ -3,6 +3,8 @@ package v24_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 	"testing"
 	"time"
 
@@ -175,6 +177,17 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
 
+	whiteWhalePoolIds := []uint64{1463, 1462, 1461}
+	for _, poolId := range whiteWhalePoolIds {
+		s.App.CosmwasmPoolKeeper.SetPool(s.Ctx, &model.CosmWasmPool{
+			ContractAddress: "foo",
+			PoolId:          poolId,
+			CodeId:          503,
+			InstantiateMsg:  []byte("bar"),
+		})
+	}
+	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 503)
+
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
@@ -236,6 +249,22 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
+
+	// Pool Migration Tests
+	//
+
+	// Test that the white whale pools have been updated
+	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+}
+
+func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {
+	for _, poolId := range pools {
+		pool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolId)
+		s.Require().NoError(err)
+		cwPool, ok := pool.(cwpooltypes.CosmWasmExtension)
+		s.Require().True(ok)
+		s.Require().EqualValues(codeId, cwPool.GetCodeId())
+	}
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
