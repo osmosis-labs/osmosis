@@ -41,6 +41,7 @@ import (
 	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
@@ -442,6 +443,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.ConsensusParamsKeeper,
 		dataDir,
+		appKeepers.GetSubspace(txfeestypes.ModuleName),
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
 
