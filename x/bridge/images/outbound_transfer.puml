@@ -1,0 +1,113 @@
+@startuml
+
+skinparam package<<Hidden>> {
+  borderColor Transparent
+  backgroundColor Transparent
+  fontColor Transparent
+  stereotypeFontColor Transparent
+}
+
+actor "Client" as client
+
+folder "Valset" as valset1 {
+    cloud "Validator 1" as val1 #lightgreen
+    cloud "Validator 2" as val2
+    cloud "Validator 3" as val3 #lightgreen
+    cloud "Validator 4" as val4
+    cloud "Validator 5" as val5 #lightgreen
+}
+
+val1 -> val2 #white
+val2 -> val3 #white
+val3 -> val4 #white
+val4 -> val5 #white
+
+note bottom of valset1
+    Green validators are
+    running x/bridge observers.
+
+    Let's say that we need **three**
+    votes to process the transfer.
+end note
+
+client --> val2 : **MsgOutboundTransfer** to the selected node
+client --> val4 #white
+
+node "x/bridge" as bridge
+
+val2 --> bridge : **InboundTransfer**
+val4 --> bridge #white
+
+node "x/tokenfactory" as tokenfactory
+
+bridge <-left-> tokenfactory : **Burn** from\nthe source addr
+
+artifact "**EventOutboundTransfer**" as event
+
+bridge --> event : Produce the event
+
+folder "Valset" as valset2 {
+    cloud "Validator 1" as val1_2 #lightgreen
+    cloud "Validator 2" as val2_2
+    cloud "Validator 3" as val3_2 #lightgreen
+    cloud "Validator 4" as val4_2
+    cloud "Validator 5" as val5_2 #lightgreen
+}
+
+val1_2 -> val2_2 #white
+val2_2 -> val3_2 #white
+val3_2 -> val4_2 #white
+val4_2 -> val5_2 #white
+
+val1_2 -u-> event: observe
+val3_2 -u-> event: observe
+val5_2 -u-> event: observe
+
+
+component "     TSS Server    " as tss
+
+val1_2 -d-> tss : sign
+val3_2 -d-> tss : sign
+val5_2 -d-> tss : sign
+
+action "Collect signatures x3" as signatures
+
+tss --> signatures
+
+action "Leader election" as leader
+
+note left of leader
+    Leader is the one who
+    broadcasts the transfer
+    to the external chain
+end note
+
+signatures --> leader
+
+folder "Valset" as valset3 {
+    cloud "Validator 1" as val1_3 #lightgreen
+    cloud "Validator 2" as val2_3
+    cloud "Validator 3" as val3_3 #lightgreen
+    cloud "Validator 4" as val4_3
+    cloud "Validator 5" as val5_3 #lightgreen
+
+    val1_3 -> val2_3 #white
+    val2_3 -> val3_3 #white
+    val3_3 -> val4_3 #white
+    val4_3 -> val5_3 #white
+}
+
+leader -d-> val1_3 #white
+leader -d-> val3_3 #white
+leader -d-> val5_3 : choose leader
+
+node "BTC vault" as vault
+
+val1_3 --> vault #white
+val5_3 --> vault : release coins
+
+actor "Happy client" as client1 #lightgreen;line:green;line.bold;text:green
+
+vault --> client1 : coins are transferred to the destination addr
+
+@enduml
