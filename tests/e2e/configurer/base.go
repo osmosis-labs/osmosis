@@ -80,18 +80,12 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	var wg sync.WaitGroup
 
 	for _, node := range chainConfig.NodeConfigs {
-<<<<<<< HEAD
-		go func(n *chain.NodeConfig) {
-			defer wg.Done()       // Decrement the WaitGroup counter when the goroutine is done
-			errCh <- n.Run(false) // Run the node and send any error to the channel
-=======
 		wg.Add(1)
 		go func(node *chain.NodeConfig) {
 			defer wg.Done()
 			if err := node.Run(false); err != nil {
 				errCh <- err
 			}
->>>>>>> ae33741e (fix(e2e): start nodes at same time, error if done condition not met (#7848))
 		}(node)
 	}
 
