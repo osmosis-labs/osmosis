@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
 * [#7839](https://github.com/osmosis-labs/osmosis/pull/7839) Add ICA controller
 * [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
+* [#7855](https://github.com/osmosis-labs/osmosis/pull/7855) Whitelist address parameter for setting fee tokens
 
 ### SDK
 
@@ -86,6 +87,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#513](https://github.com/osmosis-labs/cosmos-sdk/pull/513) Limit expired authz grant pruning to 200 per block
 * [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
 * [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
+
+### CometBFT
+
+* [#5](https://github.com/osmosis-labs/cometbft/pull/5) Batch verification
+* [#11](https://github.com/osmosis-labs/cometbft/pull/11) Skip verification of commit sigs
+* [#13](https://github.com/osmosis-labs/cometbft/pull/13) Avoid double-saving ABCI responses
+* [#20](https://github.com/osmosis-labs/cometbft/pull/20) Fix the rollback command
 
 ## v23.0.8-iavl-v1 & v23.0.8
 
