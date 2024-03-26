@@ -62,8 +62,8 @@ func (s *AuthenticatorSuite) SetupTest() {
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	// Initialize two private keys for testing
-	s.PrivKeys = make([]cryptotypes.PrivKey, 3)
-	for i := 0; i < 3; i++ {
+	s.PrivKeys = make([]cryptotypes.PrivKey, 5)
+	for i := 0; i < 5; i++ {
 		s.PrivKeys[i] = secp256k1.GenPrivKey()
 	}
 
@@ -313,22 +313,23 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsg() {
 // TestingAuthenticatorGas tests the gas limit panics when not reduced, then tests
 // that the gas limit is reset after the fee payer is authenticated.
 func (s *AuthenticatorSuite) TestAuthenticatorGas() {
+	account1 := s.Account
 	sendFromAcc1 := &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", account1.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", account1.GetAddress()),
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
 	// Initialize the second account
-	accountAddr := sdk.AccAddress(s.PrivKeys[1].PubKey().Address())
+	account2Addr := sdk.AccAddress(s.PrivKeys[1].PubKey().Address())
 
 	// fund the account
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000))
-	err := s.app.BankKeeper.SendCoins(s.chainA.GetContext(), s.chainA.SenderAccount.GetAddress(), accountAddr, coins)
+	err := s.app.BankKeeper.SendCoins(s.chainA.GetContext(), s.chainA.SenderAccount.GetAddress(), account2Addr, coins)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
 	// get the account
-	account2 := s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
+	account2 := s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), account2Addr)
 
 	sendFromAcc2 := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", account2.GetAddress()),
@@ -344,7 +345,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigh)
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
-	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), alwaysLow.Type(), []byte{})
+	_, err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account1.GetAddress(), alwaysLow.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 	acc2authId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigh.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -378,6 +379,72 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 		pks{s.PrivKeys[0], s.PrivKeys[1]}, pks{s.PrivKeys[0], s.PrivKeys[1]}, []uint64{1, 4}, sendFromAcc1, sendFromAcc2,
 	)
 	s.Require().NoError(err)
+
+	never := testutils.TestingAuthenticator{Approve: testutils.Never}
+	s.app.AuthenticatorManager.RegisterAuthenticator(never)
+	neverId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), never.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// This is a problem, as it fails but
+	feePayerBalance := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), account1.GetAddress())
+	fmt.Println(feePayerBalance)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
+		pks{s.PrivKeys[0], s.PrivKeys[1]},
+		pks{s.PrivKeys[0], s.PrivKeys[2]},
+		[]uint64{1, neverId},
+		sendFromAcc1, sendFromAcc2,
+	)
+	feePayerBalance = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), account1.GetAddress())
+	fmt.Println(feePayerBalance)
+	s.Require().Error(err)
+}
+
+// TestingAuthenticatorGas tests the gas limit panics when not reduced, then tests
+// that the gas limit is reset after the fee payer is authenticated.
+func (s *AuthenticatorSuite) TestAuthenticatorGasDrain() {
+	accounts := make([]authtypes.AccountI, 5)
+	messages := make([]*banktypes.MsgSend, 5)
+
+	for i := 0; i < 5; i++ {
+		accounts[i] = s.CreateAccount(s.PrivKeys[i], 500_000)
+		messages[i] = &banktypes.MsgSend{
+			FromAddress: sdk.MustBech32ifyAddressBytes("osmo", accounts[i].GetAddress()),
+			ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", accounts[i].GetAddress()),
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)),
+		}
+	}
+
+	alwaysLow := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 0}
+	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
+	never := testutils.TestingAuthenticator{Approve: testutils.Never}
+
+	s.app.AuthenticatorManager.RegisterAuthenticator(never)
+	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysLow)
+	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
+
+	a1AlwaysLowId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accounts[0].GetAddress(), alwaysLow.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	a2NeverId, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accounts[1].GetAddress(), never.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	a3AlwaysHigherID, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accounts[2].GetAddress(), alwaysHigher.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	a4AlwaysHigherID, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accounts[3].GetAddress(), alwaysHigher.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	a5AlwaysHigherID, err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accounts[4].GetAddress(), alwaysHigher.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// This is a problem, as it fails but
+	feePayerBalance := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), accounts[0].GetAddress())
+	fmt.Println(feePayerBalance)
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
+		pks{s.PrivKeys[0], s.PrivKeys[2], s.PrivKeys[3], s.PrivKeys[4], s.PrivKeys[1]},
+		pks{s.PrivKeys[0], s.PrivKeys[0], s.PrivKeys[0], s.PrivKeys[0], s.PrivKeys[0]}, // Doesn't matter. Not checking it
+		[]uint64{a1AlwaysLowId, a3AlwaysHigherID, a4AlwaysHigherID, a5AlwaysHigherID, a2NeverId},
+		messages[0], messages[2], messages[3], messages[4], messages[1],
+	)
+	feePayerBalance = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), accounts[0].GetAddress())
+	fmt.Println(feePayerBalance)
+	s.Require().Error(err)
 }
 
 // TestCompositeAuthenticatorAnyOf tests an AnyOf authenticator with signature verification authenticators
