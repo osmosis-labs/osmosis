@@ -48,11 +48,30 @@ func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests
 }
 
 func (uc *UpgradeConfigurer) ConfigureChains() error {
+	errCh := make(chan error, len(uc.chainConfigs))
+	var wg sync.WaitGroup
+
 	for _, chainConfig := range uc.chainConfigs {
-		if err := uc.ConfigureChain(chainConfig); err != nil {
+		wg.Add(1)
+		go func(cc *chain.Config) {
+			defer wg.Done()
+			if err := uc.ConfigureChain(cc); err != nil {
+				errCh <- err
+			}
+		}(chainConfig)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+	close(errCh)
+
+	// Check if any of the goroutines returned an error
+	for err := range errCh {
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -92,9 +111,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		}
 
 		if i == config.MaxRetries-1 {
-			if err != nil {
-				return err
-			}
+			return err
 		}
 
 		if i > 0 {
@@ -394,8 +411,26 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
 	uc.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
 
+	errCh := make(chan error, len(chainConfig.NodeConfigs))
+	var wg sync.WaitGroup
+
 	for _, node := range chainConfig.NodeConfigs {
-		if err := node.Run(true); err != nil {
+		wg.Add(1)
+		go func(node *chain.NodeConfig) {
+			defer wg.Done()
+			if err := node.Run(true); err != nil {
+				errCh <- err
+			}
+		}(node)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+	close(errCh)
+
+	// Check if any of the goroutines returned an error
+	for err := range errCh {
+		if err != nil {
 			return err
 		}
 	}
