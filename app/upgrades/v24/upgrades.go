@@ -81,6 +81,9 @@ func CreateUpgradeHandler(
 			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
 		}
 
+		// TODO: Uncomment, set, and add to upgrade_test.go IFF an address is decided on via the governance forums prior to upgrade.
+		// Otherwise, this will be set after v24 via a parameter change proposal.
+
 		// Set whitelistedFeeTokenSetters param
 		// keepers.TxFeesKeeper.SetParam(ctx, txfeestypes.KeyWhitelistedFeeTokenSetters, "osmo1...")
 
