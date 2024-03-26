@@ -4,11 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-<<<<<<< HEAD
-=======
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
->>>>>>> 0482192c (Set migrated white whale pool ids in upgrade (#7730))
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
@@ -51,8 +48,6 @@ func CreateUpgradeHandler(
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
 
-<<<<<<< HEAD
-=======
 		// Enable ICA controllers
 		keepers.ICAControllerKeeper.SetParams(ctx, icacontrollertypes.DefaultParams())
 
@@ -85,7 +80,6 @@ func CreateUpgradeHandler(
 			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
 		}
 
->>>>>>> 0482192c (Set migrated white whale pool ids in upgrade (#7730))
 		return migrations, nil
 	}
 }
