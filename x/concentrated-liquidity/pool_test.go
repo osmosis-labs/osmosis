@@ -846,7 +846,6 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 
 	// Get claimable amount for position one before the migration
-	// NOTE: since the we enforce the scaling factor and never use the original scaling factor, this check is no longer applicable
 	claimableIncentivesOneBeforeMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneID)
 	s.Require().NoError(err)
 

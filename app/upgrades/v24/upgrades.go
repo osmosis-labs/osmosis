@@ -18,7 +18,7 @@ import (
 
 const (
 	mainnetChainID = "osmosis-1"
-	// Edgenet is to function exactly the samas mainnet, and expected
+	// Edgenet is to function exactly the same as mainnet, and expected
 	// to be state-exported from mainnet state.
 	edgenetChainID = "edgenet"
 )
@@ -75,8 +75,8 @@ func CreateUpgradeHandler(
 
 // migrateMainnetPools migrates the specified mainnet pools to the new accumulator scaling factor.
 func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
-	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrated))
-	for poolID := range concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrated {
+	poolIDsToMigrate := make([]uint64, 0, len(FinalIncentiveAccumulatorPoolIDsToMigrate))
+	for poolID := range FinalIncentiveAccumulatorPoolIDsToMigrate {
 		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
 	}
 

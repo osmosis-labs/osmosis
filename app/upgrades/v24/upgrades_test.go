@@ -17,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	v24 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v24"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
@@ -101,7 +102,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	concentratedPoolIDs := []uint64{}
 
-	// Create two sets of all pools
+	// Create two sets of all pool types
 	allPoolsOne := s.PrepareAllSupportedPools()
 	allPoolsTwo := s.PrepareAllSupportedPools()
 
@@ -151,9 +152,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
 
 	// Overwrite the migration list with the desired pool ID.
-	//oldMigrationList := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{}
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[lastPoolID] = struct{}{}
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
 
 	// PROTOREV Setup
 	//
