@@ -211,16 +211,16 @@ osmosisd start --home $OSMOSIS_HOME &
 if [[ $STATE == 'true' ]]
 then
     echo "Creating pools"
-    
+
     echo "uosmo / uusdc balancer"
     create_two_asset_pool "uosmoUusdcBalancerPool.json"
-    
+
     echo "uosmo / uion balancer"
     create_two_asset_pool "uosmoUionBalancerPool.json"
-    
+
     echo "uweth / uusdc stableswap"
     create_stable_pool
-    
+
     echo "uusdc / uion balancer"
     create_two_asset_pool "uusdcUionBalancerPool.json"
 

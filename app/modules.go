@@ -165,7 +165,7 @@ func appModules(
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		ibcwasm.NewAppModule(*app.IBCWasmClientKeeper),
-		ica.NewAppModule(nil, app.ICAHostKeeper),
+		ica.NewAppModule(app.ICAControllerKeeper, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, *app.AppKeepers.ConsensusParamsKeeper),
 		app.RawIcs20TransferAppModule,
