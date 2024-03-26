@@ -1,6 +1,8 @@
 package v24
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -10,6 +12,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+)
+
+const (
+	mainnetChainID = "osmosis-1"
+	// Edgenet is to function exactly the samas mainnet, and expected
+	// to be state-exported from mainnet state.
+	edgenetChainID = "edgenet"
 )
 
 func CreateUpgradeHandler(
@@ -42,6 +51,19 @@ func CreateUpgradeHandler(
 		// since we only need the pool indexed TWAPs. We set the is pruning store value to true
 		// and spread the pruning time across multiple blocks to avoid a single block taking too long.
 		keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
+
+		// restrict lockable durations to 2 weeks per
+		// https://wallet.keplr.app/chains/osmosis/proposals/400
+		chainID := ctx.ChainID()
+
+		if chainID == mainnetChainID || chainID == edgenetChainID {
+			keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
+				time.Hour * 24 * 14,
+			})
+			keepers.PoolIncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
+				time.Hour * 24 * 14,
+			})
+		}
 
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
