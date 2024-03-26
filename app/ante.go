@@ -61,6 +61,7 @@ func NewAnteHandler(
 		ante.NewSigVerificationDecorator(accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		deductFeeDecorator,
 	)
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
@@ -73,6 +74,7 @@ func NewAnteHandler(
 		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		deductFeeDecorator,
 	)
 
 	return sdk.ChainAnteDecorators(
@@ -89,7 +91,6 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
-		deductFeeDecorator,
 		authante.NewCircuitBreakerDecorator(
 			authenticatorKeeper,
 			authenticatorVerificationDecorator,
