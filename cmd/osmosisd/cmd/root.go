@@ -100,10 +100,14 @@ type DenomUnitMap struct {
 }
 
 const (
-	mempoolConfigName            = "osmosis-mempool"
+	mempoolConfigName     = "osmosis-mempool"
+	maxGasWantedPerTxName = "max-gas-wanted-per-tx"
+
 	arbitrageMinGasFeeConfigName = "arbitrage-min-gas-fee"
 	oldArbitrageMinGasFeeValue   = ".005"
 	newArbitrageMinGasFeeValue   = "0.1"
+
+	newMaxGasWantedPerTxValue = "60000000"
 
 	consensusConfigName     = "consensus"
 	timeoutCommitConfigName = "timeout_commit"
@@ -506,6 +510,8 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 
 		// Get setting
 		currentArbitrageMinGasFeeValue := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
+
+		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, newMaxGasWantedPerTxValue)
 
 		// .x format at 0.x format are both valid.
 		if currentArbitrageMinGasFeeValue == oldArbitrageMinGasFeeValue || currentArbitrageMinGasFeeValue == "0"+oldArbitrageMinGasFeeValue {
