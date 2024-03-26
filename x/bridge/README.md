@@ -6,7 +6,7 @@ This README provides a detailed outline of the bridging mechanism implementation
 
 ## Contents
 
-* **[Concepts](#Concepts)**
+* **[Concepts](#concepts)**
   * **[Super valset](#super-valset)**
   * **[Vault](#vault)**
   * **[Observer](#observer)**
@@ -25,13 +25,13 @@ This README provides a detailed outline of the bridging mechanism implementation
   * **[Last transfer height](#last-transfer-height)**
   * **[Params](#params)**
 * **[Query Server](#query-server)**
-  * **[QueryParams](#Params-1)**
-  * **[QueryLastTransferHeight](#LastTransferHeight)**
+  * **[QueryParams](#params-1)**
+  * **[QueryLastTransferHeight](#lasttransferheight)**
 * **[Message Server](#message-server)**
-  * **[InboundTransfer](#InboundTransfer)**
-  * **[OutboundTransfer](#OutboundTransfer)**
-  * **[UpdateParams](#UpdateParams)**
-  * **[ChangeAssetStatus](#ChangeAssetStatus)**
+  * **[InboundTransfer](#inboundtransfer)**
+  * **[OutboundTransfer](#outboundtransfer)**
+  * **[UpdateParams](#updateparams)**
+  * **[ChangeAssetStatus](#changeassetstatus)**
 * **[Events](#events)**
 
 ## Concepts
