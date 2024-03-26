@@ -487,7 +487,7 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 				twapRecord := twaptypes.TwapRecord{
 					PoolId:      balancerPool.Id,
 					Asset0Denom: denomPair.Denom0,
-					Asset1Denom: denomPair.Denom0,
+					Asset1Denom: denomPair.Denom1,
 					Height:      1,
 					Time:        time.Date(2023, 0o2, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
 					// Note: truncation is acceptable as x/twap is guaranteed to work only on pools with spot prices > 10^-18.

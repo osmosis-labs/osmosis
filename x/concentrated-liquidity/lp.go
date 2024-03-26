@@ -268,7 +268,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
-	_, _, err = k.collectIncentives(ctx, owner, positionId)
+	_, totalForefeitedIncentives, scaledForfeitedIncentivesByUptime, err := k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
@@ -289,15 +289,18 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
+	// If the position has any forfeited incentives, re-deposit them into the pool.
+	err = k.redepositForfeitedIncentives(ctx, position.PoolId, owner, scaledForfeitedIncentivesByUptime, totalForefeitedIncentives)
+	if err != nil {
+		return osmomath.Int{}, osmomath.Int{}, err
+	}
+
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
-	// process also clears position records from spread factor and incentive accumulators.
+	// Ensure we collect any outstanding spread factors prior to deleting the position from state. Outstanding incentives
+	// should already be fully claimed by this point. This claiming process also clears position records from spread factor
+	// and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
-			return osmomath.Int{}, osmomath.Int{}, err
-		}
-
-		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return osmomath.Int{}, osmomath.Int{}, err
 		}
 

@@ -111,10 +111,9 @@ const (
 
 var (
 	//go:embed "osmosis-1-assetlist.json" "osmo-test-5-assetlist.json"
-	assetFS           embed.FS
-	mainnetId         = "osmosis-1"
-	testnetId         = "osmo-test-5"
-	fiveSecondsString = (5 * time.Second).String()
+	assetFS   embed.FS
+	mainnetId = "osmosis-1"
+	testnetId = "osmo-test-5"
 )
 
 func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
@@ -440,7 +439,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		// It does not exist, so we update the default config.toml to update
 		// We modify the default config.toml to have faster block times
 		// It will be written by server.InterceptConfigsPreRunHandler
-		tmcConfig.Consensus.TimeoutCommit = 4 * time.Second
+		tmcConfig.Consensus.TimeoutCommit = 3 * time.Second
 	} else {
 		// config.toml exists
 
@@ -466,10 +465,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}
 
 		// The original default is 5s and is set in Cosmos SDK.
-		// We lower it to 4s for faster block times.
-		if timeoutCommitValue == fiveSecondsString {
-			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
-		}
+		// We lower it to 3s for faster block times.
+		serverCtx.Config.Consensus.TimeoutCommit = 3 * time.Second
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -700,16 +697,23 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 			cmd.RunE = func(cmd *cobra.Command, args []string) error {
 				serverCtx := server.GetServerContextFromCmd(cmd)
 
-				// overwrite config.toml values
-				err := overwriteConfigTomlValues(serverCtx)
-				if err != nil {
-					return err
-				}
+				// Get flag value for rejecting config defaults
+				rejectConfigDefaults := serverCtx.Viper.GetBool(FlagRejectConfigDefaults)
 
-				// overwrite app.toml values
-				err = overwriteAppTomlValues(serverCtx)
-				if err != nil {
-					return err
+				// overwrite config.toml and app.toml values, if rejectConfigDefaults is false
+				if !rejectConfigDefaults {
+					// Add ctx logger line to indicate that config.toml and app.toml values are being overwritten
+					serverCtx.Logger.Info("Overwriting config.toml and app.toml values with some recommended defaults. To prevent this, set the --reject-config-defaults flag to true.")
+
+					err := overwriteConfigTomlValues(serverCtx)
+					if err != nil {
+						return err
+					}
+
+					err = overwriteAppTomlValues(serverCtx)
+					if err != nil {
+						return err
+					}
 				}
 
 				return startRunE(cmd, args)
@@ -734,6 +738,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
+	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
 }
 
 // queryCommand adds transaction and account querying commands.
@@ -837,6 +842,8 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
+	fastNodeModuleWhitelist := server.ParseModuleWhitelist(appOpts)
+
 	baseAppOptions := []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
@@ -850,7 +857,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-		baseapp.SetIAVLFastNodeModuleWhitelist(cast.ToStringSlice(appOpts.Get(server.FlagIAVLFastNodeModuleWhitelist))),
+		baseapp.SetIAVLFastNodeModuleWhitelist(fastNodeModuleWhitelist),
 		baseapp.SetChainID(chainID),
 	}
 

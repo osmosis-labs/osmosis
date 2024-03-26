@@ -12,19 +12,25 @@ import (
 )
 
 var (
-	defaultLPDenom           string        = "lptoken"
-	defaultLPSyntheticDenom  string        = "lptoken/superbonding"
-	defaultLPTokens          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
-	defaultLPSyntheticTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 10)}
-	defaultLiquidTokens      sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	defaultLockDuration      time.Duration = time.Second
-	oneLockupUser            userLocks     = userLocks{
+	defaultLPDenom                    string        = "lptoken"
+	defaultLPSyntheticDenom           string        = "lptoken/superbonding"
+	defaultLPTokens                   sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
+	defaultLPTokensDoubleAmt          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 20)}
+	defaultLPSyntheticTokens          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 10)}
+	defaultLPSyntheticTokensDoubleAmt sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 20)}
+	defaultLiquidTokens               sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	defaultLockDuration               time.Duration = time.Second
+	oneLockupUser                     userLocks     = userLocks{
 		lockDurations: []time.Duration{time.Second},
 		lockAmounts:   []sdk.Coins{defaultLPTokens},
 	}
 	twoLockupUser userLocks = userLocks{
 		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
 		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
+	}
+	twoLockupUserDoubleAmt userLocks = userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPTokensDoubleAmt, defaultLPTokensDoubleAmt},
 	}
 	oneSyntheticLockupUser userLocks = userLocks{
 		lockDurations: []time.Duration{time.Second},
@@ -33,6 +39,10 @@ var (
 	twoSyntheticLockupUser userLocks = userLocks{
 		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
 		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens, defaultLPSyntheticTokens},
+	}
+	twoSyntheticLockupUserDoubleAmt userLocks = userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokensDoubleAmt, defaultLPSyntheticTokensDoubleAmt},
 	}
 	defaultRewardDenom string = "rewardDenom"
 	otherDenom         string = "someOtherDenom"
@@ -102,7 +112,6 @@ func (s *KeeperTestSuite) SetupChangeRewardReceiver(changeRewardReceivers []chan
 // SetupUserSyntheticLocks takes an array of user locks and creates synthetic locks based on this array, then returns the respective account address byte array.
 func (s *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
-	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
 	lockupID := uint64(1)
 	for i, user := range users {
 		s.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
@@ -112,6 +121,7 @@ func (s *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk
 		}
 		accs[i] = s.setupAddr(i, "", totalLockAmt)
 		for j := 0; j < len(user.lockAmounts); j++ {
+			coins := sdk.Coins{sdk.NewInt64Coin("lptoken", user.lockAmounts[j][0].Amount.Int64())}
 			s.LockTokens(accs[i], coins, user.lockDurations[j])
 			err := s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, lockupID, "lptoken/superbonding", user.lockDurations[j], false)
 			lockupID++

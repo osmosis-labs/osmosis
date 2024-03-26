@@ -44,6 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+### State Compatible
+
+## v24.0.0
+
+### Osmosis
+
 * [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
@@ -55,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7555](https://github.com/osmosis-labs/osmosis/pull/7555) Refactor taker fees, distribute via a single module account, track once at epoch
 * [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
 * [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
+* [#7615](https://github.com/osmosis-labs/osmosis/pull/7615) Min value param for epoch distribution.
 * [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
 * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
 * [#7623](https://github.com/osmosis-labs/osmosis/pull/7623) Add query for querying all before send hooks
@@ -63,18 +70,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7685](https://github.com/osmosis-labs/osmosis/pull/7685) Speedup CL actions by only marshalling for CL hooks if they will be used.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
 * [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
+* [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
+* [#7747](https://github.com/osmosis-labs/osmosis/pull/7747) Remove redundant call to incentive collection in CL position withdrawal logic
+* [#7768](https://github.com/osmosis-labs/osmosis/pull/7768) Allow governance module account to transfer any CL position
+* [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
+* [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
+* [#7839](https://github.com/osmosis-labs/osmosis/pull/7839) Add ICA controller
+* [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
 
-## v23.0.5 & v23.0.5-iavl-v1
+### SDK
 
-* [#7716](https://github.com/osmosis-labs/osmosis/pull/7716) Unblock WW Pools
-* [#7726](https://github.com/osmosis-labs/osmosis/pull/7726) Bump comet for improved P2P logic
+* [#525](https://github.com/osmosis-labs/cosmos-sdk/pull/525) CacheKV speedups
+* [#548](https://github.com/osmosis-labs/cosmos-sdk/pull/548) Implement v0.50 slashing bitmap logic
+* [#543](https://github.com/osmosis-labs/cosmos-sdk/pull/543) Make slashing not write sign info every block
+* [#513](https://github.com/osmosis-labs/cosmos-sdk/pull/513) Limit expired authz grant pruning to 200 per block
+* [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
+* [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
 
-## v23.0.4-iavl-v1 (contains everything in v23.0.4)
+## v23.0.8-iavl-v1 & v23.0.8
+
+* [#7769](https://github.com/osmosis-labs/osmosis/pull/7769) Set and default timeout commit to 3s. Add flag to prevent custom overrides if not desired.
+
+## v23.0.7-iavl-v1
+
+* [#7750](https://github.com/osmosis-labs/osmosis/pull/7750) IAVL bump to improve pruning
+
+## v23.0.6-iavl-v1 (contains everything in v23.0.6)
 
 * [#558](https://github.com/osmosis-labs/cosmos-sdk/pull/558) Gracefully log when there is a pruning error instead of panic
 
-## v23.0.4
+## v23.0.6
 
+* [#7716](https://github.com/osmosis-labs/osmosis/pull/7716) Unblock WW Pools
+* [#7726](https://github.com/osmosis-labs/osmosis/pull/7726) Bump comet for improved P2P logic
 * [#7599](https://github.com/osmosis-labs/osmosis/pull/7599) Reduce sqrt calls in TickToSqrtPrice
 * [#7692](https://github.com/osmosis-labs/osmosis/pull/7692) Make CL operation mutative
 * [#530](https://github.com/osmosis-labs/cosmos-sdk/pull/530) Bump sdk fork Go to 1.20

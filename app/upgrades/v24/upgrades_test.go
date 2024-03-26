@@ -18,7 +18,9 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v23/x/twap"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
 )
@@ -46,7 +48,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Manually set up TWAP records indexed by both pool ID and time.
 	twapStoreKey := s.App.GetKey(twaptypes.ModuleName)
 	store := s.Ctx.KVStore(twapStoreKey)
-	twap := twaptypes.TwapRecord{
+	twapRecord1 := twaptypes.TwapRecord{
 		PoolId:                      1,
 		Asset0Denom:                 "foo",
 		Asset1Denom:                 "bar",
@@ -59,27 +61,40 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		GeometricTwapAccumulator:    osmomath.ZeroDec(),
 		LastErrorTime:               time.Time{}, // no previous error
 	}
-	poolIndexKey := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
-	osmoutils.MustSet(store, poolIndexKey, &twap)
+	twapRecord2 := twapRecord1
+	twapRecord2.Time = time.Date(2023, 0o2, 2, 0, 0, 0, 0, time.UTC)
+	twap.NumDeprecatedRecordsToPrunePerBlock = uint16(1)
+
+	// Set two records
+	poolIndexKey1 := types.FormatHistoricalPoolIndexTWAPKey(twapRecord1.PoolId, twapRecord1.Asset0Denom, twapRecord1.Asset1Denom, twapRecord1.Time)
+	poolIndexKey2 := types.FormatHistoricalPoolIndexTWAPKey(twapRecord2.PoolId, twapRecord2.Asset0Denom, twapRecord2.Asset1Denom, twapRecord2.Time)
+	osmoutils.MustSet(store, poolIndexKey1, &twapRecord1)
+	osmoutils.MustSet(store, poolIndexKey2, &twapRecord2)
 
 	// The time index key is a bit manual since we removed the old code that did this programmatically.
 	var buffer bytes.Buffer
-	timeS := osmoutils.FormatTimeString(twap.Time)
-	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPTimeIndexPrefix, twap.PoolId, KeySeparator, twap.Asset0Denom, KeySeparator, twap.Asset1Denom, KeySeparator, timeS)
-	timeIndexKey := buffer.Bytes()
-	osmoutils.MustSet(store, timeIndexKey, &twap)
+	timeS1 := osmoutils.FormatTimeString(twapRecord1.Time)
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPTimeIndexPrefix, twapRecord1.PoolId, KeySeparator, twapRecord1.Asset0Denom, KeySeparator, twapRecord1.Asset1Denom, KeySeparator, timeS1)
+	timeIndexKey1 := buffer.Bytes()
+	timeS2 := osmoutils.FormatTimeString(twapRecord2.Time)
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPTimeIndexPrefix, twapRecord2.PoolId, KeySeparator, twapRecord2.Asset0Denom, KeySeparator, twapRecord2.Asset1Denom, KeySeparator, timeS2)
+	timeIndexKey2 := buffer.Bytes()
+	osmoutils.MustSet(store, timeIndexKey1, &twapRecord1)
+	osmoutils.MustSet(store, timeIndexKey2, &twapRecord2)
 
 	// TWAP records indexed by time should exist
 	twapRecords, err := osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Len(twapRecords, 2)
+	s.Require().Equal(twapRecord1, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[1])
 
 	// TWAP records indexed by pool ID should exist.
-	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twap.PoolId)
+	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Len(twapRecords, 2)
+	s.Require().Equal(twapRecord1, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[1])
 
 	// PROTOREV Setup
 	//
@@ -121,16 +136,26 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP Tests
 	//
 
-	// TWAP records indexed by time should be completely removed.
+	// TWAP records indexed by time should be untouched since endblocker hasn't run yet.
 	twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 0)
+	s.Require().Len(twapRecords, 2)
 
-	// TWAP records indexed by pool ID should be untouched.
-	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twap.PoolId)
+	// Run the end blocker
+	s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{})
+
+	// Since the prune limit was 1, 1 TWAP record indexed by time should be completely removed, leaving one more.
+	twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
 	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[0])
+
+	// TWAP records indexed by pool ID should be untouched.
+	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
+	s.Require().NoError(err)
+	s.Require().Len(twapRecords, 2)
+	s.Require().Equal(twapRecord1, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[1])
 
 	// PROTOREV Tests
 	//
@@ -144,6 +169,16 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	oldBaseDenoms, err = s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Empty(oldBaseDenoms)
+
+	// INCENTIVES Tests
+	//
+
+	// Check that the new min value for distribution has been set
+	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
+
+	// Pool Migration Tests
+	//
 
 	// Test that the white whale pools have been updated
 	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
