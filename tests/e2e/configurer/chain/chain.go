@@ -113,11 +113,12 @@ func (c *Config) RemoveTempNode(nodeName string) error {
 func (c *Config) WaitUntilEpoch(epoch int64, epochIdentifier string) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
-	node.WaitUntil(func(_ coretypes.SyncInfo) bool {
+	err = node.WaitUntil(func(_ coretypes.SyncInfo) bool {
 		newEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
 		c.t.Logf("current epoch number is (%d), waiting to reach (%d)", newEpochNumber, epoch)
 		return newEpochNumber >= epoch
 	})
+	require.NoError(c.t, err)
 }
 
 // WaitForNumEpochs waits for the chain to to go through a given number of epochs.
@@ -145,7 +146,8 @@ func (c *Config) WaitUntilHeight(height int64) {
 
 	for _, node := range c.NodeConfigs {
 		c.t.Logf("node container: %s, waiting to reach height %d", node.Name, height)
-		node.WaitUntil(doneCondition)
+		err := node.WaitUntil(doneCondition)
+		require.NoError(c.t, err)
 	}
 }
 
@@ -164,7 +166,8 @@ func (c *Config) WaitUntilBlockTime(blockTime time.Time) {
 
 	for _, node := range c.NodeConfigs {
 		c.t.Logf("node container: %s, waiting to reach block time %s", node.Name, blockTime)
-		node.WaitUntil(doneCondition)
+		err := node.WaitUntil(doneCondition)
+		require.NoError(c.t, err)
 	}
 }
 

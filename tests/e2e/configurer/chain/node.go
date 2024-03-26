@@ -127,7 +127,7 @@ func (n *NodeConfig) Stop() error {
 	return nil
 }
 
-func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
+func (n *NodeConfig) WaitForNumHeights(numBlocks int) error {
 	targetHeight, err := n.QueryCurrentHeight()
 	require.NoError(n.t, err)
 	targetHeight += int64(numBlocks)
@@ -142,12 +142,12 @@ func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
 
 		return !syncInfo.CatchingUp
 	}
-	n.WaitUntil(doneCondition)
+	return n.WaitUntil(doneCondition)
 }
 
 // WaitUntil waits until node reaches doneCondition. Return nil
 // if reached, error otherwise.
-func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) {
+func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) error {
 	var latestBlockHeight int64
 	for i := 0; i < waitUntilrepeatMax; i++ {
 		status, err := n.rpcClient.Status(context.Background())
@@ -158,9 +158,9 @@ func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) b
 			time.Sleep(waitUntilRepeatPauseTime)
 			continue
 		}
-		return
+		return nil
 	}
-	n.t.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	return fmt.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
 }
 
 func (n *NodeConfig) extractOperatorAddressIfValidator() error {
