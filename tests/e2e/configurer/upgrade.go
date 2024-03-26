@@ -401,7 +401,7 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	}
 
 	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.Id)
-	chainConfig.WaitUntilHeight(propHeight)
+	chainConfig.WaitUntilHeight(propHeight + 3)
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
 }
