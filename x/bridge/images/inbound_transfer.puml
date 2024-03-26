@@ -53,22 +53,22 @@ Block <-- val3_2 : process
 Block <-- val4_2 : process
 Block <-- val5_2 : process
 
-action "Process each\nMsgInboundTransfer" as val1_act_1
-action "Process each\nMsgInboundTransfer" as val2_act_1
-action "Process each\nMsgInboundTransfer" as val3_act_1
-action "Process each\nMsgInboundTransfer" as val4_act_1
-action "Process each\nMsgInboundTransfer" as val5_act_1
+node "x/bridge" as val1_act_1
+node "x/bridge" as val2_act_1
+node "x/bridge" as val3_act_1
+node "x/bridge" as val4_act_1
+node "x/bridge" as val5_act_1
 
 val1_2 --> val1_act_1
 val2_2 --> val2_act_1
-val3_2 --> val3_act_1
+val3_2 --> val3_act_1 : Process each\nMsgInboundTransfer
 val4_2 --> val4_act_1
 val5_2 --> val5_act_1
 
 action "Accumulate votes x3" as val1_act_2
-action "Is not a part\nof the signers set" as val2_act_2 #red
+action "Accumulate votes x3" as val2_act_2
 action "Accumulate votes x3" as val3_act_2
-action "Is not a part\nof the signers set" as val4_act_2 #red
+action "Accumulate votes x3" as val4_act_2
 action "Accumulate votes x3" as val5_act_2
 
 val1_act_1 --> val1_act_2
@@ -77,22 +77,40 @@ val3_act_1 --> val3_act_2
 val4_act_1 --> val4_act_2
 val5_act_1 --> val5_act_2
 
-action "Call tokenfactory mint" as val1_act_3
-action "Call tokenfactory mint" as val3_act_3
-action "Call tokenfactory mint" as val5_act_3
+action "**Mint** to the dest addr" as val1_act_3
+action "**Mint** to the dest addr" as val2_act_3
+action "**Mint** to the dest addr" as val3_act_3
+action "**Mint** to the dest addr" as val4_act_3
+action "**Mint** to the dest addr" as val5_act_3
 
 val1_act_2 --> val1_act_3
+val2_act_2 --> val2_act_3
 val3_act_2 --> val3_act_3
+val4_act_2 --> val4_act_3
 val5_act_2 --> val5_act_3
 
-node "Submit the block" as consensus
+action "Finalize the transfer" as val1_act_4
+action "Finalize the transfer" as val2_act_4
+action "Finalize the transfer" as val3_act_4
+action "Finalize the transfer" as val4_act_4
+action "Finalize the transfer" as val5_act_4
 
-val1_act_3 --> consensus
-val3_act_3 --> consensus
-val5_act_3 --> consensus
+val1_act_3 --> val1_act_4
+val2_act_3 --> val2_act_4
+val3_act_3 --> val3_act_4
+val4_act_3 --> val4_act_4
+val5_act_3 --> val5_act_4
 
-note left of consensus
-    The transfer is done!
-end note
+action "Consensus!" as consensus
+
+val1_act_4 --> consensus
+val2_act_4 --> consensus
+val3_act_4 --> consensus
+val4_act_4 --> consensus
+val5_act_4 --> consensus
+
+actor "Happy client" as client1 #lightgreen;line:green;line.bold;text:green
+
+consensus --> client1  :coins are minted to the destination addr
 
 @enduml
