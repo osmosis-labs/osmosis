@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

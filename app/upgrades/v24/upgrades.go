@@ -4,11 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v24/app/keepers"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 )
 
 func CreateUpgradeHandler(
@@ -45,6 +47,38 @@ func CreateUpgradeHandler(
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
+
+		// Enable ICA controllers
+		keepers.ICAControllerKeeper.SetParams(ctx, icacontrollertypes.DefaultParams())
+
+		// White Whale uploaded a broken contract. They later migrated cwpool via the governance
+		// proposal in x/cosmwasmpool
+		// However, there was a problem in the migration logic where the CosmWasmpool state CodeId  did not get updated.
+		// As a result, the CodeID for the contract that is tracked in x/wasmd  was migrated correctly. However, the code ID that we track in the x/cosmwasmpool  state did not.
+		// Therefore, we should perform a migration for each of the hardcoded white whale pools.
+		poolIds := []uint64{1463, 1462, 1461}
+		for _, poolId := range poolIds {
+			pool, err := keepers.CosmwasmPoolKeeper.GetPool(ctx, poolId)
+			if err != nil {
+				// Skip non-existent pools. This way we don't need to create the pools on E2E tests
+				continue
+			}
+			cwPool, ok := pool.(cwpooltypes.CosmWasmExtension)
+			if !ok {
+				ctx.Logger().Error("Pool has incorrect type", "poolId", poolId, "pool", pool)
+				return nil, cwpooltypes.InvalidPoolTypeError{
+					ActualPool: pool,
+				}
+			}
+			if cwPool.GetCodeId() != 503 {
+				ctx.Logger().Error("Pool has incorrect code id", "poolId", poolId, "codeId", cwPool.GetCodeId())
+				return nil, cwpooltypes.InvalidPoolTypeError{
+					ActualPool: pool,
+				}
+			}
+			cwPool.SetCodeId(572)
+			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
+		}
 
 		return migrations, nil
 	}

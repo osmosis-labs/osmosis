@@ -9,7 +9,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
 )
 
 type MockChain struct {

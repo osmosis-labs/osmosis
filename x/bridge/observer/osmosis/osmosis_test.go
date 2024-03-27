@@ -29,10 +29,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer/osmosis"
-	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer/osmosis"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 var (

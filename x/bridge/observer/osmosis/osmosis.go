@@ -14,8 +14,8 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	cosmosproto "github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer"
-	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 var (

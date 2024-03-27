@@ -34,8 +34,8 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -79,36 +79,36 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
-	v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22"
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
-	v24 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v24"
-	v3 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v23/ingest"
-	"github.com/osmosis-labs/osmosis/v23/x/mint"
+	"github.com/osmosis-labs/osmosis/v24/app/keepers"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
+	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
+	v3 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v24/ingest"
+	"github.com/osmosis-labs/osmosis/v24/x/mint"
 )
 
 const appName = "OsmosisApp"
@@ -594,6 +594,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	defaultCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
+		sdk.NewInt64Coin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", 1000000000000), // USDC, for pool creation fee
 		sdk.NewInt64Coin("uosmo", 1000000000000),
 		sdk.NewInt64Coin("uion", 1000000000))
 

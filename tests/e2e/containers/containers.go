@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -15,12 +14,13 @@ import (
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 type TxResponse struct {
@@ -40,24 +40,18 @@ type TxResponse struct {
 }
 
 const (
-	hermesContainerName = "hermes-relayer"
-	// The maximum number of times debug logs are printed to console
-	// per CLI command.
-	maxDebugLogsPerCommand = 3
-
-	GasLimit = 400000
+	hermesContainerName    = "hermes-relayer"
+	maxDebugLogsPerCommand = 3 // The maximum number of times debug logs are printed to console per CLI command.
+	GasLimit               = 400000
 )
 
 var (
-	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
-	Fees = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64()
-
-	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
-
-	txArgs = []string{"--yes", "--keyring-backend=test", "--log_format=json"}
-
-	// See ConsensusMinFee in x/txfees/types/constants.go
-	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken}
+	Fees                 = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64() // We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+	defaultErrRegex      = regexp.MustCompile(`(E|e)rror`)
+	txArgs               = []string{"--yes", "--keyring-backend=test", "--log_format=json"}
+	txDefaultGasArgs     = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken} // See ConsensusMinFee in x/txfees/types/constants.go
+	memoCounter      int = 1
+	counterLock          = sync.Mutex{}
 )
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
@@ -98,9 +92,6 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 	return outBuf, errBuf, nil
 }
 
-var memoCounter int = 1
-var counterLock sync.Mutex
-
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
@@ -108,6 +99,7 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	t.Helper()
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
 	allTxArgs = append(allTxArgs, txArgs...)
+
 	// parse to see if command has gas flags. If not, add default gas flags.
 	addGasFlags := true
 	for _, cmd := range command {
@@ -118,6 +110,7 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	if addGasFlags {
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
+
 	// Add memo field to every tx
 	// This is done because in E2E, we remove the sequence number ante handler.
 	// This allows for quick throughput of txs, but if two txs are the same (i.e. two CL claims, two bank sends with the same amount),
@@ -126,6 +119,7 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	counterLock.Lock()
 	memo := fmt.Sprintf("--note=%d", memoCounter)
 	allTxArgs = append(allTxArgs, memo)
+
 	// Increment the counter for the next tx
 	memoCounter++
 	counterLock.Unlock()
@@ -139,6 +133,7 @@ func (m *Manager) ExecTxCmdWithSuccessStringJSON(t *testing.T, chainId string, c
 	t.Helper()
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
 	allTxArgs = append(allTxArgs, txArgs...)
+
 	// parse to see if command has gas flags. If not, add default gas flags.
 	addGasFlags := true
 	for _, cmd := range command {
@@ -149,6 +144,7 @@ func (m *Manager) ExecTxCmdWithSuccessStringJSON(t *testing.T, chainId string, c
 	if addGasFlags {
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
+
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr, true, true)
 }
@@ -215,12 +211,8 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
 
-	expectedSequence := 0
-	var sequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
-
-	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
-	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
-	require.Eventually(
+	var lastErr error
+	successConditionMet := assert.Eventually(
 		t,
 		func() bool {
 			outBuf.Reset()
@@ -243,6 +235,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				ErrorStream:  &errBuf,
 			})
 			if err != nil {
+				lastErr = err
 				return false
 			}
 
@@ -251,50 +244,16 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				return true
 			}
 
-			errBufString := errBuf.String()
-			// When a validator attempts to send multiple transactions in the same block, the expected sequence number
-			// will be thrown off, causing the transaction to fail. It will eventually clear, but what the following code
-			// does is it takes the expected sequence number from the error message, adds a sequence number flag with that
-			// number, and retries the transaction. This allows for multiple txs from the same validator to be committed in the same block.
-			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
-				// Check if the error message matches the expected pattern
-				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
-				outBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(outBuf.String(), -1)
-				if len(errBufMatches) > 0 {
-					lastArg := command[len(command)-1]
-					if strings.Contains(lastArg, "--sequence") {
-						// Remove the last argument from the command
-						command = command[:len(command)-1]
-					}
-					expectedSequenceStr := errBufMatches[len(errBufMatches)-1][1]
-					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
-					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
-					// Update the command for the next iteration
-					command = modifiedCommand
-				} else if len(outBufMatches) > 0 {
-					lastArg := command[len(command)-1]
-					if strings.Contains(lastArg, "--sequence") {
-						// Remove the last argument from the command
-						command = command[:len(command)-1]
-					}
-					expectedSequenceStr := outBufMatches[len(outBufMatches)-1][1]
-					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
-					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
-					// Update the command for the next iteration
-					command = modifiedCommand
-				}
-			}
-
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
-				!strings.Contains(errBufString, "not found") {
+			if (defaultErrRegex.MatchString(outBuf.String()) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
+				!strings.Contains(outBuf.String(), "not found") {
 				t.Log("\nstderr:")
-				t.Log(errBufString)
+				t.Log(outBuf.String())
 
 				t.Log("\nstdout:")
-				t.Log(outBuf.String())
+				t.Log(errBuf.String())
 				// N.B: We should not be returning false here
 				// because some applications such as Hermes might log
 				// "error" to stderr when they function correctly,
@@ -303,16 +262,18 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				maxDebugLogTriesLeft--
 			}
 
+			// If the success string is not empty and we are not checking the tx hash, check if the output or error string contains the success string
 			if success != "" && !checkTxHash {
-				return strings.Contains(outBuf.String(), success) || strings.Contains(errBufString, success)
+				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
 			}
 
+			// If the success string is not empty and we are checking the tx hash, check if the output or error string contains the success string
 			if success != "" && checkTxHash {
 				// Now that sdk got rid of block.. we need to query the txhash to get the result
-				outStr := outBuf.String()
-
-				txResponse, err := parseTxResponse(outStr)
+				var txResponse TxResponse
+				txResponse, err = parseTxResponse(outBuf.String())
 				if err != nil {
+					lastErr = err
 					return false
 				}
 
@@ -325,19 +286,27 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				// causing the tx to be submitted again.
 				outBuf, errBuf, err = m.ExecQueryTxHash(t, containerName, txResponse.TxHash, returnTxHashInfoAsJSON)
 				if err != nil {
+					lastErr = err
 					return false
 				}
+
+				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
 			}
 
 			return true
 		},
 		time.Minute,
 		10*time.Millisecond,
-		fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
-			success, command, outBuf.String(), errBuf.String(), err),
 	)
 
-	return outBuf, errBuf, nil
+	// If the success condition is not met, log the failure and stop the test suite.
+	if !successConditionMet {
+		t.Logf(fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			success, command, outBuf.String(), errBuf.String(), lastErr))
+		t.FailNow()
+	}
+
+	return outBuf, errBuf, err
 }
 
 func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, returnAsJson bool) (bytes.Buffer, bytes.Buffer, error) {
@@ -397,29 +366,27 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 			return outBuf, errBuf, err
 		}
 
-		errBufString := errBuf.String()
-
-		if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
-			!strings.Contains(errBufString, "not found") {
+		if (defaultErrRegex.MatchString(errBuf.String()) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
+			!strings.Contains(errBuf.String(), "not found") {
 			t.Log("\nstderr:")
-			t.Log(errBufString)
+			t.Log(errBuf.String())
 
 			t.Log("\nstdout:")
 			t.Log(outBuf.String())
 			maxDebugLogTriesLeft--
 		}
 
-		successConditionMet = strings.Contains(outBuf.String(), "code: 0") || strings.Contains(errBufString, "code: 0") || strings.Contains(outBuf.String(), "code\":0") || strings.Contains(errBufString, "code\":0")
+		successConditionMet = strings.Contains(outBuf.String(), "code: 0") || strings.Contains(errBuf.String(), "code: 0") || strings.Contains(outBuf.String(), "code\":0") || strings.Contains(errBuf.String(), "code\":0")
 		if successConditionMet {
 			break
 		}
 
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	if !successConditionMet {
-		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
-			txHash, command, outBuf.String(), errBuf.String(), err)
+		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" command %s was not met.\nstdout:\n %s\nstderr:\n %s\n",
+			txHash, command, outBuf.String(), errBuf.String())
 	}
 
 	return outBuf, errBuf, nil

@@ -38,18 +38,20 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-	downtimedetector "github.com/osmosis-labs/osmosis/v23/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/types"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev"
+	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	downtimedetector "github.com/osmosis-labs/osmosis/v24/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v24/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -68,7 +70,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	"github.com/osmosis-labs/osmosis/v23/ingest"
+	"github.com/osmosis-labs/osmosis/v24/ingest"
 
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/keeper"
@@ -77,35 +79,35 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 
-	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v23/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v23/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v23/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v23/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v23/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
-	valsetpref "github.com/osmosis-labs/osmosis/v23/x/valset-pref"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
+	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v24/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v24/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v24/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v24/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v24/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v24/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v24/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v24/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	valsetpref "github.com/osmosis-labs/osmosis/v24/x/valset-pref"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
@@ -126,11 +128,12 @@ type AppKeepers struct {
 	ConsensusParamsKeeper *consensusparamkeeper.Keeper
 
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
-	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
+	ScopedWasmKeeper          capabilitykeeper.ScopedKeeper
+	ScopedICQKeeper           capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
@@ -143,6 +146,7 @@ type AppKeepers struct {
 	IBCKeeper                    *ibckeeper.Keeper
 	IBCHooksKeeper               *ibchookskeeper.Keeper
 	ICAHostKeeper                *icahostkeeper.Keeper
+	ICAControllerKeeper          *icacontrollerkeeper.Keeper
 	ICQKeeper                    *icqkeeper.Keeper
 	TransferKeeper               *ibctransferkeeper.Keeper
 	IBCWasmClientKeeper          *ibcwasmkeeper.Keeper
@@ -292,7 +296,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
 		appKeepers.GetSubspace(icahosttypes.SubModuleName),
-		// UNFORKINGNOTE: I think it is correct to use rate limiting wrapper here
 		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
@@ -302,13 +305,24 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
-	icaHostIBCModule := icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
-	// Create static IBC router, add transfer route, then set and seal it
-	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		// The transferIBC module is replaced by rateLimitingTransferModule
-		AddRoute(ibctransfertypes.ModuleName, appKeepers.TransferStack)
-	// Note: the sealing is done after creating wasmd and wiring that up
+	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
+		appCodec, appKeepers.keys[icacontrollertypes.StoreKey],
+		appKeepers.GetSubspace(icacontrollertypes.SubModuleName),
+		appKeepers.RateLimitingICS4Wrapper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.ScopedICAControllerKeeper,
+		bApp.MsgServiceRouter(),
+	)
+	appKeepers.ICAControllerKeeper = &icaControllerKeeper
+
+	// initialize ICA module with mock module as the authentication module on the controller side
+	var icaControllerStack porttypes.IBCModule
+	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, *appKeepers.ICAControllerKeeper)
+
+	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
+	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
+	icaHostStack := icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
 
 	// ICQ Keeper
 	icqKeeper := icqkeeper.NewKeeper(
@@ -326,8 +340,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create Async ICQ module
 	icqModule := icq.NewIBCModule(*appKeepers.ICQKeeper)
 
-	// Add icq modules to IBC router
-	ibcRouter.AddRoute(icqtypes.ModuleName, icqModule)
+	// Create static IBC router, add transfer route, then set and seal it
+	ibcRouter := porttypes.NewRouter()
+	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
+		AddRoute(icahosttypes.SubModuleName, icaHostStack).
+		// The transferIBC module is replaced by rateLimitingTransferModule
+		AddRoute(ibctransfertypes.ModuleName, appKeepers.TransferStack).
+		// Add icq modules to IBC router
+		AddRoute(icqtypes.ModuleName, icqModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -676,6 +696,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, appKeepers.keys[capabilitytypes.StoreKey], appKeepers.memKeys[capabilitytypes.MemStoreKey])
 	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	appKeepers.ScopedICAHostKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	appKeepers.ScopedICAControllerKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	appKeepers.ScopedICQKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
@@ -714,6 +735,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(lockuptypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
@@ -827,6 +849,7 @@ func KVStoreKeys() []string {
 		consensusparamtypes.StoreKey,
 		ibchost.StoreKey,
 		icahosttypes.StoreKey,
+		icacontrollertypes.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,

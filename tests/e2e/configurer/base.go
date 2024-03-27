@@ -14,10 +14,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/util"
 )
 
 // baseConfigurer is the base implementation for the
@@ -76,29 +76,24 @@ func (bc *baseConfigurer) RunValidators() error {
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 
+	errCh := make(chan error, len(chainConfig.NodeConfigs))
 	var wg sync.WaitGroup
-	errCh := make(chan error, len(chainConfig.NodeConfigs)) // Buffer the channel to avoid blocking
 
-	// Increment the WaitGroup counter for each node
-	wg.Add(len(chainConfig.NodeConfigs))
-
-	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
-		go func(n *chain.NodeConfig) {
-			defer wg.Done() // Decrement the WaitGroup counter when the goroutine is done
-			// TODO: After v24, either set this to true or remove the entire logic added in https://github.com/osmosis-labs/osmosis/pull/7784
-			// and just set --reject-config-defaults=true directly here https://github.com/osmosis-labs/osmosis/blob/b106139bcfe5605fb2fedd6237d9467497cf3ded/tests/e2e/containers/containers.go#L492-L493
-			errCh <- n.Run(false) // Run the node and send any error to the channel
+		wg.Add(1)
+		go func(node *chain.NodeConfig) {
+			defer wg.Done()
+			if err := node.Run(false); err != nil {
+				errCh <- err
+			}
 		}(node)
 	}
 
-	// Wait for all goroutines to finish
+	// Wait for all goroutines to complete
 	wg.Wait()
-
-	// Close the error channel since all goroutines are done sending errors
 	close(errCh)
 
-	// Collect errors from the channel
+	// Check if any of the goroutines returned an error
 	for err := range errCh {
 		if err != nil {
 			return err

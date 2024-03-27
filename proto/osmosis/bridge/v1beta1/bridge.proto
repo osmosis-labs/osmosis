@@ -3,7 +3,7 @@ package osmosis.bridge.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/bridge/types";
 
 // Params defines params for x/bridge module.
 message Params {
@@ -46,6 +46,10 @@ message Asset {
   AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
   // Exponent represents the power of 10 used for coin representation
   uint64 exponent = 3 [ (gogoproto.moretags) = "yaml:\"exponent\"" ];
+  // ExternalConfirmations is a number of the confirmations on the external
+  // chain needed to consider the transfer confirmed
+  uint64 external_confirmations = 4
+      [ (gogoproto.moretags) = "yaml:\"external_confirmations\"" ];
 }
 
 enum AssetStatus {
