@@ -281,8 +281,6 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig, isLegacy bool) (uint64, error) {
 	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(false, isLegacy)
 
-	chainANode.DepositProposal(propNumber, true)
-
 	AllValsVoteOnProposal(c, propNumber)
 
 	require.Eventually(c.t, func() bool {
