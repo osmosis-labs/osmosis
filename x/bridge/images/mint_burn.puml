@@ -1,0 +1,43 @@
+@startuml
+
+participant "Alice BTC addr" as alice_btc
+participant "BTC vault" as btc_vault
+participant "Valset" as valset
+participant "x/bridge" as bridge
+participant "x/tokenfactory" as tokenfactory
+participant "Alice OSMO addr" as alice_osmo
+
+== BTC to OSMO ==
+
+alice_btc --> btc_vault : Send tx with the osmo\naddress in memo
+valset --> btc_vault : Observe the tx
+valset --> bridge : **MsgInboundTransfer**
+bridge --> tokenfactory : Mint tokens to\nthe osmo address
+note over tokenfactory
+  x/bridge is the admin
+end note
+tokenfactory --> alice_osmo : Update Alice balance
+
+alt failure
+  bridge --> alice_btc : Refund
+end
+
+== OSMO to BTC ==
+
+alice_osmo --> bridge : **MsgOutboundTransfer**
+bridge --> tokenfactory : Burn tokens from\nthe osmo address
+note over tokenfactory
+  x/bridge is the admin
+end note
+tokenfactory --> alice_osmo : Update Alice balance
+
+valset --> bridge : Observe x/bridge event
+
+valset --> btc_vault : Release BTC for Alice
+valset --> alice_btc : Send BTC
+
+alt failure
+  bridge --> alice_osmo : Refund
+end
+
+@enduml
