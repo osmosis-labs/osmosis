@@ -100,14 +100,13 @@ type DenomUnitMap struct {
 }
 
 const (
-	mempoolConfigName     = "osmosis-mempool"
-	maxGasWantedPerTxName = "max-gas-wanted-per-tx"
+	mempoolConfigName = "osmosis-mempool"
 
-	arbitrageMinGasFeeConfigName = "arbitrage-min-gas-fee"
-	oldArbitrageMinGasFeeValue   = ".005"
-	newArbitrageMinGasFeeValue   = "0.1"
+	arbitrageMinGasFeeConfigName          = "arbitrage-min-gas-fee"
+	recommendedNewArbitrageMinGasFeeValue = "0.1"
 
-	newMaxGasWantedPerTxValue = "60000000"
+	maxGasWantedPerTxName                = "max-gas-wanted-per-tx"
+	recommendedNewMaxGasWantedPerTxValue = "60000000"
 
 	consensusConfigName     = "consensus"
 	timeoutCommitConfigName = "timeout_commit"
@@ -509,8 +508,8 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		// app.toml exists
 
 		// Set new values in viper
-		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, newMaxGasWantedPerTxValue)
-		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, newArbitrageMinGasFeeValue)
+		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
+		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -543,7 +542,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			closingQuoteIndex += openQuoteIndex + 1
 
 			// Replace the old value with the new value
-			newFileContent := fileContent[:openQuoteIndex+1] + newArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
+			newFileContent := fileContent[:openQuoteIndex+1] + recommendedNewArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
 
 			// Write the modified content back to the file
 			err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
@@ -551,7 +550,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 				return err
 			}
 		} else {
-			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + newMaxGasWantedPerTxValue)
+			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
 	}
 	return nil
