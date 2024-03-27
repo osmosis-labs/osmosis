@@ -6,7 +6,7 @@ import (
 	math "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 // TestGenesisState tests if GenesisState is properly validated.
