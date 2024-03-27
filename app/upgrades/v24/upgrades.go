@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
@@ -79,6 +80,12 @@ func CreateUpgradeHandler(
 			cwPool.SetCodeId(572)
 			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
 		}
+
+		// TODO: Uncomment, set, and add to upgrade_test.go IFF an address is decided on via the governance forums prior to upgrade.
+		// Otherwise, this will be set after v24 via a parameter change proposal.
+
+		// Set whitelistedFeeTokenSetters param
+		// keepers.TxFeesKeeper.SetParam(ctx, txfeestypes.KeyWhitelistedFeeTokenSetters, "osmo1...")
 
 		return migrations, nil
 	}
