@@ -254,13 +254,27 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	spreadRewardsClaimed, forfeitedDust, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
+	spreadRewardsClaimedScaled, forfeitedDustScaled, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
 
+	spreadFactorScalingFactor, err := k.getSpreadFactorScalingFactorForPool(ctx, position.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	// We scale the spread factor per-unit of liquidity accumulator up to avoid truncation to zero.
+	// However, once we compute the total for the liquidity entitlement, we must scale it back down.
+	// We always truncate down in the pool's favor.
+	spreadRewardsClaimed := sdk.NewCoins()
+	for _, coin := range spreadRewardsClaimedScaled {
+		scaledCoinAmt := scaleDownIncentiveAmount(coin.Amount, spreadFactorScalingFactor)
+		spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
+	}
+
 	// add forfeited dust back to the global accumulator
-	if !forfeitedDust.IsZero() {
+	if !forfeitedDustScaled.IsZero() {
 		// Refetch the spread reward accumulator as the number of shares has changed after claiming.
 		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 		if err != nil {
@@ -273,8 +287,8 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
-			forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
-			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShare)
+			forfeitedDustScaledPerShare := forfeitedDustScaled.QuoDecTruncate(totalSharesRemaining)
+			spreadRewardAccumulator.AddToAccumulator(forfeitedDustScaledPerShare)
 		}
 	}
 
