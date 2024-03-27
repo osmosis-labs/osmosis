@@ -124,9 +124,9 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 
 	fileName := ""
 	if chainId == mainnetId || chainId == "" {
-		fileName = homeDir + "/config/osmosis-1-assetlist-manual.json"
+		fileName = filepath.Join(homeDir, "config", "osmosis-1-assetlist-manual.json")
 	} else if chainId == testnetId {
-		fileName = homeDir + "/config/osmo-test-5-assetlist-manual.json"
+		fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 	} else {
 		return nil, nil
 	}
@@ -956,10 +956,10 @@ Outputs:
 
 			if chainID == mainnetId {
 				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
-				fileName = homeDir + "/config/osmosis-1-assetlist-manual.json"
+				fileName = filepath.Join(homeDir, "config", "osmosis-1-assetlist-manual.json")
 			} else if chainID == testnetId {
 				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
-				fileName = homeDir + "/config/osmo-test-5-assetlist-manual.json"
+				fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 			} else {
 				return nil
 			}
