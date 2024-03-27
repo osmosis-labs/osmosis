@@ -96,6 +96,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7750](https://github.com/osmosis-labs/osmosis/pull/7750) IAVL bump to improve pruning
 
+### Features
+
+* [#7742](https://github.com/osmosis-labs/osmosis/pull/7742) Introduces a look up table function for computing order of magnitude of an Int for better performance.
+
 ## v23.0.6-iavl-v1 (contains everything in v23.0.6)
 
 * [#558](https://github.com/osmosis-labs/cosmos-sdk/pull/558) Gracefully log when there is a pruning error instead of panic
