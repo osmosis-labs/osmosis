@@ -74,6 +74,9 @@ message GenesisState {
   uint64 incentives_accumulator_pool_id_migration_threshold = 6
       [ (gogoproto.moretags) =
             "yaml:\"incentives_accumulator_pool_id_migration_threshold\"" ];
+  uint64 spread_factor_pool_id_migration_threshold = 7
+      [ (gogoproto.moretags) =
+            "yaml:\"spread_factor_pool_id_migration_threshold\"" ];
 }
 
 message AccumObject {
