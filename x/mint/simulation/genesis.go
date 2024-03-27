@@ -3,6 +3,7 @@ package simulation
 // DONTCOVER
 
 import (
+	"math"
 	"math/rand"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -21,7 +22,7 @@ const (
 	mintingRewardsDistributionStartEpochKey = "minting_rewards_distribution_start_epoch"
 
 	epochIdentifier = "day"
-	maxInt64        = int(^uint(0) >> 1)
+	maxInt64        = int64(math.MaxInt64)
 )
 
 var (
@@ -143,21 +144,21 @@ func RandomizedGenState(simState *module.SimulationState) {
 }
 
 func genEpochProvisions(r *rand.Rand) osmomath.Dec {
-	return osmomath.NewDec(int64(r.Intn(maxInt64)))
+	return osmomath.NewDec(r.Int63n(maxInt64))
 }
 
 func genReductionFactor(r *rand.Rand) osmomath.Dec {
-	return osmomath.NewDecWithPrec(int64(r.Intn(10)), 1)
+	return osmomath.NewDecWithPrec(r.Int63n(10), 1)
 }
 
 func genReductionPeriodInEpochs(r *rand.Rand) int64 {
-	return int64(r.Intn(maxInt64))
+	return r.Int63n(maxInt64)
 }
 
 func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
-	return int64(r.Intn(maxInt64))
+	return r.Int63n(maxInt64)
 }
 
 func genReductionStartedEpoch(r *rand.Rand) int64 {
-	return int64(r.Intn(maxInt64))
+	return r.Int63n(maxInt64)
 }
