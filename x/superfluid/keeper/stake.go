@@ -57,7 +57,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context, accs []typ
 
 		validator, found := k.sk.GetValidator(ctx, valAddress)
 		if !found {
-			k.Logger(ctx).Error(fmt.Sprintf("validator not found or %s", acc.ValAddr))
+			// k.Logger(ctx).Error(fmt.Sprintf("validator not found or %s", acc.ValAddr))
 			continue
 		}
 

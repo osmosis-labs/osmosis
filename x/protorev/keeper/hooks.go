@@ -254,6 +254,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	}
 
 	ctx.Logger().Error("----after epoch end")
+	ctx.Logger().Error("----after epoch end")
+	ctx.Logger().Error("----after epoch end")
+	ctx.Logger().Error("----after epoch end")
+	ctx.Logger().Error("----after epoch end")
 	ctx.Logger().Error(profit.String())
 
 	// Distribute profits to developer account, community pool, and burn osmo
