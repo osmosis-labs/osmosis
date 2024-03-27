@@ -10,20 +10,26 @@ import (
 var _ sdk.Msg = &MsgInboundTransfer{}
 
 func NewMsgInboundTransfer(
+	externalID string,
 	sender string,
 	destAddr string,
-	asset Asset,
+	assetID AssetID,
 	amount math.Int,
 ) *MsgInboundTransfer {
 	return &MsgInboundTransfer{
-		Sender:   sender,
-		DestAddr: destAddr,
-		Asset:    asset,
-		Amount:   amount,
+		ExternalId: externalID,
+		Sender:     sender,
+		DestAddr:   destAddr,
+		AssetId:    assetID,
+		Amount:     amount,
 	}
 }
 
 func (m MsgInboundTransfer) ValidateBasic() error {
+	if len(m.ExternalId) == 0 {
+		return errorsmod.Wrapf(ErrInvalidExternalID, "Empty external id")
+	}
+
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
@@ -34,14 +40,14 @@ func (m MsgInboundTransfer) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid destination address (%s)", err)
 	}
 
-	err = m.Asset.Validate()
+	err = m.AssetId.Validate()
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+		return errorsmod.Wrapf(ErrInvalidAssetID, err.Error())
 	}
 
 	// check if amount > 0
 	if !m.Amount.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "Amount should be positive: %s", m.Amount.String())
 	}
 
 	return nil
@@ -57,13 +63,13 @@ var _ sdk.Msg = &MsgOutboundTransfer{}
 func NewMsgOutboundTransfer(
 	sender string,
 	destAddr string,
-	asset Asset,
+	assetID AssetID,
 	amount math.Int,
 ) *MsgOutboundTransfer {
 	return &MsgOutboundTransfer{
 		Sender:   sender,
 		DestAddr: destAddr,
-		Asset:    asset,
+		AssetId:  assetID,
 		Amount:   amount,
 	}
 }
@@ -79,14 +85,14 @@ func (m MsgOutboundTransfer) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid destination address (%s)", err)
 	}
 
-	err = m.Asset.Validate()
+	err = m.AssetId.Validate()
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+		return errorsmod.Wrapf(ErrInvalidAssetID, err.Error())
 	}
 
 	// check if amount > 0
 	if !m.Amount.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "Amount should be positive: %s", m.Amount.String())
 	}
 
 	return nil
@@ -110,7 +116,12 @@ func NewMsgUpdateParams(
 }
 
 func (m MsgUpdateParams) ValidateBasic() error {
-	err := m.NewParams.Validate()
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = m.NewParams.Validate()
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidParams, err.Error())
 	}
@@ -126,20 +137,30 @@ var _ sdk.Msg = &MsgChangeAssetStatus{}
 
 func NewMsgChangeAssetStatus(
 	sender string,
-	asset Asset,
-	newAssetStatus AssetStatus,
+	assetID AssetID,
+	newStatus AssetStatus,
 ) *MsgChangeAssetStatus {
 	return &MsgChangeAssetStatus{
-		Sender:         sender,
-		Asset:          asset,
-		NewAssetStatus: newAssetStatus,
+		Sender:    sender,
+		AssetId:   assetID,
+		NewStatus: newStatus,
 	}
 }
 
 func (m MsgChangeAssetStatus) ValidateBasic() error {
-	err := m.NewAssetStatus.Validate()
+	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAsset, err.Error())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = m.AssetId.Validate()
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAssetID, err.Error())
+	}
+
+	err = m.NewStatus.Validate()
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 	return nil
 }

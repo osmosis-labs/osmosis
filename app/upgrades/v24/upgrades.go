@@ -5,17 +5,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-<<<<<<< HEAD
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-=======
 	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
->>>>>>> 63ccc366 (auto: update Go import paths to v24 on branch main (#7864))
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 )
