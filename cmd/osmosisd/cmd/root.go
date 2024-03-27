@@ -120,12 +120,13 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 	var assetList AssetList
 
 	chainId := GetChainId(initClientCtx, cmd)
+	homeDir := initClientCtx.HomeDir
 
 	fileName := ""
 	if chainId == mainnetId || chainId == "" {
-		fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
+		fileName = homeDir + "/config/osmosis-1-assetlist-manual.json"
 	} else if chainId == testnetId {
-		fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+		fileName = homeDir + "/config/osmo-test-5-assetlist-manual.json"
 	} else {
 		return nil, nil
 	}
@@ -934,20 +935,31 @@ func UpdateAssetListCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.
 		Short: "Updates asset list used by the CLI to replace ibc denoms with human readable names",
 		Long: `Updates asset list used by the CLI to replace ibc denoms with human readable names.
 Outputs:
-	- cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json for osmosis-1
-	- cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json for osmo-test-5
+	- osmosisdHomeDir + /config/osmosis-1-assetlist-manual.json for osmosis-1
+	- osmosisdHomeDir + /config/osmo-test-5-assetlist-manual.json for osmo-test-5
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			assetListURL := ""
 			fileName := ""
 
-			if args[0] == mainnetId || args[0] == "" {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			homeDir := clientCtx.HomeDir
+
+			chainID := ""
+			if len(args) > 0 {
+				chainID = args[0]
+			} else {
+				fmt.Println("No chain ID provided, defaulting to mainnet")
+				chainID = mainnetId
+			}
+
+			if chainID == mainnetId {
 				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
-				fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
-			} else if args[0] == testnetId {
+				fileName = homeDir + "/config/osmosis-1-assetlist-manual.json"
+			} else if chainID == testnetId {
 				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
-				fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+				fileName = homeDir + "/config/osmo-test-5-assetlist-manual.json"
 			} else {
 				return nil
 			}
