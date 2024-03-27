@@ -3,7 +3,7 @@ package osmosis.cosmwasmpool.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model";
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model";
 
 service MsgCreator {
   rpc CreateCosmWasmPool(MsgCreateCosmWasmPool)

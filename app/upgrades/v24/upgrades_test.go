@@ -3,8 +3,8 @@ package v24_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	"testing"
 	"time"
 
@@ -16,13 +16,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	twap "github.com/osmosis-labs/osmosis/v23/x/twap"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
+	"github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
 )
 
 const (

@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
 
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 type extMsg interface {
