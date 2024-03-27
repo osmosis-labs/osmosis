@@ -366,8 +366,6 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), true)
 
-		node.DepositProposal(propNumber, false)
-
 		chain.AllValsVoteOnProposal(chainConfig, propNumber)
 	}
 
