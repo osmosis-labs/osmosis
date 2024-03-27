@@ -95,7 +95,7 @@ The transfer process is straightforward:
 
 ### Rate limiting
 
-**Rare limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 1 BTC every 10 minutes. Should the module receive more than 1 BTC within this 10-minute timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
+**Rate limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 1 BTC every 10 minutes. Should the module receive more than 1 BTC within this 10-minute timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
 
 ### Quarantine
 
