@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -36,11 +38,13 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
+	fmt.Println("multiplier: ", multiplier)
 	if multiplier.IsZero() {
 		return osmomath.ZeroInt(), nil
 	}
 
 	decAmt := multiplier.Mul(amount.ToLegacyDec())
+	fmt.Println("decAmt: ", decAmt)
 	_, err := k.GetSuperfluidAsset(ctx, denom)
 	if err != nil {
 		return osmomath.ZeroInt(), err

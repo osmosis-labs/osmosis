@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
@@ -27,6 +29,10 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 // It will move towards per pool functions.
 func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount osmomath.Int) osmomath.Int {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
+	fmt.Println("minRiskFactor: ", minRiskFactor)
+	fmt.Println("amount: ", amount)
+	fmt.Println("minRiskFactor: ", minRiskFactor)
+	fmt.Println("amount.Sub(amount.ToLegacyDec().Mul(minRiskFactor).RoundInt()): ", amount.Sub(amount.ToLegacyDec().Mul(minRiskFactor).RoundInt()))
 	return amount.Sub(amount.ToLegacyDec().Mul(minRiskFactor).RoundInt())
 }
 

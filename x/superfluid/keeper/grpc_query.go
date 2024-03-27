@@ -259,11 +259,15 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 
 		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
 		// and twap of the denom.
+		fmt.Println("lockedCoins", lockedCoins)
+		fmt.Println("baseDenom", baseDenom)
 		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("equivalentAmount", equivalentAmount)
 		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+		fmt.Println("coin", coin)
 
 		if err != nil {
 			return nil, err
