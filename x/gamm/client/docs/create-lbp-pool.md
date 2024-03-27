@@ -39,7 +39,6 @@ pool.json
     "weights": "10akt,1atom",
     "initial-deposit": "1000akt,100atom",
     "swap-fee": "0.001",
-    "exit-fee": "0.001",
     "lbp-params": {
         "duration": "72h",
         "target-pool-weights": "1akt,1atom"
@@ -54,7 +53,6 @@ Start time included
     "weights": "10akt,1atom",
     "initial-deposit": "1000akt,100atom",
     "swap-fee": "0.001",
-    "exit-fee": "0.001",
     "lbp-params": {
         "duration": "72h",
         "target-pool-weights": "1akt,1atom",

@@ -59,7 +59,6 @@ Sample pool JSON file contents for balancer:
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
 	"swap-fee": "0.01",
-	"exit-fee": "0.01",
 	"future-governor": "168h"
 }
 
@@ -67,7 +66,6 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 {
 	"initial-deposit": "1000000uusdc,1000miliusdc",
 	"swap-fee": "0.01",
-	"exit-fee": "0.00",
 	"future-governor": "168h",
 	"scaling-factors": "1000,1"
 }
@@ -421,11 +419,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, err
 	}
 
-	exitFee, err := osmomath.NewDecFromStr(pool.ExitFee)
-	if err != nil {
-		return nil, err
-	}
-
 	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
@@ -440,7 +433,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 
 	poolParams := &balancer.PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee: exitFee,
+		ExitFee: osmomath.NewDec(0),
 	}
 
 	msg := &balancer.MsgCreateBalancerPool{
@@ -516,14 +509,9 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
-	if err != nil {
-		return nil, err
-	}
-
 	poolParams := &stableswap.PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee: exitFee,
+		ExitFee: osmomath.NewDec(0),
 	}
 
 	scalingFactors := []uint64{}

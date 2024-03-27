@@ -17,6 +17,5 @@ pool.json
     "weights": "1eth,1regen,2btc",
     "initial-deposit": "100eth,100regen,100btc",
     "swap-fee": "0.001",
-    "exit-fee": "0.001"
 }
 ```
