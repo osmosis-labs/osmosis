@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
 	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 const (
