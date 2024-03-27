@@ -24,6 +24,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // - given epochIdentifier must be equal to the mint epoch identifier set via parameters.
 // - given epochNumber must be greater than or equal to the mint start epoch set via parameters.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	ctx.Logger().Error("x/mint after epoch end")
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.EpochIdentifier {

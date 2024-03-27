@@ -17,6 +17,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 // AfterEpochEnd is the epoch end hook.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	ctx.Logger().Error("x/incentives After Epoch End")
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.DistrEpochIdentifier {

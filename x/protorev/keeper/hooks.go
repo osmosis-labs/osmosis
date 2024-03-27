@@ -248,6 +248,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// Get the current arb profits (only in base denoms to prevent spam vector)
+	ctx.Logger().Error("x/protorev after epoch end")
 	profit, err := k.CurrentBaseDenomProfits(ctx)
 	if err != nil {
 		return err
