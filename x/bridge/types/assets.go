@@ -35,7 +35,7 @@ func (m Asset) Validate() error {
 		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 
-	// don't check m.Exponent, m.ExternalConfirmations since they are always valid
+	// don't check m.Exponent, m.LastTransferHeight, and m.ExternalConfirmations since they are always valid
 
 	return nil
 }
