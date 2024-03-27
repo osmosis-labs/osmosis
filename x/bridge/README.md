@@ -48,8 +48,8 @@ The **Observer**, running as part of the `osmosisd` binary, operates exclusively
 
 * **External Chain Observers**: One for each chain, these observers track all transactions occurring within the vault. Upon identifying a valid transaction (e.g., one with the correct memo), they facilitate its transfer to Osmosis.
 * **External Chain Clients**: One for each chain, these clients communicate with external chains, allowing the **observer** to perform transfers and other supporting operations.
-* **Osmosis Observer**: This observer monitors all tx results on Osmosis, focusing only on relevant ones such as **MsgOutboundTransfer**.
-* **Osmosis Client**: The client helps perform method calls to Osmosis such as triggering **MsgInboundTransfer**.
+* **Osmosis Observer**: This observer monitors all tx results on Osmosis, focusing only on relevant ones, such as **MsgOutboundTransfer**.
+* **Osmosis Client**: The client helps perform method calls to Osmosis, such as triggering **MsgInboundTransfer**.
 * **TSS Signer**: This component manages outbound transfers from Osmosis. It handles the signing of these transfers and selects a leader to broadcast them.
 
 _Additional components are to be determined._
@@ -101,7 +101,7 @@ The transfer process is straightforward:
 
 The **quarantine** mechanism ensures the smooth handling of inbound transfers, even during periods when asset activity is paused due to rate limiting, maintenance, or other factors that might otherwise halt the minting process.
 
-The **quarantine** solves the following problem: when the module is unable to process transfers for reasons like exceeding rate limits, maintenance shutdowns, or other transfer-blocking circumstances, it cannot accept new transfers. For outbound transfers, this is straightforward as new requests are simply rejected with an error message. However, managing inbound transfers is more complex. Users perceive inbound transfers as transactions to the dedicated **vault**, and since the incoming flow on external chains can't be directly controlled, users might continue sending transfers irrespective of module availability.
+The **quarantine** solves the following problem: when the module is unable to process transfers for reasons like exceeding rate limits, maintenance shutdowns, or other transfer-blocking circumstances, it cannot accept new transfers. For outbound transfers, this is straightforward, as new requests are simply rejected with an error message. However, managing inbound transfers is more complex. Users perceive inbound transfers as transactions to the dedicated **vault**, and since the incoming flow on external chains can't be directly controlled, users might continue sending transfers irrespective of module availability.
 
 Refunding these transfers could be an option, but it's neither efficient nor entirely secure. Therefore, the **quarantine** approach is employed. Transfers that cannot be minted immediately are placed in the **quarantine**, to be processed at a later, more suitable time. Crucially, **quarantine** does not block transfers; it merely defers them. This process is transparent, informing users that their transfers are delayed but will be processed as soon as conditions allow.
 
@@ -166,11 +166,11 @@ There are two methods for managing quarantined assets:
 
 ![quarantine](images/quarantine.png)
 
-For **quarantining**, a queue is utilized instead of a map to allow sequential execution of transfers and to potentially filter out malicious transactions. While this queue cannot completely eliminate all malicious transfers, it can help segregate them and make them less harmful. As a security measure, periodically matching the total supply of minted assets with the balances in external vaults can help identify fraudulent activity.
+For **quarantining**, a queue is utilized instead of a map to allow sequential execution of transfers and to potentially filter out malicious transactions. While this queue cannot eliminate all malicious transfers, it can help segregate them and make them less harmful. As a security measure, periodically matching the total supply of minted assets with the balances in external vaults can help identify fraudulent activity.
 
 ### Validator reviving
 
-The module uses a combination of the finalization flag and the last transfer height value to ensure that validators can join the valset at any time and begin processing transfers from any height without compromising integrity of the bridging process.
+The module uses a combination of the finalization flag and the last transfer height value to ensure that validators can join the valset at any time and begin processing transfers from any height without compromising the integrity of the bridging process.
 
 The last transfer height is crucial for coordinating validators, guiding them to the appropriate starting point for their observations. Validators have the option to rely on this module's height value or to use their own local height checkpoints for starting or continuing observation. The last transfer height, linked to each asset, is updated whenever a transfer involving the asset occurs, calculated as `max(current_last_height, new_last_height)`, where `current_last_height`  is the value from the state, and `new_last_height` is obtained during finalizing the transfer. This is necessary because the module cannot ensure a sequential order for processing transfers.
 
@@ -319,7 +319,7 @@ message QueryParamsResponse {
 
 ### LastTransferHeight
 
-This method allows to get the last transfer height for the provided asset.
+This method allows getting the last transfer height for the provided asset.
 
 ```protobuf
 // LastTransferHeightRequest is the request type for the
@@ -344,7 +344,7 @@ message LastTransferHeightResponse {
 
 ### InboundTransfer
 
-Each validator invokes this method when processing the **MsgInboundTransfer** message. This message contains all information about the transfer, including the unique primary key from the external chain, such as the Bitcoin transaction hash, and the external chain height at which the transfer was witnessed. Can be called only by the members of the **super valset**.
+Each validator invokes this method when processing the **MsgInboundTransfer** message. This message contains all information about the transfer, including the unique primary key from the external chain, such as the Bitcoin transaction hash, and the external chain height at which the transfer was witnessed. This method can be called only by the members of the **super valset**.
 
 ```protobuf
 // MsgInboundTransfer defines the message structure for the InboundTransfer gRPC
@@ -441,7 +441,7 @@ message MsgUpdateParams {
 
 ### ChangeAssetStatus
 
-This method allows to update the status of the given asset. Only members of the **super valset** can invoke this method.
+This method allows updating the status of the given asset. Only members of the **super valset** can invoke this method.
 
 ```protobuf
 // MsgChangeAssetStatus changes the status of the provided asset.
