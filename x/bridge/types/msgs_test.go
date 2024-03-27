@@ -422,9 +422,10 @@ func TestMsgUpdateParams(t *testing.T) {
 				NewParams: types.Params{
 					Signers: []string{addr1, addr2},
 					Assets: []types.Asset{{
-						Id:       assetID1,
-						Status:   types.AssetStatus_ASSET_STATUS_UNSPECIFIED, // invalid status
-						Exponent: types.DefaultBitcoinExponent,
+						Id:                    assetID1,
+						Status:                types.AssetStatus_ASSET_STATUS_UNSPECIFIED, // invalid status
+						Exponent:              types.DefaultBitcoinExponent,
+						ExternalConfirmations: types.DefaultBitcoinConfirmations,
 					}},
 					VotesNeeded: types.DefaultVotesNeeded,
 					Fee:         math.LegacyNewDecWithPrec(5, 1),

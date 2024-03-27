@@ -13,8 +13,9 @@ func DefaultAssets() []Asset {
 				SourceChain: DefaultBitcoinChainName,
 				Denom:       DefaultBitcoinDenomName,
 			},
-			Status:   AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
-			Exponent: DefaultBitcoinExponent,
+			Status:                AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+			Exponent:              DefaultBitcoinExponent,
+			ExternalConfirmations: DefaultBitcoinConfirmations,
 		},
 	}
 }
@@ -34,7 +35,7 @@ func (m Asset) Validate() error {
 		return errorsmod.Wrapf(ErrInvalidAssetStatus, err.Error())
 	}
 
-	// don't check m.Exponent and m.LastTransferHeight since they are always valid
+	// don't check m.Exponent, m.ExternalConfirmations since they are always valid
 
 	return nil
 }
