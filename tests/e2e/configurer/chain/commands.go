@@ -392,18 +392,6 @@ func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords s
 	return n.SubmitProposal(cmd, isExpedited, "tick spacing reduction proposal", isLegacy)
 }
 
-func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
-	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinDepositValue)).String()
-	if isExpedited {
-		deposit = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinExpeditedDepositValue)).String()
-	}
-	cmd := []string{"osmosisd", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully deposited on proposal %d", proposalNumber)
-}
-
 func (n *NodeConfig) VoteYesProposal(from string, proposalNumber int) {
 	n.LogActionF("voting yes on proposal: %d", proposalNumber)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "yes", fmt.Sprintf("--from=%s", from)}
@@ -733,7 +721,6 @@ func (n *NodeConfig) SendIBCNoMutex(srcChain, dstChain *Config, recipient string
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string, isLegacy bool) {
 	propNumber := n.SubmitSuperfluidProposal(denom, isLegacy)
-	n.DepositProposal(propNumber, false)
 
 	AllValsVoteOnProposal(srcChain, propNumber)
 }
