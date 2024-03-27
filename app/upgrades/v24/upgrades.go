@@ -12,8 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
 
+	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
 )
 
@@ -128,7 +128,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 		}
 
 		// This should never happen, this check is defence in depth in case we have wrong data by accident
-		_, isMigrated := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[poolID]
+		_, isMigrated := v23.MigratedIncentiveAccumulatorPoolIDs[poolID]
 		if isMigrated {
 			continue
 		}

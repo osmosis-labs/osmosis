@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 
+	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 )
 
@@ -87,9 +88,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
 
 	// Overwrite the migration list with the desired pool ID.
-	oldMigrationList := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{}
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[lastPoolID] = struct{}{}
+	oldMigrationList := v23.MigratedIncentiveAccumulatorPoolIDs
+	v23.MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{}
+	v23.MigratedIncentiveAccumulatorPoolIDs[lastPoolID] = struct{}{}
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
@@ -109,7 +110,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	//s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
 
 	// Restore the migration list for use by other tests
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs = oldMigrationList
+	v23.MigratedIncentiveAccumulatorPoolIDs = oldMigrationList
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
