@@ -2,6 +2,7 @@ package observer_test
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,17 +16,20 @@ import (
 type MockChain struct {
 	In  chan observer.InboundTransfer
 	Out chan observer.OutboundTransfer
-	H   uint64
-	CR  uint64
+	H   atomic.Uint64
+	CR  atomic.Uint64
 }
 
 func NewMockChain(h uint64, cr uint64) *MockChain {
-	return &MockChain{
+	mc := MockChain{
 		In:  make(chan observer.InboundTransfer),
 		Out: make(chan observer.OutboundTransfer),
-		H:   h,
-		CR:  cr,
+		H:   atomic.Uint64{},
+		CR:  atomic.Uint64{},
 	}
+	mc.H.Store(h)
+	mc.CR.Store(cr)
+	return &mc
 }
 
 func (m *MockChain) SignalInboundTransfer(ctx context.Context, in observer.InboundTransfer) error {
@@ -46,11 +50,11 @@ func (m *MockChain) Stop() error {
 }
 
 func (m *MockChain) Height() (uint64, error) {
-	return m.H, nil
+	return m.H.Load(), nil
 }
 
 func (m *MockChain) ConfirmationsRequired() (uint64, error) {
-	return m.CR, nil
+	return m.CR.Load(), nil
 }
 
 // TestObserver verifies Observer properly receives transfers from src chains
@@ -140,7 +144,7 @@ func TestObserverLowConfirmation(t *testing.T) {
 	case <-time.After(time.Millisecond * 500):
 	}
 	require.False(t, received)
-	btc.H = 20
+	btc.H.Store(20)
 	require.Eventually(t, func() bool {
 		osmoIn = <-osmo.In
 		return true
