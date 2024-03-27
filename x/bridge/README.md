@@ -245,11 +245,15 @@ message AssetID {
 message Asset {
   // ID is the asset's primary key
   AssetID id = 1
-  [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
+      [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
   // Status is a current status of the asset
   AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
   // Exponent represents the power of 10 used for coin representation
   uint64 exponent = 3 [ (gogoproto.moretags) = "yaml:\"exponent\"" ];
+  // ExternalConfirmations is a number of the confirmations on the external
+  // chain needed to consider the transfer confirmed
+  uint64 external_confirmations = 4
+      [ (gogoproto.moretags) = "yaml:\"external_confirmations\"" ];
 }
 
 enum AssetStatus {
