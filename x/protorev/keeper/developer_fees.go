@@ -49,9 +49,13 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 	// Remove the developer profit from the remaining arb profits
 	remainingProfit = arbProfits.Sub(devProfit...)
 
+	ctx.Logger().Error("--initial remaining profit")
+	ctx.Logger().Error(remainingProfit.String())
 	// If the remaining arb profits has the OSMO denom for one of the coins, burn the OSMO by sending to the null address
 	arbProfitsOsmoCoin := sdk.NewCoin(types.OsmosisDenomination, remainingProfit.AmountOf(types.OsmosisDenomination))
 	if arbProfitsOsmoCoin.IsPositive() {
+		ctx.Logger().Error("--sending coins to null address")
+		ctx.Logger().Error(arbProfitsOsmoCoin.String())
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(
 			ctx,
 			types.ModuleName,
@@ -65,6 +69,8 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 
 	// Remove the burned OSMO from the remaining arb profits
 	remainingProfit = remainingProfit.Sub(arbProfitsOsmoCoin)
+	ctx.Logger().Error("--sending remaining profit")
+	ctx.Logger().Error(remainingProfit.String())
 
 	// Send all remaining arb profits to the community pool
 	return k.distributionKeeper.FundCommunityPool(
