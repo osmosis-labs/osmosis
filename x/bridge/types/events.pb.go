@@ -29,8 +29,8 @@ type EventInboundTransfer struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// DestAddr is a destination Osmosis address
 	DestAddr string `protobuf:"bytes,2,opt,name=dest_addr,json=destAddr,proto3" json:"dest_addr,omitempty"`
-	// Asset contains a source chain and a target denom
-	Asset Asset `protobuf:"bytes,3,opt,name=asset,proto3" json:"asset"`
+	// AssetID is the ID of the asset being transferred
+	AssetId AssetID `protobuf:"bytes,3,opt,name=asset_id,json=assetId,proto3" json:"asset_id"`
 	// Amount of coins to transfer
 	Amount cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
 }
@@ -82,11 +82,11 @@ func (m *EventInboundTransfer) GetDestAddr() string {
 	return ""
 }
 
-func (m *EventInboundTransfer) GetAsset() Asset {
+func (m *EventInboundTransfer) GetAssetId() AssetID {
 	if m != nil {
-		return m.Asset
+		return m.AssetId
 	}
-	return Asset{}
+	return AssetID{}
 }
 
 type EventOutboundTransfer struct {
@@ -94,8 +94,8 @@ type EventOutboundTransfer struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// DestAddr is a destination Osmosis address
 	DestAddr string `protobuf:"bytes,2,opt,name=dest_addr,json=destAddr,proto3" json:"dest_addr,omitempty"`
-	// Asset contains a source chain and a target denom
-	Asset Asset `protobuf:"bytes,3,opt,name=asset,proto3" json:"asset"`
+	// AssetID is the ID of the asset being transferred
+	AssetId AssetID `protobuf:"bytes,3,opt,name=asset_id,json=assetId,proto3" json:"asset_id"`
 	// Amount of coins to transfer
 	Amount cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
 }
@@ -147,20 +147,22 @@ func (m *EventOutboundTransfer) GetDestAddr() string {
 	return ""
 }
 
-func (m *EventOutboundTransfer) GetAsset() Asset {
+func (m *EventOutboundTransfer) GetAssetId() AssetID {
 	if m != nil {
-		return m.Asset
+		return m.AssetId
 	}
-	return Asset{}
+	return AssetID{}
 }
 
 type EventUpdateParams struct {
-	NewSigners     []string          `protobuf:"bytes,1,rep,name=new_signers,json=newSigners,proto3" json:"new_signers,omitempty"`
-	CreatedSigners []string          `protobuf:"bytes,2,rep,name=created_signers,json=createdSigners,proto3" json:"created_signers,omitempty"`
-	DeletedSigners []string          `protobuf:"bytes,3,rep,name=deleted_signers,json=deletedSigners,proto3" json:"deleted_signers,omitempty"`
-	NewAssets      []AssetWithStatus `protobuf:"bytes,4,rep,name=new_assets,json=newAssets,proto3" json:"new_assets"`
-	CreatedAssets  []AssetWithStatus `protobuf:"bytes,5,rep,name=created_assets,json=createdAssets,proto3" json:"created_assets"`
-	DeletedAssets  []AssetWithStatus `protobuf:"bytes,6,rep,name=deleted_assets,json=deletedAssets,proto3" json:"deleted_assets"`
+	NewSigners     []string                    `protobuf:"bytes,1,rep,name=new_signers,json=newSigners,proto3" json:"new_signers,omitempty"`
+	CreatedSigners []string                    `protobuf:"bytes,2,rep,name=created_signers,json=createdSigners,proto3" json:"created_signers,omitempty"`
+	DeletedSigners []string                    `protobuf:"bytes,3,rep,name=deleted_signers,json=deletedSigners,proto3" json:"deleted_signers,omitempty"`
+	NewAssets      []Asset                     `protobuf:"bytes,4,rep,name=new_assets,json=newAssets,proto3" json:"new_assets"`
+	CreatedAssets  []Asset                     `protobuf:"bytes,5,rep,name=created_assets,json=createdAssets,proto3" json:"created_assets"`
+	DeletedAssets  []Asset                     `protobuf:"bytes,6,rep,name=deleted_assets,json=deletedAssets,proto3" json:"deleted_assets"`
+	NewVotesNeeded uint64                      `protobuf:"varint,7,opt,name=new_votes_needed,json=newVotesNeeded,proto3" json:"new_votes_needed,omitempty"`
+	NewFee         cosmossdk_io_math.LegacyDec `protobuf:"bytes,8,opt,name=new_fee,json=newFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"new_fee"`
 }
 
 func (m *EventUpdateParams) Reset()         { *m = EventUpdateParams{} }
@@ -217,32 +219,39 @@ func (m *EventUpdateParams) GetDeletedSigners() []string {
 	return nil
 }
 
-func (m *EventUpdateParams) GetNewAssets() []AssetWithStatus {
+func (m *EventUpdateParams) GetNewAssets() []Asset {
 	if m != nil {
 		return m.NewAssets
 	}
 	return nil
 }
 
-func (m *EventUpdateParams) GetCreatedAssets() []AssetWithStatus {
+func (m *EventUpdateParams) GetCreatedAssets() []Asset {
 	if m != nil {
 		return m.CreatedAssets
 	}
 	return nil
 }
 
-func (m *EventUpdateParams) GetDeletedAssets() []AssetWithStatus {
+func (m *EventUpdateParams) GetDeletedAssets() []Asset {
 	if m != nil {
 		return m.DeletedAssets
 	}
 	return nil
 }
 
+func (m *EventUpdateParams) GetNewVotesNeeded() uint64 {
+	if m != nil {
+		return m.NewVotesNeeded
+	}
+	return 0
+}
+
 type EventChangeAssetStatus struct {
-	Sender         string      `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	Asset          Asset       `protobuf:"bytes,2,opt,name=asset,proto3" json:"asset"`
-	OldAssetStatus AssetStatus `protobuf:"varint,3,opt,name=old_asset_status,json=oldAssetStatus,proto3,enum=osmosis.bridge.v1beta1.AssetStatus" json:"old_asset_status,omitempty"`
-	NewAssetStatus AssetStatus `protobuf:"varint,4,opt,name=new_asset_status,json=newAssetStatus,proto3,enum=osmosis.bridge.v1beta1.AssetStatus" json:"new_asset_status,omitempty"`
+	Sender    string      `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	AssetId   AssetID     `protobuf:"bytes,2,opt,name=asset_id,json=assetId,proto3" json:"asset_id"`
+	OldStatus AssetStatus `protobuf:"varint,3,opt,name=old_status,json=oldStatus,proto3,enum=osmosis.bridge.v1beta1.AssetStatus" json:"old_status,omitempty"`
+	NewStatus AssetStatus `protobuf:"varint,4,opt,name=new_status,json=newStatus,proto3,enum=osmosis.bridge.v1beta1.AssetStatus" json:"new_status,omitempty"`
 }
 
 func (m *EventChangeAssetStatus) Reset()         { *m = EventChangeAssetStatus{} }
@@ -285,23 +294,23 @@ func (m *EventChangeAssetStatus) GetSender() string {
 	return ""
 }
 
-func (m *EventChangeAssetStatus) GetAsset() Asset {
+func (m *EventChangeAssetStatus) GetAssetId() AssetID {
 	if m != nil {
-		return m.Asset
+		return m.AssetId
 	}
-	return Asset{}
+	return AssetID{}
 }
 
-func (m *EventChangeAssetStatus) GetOldAssetStatus() AssetStatus {
+func (m *EventChangeAssetStatus) GetOldStatus() AssetStatus {
 	if m != nil {
-		return m.OldAssetStatus
+		return m.OldStatus
 	}
 	return AssetStatus_ASSET_STATUS_UNSPECIFIED
 }
 
-func (m *EventChangeAssetStatus) GetNewAssetStatus() AssetStatus {
+func (m *EventChangeAssetStatus) GetNewStatus() AssetStatus {
 	if m != nil {
-		return m.NewAssetStatus
+		return m.NewStatus
 	}
 	return AssetStatus_ASSET_STATUS_UNSPECIFIED
 }
@@ -318,39 +327,43 @@ func init() {
 }
 
 var fileDescriptor_61b63bd2a1c2ae24 = []byte{
-	// 507 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x94, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0x80, 0xe3, 0x24, 0x8d, 0xc8, 0x45, 0x84, 0x62, 0xb5, 0x91, 0x55, 0x54, 0x27, 0x4a, 0x87,
-	0x66, 0xc1, 0x56, 0x5d, 0x31, 0x30, 0xb6, 0x88, 0xa1, 0x52, 0x2b, 0x90, 0x5b, 0x84, 0xc4, 0x12,
-	0x9d, 0x73, 0x0f, 0xc7, 0x22, 0xbe, 0x8b, 0xee, 0x9d, 0x13, 0xd8, 0x58, 0xd9, 0xf8, 0x43, 0x30,
-	0x77, 0xec, 0x88, 0x18, 0x2a, 0x94, 0xfc, 0x11, 0xe4, 0xf3, 0x39, 0x64, 0xa0, 0x95, 0xda, 0xad,
-	0x9b, 0xfd, 0xee, 0xbb, 0xef, 0xde, 0xbb, 0xf7, 0x74, 0x64, 0x4f, 0x60, 0x2a, 0x30, 0x41, 0x3f,
-	0x92, 0x09, 0x8b, 0xc1, 0x9f, 0x1d, 0x44, 0xa0, 0xe8, 0x81, 0x0f, 0x33, 0xe0, 0x0a, 0xbd, 0xa9,
-	0x14, 0x4a, 0xd8, 0x1d, 0x03, 0x79, 0x05, 0xe4, 0x19, 0x68, 0x67, 0x2b, 0x16, 0xb1, 0xd0, 0x88,
-	0x9f, 0x7f, 0x15, 0xf4, 0xce, 0x4d, 0x4a, 0xb3, 0x59, 0x43, 0xfd, 0x1f, 0x16, 0xd9, 0x7a, 0x9d,
-	0x9f, 0x71, 0xc2, 0x23, 0x91, 0x71, 0x76, 0x21, 0x29, 0xc7, 0x8f, 0x20, 0xed, 0x0e, 0x69, 0x20,
-	0x70, 0x06, 0xd2, 0xb1, 0x7a, 0xd6, 0xa0, 0x19, 0x9a, 0x3f, 0xfb, 0x19, 0x69, 0x32, 0x40, 0x35,
-	0xa4, 0x8c, 0x49, 0xa7, 0xaa, 0x97, 0x1e, 0xe5, 0x81, 0x23, 0xc6, 0xa4, 0xfd, 0x92, 0x6c, 0x50,
-	0x44, 0x50, 0x4e, 0xad, 0x67, 0x0d, 0x5a, 0xc1, 0xae, 0xf7, 0xff, 0x84, 0xbd, 0xa3, 0x1c, 0x3a,
-	0xae, 0x5f, 0x5e, 0x77, 0x2b, 0x61, 0xb1, 0xc3, 0x7e, 0x41, 0x1a, 0x34, 0x15, 0x19, 0x57, 0x4e,
-	0x3d, 0x97, 0x1e, 0xef, 0xe6, 0x8b, 0xbf, 0xaf, 0xbb, 0xdb, 0x23, 0xed, 0x40, 0xf6, 0xc9, 0x4b,
-	0x84, 0x9f, 0x52, 0x35, 0xf6, 0x4e, 0xb8, 0x0a, 0x0d, 0xdc, 0xff, 0x69, 0x91, 0x6d, 0x9d, 0xff,
-	0x9b, 0x4c, 0x3d, 0xc8, 0x02, 0xbe, 0xd6, 0xc8, 0x53, 0x5d, 0xc0, 0xbb, 0x29, 0xa3, 0x0a, 0xde,
-	0x52, 0x49, 0x53, 0xb4, 0xbb, 0xa4, 0xc5, 0x61, 0x3e, 0xc4, 0x24, 0xe6, 0x20, 0xd1, 0xb1, 0x7a,
-	0xb5, 0x41, 0x33, 0x24, 0x1c, 0xe6, 0xe7, 0x45, 0xc4, 0xde, 0x27, 0x4f, 0x46, 0x12, 0xa8, 0x02,
-	0xb6, 0x82, 0xaa, 0x1a, 0x6a, 0x9b, 0xf0, 0x1a, 0xc8, 0x60, 0x02, 0xeb, 0x60, 0xad, 0x00, 0x4d,
-	0xb8, 0x04, 0x4f, 0x49, 0xee, 0x1f, 0xea, 0x62, 0xd0, 0xa9, 0xf7, 0x6a, 0x83, 0x56, 0xb0, 0x7f,
-	0x6b, 0xfd, 0xef, 0x13, 0x35, 0x3e, 0x57, 0x54, 0x65, 0x68, 0x6e, 0xa2, 0xc9, 0x61, 0xae, 0x57,
-	0xd0, 0xbe, 0x20, 0x65, 0x22, 0xa5, 0x71, 0xe3, 0x3e, 0xc6, 0xc7, 0x46, 0xf2, 0xcf, 0x5a, 0x16,
-	0x63, 0xac, 0x8d, 0x7b, 0x59, 0x8d, 0xa4, 0xb0, 0xf6, 0xbf, 0x55, 0x49, 0x47, 0xb7, 0xe0, 0xd5,
-	0x98, 0xf2, 0x18, 0x74, 0xb4, 0xe0, 0x6f, 0x1c, 0xa2, 0xd5, 0x9c, 0x54, 0xef, 0x3c, 0x27, 0x67,
-	0x64, 0x53, 0x4c, 0x4c, 0xfe, 0x43, 0xd4, 0xc7, 0xe8, 0x69, 0x6b, 0x07, 0x7b, 0xb7, 0x5a, 0x8a,
-	0x8c, 0xc2, 0xb6, 0x98, 0xb0, 0xf5, 0x0c, 0xcf, 0xc8, 0xe6, 0xaa, 0x6d, 0xa5, 0xae, 0x7e, 0x07,
-	0x5d, 0xd9, 0x32, 0x73, 0x41, 0xa7, 0x97, 0x0b, 0xd7, 0xba, 0x5a, 0xb8, 0xd6, 0x9f, 0x85, 0x6b,
-	0x7d, 0x5f, 0xba, 0x95, 0xab, 0xa5, 0x5b, 0xf9, 0xb5, 0x74, 0x2b, 0x1f, 0x82, 0x38, 0x51, 0xe3,
-	0x2c, 0xf2, 0x46, 0x22, 0xf5, 0x8d, 0xf8, 0xf9, 0x84, 0x46, 0x58, 0xfe, 0xf8, 0xb3, 0xe0, 0xd0,
-	0xff, 0x5c, 0x3e, 0x36, 0xea, 0xcb, 0x14, 0x30, 0x6a, 0xe8, 0x47, 0xe6, 0xf0, 0x6f, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0xed, 0xe6, 0x79, 0xac, 0xde, 0x04, 0x00, 0x00,
+	// 563 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x94, 0xcf, 0x6e, 0x13, 0x3f,
+	0x10, 0xc7, 0xe3, 0x24, 0xbf, 0xfc, 0x71, 0xf4, 0x0b, 0xb0, 0x6a, 0xa3, 0x55, 0xab, 0x6e, 0xa2,
+	0xe4, 0xc0, 0x5e, 0xd8, 0x55, 0x03, 0xdc, 0x38, 0xd0, 0x50, 0x90, 0x82, 0x2a, 0x40, 0x5b, 0xe0,
+	0xc0, 0x65, 0xe5, 0x8d, 0xa7, 0x9b, 0x15, 0x89, 0x1d, 0xad, 0x9d, 0x84, 0xbe, 0x05, 0x0f, 0x05,
+	0x52, 0xc5, 0xa9, 0x47, 0xc4, 0xa1, 0x42, 0xc9, 0x5b, 0x70, 0x42, 0xf6, 0x7a, 0x21, 0x12, 0xb4,
+	0xa2, 0xdc, 0xb8, 0x79, 0xc6, 0x9f, 0xf9, 0xce, 0x8c, 0x67, 0x64, 0xdc, 0xe3, 0x62, 0xca, 0x45,
+	0x22, 0xfc, 0x28, 0x4d, 0x68, 0x0c, 0xfe, 0x62, 0x3f, 0x02, 0x49, 0xf6, 0x7d, 0x58, 0x00, 0x93,
+	0xc2, 0x9b, 0xa5, 0x5c, 0x72, 0xab, 0x65, 0x20, 0x2f, 0x83, 0x3c, 0x03, 0xed, 0x6c, 0xc5, 0x3c,
+	0xe6, 0x1a, 0xf1, 0xd5, 0x29, 0xa3, 0x77, 0x2e, 0x93, 0x34, 0xc1, 0x1a, 0xea, 0x7e, 0x40, 0x78,
+	0xeb, 0xb1, 0xca, 0x31, 0x64, 0x11, 0x9f, 0x33, 0xfa, 0x32, 0x25, 0x4c, 0x9c, 0x40, 0x6a, 0xb5,
+	0x70, 0x45, 0x00, 0xa3, 0x90, 0xda, 0xa8, 0x83, 0xdc, 0x7a, 0x60, 0x2c, 0x6b, 0x17, 0xd7, 0x29,
+	0x08, 0x19, 0x12, 0x4a, 0x53, 0xbb, 0xa8, 0xaf, 0x6a, 0xca, 0x71, 0x40, 0x69, 0x6a, 0x3d, 0xc4,
+	0x35, 0x22, 0x04, 0xc8, 0x30, 0xa1, 0x76, 0xa9, 0x83, 0xdc, 0x46, 0xbf, 0xed, 0xfd, 0xbe, 0x66,
+	0xef, 0x40, 0x71, 0xc3, 0xc3, 0x41, 0xf9, 0xec, 0xa2, 0x5d, 0x08, 0xaa, 0x3a, 0x6c, 0x48, 0xad,
+	0xfb, 0xb8, 0x42, 0xa6, 0x7c, 0xce, 0xa4, 0x5d, 0x56, 0xda, 0x83, 0x3d, 0x75, 0xfd, 0xe5, 0xa2,
+	0xbd, 0x3d, 0xd2, 0x3a, 0x82, 0xbe, 0xf5, 0x12, 0xee, 0x4f, 0x89, 0x1c, 0x7b, 0x43, 0x26, 0x03,
+	0x03, 0x77, 0x3f, 0x22, 0xbc, 0xad, 0xdb, 0x78, 0x3e, 0x97, 0xff, 0x72, 0x1f, 0x9f, 0x4a, 0xf8,
+	0x96, 0xee, 0xe3, 0xd5, 0x8c, 0x12, 0x09, 0x2f, 0x48, 0x4a, 0xa6, 0xc2, 0x6a, 0xe3, 0x06, 0x83,
+	0x65, 0x28, 0x92, 0x98, 0x41, 0x2a, 0x6c, 0xd4, 0x29, 0xb9, 0xf5, 0x00, 0x33, 0x58, 0x1e, 0x67,
+	0x1e, 0xeb, 0x36, 0xbe, 0x31, 0x4a, 0x81, 0x48, 0xa0, 0x3f, 0xa0, 0xa2, 0x86, 0x9a, 0xc6, 0xbd,
+	0x01, 0x52, 0x98, 0xc0, 0x26, 0x58, 0xca, 0x40, 0xe3, 0xce, 0xc1, 0x01, 0x56, 0xfa, 0xa1, 0x6e,
+	0x47, 0xd8, 0xe5, 0x4e, 0xc9, 0x6d, 0xf4, 0xf7, 0xae, 0x7c, 0x03, 0xf3, 0x02, 0x75, 0x06, 0x4b,
+	0x6d, 0x0b, 0xeb, 0x29, 0xce, 0xd3, 0xe7, 0x3a, 0xff, 0xfd, 0xb9, 0xce, 0xff, 0x26, 0xf4, 0xa7,
+	0x56, 0x5e, 0xb8, 0xd1, 0xaa, 0x5c, 0x43, 0xcb, 0x84, 0x1a, 0x2d, 0x17, 0xdf, 0x54, 0xbd, 0x2d,
+	0xb8, 0x04, 0x11, 0x32, 0x00, 0x0a, 0xd4, 0xae, 0x76, 0x90, 0x5b, 0x0e, 0x9a, 0x0c, 0x96, 0xaf,
+	0x95, 0xfb, 0x99, 0xf6, 0x5a, 0x0f, 0x70, 0x55, 0x91, 0x27, 0x00, 0x76, 0x4d, 0x8f, 0xb1, 0x67,
+	0xc6, 0xb8, 0xfb, 0xeb, 0x18, 0x8f, 0x20, 0x26, 0xa3, 0xd3, 0x43, 0x18, 0x05, 0x15, 0x06, 0xcb,
+	0x27, 0x00, 0xdd, 0x6f, 0x08, 0xb7, 0xf4, 0x30, 0x1f, 0x8d, 0x09, 0x8b, 0x41, 0x67, 0x3f, 0x96,
+	0x44, 0xce, 0xc5, 0xa5, 0x5b, 0xb9, 0xb9, 0x78, 0xc5, 0xbf, 0x5a, 0xbc, 0x01, 0xc6, 0x7c, 0x42,
+	0x43, 0xa1, 0xf3, 0xe8, 0xe5, 0x6d, 0xf6, 0x7b, 0x57, 0x6a, 0x64, 0x25, 0x05, 0x75, 0x3e, 0xa1,
+	0xa6, 0x3a, 0x33, 0x7c, 0xa3, 0x51, 0xbe, 0x86, 0x86, 0xda, 0x49, 0x7d, 0x1c, 0x1c, 0x9d, 0xad,
+	0x1c, 0x74, 0xbe, 0x72, 0xd0, 0xd7, 0x95, 0x83, 0xde, 0xaf, 0x9d, 0xc2, 0xf9, 0xda, 0x29, 0x7c,
+	0x5e, 0x3b, 0x85, 0x37, 0xfd, 0x38, 0x91, 0xe3, 0x79, 0xe4, 0x8d, 0xf8, 0xd4, 0x37, 0x9a, 0x77,
+	0x26, 0x24, 0x12, 0xb9, 0xe1, 0x2f, 0xfa, 0xf7, 0xfc, 0x77, 0xf9, 0xaf, 0x25, 0x4f, 0x67, 0x20,
+	0xa2, 0x8a, 0xfe, 0xad, 0xee, 0x7e, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x2c, 0xe3, 0xa1, 0x1f, 0x27,
+	0x05, 0x00, 0x00,
 }
 
 func (m *EventInboundTransfer) Marshal() (dAtA []byte, err error) {
@@ -384,7 +397,7 @@ func (m *EventInboundTransfer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0x22
 	{
-		size, err := m.Asset.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.AssetId.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -441,7 +454,7 @@ func (m *EventOutboundTransfer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0x22
 	{
-		size, err := m.Asset.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.AssetId.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -487,6 +500,21 @@ func (m *EventUpdateParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.NewFee.Size()
+		i -= size
+		if _, err := m.NewFee.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintEvents(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x42
+	if m.NewVotesNeeded != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.NewVotesNeeded))
+		i--
+		dAtA[i] = 0x38
+	}
 	if len(m.DeletedAssets) > 0 {
 		for iNdEx := len(m.DeletedAssets) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -579,18 +607,18 @@ func (m *EventChangeAssetStatus) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
-	if m.NewAssetStatus != 0 {
-		i = encodeVarintEvents(dAtA, i, uint64(m.NewAssetStatus))
+	if m.NewStatus != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.NewStatus))
 		i--
 		dAtA[i] = 0x20
 	}
-	if m.OldAssetStatus != 0 {
-		i = encodeVarintEvents(dAtA, i, uint64(m.OldAssetStatus))
+	if m.OldStatus != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.OldStatus))
 		i--
 		dAtA[i] = 0x18
 	}
 	{
-		size, err := m.Asset.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.AssetId.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -634,7 +662,7 @@ func (m *EventInboundTransfer) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = m.Asset.Size()
+	l = m.AssetId.Size()
 	n += 1 + l + sovEvents(uint64(l))
 	l = m.Amount.Size()
 	n += 1 + l + sovEvents(uint64(l))
@@ -655,7 +683,7 @@ func (m *EventOutboundTransfer) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = m.Asset.Size()
+	l = m.AssetId.Size()
 	n += 1 + l + sovEvents(uint64(l))
 	l = m.Amount.Size()
 	n += 1 + l + sovEvents(uint64(l))
@@ -704,6 +732,11 @@ func (m *EventUpdateParams) Size() (n int) {
 			n += 1 + l + sovEvents(uint64(l))
 		}
 	}
+	if m.NewVotesNeeded != 0 {
+		n += 1 + sovEvents(uint64(m.NewVotesNeeded))
+	}
+	l = m.NewFee.Size()
+	n += 1 + l + sovEvents(uint64(l))
 	return n
 }
 
@@ -717,13 +750,13 @@ func (m *EventChangeAssetStatus) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = m.Asset.Size()
+	l = m.AssetId.Size()
 	n += 1 + l + sovEvents(uint64(l))
-	if m.OldAssetStatus != 0 {
-		n += 1 + sovEvents(uint64(m.OldAssetStatus))
+	if m.OldStatus != 0 {
+		n += 1 + sovEvents(uint64(m.OldStatus))
 	}
-	if m.NewAssetStatus != 0 {
-		n += 1 + sovEvents(uint64(m.NewAssetStatus))
+	if m.NewStatus != 0 {
+		n += 1 + sovEvents(uint64(m.NewStatus))
 	}
 	return n
 }
@@ -829,7 +862,7 @@ func (m *EventInboundTransfer) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Asset", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -856,7 +889,7 @@ func (m *EventInboundTransfer) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Asset.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.AssetId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1010,7 +1043,7 @@ func (m *EventOutboundTransfer) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Asset", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1037,7 +1070,7 @@ func (m *EventOutboundTransfer) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Asset.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.AssetId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1250,7 +1283,7 @@ func (m *EventUpdateParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NewAssets = append(m.NewAssets, AssetWithStatus{})
+			m.NewAssets = append(m.NewAssets, Asset{})
 			if err := m.NewAssets[len(m.NewAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1284,7 +1317,7 @@ func (m *EventUpdateParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CreatedAssets = append(m.CreatedAssets, AssetWithStatus{})
+			m.CreatedAssets = append(m.CreatedAssets, Asset{})
 			if err := m.CreatedAssets[len(m.CreatedAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1318,8 +1351,61 @@ func (m *EventUpdateParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DeletedAssets = append(m.DeletedAssets, AssetWithStatus{})
+			m.DeletedAssets = append(m.DeletedAssets, Asset{})
 			if err := m.DeletedAssets[len(m.DeletedAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewVotesNeeded", wireType)
+			}
+			m.NewVotesNeeded = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NewVotesNeeded |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewFee", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.NewFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1407,7 +1493,7 @@ func (m *EventChangeAssetStatus) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Asset", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1434,15 +1520,15 @@ func (m *EventChangeAssetStatus) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Asset.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.AssetId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OldAssetStatus", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OldStatus", wireType)
 			}
-			m.OldAssetStatus = 0
+			m.OldStatus = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -1452,16 +1538,16 @@ func (m *EventChangeAssetStatus) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OldAssetStatus |= AssetStatus(b&0x7F) << shift
+				m.OldStatus |= AssetStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NewAssetStatus", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NewStatus", wireType)
 			}
-			m.NewAssetStatus = 0
+			m.NewStatus = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -1471,7 +1557,7 @@ func (m *EventChangeAssetStatus) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NewAssetStatus |= AssetStatus(b&0x7F) << shift
+				m.NewStatus |= AssetStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

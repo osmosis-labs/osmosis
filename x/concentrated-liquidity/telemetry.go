@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 // emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates

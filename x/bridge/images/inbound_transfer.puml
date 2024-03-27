@@ -1,0 +1,116 @@
+@startuml
+
+actor "Client" as client
+node "BTC vault" as vault
+
+client --> vault : send BTC
+
+folder "Valset" as valset1 {
+    cloud "Validator 1" as val1 #lightgreen
+    cloud "Validator 2" as val2
+    cloud "Validator 3" as val3 #lightgreen
+    cloud "Validator 4" as val4
+    cloud "Validator 5" as val5 #lightgreen
+}
+
+note bottom of valset1
+    Green validators are
+    running x/bridge observers.
+
+    Let's say that we need **three**
+    votes to process the transfer.
+end note
+
+folder "Valset" as valset2 {
+    cloud "Validator 1" as val1_2 #lightgreen
+    cloud "Validator 2" as val2_2
+    cloud "Validator 3" as val3_2 #lightgreen
+    cloud "Validator 4" as val4_2
+    cloud "Validator 5" as val5_2 #lightgreen
+}
+
+vault <-- val1 : observe
+vault <-- val3 : observe
+vault <-- val5 : observe
+
+node "Chain proposer" as proposer
+
+val1 --> proposer : MsgInboundTransfer
+val3 --> proposer : MsgInboundTransfer
+val5 --> proposer : MsgInboundTransfer
+
+json Block {
+   "1":"MsgInboundTransfer",
+   "2":"MsgInboundTransfer",
+   "3":"MsgInboundTransfer"
+}
+
+proposer --> Block : forms a block to process
+
+Block <-- val1_2 : process
+Block <-- val2_2 : process
+Block <-- val3_2 : process
+Block <-- val4_2 : process
+Block <-- val5_2 : process
+
+node "x/bridge" as val1_act_1
+node "x/bridge" as val2_act_1
+node "x/bridge" as val3_act_1
+node "x/bridge" as val4_act_1
+node "x/bridge" as val5_act_1
+
+val1_2 --> val1_act_1
+val2_2 --> val2_act_1
+val3_2 --> val3_act_1 : Process each\nMsgInboundTransfer
+val4_2 --> val4_act_1
+val5_2 --> val5_act_1
+
+action "Accumulate votes x3" as val1_act_2
+action "Accumulate votes x3" as val2_act_2
+action "Accumulate votes x3" as val3_act_2
+action "Accumulate votes x3" as val4_act_2
+action "Accumulate votes x3" as val5_act_2
+
+val1_act_1 --> val1_act_2
+val2_act_1 --> val2_act_2
+val3_act_1 --> val3_act_2
+val4_act_1 --> val4_act_2
+val5_act_1 --> val5_act_2
+
+action "**Mint** to the dest addr" as val1_act_3
+action "**Mint** to the dest addr" as val2_act_3
+action "**Mint** to the dest addr" as val3_act_3
+action "**Mint** to the dest addr" as val4_act_3
+action "**Mint** to the dest addr" as val5_act_3
+
+val1_act_2 --> val1_act_3
+val2_act_2 --> val2_act_3
+val3_act_2 --> val3_act_3
+val4_act_2 --> val4_act_3
+val5_act_2 --> val5_act_3
+
+action "Finalize the transfer" as val1_act_4
+action "Finalize the transfer" as val2_act_4
+action "Finalize the transfer" as val3_act_4
+action "Finalize the transfer" as val4_act_4
+action "Finalize the transfer" as val5_act_4
+
+val1_act_3 --> val1_act_4
+val2_act_3 --> val2_act_4
+val3_act_3 --> val3_act_4
+val4_act_3 --> val4_act_4
+val5_act_3 --> val5_act_4
+
+action "Consensus!" as consensus
+
+val1_act_4 --> consensus
+val2_act_4 --> consensus
+val3_act_4 --> consensus
+val4_act_4 --> consensus
+val5_act_4 --> consensus
+
+actor "Happy client" as client1 #lightgreen;line:green;line.bold;text:green
+
+consensus --> client1  :coins are minted to the destination addr
+
+@enduml

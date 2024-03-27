@@ -18,4 +18,7 @@ var (
 	ErrCantChangeAssetStatus = errorsmod.Register(ModuleName, 9, "can't change asset status")
 	ErrCantCreateAsset       = errorsmod.Register(ModuleName, 10, "can't create asset")
 	ErrTokenfactory          = errorsmod.Register(ModuleName, 11, "tokenfactory error")
+	ErrInvalidAssetID        = errorsmod.Register(ModuleName, 12, "invalid asset id")
+	ErrInvalidFee            = errorsmod.Register(ModuleName, 13, "invalid fee")
+	ErrInvalidExternalID     = errorsmod.Register(ModuleName, 14, "invalid external id")
 )

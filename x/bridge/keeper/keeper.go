@@ -5,13 +5,18 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 type Keeper struct {
+	storeKey storetypes.StoreKey
+	cdc      codec.BinaryCodec
+
 	// paramSpace stores module's params
 	paramSpace paramtypes.Subspace
 	// router is used to access tokenfactory methods
@@ -25,6 +30,8 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of the x/bridge keeper.
 func NewKeeper(
+	storeKey storetypes.StoreKey,
+	cdc codec.BinaryCodec,
 	paramSpace paramtypes.Subspace,
 	router *baseapp.MsgServiceRouter,
 	accountKeeper types.AccountKeeper,
@@ -40,6 +47,8 @@ func NewKeeper(
 	}
 
 	return Keeper{
+		storeKey:      storeKey,
+		cdc:           cdc,
 		paramSpace:    paramSpace,
 		router:        router,
 		accountKeeper: accountKeeper,
