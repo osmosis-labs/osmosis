@@ -37,10 +37,7 @@ func (q queryServer) LastTransferHeight(
 ) (*types.LastTransferHeightResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	height, err := q.k.GetLastTransferHeight(ctx, req.AssetId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.LastTransferHeightResponse{LastTransferHeight: height}, nil
+	return &types.LastTransferHeightResponse{
+		LastTransferHeight: q.k.GetLastTransferHeight(ctx, req.AssetId),
+	}, nil
 }

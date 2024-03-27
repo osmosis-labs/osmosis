@@ -74,14 +74,14 @@ func (k Keeper) SaveFinalizedTransfer(ctx sdk.Context, externalID string) {
 }
 
 // GetLastTransferHeight returns the last transfer height for the given asset.
-func (k Keeper) GetLastTransferHeight(ctx sdk.Context, assetID types.AssetID) (uint64, error) {
+// Return 0 if the value was not found.
+func (k Keeper) GetLastTransferHeight(ctx sdk.Context, assetID types.AssetID) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.LastHeightKey(assetID))
 	if b == nil {
-		return 0, sdkerrors.ErrNotFound
+		return 0
 	}
-
-	return binary.BigEndian.Uint64(b), nil
+	return binary.BigEndian.Uint64(b)
 }
 
 // UpdateLastAssetHeight properly updates the last transfer height of the asset. If the height

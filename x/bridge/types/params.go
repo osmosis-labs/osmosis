@@ -36,7 +36,7 @@ func NewParams(
 // DefaultParams creates default x/bridge params.
 func DefaultParams() Params {
 	return Params{
-		Signers:     []string{},
+		Signers:     nil,
 		Assets:      DefaultAssets(),
 		VotesNeeded: DefaultVotesNeeded,
 		Fee:         math.LegacyZeroDec(),

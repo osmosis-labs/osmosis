@@ -3,7 +3,9 @@ package v24
 import (
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	bridgetypes "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -15,7 +17,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{ibcwasmtypes.StoreKey, icacontrollertypes.StoreKey},
+		Added:   []string{ibcwasmtypes.StoreKey, icacontrollertypes.StoreKey, bridgetypes.StoreKey},
 		Deleted: []string{},
 	},
 }

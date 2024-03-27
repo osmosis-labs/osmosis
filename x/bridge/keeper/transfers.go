@@ -51,7 +51,7 @@ func (k Keeper) InboundTransfer(
 		params.VotesNeeded,
 	)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrLogic, "Can't finalize inbound trander: %s", err.Error())
+		return errorsmod.Wrapf(types.ErrCantFinalizeTransfer, "Can't finalize inbound trander: %s", err.Error())
 	}
 	if !finalized {
 		// The transfer either doesn't have enough votes or has already been finalised
