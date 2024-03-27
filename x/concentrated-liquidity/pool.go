@@ -444,9 +444,9 @@ func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
 	return positionID, nil
 }
 
-// MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
+// MigrateIncentivesAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
 // and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
-func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) MigrateIncentivesAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
 	ctx.Logger().Info("migration start", "pool_id", poolId)
 	// Get pool-global incentive accumulator
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
@@ -511,6 +511,83 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		for i, uptimeTracker := range uptimeTrackers.List {
 			uptimeTrackers.List[i].UptimeGrowthOutside = uptimeTracker.UptimeGrowthOutside.MulDecTruncate(perUnitLiqScalingFactor)
 		}
+
+		// Overwrite the tick's accumulator with the new value
+		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
+	}
+
+	ctx.Logger().Info("migration end", "pool_id", poolId)
+	return nil
+}
+
+// MigrateSpreadFactorAccumulatorToScalingFactor multiplies the value of the spread reward accumulator, respective position accumulators
+// and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
+func (k Keeper) MigrateSpreadFactorAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+	ctx.Logger().Info("migration start", "pool_id", poolId)
+	// Get the spread reward accumulator for the pool.
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Update the spread reward accumulator's value by multiplying it by the per-unit liquidity scaling factor.
+	value := spreadRewardAccumulator.GetValue().MulDecTruncate(perUnitLiqScalingFactor)
+	if err := accum.OverwriteAccumulatorUnsafe(ctx.KVStore(k.storeKey), types.KeySpreadRewardPoolAccumulator(poolId), value, spreadRewardAccumulator.GetTotalShares()); err != nil {
+		return err
+	}
+
+	// Get all position IDs for the pool.
+	positionIDs, err := k.GetPositionIDsByPoolID(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("num_positions", "count", len(positionIDs))
+
+	// For each position ID, multiply the value by the per-unit liquidity scaling factor
+	// and overwrite the accumulator with the new value.
+	for _, positionId := range positionIDs {
+		// Get the position with the given ID.
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return err
+		}
+
+		// Get the key for the position's accumulator in the spread reward accumulator.
+		positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
+
+		// Check if the position exists in the spread reward accumulator.
+		hasPosition := spreadRewardAccumulator.HasPosition(positionKey)
+		if !hasPosition {
+			return types.SpreadRewardPositionNotFoundError{PositionId: positionId}
+		}
+
+		// Compute the spread reward growth outside of the range between the position's lower and upper ticks.
+		spreadRewardGrowthOutside, err := k.getSpreadRewardGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
+		if err != nil {
+			return err
+		}
+
+		// Multiply the value by the per-unit liquidity scaling factor
+		newValue := spreadRewardGrowthOutside.MulDecTruncate(perUnitLiqScalingFactor)
+
+		// Overwrite the position accumulator with the new value
+		if err := spreadRewardAccumulator.SetPositionIntervalAccumulation(positionKey, newValue); err != nil {
+			return err
+		}
+	}
+
+	// Retrieve all ticks for the pool
+	ticks, err := k.GetAllInitializedTicksForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("num_ticks", "count", len(ticks))
+
+	// For each tick, scale the value of the spread reward accumulator tracker.
+	for _, tick := range ticks {
+		tick.Info.SpreadRewardGrowthOppositeDirectionOfLastTraversal = tick.Info.SpreadRewardGrowthOppositeDirectionOfLastTraversal.MulDecTruncate(perUnitLiqScalingFactor)
 
 		// Overwrite the tick's accumulator with the new value
 		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)

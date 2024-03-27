@@ -2835,7 +2835,8 @@ func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
 			swapState.SetGlobalSpreadRewardGrowth(osmomath.ZeroDec())
 
 			// System under test.
-			swapState.UpdateSpreadRewardGrowthGlobal(tc.spreadRewardChargeTotal)
+			// TODO: Dont hardcode one here
+			swapState.UpdateSpreadRewardGrowthGlobal(tc.spreadRewardChargeTotal, sdk.OneDec())
 
 			// Assertion.
 			s.Require().Equal(tc.expectedSpreadRewardGrowthGlobal, swapState.GetGlobalSpreadRewardGrowthPerUnitLiquidity())

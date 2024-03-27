@@ -1133,7 +1133,7 @@ func (k Keeper) getIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64)
 	return oneDecScalingFactor, nil
 }
 
-// SetIncentivePoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID.
+// SetIncentivePoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID for incentive accumulators.
 func (k Keeper) SetIncentivePoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
 	// Set the pool ID migration threshold to the last pool ID
 	store := ctx.KVStore(k.storeKey)
@@ -1141,7 +1141,7 @@ func (k Keeper) SetIncentivePoolIDMigrationThreshold(ctx sdk.Context, poolIDThre
 	store.Set(types.KeyIncentiveAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
 }
 
-// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold.
+// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold for incentive accumulators.
 func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -1149,6 +1149,53 @@ func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, e
 
 	if bz == nil {
 		return 0, fmt.Errorf("incentive accumulator migration threshold not found")
+	}
+
+	threshold := sdk.BigEndianToUint64(bz)
+
+	return threshold, nil
+}
+
+// getSpreadFactorScalingFactorForPool returns the scaling factor for the given pool.
+// It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
+// It returns oneDecScalingFactor otherwise.
+func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	migrationThreshold, err := k.GetSpreadFactorPoolIDMigrationThreshold(ctx)
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+
+	// If the given pool ID is greater than the migration threshold, we return the perUnitLiqScalingFactor.
+	if poolID > migrationThreshold {
+		return perUnitLiqScalingFactor, nil
+	}
+
+	// If the given pool ID is in the migrated spread factor accumulator pool IDs, we return the perUnitLiqScalingFactor.
+	_, isMigrated := types.MigratedSpreadFactorAccumulatorPoolIDs[poolID]
+	if isMigrated {
+		return perUnitLiqScalingFactor, nil
+	}
+
+	// Otherwise, we return the oneDecScalingFactor.
+	return oneDecScalingFactor, nil
+}
+
+// SetSpreadFactorPoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID for spread factor accumulators.
+func (k Keeper) SetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
+	// Set the pool ID migration threshold to the last pool ID
+	store := ctx.KVStore(k.storeKey)
+
+	store.Set(types.KeySpreadRewardAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
+}
+
+// GetSpreadFactorPoolIDMigrationThreshold returns the pool ID migration threshold for spread factor accumulators.
+func (k Keeper) GetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.KeySpreadRewardAccumulatorMigrationThreshold)
+
+	if bz == nil {
+		return 0, fmt.Errorf("spread reward accumulator migration threshold not found")
 	}
 
 	threshold := sdk.BigEndianToUint64(bz)

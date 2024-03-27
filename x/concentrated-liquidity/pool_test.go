@@ -853,7 +853,7 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 
 	// System under test.
-	err = s.App.ConcentratedLiquidityKeeper.MigrateAccumulatorToScalingFactor(s.Ctx, poolID)
+	err = s.App.ConcentratedLiquidityKeeper.MigrateIncentivesAccumulatorToScalingFactor(s.Ctx, poolID)
 	s.Require().NoError(err)
 
 	// Note: we must now reset the migration threshold so that a scaling factor is chosen appropriately for this pool.
