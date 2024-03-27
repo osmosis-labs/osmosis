@@ -7,14 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
-
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v24/app/keepers"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 )
 
 const (

@@ -22,9 +22,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer/osmosis"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer/osmosis"
 )
 
 var (

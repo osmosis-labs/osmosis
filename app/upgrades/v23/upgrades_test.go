@@ -12,10 +12,9 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
 )
 
 const (
