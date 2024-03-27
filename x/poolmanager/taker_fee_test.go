@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 // validates that the pool manager keeper can charge taker fees correctly.

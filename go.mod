@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v23
+module github.com/osmosis-labs/osmosis/v24
 
 go 1.21
 
@@ -35,7 +35,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240312193551-6c010fa93f60
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312193551-6c010fa93f60
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/redis/go-redis/v9 v9.5.1
@@ -409,7 +409,7 @@ replace (
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

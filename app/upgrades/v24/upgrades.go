@@ -5,12 +5,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v24/app/keepers"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 )
 
 func CreateUpgradeHandler(
