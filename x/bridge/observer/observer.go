@@ -2,118 +2,148 @@ package observer
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"sync"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cometbft/cometbft/libs/pubsub/query"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	comettypes "github.com/cometbft/cometbft/types"
 )
 
-const ModuleNameObserver = "observer"
+const ModuleName = "observer"
 
 type Observer struct {
-	logger        log.Logger
-	cometRpc      *rpchttp.HTTP
-	stopChan      chan struct{}
-	eventsOutChan chan abcitypes.Event
+	logger     log.Logger
+	chains     map[ChainId]Chain
+	outTxQueue map[ChainId][]OutboundTransfer
+	outLock    sync.Mutex
+	sendPeriod time.Duration
+	stopChan   chan struct{}
 }
 
-// NewObserver returns new instance of `Observer` with RPC client created
-func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
-	if len(rpcUrl) == 0 {
-		return Observer{}, errors.New("RPC URL can't be empty")
-	}
-
-	rpc, err := rpchttp.New(rpcUrl, "/websocket")
-	if err != nil {
-		return Observer{}, errorsmod.Wrapf(err, "Failed to create RPC client")
-	}
-
+// NewObserver returns new instance of `Observer`
+func NewObserver(logger log.Logger, chains map[ChainId]Chain, sendPeriod time.Duration) Observer {
 	return Observer{
-		logger:        logger.With("module", ModuleNameObserver),
-		cometRpc:      rpc,
-		stopChan:      make(chan struct{}),
-		eventsOutChan: make(chan abcitypes.Event),
-	}, nil
+		logger:     logger.With("module", ModuleName),
+		chains:     chains,
+		outTxQueue: make(map[ChainId][]OutboundTransfer),
+		outLock:    sync.Mutex{},
+		sendPeriod: sendPeriod,
+		stopChan:   make(chan struct{}),
+	}
 }
 
-// Start starts the RPC client, subscribes to events for provided query and starts listening to the events
-func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
-	err := o.cometRpc.Start()
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to start RPC client")
+// Start starts all underlying chains and starts processing transfers
+func (o *Observer) Start(ctx context.Context) error {
+	for id, c := range o.chains {
+		err := c.Start(ctx)
+		if err != nil {
+			return errorsmod.Wrapf(err, "Failed to start chain %s", id)
+		}
 	}
 
-	query, err := query.New(queryStr)
-	if err != nil {
-		return errorsmod.Wrapf(err, "Invalid query")
-	}
-
-	txs, err := o.cometRpc.Subscribe(ctx, ModuleNameObserver, query.String())
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to subscribe to RPC client")
-	}
-
-	o.logger.Info("Observer starting listening for events at RPC", o.cometRpc.Remote())
-	go o.processEvents(ctx, txs, observeEvents)
+	go o.collectOutbound()
+	go o.processOutbound(ctx)
 
 	return nil
 }
 
-// Stop stops listening to events, unsubscribes from the RPC client and stops the RPC channel
-func (o *Observer) Stop(ctx context.Context) error {
+// Stop stops all underlying chains and stops processing transfers
+func (o *Observer) Stop() error {
 	close(o.stopChan)
-	if err := o.cometRpc.UnsubscribeAll(ctx, ModuleNameObserver); err != nil {
-		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
+	for id, c := range o.chains {
+		err := c.Stop()
+		if err != nil {
+			return errorsmod.Wrapf(err, "Failed to stop chain %s", id)
+		}
 	}
-	return o.cometRpc.Stop()
+	return nil
 }
 
-// Events returns receive-only part of the observed events
-func (o *Observer) Events() <-chan abcitypes.Event {
-	return o.eventsOutChan
-}
-
-func (o *Observer) processEvents(ctx context.Context, txs <-chan coretypes.ResultEvent, observeEvents []string) {
-	defer close(o.eventsOutChan)
-	events := make(map[string]struct{})
-	for _, e := range observeEvents {
-		events[e] = struct{}{}
+func (o *Observer) collectOutbound() {
+	aggregate := make(chan struct {
+		ChainId
+		OutboundTransfer
+	})
+	for id, chain := range o.chains {
+		go func(id ChainId, ch <-chan OutboundTransfer) {
+			for t := range ch {
+				select {
+				case aggregate <- struct {
+					ChainId
+					OutboundTransfer
+				}{id, t}:
+				case <-o.stopChan:
+					return
+				}
+			}
+		}(id, chain.ListenOutboundTransfer())
 	}
 
 	for {
 		select {
 		case <-o.stopChan:
 			return
-		case event := <-txs:
-			if newBlock, ok := event.Data.(comettypes.EventDataNewBlock); ok {
-				results, err := o.cometRpc.BlockResults(ctx, &newBlock.Block.Height)
-				if err != nil {
-					o.logger.Error("Observer failed to fetch block results for block", newBlock.Block.Height)
-					continue
-				}
+		case out := <-aggregate:
+			// case out := <-c.ListenOutboundTransfer():
+			dstChain := o.chains[out.OutboundTransfer.DstChain]
+			if dstChain == nil {
+				o.logger.Error(fmt.Sprintf("Unknown destination chain %s in outbound transfer %s", out.OutboundTransfer.DstChain, out.Id))
+			}
+			o.outLock.Lock()
+			o.outTxQueue[out.ChainId] = append(o.outTxQueue[out.ChainId], out.OutboundTransfer)
+			o.outLock.Unlock()
+		}
+	}
+}
 
-				for _, r := range results.TxsResults {
-					if r.IsErr() {
-						continue
-					}
-					for _, e := range r.Events {
-						if _, ok := events[e.Type]; !ok {
-							continue
-						}
-						select {
-						case o.eventsOutChan <- e:
-						case <-o.stopChan:
-							o.logger.Info("Observer exiting early, event skipped: ", e)
-							return
-						}
-					}
+func (o *Observer) processOutbound(ctx context.Context) {
+	for {
+		select {
+		case <-o.stopChan:
+			o.sendOutbound(ctx)
+			return
+		case <-time.After(o.sendPeriod):
+			o.sendOutbound(ctx)
+		}
+	}
+}
+
+func (o *Observer) sendOutbound(ctx context.Context) {
+	o.outLock.Lock()
+	defer o.outLock.Unlock()
+
+	for srcId, queue := range o.outTxQueue {
+		srcChain := o.chains[srcId]
+		height, err := srcChain.Height()
+		if err != nil {
+			o.logger.Error(fmt.Sprintf("Failed to get height for %s: %s", srcId, err.Error()))
+			continue
+		}
+		confirmationsRequired, err := srcChain.ConfirmationsRequired()
+		if err != nil {
+			o.logger.Error(fmt.Sprintf("Failed to get confirmations required for %s: %s", srcId, err.Error()))
+		}
+		newQueue := []OutboundTransfer{}
+		for _, out := range queue {
+			if height-out.Height < confirmationsRequired {
+				newQueue = append(newQueue, out)
+			} else {
+				in := InboundTransfer{
+					SrcChain: srcId,
+					Id:       out.Id,
+					Height:   out.Height,
+					Sender:   out.Sender,
+					To:       out.To,
+					Asset:    out.Asset,
+					Amount:   out.Amount,
+				}
+				err = o.chains[out.DstChain].SignalInboundTransfer(ctx, in)
+				if err != nil {
+					newQueue = append(newQueue, out)
 				}
 			}
 		}
+		o.outTxQueue[srcId] = newQueue
 	}
 }

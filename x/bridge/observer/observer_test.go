@@ -2,125 +2,151 @@ package observer_test
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cometbft/cometbft/rpc/jsonrpc/types"
-	cmttypes "github.com/cometbft/cometbft/types"
-	proto "github.com/cosmos/gogoproto/proto"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v23/x/bridge/observer"
-	bridge "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
 )
 
-var upgrader = websocket.Upgrader{}
-
-func readNewBlockEvent(t *testing.T, path string) coretypes.ResultEvent {
-	dataStr, err := os.ReadFile(path)
-	require.NoError(t, err)
-	result := coretypes.ResultEvent{}
-	err = cmtjson.Unmarshal([]byte(dataStr), &result)
-	require.NoError(t, err)
-	return result
+type MockChain struct {
+	In  chan observer.InboundTransfer
+	Out chan observer.OutboundTransfer
+	H   uint64
+	CR  uint64
 }
 
-func readBlockResults(t *testing.T, path string) coretypes.ResultBlockResults {
-	dataStr, err := os.ReadFile(path)
-	require.NoError(t, err)
-	result := coretypes.ResultBlockResults{}
-	err = json.Unmarshal([]byte(dataStr), &result)
-	require.NoError(t, err)
-	return result
-}
-
-func success(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			c, err := upgrader.Upgrade(w, r, nil)
-			require.NoError(t, err)
-			defer c.Close()
-			newBlock := readNewBlockEvent(t, "./test_events/new_block_event.json")
-			newBlockResp := types.NewRPCSuccessResponse(
-				types.JSONRPCIntID(1),
-				newBlock,
-			)
-			newBlockRaw, err := json.Marshal(newBlockResp)
-			require.NoError(t, err)
-			err = c.WriteMessage(1, newBlockRaw)
-			require.NoError(t, err)
-		case http.MethodPost:
-			blockResults := readBlockResults(t, "./test_events/block_results.json")
-			blockResultsResp := types.NewRPCSuccessResponse(
-				types.JSONRPCIntID(0),
-				blockResults,
-			)
-			blockResultsRaw, err := json.Marshal(blockResultsResp)
-			require.NoError(t, err)
-			_, err = w.Write(blockResultsRaw)
-			require.NoError(t, err)
-		default:
-			t.Fatal("Unexpected request method", r.Method)
-		}
+func NewMockChain(h uint64, cr uint64) *MockChain {
+	return &MockChain{
+		In:  make(chan observer.InboundTransfer),
+		Out: make(chan observer.OutboundTransfer),
+		H:   h,
+		CR:  cr,
 	}
 }
 
-// TestObserver verifies Observer properly reads subscribed messages and filters events
-func TestObserver(t *testing.T) {
-	s := httptest.NewServer(http.HandlerFunc(success(t)))
-	defer s.Close()
+func (m *MockChain) SignalInboundTransfer(ctx context.Context, in observer.InboundTransfer) error {
+	m.In <- in
+	return nil
+}
 
-	observer, err := observer.NewObserver(log.NewNopLogger(), s.URL)
-	require.NoError(t, err)
+func (m *MockChain) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
+	return m.Out
+}
+
+func (m *MockChain) Start(context.Context) error {
+	return nil
+}
+
+func (m *MockChain) Stop() error {
+	return nil
+}
+
+func (m *MockChain) Height() (uint64, error) {
+	return m.H, nil
+}
+
+func (m *MockChain) ConfirmationsRequired() (uint64, error) {
+	return m.CR, nil
+}
+
+// TestObserver verifies Observer properly receives transfers from src chains
+// and sends them to dst chain
+func TestObserver(t *testing.T) {
+	osmo := NewMockChain(15, 3)
+	btc := NewMockChain(15, 3)
+	chains := make(map[observer.ChainId]observer.Chain)
+	chains[observer.ChainId_OSMO] = osmo
+	chains[observer.ChainId_BITCOIN] = btc
+	o := observer.NewObserver(log.NewNopLogger(), chains, 100*time.Millisecond)
 
 	ctx := context.Background()
-	query := cmttypes.QueryForEvent(cmttypes.EventNewBlock)
-	observeEvents := []string{proto.MessageName(&bridge.EventOutboundTransfer{})}
-
-	err = observer.Start(ctx, query.String(), observeEvents)
+	err := o.Start(ctx)
 	require.NoError(t, err)
 
-	// We expect Observer to receive 3 Txs with `EventOutboundTransferType` events in this test
-	// Only 2 of the Txs are successful, so we should receive only 2 event through the channel
-	eventsOut := observer.Events()
-	events := [2]abcitypes.Event{}
-	for i := 0; i < len(events); i++ {
-		require.Eventually(t, func() bool {
-			events[i] = <-eventsOut
-			return true
-		}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
+	btcOut := observer.OutboundTransfer{
+		DstChain: observer.ChainId_OSMO,
+		Id:       "from-btc",
+		Height:   10,
+		Sender:   "btc-sender",
+		To:       "osmo-recipient",
+		Asset:    "btc",
+		Amount:   math.NewUint(10),
+	}
+	expOsmoIn := observer.InboundTransfer{
+		SrcChain: observer.ChainId_BITCOIN,
+		Id:       btcOut.Id,
+		Height:   btcOut.Height,
+		Sender:   btcOut.Sender,
+		To:       btcOut.To,
+		Asset:    btcOut.Asset,
+		Amount:   btcOut.Amount,
 	}
 
-	expectedEventType := proto.MessageName(&bridge.EventOutboundTransfer{})
-	require.Equal(t, expectedEventType, events[0].Type)
-	require.Equal(t, expectedEventType, events[1].Type)
-	require.Equal(t, 0, len(eventsOut))
+	btc.Out <- btcOut
+	osmoIn := observer.InboundTransfer{}
+	require.Eventually(t, func() bool {
+		osmoIn = <-osmo.In
+		return true
+	}, time.Second, 100*time.Millisecond, "Timeout receiving transfer")
+	require.Equal(t, expOsmoIn, osmoIn)
 
-	err = observer.Stop(ctx)
+	err = o.Stop()
 	require.NoError(t, err)
 }
 
-// TestObserverEmptyRpcUrl verifies NewObserver returns an error if RPC URL is empty
-func TestObserverEmptyRpcUrl(t *testing.T) {
-	_, err := observer.NewObserver(log.NewNopLogger(), "")
-	require.Error(t, err)
-}
+// TestObserverLowConfirmation verifies Observer sends transfers to
+// dst chains only when there is enough confirmations
+func TestObserverLowConfirmation(t *testing.T) {
+	osmo := NewMockChain(15, 3)
+	btc := NewMockChain(15, 3)
+	chains := make(map[observer.ChainId]observer.Chain)
+	chains[observer.ChainId_OSMO] = osmo
+	chains[observer.ChainId_BITCOIN] = btc
+	o := observer.NewObserver(log.NewNopLogger(), chains, 100*time.Millisecond)
 
-// TestObserverInvalidQuery verifies observer Start returns an error if query is invalid
-func TestObserverInvalidQuery(t *testing.T) {
-	observer, err := observer.NewObserver(log.NewNopLogger(), "http://localhost:26657")
+	ctx := context.Background()
+	err := o.Start(ctx)
 	require.NoError(t, err)
-	query := "invalid"
-	err = observer.Start(context.Background(), query, []string{})
-	require.Error(t, err)
+
+	btcOut := observer.OutboundTransfer{
+		DstChain: observer.ChainId_OSMO,
+		Id:       "from-btc",
+		Height:   15,
+		Sender:   "btc-sender",
+		To:       "osmo-recipient",
+		Asset:    "btc",
+		Amount:   math.NewUint(10),
+	}
+	expOsmoIn := observer.InboundTransfer{
+		SrcChain: observer.ChainId_BITCOIN,
+		Id:       btcOut.Id,
+		Height:   btcOut.Height,
+		Sender:   btcOut.Sender,
+		To:       btcOut.To,
+		Asset:    btcOut.Asset,
+		Amount:   btcOut.Amount,
+	}
+
+	btc.Out <- btcOut
+	osmoIn := observer.InboundTransfer{}
+	received := false
+	select {
+	case osmoIn = <-osmo.In:
+		received = true
+	case <-time.After(time.Millisecond * 500):
+	}
+	require.False(t, received)
+	btc.H = 20
+	require.Eventually(t, func() bool {
+		osmoIn = <-osmo.In
+		return true
+	}, time.Second, 100*time.Millisecond, "Timeout receiving transfer")
+	require.Equal(t, expOsmoIn, osmoIn)
+
+	err = o.Stop()
+	require.NoError(t, err)
 }

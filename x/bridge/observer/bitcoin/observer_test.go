@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
@@ -71,10 +72,12 @@ func TestObserverSuccess(t *testing.T) {
 
 	host, _ := strings.CutPrefix(s.URL, "http://")
 	client, err := rpcclient.New(&rpcclient.ConnConfig{
-		Host:       host,
-		DisableTLS: true,
-		User:       "test",
-		Pass:       "test",
+		Host:         host,
+		DisableTLS:   true,
+		HTTPPostMode: true,
+		User:         "test",
+		Pass:         "test",
+		Params:       chaincfg.TestNet3Params.Name,
 	}, nil)
 	require.NoError(t, err)
 
@@ -147,10 +150,12 @@ func TestInvalidRpcCfg(t *testing.T) {
 
 	for _, tc := range tests {
 		client, err := rpcclient.New(&rpcclient.ConnConfig{
-			Host:       tc.host,
-			DisableTLS: tc.disableTls,
-			User:       tc.user,
-			Pass:       tc.pass,
+			Host:         tc.host,
+			DisableTLS:   tc.disableTls,
+			HTTPPostMode: true,
+			User:         tc.user,
+			Pass:         tc.pass,
+			Params:       chaincfg.TestNet3Params.Name,
 		}, nil)
 		require.NoError(t, err)
 
@@ -161,10 +166,12 @@ func TestInvalidRpcCfg(t *testing.T) {
 
 func TestInvalidVaultAddress(t *testing.T) {
 	client, err := rpcclient.New(&rpcclient.ConnConfig{
-		Host:       "127.0.0.1:1234",
-		DisableTLS: true,
-		User:       "test",
-		Pass:       "test",
+		Host:         "127.0.0.1:1234",
+		DisableTLS:   true,
+		HTTPPostMode: true,
+		User:         "test",
+		Pass:         "test",
+		Params:       chaincfg.TestNet3Params.Name,
 	}, nil)
 	require.NoError(t, err)
 
