@@ -508,57 +508,50 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 	} else {
 		// app.toml exists
 
-		// Get setting
-		currentArbitrageMinGasFeeValue := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
-
+		// Set new values in viper
 		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, newMaxGasWantedPerTxValue)
+		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, newArbitrageMinGasFeeValue)
 
-		// .x format at 0.x format are both valid.
-		if currentArbitrageMinGasFeeValue == oldArbitrageMinGasFeeValue || currentArbitrageMinGasFeeValue == "0"+oldArbitrageMinGasFeeValue {
-			// Set new value in viper
-			serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, newArbitrageMinGasFeeValue)
-
-			defer func() {
-				if err := recover(); err != nil {
-					fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
-				}
-			}()
-
-			// Check if the file is writable
-			if fileInfo.Mode()&os.FileMode(0200) != 0 {
-				// Read the entire content of the file
-				content, err := os.ReadFile(configFilePath)
-				if err != nil {
-					return err
-				}
-
-				// Convert the content to a string
-				fileContent := string(content)
-
-				// Find the index of the search line
-				index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
-				if index == -1 {
-					return fmt.Errorf("search line not found in the file")
-				}
-
-				// Find the opening and closing quotes
-				openQuoteIndex := strings.Index(fileContent[index:], "\"")
-				openQuoteIndex += index
-
-				closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
-				closingQuoteIndex += openQuoteIndex + 1
-
-				// Replace the old value with the new value
-				newFileContent := fileContent[:openQuoteIndex+1] + newArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
-
-				// Write the modified content back to the file
-				err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
-				if err != nil {
-					return err
-				}
-			} else {
-				fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue)
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
 			}
+		}()
+
+		// Check if the file is writable
+		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+			// Read the entire content of the file
+			content, err := os.ReadFile(configFilePath)
+			if err != nil {
+				return err
+			}
+
+			// Convert the content to a string
+			fileContent := string(content)
+
+			// Find the index of the search line
+			index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
+			if index == -1 {
+				return fmt.Errorf("search line not found in the file")
+			}
+
+			// Find the opening and closing quotes
+			openQuoteIndex := strings.Index(fileContent[index:], "\"")
+			openQuoteIndex += index
+
+			closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
+			closingQuoteIndex += openQuoteIndex + 1
+
+			// Replace the old value with the new value
+			newFileContent := fileContent[:openQuoteIndex+1] + newArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
+
+			// Write the modified content back to the file
+			err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + newMaxGasWantedPerTxValue)
 		}
 	}
 	return nil
