@@ -1,0 +1,31 @@
+@startuml
+
+state "**Accumulation**" as accumulation : The votes are being accumulated
+
+state "**Pending**" as pending  : Need more votes
+
+state "**Finalization**" as finalization : Updating the state
+finalization : Checking rate limits
+
+state "**Finalized**" as finalized #lightgreen;line:green;line.bold
+finalized : The transfer is finalized
+
+state "**Quarantine**" as quarantine #pink;line:red;line.bold
+quarantine : The transfer is postponed
+quarantine : in the quarantine queue
+
+[*] -d-> pending
+
+pending -l-> accumulation : got new vote
+
+accumulation -r-> pending : **len(votes) < notes_needed**
+accumulation -d-> finalization : **len(votes) == notes_needed**
+accumulation -l-> finalized : **len(votes) > notes_needed**
+
+finalization -u-> finalized : within limits
+finalization -d-> quarantine : **minted_volume + incoming_volume >= rate_limit**
+quarantine -u-> finalized : release is triggered
+
+finalized -u-> [*]
+
+@enduml
