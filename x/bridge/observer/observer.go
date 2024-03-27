@@ -85,7 +85,6 @@ func (o *Observer) collectOutbound() {
 		case <-o.stopChan:
 			return
 		case out := <-aggregate:
-			// case out := <-c.ListenOutboundTransfer():
 			dstChain := o.chains[out.OutboundTransfer.DstChain]
 			if dstChain == nil {
 				o.logger.Error(fmt.Sprintf("Unknown destination chain %s in outbound transfer %s", out.OutboundTransfer.DstChain, out.Id))
