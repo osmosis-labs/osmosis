@@ -1527,14 +1527,12 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60 h1
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60/go.mod h1:7QGFTgdTvlZLcYHUPuNuZJg1+G1mVrd0dWDpLiD4jOo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60 h1:4iq0tvpzm6U0J4z6Fm95AmIFiEADE06lrBXr7HUMkdg=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60/go.mod h1:D2EoDxsaeILMe4YsCXE3CuhpQKoCosTCGaUaLYTgUY0=
-github.com/osmosis-labs/osmosis/v23 v23.0.0-20240208022725-3e106c698dc6 h1:zujs4eJ5PCRxJG40lN/ReMsoZ9MD+nEABz2IBqEu/j4=
-github.com/osmosis-labs/osmosis/v23 v23.0.0-20240208022725-3e106c698dc6/go.mod h1:u2+ADQUCkmcFq9f13Cx60CQmLB7vxtq5QCUW7nwIdGM=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240312193551-6c010fa93f60 h1:1QNyiEHhNFMYJ7qWoLAZ40yd4duSEYb7KvDnOUADp+Q=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240312193551-6c010fa93f60/go.mod h1:cByTNsagl9hFxah0O5rHS7HQA30fJdHXgE/KW0Pzi5M=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312193551-6c010fa93f60 h1:/y1ag1iipJELeWpT8yKBQS0gZqFbLLcroRaMMYD6oCI=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312193551-6c010fa93f60/go.mod h1:os1wPtMQAmTekhA+NNCZG2MMCN82fQ0oeeHIjcei0N4=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463 h1:eeGZ0A/Z0c4wstIg8G/0VGQJyYnu6/1tlOpKDnflePM=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208025415-894605171463/go.mod h1:GNHf6+eQpoud7bV0dqJ3YVxov331z+jp9vbVuZPj14s=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e h1:G0pQIik2ACMb/G4LykkR57Q9c2w300EuoFDo/7nxY/U=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
