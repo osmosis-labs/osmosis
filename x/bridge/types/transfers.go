@@ -6,16 +6,18 @@ import (
 
 func NewInboundTransfer(
 	externalID string,
+	externalHeight uint64,
 	destAddr string,
 	assetID AssetID,
 	amount math.Int,
 ) InboundTransfer {
 	return InboundTransfer{
-		ExternalId: externalID,
-		DestAddr:   destAddr,
-		AssetId:    assetID,
-		Amount:     amount,
-		Voters:     make([]string, 0),
-		Finalized:  false,
+		ExternalId:     externalID,
+		ExternalHeight: externalHeight,
+		DestAddr:       destAddr,
+		AssetId:        assetID,
+		Amount:         amount,
+		Voters:         make([]string, 0),
+		Finalized:      false,
 	}
 }

@@ -1,4 +1,3 @@
-// Package keeper TODO: upgrade the signatures validation process
 package keeper
 
 import (
@@ -34,14 +33,19 @@ func (m msgServer) InboundTransfer(
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !m.k.validateSenderIsSigner(ctx, msg.Sender) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrorInvalidSigner, "Sender is not part of the signer set")
-	}
-
-	err = m.k.InboundTransfer(ctx, msg.ExternalId, msg.Sender, msg.DestAddr, msg.AssetId, msg.Amount)
+	err = m.k.InboundTransfer(
+		ctx,
+		msg.ExternalId,
+		msg.ExternalHeight,
+		msg.Sender,
+		msg.DestAddr,
+		msg.AssetId,
+		msg.Amount,
+	)
 	if err != nil {
 		return nil, err
 	}
+
 	err = ctx.EventManager().EmitTypedEvent(&types.EventInboundTransfer{
 		Sender:   msg.Sender,
 		DestAddr: msg.DestAddr,
@@ -72,6 +76,7 @@ func (m msgServer) OutboundTransfer(
 	if err != nil {
 		return nil, err
 	}
+
 	err = ctx.EventManager().EmitTypedEvent(&types.EventOutboundTransfer{
 		Sender:   msg.Sender,
 		DestAddr: msg.DestAddr,
@@ -81,8 +86,6 @@ func (m msgServer) OutboundTransfer(
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: How to pass the outbound tx to the TSS valset?
 
 	return new(types.MsgOutboundTransferResponse), nil
 }

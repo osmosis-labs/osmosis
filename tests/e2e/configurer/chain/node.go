@@ -160,7 +160,8 @@ func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) b
 		}
 		return
 	}
-	n.t.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.Logf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.FailNow()
 }
 
 func (n *NodeConfig) extractOperatorAddressIfValidator() error {
