@@ -25,9 +25,10 @@ var (
 		Denom:       "btc1",
 	}
 	asset1 = types.Asset{
-		Id:       assetID1,
-		Status:   types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
-		Exponent: types.DefaultBitcoinExponent,
+		Id:                    assetID1,
+		Status:                types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+		Exponent:              types.DefaultBitcoinExponent,
+		ExternalConfirmations: types.DefaultBitcoinConfirmations,
 	}
 
 	assetID2 = types.AssetID{
@@ -35,8 +36,9 @@ var (
 		Denom:       "btc2",
 	}
 	asset2 = types.Asset{
-		Id:       assetID2,
-		Status:   types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
-		Exponent: types.DefaultBitcoinExponent,
+		Id:                    assetID2,
+		Status:                types.AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+		Exponent:              types.DefaultBitcoinExponent,
+		ExternalConfirmations: types.DefaultBitcoinConfirmations,
 	}
 )
