@@ -270,7 +270,9 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	spreadRewardsClaimed := sdk.NewCoins()
 	for _, coin := range spreadRewardsClaimedScaled {
 		scaledCoinAmt := scaleDownIncentiveAmount(coin.Amount, spreadFactorScalingFactor)
-		spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
+		if !scaledCoinAmt.IsZero() {
+			spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
+		}
 	}
 
 	// add forfeited dust back to the global accumulator
