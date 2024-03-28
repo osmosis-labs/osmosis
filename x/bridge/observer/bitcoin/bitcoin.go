@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -16,95 +17,111 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/cometbft/cometbft/libs/log"
+
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
 )
 
-const ModuleNameObserver = "btc-observer"
+var (
+	ModuleName = "bitcoin-chain"
+)
 
-type TxIn struct {
-	Id          string
-	Height      uint64
-	Sender      string
-	Destination string
-	Amount      math.Uint
-	Memo        string
-}
-
-type RpcConfig struct {
-	Host       string
-	DisableTls bool
-	User       string
-	Pass       string
-}
-
-func (o RpcConfig) Validate() error {
-	if len(o.Host) == 0 {
-		return fmt.Errorf("Invalid `Host` value")
-	} else if len(o.User) == 0 {
-		return fmt.Errorf("Invalid `User` value")
-	} else if len(o.Pass) == 0 {
-		return fmt.Errorf("Invalid `Pass` value")
-	} else {
-		return nil
-	}
-}
-
-type Observer struct {
+type Bitcoin struct {
 	logger             log.Logger
 	btcRpc             *rpcclient.Client
 	vaultAddr          string
-	currentHeight      uint64
-	globalTxInChan     chan TxIn
 	stopChan           chan struct{}
+	outboundChan       chan observer.OutboundTransfer
 	observeSleepPeriod time.Duration
+	lastObservedHeight uint64
 }
 
-// NewObserver returns new instance of `Observer` with BTC RPC client
-func NewObserver(
+// NewBitcoin returns new instance of `Bitcoin`
+func NewBitcoin(
 	logger log.Logger,
 	btcRpc *rpcclient.Client,
 	vaultAddr string,
-	initialHeight uint64,
 	observeSleepPeriod time.Duration,
-) (Observer, error) {
+	lastObservedHeight uint64,
+) (*Bitcoin, error) {
 	if len(vaultAddr) == 0 {
-		return Observer{}, errorsmod.Wrapf(ErrInvalidCfg, "Invalid vaultAddr")
+		return nil, errorsmod.Wrapf(ErrInvalidCfg, "Invalid BTC vault address")
 	}
 
-	return Observer{
-		logger:             logger.With("module", ModuleNameObserver),
+	return &Bitcoin{
+		logger:             logger.With("module", ModuleName),
 		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
-		currentHeight:      initialHeight,
-		globalTxInChan:     make(chan TxIn),
 		stopChan:           make(chan struct{}),
+		outboundChan:       make(chan observer.OutboundTransfer),
 		observeSleepPeriod: observeSleepPeriod,
+		lastObservedHeight: lastObservedHeight,
 	}, nil
 }
 
-// Start starts observing BTC blocks for incoming Txs to the given address
-func (o *Observer) Start() {
-	go o.observeBlocks()
+// Start starts observing Bitcoin blocks for outbound transfers
+func (b *Bitcoin) Start(context.Context) error {
+	go b.observeBlocks()
+
+	return nil
 }
 
-// Stop stops observation loop and RPC client
-func (o *Observer) Stop() {
-	close(o.stopChan)
-	o.btcRpc.Shutdown()
-	o.btcRpc.WaitForShutdown()
+// Stop stops observing Bitcoin blocks and shutdowns RPC client
+func (b *Bitcoin) Stop(context.Context) error {
+	close(b.stopChan)
+	b.btcRpc.Shutdown()
+	b.btcRpc.WaitForShutdown()
+	return nil
 }
 
-// TxIns returns receive-only part of observed Txs channel
-func (o *Observer) TxIns() <-chan TxIn {
-	return o.globalTxInChan
+// ListenOutboundTransfer returns receive-only channel with outbound transfer items
+func (b *Bitcoin) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
+	return b.outboundChan
 }
 
-func (o *Observer) CurrentHeight() uint64 {
-	return o.currentHeight
+// SignalInboundTransfer sends `InboundTransfer` to Bitcoin
+func (b *Bitcoin) SignalInboundTransfer(ctx context.Context, in observer.InboundTransfer) error {
+	return fmt.Errorf("Not implemented")
 }
 
-// FetchBlock processes block transactions at the given `height`
-func (o *Observer) fetchBlock(height uint64) error {
-	hash, err := o.btcRpc.GetBlockHash(int64(height))
+// Returns current height of the Bitcoin chain
+func (b *Bitcoin) Height() (uint64, error) {
+	height, err := b.btcRpc.GetBlockCount()
+	if err != nil {
+		return 0, errorsmod.Wrapf(ErrRpcClient, "Failed to get current height %s", err.Error())
+	}
+	return uint64(height), nil
+}
+
+// Returns number of required tx confirmations
+func (b *Bitcoin) ConfirmationsRequired() (uint64, error) {
+	// Query bridge module
+	return 0, nil
+}
+
+func (b *Bitcoin) observeBlocks() {
+	defer close(b.outboundChan)
+
+	for {
+		select {
+		case <-b.stopChan:
+			return
+		default:
+			err := b.fetchNewBlock()
+			if err != nil {
+				// Do not log error if block with this height doesn't exist yet
+				if !errors.Is(err, ErrBlockUnavailable) {
+					b.logger.Error(fmt.Sprintf("Failed to fetch block %d: %s", b.lastObservedHeight+1, err.Error()))
+				}
+				time.Sleep(b.observeSleepPeriod)
+				continue
+			}
+		}
+	}
+}
+
+func (b *Bitcoin) fetchNewBlock() error {
+	nextHeight := b.lastObservedHeight + 1
+	hash, err := b.btcRpc.GetBlockHash(int64(nextHeight))
 	if err != nil {
 		if rpcErr, ok := err.(*btcjson.RPCError); ok && rpcErr.Code == btcjson.ErrRPCInvalidParameter {
 			return ErrBlockUnavailable
@@ -112,74 +129,54 @@ func (o *Observer) fetchBlock(height uint64) error {
 		return errorsmod.Wrapf(err, "Failed to get block hash")
 	}
 
-	blockVerbose, err := o.btcRpc.GetBlockVerboseTx(hash)
+	blockVerbose, err := b.btcRpc.GetBlockVerboseTx(hash)
 	if err != nil {
 		return errorsmod.Wrapf(err, "Failed to get verbose block")
 	}
 
 	for _, tx := range blockVerbose.Tx {
-		txIn, isRelevant, err := o.processTx(uint64(blockVerbose.Height), &tx)
+		txIn, isRelevant, err := b.processTx(uint64(blockVerbose.Height), &tx)
 		if isRelevant && err != nil {
-			o.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
+			b.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
 		}
 		if isRelevant && err == nil {
 			select {
-			case o.globalTxInChan <- txIn:
-			case <-o.stopChan:
-				o.logger.Info("Observer exiting early, tx skipped: ", tx.Txid)
+			case b.outboundChan <- txIn:
+			case <-b.stopChan:
+				b.logger.Info("Observer exiting early, tx skipped: ", tx.Txid)
 				return nil
 			}
 		}
 	}
+	b.lastObservedHeight += 1
 	return nil
 }
 
-func (o *Observer) observeBlocks() {
-	defer close(o.globalTxInChan)
-
-	for {
-		select {
-		case <-o.stopChan:
-			return
-		default:
-			err := o.fetchBlock(o.currentHeight)
-			if err != nil {
-				// Do not log error if block with this height doesn't exist yet
-				if !errors.Is(err, ErrBlockUnavailable) {
-					o.logger.Error(fmt.Sprintf("Failed to fetch block %d: %s", o.currentHeight, err.Error()))
-				}
-				time.Sleep(o.observeSleepPeriod)
-				continue
-			}
-			o.currentHeight = o.currentHeight + 1
-		}
-	}
-}
-
-func (o *Observer) processTx(height uint64, tx *btcjson.TxRawResult) (TxIn, bool, error) {
-	sender, err := o.getSender(tx)
+func (b *Bitcoin) processTx(height uint64, tx *btcjson.TxRawResult) (observer.OutboundTransfer, bool, error) {
+	sender, err := b.getSender(tx)
 	if err != nil {
-		return TxIn{}, false, errorsmod.Wrapf(err, "Failed to get Tx sender")
+		return observer.OutboundTransfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx sender")
 	}
 
-	dest, amount, err := o.getOutput(sender, tx)
+	dest, amount, err := b.getOutput(sender, tx)
 	if err != nil {
-		return TxIn{}, false, errorsmod.Wrapf(err, "Failed to get Tx output")
+		return observer.OutboundTransfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx output")
 	}
-	isRelevant := dest == o.vaultAddr
+	isRelevant := dest == b.vaultAddr
 
-	memo, err := o.getMemo(tx)
+	memo, err := b.getMemo(tx)
 	if err != nil {
-		return TxIn{}, isRelevant, errorsmod.Wrapf(err, "Failed to get Tx memo")
+		return observer.OutboundTransfer{}, isRelevant, errorsmod.Wrapf(err, "Failed to get Tx memo")
 	}
 
-	return TxIn{
-		Id:          tx.Txid,
-		Height:      height,
-		Sender:      sender,
-		Destination: dest,
-		Amount:      amount,
-		Memo:        memo,
+	return observer.OutboundTransfer{
+		DstChain: observer.ChainId_OSMO,
+		Id:       tx.Hash,
+		Height:   height,
+		Sender:   sender,
+		To:       memo,
+		Asset:    string(observer.Denom_BITCOIN),
+		Amount:   amount,
 	}, isRelevant, nil
 }
 
@@ -195,7 +192,7 @@ func (o *Observer) processTx(height uint64, tx *btcjson.TxRawResult) (TxIn, bool
 //   - if `addresses` field is available - get the first address from it
 //     (again we assume that all of them are owned by the same person)
 //   - otherwise - try to decode address from the script
-func (o *Observer) getSender(tx *btcjson.TxRawResult) (string, error) {
+func (b *Bitcoin) getSender(tx *btcjson.TxRawResult) (string, error) {
 	if len(tx.Vin) == 0 {
 		return "", fmt.Errorf("Vin is empty for Tx %s", tx.Txid)
 	}
@@ -205,13 +202,13 @@ func (o *Observer) getSender(tx *btcjson.TxRawResult) (string, error) {
 		return "", errorsmod.Wrapf(err, "Failed to get Vin Tx hash for Tx %s", tx.Txid)
 	}
 
-	vinTx, err := o.btcRpc.GetRawTransactionVerbose(txHash)
+	vinTx, err := b.btcRpc.GetRawTransactionVerbose(txHash)
 	if err != nil {
 		return "", errorsmod.Wrapf(err, "Failed to get Vin Tx with hash %s", txHash)
 	}
 
 	vout := vinTx.Vout[tx.Vin[0].Vout]
-	addresses, err := o.getAddressesFromScriptPubKey(vout.ScriptPubKey)
+	addresses, err := b.getAddressesFromScriptPubKey(vout.ScriptPubKey)
 	if err != nil {
 		return "", errorsmod.Wrapf(err, "Failed to get addresses from tx %s", txHash)
 	}
@@ -226,7 +223,7 @@ func (o *Observer) getSender(tx *btcjson.TxRawResult) (string, error) {
 // We try to find a `Vout` with a single receiver address (our vault)
 // to get the Tx receiver and amount of tokens
 // We go through all of the `Vout`'s and pick the first one that is not addressed back to the sender
-func (o *Observer) getOutput(sender string, tx *btcjson.TxRawResult) (string, math.Uint, error) {
+func (b *Bitcoin) getOutput(sender string, tx *btcjson.TxRawResult) (string, math.Uint, error) {
 	for _, vout := range tx.Vout {
 		if strings.EqualFold(vout.ScriptPubKey.Type, "nulldata") {
 			continue
@@ -235,13 +232,13 @@ func (o *Observer) getOutput(sender string, tx *btcjson.TxRawResult) (string, ma
 			continue
 		}
 
-		addresses, err := o.getAddressesFromScriptPubKey(vout.ScriptPubKey)
+		addresses, err := b.getAddressesFromScriptPubKey(vout.ScriptPubKey)
 		if err != nil || len(addresses) != 1 {
 			continue
 		}
 
 		if addresses[0] != sender {
-			amount, err := o.getAmount(vout)
+			amount, err := b.getAmount(vout)
 			if err != nil {
 				continue
 			}
@@ -252,7 +249,7 @@ func (o *Observer) getOutput(sender string, tx *btcjson.TxRawResult) (string, ma
 }
 
 // getAmount retrieves amount of tokens sent
-func (o *Observer) getAmount(vout btcjson.Vout) (math.Uint, error) {
+func (b *Bitcoin) getAmount(vout btcjson.Vout) (math.Uint, error) {
 	amount, err := btcutil.NewAmount(vout.Value)
 	if err != nil {
 		return math.Uint{}, errorsmod.Wrapf(err, "Failed to parse float value")
@@ -261,7 +258,7 @@ func (o *Observer) getAmount(vout btcjson.Vout) (math.Uint, error) {
 }
 
 // getMemo retrieves data behind `OP_RETURN` Vout
-func (o *Observer) getMemo(tx *btcjson.TxRawResult) (string, error) {
+func (b *Bitcoin) getMemo(tx *btcjson.TxRawResult) (string, error) {
 	for _, vout := range tx.Vout {
 		if !strings.EqualFold(vout.ScriptPubKey.Type, "nulldata") {
 			continue
@@ -272,7 +269,7 @@ func (o *Observer) getMemo(tx *btcjson.TxRawResult) (string, error) {
 			// Decode $MEMO_DATA$ entry from the array
 			decoded, err := hex.DecodeString(fields[1])
 			if err != nil {
-				o.logger.Error("Failed to decode OP_RETURN field", err)
+				b.logger.Error("Failed to decode OP_RETURN field", err)
 				continue
 			}
 			return string(decoded), nil
@@ -281,7 +278,7 @@ func (o *Observer) getMemo(tx *btcjson.TxRawResult) (string, error) {
 	return "", fmt.Errorf("Memo not found")
 }
 
-func (o *Observer) getAddressesFromScriptPubKey(key btcjson.ScriptPubKeyResult) ([]string, error) {
+func (b *Bitcoin) getAddressesFromScriptPubKey(key btcjson.ScriptPubKeyResult) ([]string, error) {
 	if len(key.Addresses) > 0 {
 		return key.Addresses, nil
 	}

@@ -7,10 +7,13 @@ import (
 )
 
 type ChainId string
+type Denom string
 
 const (
 	ChainId_OSMO    ChainId = "osmosis"
 	ChainId_BITCOIN ChainId = "bitcoin"
+
+	Denom_BITCOIN Denom = "btc"
 )
 
 type OutboundTransfer struct {

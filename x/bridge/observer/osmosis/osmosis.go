@@ -30,7 +30,6 @@ type Osmosis struct {
 	logger             log.Logger
 	osmoClient         *Client
 	cometRpc           *rpchttp.HTTP
-	chains             map[observer.ChainId]observer.Chain
 	stopChan           chan struct{}
 	outboundChan       chan observer.OutboundTransfer
 	lastObservedHeight atomic.Uint64
@@ -41,13 +40,11 @@ func NewOsmosis(
 	logger log.Logger,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
-	chains map[observer.ChainId]observer.Chain,
 ) *Osmosis {
 	return &Osmosis{
 		logger:             logger.With("module", ModuleName),
 		osmoClient:         osmoClient,
 		cometRpc:           cometRpc,
-		chains:             chains,
 		stopChan:           make(chan struct{}),
 		outboundChan:       make(chan observer.OutboundTransfer),
 		lastObservedHeight: atomic.Uint64{},

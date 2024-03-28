@@ -1,6 +1,7 @@
 package bitcoin_test
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -17,7 +18,12 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer/bitcoin"
+)
+
+var (
+	BtcVault = "2N4qEFwruq3zznQs78twskBrNTc6kpq87j1"
 )
 
 type Response struct {
@@ -65,8 +71,7 @@ func success(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// TestObserverSuccess verifies Observer properly processes observed transactions
-func TestObserverSuccess(t *testing.T) {
+func TestListenOutboundTransfer(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(success(t)))
 	defer s.Close()
 
@@ -82,106 +87,52 @@ func TestObserverSuccess(t *testing.T) {
 	require.NoError(t, err)
 
 	initialHeight := uint64(2582657)
-	observer, err := bitcoin.NewObserver(
+	b, err := bitcoin.NewBitcoin(
 		log.NewNopLogger(),
 		client,
-		"2N4qEFwruq3zznQs78twskBrNTc6kpq87j1",
-		initialHeight,
+		BtcVault,
 		time.Second,
+		initialHeight,
 	)
 	require.NoError(t, err)
 
-	observer.Start()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	b.Start(ctx)
 
 	// We expect Observer to observe 1 block with 2 Txs
 	// Only 1 Tx is sent to our vault address,
 	// so we should receive only 1 TxIn
-	txs := observer.TxIns()
-	var tx bitcoin.TxIn
+	txs := b.ListenOutboundTransfer()
+	var out observer.OutboundTransfer
 	require.Eventually(t, func() bool {
-		tx = <-txs
+		out = <-txs
 		return true
-	}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
+	}, time.Second, 100*time.Millisecond, "Timeout reading transfer")
 
-	expectedTx := bitcoin.TxIn{
-		Id:          "f395b2cc8551aff25fe8d61fec159a6b93d29b9ff56a68c9d29df99a864fd74c",
-		Height:      initialHeight,
-		Sender:      "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
-		Destination: "2N4qEFwruq3zznQs78twskBrNTc6kpq87j1",
-		Amount:      math.NewUint(10000),
-		Memo:        "osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
+	expOut := observer.OutboundTransfer{
+		DstChain: observer.ChainId_OSMO,
+		Id:       "ef4cd511c64834bde624000b94110c9f184388566a97d68d355339294a72dadf",
+		Height:   initialHeight,
+		Sender:   "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
+		To:       "osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
+		Asset:    string(observer.Denom_BITCOIN),
+		Amount:   math.NewUint(10000),
 	}
-	require.Equal(t, expectedTx, tx)
+	require.Equal(t, expOut, out)
 	require.Equal(t, 0, len(txs))
 
-	observer.Stop()
-}
-
-func TestInvalidRpcCfg(t *testing.T) {
-	tests := []struct {
-		name       string
-		host       string
-		disableTls bool
-		user       string
-		pass       string
-	}{
-		{
-			name:       "Invalid Host URL",
-			host:       "",
-			disableTls: true,
-			user:       "test",
-			pass:       "test",
-		},
-		{
-			name:       "Invalid User",
-			host:       "127.0.0.1:1234",
-			disableTls: true,
-			user:       "",
-			pass:       "test",
-		},
-		{
-			name:       "Invalid Pass",
-			host:       "127.0.0.1:1234",
-			disableTls: true,
-			user:       "test",
-			pass:       "",
-		},
-	}
-
-	for _, tc := range tests {
-		client, err := rpcclient.New(&rpcclient.ConnConfig{
-			Host:         tc.host,
-			DisableTLS:   tc.disableTls,
-			HTTPPostMode: true,
-			User:         tc.user,
-			Pass:         tc.pass,
-			Params:       chaincfg.TestNet3Params.Name,
-		}, nil)
-		require.NoError(t, err)
-
-		_, err = bitcoin.NewObserver(log.NewNopLogger(), client, "", 0, time.Second)
-		require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
-	}
+	b.Stop(ctx)
 }
 
 func TestInvalidVaultAddress(t *testing.T) {
-	client, err := rpcclient.New(&rpcclient.ConnConfig{
-		Host:         "127.0.0.1:1234",
-		DisableTLS:   true,
-		HTTPPostMode: true,
-		User:         "test",
-		Pass:         "test",
-		Params:       chaincfg.TestNet3Params.Name,
-	}, nil)
-	require.NoError(t, err)
-
-	initialHeight := uint64(2582657)
-	_, err = bitcoin.NewObserver(
+	_, err := bitcoin.NewBitcoin(
 		log.NewNopLogger(),
-		client,
+		nil,
 		"",
-		initialHeight,
 		time.Second,
+		0,
 	)
 	require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
 }
