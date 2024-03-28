@@ -95,7 +95,7 @@ The transfer process is straightforward:
 
 ### Rate limiting
 
-**Rate limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 1 BTC every 10 minutes. Should the module receive more than 1 BTC within this 10-minute timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
+**Rate limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 5 BTC every day. Should the module receive more than 5 BTC within this 24-hours timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
 
 ### Quarantine
 
@@ -166,13 +166,61 @@ There are two methods for managing quarantined assets:
 
 ![quarantine](images/quarantine.png)
 
-For **quarantining**, a queue is utilized instead of a map to allow sequential execution of transfers and to potentially filter out malicious transactions. While this queue cannot eliminate all malicious transfers, it can help segregate them and make them less harmful. As a security measure, periodically matching the total supply of minted assets with the balances in external vaults can help identify fraudulent activity.
+For **quarantining**, a queue is utilized instead of a map to allow sequential execution of transfers and to potentially filter out malicious transactions. To better understand the difference, consider the following example.
+
+Suppose transfers are stored in a map. In this case, when releasing assets from the **quarantining** vault, the only available figure is the total volume of transfers to addresses, as depicted in the following diagram:
+
+```
+Alice_destination_addr -> 9 + 7 + 3 = 19
+...
+Bob_destination_addr   -> 1 + 2 = 3
+...
+```
+
+Conversely, when using a queue, the same data might be represented as follows:
+
+```
+[
+  {
+    dest  : Alice_destination_addr
+    amount: 9
+    height: 2
+  }
+  {
+    dest  : Alice_destination_addr
+    amount: 7
+    height: 1
+  }
+  {
+    dest  : Alice_destination_addr
+    amount: 3
+    height: 6
+  }
+  ...
+  
+  {
+    dest  : Bob_destination_addr
+    amount: 1
+    height: 2
+  }
+  {
+    dest  : Bob_destination_addr
+    amount: 2
+    height: 8
+  }
+  ...
+]
+```
+
+Imagine the module detects unusual activity at height 6. It could then decide to mint all coins except those associated with that specific height. It's important to note that the order of elements in the queue is not significant. The queue is merely a practical data structure for storage purposes.
+
+While the queue cannot eliminate all malicious transfers, it can help segregate them and make them less harmful. As a security measure, periodically matching the total supply of minted assets with the balances in external vaults can help identify fraudulent activity.
 
 ### Validator reviving
 
 The module uses a combination of the finalization flag and the last transfer height value to ensure that validators can join the valset at any time and begin processing transfers from any height without compromising the integrity of the bridging process.
 
-The last transfer height is crucial for coordinating validators, guiding them to the appropriate starting point for their observations. Validators have the option to rely on this module's height value or to use their own local height checkpoints for starting or continuing observation. The last transfer height, linked to each asset, is updated whenever a transfer involving the asset occurs, calculated as `max(current_last_height, new_last_height)`, where `current_last_height`  is the value from the state, and `new_last_height` is obtained during finalizing the transfer. This is necessary because the module cannot ensure a sequential order for processing transfers.
+The last transfer height is crucial for coordinating validators, guiding them to the appropriate starting point for their observations. Validators have the option to rely on this module's height value or to use their own local height checkpoints for starting or continuing observation. The last transfer height, linked to each asset, is updated whenever a transfer involving the asset occurs, calculated as `max(current_last_height, new_last_height)`, where `current_last_height` is the value from the state, and `new_last_height` is obtained during finalizing the transfer. This is necessary because the module cannot ensure a sequential order for processing transfers.
 
 Despite validators having the flexibility to start observing from any height, it doesn't pose a risk to the module's operations. This is because transfers that have already been finalized will not trigger the finalization again, thereby maintaining the system's integrity.
 
