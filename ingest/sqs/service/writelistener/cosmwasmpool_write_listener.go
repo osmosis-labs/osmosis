@@ -10,7 +10,7 @@ import (
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 )
 
-var _ storetypes.WriteListener = (*concentratedPoolWriteListener)(nil)
+var _ storetypes.WriteListener = (*cosmwasmPoolWriteListener)(nil)
 
 type cosmwasmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker

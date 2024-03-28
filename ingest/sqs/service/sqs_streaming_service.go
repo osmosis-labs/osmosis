@@ -28,7 +28,7 @@ type sqsStreamingService struct {
 
 	nodeStatusChecker domain.NodeStatusChecker
 
-	shouldProceessAllBlockData bool
+	shouldProcessAllBlockData bool
 }
 
 // New creates a new sqsStreamingService.
@@ -43,7 +43,7 @@ func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsI
 		poolTracker:       poolTracker,
 		nodeStatusChecker: nodeStatusChecker,
 
-		shouldProceessAllBlockData: true,
+		shouldProcessAllBlockData: true,
 	}
 }
 
@@ -89,7 +89,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		if r := recover(); r != nil {
 			// Due to panic, we set shouldProceessAllBlockData to true to reprocess the entire block.
 			// Be careful when changing this behavior.
-			s.shouldProceessAllBlockData = true
+			s.shouldProcessAllBlockData = true
 
 			// Emit telemetry for the panic.
 			emitFailureTelemetry(ctx, r, domain.SQSProcessBlockPanicMetricName)
@@ -102,7 +102,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 	if err := s.processBlock(ctx); err != nil {
 		// Due to error, we set shouldProceessAllBlockData to true to reprocess the entire block.
 		// Be careful when changing this behavior.
-		s.shouldProceessAllBlockData = true
+		s.shouldProcessAllBlockData = true
 
 		// Emit telemetry for the error.
 		emitFailureTelemetry(ctx, err, domain.SQSProcessBlockErrorMetricName)
@@ -143,7 +143,7 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	// If cold start, we use SQS ingestert to process the intire block.
-	if s.shouldProceessAllBlockData {
+	if s.shouldProcessAllBlockData {
 		// Detect syncing
 		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
 		if err != nil {
@@ -163,7 +163,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		}
 
 		// Successfully processed the block, no longer need to process full block data.
-		s.shouldProceessAllBlockData = false
+		s.shouldProcessAllBlockData = false
 
 		return nil
 	}

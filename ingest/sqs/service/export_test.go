@@ -9,11 +9,11 @@ func (s *sqsStreamingService) ProcessBlock(ctx sdk.Context) error {
 }
 
 func (s *sqsStreamingService) SetShouldProcessAllBlockData(shouldProcessAllBlockData bool) {
-	s.shouldProceessAllBlockData = shouldProcessAllBlockData
+	s.shouldProcessAllBlockData = shouldProcessAllBlockData
 }
 
 func (s *sqsStreamingService) GetShouldProcessAllBlockData() bool {
-	return s.shouldProceessAllBlockData
+	return s.shouldProcessAllBlockData
 }
 
 func (s *sqsStreamingService) ProcessBlockRecoverError(ctx sdk.Context) error {

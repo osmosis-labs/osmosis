@@ -501,6 +501,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 
 	// Get concentrated pool
 	concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
+	s.Require().NoError(err)
 
 	// Get balancer pool
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.BalancerPoolID)
