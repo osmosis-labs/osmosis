@@ -80,7 +80,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
 * [#7857](https://github.com/osmosis-labs/osmosis/pull/7857) SuperfluidDelegationsByValidatorDenom query now returns equivalent staked amount
 * [#7875](https://github.com/osmosis-labs/osmosis/pull/7875) Introduce Chain interface for the x/bridge
-* [#7880](https://github.com/osmosis-labs/osmosis/pull/7880) Rework x/bridge BTC component to use Chain interface
 
 ### SDK
 
