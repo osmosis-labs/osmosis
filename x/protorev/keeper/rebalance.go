@@ -100,20 +100,27 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 // and then subtracting the amount in from the amount out to get the profit
 func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount osmomath.Int, route poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, osmomath.Int, error) {
 	tokenIn := sdk.Coin{Denom: inputDenom, Amount: amount}
-	ctx.Logger().Error("estimating starting")
+	ctx.Logger().Error("---------estimating starting---------")
 
-	ctx.Logger().Error("printing route")
+	ctx.Logger().Error("printing route denoms")
 	for _, rotue := range route.IntermediateDenoms() {
 		ctx.Logger().Error(rotue)
 	}
+
+	ctx.Logger().Error("printing route pool ids")
 	for _, rotue := range route.PoolIds() {
 		ctx.Logger().Error(fmt.Sprintf("%d", rotue))
 	}
+
+	ctx.Logger().Error("printing token in")
 	ctx.Logger().Error(tokenIn.String())
 	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountInNoTakerFee(ctx, route, tokenIn)
 	if err != nil {
 		return sdk.Coin{}, osmomath.ZeroInt(), err
 	}
+
+	ctx.Logger().Error("printing token out")
+	ctx.Logger().Error(amtOut.String())
 	profit := amtOut.Sub(tokenIn.Amount)
 	return tokenIn, profit, nil
 }
