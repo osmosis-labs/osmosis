@@ -45,11 +45,11 @@ var (
 // Note: our Python script plots show accuracy up to a factor of 10^22.
 // However, in Go tests we only test up to 10^18. Therefore, this is the guarantee.
 func Exp2(exponent BigDec) BigDec {
-	if exponent.Abs().GT(maxSupportedExponent) {
-		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", exponent, maxSupportedExponent))
-	}
 	if exponent.IsNegative() {
 		panic(fmt.Sprintf("negative exponent %s is not supported", exponent))
+	}
+	if exponent.Abs().GT(maxSupportedExponent) {
+		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", exponent, maxSupportedExponent))
 	}
 
 	integerExponent := exponent.TruncateDec()

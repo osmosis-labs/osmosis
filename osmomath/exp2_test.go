@@ -298,3 +298,34 @@ func TestExp2(t *testing.T) {
 		})
 	}
 }
+
+var negativeExponents = []osmomath.BigDec{
+	// These could be the results from subtractions or somehow snuck in.
+	osmomath.MustNewBigDecFromStr("-1"),
+	osmomath.MustNewBigDecFromStr("-2"),
+	osmomath.MustNewBigDecFromStr("-17"),
+	osmomath.MustNewBigDecFromStr("-19"),
+	osmomath.MustNewBigDecFromStr("-20"),
+	osmomath.MustNewBigDecFromStr("-39"),
+	osmomath.MustNewBigDecFromStr("-200"),
+	osmomath.MustNewBigDecFromStr("-2000"),
+	osmomath.MustNewBigDecFromStr("-5000"),
+	osmomath.MustNewBigDecFromStr("-5007"),
+	osmomath.MustNewBigDecFromStr("-9007"),
+}
+
+func BenchmarkExp2Negatives(b *testing.B) {
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		for _, exp := range negativeExponents {
+			func() {
+				defer func() {
+					_ = recover()
+				}()
+
+				_ = osmomath.Exp2(exp)
+			}()
+		}
+	}
+}
