@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 )
 
@@ -126,8 +127,8 @@ func CreateUpgradeHandler(
 
 // migrateMainnetPools migrates the specified mainnet pools to the new spread factor accumulator scaling factor.
 func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
-	poolIDsToMigrate := make([]uint64, 0, len(MigratedSpreadFactorAccumulatorPoolIDs))
-	for poolID := range MigratedSpreadFactorAccumulatorPoolIDs {
+	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs))
+	for poolID := range concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs {
 		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
 	}
 
