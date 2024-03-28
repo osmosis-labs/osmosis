@@ -25,7 +25,7 @@ type Transfer struct {
 	Amount   math.Uint
 }
 
-type Chain interface {
+type Client interface {
 	// SignalInboundTransfer sends inbound transfer tx to the chain
 	SignalInboundTransfer(context.Context, Transfer) error
 	// ListenOutboundTransfer returns receive-only channel

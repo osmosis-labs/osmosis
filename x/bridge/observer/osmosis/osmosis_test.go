@@ -95,7 +95,7 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 	require.NoError(t, err)
 	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
 	bitcoin := &MockChain{42, 3}
-	chains := make(map[observer.ChainId]observer.Chain)
+	chains := make(map[observer.ChainId]observer.Client)
 	chains[observer.ChainIdBitcoin] = bitcoin
 
 	o := osmosis.NewChainClient(

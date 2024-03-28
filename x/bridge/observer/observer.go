@@ -14,7 +14,7 @@ const ModuleName = "observer"
 
 type Observer struct {
 	logger     log.Logger
-	chains     map[ChainId]Chain
+	chains     map[ChainId]Client
 	outTxQueue map[ChainId][]Transfer
 	outLock    sync.Mutex
 	sendPeriod time.Duration
@@ -22,7 +22,7 @@ type Observer struct {
 }
 
 // NewObserver returns new instance of `Observer`
-func NewObserver(logger log.Logger, chains map[ChainId]Chain, sendPeriod time.Duration) Observer {
+func NewObserver(logger log.Logger, chains map[ChainId]Client, sendPeriod time.Duration) Observer {
 	return Observer{
 		logger:     logger.With("module", ModuleName),
 		chains:     chains,
