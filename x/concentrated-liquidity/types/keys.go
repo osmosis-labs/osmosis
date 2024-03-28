@@ -50,7 +50,8 @@ var (
 	KeyTotalLiquidity     = []byte{0x13}
 	KeyContractHookPrefix = []byte{0x14}
 
-	KeyIncentiveAccumulatorMigrationThreshold = []byte{0x15}
+	KeyIncentiveAccumulatorMigrationThreshold    = []byte{0x15}
+	KeySpreadRewardAccumulatorMigrationThreshold = []byte{0x16}
 
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + Uint64ByteSize

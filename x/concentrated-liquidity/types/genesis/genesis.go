@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 		NextIncentiveRecordId: 1,
 		// By default, the migration threshold is set to 0, which means all pools are migrated.
 		IncentivesAccumulatorPoolIdMigrationThreshold: 0,
+		SpreadFactorPoolIdMigrationThreshold:          0,
 	}
 }
 

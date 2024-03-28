@@ -94,7 +94,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 
 	// Migrate concentrated pools
 	for _, poolId := range poolIDsToMigrate {
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolId); err != nil {
+		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, poolId); err != nil {
 			return err
 		}
 	}
@@ -113,7 +113,7 @@ func migrateAllTestnetPools(ctx sdk.Context, concentratedKeeper concentratedliqu
 
 	// Migrate each pool
 	for _, pool := range pools {
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
+		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
 			return err
 		}
 	}
