@@ -52,6 +52,7 @@ func NewAnteHandler(
 
 	// classicSignatureVerificationDecorator is the old flow to enable a circuit breaker
 	classicSignatureVerificationDecorator := sdk.ChainAnteDecorators(
+		deductFeeDecorator,
 		// We use the old pubkey decorator here to ensure that accounts work as expected,
 		// in SetPubkeyDecorator we set a pubkey in the account store, for authenticators
 		// we avoid this code path completely.
@@ -73,6 +74,7 @@ func NewAnteHandler(
 		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		deductFeeDecorator,
 	)
 
 	return sdk.ChainAnteDecorators(
@@ -89,7 +91,6 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
-		deductFeeDecorator,
 		authante.NewCircuitBreakerDecorator(
 			authenticatorKeeper,
 			authenticatorVerificationDecorator,
