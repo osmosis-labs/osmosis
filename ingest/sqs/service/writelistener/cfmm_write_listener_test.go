@@ -8,7 +8,7 @@ import (
 
 // Tests that the concentrated write listener correctly tracks pool and tick updates.
 // It ignores error cases as they are simple and unlikely giving app wiring.
-func (s *WriteListenerTestSuite) TestWriteListener_GAMM() {
+func (s *WriteListenerTestSuite) TestWriteListener_CFMM() {
 
 	// Set up chain state once per test
 	s.Setup()

@@ -47,6 +47,9 @@ func (s *SQSServiceTestSuite) TestPoolTracker_Track() {
 	// Track the balancer pool
 	poolTracker.TrackCFMM(balancerPool)
 
+	// Track the same pool to ensure no duplicates
+	poolTracker.TrackCFMM(balancerPool)
+
 	// Get stableswap pool
 	stableswapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, allPools.StableSwapPoolID)
 	s.Require().NoError(err)

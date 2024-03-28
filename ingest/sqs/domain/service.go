@@ -9,6 +9,7 @@ import (
 // BlockPoolUpdateTracker is an interface for tracking
 // the pools that were updated in a block.
 // It persists the pools using "Track" methods in its internal state.
+// It tracks the latest pool update, discarding the previous updates.
 // Only on Reset, the internal state is cleared.
 type BlockPoolUpdateTracker interface {
 	// TrackConcentrated tracks the concentrated pool.
@@ -44,8 +45,8 @@ type BlockPoolUpdateTracker interface {
 
 // NodeStatusChecker is an interface for checking the node status.
 type NodeStatusChecker interface {
-	// IsNodeSynching checks if the node is synching.
-	// Returns true if the node is synching, false otherwise.
-	// Returns error if the node synching status cannot be determined.
-	IsNodeSynching(ctx sdk.Context) (bool, error)
+	// IsNodeSyncing checks if the node is syncing.
+	// Returns true if the node is syncing, false otherwise.
+	// Returns error if the node syncing status cannot be determined.
+	IsNodeSyncing(ctx sdk.Context) (bool, error)
 }

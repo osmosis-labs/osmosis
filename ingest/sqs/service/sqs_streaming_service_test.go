@@ -42,26 +42,26 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 		// flag indicating if ProcessChangedBlockData should return an error.
 		doesProcessChangedBlockDataError bool
 
-		// flag indicating if the node is synching.
-		isSynching bool
-		// flag indicating if IsNodeSynching should return an error.
-		doesIsNodeSynchingError bool
+		// flag indicating if the node is syncing.
+		isSyncing bool
+		// flag indicating if IsNodeSyncing should return an error.
+		doesIsNodeSyncingError bool
 
 		expectedError error
 	}{
 		{
 
-			name:                      "node is synching while processing all block data - returns error",
+			name:                      "node is syncing while processing all block data - returns error",
 			shouldProcessAllBlockData: true,
-			isSynching:                true,
+			isSyncing:                 true,
 
-			expectedError: domain.ErrNodeIsSynching,
+			expectedError: domain.ErrNodeIsSyncing,
 		},
 		{
 			// The reason this does not error is so that if node falls behind a few blocks, we do not
 			// want to retrigger the processing of all block data and instead let the node catch up.
-			name:       "node is synching while processing changed block data - unaffected",
-			isSynching: true,
+			name:      "node is syncing while processing changed block data - unaffected",
+			isSyncing: true,
 		},
 		{
 			name:                      "processing all block data",
@@ -90,7 +90,7 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 		s.Run(tc.name, func() {
 			s.Setup()
 
-			// Prepate each pool for testing
+			// Prepare each pool for testing
 			allPools := s.PrepareAllSupportedPools()
 
 			sqsIngesterMock := &mocks.SQSIngesterMock{
@@ -98,8 +98,8 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 				ChangedBlockDataError: mockErrorFromFlag(tc.doesProcessChangedBlockDataError),
 			}
 			nodeStatusCheckerMock := &mocks.NodeStatusCheckerMock{
-				IsSynching:          tc.isSynching,
-				IsNodeSynchingError: mockErrorFromFlag(tc.doesIsNodeSynchingError),
+				IsSyncing:          tc.isSyncing,
+				IsNodeSyncingError: mockErrorFromFlag(tc.doesIsNodeSyncingError),
 			}
 
 			poolTracker := service.NewPoolTracker()
@@ -190,7 +190,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 		s.Run(tc.name, func() {
 			s.Setup()
 
-			// Prepate each pool for testing
+			// Prepare each pool for testing
 			allPools := s.PrepareAllSupportedPools()
 
 			sqsIngesterMock := &mocks.SQSIngesterMock{
