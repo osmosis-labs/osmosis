@@ -2,6 +2,9 @@ package osmomath
 
 import (
 	"fmt"
+	"math/big"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 // Don't EVER change after initializing
@@ -147,8 +150,8 @@ func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 		// On this line, bigK == i-1.
 		c, cneg := AbsDifferenceWithSign(a, bigK)
 		// On this line, bigK == i.
-		bigK.SetInt64(i)
-		term.MulMut(c).MulMut(x).QuoMut(bigK)
+		bigK.AddMut(one)
+		LegacyMultiMulMut(term, c, x).QuoInt64Mut(i)
 
 		// a is mutated on absDifferenceWithSign, reset
 		a.Set(exp)
@@ -202,4 +205,63 @@ func OrderOfMagnitude(num Dec) int {
 	}
 
 	return order
+}
+
+var legacyPrecisionOf5sReuse = new(big.Int).Exp(big.NewInt(5), big.NewInt(sdkmath.LegacyPrecision), nil)
+var twoFactorsToRemovePerStep = uint(sdkmath.LegacyPrecision) - 1
+var divisorsNoPowersOfTwo = []*big.Int{nil}
+
+func init() {
+	for i := 0; i < 5; i++ {
+		cur := new(big.Int).Exp(legacyPrecisionOf5sReuse, big.NewInt(int64(i+1)), nil)
+		divisorsNoPowersOfTwo = append(divisorsNoPowersOfTwo, cur)
+	}
+}
+
+// LegacyMultiMulMut does the equivalent of base * exps[0] * exps[1] * ... * exps[n]
+// while mutating base.
+//
+// Right now this is done via enlarging the base, and doing a single "chop precision and round" for the batch.
+// Ideally in the future we do something smarter that intelligently figures out when to chop precision and round
+// based on the magnitudes/growth of the intermediate result.
+func LegacyMultiMulMut(base Dec, exps ...Dec) Dec {
+	resultBi := base.BigIntMut()
+	for i, exp := range exps {
+		resultBi.Mul(resultBi, exp.BigIntMut())
+		resultBi.Rsh(resultBi, twoFactorsToRemovePerStep)
+		if (i+1)%5 == 0 {
+			resultBi.Rsh(resultBi, 4)
+			resultBi = chopPrecisionUsingParity(resultBi, divisorsNoPowersOfTwo[5])
+		}
+	}
+	// Final batch handling for cases where the total number of exps is not a multiple of 5
+	if len(exps)%5 != 0 {
+		finalBatchSize := len(exps) % 5
+		resultBi.Rsh(resultBi, uint(finalBatchSize-1))
+		resultBi = chopPrecisionUsingParity(resultBi, divisorsNoPowersOfTwo[finalBatchSize])
+	}
+	return base
+}
+
+// Divides by 2*precision. It rounds based on the direction of dividing by precision.
+func chopPrecisionUsingParity(d *big.Int, precisionReuse *big.Int) *big.Int {
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		d = chopPrecisionUsingParity(d, precisionReuse)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo := d
+	quo = quo.Quo(d, precisionReuse)
+	roundDir := quo.Bit(0)
+	quo = quo.Rsh(quo, 1)
+
+	if roundDir == 1 {
+		return quo.Add(quo, oneInt)
+	}
+	return quo
 }

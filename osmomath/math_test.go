@@ -2,6 +2,7 @@ package osmomath
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -239,5 +240,80 @@ func TestOrderOfMagnitudeWithoutLog(t *testing.T) {
 				t.Errorf("Expected order of magnitude %d, got %d", tc.expected, result)
 			}
 		})
+	}
+}
+
+func TestLegacyMultiMulMut(t *testing.T) {
+	type testCase struct {
+		base Dec
+		exps []Dec
+	}
+
+	// Define your test cases here
+	tests := []testCase{
+		{
+			base: NewDecFromBigInt(big.NewInt(2)), // Assume NewDecFromBigInt is a constructor for Dec
+			exps: []Dec{NewDecFromBigInt(big.NewInt(3)), NewDecFromBigInt(big.NewInt(4))},
+		},
+		// Single exponent
+		{
+			base: NewDec(1),
+			exps: []Dec{NewDec(2)},
+		},
+		// Two exponents
+		{
+			base: NewDec(1),
+			exps: []Dec{NewDec(2), NewDec(3)},
+		},
+		// Five exponents - precision chopping after the last multiplication
+		{
+			base: NewDec(1),
+			exps: []Dec{NewDec(2), NewDec(3), NewDec(4), NewDec(5), NewDec(6)},
+		},
+		// Six exponents - precision chopping once in the middle
+		{
+			base: NewDec(1),
+			exps: []Dec{NewDec(2), NewDec(3), NewDec(4), NewDec(5), NewDec(6), NewDec(7)},
+		},
+		// Eleven exponents - multiple precision chopping points
+		{
+			base: NewDec(1),
+			exps: []Dec{NewDec(2), NewDec(3), NewDec(4), NewDec(5), NewDec(6), NewDec(7), NewDec(8), NewDec(9), NewDec(10), NewDec(11), NewDec(12)},
+		},
+		// Edge case: No exponents
+		{
+			base: NewDec(5),
+			exps: []Dec{},
+		},
+		// Large numbers for exponents
+		{
+			base: NewDec(1000),
+			exps: []Dec{NewDec(100), NewDec(10), NewDec(1000)},
+		},
+		// Testing with negative exponent
+		{
+			base: NewDec(2),
+			exps: []Dec{NewDec(-1), NewDec(2)},
+		},
+		// Mixing positive and negative exponents
+		{
+			base: NewDec(3),
+			exps: []Dec{NewDec(-2), NewDec(4), NewDec(-5), NewDec(6)},
+		},
+	}
+
+	for _, tc := range tests {
+		// Compute the expected result using .Clone() and .MulMut()
+		expected := tc.base.Clone() // Assuming Clone() creates a deep copy
+		for _, exp := range tc.exps {
+			expected.MulMut(exp) // Assuming MulMut() mutates the object by multiplying
+		}
+
+		baseClone := tc.base.Clone()
+		result := LegacyMultiMulMut(baseClone, tc.exps...)
+		// Adjust comparison based on how Dec types can be compared
+		if !result.Equal(expected) {
+			t.Errorf("Failed for base %s and exps %s. Expected %s, got %s", tc.base, tc.exps, expected, result)
+		}
 	}
 }
