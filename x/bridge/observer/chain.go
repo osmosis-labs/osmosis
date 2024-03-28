@@ -10,13 +10,14 @@ type ChainId string
 type Denom string
 
 const (
-	ChainId_OSMO    ChainId = "osmosis"
-	ChainId_BITCOIN ChainId = "bitcoin"
+	ChainIdOsmosis ChainId = "osmosis"
+	ChainIdBitcoin ChainId = "bitcoin"
 
-	Denom_BITCOIN Denom = "btc"
+	DenomBitcoin Denom = "btc"
 )
 
-type OutboundTransfer struct {
+type Transfer struct {
+	SrcChain ChainId
 	DstChain ChainId
 	Id       string
 	Height   uint64
@@ -26,26 +27,18 @@ type OutboundTransfer struct {
 	Amount   math.Uint
 }
 
-type InboundTransfer struct {
-	SrcChain ChainId
-	Id       string
-	Height   uint64
-	Sender   string
-	To       string
-	Asset    string
-	Amount   math.Uint
-}
-
 type Chain interface {
-	// Sends inbound transfer tx to the chain
-	SignalInboundTransfer(ctx context.Context, in InboundTransfer) error
-	// Returns receive-only channel with outbound transfer txs from the chain
-	ListenOutboundTransfer() <-chan OutboundTransfer
+	// SignalInboundTransfer sends inbound transfer tx to the chain
+	SignalInboundTransfer(context.Context, Transfer) error
+	// ListenOutboundTransfer returns receive-only channel
+	// with outbound transfer txs from the chain
+	ListenOutboundTransfer() <-chan Transfer
 
-	Start(ctx context.Context) error
-	Stop(ctx context.Context) error
-	// Returns current height of the chain
+	Start(context.Context) error
+	Stop(context.Context) error
+	// Height returns current height of the chain
 	Height() (uint64, error)
-	// Returns number of the required tx confirmations
+	// ConfirmationsRequired returns number of the required confirmations
+	// for the given asset
 	ConfirmationsRequired() (uint64, error)
 }

@@ -26,33 +26,33 @@ var (
 	OsmoFeeDenom  = "uosmo"
 )
 
-type Osmosis struct {
+type ChainClient struct {
 	logger             log.Logger
 	osmoClient         *Client
 	cometRpc           *rpchttp.HTTP
 	stopChan           chan struct{}
-	outboundChan       chan observer.OutboundTransfer
+	outboundChan       chan observer.Transfer
 	lastObservedHeight atomic.Uint64
 }
 
-// NewOsmosis returns new instance of `Osmosis`
-func NewOsmosis(
+// NewChainClient returns new instance of `Osmosis`
+func NewChainClient(
 	logger log.Logger,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
-) *Osmosis {
-	return &Osmosis{
+) *ChainClient {
+	return &ChainClient{
 		logger:             logger.With("module", ModuleName),
 		osmoClient:         osmoClient,
 		cometRpc:           cometRpc,
 		stopChan:           make(chan struct{}),
-		outboundChan:       make(chan observer.OutboundTransfer),
+		outboundChan:       make(chan observer.Transfer),
 		lastObservedHeight: atomic.Uint64{},
 	}
 }
 
 // Start subscribes to the `NewBlock` events and starts listening to `EventOutboundTransfer` events
-func (o *Osmosis) Start(ctx context.Context) error {
+func (o *ChainClient) Start(ctx context.Context) error {
 	err := o.cometRpc.Start()
 	if err != nil {
 		return errorsmod.Wrapf(ErrRpcClient, err.Error())
@@ -69,7 +69,7 @@ func (o *Osmosis) Start(ctx context.Context) error {
 }
 
 // Stop stops listening to events and closes Osmosis client
-func (o *Osmosis) Stop(ctx context.Context) error {
+func (o *ChainClient) Stop(ctx context.Context) error {
 	close(o.stopChan)
 	o.osmoClient.Close()
 	if err := o.cometRpc.UnsubscribeAll(ctx, ModuleName); err != nil {
@@ -79,12 +79,12 @@ func (o *Osmosis) Stop(ctx context.Context) error {
 }
 
 // ListenOutboundTransfer returns receive-only channel with `OutboundTransfer` items
-func (o *Osmosis) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
+func (o *ChainClient) ListenOutboundTransfer() <-chan observer.Transfer {
 	return o.outboundChan
 }
 
 // SignalInboundTransfer sends `InboundTransfer` to Osmosis
-func (o *Osmosis) SignalInboundTransfer(ctx context.Context, in observer.InboundTransfer) error {
+func (o *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Transfer) error {
 	msg := bridgetypes.NewMsgInboundTransfer(
 		in.Id,
 		in.Sender,
@@ -102,12 +102,16 @@ func (o *Osmosis) SignalInboundTransfer(ctx context.Context, in observer.Inbound
 	}
 	_, err = o.osmoClient.BroadcastTx(ctx, bytes)
 	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to broadcast tx to Osmosis for inbound transfer %s", in.Id)
+		return errorsmod.Wrapf(
+			err,
+			"Failed to broadcast tx to Osmosis for inbound transfer %s",
+			in.Id,
+		)
 	}
 	return nil
 }
 
-func (o *Osmosis) observeEvents(
+func (o *ChainClient) observeEvents(
 	ctx context.Context,
 	txs <-chan coretypes.ResultEvent,
 ) {
@@ -157,7 +161,11 @@ func (o *Osmosis) observeEvents(
 					select {
 					case o.outboundChan <- out:
 					case <-o.stopChan:
-						o.logger.Info("Exiting early, event %s skipped in tx %s", e.String(), r.Hash.String())
+						o.logger.Info(
+							"Exiting early, event %s skipped in tx %s",
+							e.String(),
+							r.Hash.String(),
+						)
 						return
 					}
 				}
@@ -166,18 +174,19 @@ func (o *Osmosis) observeEvents(
 	}
 }
 
-func outboundTransferFromEvent(height uint64, hash string, e abci.Event) (observer.OutboundTransfer, error) {
+func outboundTransferFromEvent(height uint64, hash string, e abci.Event) (observer.Transfer, error) {
 	mes, err := sdktypes.ParseTypedEvent(e)
 	if err != nil {
-		return observer.OutboundTransfer{}, errorsmod.Wrapf(err, "Failed to parse typed event")
+		return observer.Transfer{}, errorsmod.Wrapf(err, "Failed to parse typed event")
 	}
 	ev, ok := mes.(*bridgetypes.EventOutboundTransfer)
 	if !ok {
-		return observer.OutboundTransfer{}, fmt.Errorf("Failed to parse EventOutboundTransfer from event")
+		return observer.Transfer{}, fmt.Errorf("Failed to parse EventOutboundTransfer from event")
 	}
 
-	return observer.OutboundTransfer{
-		DstChain: observer.ChainId_BITCOIN,
+	return observer.Transfer{
+		SrcChain: observer.ChainIdOsmosis,
+		DstChain: observer.ChainIdBitcoin,
 		Id:       hash,
 		Height:   height,
 		Sender:   ev.Sender,
@@ -188,12 +197,12 @@ func outboundTransferFromEvent(height uint64, hash string, e abci.Event) (observ
 }
 
 // Returns current height of the chain
-func (o *Osmosis) Height() (uint64, error) {
+func (o *ChainClient) Height() (uint64, error) {
 	return o.lastObservedHeight.Load(), nil
 }
 
 // Returns number of required tx confirmations
-func (o *Osmosis) ConfirmationsRequired() (uint64, error) {
+func (o *ChainClient) ConfirmationsRequired() (uint64, error) {
 	// Query bridge module
 	return 0, nil
 }

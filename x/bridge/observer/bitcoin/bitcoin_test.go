@@ -105,19 +105,20 @@ func TestListenOutboundTransfer(t *testing.T) {
 	// Only 1 Tx is sent to our vault address,
 	// so we should receive only 1 TxIn
 	txs := b.ListenOutboundTransfer()
-	var out observer.OutboundTransfer
+	var out observer.Transfer
 	require.Eventually(t, func() bool {
 		out = <-txs
 		return true
 	}, time.Second, 100*time.Millisecond, "Timeout reading transfer")
 
-	expOut := observer.OutboundTransfer{
-		DstChain: observer.ChainId_OSMO,
+	expOut := observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
 		Id:       "ef4cd511c64834bde624000b94110c9f184388566a97d68d355339294a72dadf",
 		Height:   initialHeight,
 		Sender:   "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
 		To:       "osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
-		Asset:    string(observer.Denom_BITCOIN),
+		Asset:    string(observer.DenomBitcoin),
 		Amount:   math.NewUint(10000),
 	}
 	require.Equal(t, expOut, out)

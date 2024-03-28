@@ -30,7 +30,7 @@ type Bitcoin struct {
 	btcRpc             *rpcclient.Client
 	vaultAddr          string
 	stopChan           chan struct{}
-	outboundChan       chan observer.OutboundTransfer
+	outboundChan       chan observer.Transfer
 	observeSleepPeriod time.Duration
 	lastObservedHeight uint64
 }
@@ -52,7 +52,7 @@ func NewBitcoin(
 		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
 		stopChan:           make(chan struct{}),
-		outboundChan:       make(chan observer.OutboundTransfer),
+		outboundChan:       make(chan observer.Transfer),
 		observeSleepPeriod: observeSleepPeriod,
 		lastObservedHeight: lastObservedHeight,
 	}, nil
@@ -74,12 +74,12 @@ func (b *Bitcoin) Stop(context.Context) error {
 }
 
 // ListenOutboundTransfer returns receive-only channel with outbound transfer items
-func (b *Bitcoin) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
+func (b *Bitcoin) ListenOutboundTransfer() <-chan observer.Transfer {
 	return b.outboundChan
 }
 
 // SignalInboundTransfer sends `InboundTransfer` to Bitcoin
-func (b *Bitcoin) SignalInboundTransfer(ctx context.Context, in observer.InboundTransfer) error {
+func (b *Bitcoin) SignalInboundTransfer(ctx context.Context, in observer.Transfer) error {
 	return fmt.Errorf("Not implemented")
 }
 
@@ -152,30 +152,31 @@ func (b *Bitcoin) fetchNewBlock() error {
 	return nil
 }
 
-func (b *Bitcoin) processTx(height uint64, tx *btcjson.TxRawResult) (observer.OutboundTransfer, bool, error) {
+func (b *Bitcoin) processTx(height uint64, tx *btcjson.TxRawResult) (observer.Transfer, bool, error) {
 	sender, err := b.getSender(tx)
 	if err != nil {
-		return observer.OutboundTransfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx sender")
+		return observer.Transfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx sender")
 	}
 
 	dest, amount, err := b.getOutput(sender, tx)
 	if err != nil {
-		return observer.OutboundTransfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx output")
+		return observer.Transfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx output")
 	}
 	isRelevant := dest == b.vaultAddr
 
 	memo, err := b.getMemo(tx)
 	if err != nil {
-		return observer.OutboundTransfer{}, isRelevant, errorsmod.Wrapf(err, "Failed to get Tx memo")
+		return observer.Transfer{}, isRelevant, errorsmod.Wrapf(err, "Failed to get Tx memo")
 	}
 
-	return observer.OutboundTransfer{
-		DstChain: observer.ChainId_OSMO,
+	return observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
 		Id:       tx.Hash,
 		Height:   height,
 		Sender:   sender,
 		To:       memo,
-		Asset:    string(observer.Denom_BITCOIN),
+		Asset:    string(observer.DenomBitcoin),
 		Amount:   amount,
 	}, isRelevant, nil
 }
