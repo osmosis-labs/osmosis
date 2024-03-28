@@ -499,8 +499,6 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
-	// TODO: get other pools
-
 	// Get concentrated pool
 	concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
 
