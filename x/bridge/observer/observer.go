@@ -49,10 +49,10 @@ func (o *Observer) Start(ctx context.Context) error {
 }
 
 // Stop stops all underlying chains and stops processing transfers
-func (o *Observer) Stop() error {
+func (o *Observer) Stop(ctx context.Context) error {
 	close(o.stopChan)
 	for id, c := range o.chains {
-		err := c.Stop()
+		err := c.Stop(ctx)
 		if err != nil {
 			return errorsmod.Wrapf(err, "Failed to stop chain %s", id)
 		}

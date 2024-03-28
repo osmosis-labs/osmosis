@@ -54,7 +54,7 @@ func (m *MockChain) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
 
 func (m *MockChain) Start(context.Context) error { return nil }
 
-func (m *MockChain) Stop() error { return nil }
+func (m *MockChain) Stop(context.Context) error { return nil }
 
 func (m *MockChain) Height() (uint64, error) {
 	return m.H, nil
@@ -105,6 +105,7 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		chains,
 	)
 	require.NoError(t, err)
+
 	return OsmosisTestSuite{ts, s, o}
 }
 
@@ -270,6 +271,9 @@ func TestListenOutboundTransfer(t *testing.T) {
 	defer cancel()
 	ots := NewOsmosisTestSuite(t, ctx)
 
+	height, err := ots.o.Height()
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), height)
 	ots.Start(t, ctx)
 
 	// We expect to receive 3 Txs with `EventOutboundTransferType` events in this test
@@ -304,6 +308,14 @@ func TestListenOutboundTransfer(t *testing.T) {
 	require.Equal(t, expTransfer0, transfers[0])
 	require.Equal(t, expTransfer1, transfers[1])
 	require.Equal(t, 0, len(eventsOut))
+
+	height, err = ots.o.Height()
+	require.NoError(t, err)
+	require.Equal(t, expTransfer0.Height, height)
+
+	confirms, err := ots.o.ConfirmationsRequired()
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), confirms)
 
 	ots.Stop(t, ctx)
 }

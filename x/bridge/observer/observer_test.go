@@ -45,7 +45,7 @@ func (m *MockChain) Start(context.Context) error {
 	return nil
 }
 
-func (m *MockChain) Stop() error {
+func (m *MockChain) Stop(context.Context) error {
 	return nil
 }
 
@@ -98,7 +98,7 @@ func TestObserver(t *testing.T) {
 	}, time.Second, 100*time.Millisecond, "Timeout receiving transfer")
 	require.Equal(t, expOsmoIn, osmoIn)
 
-	err = o.Stop()
+	err = o.Stop(ctx)
 	require.NoError(t, err)
 }
 
@@ -151,6 +151,6 @@ func TestObserverLowConfirmation(t *testing.T) {
 	}, time.Second, 100*time.Millisecond, "Timeout receiving transfer")
 	require.Equal(t, expOsmoIn, osmoIn)
 
-	err = o.Stop()
+	err = o.Stop(ctx)
 	require.NoError(t, err)
 }

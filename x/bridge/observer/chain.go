@@ -40,7 +40,7 @@ type Chain interface {
 	ListenOutboundTransfer() <-chan OutboundTransfer
 
 	Start(ctx context.Context) error
-	Stop() error
+	Stop(ctx context.Context) error
 	// Returns current height of the chain
 	Height() (uint64, error)
 	// Returns number of the required tx confirmations

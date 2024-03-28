@@ -3,6 +3,7 @@ package osmosis
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -26,12 +27,13 @@ var (
 )
 
 type Osmosis struct {
-	logger       log.Logger
-	osmoClient   *Client
-	cometRpc     *rpchttp.HTTP
-	chains       map[observer.ChainId]observer.Chain
-	stopChan     chan struct{}
-	outboundChan chan observer.OutboundTransfer
+	logger             log.Logger
+	osmoClient         *Client
+	cometRpc           *rpchttp.HTTP
+	chains             map[observer.ChainId]observer.Chain
+	stopChan           chan struct{}
+	outboundChan       chan observer.OutboundTransfer
+	lastObservedHeight atomic.Uint64
 }
 
 // NewOsmosis returns new instance of `Osmosis`
@@ -42,12 +44,13 @@ func NewOsmosis(
 	chains map[observer.ChainId]observer.Chain,
 ) *Osmosis {
 	return &Osmosis{
-		logger:       logger.With("module", ModuleName),
-		osmoClient:   osmoClient,
-		cometRpc:     cometRpc,
-		chains:       chains,
-		stopChan:     make(chan struct{}),
-		outboundChan: make(chan observer.OutboundTransfer),
+		logger:             logger.With("module", ModuleName),
+		osmoClient:         osmoClient,
+		cometRpc:           cometRpc,
+		chains:             chains,
+		stopChan:           make(chan struct{}),
+		outboundChan:       make(chan observer.OutboundTransfer),
+		lastObservedHeight: atomic.Uint64{},
 	}
 }
 
@@ -124,6 +127,10 @@ func (o *Osmosis) observeEvents(
 				continue
 			}
 
+			o.lastObservedHeight.Store(math.Max(
+				o.lastObservedHeight.Load(),
+				uint64(newBlock.Block.Height),
+			))
 			results, err := o.cometRpc.TxSearch(
 				ctx,
 				fmt.Sprintf("tx.height=%d", newBlock.Block.Height),
@@ -181,4 +188,15 @@ func outboundTransferFromEvent(height uint64, hash string, e abci.Event) (observ
 		Asset:    ev.AssetId.Denom,
 		Amount:   math.Uint(ev.Amount),
 	}, nil
+}
+
+// Returns current height of the chain
+func (o *Osmosis) Height() (uint64, error) {
+	return o.lastObservedHeight.Load(), nil
+}
+
+// Returns number of required tx confirmations
+func (o *Osmosis) ConfirmationsRequired() (uint64, error) {
+	// Query bridge module
+	return 0, nil
 }
