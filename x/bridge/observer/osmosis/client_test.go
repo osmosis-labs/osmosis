@@ -24,7 +24,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/app"
 	"github.com/osmosis-labs/osmosis/v24/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer/osmosis"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 var (
@@ -35,11 +37,12 @@ var (
 )
 
 type TestSuite struct {
-	Ctrl       *gomock.Controller
-	Lis        *bufconn.Listener
-	GrpcServer *grpc.Server
-	AccServer  *mocks.MockQueryServer
-	TxServer   *mocks.MockServiceServer
+	Ctrl         *gomock.Controller
+	Lis          *bufconn.Listener
+	GrpcServer   *grpc.Server
+	AccServer    *mocks.MockQueryServer
+	TxServer     *mocks.MockServiceServer
+	BridgeServer *mocks.MockBridgeQueryServer
 }
 
 func NewTestSuite(t *testing.T, ctx context.Context) TestSuite {
@@ -48,9 +51,11 @@ func NewTestSuite(t *testing.T, ctx context.Context) TestSuite {
 	s := grpc.NewServer()
 	accServer := mocks.NewMockQueryServer(ctrl)
 	txServer := mocks.NewMockServiceServer(ctrl)
+	bridgeServer := mocks.NewMockBridgeQueryServer(ctrl)
 	authtypes.RegisterQueryServer(s, accServer)
 	tx.RegisterServiceServer(s, txServer)
-	return TestSuite{ctrl, lis, s, accServer, txServer}
+	bridgetypes.RegisterQueryServer(s, bridgeServer)
+	return TestSuite{ctrl, lis, s, accServer, txServer, bridgeServer}
 }
 
 func (ts *TestSuite) Start(t *testing.T) {
@@ -107,10 +112,10 @@ func TestAccountQuerySuccess(t *testing.T) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err)
-	defer conn.Close()
 
 	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	defer client.Close()
 
 	acc, err := client.Account(ctx, Addr1)
 	require.NoError(t, err)
@@ -152,7 +157,6 @@ func TestSignTxSuccess(t *testing.T) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err)
-	defer conn.Close()
 
 	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
 	record, err := keyring.NewAccount(
@@ -165,7 +169,8 @@ func TestSignTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 	cpk, err := record.GetPubKey()
 	require.NoError(t, err)
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	defer client.Close()
 
 	coins := types.NewCoins(types.NewInt64Coin("uosmo", 100))
 	msg := banktypes.NewMsgSend(Addr1, Addr2, coins)
@@ -295,9 +300,8 @@ func TestBroadcastTxSuccess(t *testing.T) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err)
-	defer conn.Close()
-
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	defer client.Close()
 
 	bytes, err := client.SignTx(ctx, msg, fees, gasLimit)
 	require.NoError(t, err)
@@ -305,6 +309,97 @@ func TestBroadcastTxSuccess(t *testing.T) {
 	resp, err := client.BroadcastTx(ctx, bytes)
 	require.NoError(t, err)
 	require.Equal(t, expResp, resp)
+}
+
+func TestConfirmationsRequiredSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	ts := NewTestSuite(t, ctx)
+	defer ts.Close(t)
+
+	expReq := &bridgetypes.QueryParamsRequest{}
+	expResp := &bridgetypes.QueryParamsResponse{
+		Params: bridgetypes.Params{
+			Assets: []bridgetypes.Asset{
+				{
+					Id: bridgetypes.AssetID{
+						SourceChain: string(observer.ChainIdBitcoin),
+						Denom:       string(observer.DenomBitcoin),
+					},
+					ExternalConfirmations: 5,
+				},
+			},
+		},
+	}
+	ts.BridgeServer.
+		EXPECT().
+		Params(gomock.Any(), expReq).
+		Times(1).
+		Return(expResp, nil)
+	go ts.Start(t)
+
+	conn, err := grpc.DialContext(
+		ctx,
+		"test",
+		grpc.WithContextDialer(ts.Dialer()),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	defer client.Close()
+
+	cr, err := client.ConfirmationsRequired(ctx, bridgetypes.AssetID{
+		SourceChain: string(observer.ChainIdBitcoin),
+		Denom:       string(observer.DenomBitcoin),
+	})
+	require.NoError(t, err)
+	require.Equal(t, uint64(5), cr)
+}
+
+func TestConfirmationsRequiredNotFound(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	ts := NewTestSuite(t, ctx)
+	defer ts.Close(t)
+
+	expReq := &bridgetypes.QueryParamsRequest{}
+	expResp := &bridgetypes.QueryParamsResponse{
+		Params: bridgetypes.Params{
+			Assets: []bridgetypes.Asset{
+				{
+					Id: bridgetypes.AssetID{
+						SourceChain: string(observer.ChainIdBitcoin),
+						Denom:       string(observer.DenomBitcoin),
+					},
+					ExternalConfirmations: 5,
+				},
+			},
+		},
+	}
+	ts.BridgeServer.
+		EXPECT().
+		Params(gomock.Any(), expReq).
+		Times(1).
+		Return(expResp, nil)
+	go ts.Start(t)
+
+	conn, err := grpc.DialContext(
+		ctx,
+		"test",
+		grpc.WithContextDialer(ts.Dialer()),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	defer client.Close()
+
+	_, err = client.ConfirmationsRequired(ctx, bridgetypes.AssetID{
+		SourceChain: "na",
+		Denom:       "na",
+	})
+	require.ErrorIs(t, err, osmosis.ErrQuery)
 }
 
 func buildAndSignTx(

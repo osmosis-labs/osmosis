@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 type MockChain struct {
@@ -49,11 +50,11 @@ func (m *MockChain) Stop(context.Context) error {
 	return nil
 }
 
-func (m *MockChain) Height() (uint64, error) {
+func (m *MockChain) Height(context.Context) (uint64, error) {
 	return m.H.Load(), nil
 }
 
-func (m *MockChain) ConfirmationsRequired() (uint64, error) {
+func (m *MockChain) ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error) {
 	return m.CR.Load(), nil
 }
 

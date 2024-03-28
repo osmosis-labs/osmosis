@@ -267,7 +267,7 @@ func TestListenOutboundTransfer(t *testing.T) {
 	defer cancel()
 	ots := NewOsmosisTestSuite(t, ctx)
 
-	height, err := ots.o.Height()
+	height, err := ots.o.Height(ctx)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), height)
 	ots.Start(t, ctx)
@@ -305,13 +305,80 @@ func TestListenOutboundTransfer(t *testing.T) {
 	require.Equal(t, expTransfer1, transfers[1])
 	require.Equal(t, 0, len(eventsOut))
 
-	height, err = ots.o.Height()
+	height, err = ots.o.Height(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expTransfer0.Height, height)
 
-	confirms, err := ots.o.ConfirmationsRequired()
+	ots.Stop(t, ctx)
+}
+
+func TestChainClientConfirmationsRequired(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	ots := NewOsmosisTestSuite(t, ctx)
+
+	expReq := &bridgetypes.QueryParamsRequest{}
+	expResp := &bridgetypes.QueryParamsResponse{
+		Params: bridgetypes.Params{
+			Assets: []bridgetypes.Asset{
+				{
+					Id: bridgetypes.AssetID{
+						SourceChain: string(observer.ChainIdBitcoin),
+						Denom:       string(observer.DenomBitcoin),
+					},
+					ExternalConfirmations: 5,
+				},
+			},
+		},
+	}
+	ots.ts.BridgeServer.
+		EXPECT().
+		Params(gomock.Any(), expReq).
+		Times(1).
+		Return(expResp, nil)
+	ots.Start(t, ctx)
+
+	cr, err := ots.o.ConfirmationsRequired(ctx, bridgetypes.AssetID{
+		SourceChain: string(observer.ChainIdBitcoin),
+		Denom:       string(observer.DenomBitcoin),
+	})
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), confirms)
+	require.Equal(t, uint64(5), cr)
+
+	ots.Stop(t, ctx)
+}
+
+func TestChainClientConfirmationsRequiredNotFound(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	ots := NewOsmosisTestSuite(t, ctx)
+
+	expReq := &bridgetypes.QueryParamsRequest{}
+	expResp := &bridgetypes.QueryParamsResponse{
+		Params: bridgetypes.Params{
+			Assets: []bridgetypes.Asset{
+				{
+					Id: bridgetypes.AssetID{
+						SourceChain: string(observer.ChainIdBitcoin),
+						Denom:       string(observer.DenomBitcoin),
+					},
+					ExternalConfirmations: 5,
+				},
+			},
+		},
+	}
+	ots.ts.BridgeServer.
+		EXPECT().
+		Params(gomock.Any(), expReq).
+		Times(1).
+		Return(expResp, nil)
+	ots.Start(t, ctx)
+
+	_, err := ots.o.ConfirmationsRequired(ctx, bridgetypes.AssetID{
+		SourceChain: "na",
+		Denom:       "na",
+	})
+	require.ErrorIs(t, err, osmosis.ErrQuery)
 
 	ots.Stop(t, ctx)
 }
