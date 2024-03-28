@@ -90,7 +90,7 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 		s.Run(tc.name, func() {
 			s.Setup()
 
-			// Prepate each pool for testing
+			// Prepare each pool for testing
 			allPools := s.PrepareAllSupportedPools()
 
 			sqsIngesterMock := &mocks.SQSIngesterMock{
@@ -190,7 +190,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 		s.Run(tc.name, func() {
 			s.Setup()
 
-			// Prepate each pool for testing
+			// Prepare each pool for testing
 			allPools := s.PrepareAllSupportedPools()
 
 			sqsIngesterMock := &mocks.SQSIngesterMock{

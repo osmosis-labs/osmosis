@@ -135,7 +135,7 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 //
 // An internal flag shouldProceessAllBlockData is used to determine if the block data should be processed in full.
 //
-// This method is a no-op in the followin two cases:
+// This method is a no-op in the following two cases:
 // - The node is syncing.
 // - Fails to determine if the node is syncing.
 // The method calls a node's status endpoint to determine if the node is syncing.
