@@ -87,7 +87,7 @@ func TestListenOutboundTransfer(t *testing.T) {
 	require.NoError(t, err)
 
 	initialHeight := uint64(2582657)
-	b, err := bitcoin.NewBitcoin(
+	b, err := bitcoin.NewChainClient(
 		log.NewNopLogger(),
 		client,
 		BtcVault,
@@ -128,7 +128,7 @@ func TestListenOutboundTransfer(t *testing.T) {
 }
 
 func TestInvalidVaultAddress(t *testing.T) {
-	_, err := bitcoin.NewBitcoin(
+	_, err := bitcoin.NewChainClient(
 		log.NewNopLogger(),
 		nil,
 		"",
