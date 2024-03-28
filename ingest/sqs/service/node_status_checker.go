@@ -20,8 +20,8 @@ func NewNodeStatusChecker(address string) domain.NodeStatusChecker {
 	}
 }
 
-// IsNodeSynching implements NodeStatusChecker.
-func (n *nodeStatusChecker) IsNodeSynching(ctx sdk.Context) (bool, error) {
+// IsNodeSyncing implements NodeStatusChecker.
+func (n *nodeStatusChecker) IsNodeSyncing(ctx sdk.Context) (bool, error) {
 	// Get client
 	client, err := client.NewClientFromNode(n.address)
 	if err != nil {

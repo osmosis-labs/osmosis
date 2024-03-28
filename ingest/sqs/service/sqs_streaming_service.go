@@ -35,7 +35,7 @@ type sqsStreamingService struct {
 // writeListeners is a map of store keys to write listeners.
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
-// nodeStatusChecker is a checker that checks if the node is synching.
+// nodeStatusChecker is a checker that checks if the node is syncing.
 func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
 	return &sqsStreamingService{
 		writeListeners:    writeListeners,
@@ -136,25 +136,25 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 // An internal flag shouldProceessAllBlockData is used to determine if the block data should be processed in full.
 //
 // This method is a no-op in the followin two cases:
-// - The node is synching.
-// - Fails to determine if the node is synching.
-// The method calls a node's status endpoint to determine if the node is synching.
+// - The node is syncing.
+// - Fails to determine if the node is syncing.
+// The method calls a node's status endpoint to determine if the node is syncing.
 //
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	// If cold start, we use SQS ingestert to process the intire block.
 	if s.shouldProceessAllBlockData {
-		// Detect synching
-		isNodeSynching, err := s.nodeStatusChecker.IsNodeSynching(ctx)
+		// Detect syncing
+		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
 		if err != nil {
 			telemetry.IncrCounterWithLabels([]string{domain.SQSNodeSyncCheckErrorMetricName}, 1, []metrics.Label{
 				{Name: "err", Value: err.Error()},
 				{Name: "height", Value: fmt.Sprintf("%d", ctx.BlockHeight())},
 			})
-			return fmt.Errorf("failed to check if node is synching: %w", err)
+			return fmt.Errorf("failed to check if node is syncing: %w", err)
 		}
-		if isNodeSynching {
-			return fmt.Errorf("node is synching, skipping block processing")
+		if isNodesyncing {
+			return fmt.Errorf("node is syncing, skipping block processing")
 		}
 
 		// Process the entire block if the node is caught up

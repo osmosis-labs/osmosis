@@ -3,5 +3,5 @@ package domain
 import "errors"
 
 var (
-	ErrNodeIsSynching = errors.New("node is synching, skipping block processing")
+	ErrNodeIsSyncing = errors.New("node is syncing, skipping block processing")
 )

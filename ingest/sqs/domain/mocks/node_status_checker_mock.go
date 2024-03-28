@@ -8,18 +8,18 @@ import (
 
 // NodeStatusCheckerMock is a mock implementation of domain.NodeStatusChecker.
 type NodeStatusCheckerMock struct {
-	// IsSynching is the value to return when IsNodeSynching is called.
-	IsSynching bool
-	// IsNodeSynchingError is the error to return when IsNodeSynching is called.
-	IsNodeSynchingError error
-	// IsNodeSynchingCalled is a flag indicating if IsNodeSynching was called.
-	IsNodeSynchingCalled bool
+	// IsSyncing is the value to return when IsNodeSyncing is called.
+	IsSyncing bool
+	// IsNodeSyncingError is the error to return when IsNodeSyncing is called.
+	IsNodeSyncingError error
+	// IsNodeSyncingCalled is a flag indicating if IsNodeSyncing was called.
+	IsNodeSyncingCalled bool
 }
 
 var _ domain.NodeStatusChecker = (*NodeStatusCheckerMock)(nil)
 
-// IsNodeSynching implements domain.NodeStatusChecker.
-func (n *NodeStatusCheckerMock) IsNodeSynching(ctx types.Context) (bool, error) {
-	n.IsNodeSynchingCalled = true
-	return n.IsSynching, n.IsNodeSynchingError
+// IsNodeSyncing implements domain.NodeStatusChecker.
+func (n *NodeStatusCheckerMock) IsNodeSyncing(ctx types.Context) (bool, error) {
+	n.IsNodeSyncingCalled = true
+	return n.IsSyncing, n.IsNodeSyncingError
 }

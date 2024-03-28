@@ -44,8 +44,8 @@ type BlockPoolUpdateTracker interface {
 
 // NodeStatusChecker is an interface for checking the node status.
 type NodeStatusChecker interface {
-	// IsNodeSynching checks if the node is synching.
-	// Returns true if the node is synching, false otherwise.
-	// Returns error if the node synching status cannot be determined.
-	IsNodeSynching(ctx sdk.Context) (bool, error)
+	// IsNodeSyncing checks if the node is syncing.
+	// Returns true if the node is syncing, false otherwise.
+	// Returns error if the node syncing status cannot be determined.
+	IsNodeSyncing(ctx sdk.Context) (bool, error)
 }
