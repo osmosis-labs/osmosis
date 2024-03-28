@@ -499,9 +499,40 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
+	// TODO: get other pools
+
+	// Get concentrated pool
+	concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
+
+	// Get balancer pool
+	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.BalancerPoolID)
+	s.Require().NoError(err)
+
+	// Get stable swap pool
+	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.StableSwapPoolID)
+	s.Require().NoError(err)
+
+	// Get cosm wasm pool
+	cosmWasmPool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolsData.CosmWasmPoolID)
+	s.Require().NoError(err)
+
 	poolIngester := poolsingester.NewPoolIngester(redisRepoMock, redisRouterMock, nil, assetListGetterMock, sqsKeepers)
 
-	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
+	blockPools := domain.BlockPools{
+		ConcentratedPools: []poolmanagertypes.PoolI{
+			concentratedPool,
+			customTakerFeeConcentratedPool,
+		},
+		CFMMPools: []poolmanagertypes.PoolI{
+			balancerPool,
+			stableSwapPool,
+		},
+		CosmWasmPools: []poolmanagertypes.PoolI{
+			cosmWasmPool,
+		},
+	}
+
+	err = poolIngester.ProcessPoolState(s.Ctx, redisTx, blockPools)
 	s.Require().NoError(err)
 
 	allPools, err := redisRepoMock.GetAllPools(sdk.WrapSDKContext(s.Ctx))
@@ -509,7 +540,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 
 	s.Require().Len(allPools, 2+2+1)
 
-	// Order of pooks is by order of writes:
+	// Order of pools is by order of writes:
 	// 1. CFMM
 	// 2. Concentrated
 	// 3. Cosmwasm
