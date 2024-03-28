@@ -14,8 +14,6 @@ import (
 	routerredisrepo "github.com/osmosis-labs/sqs/sqsdomain/repository/redis/router"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/ingest"
-	chaininfoingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/chaininfo/ingester"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
 )
@@ -64,7 +62,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 }
 
 // Initialize initializes the sidecar query server and returns the ingester.
-func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers) (ingest.Ingester, error) {
+func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers) (domain.Ingester, error) {
 	// Create redis client and ensure that it is up.
 	redisAddress := fmt.Sprintf("%s:%s", c.StorageHost, c.StoragePort)
 	redisClient := redis.NewClient(&redis.Options{
@@ -89,10 +87,9 @@ func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers
 
 	// Create chain info ingester
 	chainInfoRepository := chaininforedisrepo.New(txManager)
-	chainInfoingester := chaininfoingester.New(chainInfoRepository, txManager)
 
 	// Create sqs ingester that encapsulates all ingesters.
-	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, chainInfoingester, txManager)
+	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, chainInfoRepository, txManager, keepers)
 
 	return sqsIngester, nil
 }
