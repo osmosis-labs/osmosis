@@ -12,6 +12,8 @@ type Denom string
 const (
 	ChainIdOsmosis ChainId = "osmosis"
 	ChainIdBitcoin ChainId = "bitcoin"
+
+	DenomBitcoin Denom = "btc"
 )
 
 type Transfer struct {
