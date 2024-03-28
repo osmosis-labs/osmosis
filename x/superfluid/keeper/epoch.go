@@ -30,6 +30,8 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	accs := k.GetAllDistrIntermediaryAccounts(ctx)
 	// Move delegation rewards to perpetual gauge
 	ctx.Logger().Info("Move delegation rewards to gauges")
+	// TODO: Evaluate what happens when val becomes jailed. Expected:
+	// Reward stays in the gauge and never distributes, which is fine.
 	k.MoveSuperfluidDelegationRewardToGauges(ctx, accs)
 
 	ctx.Logger().Info("Distribute Superfluid gauges")
@@ -57,6 +59,8 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	// Refresh intermediary accounts' delegation amounts,
 	// making staking rewards follow the updated multiplier numbers.
 	ctx.Logger().Info("Refresh all superfluid delegation amounts")
+	// TODO: Evaluate what happens when val becomes jailed. Expected:
+	// Reward stays in the gauge and never distributes, which is fine.
 	k.RefreshIntermediaryDelegationAmounts(ctx, accs)
 }
 
