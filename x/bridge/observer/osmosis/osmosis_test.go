@@ -3,6 +3,7 @@ package osmosis_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -44,12 +44,12 @@ type MockChain struct {
 	CR uint64
 }
 
-func (m *MockChain) SignalInboundTransfer(context.Context, observer.Transfer) error {
+func (m *MockChain) SignalInboundTransfer(context.Context, observer.InboundTransfer) error {
 	return nil
 }
 
-func (m *MockChain) ListenOutboundTransfer() <-chan observer.Transfer {
-	return make(<-chan observer.Transfer)
+func (m *MockChain) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
+	return make(<-chan observer.OutboundTransfer)
 }
 
 func (m *MockChain) Start(context.Context) error { return nil }
@@ -67,7 +67,7 @@ func (m *MockChain) ConfirmationsRequired() (uint64, error) {
 type OsmosisTestSuite struct {
 	ts TestSuite
 	hs *httptest.Server
-	o  *osmosis.ChainClient
+	o  *osmosis.Osmosis
 }
 
 func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
@@ -93,13 +93,12 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		hd.Secp256k1,
 	)
 	require.NoError(t, err)
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
 
-	o := osmosis.NewChainClient(
+	o := osmosis.NewOsmosis(
 		log.NewNopLogger(),
-		client,
+		&client,
 		cometRpc,
-		app.GetEncodingConfig().TxConfig,
 	)
 	require.NoError(t, err)
 
@@ -128,10 +127,10 @@ func readNewBlockEvent(t *testing.T, path string) coretypes.ResultEvent {
 	return result
 }
 
-func readTxCheck(t *testing.T, path string) abci.ResponseCheckTx {
+func readTxSearch(t *testing.T, path string) coretypes.ResultTxSearch {
 	dataStr, err := os.ReadFile(path)
 	require.NoError(t, err)
-	result := abci.ResponseCheckTx{}
+	result := coretypes.ResultTxSearch{}
 	err = json.Unmarshal([]byte(dataStr), &result)
 	require.NoError(t, err)
 	return result
@@ -144,7 +143,7 @@ func success(t *testing.T) http.HandlerFunc {
 			c, err := upgrader.Upgrade(w, r, nil)
 			require.NoError(t, err)
 			defer c.Close()
-			newBlock := readNewBlockEvent(t, "./test_events/new_block_success.json")
+			newBlock := readNewBlockEvent(t, "./test_events/new_block_event.json")
 			newBlockResp := cmtrpctypes.NewRPCSuccessResponse(
 				cmtrpctypes.JSONRPCIntID(1),
 				newBlock,
@@ -154,14 +153,14 @@ func success(t *testing.T) http.HandlerFunc {
 			err = c.WriteMessage(1, newBlockRaw)
 			require.NoError(t, err)
 		case http.MethodPost:
-			checkResults := readTxCheck(t, "./test_events/tx_check_success.json")
-			checkResultsResp := cmtrpctypes.NewRPCSuccessResponse(
+			blockResults := readTxSearch(t, "./test_events/tx_search.json")
+			blockResultsResp := cmtrpctypes.NewRPCSuccessResponse(
 				cmtrpctypes.JSONRPCIntID(0),
-				checkResults,
+				blockResults,
 			)
-			checkResultsRaw, err := json.Marshal(checkResultsResp)
+			blockResultsRaw, err := json.Marshal(blockResultsResp)
 			require.NoError(t, err)
-			_, err = w.Write(checkResultsRaw)
+			_, err = w.Write(blockResultsRaw)
 			require.NoError(t, err)
 		default:
 			t.Fatal("Unexpected request method", r.Method)
@@ -203,9 +202,8 @@ func TestSignalInboundTransfer(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	in := observer.Transfer{
-		SrcChain: observer.ChainIdBitcoin,
-		DstChain: observer.ChainIdOsmosis,
+	in := observer.InboundTransfer{
+		SrcChain: observer.ChainId_BITCOIN,
 		Id:       "deadbeef",
 		Height:   42,
 		Sender:   Addr1.String(),
@@ -251,6 +249,7 @@ func TestSignalInboundTransfer(t *testing.T) {
 			ctx context.Context,
 			req *tx.BroadcastTxRequest,
 		) (*tx.BroadcastTxResponse, error) {
+			fmt.Println("BroadcastTx")
 			return expResp2, nil
 		})
 	ots.Start(t, ctx)
@@ -264,8 +263,6 @@ func TestSignalInboundTransfer(t *testing.T) {
 // ListenOutboundTransfer verifies Osmosis properly collects transfers
 // from the chain and sends it into the outbound channel
 func TestListenOutboundTransfer(t *testing.T) {
-	t.Skip("x/bridge needs to be wired to decode Txs")
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	ots := NewOsmosisTestSuite(t, ctx)
@@ -274,29 +271,47 @@ func TestListenOutboundTransfer(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), height)
 	ots.Start(t, ctx)
-	defer ots.Stop(t, ctx)
 
-	transfers := ots.o.ListenOutboundTransfer()
-	var transfer observer.Transfer
-	require.Eventually(t, func() bool {
-		transfer = <-transfers
-		return true
-	}, time.Second, 100*time.Millisecond, "Timeout waiting for transfer")
+	// We expect to receive 3 Txs with `EventOutboundTransferType` events in this test
+	// Only 2 of the Txs are successful, so we should receive only 2 event through the channel
+	eventsOut := ots.o.ListenOutboundTransfer()
+	transfers := [2]observer.OutboundTransfer{}
+	for i := 0; i < len(transfers); i++ {
+		require.Eventually(t, func() bool {
+			transfers[i] = <-eventsOut
+			return true
+		}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
+	}
 
-	expTransfer := observer.Transfer{
-		SrcChain: observer.ChainIdOsmosis,
-		DstChain: observer.ChainIdBitcoin,
-		Id:       "8593aa191651f6a3e2978fb5334b3e5b1e20abd72ad539f15c76f241fa696d3e",
-		Height:   881,
-		Sender:   "osmo1pldlhnwegsj3lqkarz0e4flcsay3fuqgkd35ww",
-		To:       "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
+	expTransfer0 := observer.OutboundTransfer{
+		DstChain: observer.ChainId_BITCOIN,
+		Id:       "E765E65A3A513CCC3E2CE25BB6B47DBD7CA09AC6C7C380B84D96B88B3B0B8A70",
+		Height:   5984109,
+		Sender:   Addr1.String(),
+		To:       BtcAddr,
 		Asset:    "btc",
 		Amount:   math.NewUint(10),
 	}
-	require.Equal(t, expTransfer, transfer)
-	require.Equal(t, 0, len(transfers))
+	expTransfer1 := observer.OutboundTransfer{
+		DstChain: observer.ChainId_BITCOIN,
+		Id:       "CE2D6798A8C8FD8685A29B543FDAEB31EED72A1EB5F570D889FF5E263AC7D19D",
+		Height:   5984109,
+		Sender:   Addr1.String(),
+		To:       BtcAddr,
+		Asset:    "btc",
+		Amount:   math.NewUint(11),
+	}
+	require.Equal(t, expTransfer0, transfers[0])
+	require.Equal(t, expTransfer1, transfers[1])
+	require.Equal(t, 0, len(eventsOut))
 
 	height, err = ots.o.Height()
 	require.NoError(t, err)
-	require.Equal(t, expTransfer.Height, height)
+	require.Equal(t, expTransfer0.Height, height)
+
+	confirms, err := ots.o.ConfirmationsRequired()
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), confirms)
+
+	ots.Stop(t, ctx)
 }
