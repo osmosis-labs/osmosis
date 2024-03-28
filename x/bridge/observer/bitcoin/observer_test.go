@@ -12,6 +12,8 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
@@ -69,17 +71,20 @@ func TestObserverSuccess(t *testing.T) {
 	defer s.Close()
 
 	host, _ := strings.CutPrefix(s.URL, "http://")
-	cfg := bitcoin.RpcConfig{
-		Host:       host,
-		DisableTls: true,
-		User:       "test",
-		Pass:       "test",
-	}
+	client, err := rpcclient.New(&rpcclient.ConnConfig{
+		Host:         host,
+		DisableTLS:   true,
+		HTTPPostMode: true,
+		User:         "test",
+		Pass:         "test",
+		Params:       chaincfg.TestNet3Params.Name,
+	}, nil)
+	require.NoError(t, err)
 
 	initialHeight := uint64(2582657)
 	observer, err := bitcoin.NewObserver(
 		log.NewNopLogger(),
-		cfg,
+		client,
 		"2N4qEFwruq3zznQs78twskBrNTc6kpq87j1",
 		initialHeight,
 		time.Second,
@@ -114,56 +119,66 @@ func TestObserverSuccess(t *testing.T) {
 
 func TestInvalidRpcCfg(t *testing.T) {
 	tests := []struct {
-		name string
-		cfg  bitcoin.RpcConfig
+		name       string
+		host       string
+		disableTls bool
+		user       string
+		pass       string
 	}{
 		{
-			name: "Invalid Host URL",
-			cfg: bitcoin.RpcConfig{
-				Host:       "",
-				DisableTls: true,
-				User:       "test",
-				Pass:       "test",
-			},
+			name:       "Invalid Host URL",
+			host:       "",
+			disableTls: true,
+			user:       "test",
+			pass:       "test",
 		},
 		{
-			name: "Invalid User",
-			cfg: bitcoin.RpcConfig{
-				Host:       "127.0.0.1:1234",
-				DisableTls: true,
-				User:       "",
-				Pass:       "test",
-			},
+			name:       "Invalid User",
+			host:       "127.0.0.1:1234",
+			disableTls: true,
+			user:       "",
+			pass:       "test",
 		},
 		{
-			name: "Invalid Pass",
-			cfg: bitcoin.RpcConfig{
-				Host:       "127.0.0.1:1234",
-				DisableTls: true,
-				User:       "test",
-				Pass:       "",
-			},
+			name:       "Invalid Pass",
+			host:       "127.0.0.1:1234",
+			disableTls: true,
+			user:       "test",
+			pass:       "",
 		},
 	}
 
 	for _, tc := range tests {
-		_, err := bitcoin.NewObserver(log.NewNopLogger(), tc.cfg, "", 0, time.Second)
+		client, err := rpcclient.New(&rpcclient.ConnConfig{
+			Host:         tc.host,
+			DisableTLS:   tc.disableTls,
+			HTTPPostMode: true,
+			User:         tc.user,
+			Pass:         tc.pass,
+			Params:       chaincfg.TestNet3Params.Name,
+		}, nil)
+		require.NoError(t, err)
+
+		_, err = bitcoin.NewObserver(log.NewNopLogger(), client, "", 0, time.Second)
 		require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
 	}
 }
 
 func TestInvalidVaultAddress(t *testing.T) {
-	cfg := bitcoin.RpcConfig{
-		Host:       "127.0.0.1:1234",
-		DisableTls: true,
-		User:       "test",
-		Pass:       "test",
-	}
+	client, err := rpcclient.New(&rpcclient.ConnConfig{
+		Host:         "127.0.0.1:1234",
+		DisableTLS:   true,
+		HTTPPostMode: true,
+		User:         "test",
+		Pass:         "test",
+		Params:       chaincfg.TestNet3Params.Name,
+	}, nil)
+	require.NoError(t, err)
 
 	initialHeight := uint64(2582657)
-	_, err := bitcoin.NewObserver(
+	_, err = bitcoin.NewObserver(
 		log.NewNopLogger(),
-		cfg,
+		client,
 		"",
 		initialHeight,
 		time.Second,

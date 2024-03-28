@@ -6,8 +6,9 @@ import (
 
 // x/bridge module sentinel errors
 var (
-	ErrGrpcConnection = errorsmod.Register(ModuleNameClient, 1, "grpc connection error")
-	ErrSignTx         = errorsmod.Register(ModuleNameClient, 2, "tx signing error")
-	ErrBroadcastTx    = errorsmod.Register(ModuleNameClient, 3, "tx broadcast error")
-	ErrQuery          = errorsmod.Register(ModuleNameClient, 4, "query error")
+	ErrGrpcConnection = errorsmod.Register(ModuleName, 1, "grpc connection error")
+	ErrRpcClient      = errorsmod.Register(ModuleName, 2, "rpc client error")
+	ErrSignTx         = errorsmod.Register(ModuleName, 3, "tx signing error")
+	ErrBroadcastTx    = errorsmod.Register(ModuleName, 4, "tx broadcast error")
+	ErrQuery          = errorsmod.Register(ModuleName, 5, "query error")
 )

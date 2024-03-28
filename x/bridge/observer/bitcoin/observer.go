@@ -50,9 +50,9 @@ func (o RpcConfig) Validate() error {
 
 type Observer struct {
 	logger             log.Logger
+	btcRpc             *rpcclient.Client
 	vaultAddr          string
 	currentHeight      uint64
-	btcRpc             *rpcclient.Client
 	globalTxInChan     chan TxIn
 	stopChan           chan struct{}
 	observeSleepPeriod time.Duration
@@ -61,36 +61,20 @@ type Observer struct {
 // NewObserver returns new instance of `Observer` with BTC RPC client
 func NewObserver(
 	logger log.Logger,
-	cfg RpcConfig,
+	btcRpc *rpcclient.Client,
 	vaultAddr string,
 	initialHeight uint64,
 	observeSleepPeriod time.Duration,
 ) (Observer, error) {
-	err := cfg.Validate()
-	if err != nil {
-		return Observer{}, errorsmod.Wrapf(ErrInvalidCfg, err.Error())
-	}
 	if len(vaultAddr) == 0 {
 		return Observer{}, errorsmod.Wrapf(ErrInvalidCfg, "Invalid vaultAddr")
 	}
 
-	btcRpc, err := rpcclient.New(&rpcclient.ConnConfig{
-		Host:         cfg.Host,
-		HTTPPostMode: true,
-		DisableTLS:   cfg.DisableTls,
-		User:         cfg.User,
-		Pass:         cfg.Pass,
-		Params:       chaincfg.TestNet3Params.Name,
-	}, nil)
-	if err != nil {
-		return Observer{}, errorsmod.Wrapf(ErrRpcClient, err.Error())
-	}
-
 	return Observer{
 		logger:             logger.With("module", ModuleNameObserver),
+		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
 		currentHeight:      initialHeight,
-		btcRpc:             btcRpc,
 		globalTxInChan:     make(chan TxIn),
 		stopChan:           make(chan struct{}),
 		observeSleepPeriod: observeSleepPeriod,
@@ -112,6 +96,10 @@ func (o *Observer) Stop() {
 // TxIns returns receive-only part of observed Txs channel
 func (o *Observer) TxIns() <-chan TxIn {
 	return o.globalTxInChan
+}
+
+func (o *Observer) CurrentHeight() uint64 {
+	return o.currentHeight
 }
 
 // FetchBlock processes block transactions at the given `height`
