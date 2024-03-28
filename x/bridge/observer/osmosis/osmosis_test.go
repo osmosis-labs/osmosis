@@ -98,7 +98,7 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 	chains := make(map[observer.ChainId]observer.Chain)
 	chains[observer.ChainIdBitcoin] = bitcoin
 
-	o := osmosis.NewOsmosis(
+	o := osmosis.NewChainClient(
 		log.NewNopLogger(),
 		&client,
 		cometRpc,

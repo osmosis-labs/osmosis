@@ -35,8 +35,8 @@ type ChainClient struct {
 	lastObservedHeight atomic.Uint64
 }
 
-// NewOsmosis returns new instance of `Osmosis`
-func NewOsmosis(
+// NewChainClient returns new instance of `Osmosis`
+func NewChainClient(
 	logger log.Logger,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
