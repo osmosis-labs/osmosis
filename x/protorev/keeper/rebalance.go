@@ -102,14 +102,9 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 	tokenIn := sdk.Coin{Denom: inputDenom, Amount: amount}
 	ctx.Logger().Error("---------estimating starting---------")
 
-	ctx.Logger().Error("printing route denoms")
-	for _, rotue := range route.IntermediateDenoms() {
-		ctx.Logger().Error(rotue)
-	}
-
-	ctx.Logger().Error("printing route pool ids")
-	for _, rotue := range route.PoolIds() {
-		ctx.Logger().Error(fmt.Sprintf("%d", rotue))
+	for _, route := range route {
+		ctx.Logger().Error(route.TokenOutDenom)
+		ctx.Logger().Error(fmt.Sprintf("%d", route.PoolId))
 	}
 
 	ctx.Logger().Error("printing token in")
