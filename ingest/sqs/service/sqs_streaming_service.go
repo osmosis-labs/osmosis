@@ -28,14 +28,14 @@ type sqsStreamingService struct {
 
 	nodeStatusChecker domain.NodeStatusChecker
 
-	shouldProceessAllBlockData bool
+	shouldProcessAllBlockData bool
 }
 
 // New creates a new sqsStreamingService.
 // writeListeners is a map of store keys to write listeners.
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
-// nodeStatusChecker is a checker that checks if the node is synching.
+// nodeStatusChecker is a checker that checks if the node is syncing.
 func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
 	return &sqsStreamingService{
 		writeListeners:    writeListeners,
@@ -43,7 +43,7 @@ func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsI
 		poolTracker:       poolTracker,
 		nodeStatusChecker: nodeStatusChecker,
 
-		shouldProceessAllBlockData: true,
+		shouldProcessAllBlockData: true,
 	}
 }
 
@@ -89,7 +89,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		if r := recover(); r != nil {
 			// Due to panic, we set shouldProceessAllBlockData to true to reprocess the entire block.
 			// Be careful when changing this behavior.
-			s.shouldProceessAllBlockData = true
+			s.shouldProcessAllBlockData = true
 
 			// Emit telemetry for the panic.
 			emitFailureTelemetry(ctx, r, domain.SQSProcessBlockPanicMetricName)
@@ -102,7 +102,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 	if err := s.processBlock(ctx); err != nil {
 		// Due to error, we set shouldProceessAllBlockData to true to reprocess the entire block.
 		// Be careful when changing this behavior.
-		s.shouldProceessAllBlockData = true
+		s.shouldProcessAllBlockData = true
 
 		// Emit telemetry for the error.
 		emitFailureTelemetry(ctx, err, domain.SQSProcessBlockErrorMetricName)
@@ -135,26 +135,26 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 //
 // An internal flag shouldProceessAllBlockData is used to determine if the block data should be processed in full.
 //
-// This method is a no-op in the followin two cases:
-// - The node is synching.
-// - Fails to determine if the node is synching.
-// The method calls a node's status endpoint to determine if the node is synching.
+// This method is a no-op in the following two cases:
+// - The node is syncing.
+// - Fails to determine if the node is syncing.
+// The method calls a node's status endpoint to determine if the node is syncing.
 //
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	// If cold start, we use SQS ingestert to process the intire block.
-	if s.shouldProceessAllBlockData {
-		// Detect synching
-		isNodeSynching, err := s.nodeStatusChecker.IsNodeSynching(ctx)
+	if s.shouldProcessAllBlockData {
+		// Detect syncing
+		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
 		if err != nil {
 			telemetry.IncrCounterWithLabels([]string{domain.SQSNodeSyncCheckErrorMetricName}, 1, []metrics.Label{
 				{Name: "err", Value: err.Error()},
 				{Name: "height", Value: fmt.Sprintf("%d", ctx.BlockHeight())},
 			})
-			return fmt.Errorf("failed to check if node is synching: %w", err)
+			return fmt.Errorf("failed to check if node is syncing: %w", err)
 		}
-		if isNodeSynching {
-			return fmt.Errorf("node is synching, skipping block processing")
+		if isNodesyncing {
+			return fmt.Errorf("node is syncing, skipping block processing")
 		}
 
 		// Process the entire block if the node is caught up
@@ -163,7 +163,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		}
 
 		// Successfully processed the block, no longer need to process full block data.
-		s.shouldProceessAllBlockData = false
+		s.shouldProcessAllBlockData = false
 
 		return nil
 	}

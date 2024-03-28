@@ -10,7 +10,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 )
 
-var _ storetypes.WriteListener = (*concentratedPoolWriteListener)(nil)
+var _ storetypes.WriteListener = (*cfmmPoolWriteListener)(nil)
 
 type cfmmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker
