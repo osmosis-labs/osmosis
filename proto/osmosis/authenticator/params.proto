@@ -13,14 +13,14 @@ message Params {
   uint64 maximum_unauthenticated_gas = 1
       [ (gogoproto.moretags) = "yaml:\"maximum_unauthenticated_gas\"" ];
 
-  // AuthenticatorActiveState defines the state of the authenticator.
+  // IsSmartAccountActive defines the state of the authenticator.
   // If set to false, the authenticator module will not be used
   // and the classic cosmos sdk authentication will be used instead.
-  bool authenticator_active_state = 2
-      [ (gogoproto.moretags) = "yaml:\"authenticator_active_state\"" ];
+  bool is_smart_account_active = 2
+      [ (gogoproto.moretags) = "yaml:\"is_smart_account_active\"" ];
 
   // CircuitBreakerControllers defines list of addresses that are allowed to
-  // set authenticator_active_state without going through governance.
+  // set is_smart_account_active without going through governance.
   repeated string circuit_breaker_controllers = 3
       [ (gogoproto.moretags) = "yaml:\"circuit_breaker_controllers\"" ];
 }

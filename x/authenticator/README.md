@@ -398,7 +398,7 @@ been inactive for a certain period of time. This can be done by using the follow
 # Circuit Breaker
 
 For the initial release, this module will be provided behind a "circuit breaker" or feature switch. This means that
-the feature will be controlled by the `authenticator_active_state` parameter. If that parameter is set to false,
+the feature will be controlled by the `is_smart_account_active` parameter. If that parameter is set to false,
 the authenticator module will not be used and the classic cosmos sdk authentication will be used instead.
 
 # Using authenticators from JS

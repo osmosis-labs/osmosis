@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// activated by default
 	initialParams := s.App.AuthenticatorKeeper.GetParams(ctx)
-	s.Require().True(initialParams.AuthenticatorActiveState)
+	s.Require().True(initialParams.IsSmartAccountActive)
 
 	// Set the authorized account as the circuit breaker controller
 	initialParams = s.App.AuthenticatorKeeper.GetParams(ctx)
@@ -151,9 +151,9 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// active state should be false
 	params := ak.GetParams(ctx)
-	s.Require().False(params.AuthenticatorActiveState)
+	s.Require().False(params.IsSmartAccountActive)
 	// other params should remain the same
-	params.AuthenticatorActiveState = initialParams.AuthenticatorActiveState
+	params.IsSmartAccountActive = initialParams.IsSmartAccountActive
 	s.Require().Equal(params, initialParams)
 
 	// reactivate
@@ -168,8 +168,8 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// active state should be true
 	params = ak.GetParams(ctx)
-	s.Require().True(params.AuthenticatorActiveState)
+	s.Require().True(params.IsSmartAccountActive)
 	// other params should remain the same
-	params.AuthenticatorActiveState = initialParams.AuthenticatorActiveState
+	params.IsSmartAccountActive = initialParams.IsSmartAccountActive
 	s.Require().Equal(params, initialParams)
 }

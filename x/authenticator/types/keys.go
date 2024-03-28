@@ -24,14 +24,14 @@ const (
 	AttributeKeyAuthenticatorType = "authenticator_type"
 	AttributeKeyAuthenticatorId   = "authenticator_id"
 
-	AtrributeKeyAuthenticatorActiveState = "authenticator_active_state"
+	AtrributeKeyIsSmartAccountActive = "is_smart_account_active"
 )
 
 var (
 	KeyNextAccountAuthenticatorIdPrefix = []byte{0x01}
 	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
 	KeyMaximumUnauthenticatedGas        = []byte("MaximumUnauthenticatedGas")
-	KeyAuthenticatorActiveState         = []byte("AuthenticatorActiveState")
+	KeyIsSmartAccountActive             = []byte("IsSmartAccountActive")
 	KeyCircuitBreakerControllers        = []byte("CircuitBreakerControllers")
 )
 

@@ -119,7 +119,7 @@ func (m msgServer) SetActiveState(goCtx context.Context, msg *types.MsgSetActive
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AtrributeKeyAuthenticatorActiveState, strconv.FormatBool(msg.Active)),
+			sdk.NewAttribute(types.AtrributeKeyIsSmartAccountActive, strconv.FormatBool(msg.Active)),
 		),
 	})
 
