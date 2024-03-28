@@ -122,6 +122,7 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 		confirmationsRequired, err := srcChain.ConfirmationsRequired()
 		if err != nil {
 			o.logger.Error(fmt.Sprintf("Failed to get confirmations required for %s: %s", srcId, err.Error()))
+			continue
 		}
 		newQueue := []OutboundTransfer{}
 		for _, out := range queue {
