@@ -87,7 +87,12 @@ func (o *Observer) collectOutbound() {
 		case out := <-aggregate:
 			dstChain := o.chains[out.OutboundTransfer.DstChain]
 			if dstChain == nil {
-				o.logger.Error(fmt.Sprintf("Unknown destination chain %s in outbound transfer %s", out.OutboundTransfer.DstChain, out.Id))
+				o.logger.Error(fmt.Sprintf(
+					"Unknown destination chain %s in outbound transfer %s",
+					out.OutboundTransfer.DstChain,
+					out.Id,
+				))
+				continue
 			}
 			o.outLock.Lock()
 			o.outTxQueue[out.ChainId] = append(o.outTxQueue[out.ChainId], out.OutboundTransfer)
