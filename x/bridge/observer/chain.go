@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 type ChainId string
@@ -37,8 +39,8 @@ type Client interface {
 	Start(context.Context) error
 	Stop(context.Context) error
 	// Height returns current height of the chain
-	Height() (uint64, error)
+	Height(context.Context) (uint64, error)
 	// ConfirmationsRequired returns number of the required confirmations
 	// for the given asset
-	ConfirmationsRequired() (uint64, error)
+	ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error)
 }

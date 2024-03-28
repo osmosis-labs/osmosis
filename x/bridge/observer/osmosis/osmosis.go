@@ -197,12 +197,18 @@ func outboundTransferFromEvent(height uint64, hash string, e abci.Event) (observ
 }
 
 // Returns current height of the chain
-func (o *ChainClient) Height() (uint64, error) {
+func (o *ChainClient) Height(context.Context) (uint64, error) {
 	return o.lastObservedHeight.Load(), nil
 }
 
 // Returns number of required tx confirmations
-func (o *ChainClient) ConfirmationsRequired() (uint64, error) {
-	// Query bridge module
-	return 0, nil
+func (o *ChainClient) ConfirmationsRequired(
+	ctx context.Context,
+	id bridgetypes.AssetID,
+) (uint64, error) {
+	cr, err := o.osmoClient.ConfirmationsRequired(ctx, id)
+	if err != nil {
+		return 0, errorsmod.Wrapf(err, "Failed to get confirmations required")
+	}
+	return cr, nil
 }

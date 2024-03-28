@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"slices"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,6 +20,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/osmosis-labs/osmosis/v24/app"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 var (
@@ -26,12 +28,13 @@ var (
 )
 
 type Client struct {
-	chainId   string
-	keyring   keyring.Keyring
-	grpcConn  *grpc.ClientConn
-	txConfig  client.TxConfig
-	txClient  tx.ServiceClient
-	accClient authtypes.QueryClient
+	chainId      string
+	keyring      keyring.Keyring
+	grpcConn     *grpc.ClientConn
+	txConfig     client.TxConfig
+	txClient     tx.ServiceClient
+	accClient    authtypes.QueryClient
+	bridgeClient bridgetypes.QueryClient
 }
 
 // NewClient returns new instance of `Client` with
@@ -56,12 +59,13 @@ func NewClientWithConnection(
 	keyring keyring.Keyring,
 ) Client {
 	return Client{
-		chainId:   chainId,
-		keyring:   keyring,
-		grpcConn:  conn,
-		txConfig:  app.GetEncodingConfig().TxConfig,
-		txClient:  tx.NewServiceClient(conn),
-		accClient: authtypes.NewQueryClient(conn),
+		chainId:      chainId,
+		keyring:      keyring,
+		grpcConn:     conn,
+		txConfig:     app.GetEncodingConfig().TxConfig,
+		txClient:     tx.NewServiceClient(conn),
+		accClient:    authtypes.NewQueryClient(conn),
+		bridgeClient: bridgetypes.NewQueryClient(conn),
 	}
 }
 
@@ -143,6 +147,28 @@ func (c *Client) Account(ctx context.Context, addr sdk.AccAddress) (authtypes.Ba
 	}
 
 	return ba, nil
+}
+
+func (c *Client) ConfirmationsRequired(
+	ctx context.Context,
+	assetId bridgetypes.AssetID,
+) (uint64, error) {
+	req := bridgetypes.QueryParamsRequest{}
+	params, err := c.bridgeClient.Params(ctx, &req)
+	if err != nil {
+		return 0, errorsmod.Wrapf(ErrQuery, "bridge/params: %s", err.Error())
+	}
+	idx := slices.IndexFunc(params.GetParams().Assets, func(a bridgetypes.Asset) bool {
+		return a.Id == assetId
+	})
+	if idx == -1 {
+		return 0, errorsmod.Wrapf(
+			ErrQuery,
+			"bridge/params: asset with id %s not found",
+			assetId.String(),
+		)
+	}
+	return params.GetParams().Assets[idx].ExternalConfirmations, nil
 }
 
 func (c *Client) buildUnsigned(
