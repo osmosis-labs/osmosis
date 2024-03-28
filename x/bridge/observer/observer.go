@@ -82,6 +82,7 @@ func (o *Observer) collectOutbound() {
 	}()
 
 	for out := range aggregate {
+		o.outLock.Lock()
 		_, ok := o.chains[out.DstChain]
 		if !ok {
 			o.logger.Error(fmt.Sprintf(
@@ -89,9 +90,9 @@ func (o *Observer) collectOutbound() {
 				out.DstChain,
 				out.Id,
 			))
+			o.outLock.Unlock()
 			continue
 		}
-		o.outLock.Lock()
 		o.outTxQueue[out.SrcChain] = append(o.outTxQueue[out.SrcChain], out)
 		o.outLock.Unlock()
 	}
