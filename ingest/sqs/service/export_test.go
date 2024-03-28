@@ -12,7 +12,6 @@ func (s *sqsStreamingService) SetShouldProcessAllBlockData(shouldProcessAllBlock
 	s.shouldProceessAllBlockData = shouldProcessAllBlockData
 }
 
-// getShouldProcessAllBlockData returns the shouldProceessAllBlockData flag.
 func (s *sqsStreamingService) GetShouldProcessAllBlockData() bool {
 	return s.shouldProceessAllBlockData
 }
