@@ -136,7 +136,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 
 	// Deactivate smart accounts
 	params := s.OsmosisApp.AuthenticatorKeeper.GetParams(s.Ctx)
-	params.AreSmartAccountsActive = false
+	params.IsSmartAccountActive = false
 	s.OsmosisApp.AuthenticatorKeeper.SetParams(s.Ctx, params)
 
 	// Here we test when smart accounts are deactivated
@@ -146,7 +146,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 
 	// Reeactivate smart accounts
 	params = s.OsmosisApp.AuthenticatorKeeper.GetParams(ctx)
-	params.AreSmartAccountsActive = true
+	params.IsSmartAccountActive = true
 	s.OsmosisApp.AuthenticatorKeeper.SetParams(ctx, params)
 
 	// Here we test when smart accounts are active and there is not selected authenticator

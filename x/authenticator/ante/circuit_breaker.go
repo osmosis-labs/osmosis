@@ -55,7 +55,7 @@ func IsCircuitBreakActive(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 ) (bool, authenticatortypes.AuthenticatorTxOptions) {
 	authenticatorParams := authenticatorKeeper.GetParams(ctx)
-	if !authenticatorParams.AreSmartAccountsActive {
+	if !authenticatorParams.IsSmartAccountActive {
 		return true, nil
 	}
 

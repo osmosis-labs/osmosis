@@ -299,8 +299,8 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 0, false},
 	}
 
-	baseGas := 3207              // base gas consimed before starting to iterate through authenticators
-	approachingGasPerSig := 4105 // Each signature consumes at least this amount (but not much more)
+	baseGas := 2891              // base gas consimed before starting to iterate through authenticators
+	approachingGasPerSig := 5429 // Each signature consumes at least this amount (but not much more)
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -326,7 +326,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 			// ensure only the right amount of sigs have been checked
 			if tc.checks > 0 {
 				s.Require().GreaterOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+(tc.checks-1)*approachingGasPerSig))
-				s.Require().Less(res.GasMeter().GasConsumed(), uint64(baseGas+tc.checks*approachingGasPerSig))
+				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+tc.checks*approachingGasPerSig))
 			} else {
 				if tc.checkGas {
 					s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas))

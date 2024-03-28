@@ -9,6 +9,10 @@ service Msg {
       returns (MsgAddAuthenticatorResponse);
   rpc RemoveAuthenticator(MsgRemoveAuthenticator)
       returns (MsgRemoveAuthenticatorResponse);
+
+  // SetActiveState sets the active state of the authenticator.
+  // Primarily used for circuit breaking.
+  rpc SetActiveState(MsgSetActiveState) returns (MsgSetActiveStateResponse);
 }
 
 // MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
@@ -31,6 +35,13 @@ message MsgRemoveAuthenticator {
 // MsgRemoveAuthenticatorResponse defines the Msg/RemoveAuthenticator response
 // type.
 message MsgRemoveAuthenticatorResponse { bool success = 1; }
+
+message MsgSetActiveState {
+  string sender = 1;
+  bool active = 2;
+}
+
+message MsgSetActiveStateResponse {}
 
 // TxExtension allows for additional authenticator-specific data in
 // transactions.

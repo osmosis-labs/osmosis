@@ -132,7 +132,7 @@ func (s *AuthenticatorSuite) TestCircuitBreaker() {
 
 	// Activate circuit breaker
 	authenticatorParams := s.app.AuthenticatorKeeper.GetParams(s.chainA.GetContext())
-	authenticatorParams.AreSmartAccountsActive = false
+	authenticatorParams.IsSmartAccountActive = false
 	s.app.AuthenticatorKeeper.SetParams(s.chainA.GetContext(), authenticatorParams)
 
 	// Send msg from accounts default privkey
@@ -149,7 +149,7 @@ func (s *AuthenticatorSuite) TestCircuitBreaker() {
 	s.Require().Error(err, "Failed to send bank tx using the second private key")
 
 	// Deactivate circuit breaker
-	authenticatorParams.AreSmartAccountsActive = true
+	authenticatorParams.IsSmartAccountActive = true
 	s.app.AuthenticatorKeeper.SetParams(s.chainA.GetContext(), authenticatorParams)
 
 	// ReSubmit a bank send tx using the second private key

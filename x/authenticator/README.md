@@ -21,33 +21,33 @@ type Authenticator interface {
     // Type returns the specific type of the authenticator, such as SignatureVerificationAuthenticator.
     // This type is used for registering and identifying the authenticator within the AuthenticatorManager.
     Type() string
-    
+
     // StaticGas provides the fixed gas amount consumed for each invocation of this authenticator.
     // This is used for managing gas consumption during transaction verification.
     StaticGas() uint64
-    
+
     // Initialize prepares the authenticator with necessary data from storage, specific to an account-authenticator pair.
     // This method is used for setting up the authenticator with data like a PublicKey for signature verification.
     Initialize(data []byte) (Authenticator, error)
-    
+
     // Authenticate confirms the validity of a message using the provided authentication data.
     // NOTE: Any state changes made by this function will be discarded.
     // It's a core function within an ante handler to ensure message authenticity and enforce gas consumption.
     Authenticate(ctx sdk.Context, request AuthenticationRequest) error
-    
+
     // Track allows the authenticator to record information, regardless of the transaction's authentication method.
     // NOTE: Any state changes made by this function will be written to the store as long as Authenticate succeeds and will not be reverted if the message execution fails.
     // This function is used for the authenticator to acknowledge the execution of specific messages by an account.
     Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error
-    
+
     // ConfirmExecution enforces transaction rules post-transaction, like spending and transaction limits.
     // It is used to verify execution-specific state and values, to allow authentication to be dependent on the effects of a transaction.
     ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error
-    
+
     // OnAuthenticatorAdded handles the addition of an authenticator to an account.
     // It checks the data format and compatibility, to maintain account security and authenticator integrity.
     OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
-    
+
     // OnAuthenticatorRemoved manages the removal of an authenticator from an account.
     // This function is used for updating global data or preventing removal when necessary to maintain system stability.
     OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
@@ -58,7 +58,7 @@ type Authenticator interface {
 
 #### `Type`
 
-Returns the type of the authenticator (e.g., `SignatureVerificationAuthenticator`, `CosmWasmAuthenticator`). 
+Returns the type of the authenticator (e.g., `SignatureVerificationAuthenticator`, `CosmWasmAuthenticator`).
 Each type must be registered within the `AuthenticatorManager`.
 
 #### `StaticGas`
@@ -67,21 +67,21 @@ Provides the fixed gas amount that is consumed with each invocation of this auth
 
 #### `Initialize`
 
-Initializes the authenticator when retrieved from storage. It takes stored data (e.g., PublicKey for signature verification) as 
+Initializes the authenticator when retrieved from storage. It takes stored data (e.g., PublicKey for signature verification) as
 an argument to set up the authenticator.
 
 #### `Authenticate`
-Validates a message based on the provided transaction data (encoded as an `AuthenticationRequest`). 
-Returns true if authenticated, false otherwise. 
 
-Note that any state changes made by this function are intended to be discarded. The role of this function is 
+Validates a message based on the provided transaction data (encoded as an `AuthenticationRequest`).
+Returns true if authenticated, false otherwise.
+
+Note that any state changes made by this function are intended to be discarded. The role of this function is
 transaction verification without affecting permanent state.
 
 #### `Track`
 
 Once authentication succeeds, the `Track` function is called on every authenticator that was involved in authenticating
 the messages.
-
 
 #### `ConfirmExecution`
 
@@ -131,7 +131,7 @@ RemoveAuthenticator(account, authenticatorGlobalId)
 
    - The associated account for every message is identified.
    - The system fetches the appropriate authenticators for that account.
-   - The selected authenticator is retrieved from the transaction and used to determine which aithenticator to execute 
+   - The selected authenticator is retrieved from the transaction and used to determine which aithenticator to execute
    - The authenticator tries to validate the message. Successful validation means the message is authenticated and execution can proceed.
 
 4. **Gas Limit Reset**: Once the fee payer is authenticated, the gas limit is restored to its original value.
@@ -172,7 +172,7 @@ data: json_bytes({
 })
 ```
 
-The `params` field allows users to configure any user-specific information that the authenticator contract may need so that shared contracts don't 
+The `params` field allows users to configure any user-specific information that the authenticator contract may need so that shared contracts don't
 need to internally store data for each user. This allows for contract reuse even when user specific information is needed.
 This field is standardized and must be json bytes. This way it can be easily parsed and displayed by clients, which makes them more human-friendly.
 
@@ -202,23 +202,25 @@ Request types are defined [here](https://docs.rs/osmosis-authenticators/latest/o
 
 TODO: Add examples of queries and how to read them
 
--- 
+--
+
 # Design Decisions
 
 ## Authenticator Selection
 
 ### Different authenticators for each message
 
-The classic cosmos sdk authentication authenticates the tx as a whole by verifying the signatures of each signer. This 
+The classic cosmos sdk authentication authenticates the tx as a whole by verifying the signatures of each signer. This
 can be done because authentication logic is the same for all messages.  
 This module allows for more fine-grained control over the authentication process, which means users can
 configure how messages for their account are authenticated. Because of this, on a multi-message transaction, each
-message will go through its own authentication process: 
- * fetch the authenticators for the account
- * select the authenticator to use for this message
- * authenticate the message with the selected authenticator
+message will go through its own authentication process:
 
-The authenticators used for each message may be different and require different signature types. 
+- fetch the authenticators for the account
+- select the authenticator to use for this message
+- authenticate the message with the selected authenticator
+
+The authenticators used for each message may be different and require different signature types.
 
 Once all messages are authenticated, the track function is called on the used authenticators, messages are executed,
 and if execution is successful, the confirm execution function is called on the used authenticators.
@@ -226,21 +228,22 @@ and if execution is successful, the confirm execution function is called on the 
 ### Specifying authenticators
 
 When a user submits a transaction, they must specify which authenticators to use for each message. This is done by
-including the following TxExtension: 
+including the following TxExtension:
 
 ```go
 // TxExtension allows for additional authenticator-specific data in
 // transactions.
 message TxExtension {
-  // selected_authenticators holds the authenticator_id for the chosen 
+  // selected_authenticators holds the authenticator_id for the chosen
   // authenticator per message.
   repeated uint64 selected_authenticators = 1;
 }
 ```
+
 If the selected authenticators are not present, or there isn't one for each message, the transaction will be rejected
 by this module.
 
-At the moment, there is a backup authentication method that uses the classic Cosmos SDK authentication. If 
+At the moment, there is a backup authentication method that uses the classic Cosmos SDK authentication. If
 selected_authenticators are not specified, we default to the classic authentication method. This way existing
 applications don't need to be aware of authenticators to get their txs processed. This is likely a temporary measure
 
@@ -252,7 +255,7 @@ that are accepted.
 ### Messages can only have one signer
 
 On cosmos SDK versions before 0.50 it was possible to have multiple signers for a message. This will no longer be
-the case after v0.50, and we have introduced this restriction here as it makes it more clear which account a message 
+the case after v0.50, and we have introduced this restriction here as it makes it more clear which account a message
 is associated with.
 
 ### The fee payer must be the first signer of the first message
@@ -262,17 +265,17 @@ message. This module will enforce this restriction to simplify the gas managemen
 
 ## Fee Payer and Gas Consumption
 
-Fees (that pay for gas consumption) must be paid by the fee payer. These fees are paid regardless of whether the message 
-execution succeeds or fails, but cannot be charged (i.e.: the spend committed to state) until the authentication 
-succeeds (otherwise an attacker could force fees to be deducted from an account they don't control). This is not a 
-problem with classic authentication because validating each signature is a consistently cheap operation 
+Fees (that pay for gas consumption) must be paid by the fee payer. These fees are paid regardless of whether the message
+execution succeeds or fails, but cannot be charged (i.e.: the spend committed to state) until the authentication
+succeeds (otherwise an attacker could force fees to be deducted from an account they don't control). This is not a
+problem with classic authentication because validating each signature is a consistently cheap operation
 (signature verification).
 
 In an authenticator model, the cost of authenticating a message can vary greatly depending on the authenticators used.
 Moreover, if we enable the use of permissionless wasm contracts as authenticators, an attacker could write a contract
-that consumes a lot of gas (i.e.: cpu cycles) during authentication and use that to spam the network without any cost. 
+that consumes a lot of gas (i.e.: cpu cycles) during authentication and use that to spam the network without any cost.
 
-To prevent this type of spam, we need to limit the amount of gas that can be consumed during the authentication before 
+To prevent this type of spam, we need to limit the amount of gas that can be consumed during the authentication before
 the fee payer has been authenticated.
 
 This limit is set to a fixed amount controlled by the param of this module as `maximum_unauthenticated_gas`
@@ -280,7 +283,7 @@ This limit is set to a fixed amount controlled by the param of this module as `m
 ## Authenticator Ids
 
 Each authenticator associated with an account has a unique id that is used to identify it. This id is an incrementing
-number that is globally unique. For example, if user1 and user2 add authenticators to their accounts, these will have 
+number that is globally unique. For example, if user1 and user2 add authenticators to their accounts, these will have
 ids 1 and 2 respectively. If user1 adds a second authenticator, it will have id 3.
 
 ## Composite authenticators
@@ -291,12 +294,12 @@ There are two composite authenticators implemented in this module: `AnyOf` and `
 list of authenticators and authenticate a message if any or all of the authenticators in the list authenticate the
 message. A similar logic applies to track and confirm.
 
-### Composite Ids 
+### Composite Ids
 
 When a composite authenticator calls a sub authenticator, it is its responsibility to update the authenticator id
-passed down to the callee so that it can identify itself. This is done by combining the id of the top level 
-authenticator with the position of the sub-authenticator in the list. For example, if a user has 
-`AllOf(AnyOf(sig1, sig2), CosmwasmAuthenticator(contract1, params))` as it's authenticator, and it has a 
+passed down to the callee so that it can identify itself. This is done by combining the id of the top level
+authenticator with the position of the sub-authenticator in the list. For example, if a user has
+`AllOf(AnyOf(sig1, sig2), CosmwasmAuthenticator(contract1, params))` as it's authenticator, and it has a
 global id of 86, the cosmwasm authenticator will receive `86.1` as its authenticator id. If that instead was another
 composite authenticator, its first sub-authenticator would receive `86.1.0` as its authenticator id.
 
@@ -306,12 +309,12 @@ composite authenticator, its first sub-authenticator would receive `86.1.0` as i
 
 When using an AllOf authenticator `AllOf(a,b,...)`, the msg will be authenticated iff `authenticate(a) && authenticate(b) && ...` is true.
 
-The track function will be called for all the sub-authenticators. Any state changes made in track will be committed if 
-authentication and track succeeds, regardless of the outcome of the message execution.  
+The track function will be called for all the sub-authenticators. Any state changes made in track will be committed if
+authentication and track succeeds, regardless of the outcome of the message execution.
 
 If the message execution succeeds, the confirm function will be called for all the sub-authenticators.
 
-The message will succeed and its state changes be committed iff `confirm(a) && confirm(b) && ...` is true. Otherwise, 
+The message will succeed and its state changes be committed iff `confirm(a) && confirm(b) && ...` is true. Otherwise,
 the all state changes will be reverted except the ones made in track, which are always committed.
 
 #### AnyOf
@@ -319,17 +322,17 @@ the all state changes will be reverted except the ones made in track, which are 
 When using an AnyOf authenticator `AnyOf(a,b,...)`, the msg will be authenticated iff `authenticate(a) || authenticate(b) || ...` is true.
 
 In this case, because we are not tracking which sub-authenticators authenticated the message, the track function must be
-called on *all* the sub-authenticators. Any state changes made in track will be committed if authentication and track
+called on _all_ the sub-authenticators. Any state changes made in track will be committed if authentication and track
 succeeds, regardless of the outcome of the message execution.
 
-Similarly, when calling confirm on an AnyOf authenticator, we call confirm on *all* the sub-authenticators.
+Similarly, when calling confirm on an AnyOf authenticator, we call confirm on _all_ the sub-authenticators.
 
 The message will succeed and its state changes be committed iff `confirm(a) || confirm(b) || ...` is true. Otherwise,
 the all state changes will be reverted except the ones made in track, which are always committed.
 
 ### Selecting sub-authenticators
 
-At the moment, we do not support selecting sub-authenticators when submitting a tx. This would be useful when dealing 
+At the moment, we do not support selecting sub-authenticators when submitting a tx. This would be useful when dealing
 with an `AnyOf` so that a user can specify which sub-authenticator to select. This would also allow us to avoid calling
 all sub-authenticators when during the track and confirm steps. This is a feature that could be added in the future.
 
@@ -337,25 +340,25 @@ all sub-authenticators when during the track and confirm steps. This is a featur
 
 There are two ways in which we may want to provide signatures to a composite authenticator:
 
- * Simple: the same signature is passed to all sub-authenticators
- * Partitioned: the signatures are encoded as a json array, and each sub-authenticator is given its own part of the signature
+- Simple: the same signature is passed to all sub-authenticators
+- Partitioned: the signatures are encoded as a json array, and each sub-authenticator is given its own part of the signature
 
 As an example, consider a simple multi-sig implemented through composite authenticators. In this case, a user would assign
-an authenticator that looks like `PartitionedAllOf(pubkey1, pubkey2)` to their account. If this authenticator were a 
+an authenticator that looks like `PartitionedAllOf(pubkey1, pubkey2)` to their account. If this authenticator were a
 simple `AnyOf` there would be no way of providing a signature that satisfies both pubkeys. Here, however, we can
-provide each signature encoded in a json array. 
+provide each signature encoded in a json array.
 
 The user provides the bytes `"[sig1, sig2]"` as their signature. The `PartitionedAllOf` authenticator will then decode
 this json array and pass `sig1` to the first sub-authenticator and `sig2` to the second sub-authenticator.
 
 # Constructing composite authenticators
 
-As a user, you may want to combine composite authenticators to create more complex authentication logic. Here are some 
+As a user, you may want to combine composite authenticators to create more complex authentication logic. Here are some
 examples of how to do that:
 
 ## One Click trading
 
-A hot key can be configured so that it is only allowed to execute swap messages, and fail if the transaction leaves the 
+A hot key can be configured so that it is only allowed to execute swap messages, and fail if the transaction leaves the
 user with a lower balance than a certain threshold. This can be done by using the following authenticator:
 
 `AllOf(SignatureVerificationAuthenticator(usersPubKey), AnyOf(MessageFilter(SwapMsg1), MessageFilter(SwapMsg2)), CosmwasmAuthenticator(spendLimitContract, params))`
@@ -367,7 +370,7 @@ pubkeys and authenticate the message if signatures for the pubkeys are present i
 
 `PartitionedAllOf(pubkey1, pubkey2, pubkey3)`
 
-## Cosigner 
+## Cosigner
 
 An off chain cosigner can be configured to be required for all messages on an account. This way, an api (cosigner service)
 can analyze and simulate the transactions for security and provide their signature iff the transaction is safe.
@@ -377,27 +380,26 @@ This could be achieved by using the following authenticator:
 under the `AnyOf`.
 
 For a more complex cosigner, the user could use a `CosmwasmAuthenticator` that calls a contract that implements the
-cosigner logic. This would allow some manager to rotate the cosigner key or implement some recovery logic in case the 
-cosigner is unavailable or misbehaving. 
+cosigner logic. This would allow some manager to rotate the cosigner key or implement some recovery logic in case the
+cosigner is unavailable or misbehaving.
 
 ## Succession/Inheritance protocol
 
-A user can configure an inheritance authenticator so that a beneficiary can take over their account if the account has 
+A user can configure an inheritance authenticator so that a beneficiary can take over their account if the account has
 been inactive for a certain period of time. This can be done by using the following authenticator:
 
-`AnyOf(CosmwasmAuthenticator(inheritanceContract, params), ...other_authenticators)` 
+`AnyOf(CosmwasmAuthenticator(inheritanceContract, params), ...other_authenticators)`
 
+# Authentication Lifecycle examples
 
-# Authentication Lifecycle examples 
 - Which hook runs and when
 - State commit / reversion conditions
-
 
 # Circuit Breaker
 
 For the initial release, this module will be provided behind a "circuit breaker" or feature switch. This means that
-the feature will be controlled by the `are_smart_accounts_active` parameter. If that parameter is set to false,
-the authenticator module will not be used and the classic cosmos sdk authentication will be used instead.g
+the feature will be controlled by the `is_smart_account_active` parameter. If that parameter is set to false,
+the authenticator module will not be used and the classic cosmos sdk authentication will be used instead.
 
 # Using authenticators from JS
 

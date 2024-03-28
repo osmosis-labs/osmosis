@@ -7,6 +7,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
@@ -88,4 +89,39 @@ func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemo
 	return &types.MsgRemoveAuthenticatorResponse{
 		Success: true,
 	}, nil
+}
+
+func (m msgServer) SetActiveState(goCtx context.Context, msg *types.MsgSetActiveState) (*types.MsgSetActiveStateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// `MsgSetActiveState` must have only one signer
+	signer := msg.GetSigners()[0]
+
+	// check if signer is authorized to set the active state
+	isAuthorized := false
+	params := m.Keeper.GetParams(ctx)
+
+	for _, controller := range params.CircuitBreakerControllers {
+		if controller == signer.String() {
+			isAuthorized = true
+			break
+		}
+	}
+	if !isAuthorized {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer is not a circuit breaker controller")
+	}
+
+	// Set the active state of the authenticator
+	m.Keeper.SetActiveState(ctx, msg.Active)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AtrributeKeyIsSmartAccountActive, strconv.FormatBool(msg.Active)),
+		),
+	})
+
+	return &types.MsgSetActiveStateResponse{}, nil
 }

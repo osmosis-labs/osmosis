@@ -23,13 +23,16 @@ const (
 	AttributeValueCategory        = ModuleName
 	AttributeKeyAuthenticatorType = "authenticator_type"
 	AttributeKeyAuthenticatorId   = "authenticator_id"
+
+	AtrributeKeyIsSmartAccountActive = "is_smart_account_active"
 )
 
 var (
 	KeyNextAccountAuthenticatorIdPrefix = []byte{0x01}
 	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
 	KeyMaximumUnauthenticatedGas        = []byte("MaximumUnauthenticatedGas")
-	KeyAreSmartAccountsActive           = []byte("AreSmartAccountsActive")
+	KeyIsSmartAccountActive             = []byte("IsSmartAccountActive")
+	KeyCircuitBreakerControllers        = []byte("CircuitBreakerControllers")
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {
