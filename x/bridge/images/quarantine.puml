@@ -1,0 +1,31 @@
+@startuml
+
+title "Inbound transfer state diagram"
+
+legend right
+|= Color       |= Definition |
+|<#lightgreen> | Final state |
+endlegend
+
+state "**Accumulation**" as accumulation : Accumulate votes
+
+state "**Finalization**" as finalization : Check rate limits
+
+state "**Finalized**" as finalized #lightgreen;line:green;line.bold
+finalized : The transfer is finalized
+
+state "**Quarantine**" as quarantine
+quarantine : The transfer is postponed
+quarantine : in the quarantine queue
+
+[*] -d-> accumulation : **MsgInboundTransfer**
+
+accumulation -l-> accumulation : **len(votes) < notes_needed**
+accumulation -d-> finalization : **len(votes) == notes_needed**
+accumulation -r-> finalized : **len(votes) > notes_needed**
+
+finalization --> finalized : within limits
+finalization --> quarantine : **minted_volume + incoming_volume >= rate_limit**
+quarantine --> finalized : release is triggered
+
+@enduml
