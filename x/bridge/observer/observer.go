@@ -14,7 +14,7 @@ const ModuleName = "observer"
 
 type Observer struct {
 	logger     log.Logger
-	chains     map[ChainId]Chain
+	chains     map[ChainId]Client
 	outTxQueue map[ChainId][]Transfer
 	outLock    sync.Mutex
 	sendPeriod time.Duration
@@ -22,7 +22,7 @@ type Observer struct {
 }
 
 // NewObserver returns new instance of `Observer`
-func NewObserver(logger log.Logger, chains map[ChainId]Chain, sendPeriod time.Duration) Observer {
+func NewObserver(logger log.Logger, chains map[ChainId]Client, sendPeriod time.Duration) Observer {
 	return Observer{
 		logger:     logger.With("module", ModuleName),
 		chains:     chains,
@@ -82,6 +82,7 @@ func (o *Observer) collectOutbound() {
 	}()
 
 	for out := range aggregate {
+		o.outLock.Lock()
 		_, ok := o.chains[out.DstChain]
 		if !ok {
 			o.logger.Error(fmt.Sprintf(
@@ -89,9 +90,9 @@ func (o *Observer) collectOutbound() {
 				out.DstChain,
 				out.Id,
 			))
+			o.outLock.Unlock()
 			continue
 		}
-		o.outLock.Lock()
 		o.outTxQueue[out.SrcChain] = append(o.outTxQueue[out.SrcChain], out)
 		o.outLock.Unlock()
 	}

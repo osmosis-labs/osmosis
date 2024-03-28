@@ -62,7 +62,7 @@ func (m *MockChain) ConfirmationsRequired() (uint64, error) {
 func TestObserver(t *testing.T) {
 	osmo := NewMockChain(15, 3)
 	btc := NewMockChain(15, 3)
-	chains := make(map[observer.ChainId]observer.Chain)
+	chains := make(map[observer.ChainId]observer.Client)
 	chains[observer.ChainIdOsmosis] = osmo
 	chains[observer.ChainIdBitcoin] = btc
 	o := observer.NewObserver(log.NewNopLogger(), chains, 100*time.Millisecond)
@@ -98,7 +98,7 @@ func TestObserver(t *testing.T) {
 func TestObserverLowConfirmation(t *testing.T) {
 	osmo := NewMockChain(15, 3)
 	btc := NewMockChain(15, 3)
-	chains := make(map[observer.ChainId]observer.Chain)
+	chains := make(map[observer.ChainId]observer.Client)
 	chains[observer.ChainIdOsmosis] = osmo
 	chains[observer.ChainIdBitcoin] = btc
 	o := observer.NewObserver(log.NewNopLogger(), chains, 100*time.Millisecond)
