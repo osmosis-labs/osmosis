@@ -127,8 +127,8 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmo
 		}
 	}
 
-	// Update global spread reward growth with the scaled total
-	ss.globalSpreadRewardGrowth = ss.globalSpreadRewardGrowth.Add(scaledSpreadRewardChargeTotal)
+	// Update global spread reward growth with the UNSCALED total
+	ss.globalSpreadRewardGrowth = ss.globalSpreadRewardGrowth.Add(spreadRewardChargeTotal)
 
 	// If liquidity is zero, return early to avoid division by zero
 	if ss.liquidity.IsZero() {
