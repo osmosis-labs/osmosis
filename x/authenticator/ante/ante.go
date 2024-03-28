@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 	"strconv"
 	"time"
 
@@ -18,12 +19,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
 )
 
+// GetSudoCtxFuncType defines the function signature for our wrapper
+// Adjust the types as necessary
+type GetSudoCtxFuncType func(mode int, txBytes []byte) sdk.Context
+
 // AuthenticatorDecorator is responsible for processing authentication logic
 // before transaction execution.
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	accountKeeper       authante.AccountKeeper
 	sigModeHandler      authsigning.SignModeHandler
+	getSudoContext      GetSudoCtxFuncType
+	bankKeeper          txfeestypes.BankKeeper
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
@@ -31,11 +38,15 @@ func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
+	getSudoContext GetSudoCtxFuncType,
+	bankKeeper txfeestypes.BankKeeper,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
 		accountKeeper:       accountKeeper,
 		sigModeHandler:      sigModeHandler,
+		getSudoContext:      getSudoContext,
+		bankKeeper:          bankKeeper,
 	}
 }
 
@@ -103,6 +114,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// tracks are used to make sure that we only write to the store after every message is successful
 	var tracks []func() error
 
+	authenticatingFeePayer := true
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		signers := msg.GetSigners()
@@ -155,34 +167,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		neverWriteCtx, _ := cacheCtx.CacheContext()
 		authErr := a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
-		// If authentication is successful, continue
-		if authErr == nil {
-			// Once the fee payer is authenticated, we can set the gas limit to its original value
-			if account.Equals(feePayer) {
-				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
-
-				// Reset this for both contexts
-				cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
-				ctx = ctx.WithGasMeter(originalGasMeter)
-			}
-
-			// Append the track closure to be called after every message is authenticated
-			tracks = append(tracks, func() error {
-				err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
-
-				if err != nil {
-					// track should not fail in normal circumstances, since it is intended to update track state before execution.
-					// If it does fail, we log the error.
-					telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
-					ad.authenticatorKeeper.Logger(ctx).Error(
-						"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
-
-					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
-				}
-				return nil
-			})
-		}
-
 		// If authentication failed, return an error
 		if authErr != nil {
 			return ctx, errorsmod.Wrapf(
@@ -190,6 +174,43 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				"authentication failed for message %d, authenticator id %d, type %s", msgIndex, selectedAuthenticator.Id, selectedAuthenticator.Authenticator.Type(),
 			)
 		}
+
+		// Once the fee payer is authenticated, we can set the gas limit to its original value
+		if authenticatingFeePayer && account.Equals(feePayer) {
+			originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
+
+			// Reset this for both contexts
+			cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+			ctx = ctx.WithGasMeter(originalGasMeter)
+
+			// Deduct fees here! We need to use the jailbroken cache to make sure this is committed.
+			sudoCtx := ad.getSudoContext(3, ctx.TxBytes()) // TODO: get the right mode here
+			_, err := authante.NewDeductFeeDecorator(ad.accountKeeper, ad.bankKeeper, nil, nil).AnteHandle(sudoCtx, tx, simulate, next)
+			sudoCtx.MultiStore()
+			if err != nil {
+				return sdk.Context{}, err
+			}
+
+			// Fee Payer has been authenticated and gas set to the normal amount
+			authenticatingFeePayer = false
+		}
+
+		// Append the track closure to be called after every message is authenticated
+		tracks = append(tracks, func() error {
+			err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
+
+			if err != nil {
+				// track should not fail in normal circumstances, since it is intended to update track state before execution.
+				// If it does fail, we log the error.
+				telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
+				ad.authenticatorKeeper.Logger(ctx).Error(
+					"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
+
+				return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
+			}
+			return nil
+		})
+
 	}
 
 	// If the transaction has been authenticated, we call Track(...) on every message

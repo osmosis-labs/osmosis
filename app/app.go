@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	authante "github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
 	"io"
 	"net/http"
 	"os"
@@ -365,6 +366,8 @@ func NewOsmosisApp(
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
+	getSudoContextFunc := CreateGetSudoCtxFunc(app.BaseApp)
+
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
@@ -377,6 +380,7 @@ func NewOsmosisApp(
 		ante.DefaultSigVerificationGasConsumer,
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
+		getSudoContextFunc,
 	)
 
 	// initialize BaseApp
@@ -410,6 +414,24 @@ func NewOsmosisApp(
 	}
 
 	return app
+}
+
+// CreateGetSudoCtxFunc creates a function that wraps the call to the unexported getContextForTx
+func CreateGetSudoCtxFunc(appBaseApp interface{}) authante.GetSudoCtxFuncType {
+	return func(mode int, txBytes []byte) sdk.Context {
+		appBaseAppVal := reflect.ValueOf(appBaseApp)
+		getSudoContextFunc := appBaseAppVal.MethodByName("getContextForTx")
+
+		// Call the method using reflection
+		result := getSudoContextFunc.Call([]reflect.Value{
+			reflect.ValueOf(mode),
+			reflect.ValueOf(txBytes),
+		})
+
+		// Assume the function returns a single value of type sdk.Context
+		// and there is no error handling for simplicity
+		return result[0].Interface().(sdk.Context)
+	}
 }
 
 // InitOsmosisAppForTestnet is broken down into two sections:

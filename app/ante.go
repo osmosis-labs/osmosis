@@ -43,6 +43,7 @@ func NewAnteHandler(
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper *ibckeeper.Keeper,
+	sudoContextFn authante.GetSudoCtxFuncType,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -71,7 +72,7 @@ func NewAnteHandler(
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
 		// is enbedded in the authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
+		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler, sudoContextFn, bankKeeper),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 		deductFeeDecorator,
