@@ -14,16 +14,16 @@ import (
 )
 
 type MockChain struct {
-	In  chan observer.InboundTransfer
-	Out chan observer.OutboundTransfer
+	In  chan observer.Transfer
+	Out chan observer.Transfer
 	H   atomic.Uint64
 	CR  atomic.Uint64
 }
 
 func NewMockChain(h uint64, cr uint64) *MockChain {
 	mc := MockChain{
-		In:  make(chan observer.InboundTransfer),
-		Out: make(chan observer.OutboundTransfer),
+		In:  make(chan observer.Transfer),
+		Out: make(chan observer.Transfer),
 		H:   atomic.Uint64{},
 		CR:  atomic.Uint64{},
 	}
@@ -32,12 +32,12 @@ func NewMockChain(h uint64, cr uint64) *MockChain {
 	return &mc
 }
 
-func (m *MockChain) SignalInboundTransfer(ctx context.Context, in observer.InboundTransfer) error {
+func (m *MockChain) SignalInboundTransfer(ctx context.Context, in observer.Transfer) error {
 	m.In <- in
 	return nil
 }
 
-func (m *MockChain) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
+func (m *MockChain) ListenOutboundTransfer() <-chan observer.Transfer {
 	return m.Out
 }
 
@@ -63,16 +63,17 @@ func TestObserver(t *testing.T) {
 	osmo := NewMockChain(15, 3)
 	btc := NewMockChain(15, 3)
 	chains := make(map[observer.ChainId]observer.Chain)
-	chains[observer.ChainId_OSMO] = osmo
-	chains[observer.ChainId_BITCOIN] = btc
+	chains[observer.ChainIdOsmosis] = osmo
+	chains[observer.ChainIdBitcoin] = btc
 	o := observer.NewObserver(log.NewNopLogger(), chains, 100*time.Millisecond)
 
 	ctx := context.Background()
 	err := o.Start(ctx)
 	require.NoError(t, err)
 
-	btcOut := observer.OutboundTransfer{
-		DstChain: observer.ChainId_OSMO,
+	btcOut := observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
 		Id:       "from-btc",
 		Height:   10,
 		Sender:   "btc-sender",
@@ -80,23 +81,13 @@ func TestObserver(t *testing.T) {
 		Asset:    "btc",
 		Amount:   math.NewUint(10),
 	}
-	expOsmoIn := observer.InboundTransfer{
-		SrcChain: observer.ChainId_BITCOIN,
-		Id:       btcOut.Id,
-		Height:   btcOut.Height,
-		Sender:   btcOut.Sender,
-		To:       btcOut.To,
-		Asset:    btcOut.Asset,
-		Amount:   btcOut.Amount,
-	}
-
 	btc.Out <- btcOut
-	osmoIn := observer.InboundTransfer{}
+	osmoIn := observer.Transfer{}
 	require.Eventually(t, func() bool {
 		osmoIn = <-osmo.In
 		return true
 	}, time.Second, 100*time.Millisecond, "Timeout receiving transfer")
-	require.Equal(t, expOsmoIn, osmoIn)
+	require.Equal(t, btcOut, osmoIn)
 
 	err = o.Stop(ctx)
 	require.NoError(t, err)
@@ -108,16 +99,17 @@ func TestObserverLowConfirmation(t *testing.T) {
 	osmo := NewMockChain(15, 3)
 	btc := NewMockChain(15, 3)
 	chains := make(map[observer.ChainId]observer.Chain)
-	chains[observer.ChainId_OSMO] = osmo
-	chains[observer.ChainId_BITCOIN] = btc
+	chains[observer.ChainIdOsmosis] = osmo
+	chains[observer.ChainIdBitcoin] = btc
 	o := observer.NewObserver(log.NewNopLogger(), chains, 100*time.Millisecond)
 
 	ctx := context.Background()
 	err := o.Start(ctx)
 	require.NoError(t, err)
 
-	btcOut := observer.OutboundTransfer{
-		DstChain: observer.ChainId_OSMO,
+	btcOut := observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
 		Id:       "from-btc",
 		Height:   15,
 		Sender:   "btc-sender",
@@ -125,18 +117,8 @@ func TestObserverLowConfirmation(t *testing.T) {
 		Asset:    "btc",
 		Amount:   math.NewUint(10),
 	}
-	expOsmoIn := observer.InboundTransfer{
-		SrcChain: observer.ChainId_BITCOIN,
-		Id:       btcOut.Id,
-		Height:   btcOut.Height,
-		Sender:   btcOut.Sender,
-		To:       btcOut.To,
-		Asset:    btcOut.Asset,
-		Amount:   btcOut.Amount,
-	}
-
 	btc.Out <- btcOut
-	osmoIn := observer.InboundTransfer{}
+	osmoIn := observer.Transfer{}
 	received := false
 	select {
 	case osmoIn = <-osmo.In:
@@ -149,7 +131,7 @@ func TestObserverLowConfirmation(t *testing.T) {
 		osmoIn = <-osmo.In
 		return true
 	}, time.Second, 100*time.Millisecond, "Timeout receiving transfer")
-	require.Equal(t, expOsmoIn, osmoIn)
+	require.Equal(t, btcOut, osmoIn)
 
 	err = o.Stop(ctx)
 	require.NoError(t, err)

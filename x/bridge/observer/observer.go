@@ -15,7 +15,7 @@ const ModuleName = "observer"
 type Observer struct {
 	logger     log.Logger
 	chains     map[ChainId]Chain
-	outTxQueue map[ChainId][]OutboundTransfer
+	outTxQueue map[ChainId][]Transfer
 	outLock    sync.Mutex
 	sendPeriod time.Duration
 	stopChan   chan struct{}
@@ -26,7 +26,7 @@ func NewObserver(logger log.Logger, chains map[ChainId]Chain, sendPeriod time.Du
 	return Observer{
 		logger:     logger.With("module", ModuleName),
 		chains:     chains,
-		outTxQueue: make(map[ChainId][]OutboundTransfer),
+		outTxQueue: make(map[ChainId][]Transfer),
 		outLock:    sync.Mutex{},
 		sendPeriod: sendPeriod,
 		stopChan:   make(chan struct{}),
@@ -50,54 +50,50 @@ func (o *Observer) Start(ctx context.Context) error {
 
 // Stop stops all underlying chains and stops processing transfers
 func (o *Observer) Stop(ctx context.Context) error {
-	close(o.stopChan)
 	for id, c := range o.chains {
 		err := c.Stop(ctx)
 		if err != nil {
-			return errorsmod.Wrapf(err, "Failed to stop chain %s", id)
+			o.logger.Error(fmt.Sprintf("Failed to stop chain %s", id))
+			continue
 		}
 	}
+	close(o.stopChan)
 	return nil
 }
 
 func (o *Observer) collectOutbound() {
-	aggregate := make(chan struct {
-		ChainId
-		OutboundTransfer
-	})
-	for id, chain := range o.chains {
-		go func(id ChainId, ch <-chan OutboundTransfer) {
+	aggregate := make(chan Transfer)
+	wg := sync.WaitGroup{}
+
+	for _, chain := range o.chains {
+		wg.Add(1)
+		ch := chain.ListenOutboundTransfer()
+		go func() {
+			defer wg.Done()
 			for t := range ch {
-				select {
-				case aggregate <- struct {
-					ChainId
-					OutboundTransfer
-				}{id, t}:
-				case <-o.stopChan:
-					return
-				}
+				aggregate <- t
 			}
-		}(id, chain.ListenOutboundTransfer())
+		}()
 	}
 
-	for {
-		select {
-		case <-o.stopChan:
-			return
-		case out := <-aggregate:
-			dstChain := o.chains[out.OutboundTransfer.DstChain]
-			if dstChain == nil {
-				o.logger.Error(fmt.Sprintf(
-					"Unknown destination chain %s in outbound transfer %s",
-					out.OutboundTransfer.DstChain,
-					out.Id,
-				))
-				continue
-			}
-			o.outLock.Lock()
-			o.outTxQueue[out.ChainId] = append(o.outTxQueue[out.ChainId], out.OutboundTransfer)
-			o.outLock.Unlock()
+	go func() {
+		wg.Wait()
+		close(aggregate)
+	}()
+
+	for out := range aggregate {
+		_, ok := o.chains[out.DstChain]
+		if !ok {
+			o.logger.Error(fmt.Sprintf(
+				"Unknown destination chain %s in outbound transfer %s",
+				out.DstChain,
+				out.Id,
+			))
+			continue
 		}
+		o.outLock.Lock()
+		o.outTxQueue[out.SrcChain] = append(o.outTxQueue[out.SrcChain], out)
+		o.outLock.Unlock()
 	}
 }
 
@@ -126,27 +122,22 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 		}
 		confirmationsRequired, err := srcChain.ConfirmationsRequired()
 		if err != nil {
-			o.logger.Error(fmt.Sprintf("Failed to get confirmations required for %s: %s", srcId, err.Error()))
+			o.logger.Error(fmt.Sprintf(
+				"Failed to get confirmations required for %s: %s",
+				srcId,
+				err.Error(),
+			))
 			continue
 		}
-		newQueue := []OutboundTransfer{}
+		var newQueue []Transfer
 		for _, out := range queue {
 			if height-out.Height < confirmationsRequired {
 				newQueue = append(newQueue, out)
-			} else {
-				in := InboundTransfer{
-					SrcChain: srcId,
-					Id:       out.Id,
-					Height:   out.Height,
-					Sender:   out.Sender,
-					To:       out.To,
-					Asset:    out.Asset,
-					Amount:   out.Amount,
-				}
-				err = o.chains[out.DstChain].SignalInboundTransfer(ctx, in)
-				if err != nil {
-					newQueue = append(newQueue, out)
-				}
+				continue
+			}
+			err = o.chains[out.DstChain].SignalInboundTransfer(ctx, out)
+			if err != nil {
+				newQueue = append(newQueue, out)
 			}
 		}
 		o.outTxQueue[srcId] = newQueue

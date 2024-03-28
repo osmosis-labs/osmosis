@@ -44,12 +44,12 @@ type MockChain struct {
 	CR uint64
 }
 
-func (m *MockChain) SignalInboundTransfer(context.Context, observer.InboundTransfer) error {
+func (m *MockChain) SignalInboundTransfer(context.Context, observer.Transfer) error {
 	return nil
 }
 
-func (m *MockChain) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
-	return make(<-chan observer.OutboundTransfer)
+func (m *MockChain) ListenOutboundTransfer() <-chan observer.Transfer {
+	return make(<-chan observer.Transfer)
 }
 
 func (m *MockChain) Start(context.Context) error { return nil }
@@ -67,7 +67,7 @@ func (m *MockChain) ConfirmationsRequired() (uint64, error) {
 type OsmosisTestSuite struct {
 	ts TestSuite
 	hs *httptest.Server
-	o  *osmosis.Osmosis
+	o  *osmosis.ChainClient
 }
 
 func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
@@ -96,13 +96,12 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
 	bitcoin := &MockChain{42, 3}
 	chains := make(map[observer.ChainId]observer.Chain)
-	chains[observer.ChainId_BITCOIN] = bitcoin
+	chains[observer.ChainIdBitcoin] = bitcoin
 
 	o := osmosis.NewOsmosis(
 		log.NewNopLogger(),
 		&client,
 		cometRpc,
-		chains,
 	)
 	require.NoError(t, err)
 
@@ -206,8 +205,9 @@ func TestSignalInboundTransfer(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	in := observer.InboundTransfer{
-		SrcChain: observer.ChainId_BITCOIN,
+	in := observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
 		Id:       "deadbeef",
 		Height:   42,
 		Sender:   Addr1.String(),
@@ -279,7 +279,7 @@ func TestListenOutboundTransfer(t *testing.T) {
 	// We expect to receive 3 Txs with `EventOutboundTransferType` events in this test
 	// Only 2 of the Txs are successful, so we should receive only 2 event through the channel
 	eventsOut := ots.o.ListenOutboundTransfer()
-	transfers := [2]observer.OutboundTransfer{}
+	transfers := [2]observer.Transfer{}
 	for i := 0; i < len(transfers); i++ {
 		require.Eventually(t, func() bool {
 			transfers[i] = <-eventsOut
@@ -287,8 +287,9 @@ func TestListenOutboundTransfer(t *testing.T) {
 		}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
 	}
 
-	expTransfer0 := observer.OutboundTransfer{
-		DstChain: observer.ChainId_BITCOIN,
+	expTransfer0 := observer.Transfer{
+		SrcChain: observer.ChainIdOsmosis,
+		DstChain: observer.ChainIdBitcoin,
 		Id:       "E765E65A3A513CCC3E2CE25BB6B47DBD7CA09AC6C7C380B84D96B88B3B0B8A70",
 		Height:   5984109,
 		Sender:   Addr1.String(),
@@ -296,8 +297,9 @@ func TestListenOutboundTransfer(t *testing.T) {
 		Asset:    "btc",
 		Amount:   math.NewUint(10),
 	}
-	expTransfer1 := observer.OutboundTransfer{
-		DstChain: observer.ChainId_BITCOIN,
+	expTransfer1 := observer.Transfer{
+		SrcChain: observer.ChainIdOsmosis,
+		DstChain: observer.ChainIdBitcoin,
 		Id:       "CE2D6798A8C8FD8685A29B543FDAEB31EED72A1EB5F570D889FF5E263AC7D19D",
 		Height:   5984109,
 		Sender:   Addr1.String(),
