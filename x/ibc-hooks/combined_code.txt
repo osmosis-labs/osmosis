@@ -1,0 +1,3152 @@
+// File: ./ibc_module.go
+package ibc_hooks
+
+import (
+	// external libraries
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	// ibc-go
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+)
+
+var _ porttypes.Middleware = &IBCMiddleware{}
+
+type IBCMiddleware struct {
+	App            porttypes.IBCModule
+	ICS4Middleware *ICS4Middleware
+}
+
+func NewIBCMiddleware(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCMiddleware {
+	return IBCMiddleware{
+		App:            app,
+		ICS4Middleware: ics4,
+	}
+}
+
+// OnChanOpenInit implements the IBCMiddleware interface
+func (im IBCMiddleware) OnChanOpenInit(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID string,
+	channelID string,
+	channelCap *capabilitytypes.Capability,
+	counterparty channeltypes.Counterparty,
+	version string,
+) (string, error) {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenInitOverrideHooks); ok {
+		return hook.OnChanOpenInitOverride(im, ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenInitBeforeHooks); ok {
+		hook.OnChanOpenInitBeforeHook(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version)
+	}
+
+	finalVersion, err := im.App.OnChanOpenInit(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version)
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenInitAfterHooks); ok {
+		hook.OnChanOpenInitAfterHook(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version, finalVersion, err)
+	}
+	return version, err
+}
+
+// OnChanOpenTry implements the IBCMiddleware interface
+func (im IBCMiddleware) OnChanOpenTry(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	channelCap *capabilitytypes.Capability,
+	counterparty channeltypes.Counterparty,
+	counterpartyVersion string,
+) (string, error) {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenTryOverrideHooks); ok {
+		return hook.OnChanOpenTryOverride(im, ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenTryBeforeHooks); ok {
+		hook.OnChanOpenTryBeforeHook(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
+	}
+
+	version, err := im.App.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenTryAfterHooks); ok {
+		hook.OnChanOpenTryAfterHook(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion, version, err)
+	}
+	return version, err
+}
+
+// OnChanOpenAck implements the IBCMiddleware interface
+func (im IBCMiddleware) OnChanOpenAck(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	counterpartyChannelID string,
+	counterpartyVersion string,
+) error {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenAckOverrideHooks); ok {
+		return hook.OnChanOpenAckOverride(im, ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenAckBeforeHooks); ok {
+		hook.OnChanOpenAckBeforeHook(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
+	}
+	err := im.App.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenAckAfterHooks); ok {
+		hook.OnChanOpenAckAfterHook(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion, err)
+	}
+
+	return err
+}
+
+// OnChanOpenConfirm implements the IBCMiddleware interface
+func (im IBCMiddleware) OnChanOpenConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenConfirmOverrideHooks); ok {
+		return hook.OnChanOpenConfirmOverride(im, ctx, portID, channelID)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenConfirmBeforeHooks); ok {
+		hook.OnChanOpenConfirmBeforeHook(ctx, portID, channelID)
+	}
+	err := im.App.OnChanOpenConfirm(ctx, portID, channelID)
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenConfirmAfterHooks); ok {
+		hook.OnChanOpenConfirmAfterHook(ctx, portID, channelID, err)
+	}
+	return err
+}
+
+// OnChanCloseInit implements the IBCMiddleware interface
+func (im IBCMiddleware) OnChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	// Here we can remove the limits when a new channel is closed. For now, they can remove them  manually on the contract
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanCloseInitOverrideHooks); ok {
+		return hook.OnChanCloseInitOverride(im, ctx, portID, channelID)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanCloseInitBeforeHooks); ok {
+		hook.OnChanCloseInitBeforeHook(ctx, portID, channelID)
+	}
+	err := im.App.OnChanCloseInit(ctx, portID, channelID)
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanCloseInitAfterHooks); ok {
+		hook.OnChanCloseInitAfterHook(ctx, portID, channelID, err)
+	}
+
+	return err
+}
+
+// OnChanCloseConfirm implements the IBCMiddleware interface
+func (im IBCMiddleware) OnChanCloseConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	// Here we can remove the limits when a new channel is closed. For now, they can remove them  manually on the contract
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanCloseConfirmOverrideHooks); ok {
+		return hook.OnChanCloseConfirmOverride(im, ctx, portID, channelID)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanCloseConfirmBeforeHooks); ok {
+		hook.OnChanCloseConfirmBeforeHook(ctx, portID, channelID)
+	}
+	err := im.App.OnChanCloseConfirm(ctx, portID, channelID)
+	if hook, ok := im.ICS4Middleware.Hooks.(OnChanCloseConfirmAfterHooks); ok {
+		hook.OnChanCloseConfirmAfterHook(ctx, portID, channelID, err)
+	}
+
+	return err
+}
+
+// OnRecvPacket implements the IBCMiddleware interface
+func (im IBCMiddleware) OnRecvPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	relayer sdk.AccAddress,
+) ibcexported.Acknowledgement {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnRecvPacketOverrideHooks); ok {
+		return hook.OnRecvPacketOverride(im, ctx, packet, relayer)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnRecvPacketBeforeHooks); ok {
+		hook.OnRecvPacketBeforeHook(ctx, packet, relayer)
+	}
+
+	ack := im.App.OnRecvPacket(ctx, packet, relayer)
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnRecvPacketAfterHooks); ok {
+		hook.OnRecvPacketAfterHook(ctx, packet, relayer, ack)
+	}
+
+	return ack
+}
+
+// OnAcknowledgementPacket implements the IBCMiddleware interface
+func (im IBCMiddleware) OnAcknowledgementPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+	relayer sdk.AccAddress,
+) error {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnAcknowledgementPacketOverrideHooks); ok {
+		return hook.OnAcknowledgementPacketOverride(im, ctx, packet, acknowledgement, relayer)
+	}
+	if hook, ok := im.ICS4Middleware.Hooks.(OnAcknowledgementPacketBeforeHooks); ok {
+		hook.OnAcknowledgementPacketBeforeHook(ctx, packet, acknowledgement, relayer)
+	}
+
+	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnAcknowledgementPacketAfterHooks); ok {
+		hook.OnAcknowledgementPacketAfterHook(ctx, packet, acknowledgement, relayer, err)
+	}
+
+	return err
+}
+
+// OnTimeoutPacket implements the IBCMiddleware interface
+func (im IBCMiddleware) OnTimeoutPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	relayer sdk.AccAddress,
+) error {
+	if hook, ok := im.ICS4Middleware.Hooks.(OnTimeoutPacketOverrideHooks); ok {
+		return hook.OnTimeoutPacketOverride(im, ctx, packet, relayer)
+	}
+
+	if hook, ok := im.ICS4Middleware.Hooks.(OnTimeoutPacketBeforeHooks); ok {
+		hook.OnTimeoutPacketBeforeHook(ctx, packet, relayer)
+	}
+	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
+	if hook, ok := im.ICS4Middleware.Hooks.(OnTimeoutPacketAfterHooks); ok {
+		hook.OnTimeoutPacketAfterHook(ctx, packet, relayer, err)
+	}
+
+	return err
+}
+
+// SendPacket implements the ICS4 Wrapper interface
+func (im IBCMiddleware) SendPacket(
+	ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort string, sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+) (sequence uint64, err error) {
+	return im.ICS4Middleware.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+}
+
+// WriteAcknowledgement implements the ICS4 Wrapper interface
+func (im IBCMiddleware) WriteAcknowledgement(
+	ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	packet ibcexported.PacketI,
+	ack ibcexported.Acknowledgement,
+) error {
+	return im.ICS4Middleware.WriteAcknowledgement(ctx, chanCap, packet, ack)
+}
+
+func (im IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
+	return im.ICS4Middleware.GetAppVersion(ctx, portID, channelID)
+}
+
+// ===========================
+
+// File: ./hooks.go
+package ibc_hooks
+
+import (
+	// external libraries
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	// ibc-go
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+)
+
+type Hooks interface{}
+
+type OnChanOpenInitOverrideHooks interface {
+	OnChanOpenInitOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error)
+}
+type OnChanOpenInitBeforeHooks interface {
+	OnChanOpenInitBeforeHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string)
+}
+type OnChanOpenInitAfterHooks interface {
+	OnChanOpenInitAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string, finalVersion string, err error)
+}
+
+// OnChanOpenTry Hooks
+type OnChanOpenTryOverrideHooks interface {
+	OnChanOpenTryOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error)
+}
+type OnChanOpenTryBeforeHooks interface {
+	OnChanOpenTryBeforeHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string)
+}
+type OnChanOpenTryAfterHooks interface {
+	OnChanOpenTryAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string, version string, err error)
+}
+
+// OnChanOpenAck Hooks
+type OnChanOpenAckOverrideHooks interface {
+	OnChanOpenAckOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string) error
+}
+type OnChanOpenAckBeforeHooks interface {
+	OnChanOpenAckBeforeHook(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string)
+}
+type OnChanOpenAckAfterHooks interface {
+	OnChanOpenAckAfterHook(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string, err error)
+}
+
+// OnChanOpenConfirm Hooks
+type OnChanOpenConfirmOverrideHooks interface {
+	OnChanOpenConfirmOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string) error
+}
+type OnChanOpenConfirmBeforeHooks interface {
+	OnChanOpenConfirmBeforeHook(ctx sdk.Context, portID, channelID string)
+}
+type OnChanOpenConfirmAfterHooks interface {
+	OnChanOpenConfirmAfterHook(ctx sdk.Context, portID, channelID string, err error)
+}
+
+// OnChanCloseInit Hooks
+type OnChanCloseInitOverrideHooks interface {
+	OnChanCloseInitOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string) error
+}
+type OnChanCloseInitBeforeHooks interface {
+	OnChanCloseInitBeforeHook(ctx sdk.Context, portID, channelID string)
+}
+type OnChanCloseInitAfterHooks interface {
+	OnChanCloseInitAfterHook(ctx sdk.Context, portID, channelID string, err error)
+}
+
+// OnChanCloseConfirm Hooks
+type OnChanCloseConfirmOverrideHooks interface {
+	OnChanCloseConfirmOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string) error
+}
+type OnChanCloseConfirmBeforeHooks interface {
+	OnChanCloseConfirmBeforeHook(ctx sdk.Context, portID, channelID string)
+}
+type OnChanCloseConfirmAfterHooks interface {
+	OnChanCloseConfirmAfterHook(ctx sdk.Context, portID, channelID string, err error)
+}
+
+// OnRecvPacket Hooks
+type OnRecvPacketOverrideHooks interface {
+	OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement
+}
+type OnRecvPacketBeforeHooks interface {
+	OnRecvPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress)
+}
+type OnRecvPacketAfterHooks interface {
+	OnRecvPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement)
+}
+
+// OnAcknowledgementPacket Hooks
+type OnAcknowledgementPacketOverrideHooks interface {
+	OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error
+}
+type OnAcknowledgementPacketBeforeHooks interface {
+	OnAcknowledgementPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress)
+}
+type OnAcknowledgementPacketAfterHooks interface {
+	OnAcknowledgementPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress, err error)
+}
+
+// OnTimeoutPacket Hooks
+type OnTimeoutPacketOverrideHooks interface {
+	OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error
+}
+type OnTimeoutPacketBeforeHooks interface {
+	OnTimeoutPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress)
+}
+type OnTimeoutPacketAfterHooks interface {
+	OnTimeoutPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, err error)
+}
+
+// SendPacket Hooks
+type SendPacketOverrideHooks interface {
+	SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error)
+}
+type SendPacketBeforeHooks interface {
+	SendPacketBeforeHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte)
+}
+type SendPacketAfterHooks interface {
+	SendPacketAfterHook(cctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte, err error)
+}
+
+// WriteAcknowledgement Hooks
+type WriteAcknowledgementOverrideHooks interface {
+	WriteAcknowledgementOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement) error
+}
+type WriteAcknowledgementBeforeHooks interface {
+	WriteAcknowledgementBeforeHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement)
+}
+type WriteAcknowledgementAfterHooks interface {
+	WriteAcknowledgementAfterHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement, err error)
+}
+
+// GetAppVersion Hooks
+type GetAppVersionOverrideHooks interface {
+	GetAppVersionOverride(i ICS4Middleware, ctx sdk.Context, portID, channelID string) (string, bool)
+}
+type GetAppVersionBeforeHooks interface {
+	GetAppVersionBeforeHook(ctx sdk.Context, portID, channelID string)
+}
+type GetAppVersionAfterHooks interface {
+	GetAppVersionAfterHook(ctx sdk.Context, portID, channelID string, result string, success bool)
+}
+
+// ===========================
+
+// File: ./types/tx.pb.go
+// Code generated by protoc-gen-gogo. DO NOT EDIT.
+// source: osmosis/ibchooks/tx.proto
+
+package types
+
+import (
+	context "context"
+	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+)
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
+type MsgEmitIBCAck struct {
+	Sender         string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PacketSequence uint64 `protobuf:"varint,2,opt,name=packet_sequence,json=packetSequence,proto3" json:"packet_sequence,omitempty" yaml:"packet_sequence"`
+	Channel        string `protobuf:"bytes,3,opt,name=channel,proto3" json:"channel,omitempty" yaml:"channel"`
+}
+
+func (m *MsgEmitIBCAck) Reset()         { *m = MsgEmitIBCAck{} }
+func (m *MsgEmitIBCAck) String() string { return proto.CompactTextString(m) }
+func (*MsgEmitIBCAck) ProtoMessage()    {}
+func (*MsgEmitIBCAck) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb5a795bb7f479a3, []int{0}
+}
+func (m *MsgEmitIBCAck) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgEmitIBCAck) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgEmitIBCAck.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgEmitIBCAck) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgEmitIBCAck.Merge(m, src)
+}
+func (m *MsgEmitIBCAck) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgEmitIBCAck) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgEmitIBCAck.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgEmitIBCAck proto.InternalMessageInfo
+
+func (m *MsgEmitIBCAck) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgEmitIBCAck) GetPacketSequence() uint64 {
+	if m != nil {
+		return m.PacketSequence
+	}
+	return 0
+}
+
+func (m *MsgEmitIBCAck) GetChannel() string {
+	if m != nil {
+		return m.Channel
+	}
+	return ""
+}
+
+type MsgEmitIBCAckResponse struct {
+	ContractResult string `protobuf:"bytes,1,opt,name=contract_result,json=contractResult,proto3" json:"contract_result,omitempty" yaml:"contract_result"`
+	IbcAck         string `protobuf:"bytes,2,opt,name=ibc_ack,json=ibcAck,proto3" json:"ibc_ack,omitempty" yaml:"ibc_ack"`
+}
+
+func (m *MsgEmitIBCAckResponse) Reset()         { *m = MsgEmitIBCAckResponse{} }
+func (m *MsgEmitIBCAckResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgEmitIBCAckResponse) ProtoMessage()    {}
+func (*MsgEmitIBCAckResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb5a795bb7f479a3, []int{1}
+}
+func (m *MsgEmitIBCAckResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgEmitIBCAckResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgEmitIBCAckResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgEmitIBCAckResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgEmitIBCAckResponse.Merge(m, src)
+}
+func (m *MsgEmitIBCAckResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgEmitIBCAckResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgEmitIBCAckResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgEmitIBCAckResponse proto.InternalMessageInfo
+
+func (m *MsgEmitIBCAckResponse) GetContractResult() string {
+	if m != nil {
+		return m.ContractResult
+	}
+	return ""
+}
+
+func (m *MsgEmitIBCAckResponse) GetIbcAck() string {
+	if m != nil {
+		return m.IbcAck
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*MsgEmitIBCAck)(nil), "osmosis.ibchooks.MsgEmitIBCAck")
+	proto.RegisterType((*MsgEmitIBCAckResponse)(nil), "osmosis.ibchooks.MsgEmitIBCAckResponse")
+}
+
+func init() { proto.RegisterFile("osmosis/ibchooks/tx.proto", fileDescriptor_eb5a795bb7f479a3) }
+
+var fileDescriptor_eb5a795bb7f479a3 = []byte{
+	// 364 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0x4f, 0x4f, 0xc2, 0x30,
+	0x18, 0xc6, 0xa9, 0x18, 0x88, 0x4d, 0x40, 0x6d, 0xd4, 0x20, 0x87, 0x8d, 0xf4, 0x22, 0x46, 0xd9,
+	0x12, 0x88, 0x17, 0x6f, 0x8c, 0x78, 0xf0, 0x40, 0x4c, 0x6a, 0xe2, 0xc1, 0xc4, 0x90, 0xad, 0x36,
+	0x63, 0xd9, 0x9f, 0xce, 0xb5, 0x18, 0xf8, 0x08, 0xde, 0xfc, 0x22, 0x7e, 0x0f, 0x8f, 0x1c, 0x3d,
+	0x11, 0x03, 0xdf, 0x80, 0x4f, 0x60, 0xd8, 0xba, 0x04, 0x76, 0xf1, 0xb6, 0x3d, 0xcf, 0xef, 0x6d,
+	0x9f, 0xf7, 0xed, 0x0b, 0xcf, 0xb9, 0x08, 0xb9, 0xf0, 0x84, 0xe9, 0x39, 0x74, 0xcc, 0xb9, 0x2f,
+	0x4c, 0x39, 0x35, 0xe2, 0x84, 0x4b, 0x8e, 0x8e, 0x94, 0x65, 0xe4, 0x56, 0xf3, 0xc4, 0xe5, 0x2e,
+	0x4f, 0x4d, 0x73, 0xf3, 0x95, 0x71, 0xf8, 0x0b, 0xc0, 0xda, 0x50, 0xb8, 0x77, 0xa1, 0x27, 0xef,
+	0xad, 0x41, 0x9f, 0xfa, 0xe8, 0x12, 0x56, 0x04, 0x8b, 0x5e, 0x59, 0xd2, 0x00, 0x2d, 0xd0, 0x3e,
+	0xb0, 0x8e, 0xd7, 0x0b, 0xbd, 0x36, 0xb3, 0xc3, 0xe0, 0x16, 0x67, 0x3a, 0x26, 0x0a, 0x40, 0x03,
+	0x78, 0x18, 0xdb, 0xd4, 0x67, 0x72, 0x24, 0xd8, 0xdb, 0x84, 0x45, 0x94, 0x35, 0xf6, 0x5a, 0xa0,
+	0xbd, 0x6f, 0x35, 0xd7, 0x0b, 0xfd, 0x2c, 0xab, 0x29, 0x00, 0x98, 0xd4, 0x33, 0xe5, 0x51, 0x09,
+	0xe8, 0x1a, 0x56, 0xe9, 0xd8, 0x8e, 0x22, 0x16, 0x34, 0xca, 0xe9, 0x85, 0x68, 0xbd, 0xd0, 0xeb,
+	0x59, 0xb1, 0x32, 0x30, 0xc9, 0x11, 0xfc, 0x01, 0xe0, 0xe9, 0x4e, 0x5e, 0xc2, 0x44, 0xcc, 0x23,
+	0xc1, 0x36, 0x61, 0x28, 0x8f, 0x64, 0x62, 0x53, 0x39, 0x4a, 0x98, 0x98, 0x04, 0x52, 0x35, 0xb0,
+	0x15, 0xa6, 0x00, 0x60, 0x52, 0xcf, 0x15, 0x92, 0x0a, 0xe8, 0x0a, 0x56, 0x3d, 0x87, 0x8e, 0x6c,
+	0xea, 0xa7, 0x9d, 0xec, 0x84, 0x51, 0x06, 0x26, 0x15, 0xcf, 0xa1, 0x7d, 0xea, 0x77, 0x5f, 0x60,
+	0x79, 0x28, 0x5c, 0xf4, 0x04, 0xe1, 0xd6, 0xf8, 0x74, 0xa3, 0x38, 0x79, 0x63, 0x27, 0x6f, 0xf3,
+	0xe2, 0x1f, 0x20, 0x6f, 0xc8, 0x7a, 0xf8, 0x5e, 0x6a, 0x60, 0xbe, 0xd4, 0xc0, 0xef, 0x52, 0x03,
+	0x9f, 0x2b, 0xad, 0x34, 0x5f, 0x69, 0xa5, 0x9f, 0x95, 0x56, 0x7a, 0xbe, 0x71, 0x3d, 0x39, 0x9e,
+	0x38, 0x06, 0xe5, 0xa1, 0xa9, 0x0e, 0xeb, 0x04, 0xb6, 0x23, 0xf2, 0x1f, 0xf3, 0xbd, 0xdb, 0x33,
+	0xa7, 0x9b, 0xad, 0xe8, 0xa8, 0xb5, 0x98, 0xc5, 0x4c, 0x38, 0x95, 0xf4, 0xc9, 0x7b, 0x7f, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0x1f, 0xa8, 0x22, 0x81, 0x37, 0x02, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// MsgClient is the client API for Msg service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MsgClient interface {
+	// EmitIBCAck checks the sender can emit the ack and writes the IBC
+	// acknowledgement
+	EmitIBCAck(ctx context.Context, in *MsgEmitIBCAck, opts ...grpc.CallOption) (*MsgEmitIBCAckResponse, error)
+}
+
+type msgClient struct {
+	cc grpc1.ClientConn
+}
+
+func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+	return &msgClient{cc}
+}
+
+func (c *msgClient) EmitIBCAck(ctx context.Context, in *MsgEmitIBCAck, opts ...grpc.CallOption) (*MsgEmitIBCAckResponse, error) {
+	out := new(MsgEmitIBCAckResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.ibchooks.Msg/EmitIBCAck", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MsgServer is the server API for Msg service.
+type MsgServer interface {
+	// EmitIBCAck checks the sender can emit the ack and writes the IBC
+	// acknowledgement
+	EmitIBCAck(context.Context, *MsgEmitIBCAck) (*MsgEmitIBCAckResponse, error)
+}
+
+// UnimplementedMsgServer can be embedded to have forward compatible implementations.
+type UnimplementedMsgServer struct {
+}
+
+func (*UnimplementedMsgServer) EmitIBCAck(ctx context.Context, req *MsgEmitIBCAck) (*MsgEmitIBCAckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EmitIBCAck not implemented")
+}
+
+func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_EmitIBCAck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgEmitIBCAck)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).EmitIBCAck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.ibchooks.Msg/EmitIBCAck",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).EmitIBCAck(ctx, req.(*MsgEmitIBCAck))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Msg_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "osmosis.ibchooks.Msg",
+	HandlerType: (*MsgServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "EmitIBCAck",
+			Handler:    _Msg_EmitIBCAck_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "osmosis/ibchooks/tx.proto",
+}
+
+func (m *MsgEmitIBCAck) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgEmitIBCAck) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgEmitIBCAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Channel) > 0 {
+		i -= len(m.Channel)
+		copy(dAtA[i:], m.Channel)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Channel)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.PacketSequence != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PacketSequence))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgEmitIBCAckResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgEmitIBCAckResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgEmitIBCAckResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.IbcAck) > 0 {
+		i -= len(m.IbcAck)
+		copy(dAtA[i:], m.IbcAck)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.IbcAck)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ContractResult) > 0 {
+		i -= len(m.ContractResult)
+		copy(dAtA[i:], m.ContractResult)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ContractResult)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
+	offset -= sovTx(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *MsgEmitIBCAck) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.PacketSequence != 0 {
+		n += 1 + sovTx(uint64(m.PacketSequence))
+	}
+	l = len(m.Channel)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgEmitIBCAckResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ContractResult)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.IbcAck)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func sovTx(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozTx(x uint64) (n int) {
+	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgEmitIBCAck) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgEmitIBCAck: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgEmitIBCAck: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PacketSequence", wireType)
+			}
+			m.PacketSequence = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PacketSequence |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Channel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Channel = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgEmitIBCAckResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgEmitIBCAckResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgEmitIBCAckResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractResult", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractResult = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IbcAck", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IbcAck = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipTx(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthTx
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupTx
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthTx
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthTx        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowTx          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupTx = fmt.Errorf("proto: unexpected end of group")
+)
+
+// ===========================
+
+// File: ./types/params.go
+package types
+
+import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+)
+
+// Parameter store keys.
+var (
+	KeyAsyncAckAllowList = []byte("AsyncAckAllowList")
+
+	_ paramtypes.ParamSet = &Params{}
+)
+
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+}
+
+func NewParams(allowedAsyncAckContracts []string) Params {
+	return Params{
+		AllowedAsyncAckContracts: allowedAsyncAckContracts,
+	}
+}
+
+// DefaultParams returns default concentrated-liquidity module parameters.
+func DefaultParams() Params {
+	return Params{
+		AllowedAsyncAckContracts: []string{},
+	}
+}
+
+// ParamSetPairs implements params.ParamSet.
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyAsyncAckAllowList, &p.AllowedAsyncAckContracts, validateAsyncAckAllowList),
+	}
+}
+
+// Validate params.
+func (p Params) Validate() error {
+	if err := validateAsyncAckAllowList(p.AllowedAsyncAckContracts); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateAsyncAckAllowList(i interface{}) error {
+	allowedContracts, ok := i.([]string)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, contract := range allowedContracts {
+		if _, err := sdk.AccAddressFromBech32(contract); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ===========================
+
+// File: ./types/types.go
+package types
+
+import (
+	"encoding/json"
+
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+)
+
+// Async: The following types represent the response sent by a contract on OnRecvPacket when it wants the ack to be async
+
+// OnRecvPacketAsyncAckResponse the response a contract sends to instruct the module to make the ack async
+type OnRecvPacketAsyncAckResponse struct {
+	IsAsyncAck bool `json:"is_async_ack"`
+}
+
+// Async The following types are used to ask a contract that has sent a packet to generate an ack for it
+
+// RequestAckI internals of IBCAsync
+type RequestAckI struct {
+	PacketSequence uint64 `json:"packet_sequence"`
+	SourceChannel  string `json:"source_channel"`
+}
+
+// RequestAck internals of IBCAsync
+type RequestAck struct {
+	RequestAckI `json:"request_ack"`
+}
+
+// IBCAsync is the sudo message to be sent to the contract for it to generate  an ack for a sent packet
+type IBCAsync struct {
+	RequestAck `json:"ibc_async"`
+}
+
+// General
+
+// ContractAck is the response to be stored when a wasm hook is executed
+type ContractAck struct {
+	ContractResult []byte `json:"contract_result"`
+	IbcAck         []byte `json:"ibc_ack"`
+}
+
+// IBCAckResponse is the response that a contract returns from the sudo() call on OnRecvPacket or RequestAck
+type IBCAckResponse struct {
+	Packet      channeltypes.Packet `json:"packet"`
+	ContractAck ContractAck         `json:"contract_ack"`
+}
+
+// IBCAckError is the error that a contract returns from the sudo() call on RequestAck
+type IBCAckError struct {
+	Packet           channeltypes.Packet `json:"packet"`
+	ErrorDescription string              `json:"error_description"`
+	ErrorResponse    string              `json:"error_response"`
+}
+
+type IBCAck struct {
+	Type    string          `json:"type"`
+	Content json.RawMessage `json:"content"`
+	// Note: These two fields have to be pointers so that they can be null
+	// If they are not pointers, they will be empty structs when null,
+	// which will cause issues with json.Unmarshal.
+	AckResponse *IBCAckResponse `json:"response,omitempty"`
+	AckError    *IBCAckError    `json:"error,omitempty"`
+}
+
+func UnmarshalIBCAck(bz []byte) (*IBCAck, error) {
+	var ack IBCAck
+	if err := json.Unmarshal(bz, &ack); err != nil {
+		return nil, err
+	}
+
+	switch ack.Type {
+	case "ack_response":
+		ack.AckResponse = &IBCAckResponse{}
+		if err := json.Unmarshal(ack.Content, ack.AckResponse); err != nil {
+			return nil, err
+		}
+	case "ack_error":
+		ack.AckError = &IBCAckError{}
+		if err := json.Unmarshal(ack.Content, ack.AckError); err != nil {
+			return nil, err
+		}
+	}
+
+	return &ack, nil
+}
+
+// ===========================
+
+// File: ./types/msgs.go
+package types
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+// constants.
+const (
+	TypeMsgEmitIBCAck = "emit-ibc-ack"
+)
+
+var _ sdk.Msg = &MsgEmitIBCAck{}
+
+func (m MsgEmitIBCAck) Route() string { return RouterKey }
+func (m MsgEmitIBCAck) Type() string  { return TypeMsgEmitIBCAck }
+func (m MsgEmitIBCAck) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+	return nil
+}
+
+func (m MsgEmitIBCAck) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgEmitIBCAck) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+// ===========================
+
+// File: ./types/keys.go
+package types
+
+const (
+	ModuleName = "ibchooks"
+	RouterKey  = ModuleName
+	StoreKey   = "hooks-for-ibc" // not using the module name because of collisions with key "ibc"
+
+	IBCCallbackKey = "ibc_callback"
+	IBCAsyncAckKey = "ibc_async_ack"
+
+	MsgEmitAckKey           = "emit_ack"
+	AttributeSender         = "sender"
+	AttributeChannel        = "channel"
+	AttributePacketSequence = "sequence"
+
+	SenderPrefix = "ibc-wasm-hook-intermediary"
+)
+
+// ===========================
+
+// File: ./types/expected_keepers.go
+package types
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+)
+
+type ChannelKeeper interface {
+	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
+	GetPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) []byte
+	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
+	LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capabilitytypes.Capability, error)
+	WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, acknowledgement exported.Acknowledgement) error
+}
+
+// ===========================
+
+// File: ./types/genesis.go
+package types
+
+// DefaultGenesis returns the default GenesisState for the concentrated-liquidity module.
+func DefaultGenesis() *GenesisState {
+	return &GenesisState{
+		Params: DefaultParams(),
+	}
+}
+
+// Validate performs basic genesis state validation returning an error upon any failure.
+func (gs GenesisState) Validate() error {
+	if err := gs.Params.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ===========================
+
+// File: ./types/genesis.pb.go
+// Code generated by protoc-gen-gogo. DO NOT EDIT.
+// source: osmosis/ibchooks/genesis.proto
+
+package types
+
+import (
+	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+)
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
+type GenesisState struct {
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *GenesisState) Reset()         { *m = GenesisState{} }
+func (m *GenesisState) String() string { return proto.CompactTextString(m) }
+func (*GenesisState) ProtoMessage()    {}
+func (*GenesisState) Descriptor() ([]byte, []int) {
+	return fileDescriptor_03d36a9d42c8f2ad, []int{0}
+}
+func (m *GenesisState) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GenesisState.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GenesisState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisState.Merge(m, src)
+}
+func (m *GenesisState) XXX_Size() int {
+	return m.Size()
+}
+func (m *GenesisState) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisState.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GenesisState proto.InternalMessageInfo
+
+func (m *GenesisState) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
+func init() {
+	proto.RegisterType((*GenesisState)(nil), "osmosis.ibchooks.GenesisState")
+}
+
+func init() { proto.RegisterFile("osmosis/ibchooks/genesis.proto", fileDescriptor_03d36a9d42c8f2ad) }
+
+var fileDescriptor_03d36a9d42c8f2ad = []byte{
+	// 211 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xcb, 0x2f, 0xce, 0xcd,
+	0x2f, 0xce, 0x2c, 0xd6, 0xcf, 0x4c, 0x4a, 0xce, 0xc8, 0xcf, 0xcf, 0x2e, 0xd6, 0x4f, 0x4f, 0xcd,
+	0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x80, 0xca, 0xeb, 0xc1,
+	0xe4, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x92, 0xfa, 0x20, 0x16, 0x44, 0x9d, 0x94, 0x64,
+	0x32, 0x58, 0x61, 0x3c, 0x44, 0x02, 0xc2, 0x81, 0x4a, 0xc9, 0x62, 0x58, 0x51, 0x90, 0x58, 0x94,
+	0x98, 0x0b, 0x95, 0x56, 0x72, 0xe3, 0xe2, 0x71, 0x87, 0x58, 0x19, 0x5c, 0x92, 0x58, 0x92, 0x2a,
+	0x64, 0xc6, 0xc5, 0x06, 0x91, 0x97, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x36, 0x92, 0xd0, 0x43, 0x77,
+	0x82, 0x5e, 0x00, 0x58, 0xde, 0x89, 0xe5, 0xc4, 0x3d, 0x79, 0x86, 0x20, 0xa8, 0x6a, 0x27, 0xff,
+	0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39,
+	0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x32, 0x4d, 0xcf, 0x2c, 0xc9, 0x28,
+	0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x87, 0x9a, 0xa5, 0x9b, 0x93, 0x98, 0x54, 0x0c, 0xe3, 0xe8,
+	0x97, 0x19, 0x19, 0xeb, 0x57, 0x80, 0x9c, 0xa7, 0x0b, 0x71, 0x5f, 0x49, 0x65, 0x41, 0x6a, 0x71,
+	0x12, 0x1b, 0xd8, 0x7d, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x23, 0xb5, 0x8f, 0x62, 0x23,
+	0x01, 0x00, 0x00,
+}
+
+func (m *GenesisState) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GenesisState) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
+	offset -= sovGenesis(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *GenesisState) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func sovGenesis(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozGenesis(x uint64) (n int) {
+	return sovGenesis(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *GenesisState) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GenesisState: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipGenesis(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthGenesis
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupGenesis
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthGenesis
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthGenesis        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowGenesis          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupGenesis = fmt.Errorf("proto: unexpected end of group")
+)
+
+// ===========================
+
+// File: ./types/codec.go
+package types
+
+import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
+	// this line is used by starport scaffolding # 1
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
+)
+
+func RegisterCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterConcrete(&MsgEmitIBCAck{}, "osmosis/ibc-hooks/emit-ibc-ack", nil)
+}
+
+func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgEmitIBCAck{},
+	)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+}
+
+var (
+	amino     = codec.NewLegacyAmino()
+	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
+)
+
+func init() {
+	RegisterCodec(amino)
+	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+	// used to properly serialize MsgGrant and MsgExec instances
+	sdk.RegisterLegacyAminoCodec(amino)
+	RegisterCodec(authzcodec.Amino)
+
+	amino.Seal()
+}
+
+// ===========================
+
+// File: ./types/params.pb.go
+// Code generated by protoc-gen-gogo. DO NOT EDIT.
+// source: osmosis/ibchooks/params.proto
+
+package types
+
+import (
+	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+)
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
+type Params struct {
+	AllowedAsyncAckContracts []string `protobuf:"bytes,1,rep,name=allowed_async_ack_contracts,json=allowedAsyncAckContracts,proto3" json:"allowed_async_ack_contracts,omitempty" yaml:"allowed_async_ack_contracts"`
+}
+
+func (m *Params) Reset()         { *m = Params{} }
+func (m *Params) String() string { return proto.CompactTextString(m) }
+func (*Params) ProtoMessage()    {}
+func (*Params) Descriptor() ([]byte, []int) {
+	return fileDescriptor_970ea72aec489f5a, []int{0}
+}
+func (m *Params) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Params) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Params.Merge(m, src)
+}
+func (m *Params) XXX_Size() int {
+	return m.Size()
+}
+func (m *Params) XXX_DiscardUnknown() {
+	xxx_messageInfo_Params.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Params proto.InternalMessageInfo
+
+func (m *Params) GetAllowedAsyncAckContracts() []string {
+	if m != nil {
+		return m.AllowedAsyncAckContracts
+	}
+	return nil
+}
+
+func init() {
+	proto.RegisterType((*Params)(nil), "osmosis.ibchooks.Params")
+}
+
+func init() { proto.RegisterFile("osmosis/ibchooks/params.proto", fileDescriptor_970ea72aec489f5a) }
+
+var fileDescriptor_970ea72aec489f5a = []byte{
+	// 253 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xcd, 0x2f, 0xce, 0xcd,
+	0x2f, 0xce, 0x2c, 0xd6, 0xcf, 0x4c, 0x4a, 0xce, 0xc8, 0xcf, 0xcf, 0x2e, 0xd6, 0x2f, 0x48, 0x2c,
+	0x4a, 0xcc, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x80, 0x4a, 0xeb, 0xc1, 0xa4,
+	0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x92, 0xfa, 0x20, 0x16, 0x44, 0x9d, 0x94, 0x64, 0x32,
+	0x58, 0x61, 0x3c, 0x44, 0x02, 0xc2, 0x81, 0x4a, 0xc9, 0xa5, 0xe7, 0xe7, 0xa7, 0xe7, 0xa4, 0xea,
+	0x83, 0x79, 0x49, 0xa5, 0x69, 0xfa, 0x29, 0xa5, 0x45, 0x89, 0x25, 0x99, 0xf9, 0x79, 0x10, 0x79,
+	0xa5, 0x7c, 0x2e, 0xb6, 0x00, 0xb0, 0x95, 0x42, 0xa9, 0x5c, 0xd2, 0x89, 0x39, 0x39, 0xf9, 0xe5,
+	0xa9, 0x29, 0xf1, 0x89, 0xc5, 0x95, 0x79, 0xc9, 0xf1, 0x89, 0xc9, 0xd9, 0xf1, 0xc9, 0xf9, 0x79,
+	0x25, 0x45, 0x89, 0xc9, 0x25, 0xc5, 0x12, 0x8c, 0x0a, 0xcc, 0x1a, 0x9c, 0x4e, 0x6a, 0x9f, 0xee,
+	0xc9, 0x2b, 0x55, 0x26, 0xe6, 0xe6, 0x58, 0x29, 0xe1, 0x51, 0xac, 0x14, 0x24, 0x01, 0x95, 0x75,
+	0x04, 0x49, 0x3a, 0x26, 0x67, 0x3b, 0xc3, 0xa4, 0x9c, 0xfc, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0,
+	0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8,
+	0xf1, 0x58, 0x8e, 0x21, 0xca, 0x34, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57,
+	0x1f, 0xea, 0x71, 0xdd, 0x9c, 0xc4, 0xa4, 0x62, 0x18, 0x47, 0xbf, 0xcc, 0xc8, 0x58, 0xbf, 0x02,
+	0x14, 0x54, 0xba, 0x90, 0xb0, 0x2a, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x7b, 0xc4, 0x18,
+	0x10, 0x00, 0x00, 0xff, 0xff, 0xbc, 0x26, 0x76, 0x20, 0x4c, 0x01, 0x00, 0x00,
+}
+
+func (m *Params) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Params) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AllowedAsyncAckContracts) > 0 {
+		for iNdEx := len(m.AllowedAsyncAckContracts) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.AllowedAsyncAckContracts[iNdEx])
+			copy(dAtA[i:], m.AllowedAsyncAckContracts[iNdEx])
+			i = encodeVarintParams(dAtA, i, uint64(len(m.AllowedAsyncAckContracts[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintParams(dAtA []byte, offset int, v uint64) int {
+	offset -= sovParams(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *Params) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.AllowedAsyncAckContracts) > 0 {
+		for _, s := range m.AllowedAsyncAckContracts {
+			l = len(s)
+			n += 1 + l + sovParams(uint64(l))
+		}
+	}
+	return n
+}
+
+func sovParams(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozParams(x uint64) (n int) {
+	return sovParams(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *Params) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowParams
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Params: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllowedAsyncAckContracts", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AllowedAsyncAckContracts = append(m.AllowedAsyncAckContracts, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipParams(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthParams
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipParams(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowParams
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthParams
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupParams
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthParams
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthParams        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowParams          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupParams = fmt.Errorf("proto: unexpected end of group")
+)
+
+// ===========================
+
+// File: ./types/errors.go
+package types
+
+import (
+	errorsmod "cosmossdk.io/errors"
+)
+
+var (
+	ErrBadMetadataFormatMsg = "wasm metadata not properly formatted for: '%v'. %s"
+	ErrBadExecutionMsg      = "cannot execute contract: %v"
+
+	ErrMsgValidation       = errorsmod.Register("wasm-hooks", 2, "error in wasmhook message validation")
+	ErrMarshaling          = errorsmod.Register("wasm-hooks", 3, "cannot marshal the ICS20 packet")
+	ErrInvalidPacket       = errorsmod.Register("wasm-hooks", 4, "invalid packet data")
+	ErrBadResponse         = errorsmod.Register("wasm-hooks", 5, "cannot create response")
+	ErrWasmError           = errorsmod.Register("wasm-hooks", 6, "wasm error")
+	ErrBadSender           = errorsmod.Register("wasm-hooks", 7, "bad sender")
+	ErrAckFromContract     = errorsmod.Register("wasm-hooks", 8, "contract returned error ack")
+	ErrAsyncAckNotAllowed  = errorsmod.Register("wasm-hooks", 9, "contract not allowed to send async acks")
+	ErrAckPacketMismatch   = errorsmod.Register("wasm-hooks", 10, "packet does not match the expected packet")
+	ErrInvalidContractAddr = errorsmod.Register("wasm-hooks", 11, "invalid contract address")
+)
+
+// ===========================
+
+// File: ./ics4_middleware.go
+package ibc_hooks
+
+import (
+	// external libraries
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	// ibc-go
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+)
+
+var _ porttypes.ICS4Wrapper = &ICS4Middleware{}
+
+type ICS4Middleware struct {
+	channel porttypes.ICS4Wrapper
+
+	// Hooks
+	Hooks Hooks
+}
+
+func NewICS4Middleware(channel porttypes.ICS4Wrapper, hooks Hooks) ICS4Middleware {
+	return ICS4Middleware{
+		channel: channel,
+		Hooks:   hooks,
+	}
+}
+
+func (i ICS4Middleware) SendPacket(
+	ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort string, sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+) (sequence uint64, err error) {
+	if hook, ok := i.Hooks.(SendPacketOverrideHooks); ok {
+		return hook.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	}
+
+	if hook, ok := i.Hooks.(SendPacketBeforeHooks); ok {
+		hook.SendPacketBeforeHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	}
+
+	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+
+	if hook, ok := i.Hooks.(SendPacketAfterHooks); ok {
+		hook.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, err)
+	}
+
+	return seq, err
+}
+
+func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement) error {
+	if hook, ok := i.Hooks.(WriteAcknowledgementOverrideHooks); ok {
+		return hook.WriteAcknowledgementOverride(i, ctx, chanCap, packet, ack)
+	}
+
+	if hook, ok := i.Hooks.(WriteAcknowledgementBeforeHooks); ok {
+		hook.WriteAcknowledgementBeforeHook(ctx, chanCap, packet, ack)
+	}
+	err := i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
+	if hook, ok := i.Hooks.(WriteAcknowledgementAfterHooks); ok {
+		hook.WriteAcknowledgementAfterHook(ctx, chanCap, packet, ack, err)
+	}
+
+	return err
+}
+
+func (i ICS4Middleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
+	if hook, ok := i.Hooks.(GetAppVersionOverrideHooks); ok {
+		return hook.GetAppVersionOverride(i, ctx, portID, channelID)
+	}
+
+	if hook, ok := i.Hooks.(GetAppVersionBeforeHooks); ok {
+		hook.GetAppVersionBeforeHook(ctx, portID, channelID)
+	}
+	version, err := i.channel.GetAppVersion(ctx, portID, channelID)
+	if hook, ok := i.Hooks.(GetAppVersionAfterHooks); ok {
+		hook.GetAppVersionAfterHook(ctx, portID, channelID, version, err)
+	}
+
+	return version, err
+}
+
+// ===========================
+
+// File: ./sdkmodule.go
+package ibc_hooks
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/client/cli"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
+)
+
+// AppModuleBasic defines the basic application module used by the ibc-hooks module.
+type AppModuleBasic struct{}
+
+var _ module.AppModuleBasic = AppModuleBasic{}
+
+// Name returns the ibc-hooks module's name.
+func (AppModuleBasic) Name() string {
+	return types.ModuleName
+}
+
+// RegisterLegacyAminoCodec registers the ibc-hooks module's types on the given LegacyAmino codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterCodec(cdc)
+}
+
+// RegisterInterfaces registers the module's interface types
+func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(reg)
+}
+
+// DefaultGenesis returns default genesis state as raw bytes for the
+// module.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
+}
+
+// ValidateGenesis performs genesis state validation for the ibc-hooks module.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
+}
+
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibc-hooks module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
+
+// GetTxCmd returns no root tx command for the ibc-hooks module.
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+
+// GetQueryCmd returns the root query command for the ibc-hooks module.
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
+}
+
+// ___________________________________________________________________________
+
+// AppModule implements an application module for the ibc-hooks module.
+type AppModule struct {
+	AppModuleBasic
+
+	authKeeper osmoutils.AccountKeeper
+	keeper     keeper.Keeper
+}
+
+// NewAppModule creates a new AppModule object.
+func NewAppModule(ak osmoutils.AccountKeeper, keeper keeper.Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{},
+		authKeeper:     ak,
+		keeper:         keeper,
+	}
+}
+
+// Name returns the ibc-hooks module's name.
+func (AppModule) Name() string {
+	return types.ModuleName
+}
+
+// RegisterInvariants registers the ibc-hooks module invariants.
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// QuerierRoute returns the module's querier route name.
+func (AppModule) QuerierRoute() string {
+	return ""
+}
+
+// RegisterServices registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+}
+
+// InitGenesis performs genesis initialization for the ibc-hooks module. It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	var genState types.GenesisState
+	// Initialize global index to index in genesis state
+	cdc.MustUnmarshalJSON(data, &genState)
+
+	am.keeper.InitGenesis(ctx, genState)
+
+	return []abci.ValidatorUpdate{}
+}
+
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	genState := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(genState)
+}
+
+// BeginBlock returns the begin blocker for the ibc-hooks module.
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+}
+
+// EndBlock returns the end blocker for the ibc-hooks module. It returns no validator
+// updates.
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ===========================
+
+// File: ./keeper/keeper.go
+package keeper
+
+import (
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+)
+
+type (
+	Keeper struct {
+		storeKey   storetypes.StoreKey
+		paramSpace paramtypes.Subspace
+
+		channelKeeper  types.ChannelKeeper
+		ContractKeeper *wasmkeeper.PermissionedKeeper
+	}
+)
+
+// NewKeeper returns a new instance of the x/ibchooks keeper
+func NewKeeper(
+	storeKey storetypes.StoreKey,
+	paramSpace paramtypes.Subspace,
+	channelKeeper types.ChannelKeeper,
+	contractKeeper *wasmkeeper.PermissionedKeeper,
+) *Keeper {
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+	return &Keeper{
+		storeKey:       storeKey,
+		paramSpace:     paramSpace,
+		channelKeeper:  channelKeeper,
+		ContractKeeper: contractKeeper,
+	}
+}
+
+// Logger returns a logger for the x/tokenfactory module
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// GetParams returns the total set of the module's parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+	k.paramSpace.GetParamSet(ctx, &params)
+	return params
+}
+
+// SetParams sets the module's parameters with the provided parameters.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+// SetParam sets a specific ibc-hooks module's parameter with the provided parameter.
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+	k.paramSpace.Set(ctx, key, value)
+}
+
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
+	k.SetParams(ctx, genState.Params)
+}
+
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	return &types.GenesisState{
+		Params: k.GetParams(ctx),
+	}
+}
+
+func GetPacketCallbackKey(channel string, packetSequence uint64) []byte {
+	return []byte(fmt.Sprintf("%s::%d", channel, packetSequence))
+}
+
+func GetPacketAckKey(channel string, packetSequence uint64) []byte {
+	return []byte(fmt.Sprintf("%s::%d::ack", channel, packetSequence))
+}
+
+func GeneratePacketAckValue(packet channeltypes.Packet, contract string) ([]byte, error) {
+	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalidContractAddr, contract)
+	}
+
+	packetHash, err := hashPacket(packet)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not hash packet")
+	}
+
+	return []byte(fmt.Sprintf("%s::%s", contract, packetHash)), nil
+}
+
+// StorePacketCallback stores which contract will be listening for the ack or timeout of a packet
+func (k Keeper) StorePacketCallback(ctx sdk.Context, channel string, packetSequence uint64, contract string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(GetPacketCallbackKey(channel, packetSequence), []byte(contract))
+}
+
+// GetPacketCallback returns the bech32 addr of the contract that is expecting a callback from a packet
+func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequence uint64) string {
+	store := ctx.KVStore(k.storeKey)
+	return string(store.Get(GetPacketCallbackKey(channel, packetSequence)))
+}
+
+// IsInAllowList checks the params to see if the contract is in the KeyAsyncAckAllowList param
+func (k Keeper) IsInAllowList(ctx sdk.Context, contract string) bool {
+	var allowList []string
+	k.paramSpace.GetIfExists(ctx, types.KeyAsyncAckAllowList, &allowList)
+	for _, addr := range allowList {
+		if addr == contract {
+			return true
+		}
+	}
+	return false
+}
+
+// DeletePacketCallback deletes the callback from storage once it has been processed
+func (k Keeper) DeletePacketCallback(ctx sdk.Context, channel string, packetSequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetPacketCallbackKey(channel, packetSequence))
+}
+
+// StorePacketAckActor stores which contract is allowed to send an ack for the packet
+func (k Keeper) StorePacketAckActor(ctx sdk.Context, packet channeltypes.Packet, contract string) {
+	store := ctx.KVStore(k.storeKey)
+	channel := packet.GetSourceChannel()
+	packetSequence := packet.GetSequence()
+
+	val, err := GeneratePacketAckValue(packet, contract)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(GetPacketAckKey(channel, packetSequence), val)
+}
+
+// GetPacketAckActor returns the bech32 addr  of the contract that is allowed to send an ack for the packet and the packet hash
+func (k Keeper) GetPacketAckActor(ctx sdk.Context, channel string, packetSequence uint64) (string, string) {
+	store := ctx.KVStore(k.storeKey)
+	rawData := store.Get(GetPacketAckKey(channel, packetSequence))
+	if rawData == nil {
+		return "", ""
+	}
+	data := strings.Split(string(rawData), "::")
+	if len(data) != 2 {
+		return "", ""
+	}
+	// validate that the contract is a valid bech32 addr
+	if _, err := sdk.AccAddressFromBech32(data[0]); err != nil {
+		return "", ""
+	}
+	// validate that the hash is a valid sha256sum hash
+	if _, err := hex.DecodeString(data[1]); err != nil {
+		return "", ""
+	}
+
+	return data[0], data[1]
+}
+
+// DeletePacketAckActor deletes the ack actor from storage once it has been used
+func (k Keeper) DeletePacketAckActor(ctx sdk.Context, channel string, packetSequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetPacketAckKey(channel, packetSequence))
+}
+
+// DeriveIntermediateSender derives the sender address to be used when calling wasm hooks
+func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (string, error) {
+	senderStr := fmt.Sprintf("%s/%s", channel, originalSender)
+	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
+	sender := sdk.AccAddress(senderHash32[:])
+	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
+}
+
+// EmitIBCAck emits an event that the IBC packet has been acknowledged
+func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequence uint64) ([]byte, error) {
+	contract, packetHash := k.GetPacketAckActor(ctx, channel, packetSequence)
+	if contract == "" {
+		return nil, fmt.Errorf("no ack actor set for channel %s packet %d", channel, packetSequence)
+	}
+	// Only the contract itself can request for the ack to be emitted. This will generally happen as a callback
+	// when the result of other IBC actions has finished, but it could be exposed directly by the contract if the
+	// proper checks are made
+	if sender != contract {
+		return nil, fmt.Errorf("sender %s is not allowed to send an ack for channel %s packet %d", sender, channel, packetSequence)
+	}
+
+	// Write the acknowledgement
+	_, cap, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
+	}
+
+	// Calling the contract. This could be made generic by using an interface if we want
+	// to support other types of AckActors, but keeping it here for now for simplicity.
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not parse contract address")
+	}
+
+	msg := types.IBCAsync{
+		RequestAck: types.RequestAck{RequestAckI: types.RequestAckI{
+			PacketSequence: packetSequence,
+			SourceChannel:  channel,
+		}},
+	}
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not marshal message")
+	}
+	bz, err := k.ContractKeeper.Sudo(ctx, contractAddr, msgBytes)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not execute contract")
+	}
+
+	ack, err := types.UnmarshalIBCAck(bz)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
+
+	}
+	var newAck channeltypes.Acknowledgement
+	var packet channeltypes.Packet
+
+	switch ack.Type {
+	case "ack_response":
+		jsonAck, err := json.Marshal(ack.AckResponse.ContractAck)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+		}
+		packet = ack.AckResponse.Packet
+		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
+	case "ack_error":
+		packet = ack.AckError.Packet
+		newAck = osmoutils.NewSuccessAckRepresentingAnError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
+	default:
+		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
+	}
+
+	// Validate that the packet returned by the contract matches the one we stored when sending
+	receivedPacketHash, err := hashPacket(packet)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not hash packet")
+	}
+	if receivedPacketHash != packetHash {
+		return nil, sdkerrors.Wrap(types.ErrAckPacketMismatch, fmt.Sprintf("packet hash mismatch. Expected %s, got %s", packetHash, receivedPacketHash))
+	}
+
+	// Now we can write the acknowledgement
+	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, packet, newAck)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
+	}
+
+	response, err := json.Marshal(newAck)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+	}
+	return response, nil
+}
+
+func hashPacket(packet channeltypes.Packet) (string, error) {
+	// ignore the data here. We only care about the channel information
+	packet.Data = nil
+	bz, err := json.Marshal(packet)
+	if err != nil {
+		return "", sdkerrors.Wrap(err, "could not marshal packet")
+	}
+	packetHash := tmhash.Sum(bz)
+	return hex.EncodeToString(packetHash), nil
+}
+
+// ===========================
+
+// File: ./keeper/msg_server.go
+package keeper
+
+import (
+	"context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+	"strconv"
+)
+
+type msgServer struct {
+	Keeper
+}
+
+// NewMsgServerImpl returns an implementation of the MsgServer interface
+// for the provided Keeper.
+func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+	return &msgServer{Keeper: keeper}
+}
+
+var _ types.MsgServer = msgServer{}
+
+func (m msgServer) EmitIBCAck(goCtx context.Context, msg *types.MsgEmitIBCAck) (*types.MsgEmitIBCAckResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.MsgEmitAckKey,
+			sdk.NewAttribute(types.AttributeSender, msg.Sender),
+			sdk.NewAttribute(types.AttributeChannel, msg.Channel),
+			sdk.NewAttribute(types.AttributePacketSequence, strconv.FormatUint(msg.PacketSequence, 10)),
+		),
+	)
+
+	ack, err := m.Keeper.EmitIBCAck(ctx, msg.Sender, msg.Channel, msg.PacketSequence)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgEmitIBCAckResponse{ContractResult: string(ack), IbcAck: string(ack)}, nil
+}
+
+// ===========================
+
+// File: ./wasm_hook.go
+package ibc_hooks
+
+import (
+	"encoding/json"
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	errorsmod "cosmossdk.io/errors"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+)
+
+type WasmHooks struct {
+	ContractKeeper      *wasmkeeper.Keeper
+	ibcHooksKeeper      *keeper.Keeper
+	bech32PrefixAccAddr string
+}
+
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.Keeper, bech32PrefixAccAddr string) WasmHooks {
+	return WasmHooks{
+		ContractKeeper:      contractKeeper,
+		ibcHooksKeeper:      ibcHooksKeeper,
+		bech32PrefixAccAddr: bech32PrefixAccAddr,
+	}
+}
+
+func (h WasmHooks) ProperlyConfigured() bool {
+	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
+}
+
+func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+	if !h.ProperlyConfigured() {
+		// Not configured
+		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
+	isIcs20, data := isIcs20Packet(packet.GetData())
+	if !isIcs20 {
+		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
+
+	// Validate the memo
+	isWasmRouted, contractAddr, msgBytes, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
+	if !isWasmRouted {
+		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
+	if err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
+	}
+	if msgBytes == nil || contractAddr == nil { // This should never happen
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
+	}
+
+	// Calculate the receiver / contract caller based on the packet's channel and sender
+	channel := packet.GetDestChannel()
+	sender := data.GetSender()
+	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
+	if err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
+	}
+
+	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
+	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
+	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
+	// relay.go and send the sunds to the intermediary account.
+	//
+	// If that succeeds, we make the contract call
+	data.Receiver = senderBech32
+	bz, err := json.Marshal(data)
+	if err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMarshaling, err.Error())
+	}
+	packet.Data = bz
+
+	// Execute the receive
+	ack := im.App.OnRecvPacket(ctx, packet, relayer)
+	if !ack.Success() {
+		return ack
+	}
+
+	amount, ok := osmomath.NewIntFromString(data.GetAmount())
+	if !ok {
+		// This should never happen, as it should've been caught in the underlying call to OnRecvPacket,
+		// but returning here for completeness
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, "Amount is not an int")
+	}
+
+	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
+	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
+	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
+
+	// Execute the contract
+	execMsg := wasmtypes.MsgExecuteContract{
+		Sender:   senderBech32,
+		Contract: contractAddr.String(),
+		Msg:      msgBytes,
+		Funds:    funds,
+	}
+	response, err := h.execWasmMsg(ctx, &execMsg)
+	if err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
+	}
+
+	// Check if the contract is requesting for the ack to be async.
+	var asyncAckRequest types.OnRecvPacketAsyncAckResponse
+	err = json.Unmarshal(response.Data, &asyncAckRequest)
+	if err == nil {
+		// If unmarshalling succeeds, the contract is requesting for the ack to be async.
+		if asyncAckRequest.IsAsyncAck { // in which case IsAsyncAck is expected to be set to true
+			if !h.ibcHooksKeeper.IsInAllowList(ctx, contractAddr.String()) {
+				// Only allowed contracts can send async acks
+				return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
+			}
+			// Store the contract as the packet's ack actor and return nil
+			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet, contractAddr.String())
+			return nil
+		}
+	}
+
+	// If the ack is not async, we continue generating the ack and return it
+	fullAck := types.ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
+	bz, err = json.Marshal(fullAck)
+	if err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
+	}
+
+	return channeltypes.NewResultAcknowledgement(bz)
+}
+
+func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
+	if err := execMsg.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
+	}
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
+	return wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), execMsg)
+}
+
+func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
+	var packetdata transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(data, &packetdata); err != nil {
+		return false, packetdata
+	}
+	return true, packetdata
+}
+
+// jsonStringHasKey parses the memo as a json object and checks if it contains the key.
+func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
+	jsonObject = make(map[string]interface{})
+
+	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
+	// intentionally left blank. Nothing to do here. Ignore the packet and pass it down the stack.
+	if len(memo) == 0 {
+		return false, jsonObject
+	}
+
+	// the jsonObject must be a valid JSON object
+	err := json.Unmarshal([]byte(memo), &jsonObject)
+	if err != nil {
+		return false, jsonObject
+	}
+
+	// If the key doesn't exist, there's nothing to do on this hook. Continue by passing the packet
+	// down the stack
+	_, ok := jsonObject[key]
+	if !ok {
+		return false, jsonObject
+	}
+
+	return true, jsonObject
+}
+
+func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
+	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
+	if !isWasmRouted {
+		return isWasmRouted, sdk.AccAddress{}, nil, nil
+	}
+
+	wasmRaw := metadata["wasm"]
+
+	// Make sure the wasm key is a map. If it isn't, ignore this packet
+	wasm, ok := wasmRaw.(map[string]interface{})
+	if !ok {
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, "wasm metadata is not a valid JSON map object")
+	}
+
+	// Get the contract
+	contract, ok := wasm["contract"].(string)
+	if !ok {
+		// The tokens will be returned
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["contract"]`)
+	}
+
+	contractAddr, err = sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] is not a valid bech32 address`)
+	}
+
+	// The contract and the receiver should be the same for the packet to be valid
+	if contract != receiver {
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] should be the same as the receiver of the packet`)
+	}
+
+	// Ensure the message key is provided
+	if wasm["msg"] == nil {
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["msg"]`)
+	}
+
+	// Make sure the msg key is a map. If it isn't, return an error
+	_, ok = wasm["msg"].(map[string]interface{})
+	if !ok {
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["msg"] is not a map object`)
+	}
+
+	// Get the message string by serializing the map
+	msgBytes, err = json.Marshal(wasm["msg"])
+	if err != nil {
+		// The tokens will be returned
+		return isWasmRouted, sdk.AccAddress{}, nil,
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, err.Error())
+	}
+
+	return isWasmRouted, contractAddr, msgBytes, nil
+}
+
+func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error) {
+	isIcs20, ics20data := isIcs20Packet(data)
+	if !isIcs20 {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+	}
+
+	isCallbackRouted, metadata := jsonStringHasKey(ics20data.GetMemo(), types.IBCCallbackKey)
+	if !isCallbackRouted {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+	}
+
+	// We remove the callback metadata from the memo as it has already been processed.
+
+	// If the only available key in the memo is the callback, we should remove the memo
+	// from the data completely so the packet is sent without it.
+	// This way receiver chains that are on old versions of IBC will be able to process the packet
+	callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
+	delete(metadata, types.IBCCallbackKey)
+	bzMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		return 0, errorsmod.Wrap(err, "Send packet with callback error")
+	}
+	stringMetadata := string(bzMetadata)
+	if stringMetadata == "{}" {
+		ics20data.Memo = ""
+	} else {
+		ics20data.Memo = stringMetadata
+	}
+	dataBytes, err := json.Marshal(ics20data)
+	if err != nil {
+		return 0, errorsmod.Wrap(err, "Send packet with callback error")
+	}
+
+	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
+	if err != nil {
+		return 0, err
+	}
+
+	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
+	contract, ok := callbackRaw.(string)
+	if !ok {
+		return 0, nil
+	}
+	_, err = sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return 0, nil
+	}
+
+	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
+	return seq, nil
+}
+
+func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return errorsmod.Wrap(err, "Ack callback error") // The callback configured is not a bech32. Error out
+	}
+
+	success := "false"
+	if !osmoutils.IsAckError(acknowledgement) {
+		success = "true"
+	}
+
+	// Notify the sender that the ack has been received
+	ackAsJson, err := json.Marshal(acknowledgement)
+	if err != nil {
+		// If the ack is not a json object, error
+		return err
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
+		packet.SourceChannel, packet.Sequence, ackAsJson, success))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback
+		// ToDo: Open Question: Should we also delete the callback here?
+		return errorsmod.Wrap(err, "Ack callback error")
+	}
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	return nil
+}
+
+func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return errorsmod.Wrap(err, "Timeout callback error") // The callback configured is not a bech32. Error out
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
+		packet.SourceChannel, packet.Sequence))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback. This could be because the contract doesn't implement the message type to
+		// process the callback. Retrying this will not help, so we can delete the callback from storage.
+		// Since the packet has timed out, we don't expect any other responses that may trigger the callback.
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"ibc-timeout-callback-error",
+				sdk.NewAttribute("contract", contractAddr.String()),
+				sdk.NewAttribute("message", string(sudoMsg)),
+				sdk.NewAttribute("error", err.Error()),
+			),
+		})
+	}
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	return nil
+}
+
+// ===========================
+
+// File: ./client/cli/query.go
+package cli
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+)
+
+func indexRunCmd(cmd *cobra.Command, args []string) error {
+	usageTemplate := `Usage:{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}
+  
+{{if .HasAvailableSubCommands}}Available Commands:{{range .Commands}}{{if .IsAvailableCommand}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+	cmd.SetUsageTemplate(usageTemplate)
+	return cmd.Help()
+}
+
+// GetQueryCmd returns the cli query commands for this module.
+func GetQueryCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       indexRunCmd,
+	}
+
+	cmd.AddCommand(
+		GetCmdWasmSender(),
+	)
+	return cmd
+}
+
+// GetCmdPoolParams return pool params.
+func GetCmdWasmSender() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "wasm-sender <channelID> <originalSender>",
+		Short: "Generate the local address for a wasm hooks sender",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Generate the local address for a wasm hooks sender.
+Example:
+$ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqwq2qjatezqwqxu
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			channelID := args[0]
+			originalSender := args[1]
+			// ToDo: Make this flexible as an arg
+			prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+			senderBech32, err := keeper.DeriveIntermediateSender(channelID, originalSender, prefix)
+			if err != nil {
+				return err
+			}
+			fmt.Println(senderBech32)
+			return nil
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// ===========================
+
