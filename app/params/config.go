@@ -22,14 +22,18 @@ const (
 )
 
 const (
-	MicroUnit = int64(1e6)
-
-	MicroSDRDenom = "usdr"
-
 	BlocksPerMinute = uint64(10)
 	BlocksPerHour   = BlocksPerMinute * 60
 	BlocksPerDay    = BlocksPerHour * 24
+	BlocksPerWeek   = BlocksPerDay * 7
+	BlocksPerMonth  = BlocksPerDay * 30
+	BlocksPerYear   = BlocksPerDay * 365
 )
+
+// IsPeriodLastBlock returns true if we are at the last block of the period
+func IsPeriodLastBlock(ctx sdk.Context, blocksPerPeriod uint64) bool {
+	return ((uint64)(ctx.BlockHeight())+1)%blocksPerPeriod == 0
+}
 
 var (
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key.

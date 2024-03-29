@@ -71,18 +71,18 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	// Apply only tobin tax without constant product spread
 	if offerCoin.Denom != appParams.BaseCoinUnit && askDenom != appParams.BaseCoinUnit {
 		var tobinTax sdk.Dec
-		//offerTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, offerCoin.Denom)
-		//if err2 != nil {
-		//	return sdk.DecCoin{}, sdk.Dec{}, err2
-		//}
-		//
-		//askTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, askDenom)
-		//if err2 != nil {
-		//	return sdk.DecCoin{}, sdk.Dec{}, err2
-		//}
+		offerTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, offerCoin.Denom)
+		if err2 != nil {
+			return sdk.DecCoin{}, sdk.Dec{}, err2
+		}
 
-		offerTobinTax := sdk.NewDecWithPrec(25, 4)
-		askTobinTax := sdk.NewDecWithPrec(25, 4)
+		askTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, askDenom)
+		if err2 != nil {
+			return sdk.DecCoin{}, sdk.Dec{}, err2
+		}
+
+		//offerTobinTax := sdk.NewDecWithPrec(25, 4)
+		//askTobinTax := sdk.NewDecWithPrec(25, 4)
 
 		// Apply highest tobin tax for the denoms in the swap operation
 		if askTobinTax.GT(offerTobinTax) {
@@ -141,18 +141,18 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 		return offerCoin, nil
 	}
 
-	//offerRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
-	//if err != nil {
-	//	return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
-	//}
-	//
-	//askRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, askDenom)
-	//if err != nil {
-	//	return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, askDenom)
-	//}
+	offerRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
+	if err != nil {
+		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
+	}
 
-	offerRate := sdk.OneDec()
-	askRate := sdk.OneDec()
+	askRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, askDenom)
+	if err != nil {
+		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, askDenom)
+	}
+
+	//offerRate := sdk.OneDec()
+	//askRate := sdk.OneDec()
 
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
 	if retAmount.LTE(sdk.ZeroDec()) {

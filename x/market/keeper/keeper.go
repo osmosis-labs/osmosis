@@ -19,6 +19,7 @@ type Keeper struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+	OracleKeeper  types.OracleKeeper
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -28,6 +29,7 @@ func NewKeeper(
 	paramstore paramstypes.Subspace,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	oracleKeeper types.OracleKeeper,
 ) Keeper {
 	// ensure market module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -45,6 +47,7 @@ func NewKeeper(
 		paramSpace:    paramstore,
 		AccountKeeper: accountKeeper,
 		BankKeeper:    bankKeeper,
+		OracleKeeper:  oracleKeeper,
 	}
 }
 

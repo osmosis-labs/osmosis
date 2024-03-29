@@ -8,7 +8,7 @@ import (
 
 	//nolint:staticcheck
 	"github.com/golang/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 	"github.com/spf13/cobra"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -415,12 +415,12 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 	case "market":
 		switch structName {
 		case "SwapRequest":
-			v := &types.QuerySwapRequest{}
+			v := &markettypes.QuerySwapRequest{}
 			v.OfferCoin = structArguments[0]
 			v.AskDenom = structArguments[1]
 			return v, nil
 		case "OsmosisPoolDeltaRequest":
-			v := &types.QueryOsmosisPoolDeltaRequest{}
+			v := &markettypes.QueryOsmosisPoolDeltaRequest{}
 			return v, nil
 		}
 	case "txfees":

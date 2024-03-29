@@ -1,78 +1,72 @@
-package keeper
+package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v23/x/market/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 )
 
-func TestQueryParams(t *testing.T) {
-	input := CreateTestInput(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
+func (s *KeeperTestSuite) TestQueryParams() {
+	ctx := sdk.WrapSDKContext(s.Ctx)
 
-	querier := NewQuerier(input.MarketKeeper)
+	querier := keeper.NewQuerier(*s.App.MarketKeeper)
 	res, err := querier.Params(ctx, &types.QueryParamsRequest{})
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
-	require.Equal(t, input.MarketKeeper.GetParams(input.Ctx), res.Params)
+	s.Require().Equal(s.App.MarketKeeper.GetParams(s.Ctx), res.Params)
 }
 
-func TestQuerySwap(t *testing.T) {
-	input := CreateTestInput(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.MarketKeeper)
+func (s *KeeperTestSuite) TestQuerySwap() {
+	ctx := sdk.WrapSDKContext(s.Ctx)
+	querier := keeper.NewQuerier(*s.App.MarketKeeper)
 
-	//price := sdk.NewDecWithPrec(17, 1)
-	//input.OracleKeeper.SetLunaExchangeRate(input.Ctx, appParams.MicroSDRDenom, price)
+	price := sdk.NewDecWithPrec(17, 1)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appParams.MicroSDRDenom, price)
 
 	var err error
 
 	// empty request cause error
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{})
-	require.Error(t, err)
+	s.Require().Error(err)
 
 	// empty ask denom cause error
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: sdk.Coin{Denom: appParams.MicroSDRDenom, Amount: sdk.NewInt(100)}.String()})
-	require.Error(t, err)
+	s.Require().Error(err)
 
 	// empty offer coin cause error
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{AskDenom: appParams.MicroSDRDenom})
-	require.Error(t, err)
+	s.Require().Error(err)
 
 	// recursive query
 	offerCoin := sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(10)).String()
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: appParams.BaseCoinUnit})
-	require.Error(t, err)
+	s.Require().Error(err)
 
 	// overflow query
 	overflowAmt, _ := sdk.NewIntFromString("1000000000000000000000000000000000")
 	overflowOfferCoin := sdk.NewCoin(appParams.BaseCoinUnit, overflowAmt).String()
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: overflowOfferCoin, AskDenom: appParams.MicroSDRDenom})
-	require.Error(t, err)
+	s.Require().Error(err)
 
 	// valid query
 	res, err := querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: appParams.MicroSDRDenom})
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
-	require.Equal(t, appParams.MicroSDRDenom, res.ReturnCoin.Denom)
-	require.True(t, sdk.NewInt(17).GTE(res.ReturnCoin.Amount))
-	require.True(t, res.ReturnCoin.Amount.IsPositive())
+	s.Require().Equal(appParams.MicroSDRDenom, res.ReturnCoin.Denom)
+	s.Require().True(sdk.NewInt(17).GTE(res.ReturnCoin.Amount))
+	s.Require().True(res.ReturnCoin.Amount.IsPositive())
 }
 
-func TestQueryMintPoolDelta(t *testing.T) {
-	input := CreateTestInput(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.MarketKeeper)
+func (s *KeeperTestSuite) TestQueryMintPoolDelta() {
+	ctx := sdk.WrapSDKContext(s.Ctx)
+	querier := keeper.NewQuerier(*s.App.MarketKeeper)
 
 	poolDelta := sdk.NewDecWithPrec(17, 1)
-	input.MarketKeeper.SetOsmosisPoolDelta(input.Ctx, poolDelta)
+	s.App.MarketKeeper.SetOsmosisPoolDelta(s.Ctx, poolDelta)
 
 	res, errRes := querier.OsmosisPoolDelta(ctx, &types.QueryOsmosisPoolDeltaRequest{})
-	require.NoError(t, errRes)
+	s.Require().NoError(errRes)
 
-	require.Equal(t, poolDelta, res.OsmosisPoolDelta)
+	s.Require().Equal(poolDelta, res.OsmosisPoolDelta)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 )
@@ -122,11 +123,10 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 
 	// Send swap fee to oracle account
 	if feeCoin.IsPositive() {
-		//feeCoins := sdk.NewCoins(feeCoin)
-		// if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, feeCoins);
-		// err != nil {
-		// 	return nil, err
-		// }
+		feeCoins := sdk.NewCoins(feeCoin)
+		if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, oracletypes.ModuleName, feeCoins); err != nil {
+			return nil, err
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
