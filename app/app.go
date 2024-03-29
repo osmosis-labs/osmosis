@@ -155,6 +155,9 @@ var (
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
+
+	// rpcAddressConfigName is the name of the config key that holds the RPC address.
+	rpcAddressConfigName = "rpc.laddr"
 )
 
 // OsmosisApp extends an ABCI application, but with most of its parameters exported.
@@ -303,7 +306,11 @@ func NewOsmosisApp(
 		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
 
 		// Note: address can be moved to config in the future if needed.
-		nodeStatusChecker := service.NewNodeStatusChecker("tcp://localhost:26657")
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
