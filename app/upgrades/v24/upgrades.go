@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 func CreateUpgradeHandler(
@@ -81,12 +82,8 @@ func CreateUpgradeHandler(
 			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
 		}
 
-		// TODO: Uncomment, set, and add to upgrade_test.go IFF an address is decided on via the governance forums prior to upgrade.
-		// Otherwise, this will be set after v24 via a parameter change proposal.
-
-		// Set whitelistedFeeTokenSetters param
-		// keepers.TxFeesKeeper.SetParam(ctx, txfeestypes.KeyWhitelistedFeeTokenSetters, "osmo1...")
-
+		// Set whitelistedFeeTokenSetters param as per https://forum.osmosis.zone/t/temperature-check-add-a-permissioned-address-to-manage-the-fee-token-whitelist/2604
+		keepers.TxFeesKeeper.SetParam(ctx, txfeestypes.KeyWhitelistedFeeTokenSetters, WhitelistedFeeTokenSetters)
 		return migrations, nil
 	}
 }

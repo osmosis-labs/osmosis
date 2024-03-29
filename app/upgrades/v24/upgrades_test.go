@@ -3,10 +3,11 @@ package v24_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	"testing"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
+	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
@@ -182,6 +184,14 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Test that the white whale pools have been updated
 	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+
+	// TXFEES Tests
+	//
+
+	// Check that the whitelisted fee token address has been set
+	whitelistedFeeTokenSetters := s.App.TxFeesKeeper.GetParams(s.Ctx).WhitelistedFeeTokenSetters
+	s.Require().Len(whitelistedFeeTokenSetters, 1)
+	s.Require().Equal(whitelistedFeeTokenSetters, v24.WhitelistedFeeTokenSetters)
 }
 
 func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {
