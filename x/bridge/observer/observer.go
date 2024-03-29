@@ -112,12 +112,11 @@ func (o *Observer) addTxToQueue(ctx context.Context, tx Transfer) {
 	}
 	cr, err := o.getConfirmationsRequired(ctx, tx)
 	if err != nil {
-		o.logger.Error(fmt.Sprintf(
-			"Failed to get confirmations required for outbound transfer %s",
-			tx.Id,
-		))
+		o.logger.With("error", err, "id", tx.Id).
+			Error("Failed to get confirmations required for outbound transfer")
 		return
 	}
+
 	o.outTxQueue[tx.SrcChain] = append(o.outTxQueue[tx.SrcChain], TxQueueItem{tx, cr})
 }
 
@@ -148,13 +147,16 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 		var newQueue []TxQueueItem
 		for _, out := range queue {
 			confirmed, err := o.isTxConfirmed(ctx, height, &out)
-			if !confirmed || err != nil {
-				if err != nil {
-					o.logger.Error(fmt.Sprintf("Failed to confirm tx %s", err.Error()))
-				}
+			if err != nil {
+				o.logger.Error(fmt.Sprintf("Failed to confirm tx %s", err.Error()))
 				newQueue = append(newQueue, out)
 				continue
 			}
+			if !confirmed {
+				newQueue = append(newQueue, out)
+				continue
+			}
+
 			err = o.chains[out.Tx.DstChain].SignalInboundTransfer(ctx, out.Tx)
 			if err != nil {
 				newQueue = append(newQueue, out)
@@ -171,7 +173,7 @@ func (o *Observer) getConfirmationsRequired(ctx context.Context, tx Transfer) (u
 
 	chain, ok := o.chains[ChainIdOsmosis]
 	if !ok {
-		return 0, fmt.Errorf("Chain client for %s not found", ChainIdOsmosis)
+		return 0, fmt.Errorf("chain client for %s not found", ChainIdOsmosis)
 	}
 	cr, err := chain.ConfirmationsRequired(ctx, bridgetypes.AssetID{
 		SourceChain: string(tx.SrcChain),
@@ -191,6 +193,8 @@ func (o *Observer) isTxConfirmed(
 	if curHeight < item.ConfirmationsRequired+item.Tx.Height {
 		return false, nil
 	}
+	// If the number of confirmations is reached, request the required number of confirmations again
+	// to check whether the bridge parameters were changed while transactions was being processed
 	cr, err := o.getConfirmationsRequired(ctx, item.Tx)
 	if err != nil {
 		return false, errorsmod.Wrapf(

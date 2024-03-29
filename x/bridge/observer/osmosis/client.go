@@ -2,7 +2,6 @@ package osmosis
 
 import (
 	"context"
-	"crypto/x509"
 	"fmt"
 	"slices"
 
@@ -16,16 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
-var (
-	ModuleNameClient = "osmo-client"
-)
+var ModuleNameClient = "osmo-client"
 
 type Client struct {
 	chainId      string
@@ -41,37 +35,23 @@ type Client struct {
 // Tx service client and Auth query client created
 func NewClient(
 	chainId string,
-	rpcUrl string,
-	disableTls bool,
+	grpcConn *grpc.ClientConn,
 	keyring keyring.Keyring,
-) (Client, error) {
-	grpcConn, err := grpcConnection(rpcUrl, disableTls)
-	if err != nil {
-		return Client{}, errorsmod.Wrapf(ErrGrpcConnection, err.Error())
-	}
-
-	return NewClientWithConnection(chainId, grpcConn, keyring), nil
-}
-
-func NewClientWithConnection(
-	chainId string,
-	conn *grpc.ClientConn,
-	keyring keyring.Keyring,
-) Client {
-	return Client{
-		chainId:      chainId,
-		keyring:      keyring,
-		grpcConn:     conn,
-		txConfig:     app.GetEncodingConfig().TxConfig,
-		txClient:     tx.NewServiceClient(conn),
-		accClient:    authtypes.NewQueryClient(conn),
-		bridgeClient: bridgetypes.NewQueryClient(conn),
+	txConfig client.TxConfig,
+) *Client {
+	return &Client{
+		chainId:   chainId,
+		keyring:   keyring,
+		grpcConn:  grpcConn,
+		txClient:  tx.NewServiceClient(grpcConn),
+		accClient: authtypes.NewQueryClient(grpcConn),
+		txConfig:  txConfig,
 	}
 }
 
 // Close closes client's GRPC connections
 func (c *Client) Close() {
-	c.grpcConn.Close()
+	_ = c.grpcConn.Close()
 }
 
 // SignTx signs provided message with internal keyring
@@ -149,19 +129,20 @@ func (c *Client) Account(ctx context.Context, addr sdk.AccAddress) (authtypes.Ba
 	return ba, nil
 }
 
+// ConfirmationsRequired returns the amount of confirmations required for the specified asset
 func (c *Client) ConfirmationsRequired(
 	ctx context.Context,
 	assetId bridgetypes.AssetID,
 ) (uint64, error) {
-	req := bridgetypes.QueryParamsRequest{}
-	params, err := c.bridgeClient.Params(ctx, &req)
+	params, err := c.bridgeClient.Params(ctx, new(bridgetypes.QueryParamsRequest))
 	if err != nil {
 		return 0, errorsmod.Wrapf(ErrQuery, "bridge/params: %s", err.Error())
 	}
 	idx := slices.IndexFunc(params.GetParams().Assets, func(a bridgetypes.Asset) bool {
 		return a.Id == assetId
 	})
-	if idx == -1 {
+	const idxNotFound = -1
+	if idx == idxNotFound {
 		return 0, errorsmod.Wrapf(
 			ErrQuery,
 			"bridge/params: asset with id %s not found",
@@ -171,6 +152,8 @@ func (c *Client) ConfirmationsRequired(
 	return params.GetParams().Assets[idx].ExternalConfirmations, nil
 }
 
+// buildUnsigned creates unassigned transaction with provided message, fees and gas limit.
+// Initializes transaction signatures
 func (c *Client) buildUnsigned(
 	cpk types.PubKey,
 	accSeq uint64,
@@ -203,6 +186,7 @@ func (c *Client) buildUnsigned(
 	return txBuilder, nil
 }
 
+// sign signs transaction using client's keyring
 func (c *Client) sign(
 	txBuilder client.TxBuilder,
 	cpk types.PubKey,
@@ -251,18 +235,4 @@ func (c *Client) sign(
 		return nil, errorsmod.Wrapf(err, "Failed to encode tx")
 	}
 	return txBytes, nil
-}
-
-func grpcConnection(url string, disableTls bool) (*grpc.ClientConn, error) {
-	var creds credentials.TransportCredentials
-	if disableTls {
-		creds = insecure.NewCredentials()
-	} else {
-		certs, err := x509.SystemCertPool()
-		if err != nil {
-			return nil, errorsmod.Wrapf(err, "Failed to load system certificates")
-		}
-		creds = credentials.NewClientTLSFromCert(certs, "")
-	}
-	return grpc.Dial(url, grpc.WithTransportCredentials(creds))
 }

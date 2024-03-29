@@ -3,7 +3,9 @@ package types
 const (
 	DefaultBitcoinChainName     = "bitcoin"
 	DefaultBitcoinDenomName     = "btc"
-	DefaultBitcoinConfirmations = 6
+	DefaultBitcoinConfirmations = 1
 	DefaultBitcoinExponent      = 10 // TODO: decide
 	DefaultVotesNeeded          = 1
+
+	DefaultOsmosisChainName = "osmosis"
 )

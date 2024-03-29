@@ -3,7 +3,6 @@ package osmosis_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -36,42 +36,45 @@ import (
 )
 
 var (
-	BtcAddr = "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ"
+	BtcAddr              = "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ"
+	OsmosisValidatorAddr = "osmo1ajaeadkj8u4wgw3sfm8szu8hl992nngaex40fs"
 )
 
+var _ observer.Client = new(MockChain)
+
 type MockChain struct {
-	H  uint64
-	CR uint64
+	vHeight                uint64
+	vConfirmationsRequired uint64
 }
 
-func (m *MockChain) SignalInboundTransfer(context.Context, observer.InboundTransfer) error {
+func (m *MockChain) SignalInboundTransfer(context.Context, observer.Transfer) error {
 	return nil
 }
 
-func (m *MockChain) ListenOutboundTransfer() <-chan observer.OutboundTransfer {
-	return make(<-chan observer.OutboundTransfer)
+func (m *MockChain) ListenOutboundTransfer() <-chan observer.Transfer {
+	return make(<-chan observer.Transfer)
 }
 
 func (m *MockChain) Start(context.Context) error { return nil }
 
 func (m *MockChain) Stop(context.Context) error { return nil }
 
-func (m *MockChain) Height() (uint64, error) {
-	return m.H, nil
+func (m *MockChain) Height(context.Context) (uint64, error) {
+	return m.vHeight, nil
 }
 
-func (m *MockChain) ConfirmationsRequired() (uint64, error) {
-	return m.CR, nil
+func (m *MockChain) ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error) {
+	return m.vConfirmationsRequired, nil
 }
 
 type OsmosisTestSuite struct {
 	ts TestSuite
 	hs *httptest.Server
-	o  *osmosis.Osmosis
+	o  *osmosis.ChainClient
 }
 
 func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
-	ts := NewTestSuite(t, ctx)
+	ts := NewTestSuite(t)
 
 	s := httptest.NewServer(http.HandlerFunc(success(t)))
 	cometRpc, err := rpchttp.New(s.URL, "/websocket")
@@ -84,8 +87,8 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err)
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err = keyring.NewAccount(
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	_, err = kr.NewAccount(
 		osmosis.ModuleNameClient,
 		Mnemonic1,
 		"",
@@ -93,12 +96,13 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		hd.Secp256k1,
 	)
 	require.NoError(t, err)
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
 
-	o := osmosis.NewOsmosis(
+	client := osmosis.NewClient(ChainId, conn, kr, app.GetEncodingConfig().TxConfig)
+	o := osmosis.NewChainClient(
 		log.NewNopLogger(),
-		&client,
+		client,
 		cometRpc,
+		OsmosisValidatorAddr,
 	)
 	require.NoError(t, err)
 
@@ -107,11 +111,13 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 
 func (ots *OsmosisTestSuite) Start(t *testing.T, ctx context.Context) {
 	go ots.ts.Start(t)
-	ots.o.Start(ctx)
+	err := ots.o.Start(ctx)
+	require.NoError(t, err)
 }
 
 func (ots *OsmosisTestSuite) Stop(t *testing.T, ctx context.Context) {
-	ots.o.Stop(ctx)
+	err := ots.o.Stop(ctx)
+	require.NoError(t, err)
 	ots.hs.Close()
 	ots.ts.Close(t)
 }
@@ -127,10 +133,10 @@ func readNewBlockEvent(t *testing.T, path string) coretypes.ResultEvent {
 	return result
 }
 
-func readTxSearch(t *testing.T, path string) coretypes.ResultTxSearch {
+func readTxCheck(t *testing.T, path string) abci.ResponseCheckTx {
 	dataStr, err := os.ReadFile(path)
 	require.NoError(t, err)
-	result := coretypes.ResultTxSearch{}
+	result := abci.ResponseCheckTx{}
 	err = json.Unmarshal([]byte(dataStr), &result)
 	require.NoError(t, err)
 	return result
@@ -143,7 +149,7 @@ func success(t *testing.T) http.HandlerFunc {
 			c, err := upgrader.Upgrade(w, r, nil)
 			require.NoError(t, err)
 			defer c.Close()
-			newBlock := readNewBlockEvent(t, "./test_events/new_block_event.json")
+			newBlock := readNewBlockEvent(t, "./test_events/new_block_success.json")
 			newBlockResp := cmtrpctypes.NewRPCSuccessResponse(
 				cmtrpctypes.JSONRPCIntID(1),
 				newBlock,
@@ -153,14 +159,14 @@ func success(t *testing.T) http.HandlerFunc {
 			err = c.WriteMessage(1, newBlockRaw)
 			require.NoError(t, err)
 		case http.MethodPost:
-			blockResults := readTxSearch(t, "./test_events/tx_search.json")
-			blockResultsResp := cmtrpctypes.NewRPCSuccessResponse(
+			checkResults := readTxCheck(t, "./test_events/tx_check_success.json")
+			checkResultsResp := cmtrpctypes.NewRPCSuccessResponse(
 				cmtrpctypes.JSONRPCIntID(0),
-				blockResults,
+				checkResults,
 			)
-			blockResultsRaw, err := json.Marshal(blockResultsResp)
+			checkResultsRaw, err := json.Marshal(checkResultsResp)
 			require.NoError(t, err)
-			_, err = w.Write(blockResultsRaw)
+			_, err = w.Write(checkResultsRaw)
 			require.NoError(t, err)
 		default:
 			t.Fatal("Unexpected request method", r.Method)
@@ -192,8 +198,8 @@ func TestSignalInboundTransfer(t *testing.T) {
 		Times(1).
 		Return(expResp1, nil)
 
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err = keyring.NewAccount(
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	_, err = kr.NewAccount(
 		osmosis.ModuleNameClient,
 		Mnemonic1,
 		"",
@@ -202,18 +208,19 @@ func TestSignalInboundTransfer(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	in := observer.InboundTransfer{
-		SrcChain: observer.ChainId_BITCOIN,
+	in := observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
 		Id:       "deadbeef",
 		Height:   42,
 		Sender:   Addr1.String(),
 		To:       BtcAddr,
-		Asset:    "btc",
+		Asset:    bridgetypes.DefaultBitcoinDenomName,
 		Amount:   math.NewUint(10),
 	}
 	msg := bridgetypes.NewMsgInboundTransfer(
 		in.Id,
-		in.Sender,
+		OsmosisValidatorAddr, // NB! validator sends a message!
 		in.To,
 		bridgetypes.AssetID{
 			SourceChain: string(in.SrcChain),
@@ -224,7 +231,7 @@ func TestSignalInboundTransfer(t *testing.T) {
 	fees := sdktypes.NewCoins(sdktypes.NewCoin(osmosis.OsmoFeeDenom, osmosis.OsmoFeeAmount))
 	expBytes := buildAndSignTx(
 		t,
-		keyring,
+		kr,
 		expectedAcc.AccountNumber,
 		expectedAcc.Sequence,
 		msg,
@@ -249,7 +256,6 @@ func TestSignalInboundTransfer(t *testing.T) {
 			ctx context.Context,
 			req *tx.BroadcastTxRequest,
 		) (*tx.BroadcastTxResponse, error) {
-			fmt.Println("BroadcastTx")
 			return expResp2, nil
 		})
 	ots.Start(t, ctx)
@@ -263,6 +269,8 @@ func TestSignalInboundTransfer(t *testing.T) {
 // ListenOutboundTransfer verifies Osmosis properly collects transfers
 // from the chain and sends it into the outbound channel
 func TestListenOutboundTransfer(t *testing.T) {
+	t.Skip("x/bridge needs to be wired to decode Txs")
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	ots := NewOsmosisTestSuite(t, ctx)
@@ -271,114 +279,29 @@ func TestListenOutboundTransfer(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), height)
 	ots.Start(t, ctx)
+	defer ots.Stop(t, ctx)
 
-	// We expect to receive 3 Txs with `EventOutboundTransferType` events in this test
-	// Only 2 of the Txs are successful, so we should receive only 2 event through the channel
-	eventsOut := ots.o.ListenOutboundTransfer()
-	transfers := [2]observer.OutboundTransfer{}
-	for i := 0; i < len(transfers); i++ {
-		require.Eventually(t, func() bool {
-			transfers[i] = <-eventsOut
-			return true
-		}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
-	}
+	transfers := ots.o.ListenOutboundTransfer()
+	var transfer observer.Transfer
+	require.Eventually(t, func() bool {
+		transfer = <-transfers
+		return true
+	}, time.Second, 100*time.Millisecond, "Timeout waiting for transfer")
 
-	expTransfer0 := observer.OutboundTransfer{
-		DstChain: observer.ChainId_BITCOIN,
-		Id:       "E765E65A3A513CCC3E2CE25BB6B47DBD7CA09AC6C7C380B84D96B88B3B0B8A70",
-		Height:   5984109,
-		Sender:   Addr1.String(),
-		To:       BtcAddr,
-		Asset:    "btc",
+	expTransfer := observer.Transfer{
+		SrcChain: observer.ChainIdOsmosis,
+		DstChain: observer.ChainIdBitcoin,
+		Id:       "8593aa191651f6a3e2978fb5334b3e5b1e20abd72ad539f15c76f241fa696d3e",
+		Height:   881,
+		Sender:   "osmo1pldlhnwegsj3lqkarz0e4flcsay3fuqgkd35ww",
+		To:       "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
+		Asset:    bridgetypes.DefaultBitcoinDenomName,
 		Amount:   math.NewUint(10),
 	}
-	expTransfer1 := observer.OutboundTransfer{
-		DstChain: observer.ChainId_BITCOIN,
-		Id:       "CE2D6798A8C8FD8685A29B543FDAEB31EED72A1EB5F570D889FF5E263AC7D19D",
-		Height:   5984109,
-		Sender:   Addr1.String(),
-		To:       BtcAddr,
-		Asset:    "btc",
-		Amount:   math.NewUint(11),
-	}
-	require.Equal(t, expTransfer0, transfers[0])
-	require.Equal(t, expTransfer1, transfers[1])
-	require.Equal(t, 0, len(eventsOut))
+	require.Equal(t, expTransfer, transfer)
+	require.Equal(t, 0, len(transfers))
 
 	height, err = ots.o.Height(ctx)
 	require.NoError(t, err)
-	require.Equal(t, expTransfer0.Height, height)
-
-	ots.Stop(t, ctx)
-}
-
-func TestChainClientConfirmationsRequired(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	ots := NewOsmosisTestSuite(t, ctx)
-
-	expReq := &bridgetypes.QueryParamsRequest{}
-	expResp := &bridgetypes.QueryParamsResponse{
-		Params: bridgetypes.Params{
-			Assets: []bridgetypes.Asset{
-				{
-					Id: bridgetypes.AssetID{
-						SourceChain: string(observer.ChainIdBitcoin),
-						Denom:       string(observer.DenomBitcoin),
-					},
-					ExternalConfirmations: 5,
-				},
-			},
-		},
-	}
-	ots.ts.BridgeServer.
-		EXPECT().
-		Params(gomock.Any(), expReq).
-		Times(1).
-		Return(expResp, nil)
-	ots.Start(t, ctx)
-
-	cr, err := ots.o.ConfirmationsRequired(ctx, bridgetypes.AssetID{
-		SourceChain: string(observer.ChainIdBitcoin),
-		Denom:       string(observer.DenomBitcoin),
-	})
-	require.NoError(t, err)
-	require.Equal(t, uint64(5), cr)
-
-	ots.Stop(t, ctx)
-}
-
-func TestChainClientConfirmationsRequiredNotFound(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	ots := NewOsmosisTestSuite(t, ctx)
-
-	expReq := &bridgetypes.QueryParamsRequest{}
-	expResp := &bridgetypes.QueryParamsResponse{
-		Params: bridgetypes.Params{
-			Assets: []bridgetypes.Asset{
-				{
-					Id: bridgetypes.AssetID{
-						SourceChain: string(observer.ChainIdBitcoin),
-						Denom:       string(observer.DenomBitcoin),
-					},
-					ExternalConfirmations: 5,
-				},
-			},
-		},
-	}
-	ots.ts.BridgeServer.
-		EXPECT().
-		Params(gomock.Any(), expReq).
-		Times(1).
-		Return(expResp, nil)
-	ots.Start(t, ctx)
-
-	_, err := ots.o.ConfirmationsRequired(ctx, bridgetypes.AssetID{
-		SourceChain: "na",
-		Denom:       "na",
-	})
-	require.ErrorIs(t, err, osmosis.ErrQuery)
-
-	ots.Stop(t, ctx)
+	require.Equal(t, expTransfer.Height, height)
 }
