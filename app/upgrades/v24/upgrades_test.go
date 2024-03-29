@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -19,8 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
@@ -34,8 +34,6 @@ const (
 	HistoricalTWAPTimeIndexPrefix = "historical_time_index"
 	KeySeparator                  = "|"
 )
-
-var perUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
@@ -102,6 +100,64 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(twapRecord1, twapRecords[0])
 	s.Require().Equal(twapRecord2, twapRecords[1])
 
+	// INCENTIVES Setup
+	//
+
+	concentratedPoolIDs := []uint64{}
+
+	// Create two sets of all pool types
+	allPoolsOne := s.PrepareAllSupportedPools()
+	allPoolsTwo := s.PrepareAllSupportedPools()
+
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsOne.ConcentratedPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsTwo.ConcentratedPoolID)
+
+	// Update authorized quote denoms
+	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
+
+	// Create two more concentrated pools with positions
+	secondLastPoolID := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
+	lastPoolID := secondLastPoolID + 1
+	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
+	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
+		{"uion", "uosmo"},
+		{apptesting.ETH, apptesting.USDC},
+	})
+
+	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
+
+	// Create incentive record for last pool
+	incentiveCoin := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Create incentive record for second last pool
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, secondLastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Make 60 seconds pass
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, lastPoolID)
+	s.Require().NoError(err)
+
+	// Migrated pool claim
+	migratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(migratedPoolBeforeUpgradeIncentives)
+
+	// Non-migrated pool claim
+	nonMigratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
+
+	// Overwrite the migration list with the desired pool ID.
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
+
 	// PROTOREV Setup
 	//
 
@@ -133,8 +189,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	}
 	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 503)
 
-	oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeIncentives, nonMigratedPoolBeforeUpgradeIncentives := s.PrepareSpreadRewardsMigrationTestEnv()
-
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
@@ -161,9 +215,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP records indexed by pool ID should be untouched.
 	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 4) // Two extra come from the spread factor test
-	s.Require().Equal(twapRecord1, twapRecords[2])
-	s.Require().Equal(twapRecord2, twapRecords[3])
+	s.Require().Len(twapRecords, 6)
+	s.Require().Equal(twapRecord1, twapRecords[4])
+	s.Require().Equal(twapRecord2, twapRecords[5])
 
 	// PROTOREV Tests
 	//
@@ -181,6 +235,18 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// INCENTIVES Tests
 	//
 
+	// Migrated pool: ensure that the claimable incentives are the same before and after migration
+	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+
+	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
+
+	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
+	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+
+	s.Require().NoError(err)
+	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
+
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
@@ -190,8 +256,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Test that the white whale pools have been updated
 	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
-
-	s.ExecuteSpreadRewardsMigrationTest(oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeIncentives, nonMigratedPoolBeforeUpgradeIncentives)
 }
 
 func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {
@@ -213,75 +277,4 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	s.Require().True(exists)
 
 	s.Ctx = s.Ctx.WithBlockHeight(v24UpgradeHeight)
-}
-
-func (s *UpgradeTestSuite) PrepareSpreadRewardsMigrationTestEnv() (map[uint64]struct{}, uint64, sdk.Coins, sdk.Coins) {
-	// Set the migration pool ID threshold to far away to simulate pre-migration state.
-	s.App.ConcentratedLiquidityKeeper.SetSpreadFactorPoolIDMigrationThreshold(s.Ctx, 1000)
-
-	concentratedPoolIDs := []uint64{}
-
-	// Create two sets of all pools
-	allPoolsOne := s.PrepareAllSupportedPools()
-	allPoolsTwo := s.PrepareAllSupportedPools()
-
-	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsOne.ConcentratedPoolID)
-	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsTwo.ConcentratedPoolID)
-
-	// Update authorized quote denoms
-	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
-
-	// Create two more concentrated pools with positions
-	secondLastPoolID := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
-	lastPoolID := secondLastPoolID + 1
-	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
-	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
-	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
-		{"uion", "uosmo"},
-		{apptesting.ETH, apptesting.USDC},
-	})
-
-	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
-
-	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, lastPoolID)
-	s.Require().NoError(err)
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", sdk.MustNewDecFromStr("276701288297452775148000"))))
-
-	feeAccumulator, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, secondLastPoolID)
-	s.Require().NoError(err)
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", sdk.MustNewDecFromStr("276701288297452775148000"))))
-
-	// Migrated pool claim
-	migratedPoolBeforeUpgradeIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, lastPoolPositionID)
-	s.Require().NoError(err)
-	s.Require().NotEmpty(migratedPoolBeforeUpgradeIncentives)
-
-	// Non-migrated pool claim
-	nonMigratedPoolBeforeUpgradeIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, lastPoolPositionID-1)
-	s.Require().NoError(err)
-	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
-
-	// Overwrite the migration list with the desired pool ID.
-	oldMigrationList := concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs
-	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs = map[uint64]struct{}{}
-	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs[lastPoolID] = struct{}{}
-
-	return oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeIncentives, nonMigratedPoolBeforeUpgradeIncentives
-}
-
-func (s *UpgradeTestSuite) ExecuteSpreadRewardsMigrationTest(oldMigrationList map[uint64]struct{}, lastPoolPositionID uint64, migratedPoolBeforeUpgradeIncentives, nonMigratedPoolBeforeUpgradeIncentives sdk.Coins) {
-	// Migrated pool: ensure that the claimable incentives are the same before and after migration
-	migratedPoolAfterUpgradeIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, lastPoolPositionID)
-	s.Require().NoError(err)
-	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
-
-	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
-	nonMigratedPoolAfterUpgradeIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, lastPoolPositionID-1)
-	s.Require().NoError(err)
-	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
-
-	// Restore the migration list for use by other tests
-	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs = oldMigrationList
 }
