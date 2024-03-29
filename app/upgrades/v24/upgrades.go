@@ -1,18 +1,27 @@
 package v24
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
-	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
-
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+)
+
+const (
+	mainnetChainID = "osmosis-1"
+	// Edgenet is to function exactly the same as mainnet, and expected
+	// to be state-exported from mainnet state.
+	edgenetChainID = "edgenet"
 )
 
 func CreateUpgradeHandler(
@@ -50,6 +59,14 @@ func CreateUpgradeHandler(
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
 
+		chainID := ctx.ChainID()
+		// We only perform the migration on mainnet pools since we hard-coded the pool IDs to migrate
+		// in the types package. And the testnet was migrated in v24
+		if chainID == mainnetChainID || chainID == edgenetChainID {
+			if err := migrateMainnetPools(ctx, *keepers.ConcentratedLiquidityKeeper); err != nil {
+				return nil, err
+			}
+		}
 		// Enable ICA controllers
 		keepers.ICAControllerKeeper.SetParams(ctx, icacontrollertypes.DefaultParams())
 
@@ -86,4 +103,42 @@ func CreateUpgradeHandler(
 		keepers.TxFeesKeeper.SetParam(ctx, txfeestypes.KeyWhitelistedFeeTokenSetters, WhitelistedFeeTokenSetters)
 		return migrations, nil
 	}
+}
+
+// migrateMainnetPools migrates the specified mainnet pools to the new accumulator scaling factor.
+func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
+	poolIDsToMigrate := make([]uint64, 0, len(FinalIncentiveAccumulatorPoolIDsToMigrate))
+	for poolID := range FinalIncentiveAccumulatorPoolIDsToMigrate {
+		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
+	}
+
+	// Sort for determinism
+	sort.Slice(poolIDsToMigrate, func(i, j int) bool {
+		return poolIDsToMigrate[i] < poolIDsToMigrate[j]
+	})
+
+	// Migrate concentrated pools
+	thresholdId, err := concentratedKeeper.GetIncentivePoolIDMigrationThreshold(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, poolID := range poolIDsToMigrate {
+		// This should never happen, this check is defence in depth in case we have wrong data by accident
+		if poolID >= thresholdId {
+			continue
+		}
+
+		// This should never happen, this check is defence in depth in case we have wrong data by accident
+		_, isMigrated := v23.MigratedIncentiveAccumulatorPoolIDs[poolID]
+		if isMigrated {
+			continue
+		}
+
+		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolID); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
