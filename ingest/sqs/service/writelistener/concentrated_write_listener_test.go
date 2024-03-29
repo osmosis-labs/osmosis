@@ -49,7 +49,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Concentrated() {
 		expectedPoolTickUpdate bool
 	}{
 		{
-			name: "random concentrated write, no-op",
+			name: "concentrated write unrelated to pool state, no-op",
 
 			key:   concentratedtypes.KeyAuthorizedTickSpacing,
 			value: someValue,
