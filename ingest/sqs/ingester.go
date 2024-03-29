@@ -108,7 +108,9 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 	return i.storeLatestHeight(ctx, tx)
 }
 
-// ProcessBlock implements ingest.Ingester.
+// storeLatestHeight stores the latest blockchain height on the tx.
+// Additionally, it executes the transaction.
+// Returns error if the store operation fails.
 func (i *sqsIngester) storeLatestHeight(ctx sdk.Context, tx repository.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
