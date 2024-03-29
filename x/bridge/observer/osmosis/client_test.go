@@ -32,7 +32,6 @@ var (
 	Addr1     = types.MustAccAddressFromBech32("osmo1mfkl4p92lqvlf7fh5rpds3afvpase78fz5h36l")
 	Mnemonic1 = "tonight april truth pelican manual door beyond inspire boil biology improve horse bean cotton festival display calm pitch ahead seed ice fee baby quality"
 	Addr2     = types.MustAccAddressFromBech32("osmo1g9z8hxmr9qqfl0lxeahpf2m5hygveasx933lhp")
-	Mnemonic2 = "know snack twice salad symbol catch spring street ride basic olympic hard onion usage adult solution setup embody eight bridge portion quote bird timber"
 )
 
 type TestSuite struct {
