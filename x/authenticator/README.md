@@ -37,9 +37,10 @@ The authenticator ante handler iterates over each message in the transaction. Fo
  * The Call Track() on all messages step is executed, notifying the authenticators involved.
  * If all track calls finish successfully, the changes are written to the data store.
 
-The process then executes all the authenticated messages. 
+The process then executes all the authenticated messages. If the transaction fails at this point, the execution 
+changes are discarded. Please note that the authenticator changes (committed in track) are not reverted!
 
-After execution (in the post handler):
+If the execution is successful, we continue in the post handler:
 
  * For each message, an account and authenticator are selected again.
  * The ConfirmExecution() function is called on the selected authenticator, allowing it to enforce post-execution rules.
