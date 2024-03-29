@@ -9,6 +9,8 @@ each with their own set of rules and conditions for transaction approval.
 
 ## Architecture Overview
 
+### Circuit Breaker
+
 The module is designed to be used as a replacement for the default Cosmos SDK authentication mechanism. This is 
 configured as an ante handler (executed before the transaction messages are processed). For safety, we have included
 a circuit breaker that allows the module to be disabled if necessary. Once the module is enabled, the user needs to 
@@ -19,6 +21,8 @@ transaction defaults to the classic Cosmos SDK authentication method.
 The flow is as follows:
 
 ![Circuit Breaker](/x/authenticator/images/circuit_breaker.jpg)
+
+### Authenticator Flow
 
 After passing the circuit breaker, if the transaction uses authenticators, the flow becomes as follows:
 
@@ -48,6 +52,46 @@ If the execution is successful, we continue in the post handler:
    * If ConfirmExecution() fails for any authenticator, or if the "Execute All Messages" step fails, the changes are discarded.
 
 ![Authenticator Flow](/x/authenticator/images/authentication_flow.jpg)
+
+### Authenticator Implementations
+
+The implementation of each authenticator type is done by a Go struct that implements the `Authenticator` interface. 
+This interface defines the functions that need to be implemented and will be described in detail in the next section. 
+
+For authenticators to be available, they need to be registered with the `AuthenticatorManager`. This manager is 
+responsible for retrieving authenticators by their unique type.
+
+![Authenticator Implementations](/x/authenticator/images/authenticator_manager.jpg)
+
+Since implementations are custom code, they can encode complex authentication logic like calling each other, or
+calling cosmwasm contracts to authenticate the messages.
+
+### Authenticator configuration for accounts
+
+Accounts have the flexibility to be linked with multiple authenticators, a setup maintained in the system's storage 
+and managed by the module's Keeper. The keeper is responsible for adding and removing 
+authenticators, as well as storing any user data that the authenticators may need. 
+
+This is where the association of specific authenticators with accounts is stored. 
+
+![Account Authenticator Configuration](/x/authenticator/images/keeper.jpg)
+
+One way of seeing this data is as the instantiation information necessary to use the authenticator for a specific 
+account. For example, a `SignatureVerificationAuthenticator` contains the code necessary to verify a signature, but
+it needs to know which public key to use when verifying it. An account can configure the 
+`SignatureVerificationAuthenticator` to be one of their authenticators and would need to provide the public key it wants 
+to use for verification in the configuration data.
+
+
+To make an authenticator work for a specific account, you just need to feed it the right information. For example, 
+the `SignatureVerificationAuthenticator` needs to know which public key to check when verifying a signature. 
+So, if you're setting this up for your account, you have to configure it with the public key you want as part of the 
+account-authenticator link.
+
+This is done by using the `MsgAddAuthenticator` message, which is covered in detail in a later section. When 
+authenticators are added to accounts, they should validate that the necessary data is available and correct in their
+`OnAuthenticatorAdded` function.
+
 
 ## Authenticator Interface
 
