@@ -2,13 +2,20 @@ package keeper_test
 
 import (
 	"bytes"
+	"encoding/hex"
+	"strconv"
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-
-	"github.com/cometbft/cometbft/crypto"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -19,8 +26,6 @@ import (
 )
 
 var (
-	//ValPubKeys = simapp.CreateTestPubKeys(5)
-
 	pubKeys = []crypto.PubKey{
 		secp256k1.GenPrivKey().PubKey(),
 		secp256k1.GenPrivKey().PubKey(),
@@ -50,11 +55,13 @@ var (
 
 	OracleDecPrecision = 8
 
-	faucetAccountName = "faucet"
+	faucetAccountName = tokenfactorytypes.ModuleName
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+
+	valPubKeys []cryptotypes.PubKey
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -66,9 +73,28 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Set the bond denom to be uosmo to make volume tracking tests more readable.
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	skParams.BondDenom = "uosmo"
+	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+
+	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs)*10))))
+	s.App.BankKeeper.MintCoins(s.Ctx, faucetAccountName, totalSupply)
+
+	s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs))))))
+
+	for _, addr := range Addrs {
+		s.App.AccountKeeper.SetAccount(s.Ctx, authtypes.NewBaseAccountWithAddress(addr))
+		err := s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, faucetAccountName, addr, InitCoins)
+		s.Require().NoError(err)
+	}
+
+	defaults := types.DefaultParams()
+	s.App.OracleKeeper.SetParams(s.Ctx, defaults)
+	for _, denom := range defaults.Whitelist {
+		s.App.OracleKeeper.SetTobinTax(s.Ctx, denom.Name, denom.TobinTax)
+	}
+
+	s.valPubKeys = CreateTestPubKeys(5)
 }
 
 // NewTestMsgCreateValidator test msg creator
@@ -91,6 +117,35 @@ func (s *KeeperTestSuite) FundAccount(addr sdk.AccAddress, amounts sdk.Coins) er
 	}
 
 	return s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, faucetAccountName, addr, amounts)
+}
+
+// CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
+func CreateTestPubKeys(numPubKeys int) []cryptotypes.PubKey {
+	var publicKeys []cryptotypes.PubKey
+	var buffer bytes.Buffer
+
+	// start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 100; i < (numPubKeys + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") // base pubkey string
+		buffer.WriteString(numString)                                                       // adding on final two digits to make pubkeys unique
+		publicKeys = append(publicKeys, NewPubKeyFromHex(buffer.String()))
+		buffer.Reset()
+	}
+
+	return publicKeys
+}
+
+// NewPubKeyFromHex returns a PubKey from a hex string.
+func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	if len(pkBytes) != ed25519.PubKeySize {
+		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
+	}
+	return &ed25519.PubKey{Key: pkBytes}
 }
 
 func (s *KeeperTestSuite) TestExchangeRate() {
@@ -391,44 +446,44 @@ func (s *KeeperTestSuite) TestTobinTaxGetSet() {
 	}
 }
 
-//func (s *KeeperTestSuite) TestValidateFeeder() {
-//	// initial setup
-//	addr, val := ValAddrs[0], ValPubKeys[0]
-//	addr1, val1 := ValAddrs[1], ValPubKeys[1]
-//	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-//	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
-//	ctx := s.Ctx
-//
-//	// Validator created
-//	_, err := stakingMsgSvr.CreateValidator(ctx, s.NewTestMsgCreateValidator(addr, val, amt))
-//	s.Require().NoError(err)
-//	_, err = stakingMsgSvr.CreateValidator(ctx, s.NewTestMsgCreateValidator(addr1, val1, amt))
-//	s.Require().NoError(err)
-//	staking.EndBlocker(ctx, s.App.StakingKeeper)
-//
-//	s.Require().Equal(
-//		s.App.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-//		sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
-//	)
-//	s.Require().Equal(amt, s.App.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
-//	s.Require().Equal(
-//		s.App.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr1)),
-//		sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
-//	)
-//	s.Require().Equal(amt, s.App.StakingKeeper.Validator(ctx, addr1).GetBondedTokens())
-//
-//	s.Require().NoError(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr), addr))
-//	s.Require().NoError(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr1), addr1))
-//
-//	// delegate works
-//	s.App.OracleKeeper.SetFeederDelegation(s.Ctx, addr, sdk.AccAddress(addr1))
-//	s.Require().NoError(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr1), addr))
-//	s.Require().Error(s.App.OracleKeeper.ValidateFeeder(s.Ctx, Addrs[2], addr))
-//
-//	// only active validators can do oracle votes
-//	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, addr)
-//	s.Require().True(found)
-//	validator.Status = stakingtypes.Unbonded
-//	s.App.StakingKeeper.SetValidator(s.Ctx, validator)
-//	s.Require().Error(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr1), addr))
-//}
+func (s *KeeperTestSuite) TestValidateFeeder() {
+	// initial setup
+	addr, val := ValAddrs[0], s.valPubKeys[0]
+	addr1, val1 := ValAddrs[1], s.valPubKeys[1]
+	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
+	ctx := s.Ctx
+
+	// Validator created
+	_, err := stakingMsgSvr.CreateValidator(ctx, s.NewTestMsgCreateValidator(addr, val, amt))
+	s.Require().NoError(err)
+	_, err = stakingMsgSvr.CreateValidator(ctx, s.NewTestMsgCreateValidator(addr1, val1, amt))
+	s.Require().NoError(err)
+	staking.EndBlocker(ctx, s.App.StakingKeeper)
+
+	s.Require().Equal(
+		s.App.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
+		sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
+	)
+	s.Require().Equal(amt, s.App.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
+	s.Require().Equal(
+		s.App.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr1)),
+		sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
+	)
+	s.Require().Equal(amt, s.App.StakingKeeper.Validator(ctx, addr1).GetBondedTokens())
+
+	s.Require().NoError(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr), addr))
+	s.Require().NoError(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr1), addr1))
+
+	// delegate works
+	s.App.OracleKeeper.SetFeederDelegation(s.Ctx, addr, sdk.AccAddress(addr1))
+	s.Require().NoError(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr1), addr))
+	s.Require().Error(s.App.OracleKeeper.ValidateFeeder(s.Ctx, Addrs[2], addr))
+
+	// only active validators can do oracle votes
+	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, addr)
+	s.Require().True(found)
+	validator.Status = stakingtypes.Unbonded
+	s.App.StakingKeeper.SetValidator(s.Ctx, validator)
+	s.Require().Error(s.App.OracleKeeper.ValidateFeeder(s.Ctx, sdk.AccAddress(addr1), addr))
+}
