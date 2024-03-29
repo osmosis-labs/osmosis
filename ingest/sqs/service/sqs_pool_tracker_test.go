@@ -34,6 +34,9 @@ func (s *SQSServiceTestSuite) TestPoolTracker_Track() {
 	// Track the concentrated pool
 	poolTracker.TrackConcentrated(concentratedPool)
 
+	// Track the same pool to ensure no duplicates
+	poolTracker.TrackConcentrated(concentratedPool)
+
 	// Get the concentrated pool
 	concentratedPools := poolTracker.GetConcentratedPools()
 	s.Require().Len(concentratedPools, 1)
@@ -57,6 +60,9 @@ func (s *SQSServiceTestSuite) TestPoolTracker_Track() {
 	// Track the stableswap pool
 	poolTracker.TrackCFMM(stableswapPool)
 
+	// Track the same pool to ensure no duplicates
+	poolTracker.TrackCFMM(stableswapPool)
+
 	// Get the CFMM pools
 	cfmmPools := poolTracker.GetCFMMPools()
 	s.Require().Len(cfmmPools, 2)
@@ -70,11 +76,17 @@ func (s *SQSServiceTestSuite) TestPoolTracker_Track() {
 	// Track the CosmWasm pool
 	poolTracker.TrackCosmWasm(cosmWasmPool)
 
+	// Track the same pool to ensure no duplicates
+	poolTracker.TrackCosmWasm(cosmWasmPool)
+
 	// Get the CosmWasm pools
 	cosmWasmPools := poolTracker.GetCosmWasmPools()
 	s.Require().Len(cosmWasmPools, 1)
 
 	// Track concentrated tick change
+	poolTracker.TrackConcentratedPoolIDTickChange(allPools.ConcentratedPoolID)
+
+	// Track the same tick change to ensure no duplicates
 	poolTracker.TrackConcentratedPoolIDTickChange(allPools.ConcentratedPoolID)
 
 	// Get concentrated tick change
