@@ -170,7 +170,7 @@ For **quarantining**, a queue is utilized instead of a map to allow sequential e
 
 Suppose transfers are stored in a map. In this case, when releasing assets from the **quarantining** vault, the only available figure is the total volume of transfers to addresses, as depicted in the following diagram:
 
-```
+```text
 Alice_destination_addr -> 9 + 7 + 3 = 19
 ...
 Bob_destination_addr   -> 1 + 2 = 3
@@ -179,7 +179,7 @@ Bob_destination_addr   -> 1 + 2 = 3
 
 Conversely, when using a queue, the same data might be represented as follows:
 
-```
+```text
 [
   {
     dest  : Alice_destination_addr
