@@ -36,6 +36,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service/writelistener"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -107,7 +115,6 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v24/ingest"
 	"github.com/osmosis-labs/osmosis/v24/x/mint"
 )
 
@@ -148,6 +155,9 @@ var (
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
+
+	// rpcAddressConfigName is the name of the config key that holds the RPC address.
+	rpcAddressConfigName = "rpc.laddr"
 )
 
 // OsmosisApp extends an ABCI application, but with most of its parameters exported.
@@ -269,9 +279,6 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
-	// Initialize the ingest manager for propagating data to external sinks.
-	app.IngestManager = ingest.NewIngestManager()
-
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
 	// Initialize the SQS ingester if it is enabled.
@@ -285,13 +292,32 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
+		// Initialize the SQS ingester.
 		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
 		if err != nil {
 			panic(err)
 		}
 
-		// Set the sidecar query server ingester to the ingest manager.
-		app.IngestManager.RegisterIngester(sqsIngester)
+		// Create pool tracker that tracks pool updates
+		// made by the write listenetrs.
+		poolTracker := service.NewPoolTracker()
+
+		// Create write listeners for the SQS service.
+		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
+
+		// Create the SQS streaming service by setting up the write listeners,
+		// the SQS ingester, and the pool tracker.
+		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
+
+		// Register the SQS streaming service with the app.
+		app.SetStreamingService(sqsStreamingService)
 	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
@@ -429,6 +455,22 @@ func NewOsmosisApp(
 	}
 
 	return app
+}
+
+// getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
+	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+
+	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
+		writelistener.NewConcentrated(blockPoolUpdateTracker),
+	}
+	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
+		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
+	}
+	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
+		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+	}
+	return writeListeners
 }
 
 // InitOsmosisAppForTestnet is broken down into two sections:
@@ -694,8 +736,6 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	// Process the block and ingest data into various sinks.
-	app.IngestManager.ProcessBlock(ctx)
 	return app.mm.EndBlock(ctx, req)
 }
 
