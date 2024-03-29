@@ -19,6 +19,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 var (
@@ -84,7 +85,7 @@ func (b *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Tra
 }
 
 // Returns current height of the Bitcoin chain
-func (b *ChainClient) Height() (uint64, error) {
+func (b *ChainClient) Height(context.Context) (uint64, error) {
 	height, err := b.btcRpc.GetBlockCount()
 	if err != nil {
 		return 0, errorsmod.Wrapf(ErrRpcClient, "Failed to get current height %s", err.Error())
@@ -93,7 +94,7 @@ func (b *ChainClient) Height() (uint64, error) {
 }
 
 // Returns number of required tx confirmations
-func (b *ChainClient) ConfirmationsRequired() (uint64, error) {
+func (b *ChainClient) ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error) {
 	return 0, nil
 }
 
