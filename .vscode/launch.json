@@ -334,16 +334,44 @@
             ],
         },
         {
-            "name": "ingest/sqs/pools/ingester/redis",
+            "name": "ingest/sqs/pools/ingester",
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/ingest/sqs/pools/ingester/redis",
+            "program": "${workspaceFolder}/ingest/sqs/pools/ingester",
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
                 "TestIngesterTestSuite/TestProcessBlock",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/service",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/service",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestSQSServiceTestSuite/TestProcessBlockRecoverError",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/service/writelistener",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/service/writelistener",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestWriteListenerTestSuite/TestWriteListener_GAMM",
                 "-test.v"
             ],
         },
