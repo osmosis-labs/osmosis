@@ -2,10 +2,51 @@
 
 ## General Explanation
 
-The `x/authenticators` module provides a robust and extensible framework for authenticating transactions.
+The `x/authenticator` module provides a robust and extensible framework for authenticating transactions.
 
 Unlike traditional authentication methods, this module allows you to use multiple types of authenticators,
 each with their own set of rules and conditions for transaction approval.
+
+## Architecture Overview
+
+The module is designed to be used as a replacement for the default Cosmos SDK authentication mechanism. This is 
+configured as an ante handler (executed before the transaction messages are processed). For safety, we have included
+a circuit breaker that allows the module to be disabled if necessary. Once the module is enabled, the user needs to 
+opt-in into using authenticators by selecting the authenticators it wants to use for each message. This is specified
+in the `selected_authenticators` field of the transaction extension. If selected_authenticators are not provided, the
+transaction defaults to the classic Cosmos SDK authentication method.
+
+The flow is as follows:
+
+![Circuit Breaker](/x/authenticator/images/circuit_breaker.jpg)
+
+After passing the circuit breaker, if the transaction uses authenticators, the flow becomes as follows:
+
+The authenticator ante handler iterates over each message in the transaction. For each message, the following steps occur:
+
+ * The message signer is selected as the "account" for this message. The authenticator for that account is selected based on the selected_authenticator provided in the tx
+    * Validation occurs to ensure that the selected authenticator is valid and that the account has the authenticator.
+ * The selected authenticator attempts to authenticate the message by calling its Authenticate() function. 
+   * If authentication fails, the process stops and the transaction is rejected. No changes to state are made.
+   * If authentication succeeds, closure is generated for the message.
+     * This closure remembers which authenticator was used and will be called later if the whole tx (all messages) are authenticated. 
+ * Fees for the transaction are collected
+
+ After all messages are authenticated successfully:
+
+ * The Call Track() on all messages step is executed, notifying the authenticators involved.
+ * If all track calls finish successfully, the changes are written to the data store.
+
+The process then executes all the authenticated messages. 
+
+After execution (in the post handler):
+
+ * For each message, an account and authenticator are selected again.
+ * The ConfirmExecution() function is called on the selected authenticator, allowing it to enforce post-execution rules.
+   * If ConfirmExecution() succeeds for all authenticators, the changes are written to the data store.
+   * If ConfirmExecution() fails for any authenticator, or if the "Execute All Messages" step fails, the changes are discarded.
+
+![Authenticator Flow](/x/authenticator/images/authentication_flow.jpg)
 
 ## Authenticator Interface
 
