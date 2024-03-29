@@ -39,7 +39,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CFMM() {
 		expectedPoolID uint64
 	}{
 		{
-			name: "random gamm write, no-op",
+			name: "gamm write unrelated to pool state, no-op",
 
 			key:   gammtypes.KeyNextGlobalPoolId,
 			value: someValue,

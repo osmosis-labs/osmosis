@@ -32,7 +32,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 		expectedPoolUpdate bool
 	}{
 		{
-			name: "random cosmwasm pool write, no-op",
+			name: "cosmwasm pool write unrelated to pool state, no-op",
 
 			key:   cosmwasmpooltypes.KeyCodeIdWhitelist,
 			value: someValue,
