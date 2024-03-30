@@ -359,7 +359,7 @@ func scaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmoma
 
 // scaleDownIncentiveAmount scales down the incentive amount by the scaling factor.
 func scaleDownIncentiveAmountNew(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
-	scaledDec := incentiveAmount.ToLegacyDec().Quo(scalingFactor)
+	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
 	scaledAmount = scaledDec.TruncateInt()
 	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())
 	return scaledAmount, truncatedDec
