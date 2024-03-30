@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 		expectedError                     bool
 	}
 
-	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor)
 	defaultPoolId := uint64(1)
 	defaultInitialLiquidity := osmomath.OneDec()
 
@@ -279,7 +279,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        2,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -290,7 +290,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          2,
 			currentTick:                        3,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -301,7 +301,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        0,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          2,
 			currentTick:                        0,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        1,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -339,7 +339,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        0,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -350,7 +350,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        1,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -361,7 +361,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        -1,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -372,7 +372,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        0,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
@@ -383,7 +383,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			upperTick:                          1,
 			currentTick:                        2,
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor),
 			globalSpreadRewardGrowth:           sdk.NewDecCoin(ETH, osmomath.NewInt(10)),
 			expectedSpreadRewardGrowthOutside:  defaultAccumCoins,
 			expectedError:                      false,
