@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -33,10 +34,10 @@ type ChainClient struct {
 	stopChan           chan struct{}
 	outboundChan       chan observer.Transfer
 	observeSleepPeriod time.Duration
-	lastObservedHeight uint64
+	lastObservedHeight atomic.Uint64
 }
 
-// NewChainClient returns new instance of `Bitcoin`
+// NewChainClient returns new instance of `ChainClient`
 func NewChainClient(
 	logger log.Logger,
 	btcRpc *rpcclient.Client,
@@ -47,16 +48,18 @@ func NewChainClient(
 	if len(vaultAddr) == 0 {
 		return nil, errorsmod.Wrapf(ErrInvalidCfg, "Invalid BTC vault address")
 	}
-
-	return &ChainClient{
+	c := &ChainClient{
 		logger:             logger.With("module", ModuleName),
 		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
 		stopChan:           make(chan struct{}),
 		outboundChan:       make(chan observer.Transfer),
 		observeSleepPeriod: observeSleepPeriod,
-		lastObservedHeight: lastObservedHeight,
-	}, nil
+		lastObservedHeight: atomic.Uint64{},
+	}
+	c.lastObservedHeight.Store(lastObservedHeight)
+
+	return c, nil
 }
 
 // Start starts observing Bitcoin blocks for outbound transfers
@@ -84,7 +87,7 @@ func (b *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Tra
 	return fmt.Errorf("Not implemented")
 }
 
-// Returns current height of the Bitcoin chain
+// Height returns current height of the Bitcoin chain
 func (b *ChainClient) Height(context.Context) (uint64, error) {
 	height, err := b.btcRpc.GetBlockCount()
 	if err != nil {
@@ -93,11 +96,12 @@ func (b *ChainClient) Height(context.Context) (uint64, error) {
 	return uint64(height), nil
 }
 
-// Returns number of required tx confirmations
+// ConfirmationsRequired returns number of required tx confirmations
 func (b *ChainClient) ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error) {
-	return 0, nil
+	return 0, fmt.Errorf("Not supported for the BTC chain")
 }
 
+// observeBlocks main loop for fetching new Bitcoin blocks
 func (b *ChainClient) observeBlocks() {
 	defer close(b.outboundChan)
 
@@ -112,7 +116,7 @@ func (b *ChainClient) observeBlocks() {
 				if !errors.Is(err, ErrBlockUnavailable) {
 					b.logger.Error(fmt.Sprintf(
 						"Failed to fetch block %d: %s",
-						b.lastObservedHeight+1,
+						b.lastObservedHeight.Load()+1,
 						err.Error(),
 					))
 				}
@@ -123,8 +127,9 @@ func (b *ChainClient) observeBlocks() {
 	}
 }
 
+// fetchNewBlock fetches new Bitcoin block and extracts relevant transactions
 func (b *ChainClient) fetchNewBlock() error {
-	nextHeight := b.lastObservedHeight + 1
+	nextHeight := b.lastObservedHeight.Load() + 1
 	hash, err := b.btcRpc.GetBlockHash(int64(nextHeight))
 	if err != nil {
 		if rpcErr, ok := err.(*btcjson.RPCError); ok && rpcErr.Code == btcjson.ErrRPCInvalidParameter {
@@ -152,10 +157,11 @@ func (b *ChainClient) fetchNewBlock() error {
 			}
 		}
 	}
-	b.lastObservedHeight += 1
+	b.lastObservedHeight.Add(1)
 	return nil
 }
 
+// processTx builds `Transfer` from provided Bitcoin transaction
 func (b *ChainClient) processTx(height uint64, tx *btcjson.TxRawResult) (observer.Transfer, bool, error) {
 	sender, err := b.getSender(tx)
 	if err != nil {
@@ -283,6 +289,7 @@ func (b *ChainClient) getMemo(tx *btcjson.TxRawResult) (string, error) {
 	return "", fmt.Errorf("Memo not found")
 }
 
+// getAddressesFromScriptPubKey extracts addresses from the Bitcoin script
 func (b *ChainClient) getAddressesFromScriptPubKey(key btcjson.ScriptPubKeyResult) ([]string, error) {
 	if len(key.Addresses) > 0 {
 		return key.Addresses, nil

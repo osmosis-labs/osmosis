@@ -25,6 +25,8 @@ import (
 
 var (
 	ModuleNameClient = "osmo-client"
+
+	IdxAssetNotFound = -1
 )
 
 type Client struct {
@@ -53,6 +55,8 @@ func NewClient(
 	return NewClientWithConnection(chainId, grpcConn, keyring), nil
 }
 
+// NewClientWithConnection returns new instance of `Client`
+// using provided gRPC connection
 func NewClientWithConnection(
 	chainId string,
 	conn *grpc.ClientConn,
@@ -149,19 +153,19 @@ func (c *Client) Account(ctx context.Context, addr sdk.AccAddress) (authtypes.Ba
 	return ba, nil
 }
 
+// ConfirmationsRequired returns the amount of confirmations required for the specified asset
 func (c *Client) ConfirmationsRequired(
 	ctx context.Context,
 	assetId bridgetypes.AssetID,
 ) (uint64, error) {
-	req := bridgetypes.QueryParamsRequest{}
-	params, err := c.bridgeClient.Params(ctx, &req)
+	params, err := c.bridgeClient.Params(ctx, new(bridgetypes.QueryParamsRequest))
 	if err != nil {
 		return 0, errorsmod.Wrapf(ErrQuery, "bridge/params: %s", err.Error())
 	}
 	idx := slices.IndexFunc(params.GetParams().Assets, func(a bridgetypes.Asset) bool {
 		return a.Id == assetId
 	})
-	if idx == -1 {
+	if idx == IdxAssetNotFound {
 		return 0, errorsmod.Wrapf(
 			ErrQuery,
 			"bridge/params: asset with id %s not found",
@@ -171,6 +175,8 @@ func (c *Client) ConfirmationsRequired(
 	return params.GetParams().Assets[idx].ExternalConfirmations, nil
 }
 
+// buildUnsigned creates unassigned transaction with provided message, fees and gas limit.
+// Initializes transaction signatures
 func (c *Client) buildUnsigned(
 	cpk types.PubKey,
 	accSeq uint64,
@@ -203,6 +209,7 @@ func (c *Client) buildUnsigned(
 	return txBuilder, nil
 }
 
+// sign signs transaction using client's keyring
 func (c *Client) sign(
 	txBuilder client.TxBuilder,
 	cpk types.PubKey,
@@ -253,6 +260,7 @@ func (c *Client) sign(
 	return txBytes, nil
 }
 
+// grpcConnection creates a gRPC connection with specified credentials
 func grpcConnection(url string, disableTls bool) (*grpc.ClientConn, error) {
 	var creds credentials.TransportCredentials
 	if disableTls {

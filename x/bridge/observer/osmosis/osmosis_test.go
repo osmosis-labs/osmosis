@@ -316,72 +316,58 @@ func TestListenOutboundTransfer(t *testing.T) {
 }
 
 func TestChainClientConfirmationsRequired(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	ots := NewOsmosisTestSuite(t, ctx)
-
-	expReq := &bridgetypes.QueryParamsRequest{}
-	expResp := &bridgetypes.QueryParamsResponse{
-		Params: bridgetypes.Params{
-			Assets: []bridgetypes.Asset{
-				{
-					Id: bridgetypes.AssetID{
-						SourceChain: string(observer.ChainIdBitcoin),
-						Denom:       string(observer.DenomBitcoin),
-					},
-					ExternalConfirmations: 5,
-				},
+	tests := []struct {
+		name        string
+		assetId     bridgetypes.AssetID
+		expectedErr error
+		expectedRes uint64
+	}{
+		{
+			"success",
+			bridgetypes.AssetID{
+				SourceChain: string(observer.ChainIdBitcoin),
+				Denom:       string(observer.DenomBitcoin),
 			},
+			nil,
+			5,
+		},
+		{
+			"invalid source chain",
+			bridgetypes.AssetID{
+				SourceChain: "na",
+				Denom:       string(observer.DenomBitcoin),
+			},
+			osmosis.ErrQuery,
+			0,
+		},
+		{
+			"invalid denom",
+			bridgetypes.AssetID{
+				SourceChain: string(observer.ChainIdBitcoin),
+				Denom:       "na",
+			},
+			osmosis.ErrQuery,
+			0,
 		},
 	}
-	ots.ts.BridgeServer.
-		EXPECT().
-		Params(gomock.Any(), expReq).
-		Times(1).
-		Return(expResp, nil)
-	ots.Start(t, ctx)
 
-	cr, err := ots.o.ConfirmationsRequired(ctx, bridgetypes.AssetID{
-		SourceChain: string(observer.ChainIdBitcoin),
-		Denom:       string(observer.DenomBitcoin),
-	})
-	require.NoError(t, err)
-	require.Equal(t, uint64(5), cr)
+	for _, tc := range tests {
+		func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			ots := NewOsmosisTestSuite(t, ctx)
+			defer ots.Stop(t, ctx)
 
-	ots.Stop(t, ctx)
-}
+			ots.ts.ExpectTestConfirmationsRequired()
+			ots.Start(t, ctx)
 
-func TestChainClientConfirmationsRequiredNotFound(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	ots := NewOsmosisTestSuite(t, ctx)
-
-	expReq := &bridgetypes.QueryParamsRequest{}
-	expResp := &bridgetypes.QueryParamsResponse{
-		Params: bridgetypes.Params{
-			Assets: []bridgetypes.Asset{
-				{
-					Id: bridgetypes.AssetID{
-						SourceChain: string(observer.ChainIdBitcoin),
-						Denom:       string(observer.DenomBitcoin),
-					},
-					ExternalConfirmations: 5,
-				},
-			},
-		},
+			cr, err := ots.o.ConfirmationsRequired(ctx, tc.assetId)
+			if tc.expectedErr == nil {
+				require.NoError(t, err, "test %s", tc.name)
+				require.Equal(t, tc.expectedRes, cr, "test %s", tc.name)
+			} else {
+				require.ErrorIs(t, tc.expectedErr, err, "test %s", tc.name)
+			}
+		}()
 	}
-	ots.ts.BridgeServer.
-		EXPECT().
-		Params(gomock.Any(), expReq).
-		Times(1).
-		Return(expResp, nil)
-	ots.Start(t, ctx)
-
-	_, err := ots.o.ConfirmationsRequired(ctx, bridgetypes.AssetID{
-		SourceChain: "na",
-		Denom:       "na",
-	})
-	require.ErrorIs(t, err, osmosis.ErrQuery)
-
-	ots.Stop(t, ctx)
 }

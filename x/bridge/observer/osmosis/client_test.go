@@ -76,6 +76,28 @@ func (ts *TestSuite) Dialer() func(context.Context, string) (net.Conn, error) {
 	}
 }
 
+func (ts *TestSuite) ExpectTestConfirmationsRequired() {
+	expReq := &bridgetypes.QueryParamsRequest{}
+	expResp := &bridgetypes.QueryParamsResponse{
+		Params: bridgetypes.Params{
+			Assets: []bridgetypes.Asset{
+				{
+					Id: bridgetypes.AssetID{
+						SourceChain: string(observer.ChainIdBitcoin),
+						Denom:       string(observer.DenomBitcoin),
+					},
+					ExternalConfirmations: 5,
+				},
+			},
+		},
+	}
+	ts.BridgeServer.
+		EXPECT().
+		Params(gomock.Any(), expReq).
+		Times(1).
+		Return(expResp, nil)
+}
+
 // TestAccountQuerySuccess verifies client properly sends account request
 // and receives account response
 func TestAccountQuerySuccess(t *testing.T) {
@@ -312,94 +334,71 @@ func TestBroadcastTxSuccess(t *testing.T) {
 }
 
 func TestConfirmationsRequiredSuccess(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	ts := NewTestSuite(t, ctx)
-	defer ts.Close(t)
-
-	expReq := &bridgetypes.QueryParamsRequest{}
-	expResp := &bridgetypes.QueryParamsResponse{
-		Params: bridgetypes.Params{
-			Assets: []bridgetypes.Asset{
-				{
-					Id: bridgetypes.AssetID{
-						SourceChain: string(observer.ChainIdBitcoin),
-						Denom:       string(observer.DenomBitcoin),
-					},
-					ExternalConfirmations: 5,
-				},
+	tests := []struct {
+		name        string
+		assetId     bridgetypes.AssetID
+		expectedErr error
+		expectedRes uint64
+	}{
+		{
+			"success",
+			bridgetypes.AssetID{
+				SourceChain: string(observer.ChainIdBitcoin),
+				Denom:       string(observer.DenomBitcoin),
 			},
+			nil,
+			5,
+		},
+		{
+			"invalid source chain",
+			bridgetypes.AssetID{
+				SourceChain: "na",
+				Denom:       string(observer.DenomBitcoin),
+			},
+			osmosis.ErrQuery,
+			0,
+		},
+		{
+			"invalid denom",
+			bridgetypes.AssetID{
+				SourceChain: string(observer.ChainIdBitcoin),
+				Denom:       "na",
+			},
+			osmosis.ErrQuery,
+			0,
 		},
 	}
-	ts.BridgeServer.
-		EXPECT().
-		Params(gomock.Any(), expReq).
-		Times(1).
-		Return(expResp, nil)
-	go ts.Start(t)
 
-	conn, err := grpc.DialContext(
-		ctx,
-		"test",
-		grpc.WithContextDialer(ts.Dialer()),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	require.NoError(t, err)
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
-	defer client.Close()
+	for _, tc := range tests {
+		func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			ts := NewTestSuite(t, ctx)
+			defer ts.Close(t)
 
-	cr, err := client.ConfirmationsRequired(ctx, bridgetypes.AssetID{
-		SourceChain: string(observer.ChainIdBitcoin),
-		Denom:       string(observer.DenomBitcoin),
-	})
-	require.NoError(t, err)
-	require.Equal(t, uint64(5), cr)
-}
+			ts.ExpectTestConfirmationsRequired()
+			go ts.Start(t)
 
-func TestConfirmationsRequiredNotFound(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	ts := NewTestSuite(t, ctx)
-	defer ts.Close(t)
+			conn, err := grpc.DialContext(
+				ctx,
+				"test",
+				grpc.WithContextDialer(ts.Dialer()),
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+			)
+			require.NoError(t, err)
+			keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+			client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+			defer client.Close()
 
-	expReq := &bridgetypes.QueryParamsRequest{}
-	expResp := &bridgetypes.QueryParamsResponse{
-		Params: bridgetypes.Params{
-			Assets: []bridgetypes.Asset{
-				{
-					Id: bridgetypes.AssetID{
-						SourceChain: string(observer.ChainIdBitcoin),
-						Denom:       string(observer.DenomBitcoin),
-					},
-					ExternalConfirmations: 5,
-				},
-			},
-		},
+			cr, err := client.ConfirmationsRequired(ctx, tc.assetId)
+			if tc.expectedErr == nil {
+				require.NoError(t, err, "test %s", tc.name)
+				require.Equal(t, tc.expectedRes, cr, "test %s", tc.name)
+			} else {
+				require.ErrorIs(t, tc.expectedErr, err, "test %s", tc.name)
+			}
+		}()
 	}
-	ts.BridgeServer.
-		EXPECT().
-		Params(gomock.Any(), expReq).
-		Times(1).
-		Return(expResp, nil)
-	go ts.Start(t)
-
-	conn, err := grpc.DialContext(
-		ctx,
-		"test",
-		grpc.WithContextDialer(ts.Dialer()),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	require.NoError(t, err)
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
-	defer client.Close()
-
-	_, err = client.ConfirmationsRequired(ctx, bridgetypes.AssetID{
-		SourceChain: "na",
-		Denom:       "na",
-	})
-	require.ErrorIs(t, err, osmosis.ErrQuery)
 }
 
 func buildAndSignTx(

@@ -148,10 +148,12 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 		var newQueue []TxQueueItem
 		for _, out := range queue {
 			confirmed, err := o.isTxConfirmed(ctx, height, &out)
-			if !confirmed || err != nil {
-				if err != nil {
-					o.logger.Error(fmt.Sprintf("Failed to confirm tx %s", err.Error()))
-				}
+			if err != nil {
+				o.logger.Error(fmt.Sprintf("Failed to confirm tx %s", err.Error()))
+				newQueue = append(newQueue, out)
+				continue
+			}
+			if !confirmed {
 				newQueue = append(newQueue, out)
 				continue
 			}
