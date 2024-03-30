@@ -488,7 +488,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		preInitializedTickIndex     = DefaultCurrTick - 2
 		expectedUptimes             = getExpectedUptimes()
 		emptyUptimeTrackers         = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		defaultAdditiveSpreadFactor = sdk.NewDecCoinFromDec(USDC, osmomath.NewDec(1000))
+		defaultAdditiveSpreadFactor = sdk.NewDecCoinFromDec(USDC, osmomath.NewDec(1000).MulTruncate(cl.PerUnitLiqScalingFactor))
 	)
 
 	tests := []struct {
@@ -687,7 +687,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 
 				// accum value should not have changed
-				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(osmomath.NewDec(2)))
+				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(osmomath.NewDec(2)).MulDecTruncate(cl.PerUnitLiqScalingFactor))
 
 				// check if the tick spread reward growth outside has been correctly subtracted
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
