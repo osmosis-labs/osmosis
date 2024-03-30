@@ -193,6 +193,8 @@ func (o *Observer) isTxConfirmed(
 	if curHeight < item.ConfirmationsRequired+item.Tx.Height {
 		return false, nil
 	}
+	// If the number of confirmations is reached, request the required number of confirmations again
+	// to check whether the bridge parameters were changed while transactions was being processed
 	cr, err := o.getConfirmationsRequired(ctx, item.Tx)
 	if err != nil {
 		return false, errorsmod.Wrapf(
