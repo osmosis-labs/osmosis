@@ -83,7 +83,7 @@ var (
 
 	positionCases = map[string]lpTest{
 		"base case": {
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -91,7 +91,7 @@ var (
 		},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
 			tickSpacing:                            10,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -103,7 +103,7 @@ var (
 			currentTick: DefaultUpperTick + 100,
 
 			preSetChargeSpreadRewards:              oneEth,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -115,7 +115,7 @@ var (
 			currentTick: DefaultUpperTick + 100,
 
 			preSetChargeSpreadRewards:              sdk.NewDecCoin(ETH, osmomath.ZeroInt()), // zero spread reward
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -127,7 +127,7 @@ var (
 			currentTick: DefaultLowerTick - 100,
 
 			preSetChargeSpreadRewards:              oneEth,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -139,7 +139,7 @@ var (
 			currentTick: DefaultUpperTick,
 
 			preSetChargeSpreadRewards:              oneEth,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -155,7 +155,7 @@ var (
 
 			liquidityAmount:                        baseCase.liquidityAmount.MulInt64(2),
 			preSetChargeSpreadRewards:              oneEth,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins.MulDecTruncate(cl.PerUnitLiqScalingFactor),
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
