@@ -885,7 +885,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			initialLiquidity: osmomath.OneDec(),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 
 			globalSpreadRewardGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 
@@ -895,13 +895,13 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 2,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"single swap left -> right: 3 ticks, two shares, current tick > upper tick": {
 			initialLiquidity: osmomath.NewDec(2),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 
 			globalSpreadRewardGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 
@@ -911,7 +911,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 3,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"single swap left -> right: 3 ticks, two shares, current tick in between lower and upper tick": {
 			initialLiquidity: osmomath.NewDec(2),
@@ -927,13 +927,13 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 1,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"single swap left -> right: 2 ticks, one share, current tick == upper tick": {
 			initialLiquidity: osmomath.OneDec(),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 
 			globalSpreadRewardGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 
@@ -943,7 +943,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 1,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"single swap right -> left: 2 ticks, one share, current tick == lower tick": {
 			initialLiquidity: osmomath.OneDec(),
@@ -960,12 +960,12 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 0,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"single swap right -> left: 2 ticks, one share, current tick < lower tick": {
 			initialLiquidity: osmomath.OneDec(),
 
-			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
 
 			globalSpreadRewardGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
@@ -976,7 +976,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: -1,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
 			initialLiquidity: osmomath.NewDec(2),
@@ -992,13 +992,13 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 1,
 
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 		},
 		"dust reinvested: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
 			initialLiquidity: osmomath.NewDec(2),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("3.3"))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("3.3").MulTruncate(cl.PerUnitLiqScalingFactor))),
 
 			globalSpreadRewardGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 
@@ -1009,7 +1009,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			currentTick: 1,
 
 			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
-			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("6.7"))),
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("6.7").MulTruncate(cl.PerUnitLiqScalingFactor))),
 			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
 			// This can be thought of as the difference between the non-truncated total amount of spread rewards and the truncated toal amount of spread rewards
 			// divided by the number of shares.
@@ -1053,7 +1053,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			initialLiquidity: osmomath.OneDec(),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
-			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
+			upperTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.NewDec(10).MulTruncate(cl.PerUnitLiqScalingFactor))),
 
 			globalSpreadRewardGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 
@@ -1118,7 +1118,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			s.Require().Equal(tc.expectedInitAccumValue, postPreparePosition.AccumValuePerShare)
 			s.Require().Equal(tc.initialLiquidity, postPreparePosition.NumShares)
 
-			expectedClaimedAmountDec := tc.expectedInitAccumValue.AmountOf(ETH).Mul(tc.initialLiquidity)
+			expectedClaimedAmountDec := tc.expectedInitAccumValue.AmountOf(ETH).QuoTruncate(cl.PerUnitLiqScalingFactor).Mul(tc.initialLiquidity)
 			expectedSpreadRewardClaimAmount := expectedClaimedAmountDec.TruncateInt()
 			s.Require().Equal(expectedSpreadRewardClaimAmount, actualSpreadRewardsClaimed.AmountOf(ETH))
 
