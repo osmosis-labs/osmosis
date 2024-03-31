@@ -1503,6 +1503,7 @@ var (
 
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
 
 			// token_out = Decimal("42000000")
 			// liq = Decimal("1517882343.751510417627556287")
@@ -1515,20 +1516,22 @@ var (
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
 			// spread_factor = token_in *  spread_factor / (1 - spread_factor)
+			// spread_factor = spread_factor.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_scaled = spread_factor * Decimal('1e27')
 
 			// # Summary:
 			// token_in = ceil(token_in + spread_factor)
-			// spread_rewards_growth = spread_factor / liq
+			// spread_rewards_growth_scaled = spread_factor_scaled / liq
 			// print(sqrt_next)
 			// print(token_in)
-			// print(spread_rewards_growth)
+			// print(spread_rewards_growth_scaled)
 			ExpectedTokenOut: sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 			ExpectedTokenIn:  sdk.NewCoin(ETH, osmomath.NewInt(8489)),
 			ExpectedTick:     30996087,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
 			ExpectedSqrtPrice:                          osmomath.MustNewBigDecFromStr("70.683007989825007163485199999996399373"),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000055925868851"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("55925868851654476246.917645850742390565"),
 		},
 		"spread factor 2: two positions within one tick: usdc (in) -> eth (out) (3% spread factor) | ofz": {
 			TokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(8398)),
@@ -1548,6 +1551,8 @@ var (
 
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// token_out = Decimal("8398")
 			// liq = Decimal("1517882343.751510417627556287") * 2
@@ -1557,10 +1562,12 @@ var (
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
 			// spread_factor = token_in *  spread_factor / (1 - spread_factor)
+			// spread_factor = spread_factor.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_scaled = spread_factor * Decimal('1e27')
 
 			// # Summary:
 			// token_in = ceil(token_in + spread_factor)
-			// spread_rewards_growth = spread_factor / liq
+			// spread_rewards_growth = spread_factor_scaled / liq
 			// print(sqrt_next)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1571,7 +1578,7 @@ var (
 			// two positions with same liquidity entered
 			PoolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
 			PoolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000427870415073442"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("427870415073442338014180.32170420345193389"),
 		},
 		"spread factor 3: two positions with consecutive price ranges: usdc (in) -> eth (out) (0.1% spread factor) | ofz": {
 			TokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820630)),
@@ -1591,6 +1598,8 @@ var (
 
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Range 1: From 5000 to 5500
 			// token_out = Decimal("1820630")
@@ -1604,6 +1613,8 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_next_1, sqrt_cur, False))
 			// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1 ))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
 
@@ -1615,10 +1626,12 @@ var (
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// # Summary:
 			// token_in = ceil(token_in_1 + spread_factor_1 + token_in_2 + spread_factor_2)
-			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2
+			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1630,7 +1643,7 @@ var (
 			ExpectedSecondUpperTickSpreadRewardGrowth: secondPosition{TickIndex: 322500, ExpectedSpreadRewardGrowth: cl.EmptyCoins},
 			NewLowerPrice: osmomath.NewDec(5500),
 			NewUpperPrice: osmomath.NewDec(6250),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.007433904623597252"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("7433904623597252460212880.27641850515039564"),
 		},
 		"spread factor 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) (10% spread factor) | zfo": {
 			TokenOut:                 sdk.NewCoin(USDC, osmomath.NewInt(9321276930)),
@@ -1650,6 +1663,8 @@ var (
 
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Swap step 1
 			// token_out = Decimal("9321276930")
@@ -1661,6 +1676,8 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
 
@@ -1672,6 +1689,8 @@ var (
 			// token_out_2 = round_sdk_prec_down(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
 			// token_in_2 = ceil(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// token_out = token_out - token_out_2
 
@@ -1681,11 +1700,13 @@ var (
 
 			// token_out_3 = round_sdk_prec_down(calc_amount_one_delta(liq_3, sqrt_next_2, sqrt_next_3, False))
 			// token_in_3 = ceil(calc_amount_zero_delta(liq_3, sqrt_next_2, sqrt_next_3, True))
-			// spread_factor_2 = token_in_3 *  spread_factor / (1 - spread_factor)
+			// spread_factor_3 = token_in_3 *  spread_factor / (1 - spread_factor)
+			// spread_factor_3 = spread_factor_3.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_3_scaled = spread_factor_3 * Decimal('1e27')
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2
-			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2
+			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2 + spread_factor_3_scaled / liq_3
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1702,7 +1723,7 @@ var (
 			ExpectedSecondUpperTickSpreadRewardGrowth: secondPosition{TickIndex: 309990, ExpectedSpreadRewardGrowth: cl.EmptyCoins},
 			NewLowerPrice: osmomath.NewDec(4000),
 			NewUpperPrice: osmomath.NewDec(4999),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000157793641388331"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("157793641388331454533614.802869152878314494"),
 		},
 		"spread factor 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) (5% spread factor) | ofz": {
 			TokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1609138)),
@@ -1722,6 +1743,8 @@ var (
 
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Swap step 1
 			// token_out = Decimal("1609138")
@@ -1733,6 +1756,8 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
 
@@ -1744,6 +1769,8 @@ var (
 			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
 			// token_in_2 = ceil(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// token_out = token_out - token_out_2
 
@@ -1753,11 +1780,13 @@ var (
 
 			// token_out_3 = round_sdk_prec_down(calc_amount_zero_delta(liq_3, sqrt_next_2, sqrt_next_3, False))
 			// token_in_3 = ceil(calc_amount_one_delta(liq_3, sqrt_next_2, sqrt_next_3, True))
-			// spread_factor_2 = token_in_3 *  spread_factor / (1 - spread_factor)
+			// spread_factor_3 = token_in_3 *  spread_factor / (1 - spread_factor)
+			// spread_factor_3 = spread_factor_3.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_3_scaled = spread_factor_3 * Decimal('1e27')
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2
-			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2
+			// token_in = token_in_1 + token_in_2 + token_in_3
+			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2 + spread_factor_3_scaled / liq_3
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1770,7 +1799,7 @@ var (
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("75.582372355128594342857800328292876450"),
 			NewLowerPrice:     osmomath.NewDec(5001),
 			NewUpperPrice:     osmomath.NewDec(6250),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.256404959888119530"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("256404959888119530163422038.415954429508837832"),
 		},
 		"spread factor 6: two sequential positions with a gap usdc (in) -> eth (out) (0.03% spread factor) | ofz": {
 			TokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
@@ -1790,6 +1819,8 @@ var (
 
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Swap step 1
 			// token_out = Decimal("1820545")
@@ -1801,6 +1832,8 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
 
@@ -1810,12 +1843,14 @@ var (
 			// sqrt_next_2 = get_next_sqrt_price_from_amount0_out_round_up(liq_2, sqrt_cur_2, token_out)
 
 			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
-			// token_in_2 = ceil(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
+			// token_in_2 = ceil(calc_amount_one_delta(liq_2, sqrt_cur_2 , sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2
-			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2
+			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1828,7 +1863,7 @@ var (
 			ExpectedSecondUpperTickSpreadRewardGrowth: secondPosition{TickIndex: 322500, ExpectedSpreadRewardGrowth: cl.EmptyCoins},
 			NewLowerPrice: osmomath.NewDec(5501),
 			NewUpperPrice: osmomath.NewDec(6250),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.002226857353494143"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("2226857353494143130089064.680147903217161305"),
 		},
 		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% spread factor) | ofz": {
 			TokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
@@ -1837,6 +1872,11 @@ var (
 			SpreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
+
 			// # Range 1: From 5000 to 5002
 			// token_out = Decimal("1820545")
 			// liq_1 = Decimal("1517882343.751510417627556287")
@@ -1847,10 +1887,12 @@ var (
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// # Summary:
 			// token_in = ceil(token_in_1 + spread_factor_1)
-			// spread_rewards_growth = spread_factor_1 / liq_1
+			// spread_rewards_growth = spread_factor_1_scaled / liq_1
 			// print(sqrt_next_1)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1858,7 +1900,7 @@ var (
 			ExpectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(21680760)),
 			ExpectedTick:      31002000,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724818840347693040"),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000142835574082604"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("142835574082604331121776.718730744794622639"),
 		},
 	}
 
