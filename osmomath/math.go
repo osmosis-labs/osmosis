@@ -8,7 +8,7 @@ import (
 // TODO: Analyze choice here.
 var powPrecision, _ = NewDecFromStr("0.00000001")
 
-const powIterationLimit = 150_000
+const powIterationLimit = 100_000
 
 var (
 	one_half Dec = MustNewDecFromStr("0.5")
