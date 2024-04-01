@@ -36,8 +36,11 @@ import (
 )
 
 var (
-	BtcAddr = "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ"
+	BtcAddr              = "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ"
+	OsmosisValidatorAddr = "osmo1ajaeadkj8u4wgw3sfm8szu8hl992nngaex40fs"
 )
+
+var _ observer.Client = new(MockChain)
 
 type MockChain struct {
 	H  uint64
@@ -56,11 +59,11 @@ func (m *MockChain) Start(context.Context) error { return nil }
 
 func (m *MockChain) Stop(context.Context) error { return nil }
 
-func (m *MockChain) Height() (uint64, error) {
+func (m *MockChain) Height(context.Context) (uint64, error) {
 	return m.H, nil
 }
 
-func (m *MockChain) ConfirmationsRequired() (uint64, error) {
+func (m *MockChain) ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error) {
 	return m.CR, nil
 }
 
@@ -71,7 +74,7 @@ type OsmosisTestSuite struct {
 }
 
 func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
-	ts := NewTestSuite(t, ctx)
+	ts := NewTestSuite(t)
 
 	s := httptest.NewServer(http.HandlerFunc(success(t)))
 	cometRpc, err := rpchttp.New(s.URL, "/websocket")
@@ -84,8 +87,8 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err)
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err = keyring.NewAccount(
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	_, err = kr.NewAccount(
 		osmosis.ModuleNameClient,
 		Mnemonic1,
 		"",
@@ -93,12 +96,13 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		hd.Secp256k1,
 	)
 	require.NoError(t, err)
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	client := osmosis.NewClientWithConnection(ChainId, conn, kr, app.GetEncodingConfig().TxConfig)
 
 	o := osmosis.NewChainClient(
 		log.NewNopLogger(),
-		&client,
+		client,
 		cometRpc,
+		OsmosisValidatorAddr,
 	)
 	require.NoError(t, err)
 
@@ -107,11 +111,13 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 
 func (ots *OsmosisTestSuite) Start(t *testing.T, ctx context.Context) {
 	go ots.ts.Start(t)
-	ots.o.Start(ctx)
+	err := ots.o.Start(ctx)
+	require.NoError(t, err)
 }
 
 func (ots *OsmosisTestSuite) Stop(t *testing.T, ctx context.Context) {
-	ots.o.Stop(ctx)
+	err := ots.o.Stop(ctx)
+	require.NoError(t, err)
 	ots.hs.Close()
 	ots.ts.Close(t)
 }
@@ -192,8 +198,8 @@ func TestSignalInboundTransfer(t *testing.T) {
 		Times(1).
 		Return(expResp1, nil)
 
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err = keyring.NewAccount(
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	_, err = kr.NewAccount(
 		osmosis.ModuleNameClient,
 		Mnemonic1,
 		"",
@@ -214,7 +220,7 @@ func TestSignalInboundTransfer(t *testing.T) {
 	}
 	msg := bridgetypes.NewMsgInboundTransfer(
 		in.Id,
-		in.Sender,
+		OsmosisValidatorAddr, // NB! validator sends a message!
 		in.To,
 		bridgetypes.AssetID{
 			SourceChain: string(in.SrcChain),
@@ -225,7 +231,7 @@ func TestSignalInboundTransfer(t *testing.T) {
 	fees := sdktypes.NewCoins(sdktypes.NewCoin(osmosis.OsmoFeeDenom, osmosis.OsmoFeeAmount))
 	expBytes := buildAndSignTx(
 		t,
-		keyring,
+		kr,
 		expectedAcc.AccountNumber,
 		expectedAcc.Sequence,
 		msg,

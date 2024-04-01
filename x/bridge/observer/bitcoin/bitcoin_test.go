@@ -93,13 +93,15 @@ func TestListenOutboundTransfer(t *testing.T) {
 		BtcVault,
 		time.Second,
 		initialHeight,
+		chaincfg.TestNet3Params,
 	)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	b.Start(ctx)
+	err = b.Start(ctx)
+	require.NoError(t, err)
 
 	// We expect Observer to observe 1 block with 2 Txs
 	// Only 1 Tx is sent to our vault address,
@@ -116,7 +118,7 @@ func TestListenOutboundTransfer(t *testing.T) {
 		DstChain: observer.ChainIdOsmosis,
 		Id:       "ef4cd511c64834bde624000b94110c9f184388566a97d68d355339294a72dadf",
 		Height:   initialHeight,
-		Sender:   "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
+		Sender:   "", // the sender is set in the osmosis chain client
 		To:       "osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
 		Asset:    string(observer.DenomBitcoin),
 		Amount:   math.NewUint(10000),
@@ -124,7 +126,8 @@ func TestListenOutboundTransfer(t *testing.T) {
 	require.Equal(t, expOut, out)
 	require.Equal(t, 0, len(txs))
 
-	b.Stop(ctx)
+	err = b.Stop(ctx)
+	require.NoError(t, err)
 }
 
 func TestInvalidVaultAddress(t *testing.T) {
@@ -134,6 +137,7 @@ func TestInvalidVaultAddress(t *testing.T) {
 		"",
 		time.Second,
 		0,
+		chaincfg.TestNet3Params,
 	)
 	require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
 }

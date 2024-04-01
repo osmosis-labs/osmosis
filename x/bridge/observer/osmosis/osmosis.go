@@ -33,6 +33,7 @@ type ChainClient struct {
 	stopChan           chan struct{}
 	outboundChan       chan observer.Transfer
 	lastObservedHeight atomic.Uint64
+	signerAddr         string // TODO: validate this address (probably using a private key)! otherwise everyone could act on behalf of the validator
 }
 
 // NewChainClient returns new instance of `Osmosis`
@@ -40,6 +41,7 @@ func NewChainClient(
 	logger log.Logger,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
+	signerAddr string,
 ) *ChainClient {
 	return &ChainClient{
 		logger:             logger.With("module", ModuleName),
@@ -48,6 +50,7 @@ func NewChainClient(
 		stopChan:           make(chan struct{}),
 		outboundChan:       make(chan observer.Transfer),
 		lastObservedHeight: atomic.Uint64{},
+		signerAddr:         signerAddr,
 	}
 }
 
@@ -65,6 +68,7 @@ func (o *ChainClient) Start(ctx context.Context) error {
 
 	go o.observeEvents(ctx, txs)
 
+	o.logger.Info("Started Osmosis chain client")
 	return nil
 }
 
@@ -75,7 +79,14 @@ func (o *ChainClient) Stop(ctx context.Context) error {
 	if err := o.cometRpc.UnsubscribeAll(ctx, ModuleName); err != nil {
 		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
 	}
-	return o.cometRpc.Stop()
+
+	err := o.cometRpc.Stop()
+	if err != nil {
+		return errorsmod.Wrapf(err, "Failed to stop comet RPC")
+	}
+
+	o.logger.Info("Stopped Osmosis chain client")
+	return nil
 }
 
 // ListenOutboundTransfer returns receive-only channel with `OutboundTransfer` items
@@ -87,7 +98,7 @@ func (o *ChainClient) ListenOutboundTransfer() <-chan observer.Transfer {
 func (o *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Transfer) error {
 	msg := bridgetypes.NewMsgInboundTransfer(
 		in.Id,
-		in.Sender,
+		o.signerAddr, // NB! a current node should be a sender!
 		in.To,
 		bridgetypes.AssetID{
 			SourceChain: string(in.SrcChain),
@@ -196,12 +207,12 @@ func outboundTransferFromEvent(height uint64, hash string, e abci.Event) (observ
 	}, nil
 }
 
-// Returns current height of the chain
+// Height returns current height of the chain
 func (o *ChainClient) Height(context.Context) (uint64, error) {
 	return o.lastObservedHeight.Load(), nil
 }
 
-// Returns number of required tx confirmations
+// ConfirmationsRequired returns number of required tx confirmations
 func (o *ChainClient) ConfirmationsRequired(
 	ctx context.Context,
 	id bridgetypes.AssetID,

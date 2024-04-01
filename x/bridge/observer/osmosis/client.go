@@ -19,15 +19,10 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
-var (
-	ModuleNameClient = "osmo-client"
-
-	IdxAssetNotFound = -1
-)
+var ModuleNameClient = "osmo-client"
 
 type Client struct {
 	chainId      string
@@ -46,13 +41,14 @@ func NewClient(
 	rpcUrl string,
 	disableTls bool,
 	keyring keyring.Keyring,
-) (Client, error) {
+	txConfig client.TxConfig,
+) (*Client, error) {
 	grpcConn, err := grpcConnection(rpcUrl, disableTls)
 	if err != nil {
-		return Client{}, errorsmod.Wrapf(ErrGrpcConnection, err.Error())
+		return &Client{}, errorsmod.Wrapf(ErrGrpcConnection, err.Error())
 	}
 
-	return NewClientWithConnection(chainId, grpcConn, keyring), nil
+	return NewClientWithConnection(chainId, grpcConn, keyring, txConfig), nil
 }
 
 // NewClientWithConnection returns new instance of `Client`
@@ -61,12 +57,13 @@ func NewClientWithConnection(
 	chainId string,
 	conn *grpc.ClientConn,
 	keyring keyring.Keyring,
-) Client {
-	return Client{
+	txConfig client.TxConfig,
+) *Client {
+	return &Client{
 		chainId:      chainId,
 		keyring:      keyring,
 		grpcConn:     conn,
-		txConfig:     app.GetEncodingConfig().TxConfig,
+		txConfig:     txConfig,
 		txClient:     tx.NewServiceClient(conn),
 		accClient:    authtypes.NewQueryClient(conn),
 		bridgeClient: bridgetypes.NewQueryClient(conn),
@@ -75,7 +72,7 @@ func NewClientWithConnection(
 
 // Close closes client's GRPC connections
 func (c *Client) Close() {
-	c.grpcConn.Close()
+	_ = c.grpcConn.Close()
 }
 
 // SignTx signs provided message with internal keyring
@@ -165,7 +162,8 @@ func (c *Client) ConfirmationsRequired(
 	idx := slices.IndexFunc(params.GetParams().Assets, func(a bridgetypes.Asset) bool {
 		return a.Id == assetId
 	})
-	if idx == IdxAssetNotFound {
+	const idxNotFound = -1
+	if idx == idxNotFound {
 		return 0, errorsmod.Wrapf(
 			ErrQuery,
 			"bridge/params: asset with id %s not found",
