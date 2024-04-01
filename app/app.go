@@ -387,10 +387,7 @@ func NewOsmosisApp(
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
-	reflectionSvc, err := runtimeservices.NewReflectionService()
-	if err != nil {
-		panic(err)
-	}
+	reflectionSvc := getReflectionService()
 	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	app.sm.RegisterStoreDecoders()
@@ -471,6 +468,21 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
 	}
 	return writeListeners
+}
+
+// we cache the reflectionService to save us time within tests.
+var cachedReflectionService *runtimeservices.ReflectionService = nil
+
+func getReflectionService() *runtimeservices.ReflectionService {
+	if cachedReflectionService != nil {
+		return cachedReflectionService
+	}
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	cachedReflectionService = reflectionSvc
+	return reflectionSvc
 }
 
 // InitOsmosisAppForTestnet is broken down into two sections:
