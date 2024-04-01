@@ -683,6 +683,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 		snapshot.Cmd(newApp),
 		pruning.Cmd(newApp, osmosis.DefaultNodeHome),
+		StartObserverCmd(),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
