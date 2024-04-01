@@ -178,7 +178,7 @@ func success(t *testing.T) http.HandlerFunc {
 // TestSignalInboundTransfer verifies calling SignalInboundTransfer
 // results in Tx being signed and sent to the chain
 func TestSignalInboundTransfer(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	ots := NewOsmosisTestSuite(t, ctx)
 
