@@ -3,6 +3,7 @@ package v24
 import (
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -19,6 +20,8 @@ var Upgrade = upgrades.Upgrade{
 		Deleted: []string{},
 	},
 }
+
+var WhitelistedFeeTokenSetters = []string{"osmo17eqe9dpglajwd48r65lasq3mftra5q4uxce525htyvjdp0q037vqpurhve"}
 
 var FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{
 	// token0 ibc/E7905742CE2EA4EA5D592527DC89220C59B617DE803939FE7293805A64B484D7

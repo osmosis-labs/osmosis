@@ -256,6 +256,14 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Test that the white whale pools have been updated
 	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+
+	// TXFEES Tests
+	//
+
+	// Check that the whitelisted fee token address has been set
+	whitelistedFeeTokenSetters := s.App.TxFeesKeeper.GetParams(s.Ctx).WhitelistedFeeTokenSetters
+	s.Require().Len(whitelistedFeeTokenSetters, 1)
+	s.Require().Equal(whitelistedFeeTokenSetters, v24.WhitelistedFeeTokenSetters)
 }
 
 func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {

@@ -9,6 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	osmoutils "github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
@@ -185,4 +187,18 @@ func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) error 
 		}
 	}
 	return nil
+}
+
+// SenderValidationSetFeeTokens first checks to see if the sender is whitelisted to set fee tokens.
+// If the sender is whitelisted, it sets the fee tokens.
+// If the sender is not whitelisted, it returns an error.
+func (k Keeper) SenderValidationSetFeeTokens(ctx sdk.Context, sender string, feetokens []types.FeeToken) error {
+	whitelistedAddresses := k.GetParams(ctx).WhitelistedFeeTokenSetters
+
+	isWhitelisted := osmoutils.Contains(whitelistedAddresses, sender)
+	if !isWhitelisted {
+		return errorsmod.Wrapf(types.ErrNotWhitelistedFeeTokenSetter, "%s", sender)
+	}
+
+	return k.SetFeeTokens(ctx, feetokens)
 }

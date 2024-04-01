@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
@@ -25,6 +26,8 @@ type Keeper struct {
 	distributionKeeper types.DistributionKeeper
 	consensusKeeper    types.ConsensusKeeper
 	dataDir            string
+
+	paramSpace paramtypes.Subspace
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
@@ -38,7 +41,13 @@ func NewKeeper(
 	distributionKeeper types.DistributionKeeper,
 	consensusKeeper types.ConsensusKeeper,
 	dataDir string,
+	paramSpace paramtypes.Subspace,
 ) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		accountKeeper:      accountKeeper,
 		bankKeeper:         bankKeeper,
@@ -48,7 +57,24 @@ func NewKeeper(
 		distributionKeeper: distributionKeeper,
 		consensusKeeper:    consensusKeeper,
 		dataDir:            dataDir,
+		paramSpace:         paramSpace,
 	}
+}
+
+// GetParams returns the total set of txfees parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+	k.paramSpace.GetParamSet(ctx, &params)
+	return params
+}
+
+// SetParams sets the total set of txfees parameters.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+// SetParam sets a specific txfees module's parameter with the provided parameter.
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+	k.paramSpace.Set(ctx, key, value)
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

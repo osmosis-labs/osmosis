@@ -14,6 +14,7 @@ import (
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 const (
@@ -98,6 +99,8 @@ func CreateUpgradeHandler(
 			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
 		}
 
+		// Set whitelistedFeeTokenSetters param as per https://forum.osmosis.zone/t/temperature-check-add-a-permissioned-address-to-manage-the-fee-token-whitelist/2604
+		keepers.TxFeesKeeper.SetParam(ctx, txfeestypes.KeyWhitelistedFeeTokenSetters, WhitelistedFeeTokenSetters)
 		return migrations, nil
 	}
 }
