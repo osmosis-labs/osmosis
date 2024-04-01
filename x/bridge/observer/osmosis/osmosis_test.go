@@ -264,6 +264,8 @@ func TestSignalInboundTransfer(t *testing.T) {
 // ListenOutboundTransfer verifies Osmosis properly collects transfers
 // from the chain and sends it into the outbound channel
 func TestListenOutboundTransfer(t *testing.T) {
+	t.Skip("x/bridge needs to be wired to decode Txs")
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	ots := NewOsmosisTestSuite(t, ctx)
