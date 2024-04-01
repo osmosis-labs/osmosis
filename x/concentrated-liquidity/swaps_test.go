@@ -734,35 +734,86 @@ var (
 		//          5000
 		//  4545 -----|----- 5500
 		"spread factor 1 - single position within one tick: usdc -> eth (1% spread factor)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			TokenIn:           sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
-			TokenOutDenom:     "eth",
-			PriceLimit:        osmomath.NewBigDec(5004),
-			SpreadFactor:      osmomath.MustNewDecFromStr("0.01"),
+			TokenIn:       sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
+			TokenOutDenom: "eth",
+			PriceLimit:    osmomath.NewBigDec(5004),
+			SpreadFactor:  osmomath.MustNewDecFromStr("0.01"),
+			// from math import *
+			// from decimal import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("42000000")
+			// spread_factor = Decimal("0.01")
+
+			// # Swap step 1
+			// liq = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// token_in_after_fee = token_in * (1 - spread_factor)
+			// sqrt_next = get_next_sqrt_price_from_amount1_in_round_down(liq, sqrt_cur, token_in_after_fee)
+			// token_out = round_sdk_prec_down(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next, False))
+			// token_in_after_fee = ceil(calc_amount_one_delta(liq, sqrt_cur, sqrt_next, True))
+			// fee_charge_total = token_in - token_in_after_fee
+			// fee_charge_total = fee_charge_total.quantize(eighteen_decimal_precision, ROUND_UP)
+			// fee_charged_total_scaled = fee_charge_total * Decimal('1e27')
+			// fee_amount_per_share = fee_charged_total_scaled / liq
+
+			// print(sqrt_next)
+			// print(token_in)
+			// print(token_out)
+			// print(fee_amount_per_share)
 			ExpectedTokenIn:   sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
 			ExpectedTokenOut:  sdk.NewCoin("eth", osmomath.NewInt(8312)),
 			ExpectedTick:      31003800,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.738071546196200264"),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000276701288297452"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("276701288297452775148000.000036006261209414"),
 		},
 		//          5000
 		//  4545 -----|----- 5500
 		//  4545 -----|----- 5500
 		"spread factor 2 - two positions within one tick: eth -> usdc (3% spread factor) ": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			TokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			TokenOutDenom:            "usdc",
 			PriceLimit:               osmomath.NewBigDec(4990),
 			SpreadFactor:             osmomath.MustNewDecFromStr("0.03"),
 			SecondPositionLowerPrice: DefaultLowerPrice,
 			SecondPositionUpperPrice: DefaultUpperPrice,
-			ExpectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(13370)),
-			ExpectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(64824917)),
-			ExpectedTick:             30996900,
-			ExpectedSqrtPrice:        osmomath.MustNewBigDecFromStr("70.689324382628080102"),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000132091924532"),
+			// from math import *
+			// from decimal import *
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("13370")
+			// spread_factor = Decimal("0.03")
+
+			// # Swap step 1
+			// liq = 2 * Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// token_in_after_fee = token_in * (1 - spread_factor)
+			// sqrt_next = get_next_sqrt_price_from_amount0_in_round_up(liq, sqrt_cur, token_in_after_fee)
+			// token_in_after_fee = ceil(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next, True))
+			// token_out = floor(liq * abs(sqrt_cur - sqrt_next))
+			// fee_charge_total = token_in - token_in_after_fee
+			// fee_charge_total = fee_charge_total.quantize(eighteen_decimal_precision, ROUND_UP)
+			// fee_charged_total_scaled = fee_charge_total * Decimal('1e27')
+			// fee_amount_per_share = fee_charged_total_scaled / liq
+
+			// print(sqrt_next)
+			// print(token_in)
+			// print(token_out)
+			// print(fee_amount_per_share)
+			ExpectedTokenIn:   sdk.NewCoin("eth", osmomath.NewInt(13370)),
+			ExpectedTokenOut:  sdk.NewCoin("usdc", osmomath.NewInt(64824917)),
+			ExpectedTick:      30996900,
+			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.689324382628080102"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("132091924532474479564.700000017188703267"),
 			// two positions with same liquidity entered
 			PoolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
 			PoolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
@@ -771,17 +822,56 @@ var (
 		//  		   4545 -----|----- 5500
 		//  4000 ----------- 4545
 		"spread factor 3 - two positions with consecutive price ranges: eth -> usdc (5% spread factor)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			TokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(2000000)),
 			TokenOutDenom:            "usdc",
 			PriceLimit:               osmomath.NewBigDec(4094),
 			SpreadFactor:             osmomath.MustNewDecFromStr("0.05"),
 			SecondPositionLowerPrice: osmomath.NewDec(4000),
 			SecondPositionUpperPrice: osmomath.NewDec(4545),
-			ExpectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(2000000)),
-			ExpectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(8691708221)),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000073738597832046"),
+			// from math import *
+			// from decimal import *
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("2000000")
+			// spread_factor = Decimal("0.05")
+
+			// # Swap step 1
+			// liq = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// sqrt_next_1 = Decimal("67.416615162732695594")
+			// token_out = round_sdk_prec_down(calc_amount_one_delta(liq, sqrt_cur, sqrt_next_1, False))
+			// expected_token_in_before_fee = ceil(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next_1, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share = expected_fee_scaled / liq
+			// token_in = token_in - expected_token_in
+
+			// # Swap step 2
+			// token_in_remaining_after_fee = token_in * (1 - spread_factor)
+			// liq_2 = Decimal("1198735489.597250295669959397")
+			// sqrt_next_2 = get_next_sqrt_price_from_amount0_in_round_up(liq_2, sqrt_next_1, token_in_remaining_after_fee)
+			// token_out = token_out + round_sdk_prec_down(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
+			// token_in_after_fee_rounded_up = ceil(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
+			// fee_charge_total = token_in - token_in_after_fee_rounded_up
+			// fee_charge_total_scaled = fee_charge_total * Decimal('1e27')
+			// fee_amount_per_share_2 = fee_charge_total_scaled / liq_2
+
+			// print(sqrt_next_2)
+			// print(token_in)
+			// print(token_out)
+			// print(fee_amount_per_share + fee_amount_per_share_2)
+			ExpectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(2000000)),
+			ExpectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(8691708221)),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("73738597832046531511028.986577438713850755"),
 			ExpectedTick:      30139200,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("64.336946417392457832"),
 			NewLowerPrice:     osmomath.NewDec(4000),
@@ -791,17 +881,70 @@ var (
 		//  4545 -----|----- 5500
 		//  	  5001 ----------- 6250
 		"spread factor 4 - two positions with partially overlapping price ranges: usdc -> eth (10% spread factor)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			TokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			TokenOutDenom:            "eth",
 			PriceLimit:               osmomath.NewBigDec(6056),
 			SpreadFactor:             osmomath.MustNewDecFromStr("0.1"),
 			SecondPositionLowerPrice: osmomath.NewDec(5001),
 			SecondPositionUpperPrice: osmomath.NewDec(6250),
-			ExpectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
-			ExpectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1695807)),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.624166726347032857"),
+			// from math import *
+			// from decimal import *
+
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("10000000000")
+			// spread_factor = Decimal("0.1")
+
+			// # Swap step 1
+			// liq = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// sqrt_next_1 = Decimal("70.717748832948578243")
+			// token_out = round_sdk_prec_down(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next_1, False))
+			// expected_token_in_before_fee = ceil(calc_amount_one_delta(liq, sqrt_cur, sqrt_next_1, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in_1 = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share = expected_fee_scaled / liq
+			// token_in = token_in - expected_token_in_1
+
+			// # Swap step 2
+			// liq_2 = liq + Decimal("670416088.605668727039240782")
+			// sqrt_next_2 = Decimal("74.161984870956629487")
+			// token_out = token_out + round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
+			// expected_token_in_before_fee = ceil(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in_2 = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share_2 = expected_fee_scaled / liq_2
+			// token_in = token_in - expected_token_in_2
+
+			// # Swap step 3
+			// token_in_remaining_after_fee = token_in * (1 - spread_factor)
+			// liq_3 = Decimal("670416088.605668727039240782")
+			// sqrt_next_3 = get_next_sqrt_price_from_amount1_in_round_down(liq_3, sqrt_next_2, token_in_remaining_after_fee)
+			// token_out = token_out + round_sdk_prec_down(calc_amount_zero_delta(liq_3, sqrt_next_2, sqrt_next_3, False))
+			// token_in_after_fee_rounded_up = ceil(calc_amount_one_delta(liq_3, sqrt_next_2, sqrt_next_3, True))
+			// fee_charge_total = token_in - token_in_after_fee_rounded_up
+			// expected_token_in_3 = token_in_remaining_after_fee + fee_charge_total
+			// fee_charge_total_scaled = fee_charge_total * Decimal('1e27')
+			// fee_amount_per_share_3 = fee_charge_total_scaled / liq_3
+
+			// print(sqrt_next_3)
+			// print(expected_token_in_1 + expected_token_in_2 + expected_token_in_3)
+			// print(token_out)
+			// print(fee_amount_per_share + fee_amount_per_share_2 + fee_amount_per_share_3)
+			ExpectedTokenIn:  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			ExpectedTokenOut: sdk.NewCoin("eth", osmomath.NewInt(1695807)),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("624166726347032858859872177.022718036187588520"),
 			ExpectedTick:      31825900,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("76.328178655208424124"),
 			NewLowerPrice:     osmomath.NewDec(5001),
@@ -811,17 +954,71 @@ var (
 		//  		4545 -----|----- 5500
 		// 4000 ----------- 4999
 		"spread factor 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% spread factor)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			TokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(1800000)),
 			TokenOutDenom:            "usdc",
 			PriceLimit:               osmomath.NewBigDec(4128),
 			SpreadFactor:             osmomath.MustNewDecFromStr("0.005"),
 			SecondPositionLowerPrice: osmomath.NewDec(4000),
 			SecondPositionUpperPrice: osmomath.NewDec(4999),
-			ExpectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(1800000)),
-			ExpectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(8440657775)),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000005569829831408"),
+			// from math import *
+			// from decimal import *
+
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("1800000")
+			// spread_factor = Decimal("0.005")
+
+			// # Swap step 1
+			// liq_1 = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// sqrt_next_1 = Decimal("70.703606697254136613")
+			// token_out = round_sdk_prec_down(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, False))
+			// expected_token_in_before_fee = ceil(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in_1 = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share = expected_fee_scaled / liq_1
+			// token_in = token_in - expected_token_in_1
+
+			// # Swap step 2
+			// second_pos_liq = Decimal("670416215.718827443660400593")
+			// liq_2 = liq_1 + second_pos_liq
+			// sqrt_next_2 = Decimal("67.416615162732695594")
+			// token_out = token_out + round_sdk_prec_down(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
+			// expected_token_in_before_fee = ceil(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in_2 = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share_2 = expected_fee_scaled / liq_2
+			// token_in = token_in - expected_token_in_2
+
+			// # Swap step 3
+			// token_in_remaining_after_fee = token_in * (1 - spread_factor)
+			// liq_3 = second_pos_liq
+			// sqrt_next_3 = get_next_sqrt_price_from_amount0_in_round_up(liq_3, sqrt_next_2, token_in_remaining_after_fee)
+			// token_out = token_out + round_sdk_prec_down(calc_amount_one_delta(liq_3, sqrt_next_2, sqrt_next_3, False))
+			// token_in_after_fee_rounded_up = ceil(calc_amount_zero_delta(liq_3, sqrt_next_2, sqrt_next_3, True))
+			// fee_charge_total = token_in - token_in_after_fee_rounded_up
+			// expected_token_in_3 = token_in_remaining_after_fee + fee_charge_total
+			// fee_charge_total_scaled = fee_charge_total * Decimal('1e27')
+			// fee_amount_per_share_3 = fee_charge_total_scaled / liq_3
+
+			// print(sqrt_next_3)
+			// print(expected_token_in_1 + expected_token_in_2 + expected_token_in_3)
+			// print(token_out)
+			// print(fee_amount_per_share + fee_amount_per_share_2 + fee_amount_per_share_3)
+			ExpectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(1800000)),
+			ExpectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(8440657775)),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("5569829831409674884074.995240904342300353"),
 			ExpectedTick:      30299600,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("65.571484748647169032"),
 			NewLowerPrice:     osmomath.NewDec(4000),
@@ -831,17 +1028,59 @@ var (
 		//  4545 -----|----- 5500
 		// 			   5501 ----------- 6250
 		"spread factor 6 - two sequential positions with a gap usdc -> eth (3% spread factor)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			TokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			TokenOutDenom:            "eth",
 			PriceLimit:               osmomath.NewBigDec(6106),
 			SecondPositionLowerPrice: osmomath.NewDec(5501),
 			SecondPositionUpperPrice: osmomath.NewDec(6250),
 			SpreadFactor:             osmomath.MustNewDecFromStr("0.03"),
-			ExpectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
-			ExpectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1771252)),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.221769187794051751"),
+			// from math import *
+			// from decimal import *
+
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("10000000000")
+			// spread_factor = Decimal("0.03")
+
+			// # Swap step 1
+			// liq = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// sqrt_next_1 = Decimal("74.161984870956629488")
+			// token_out = round_sdk_prec_down(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next_1, False))
+			// expected_token_in_before_fee = ceil(calc_amount_one_delta(liq, sqrt_cur, sqrt_next_1, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in_1 = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share = expected_fee_scaled / liq
+			// token_in = token_in - expected_token_in_1
+
+			// # Swap step 2
+			// token_in_remaining_after_fee = token_in * (1 - spread_factor)
+			// sqrt_next_1 = Decimal("74.168726563154635304")
+			// liq_2 = Decimal("1199528406.187413669481596330")
+			// sqrt_next_2 = get_next_sqrt_price_from_amount1_in_round_down(liq_2, sqrt_next_1, token_in_remaining_after_fee)
+			// token_out = token_out + round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
+			// token_in_after_fee_rounded_up = ceil(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
+			// fee_charge_total = token_in - token_in_after_fee_rounded_up
+			// expected_token_in_2 = token_in_after_fee_rounded_up + fee_charge_total
+			// fee_charge_total_scaled = fee_charge_total * Decimal('1e27')
+			// fee_amount_per_share_2 = fee_charge_total_scaled / liq_2
+
+			// print(sqrt_next_2)
+			// print(expected_token_in_1 + expected_token_in_2)
+			// print(token_out)
+			// print(fee_amount_per_share + fee_amount_per_share_2)
+			ExpectedTokenIn:  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			ExpectedTokenOut: sdk.NewCoin("eth", osmomath.NewInt(1771252)),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("221769187794051752431350930.196900794924811117"),
 			ExpectedTick:      32066500,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("77.887956882326389372"),
 			NewLowerPrice:     osmomath.NewDec(5501),
@@ -850,15 +1089,45 @@ var (
 		//          5000
 		//  4545 ---!-|----- 5500
 		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% spread factor)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			TokenIn:          sdk.NewCoin("eth", osmomath.NewInt(13370)),
-			TokenOutDenom:    "usdc",
-			PriceLimit:       osmomath.NewBigDec(4994),
-			SpreadFactor:     osmomath.MustNewDecFromStr("0.01"),
+			TokenIn:       sdk.NewCoin("eth", osmomath.NewInt(13370)),
+			TokenOutDenom: "usdc",
+			PriceLimit:    osmomath.NewBigDec(4994),
+			SpreadFactor:  osmomath.MustNewDecFromStr("0.01"),
+			// from math import *
+			// from decimal import *
+
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+			// eighteen_decimal_precision = Decimal('1.000000000000000000')
+			// token_in = Decimal("13370")
+			// spread_factor = Decimal("0.01")
+
+			// # Swap step 1
+			// liq = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// sqrt_next_1 = Decimal("70.668238976219012613")
+			// token_out = round_sdk_prec_down(calc_amount_one_delta(liq, sqrt_cur, sqrt_next_1, False))
+			// expected_token_in_before_fee = ceil(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next_1, True))
+			// expected_fee = (expected_token_in_before_fee * spread_factor) / (1 - spread_factor)
+			// expected_fee = expected_fee.quantize(eighteen_decimal_precision, ROUND_UP)
+			// expected_token_in = expected_token_in_before_fee + expected_fee
+			// expected_fee_scaled = expected_fee * Decimal('1e27')
+			// fee_amount_per_share = expected_fee_scaled / liq
+			// token_in = token_in - expected_token_in
+
+			// print(sqrt_next_1)
+			// print(expected_token_in)
+			// print(token_out)
+			// print(fee_amount_per_share)
 			ExpectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(13023)),
 			ExpectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(64417624)),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000085792039652"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("85792039652014458326.823520915418388244"),
 			ExpectedTick: func() int64 {
 				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
 				return tick
