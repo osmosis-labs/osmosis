@@ -33,8 +33,8 @@ func NewObserver(
 	logger log.Logger,
 	chains map[ChainId]Client,
 	sendPeriod time.Duration,
-) Observer {
-	return Observer{
+) *Observer {
+	return &Observer{
 		logger:     logger.With("module", ModuleName),
 		chains:     chains,
 		outTxQueue: make(map[ChainId][]TxQueueItem),
@@ -168,7 +168,7 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 
 func (o *Observer) getConfirmationsRequired(ctx context.Context, tx Transfer) (uint64, error) {
 	if tx.SrcChain == ChainIdOsmosis {
-		return 0, nil
+		return 1, nil
 	}
 
 	chain, ok := o.chains[ChainIdOsmosis]
@@ -190,7 +190,9 @@ func (o *Observer) isTxConfirmed(
 	curHeight uint64,
 	item *TxQueueItem,
 ) (bool, error) {
-	if curHeight < item.ConfirmationsRequired+item.Tx.Height {
+	// In Bitcoin, the number of confirmations: currentHeight - txHeight + 1, so the first block counts as 1.
+	// Therefore, count the first block as 1 for all other chains.
+	if curHeight-item.Tx.Height+1 < item.ConfirmationsRequired {
 		return false, nil
 	}
 	// If the number of confirmations is reached, request the required number of confirmations again
@@ -203,7 +205,7 @@ func (o *Observer) isTxConfirmed(
 			item.Tx.Id,
 		)
 	}
-	if curHeight < cr+item.Tx.Height {
+	if curHeight-item.Tx.Height+1 < cr {
 		item.ConfirmationsRequired = cr
 		return false, nil
 	}

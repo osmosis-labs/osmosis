@@ -102,6 +102,7 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 		log.NewNopLogger(),
 		client,
 		cometRpc,
+		app.GetEncodingConfig().TxConfig,
 		OsmosisValidatorAddr,
 	)
 	require.NoError(t, err)
