@@ -15,7 +15,6 @@ pool.json
 	"initial-deposit": "1000000uusdc,1000miliusdc",
     "scaling-factors": "1000,1",
 	"swap-fee": "0.005",
-	"exit-fee": "0.00",
 	"future-governor": "168h",
     "scaling-factor-controller": ""
 }
