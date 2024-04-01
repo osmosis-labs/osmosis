@@ -7,6 +7,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Basedenom: sdk.DefaultBondDenom,
 		Feetokens: []FeeToken{},
+		Params:    DefaultParams(),
 	}
 }
 
@@ -24,6 +25,10 @@ func (gs GenesisState) Validate() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := gs.Params.Validate(); err != nil {
+		return err
 	}
 
 	return nil
