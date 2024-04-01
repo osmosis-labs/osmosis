@@ -22,7 +22,7 @@ import (
 
 	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
@@ -266,7 +266,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// INCENTIVES Tests
 	//
 
-	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivetypes.Gauge{*gauge})
+	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivestypes.Gauge{*gauge})
 	s.Require().NoError(err)
 	s.Require().Equal(incentive.String(), coins.String())
 
@@ -291,7 +291,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
-	s.Require().Equal(incentivetypes.DefaultMinValueForDistr, params.MinValueForDistribution)
+	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
 
 	// Pool Migration Tests
 	//
