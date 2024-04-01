@@ -7,11 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-<<<<<<< HEAD
-
-	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-=======
->>>>>>> dbec8405 (fix: migrate remaining cl incentives (#7805))
 
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
