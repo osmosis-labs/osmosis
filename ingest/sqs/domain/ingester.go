@@ -3,15 +3,39 @@ package domain
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/sqs/sqsdomain/repository"
+	"github.com/osmosis-labs/sqs/sqsdomain"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
-// AtomicIngester is an interface that defines the methods for the atomic ingester.
-// It processes a block by writing data into a transaction.
-// The caller must call Exec on the transaction to flush data to sink.
-type AtomicIngester interface {
-	// ProcessBlock processes the block by writing data into a transaction.
-	// Returns error if fails to process.
-	// It does not flush data to sink. The caller must call Exec on the transaction
-	ProcessBlock(ctx sdk.Context, tx repository.Tx) error
+// Ingester is an interface that defines the methods for the ingester.
+// Ingester ingests data into a sink.
+type Ingester interface {
+	// ProcessAllBlockData processes the block and ingests data into a sink.
+	// Returns error if the ingester fails to ingest data.
+	ProcessAllBlockData(ctx sdk.Context) error
+
+	// ProcessChangedBlockData processes only the pools that were changed in the block.
+	ProcessChangedBlockData(ctx sdk.Context, changedPools BlockPools) error
+}
+
+// PoolsTransformer is an interface that defines the methods for the pool transformer
+type PoolsTransformer interface {
+	// Transform processes the pool state, returning pools instrumented with all the necessary chain data.
+	// Additionally, returns the take fee map for every pool denom pair.
+	// Returns error if the transformer fails to process pool data.
+	Transform(ctx sdk.Context, blockPools BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error)
+}
+
+// BlockPools contains the pools to be ingested in a block.
+type BlockPools struct {
+	// ConcentratedPools are the concentrated pools to be ingested.
+	ConcentratedPools []poolmanagertypes.PoolI
+	// ConcentratedPoolIDTickChange is the map of pool ID to tick change for concentrated pools.
+	// We use these pool IDs to append concentrated pools with all ticks at the end of the block.
+	ConcentratedPoolIDTickChange map[uint64]struct{}
+	// CosmWasmPools are the CosmWasm pools to be ingested.
+	CosmWasmPools []poolmanagertypes.PoolI
+	// CFMMPools are the CFMM pools to be ingested.
+	CFMMPools []poolmanagertypes.PoolI
 }
