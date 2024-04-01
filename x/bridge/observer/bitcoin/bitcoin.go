@@ -32,7 +32,7 @@ type ChainClient struct {
 	vaultAddr          string
 	stopChan           chan struct{}
 	outboundChan       chan observer.Transfer
-	observeSleepPeriod time.Duration
+	fetchInterval      time.Duration
 	lastObservedHeight atomic.Uint64
 	chainParams        chaincfg.Params
 }
@@ -42,7 +42,7 @@ func NewChainClient(
 	logger log.Logger,
 	btcRpc *rpcclient.Client,
 	vaultAddr string,
-	observeSleepPeriod time.Duration,
+	fetchInterval time.Duration,
 	lastObservedHeight uint64,
 	chainParams chaincfg.Params,
 ) (*ChainClient, error) {
@@ -57,7 +57,7 @@ func NewChainClient(
 		vaultAddr:          vaultAddr,
 		stopChan:           make(chan struct{}),
 		outboundChan:       make(chan observer.Transfer),
-		observeSleepPeriod: observeSleepPeriod,
+		fetchInterval:      fetchInterval,
 		lastObservedHeight: atomic.Uint64{},
 		chainParams:        chainParams,
 	}
@@ -141,7 +141,7 @@ func (b *ChainClient) observeBlocks() {
 						err.Error(),
 					))
 				}
-				time.Sleep(b.observeSleepPeriod)
+				time.Sleep(b.fetchInterval)
 				continue
 			}
 		}
