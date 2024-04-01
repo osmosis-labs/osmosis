@@ -16,15 +16,15 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -263,11 +263,9 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		if err != nil {
 			return nil, err
 		}
+
 		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
 
-		if err != nil {
-			return nil, err
-		}
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
 				DelegatorAddress:       req.DelegatorAddress,
@@ -428,11 +426,21 @@ func (q Querier) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, re
 
 	for _, lock := range periodLocks {
 		lockedCoins := sdk.NewCoin(req.Denom, lock.GetCoins().AmountOf(req.Denom))
+		baseDenom := lock.Coins.GetDenomByIndex(0)
+
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		if err != nil {
+			return nil, err
+		}
+
+		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
-				DelegatorAddress: lock.GetOwner(),
-				ValidatorAddress: req.ValidatorAddress,
-				DelegationAmount: lockedCoins,
+				DelegatorAddress:       lock.GetOwner(),
+				ValidatorAddress:       req.ValidatorAddress,
+				DelegationAmount:       lockedCoins,
+				EquivalentStakedAmount: &coin,
 			},
 		)
 	}

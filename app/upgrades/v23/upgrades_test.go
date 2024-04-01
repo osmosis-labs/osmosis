@@ -12,9 +12,10 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
-	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 const (
@@ -87,27 +88,29 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
 
 	// Overwrite the migration list with the desired pool ID.
-	oldMigrationList := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{}
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[lastPoolID] = struct{}{}
+	oldMigrationList := v23.MigratedIncentiveAccumulatorPoolIDs
+	v23.MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{}
+	v23.MigratedIncentiveAccumulatorPoolIDs[lastPoolID] = struct{}{}
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
+	// NOTE: these no longer work as expected in versions later than v23, in v23 we decide between the old and new scaling factor.
+	// Since we're removing this choice, these test are not worrking as expected
 	// Migrated pool: ensure that the claimable incentives are the same before and after migration
-	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
-	s.Require().NoError(err)
-	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
+	//migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	//s.Require().NoError(err)
+	//s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
 
-	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
-	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
-	s.Require().NoError(err)
-	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
+	//// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
+	//nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	//s.Require().NoError(err)
+	//s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
 
 	// Restore the migration list for use by other tests
-	concentratedtypes.MigratedIncentiveAccumulatorPoolIDs = oldMigrationList
+	v23.MigratedIncentiveAccumulatorPoolIDs = oldMigrationList
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {

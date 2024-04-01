@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,13 +18,16 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
-	incentivetypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
+	"github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
 )
 
 const (
@@ -47,7 +53,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Manually set up TWAP records indexed by both pool ID and time.
 	twapStoreKey := s.App.GetKey(twaptypes.ModuleName)
 	store := s.Ctx.KVStore(twapStoreKey)
-	twap := twaptypes.TwapRecord{
+	twapRecord1 := twaptypes.TwapRecord{
 		PoolId:                      1,
 		Asset0Denom:                 "foo",
 		Asset1Denom:                 "bar",
@@ -60,27 +66,98 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		GeometricTwapAccumulator:    osmomath.ZeroDec(),
 		LastErrorTime:               time.Time{}, // no previous error
 	}
-	poolIndexKey := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
-	osmoutils.MustSet(store, poolIndexKey, &twap)
+	twapRecord2 := twapRecord1
+	twapRecord2.Time = time.Date(2023, 0o2, 2, 0, 0, 0, 0, time.UTC)
+	twap.NumDeprecatedRecordsToPrunePerBlock = uint16(1)
+
+	// Set two records
+	poolIndexKey1 := types.FormatHistoricalPoolIndexTWAPKey(twapRecord1.PoolId, twapRecord1.Asset0Denom, twapRecord1.Asset1Denom, twapRecord1.Time)
+	poolIndexKey2 := types.FormatHistoricalPoolIndexTWAPKey(twapRecord2.PoolId, twapRecord2.Asset0Denom, twapRecord2.Asset1Denom, twapRecord2.Time)
+	osmoutils.MustSet(store, poolIndexKey1, &twapRecord1)
+	osmoutils.MustSet(store, poolIndexKey2, &twapRecord2)
 
 	// The time index key is a bit manual since we removed the old code that did this programmatically.
 	var buffer bytes.Buffer
-	timeS := osmoutils.FormatTimeString(twap.Time)
-	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPTimeIndexPrefix, twap.PoolId, KeySeparator, twap.Asset0Denom, KeySeparator, twap.Asset1Denom, KeySeparator, timeS)
-	timeIndexKey := buffer.Bytes()
-	osmoutils.MustSet(store, timeIndexKey, &twap)
+	timeS1 := osmoutils.FormatTimeString(twapRecord1.Time)
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPTimeIndexPrefix, twapRecord1.PoolId, KeySeparator, twapRecord1.Asset0Denom, KeySeparator, twapRecord1.Asset1Denom, KeySeparator, timeS1)
+	timeIndexKey1 := buffer.Bytes()
+	timeS2 := osmoutils.FormatTimeString(twapRecord2.Time)
+	fmt.Fprintf(&buffer, "%s%d%s%s%s%s%s%s", HistoricalTWAPTimeIndexPrefix, twapRecord2.PoolId, KeySeparator, twapRecord2.Asset0Denom, KeySeparator, twapRecord2.Asset1Denom, KeySeparator, timeS2)
+	timeIndexKey2 := buffer.Bytes()
+	osmoutils.MustSet(store, timeIndexKey1, &twapRecord1)
+	osmoutils.MustSet(store, timeIndexKey2, &twapRecord2)
 
 	// TWAP records indexed by time should exist
 	twapRecords, err := osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Len(twapRecords, 2)
+	s.Require().Equal(twapRecord1, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[1])
 
 	// TWAP records indexed by pool ID should exist.
-	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twap.PoolId)
+	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Len(twapRecords, 2)
+	s.Require().Equal(twapRecord1, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[1])
+
+	// INCENTIVES Setup
+	//
+
+	concentratedPoolIDs := []uint64{}
+
+	// Create two sets of all pool types
+	allPoolsOne := s.PrepareAllSupportedPools()
+	allPoolsTwo := s.PrepareAllSupportedPools()
+
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsOne.ConcentratedPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsTwo.ConcentratedPoolID)
+
+	// Update authorized quote denoms
+	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
+
+	// Create two more concentrated pools with positions
+	secondLastPoolID := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
+	lastPoolID := secondLastPoolID + 1
+	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
+	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
+		{"uion", "uosmo"},
+		{apptesting.ETH, apptesting.USDC},
+	})
+
+	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
+
+	// Create incentive record for last pool
+	incentiveCoin := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Create incentive record for second last pool
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, secondLastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Make 60 seconds pass
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, lastPoolID)
+	s.Require().NoError(err)
+
+	// Migrated pool claim
+	migratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(migratedPoolBeforeUpgradeIncentives)
+
+	// Non-migrated pool claim
+	nonMigratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
+
+	// Overwrite the migration list with the desired pool ID.
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
 
 	// PROTOREV Setup
 	//
@@ -132,6 +209,17 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 	s.Require().NoError(err)
 
+	whiteWhalePoolIds := []uint64{1463, 1462, 1461}
+	for _, poolId := range whiteWhalePoolIds {
+		s.App.CosmwasmPoolKeeper.SetPool(s.Ctx, &model.CosmWasmPool{
+			ContractAddress: "foo",
+			PoolId:          poolId,
+			CodeId:          503,
+			InstantiateMsg:  []byte("bar"),
+		})
+	}
+	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 503)
+
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
@@ -141,16 +229,26 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP Tests
 	//
 
-	// TWAP records indexed by time should be completely removed.
+	// TWAP records indexed by time should be untouched since endblocker hasn't run yet.
 	twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 0)
+	s.Require().Len(twapRecords, 2)
 
-	// TWAP records indexed by pool ID should be untouched.
-	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twap.PoolId)
+	// Run the end blocker
+	s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{})
+
+	// Since the prune limit was 1, 1 TWAP record indexed by time should be completely removed, leaving one more.
+	twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 	s.Require().NoError(err)
 	s.Require().Len(twapRecords, 1)
-	s.Require().Equal(twap, twapRecords[0])
+	s.Require().Equal(twapRecord2, twapRecords[0])
+
+	// TWAP records indexed by pool ID should be untouched.
+	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
+	s.Require().NoError(err)
+	s.Require().Len(twapRecords, 6)
+	s.Require().Equal(twapRecord1, twapRecords[4])
+	s.Require().Equal(twapRecord2, twapRecords[5])
 
 	// PROTOREV Tests
 	//
@@ -180,9 +278,44 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(len(lockableDurations), 1)
 	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
 
+	// Migrated pool: ensure that the claimable incentives are the same before and after migration
+	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+
+	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
+
+	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
+	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
+
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	s.Require().Equal(incentivetypes.DefaultMinValueForDistr, params.MinValueForDistribution)
+
+	// Pool Migration Tests
+	//
+
+	// Test that the white whale pools have been updated
+	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+
+	// TXFEES Tests
+	//
+
+	// Check that the whitelisted fee token address has been set
+	whitelistedFeeTokenSetters := s.App.TxFeesKeeper.GetParams(s.Ctx).WhitelistedFeeTokenSetters
+	s.Require().Len(whitelistedFeeTokenSetters, 1)
+	s.Require().Equal(whitelistedFeeTokenSetters, v24.WhitelistedFeeTokenSetters)
+}
+
+func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {
+	for _, poolId := range pools {
+		pool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolId)
+		s.Require().NoError(err)
+		cwPool, ok := pool.(cwpooltypes.CosmWasmExtension)
+		s.Require().True(ok)
+		s.Require().EqualValues(codeId, cwPool.GetCodeId())
+	}
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {

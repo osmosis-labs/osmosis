@@ -12,7 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -296,7 +296,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		}
 	}
 	if len(coinsNotSwapped) > 0 {
-		ctx.Logger().Info("The following non-native tokens were not swapped (see debug logs for further details): %s", coinsNotSwapped)
+		ctx.Logger().Info(fmt.Sprintf("The following non-native tokens were not swapped (see debug logs for further details): %s", coinsNotSwapped))
 	}
 
 	return totalCoinOut

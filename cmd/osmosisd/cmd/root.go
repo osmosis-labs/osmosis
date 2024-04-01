@@ -21,9 +21,9 @@ import (
 	cometbftdb "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23" // should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v24/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
@@ -68,7 +68,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v23/app"
+	osmosis "github.com/osmosis-labs/osmosis/v24/app"
 )
 
 type AssetList struct {
@@ -100,10 +100,13 @@ type DenomUnitMap struct {
 }
 
 const (
-	mempoolConfigName            = "osmosis-mempool"
-	arbitrageMinGasFeeConfigName = "arbitrage-min-gas-fee"
-	oldArbitrageMinGasFeeValue   = ".005"
-	newArbitrageMinGasFeeValue   = "0.1"
+	mempoolConfigName = "osmosis-mempool"
+
+	arbitrageMinGasFeeConfigName          = "arbitrage-min-gas-fee"
+	recommendedNewArbitrageMinGasFeeValue = "0.1"
+
+	maxGasWantedPerTxName                = "max-gas-wanted-per-tx"
+	recommendedNewMaxGasWantedPerTxValue = "60000000"
 
 	consensusConfigName     = "consensus"
 	timeoutCommitConfigName = "timeout_commit"
@@ -120,12 +123,13 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 	var assetList AssetList
 
 	chainId := GetChainId(initClientCtx, cmd)
+	homeDir := initClientCtx.HomeDir
 
 	fileName := ""
 	if chainId == mainnetId || chainId == "" {
-		fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
+		fileName = filepath.Join(homeDir, "config", "osmosis-1-assetlist-manual.json")
 	} else if chainId == testnetId {
-		fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+		fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 	} else {
 		return nil, nil
 	}
@@ -504,55 +508,50 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 	} else {
 		// app.toml exists
 
-		// Get setting
-		currentArbitrageMinGasFeeValue := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
+		// Set new values in viper
+		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
+		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
 
-		// .x format at 0.x format are both valid.
-		if currentArbitrageMinGasFeeValue == oldArbitrageMinGasFeeValue || currentArbitrageMinGasFeeValue == "0"+oldArbitrageMinGasFeeValue {
-			// Set new value in viper
-			serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, newArbitrageMinGasFeeValue)
-
-			defer func() {
-				if err := recover(); err != nil {
-					fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
-				}
-			}()
-
-			// Check if the file is writable
-			if fileInfo.Mode()&os.FileMode(0200) != 0 {
-				// Read the entire content of the file
-				content, err := os.ReadFile(configFilePath)
-				if err != nil {
-					return err
-				}
-
-				// Convert the content to a string
-				fileContent := string(content)
-
-				// Find the index of the search line
-				index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
-				if index == -1 {
-					return fmt.Errorf("search line not found in the file")
-				}
-
-				// Find the opening and closing quotes
-				openQuoteIndex := strings.Index(fileContent[index:], "\"")
-				openQuoteIndex += index
-
-				closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
-				closingQuoteIndex += openQuoteIndex + 1
-
-				// Replace the old value with the new value
-				newFileContent := fileContent[:openQuoteIndex+1] + newArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
-
-				// Write the modified content back to the file
-				err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
-				if err != nil {
-					return err
-				}
-			} else {
-				fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue)
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
 			}
+		}()
+
+		// Check if the file is writable
+		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+			// Read the entire content of the file
+			content, err := os.ReadFile(configFilePath)
+			if err != nil {
+				return err
+			}
+
+			// Convert the content to a string
+			fileContent := string(content)
+
+			// Find the index of the search line
+			index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
+			if index == -1 {
+				return fmt.Errorf("search line not found in the file")
+			}
+
+			// Find the opening and closing quotes
+			openQuoteIndex := strings.Index(fileContent[index:], "\"")
+			openQuoteIndex += index
+
+			closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
+			closingQuoteIndex += openQuoteIndex + 1
+
+			// Replace the old value with the new value
+			newFileContent := fileContent[:openQuoteIndex+1] + recommendedNewArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
+
+			// Write the modified content back to the file
+			err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
 	}
 	return nil
@@ -593,7 +592,6 @@ func initAppConfig() (string, interface{}) {
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
 	srvCfg.API.Enable = true
-	srvCfg.StateSync.SnapshotInterval = 1500
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
 
@@ -614,7 +612,7 @@ func initAppConfig() (string, interface{}) {
 [osmosis-mempool]
 # This is the max allowed gas any tx.
 # This is only for local mempool purposes, and thus	is only ran on check tx.
-max-gas-wanted-per-tx = "25000000"
+max-gas-wanted-per-tx = "60000000"
 
 # This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
 # Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
@@ -934,20 +932,31 @@ func UpdateAssetListCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.
 		Short: "Updates asset list used by the CLI to replace ibc denoms with human readable names",
 		Long: `Updates asset list used by the CLI to replace ibc denoms with human readable names.
 Outputs:
-	- cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json for osmosis-1
-	- cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json for osmo-test-5
+	- osmosisdHomeDir + /config/osmosis-1-assetlist-manual.json for osmosis-1
+	- osmosisdHomeDir + /config/osmo-test-5-assetlist-manual.json for osmo-test-5
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			assetListURL := ""
 			fileName := ""
 
-			if args[0] == mainnetId || args[0] == "" {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			homeDir := clientCtx.HomeDir
+
+			chainID := ""
+			if len(args) > 0 {
+				chainID = args[0]
+			} else {
+				fmt.Println("No chain ID provided, defaulting to mainnet")
+				chainID = mainnetId
+			}
+
+			if chainID == mainnetId {
 				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
-				fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
-			} else if args[0] == testnetId {
+				fileName = filepath.Join(homeDir, "config", "osmosis-1-assetlist-manual.json")
+			} else if chainID == testnetId {
 				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
-				fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+				fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 			} else {
 				return nil
 			}

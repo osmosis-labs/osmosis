@@ -12,8 +12,8 @@ import (
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -160,7 +160,8 @@ func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) b
 		}
 		return
 	}
-	n.t.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.Logf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.FailNow()
 }
 
 func (n *NodeConfig) extractOperatorAddressIfValidator() error {

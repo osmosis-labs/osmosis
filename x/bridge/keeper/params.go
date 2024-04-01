@@ -4,7 +4,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 type UpdateParamsResult struct {
@@ -25,7 +25,6 @@ func (k Keeper) UpdateParams(ctx sdk.Context, newParams types.Params) (UpdatePar
 		assetsToDelete  = Difference(oldParams.Assets, newParams.Assets)
 	)
 
-	// create denoms for all new assets
 	err := k.createAssets(ctx, assetsToCreate)
 	if err != nil {
 		return UpdateParamsResult{},

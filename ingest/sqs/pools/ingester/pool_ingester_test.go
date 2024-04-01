@@ -13,14 +13,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain/mocks"
-	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
-	clqueryproto "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain/mocks"
+	poolsingester "github.com/osmosis-labs/osmosis/v24/ingest/sqs/pools/ingester"
+	clqueryproto "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 type IngesterTestSuite struct {
@@ -499,9 +499,39 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
+	// Get concentrated pool
+	concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
+	s.Require().NoError(err)
+
+	// Get balancer pool
+	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.BalancerPoolID)
+	s.Require().NoError(err)
+
+	// Get stable swap pool
+	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.StableSwapPoolID)
+	s.Require().NoError(err)
+
+	// Get cosm wasm pool
+	cosmWasmPool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolsData.CosmWasmPoolID)
+	s.Require().NoError(err)
+
 	poolIngester := poolsingester.NewPoolIngester(redisRepoMock, redisRouterMock, nil, assetListGetterMock, sqsKeepers)
 
-	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
+	blockPools := domain.BlockPools{
+		ConcentratedPools: []poolmanagertypes.PoolI{
+			concentratedPool,
+			customTakerFeeConcentratedPool,
+		},
+		CFMMPools: []poolmanagertypes.PoolI{
+			balancerPool,
+			stableSwapPool,
+		},
+		CosmWasmPools: []poolmanagertypes.PoolI{
+			cosmWasmPool,
+		},
+	}
+
+	err = poolIngester.ProcessPoolState(s.Ctx, redisTx, blockPools)
 	s.Require().NoError(err)
 
 	allPools, err := redisRepoMock.GetAllPools(sdk.WrapSDKContext(s.Ctx))
@@ -509,7 +539,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 
 	s.Require().Len(allPools, 2+2+1)
 
-	// Order of pooks is by order of writes:
+	// Order of pools is by order of writes:
 	// 1. CFMM
 	// 2. Concentrated
 	// 3. Cosmwasm
@@ -551,7 +581,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 	s.Require().Equal(expectedPool.GetType(), actualPool.GetType())
 
 	// Validate TVL
-	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUOSMO().String())
+	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUSDC().String())
 	sqsPoolModel := actualPool.GetSQSPoolModel()
 	s.Require().Contains(sqsPoolModel.TotalValueLockedError, expectTVLErrorStr)
 

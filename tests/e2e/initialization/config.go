@@ -20,20 +20,20 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -487,7 +487,7 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 				twapRecord := twaptypes.TwapRecord{
 					PoolId:      balancerPool.Id,
 					Asset0Denom: denomPair.Denom0,
-					Asset1Denom: denomPair.Denom0,
+					Asset1Denom: denomPair.Denom1,
 					Height:      1,
 					Time:        time.Date(2023, 0o2, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
 					// Note: truncation is acceptable as x/twap is guaranteed to work only on pools with spot prices > 10^-18.

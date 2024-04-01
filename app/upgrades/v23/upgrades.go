@@ -9,12 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/app/keepers"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 )
 
 const (
@@ -82,8 +81,8 @@ func CreateUpgradeHandler(
 
 // migrateMainnetPools migrates the specified mainnet pools to the new accumulator scaling factor.
 func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
-	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.MigratedIncentiveAccumulatorPoolIDs))
-	for poolID := range concentratedtypes.MigratedIncentiveAccumulatorPoolIDs {
+	poolIDsToMigrate := make([]uint64, 0, len(MigratedIncentiveAccumulatorPoolIDs))
+	for poolID := range MigratedIncentiveAccumulatorPoolIDs {
 		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
 	}
 

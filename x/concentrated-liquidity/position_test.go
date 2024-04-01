@@ -6,17 +6,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 const (
@@ -82,16 +83,17 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 
 // ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
 // It also asserts that no more incentives can be claimed for the position.
-func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
+func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins, poolId uint64) {
 	// Initial claim and assertion
-	claimedRewards, forfeitedRewards, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, totalForfeitedRewards, scaledForfeitedRewardsByUptime, err := s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedRewards, claimedRewards)
-	s.Require().Equal(expectedForfeited, forfeitedRewards)
+	s.Require().Equal(expectedForfeited, totalForfeitedRewards)
+	s.checkForfeitedCoinsByUptime(totalForfeitedRewards, scaledForfeitedRewardsByUptime)
 
 	// Sanity check that cannot claim again.
-	claimedRewards, _, err = s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, _, _, err = s.Clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -314,7 +316,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
 					if timeElapsedSec.IsPositive() {
-						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords, cl.OneDecScalingFactor)
+						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords, cl.PerUnitLiqScalingFactor)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
 					}
@@ -2279,6 +2281,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 		positionsToTransfer  []uint64
 		setupUnownedPosition bool
 		isLastPositionInPool bool
+		isGovAddress         bool
 
 		expectedError error
 	}{
@@ -2313,6 +2316,12 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			inRangePositions:    []uint64{DefaultPositionId},
 			outOfRangePositions: []uint64{DefaultPositionId + 1, DefaultPositionId + 2},
 			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 2},
+		},
+		"three position IDs, not an owner of any of them but caller is gov address": {
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			outOfRangePositions: []uint64{DefaultPositionId + 2},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			isGovAddress:        true,
 		},
 		"error: two position IDs, second ID does not exist": {
 			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
@@ -2387,8 +2396,13 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			// Account funds of new owner
 			preTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
 
+			transferCaller := oldOwner
+			if tc.isGovAddress {
+				transferCaller = s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+			}
+
 			// System under test
-			err = s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, tc.positionsToTransfer, oldOwner, newOwner)
+			err = s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, tc.positionsToTransfer, transferCaller, newOwner)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
@@ -2440,35 +2454,38 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 					s.Require().Equal(oldPosition, newPosition)
 				}
 
-				// Check that the incentives and spread rewards went to the old owner
+				// Check that the old owner's balance did not change due to the transfer
 				postTransferOriginalOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
-				expectedTransferOriginalOwnerFunds := preTransferOwnerFunds.Add(totalExpectedRewards...)
-				s.Require().Equal(expectedTransferOriginalOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
+				s.Require().Equal(preTransferOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
 
-				// Check that the new owner does not have any new funds
+				// Check that the new owner's balance did not change due to the transfer
 				postTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
 				s.Require().Equal(preTransferNewOwnerFunds, postTransferNewOwnerFunds)
 
-				// Test that claiming incentives/spread rewards with the new owner returns nothing
-				for _, positionId := range tc.positionsToTransfer {
-					fundsToClaim, fundsToForefeit, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionId)
+				// Claim rewards and ensure that previously accrued incentives and spread rewards go to the new owner
+				for _, positionID := range tc.positionsToTransfer {
+					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					s.Require().Equal(sdk.Coins{}, fundsToClaim)
-					s.Require().Equal(sdk.Coins{}, fundsToForefeit)
-
-					spreadRewards, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId)
+					_, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionID)
 					s.Require().NoError(err)
-					s.Require().Equal(sdk.Coins(nil), spreadRewards)
 				}
+
+				// Ensure all rewards went to the new owner
+				postClaimRewardsNewOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
+				s.Require().Equal(totalExpectedRewards, postClaimRewardsNewOwnerBalance)
+
+				// Ensure no rewards went to the old owner
+				postClaimRewardsOldOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
+				s.Require().Equal(preTransferOwnerFunds.String(), postClaimRewardsOldOwnerBalance.String())
 
 				// Test that adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything
 				totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
 				totalIncentives := s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.inRangePositions)
-				totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...)
+				totalExpectedRewards := totalExpectedRewards.Add(totalSpreadRewards...).Add(totalIncentives...)
 				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 				for _, positionId := range tc.positionsToTransfer {
-					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
+					_, _, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
 					s.Require().NoError(err)
 					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionId)
 					s.Require().NoError(err)

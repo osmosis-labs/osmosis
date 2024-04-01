@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v24/x/twap/types"
 )
 
 func newTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -122,6 +122,12 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 		if err != nil {
 			ctx.Logger().Error("Error pruning old twaps at the end block", err)
 		}
+	}
+
+	// If we still have more deprecated historical twaps to prune, then we prune up to the per block limit.
+	// TODO: Can remove this in the v25 upgrade or after.
+	if k.IsDeprecatedHistoricalTWAPsPruning(ctx) {
+		k.DeleteHistoricalTimeIndexedTWAPs(ctx)
 	}
 }
 
