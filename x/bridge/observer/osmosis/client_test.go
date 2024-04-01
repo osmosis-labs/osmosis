@@ -42,7 +42,7 @@ type TestSuite struct {
 	TxServer   *mocks.MockServiceServer
 }
 
-func NewTestSuite(t *testing.T, ctx context.Context) TestSuite {
+func NewTestSuite(t *testing.T) TestSuite {
 	ctrl := gomock.NewController(t)
 	lis := bufconn.Listen(1024 * 1024)
 	s := grpc.NewServer()
@@ -76,7 +76,7 @@ func (ts *TestSuite) Dialer() func(context.Context, string) (net.Conn, error) {
 func TestAccountQuerySuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	ts := NewTestSuite(t, ctx)
+	ts := NewTestSuite(t)
 	defer ts.Close(t)
 
 	expectedReq := &authtypes.QueryAccountRequest{Address: Addr1.String()}
@@ -109,8 +109,8 @@ func TestAccountQuerySuccess(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	client := osmosis.NewClient(ChainId, conn, kr, app.GetEncodingConfig().TxConfig)
 
 	acc, err := client.Account(ctx, Addr1)
 	require.NoError(t, err)
@@ -121,7 +121,7 @@ func TestAccountQuerySuccess(t *testing.T) {
 func TestSignTxSuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	ts := NewTestSuite(t, ctx)
+	ts := NewTestSuite(t)
 	defer ts.Close(t)
 
 	expectedReq := &authtypes.QueryAccountRequest{Address: Addr1.String()}
@@ -154,8 +154,8 @@ func TestSignTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	record, err := keyring.NewAccount(
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	record, err := kr.NewAccount(
 		osmosis.ModuleNameClient,
 		Mnemonic1,
 		"",
@@ -165,7 +165,7 @@ func TestSignTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 	cpk, err := record.GetPubKey()
 	require.NoError(t, err)
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	client := osmosis.NewClient(ChainId, conn, kr, app.GetEncodingConfig().TxConfig)
 
 	coins := types.NewCoins(types.NewInt64Coin("uosmo", 100))
 	msg := banktypes.NewMsgSend(Addr1, Addr2, coins)
@@ -174,15 +174,15 @@ func TestSignTxSuccess(t *testing.T) {
 	bytes, err := client.SignTx(ctx, msg, fees, gasLimit)
 	require.NoError(t, err)
 
-	tx, err := app.GetEncodingConfig().TxConfig.TxDecoder()(bytes)
+	transaction, err := app.GetEncodingConfig().TxConfig.TxDecoder()(bytes)
 	require.NoError(t, err)
 
-	fee, ok := tx.(types.FeeTx)
+	fee, ok := transaction.(types.FeeTx)
 	require.True(t, ok, "Failed to cast Tx to FeeTx")
 	require.Equal(t, gasLimit, fee.GetGas())
 	require.Equal(t, fees, fee.GetFee())
 
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := transaction.(authsigning.SigVerifiableTx)
 	require.True(t, ok, "Failed to cast Tx to SigVerifiableTx")
 	pks, err := sigTx.GetPubKeys()
 	require.NoError(t, err)
@@ -211,7 +211,7 @@ func TestSignTxSuccess(t *testing.T) {
 		signerData,
 		sig.Data,
 		app.GetEncodingConfig().TxConfig.SignModeHandler(),
-		tx,
+		transaction,
 	)
 	require.NoError(t, err)
 }
@@ -221,7 +221,7 @@ func TestSignTxSuccess(t *testing.T) {
 func TestBroadcastTxSuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	ts := NewTestSuite(t, ctx)
+	ts := NewTestSuite(t)
 	defer ts.Close(t)
 
 	expectedReq := &authtypes.QueryAccountRequest{Address: Addr1.String()}
@@ -244,8 +244,8 @@ func TestBroadcastTxSuccess(t *testing.T) {
 			return &ret, nil
 		})
 
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err := keyring.NewAccount(
+	kr := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
+	_, err := kr.NewAccount(
 		osmosis.ModuleNameClient,
 		Mnemonic1,
 		"",
@@ -259,7 +259,7 @@ func TestBroadcastTxSuccess(t *testing.T) {
 	gasLimit := uint64(200000)
 	expectedTxBytes := buildAndSignTx(
 		t,
-		keyring,
+		kr,
 		expectedAcc.AccountNumber,
 		expectedAcc.Sequence,
 		msg,
@@ -297,7 +297,7 @@ func TestBroadcastTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
+	client := osmosis.NewClient(ChainId, conn, kr, app.GetEncodingConfig().TxConfig)
 
 	bytes, err := client.SignTx(ctx, msg, fees, gasLimit)
 	require.NoError(t, err)

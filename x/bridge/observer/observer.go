@@ -8,25 +8,36 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/log"
+
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 const ModuleName = "observer"
 
+type TxQueueItem struct {
+	Tx                    Transfer
+	ConfirmationsRequired uint64
+}
+
 type Observer struct {
 	logger     log.Logger
 	chains     map[ChainId]Client
-	outTxQueue map[ChainId][]Transfer
+	outTxQueue map[ChainId][]TxQueueItem
 	outLock    sync.Mutex
 	sendPeriod time.Duration
 	stopChan   chan struct{}
 }
 
 // NewObserver returns new instance of `Observer`
-func NewObserver(logger log.Logger, chains map[ChainId]Client, sendPeriod time.Duration) Observer {
-	return Observer{
+func NewObserver(
+	logger log.Logger,
+	chains map[ChainId]Client,
+	sendPeriod time.Duration,
+) *Observer {
+	return &Observer{
 		logger:     logger.With("module", ModuleName),
 		chains:     chains,
-		outTxQueue: make(map[ChainId][]Transfer),
+		outTxQueue: make(map[ChainId][]TxQueueItem),
 		outLock:    sync.Mutex{},
 		sendPeriod: sendPeriod,
 		stopChan:   make(chan struct{}),
@@ -42,7 +53,7 @@ func (o *Observer) Start(ctx context.Context) error {
 		}
 	}
 
-	go o.collectOutbound()
+	go o.collectOutbound(ctx)
 	go o.processOutbound(ctx)
 
 	return nil
@@ -61,7 +72,7 @@ func (o *Observer) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (o *Observer) collectOutbound() {
+func (o *Observer) collectOutbound(ctx context.Context) {
 	aggregate := make(chan Transfer)
 	wg := sync.WaitGroup{}
 
@@ -82,20 +93,31 @@ func (o *Observer) collectOutbound() {
 	}()
 
 	for out := range aggregate {
-		o.outLock.Lock()
-		_, ok := o.chains[out.DstChain]
-		if !ok {
-			o.logger.Error(fmt.Sprintf(
-				"Unknown destination chain %s in outbound transfer %s",
-				out.DstChain,
-				out.Id,
-			))
-			o.outLock.Unlock()
-			continue
-		}
-		o.outTxQueue[out.SrcChain] = append(o.outTxQueue[out.SrcChain], out)
-		o.outLock.Unlock()
+		o.addTxToQueue(ctx, out)
 	}
+}
+
+func (o *Observer) addTxToQueue(ctx context.Context, tx Transfer) {
+	o.outLock.Lock()
+	defer o.outLock.Unlock()
+
+	_, ok := o.chains[tx.DstChain]
+	if !ok {
+		o.logger.Error(fmt.Sprintf(
+			"Unknown destination chain %s in outbound transfer %s",
+			tx.DstChain,
+			tx.Id,
+		))
+		return
+	}
+	cr, err := o.getConfirmationsRequired(ctx, tx)
+	if err != nil {
+		o.logger.With("error", err, "id", tx.Id).
+			Error("Failed to get confirmations required for outbound transfer")
+		return
+	}
+
+	o.outTxQueue[tx.SrcChain] = append(o.outTxQueue[tx.SrcChain], TxQueueItem{tx, cr})
 }
 
 func (o *Observer) processOutbound(ctx context.Context) {
@@ -116,31 +138,76 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 
 	for srcId, queue := range o.outTxQueue {
 		srcChain := o.chains[srcId]
-		height, err := srcChain.Height()
+		height, err := srcChain.Height(ctx)
 		if err != nil {
 			o.logger.Error(fmt.Sprintf("Failed to get height for %s: %s", srcId, err.Error()))
 			continue
 		}
-		confirmationsRequired, err := srcChain.ConfirmationsRequired()
-		if err != nil {
-			o.logger.Error(fmt.Sprintf(
-				"Failed to get confirmations required for %s: %s",
-				srcId,
-				err.Error(),
-			))
-			continue
-		}
-		var newQueue []Transfer
+
+		var newQueue []TxQueueItem
 		for _, out := range queue {
-			if height-out.Height < confirmationsRequired {
+			confirmed, err := o.isTxConfirmed(ctx, height, &out)
+			if err != nil {
+				o.logger.Error(fmt.Sprintf("Failed to confirm tx %s", err.Error()))
 				newQueue = append(newQueue, out)
 				continue
 			}
-			err = o.chains[out.DstChain].SignalInboundTransfer(ctx, out)
+			if !confirmed {
+				newQueue = append(newQueue, out)
+				continue
+			}
+
+			err = o.chains[out.Tx.DstChain].SignalInboundTransfer(ctx, out.Tx)
 			if err != nil {
 				newQueue = append(newQueue, out)
 			}
 		}
 		o.outTxQueue[srcId] = newQueue
 	}
+}
+
+func (o *Observer) getConfirmationsRequired(ctx context.Context, tx Transfer) (uint64, error) {
+	if tx.SrcChain == ChainIdOsmosis {
+		return 1, nil
+	}
+
+	chain, ok := o.chains[ChainIdOsmosis]
+	if !ok {
+		return 0, fmt.Errorf("chain client for %s not found", ChainIdOsmosis)
+	}
+	cr, err := chain.ConfirmationsRequired(ctx, bridgetypes.AssetID{
+		SourceChain: string(tx.SrcChain),
+		Denom:       tx.Asset,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return cr, nil
+}
+
+func (o *Observer) isTxConfirmed(
+	ctx context.Context,
+	curHeight uint64,
+	item *TxQueueItem,
+) (bool, error) {
+	// In Bitcoin, the number of confirmations: currentHeight - txHeight + 1, so the first block counts as 1.
+	// Therefore, count the first block as 1 for all other chains.
+	if curHeight-item.Tx.Height+1 < item.ConfirmationsRequired {
+		return false, nil
+	}
+	// If the number of confirmations is reached, request the required number of confirmations again
+	// to check whether the bridge parameters were changed while transactions was being processed
+	cr, err := o.getConfirmationsRequired(ctx, item.Tx)
+	if err != nil {
+		return false, errorsmod.Wrapf(
+			err,
+			"Failed to get confirmations required for outbound transfer %s",
+			item.Tx.Id,
+		)
+	}
+	if curHeight-item.Tx.Height+1 < cr {
+		item.ConfirmationsRequired = cr
+		return false, nil
+	}
+	return true, nil
 }

@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -13,17 +15,16 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/cometbft/cometbft/libs/log"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
-var (
-	ModuleName = "bitcoin-chain"
-)
+var ModuleName = "bitcoin-chain"
 
 type ChainClient struct {
 	logger             log.Logger
@@ -31,45 +32,70 @@ type ChainClient struct {
 	vaultAddr          string
 	stopChan           chan struct{}
 	outboundChan       chan observer.Transfer
-	observeSleepPeriod time.Duration
-	lastObservedHeight uint64
+	fetchInterval      time.Duration
+	lastObservedHeight atomic.Uint64
+	chainParams        chaincfg.Params
 }
 
-// NewChainClient returns new instance of `Bitcoin`
+// NewChainClient returns new instance of `ChainClient`
 func NewChainClient(
 	logger log.Logger,
 	btcRpc *rpcclient.Client,
 	vaultAddr string,
-	observeSleepPeriod time.Duration,
+	fetchInterval time.Duration,
 	lastObservedHeight uint64,
+	chainParams chaincfg.Params,
 ) (*ChainClient, error) {
-	if len(vaultAddr) == 0 {
+	_, err := btcutil.DecodeAddress(vaultAddr, &chainParams)
+	if err != nil {
 		return nil, errorsmod.Wrapf(ErrInvalidCfg, "Invalid BTC vault address")
 	}
 
-	return &ChainClient{
+	c := &ChainClient{
 		logger:             logger.With("module", ModuleName),
 		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
 		stopChan:           make(chan struct{}),
 		outboundChan:       make(chan observer.Transfer),
-		observeSleepPeriod: observeSleepPeriod,
-		lastObservedHeight: lastObservedHeight,
-	}, nil
+		fetchInterval:      fetchInterval,
+		lastObservedHeight: atomic.Uint64{},
+		chainParams:        chainParams,
+	}
+	c.lastObservedHeight.Store(lastObservedHeight)
+
+	return c, nil
 }
 
 // Start starts observing Bitcoin blocks for outbound transfers
 func (b *ChainClient) Start(context.Context) error {
 	go b.observeBlocks()
 
+	b.logger.Info("Started Bitcoin chain client")
 	return nil
 }
 
 // Stop stops observing Bitcoin blocks and shutdowns RPC client
-func (b *ChainClient) Stop(context.Context) error {
+func (b *ChainClient) Stop(ctx context.Context) error {
 	close(b.stopChan)
 	b.btcRpc.Shutdown()
-	b.btcRpc.WaitForShutdown()
+
+	const shutdownTimeout = 3 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+	defer cancel()
+	stop := make(chan struct{})
+
+	go func() {
+		b.btcRpc.WaitForShutdown()
+		close(stop)
+	}()
+
+	select {
+	case <-ctx.Done():
+		b.logger.Error("Bitcoin chain client: shutdown timeout exceeded")
+	case <-stop:
+	}
+
+	b.logger.Info("Stopped Bitcoin chain client")
 	return nil
 }
 
@@ -79,12 +105,12 @@ func (b *ChainClient) ListenOutboundTransfer() <-chan observer.Transfer {
 }
 
 // SignalInboundTransfer sends `InboundTransfer` to Bitcoin
-func (b *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Transfer) error {
+func (b *ChainClient) SignalInboundTransfer(context.Context, observer.Transfer) error {
 	return fmt.Errorf("Not implemented")
 }
 
-// Returns current height of the Bitcoin chain
-func (b *ChainClient) Height() (uint64, error) {
+// Height returns current height of the Bitcoin chain
+func (b *ChainClient) Height(context.Context) (uint64, error) {
 	height, err := b.btcRpc.GetBlockCount()
 	if err != nil {
 		return 0, errorsmod.Wrapf(ErrRpcClient, "Failed to get current height %s", err.Error())
@@ -92,11 +118,12 @@ func (b *ChainClient) Height() (uint64, error) {
 	return uint64(height), nil
 }
 
-// Returns number of required tx confirmations
-func (b *ChainClient) ConfirmationsRequired() (uint64, error) {
-	return 0, nil
+// ConfirmationsRequired returns number of required tx confirmations
+func (b *ChainClient) ConfirmationsRequired(context.Context, bridgetypes.AssetID) (uint64, error) {
+	return 0, fmt.Errorf("not supported for the BTC chain")
 }
 
+// observeBlocks main loop for fetching new Bitcoin blocks
 func (b *ChainClient) observeBlocks() {
 	defer close(b.outboundChan)
 
@@ -111,26 +138,36 @@ func (b *ChainClient) observeBlocks() {
 				if !errors.Is(err, ErrBlockUnavailable) {
 					b.logger.Error(fmt.Sprintf(
 						"Failed to fetch block %d: %s",
-						b.lastObservedHeight+1,
+						b.lastObservedHeight.Load()+1,
 						err.Error(),
 					))
 				}
-				time.Sleep(b.observeSleepPeriod)
+				time.Sleep(b.fetchInterval)
 				continue
 			}
 		}
 	}
 }
 
+// fetchNewBlock fetches new Bitcoin block and extracts relevant transactions.
 func (b *ChainClient) fetchNewBlock() error {
-	nextHeight := b.lastObservedHeight + 1
+	nextHeight := b.lastObservedHeight.Load() + 1
+
+	// TODO: Now we infinitely retry to fetch one block if we get errors on either
+	// GetBlockHash or GetBlockVerboseTx. Decide what to do in that case.
+	// Skip the block after several retries?
+
 	hash, err := b.btcRpc.GetBlockHash(int64(nextHeight))
 	if err != nil {
-		if rpcErr, ok := err.(*btcjson.RPCError); ok && rpcErr.Code == btcjson.ErrRPCInvalidParameter {
+		var rpcErr *btcjson.RPCError
+		if errors.As(err, &rpcErr) && rpcErr.Code == btcjson.ErrRPCInvalidParameter {
+			// The block doesn't exist yet, skip it for now
 			return ErrBlockUnavailable
 		}
 		return errorsmod.Wrapf(err, "Failed to get block hash")
 	}
+
+	b.logger.With("height", nextHeight, "hash", hash).Info("Fetching bitcoin block")
 
 	blockVerbose, err := b.btcRpc.GetBlockVerboseTx(hash)
 	if err != nil {
@@ -139,37 +176,36 @@ func (b *ChainClient) fetchNewBlock() error {
 
 	for _, tx := range blockVerbose.Tx {
 		txIn, isRelevant, err := b.processTx(uint64(blockVerbose.Height), &tx)
-		if isRelevant && err != nil {
+		if err != nil {
 			b.logger.Error(fmt.Sprintf("Failed to process Tx %s: %s", tx.Txid, err.Error()))
+			continue
 		}
-		if isRelevant && err == nil {
-			select {
-			case b.outboundChan <- txIn:
-			case <-b.stopChan:
-				b.logger.Info("Observer exiting early, tx skipped: ", tx.Txid)
-				return nil
-			}
+		if !isRelevant {
+			continue
+		}
+
+		select {
+		case b.outboundChan <- txIn:
+		case <-b.stopChan:
+			b.logger.Info("Observer exiting early, tx skipped: ", tx.Txid)
+			return nil
 		}
 	}
-	b.lastObservedHeight += 1
+
+	b.lastObservedHeight.Add(1)
 	return nil
 }
 
+// processTx builds `Transfer` from provided Bitcoin transaction
 func (b *ChainClient) processTx(height uint64, tx *btcjson.TxRawResult) (observer.Transfer, bool, error) {
-	sender, err := b.getSender(tx)
-	if err != nil {
-		return observer.Transfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx sender")
+	amount, relevant := b.isTxRelevant(tx)
+	if !relevant {
+		return observer.Transfer{}, false, nil
 	}
 
-	dest, amount, err := b.getOutput(sender, tx)
-	if err != nil {
-		return observer.Transfer{}, false, errorsmod.Wrapf(err, "Failed to get Tx output")
-	}
-	isRelevant := dest == b.vaultAddr
-
-	memo, err := b.getMemo(tx)
-	if err != nil {
-		return observer.Transfer{}, isRelevant, errorsmod.Wrapf(err, "Failed to get Tx memo")
+	memo, contains := getMemo(tx)
+	if !contains {
+		return observer.Transfer{}, false, fmt.Errorf("failed to get Tx memo")
 	}
 
 	return observer.Transfer{
@@ -177,57 +213,18 @@ func (b *ChainClient) processTx(height uint64, tx *btcjson.TxRawResult) (observe
 		DstChain: observer.ChainIdOsmosis,
 		Id:       tx.Hash,
 		Height:   height,
-		Sender:   sender,
+		Sender:   "", // NB! the sender is set in the osmosis chain client
 		To:       memo,
-		Asset:    string(observer.DenomBitcoin),
+		Asset:    bridgetypes.DefaultBitcoinDenomName,
 		Amount:   amount,
-	}, isRelevant, nil
+	}, true, nil
 }
 
-// getSender retrieves sender's address from Tx
-// There is no straightforward way to determine sender of the Tx, the flow used in this impl goes like this:
-// 1. Get the `txid` and `Vout` index from `Vin[0]` from incoming Tx
-//   - if we have multiple `Vin` entries the best thing we can do is to assume
-//     that all of the Vins owned by the same person
-//
-// 2. Get Tx by `txid` to get the transaction the input is originated from
-// 3. Get the `Vout` entry from this Tx by its index
-// 4. Get the sender address from `Vout`
-//   - if `addresses` field is available - get the first address from it
-//     (again we assume that all of them are owned by the same person)
-//   - otherwise - try to decode address from the script
-func (b *ChainClient) getSender(tx *btcjson.TxRawResult) (string, error) {
-	if len(tx.Vin) == 0 {
-		return "", fmt.Errorf("Vin is empty for Tx %s", tx.Txid)
-	}
-
-	txHash, err := chainhash.NewHashFromStr(tx.Vin[0].Txid)
-	if err != nil {
-		return "", errorsmod.Wrapf(err, "Failed to get Vin Tx hash for Tx %s", tx.Txid)
-	}
-
-	vinTx, err := b.btcRpc.GetRawTransactionVerbose(txHash)
-	if err != nil {
-		return "", errorsmod.Wrapf(err, "Failed to get Vin Tx with hash %s", txHash)
-	}
-
-	vout := vinTx.Vout[tx.Vin[0].Vout]
-	addresses, err := b.getAddressesFromScriptPubKey(vout.ScriptPubKey)
-	if err != nil {
-		return "", errorsmod.Wrapf(err, "Failed to get addresses from tx %s", txHash)
-	}
-	if len(addresses) == 0 {
-		return "", fmt.Errorf("No addresses found in Vout in tx %s", txHash)
-	}
-
-	return addresses[0], nil
-}
-
-// getOutput retrieves receiver address and amount of tokens from Tx
-// We try to find a `Vout` with a single receiver address (our vault)
-// to get the Tx receiver and amount of tokens
-// We go through all of the `Vout`'s and pick the first one that is not addressed back to the sender
-func (b *ChainClient) getOutput(sender string, tx *btcjson.TxRawResult) (string, math.Uint, error) {
+// isTxRelevant checks if a tx contains transfers to the BTC vault and calculates the total amount to transfer.
+// This method goes through all the Vouts and accumulates their values if Vouts.account[0] == vault.
+// Returns true is the tx is not relevant. Otherwise, false and the total amount to transfer.
+func (b *ChainClient) isTxRelevant(tx *btcjson.TxRawResult) (math.Uint, bool) {
+	var amount = sdk.NewUint(0)
 	for _, vout := range tx.Vout {
 		if strings.EqualFold(vout.ScriptPubKey.Type, "nulldata") {
 			continue
@@ -241,19 +238,19 @@ func (b *ChainClient) getOutput(sender string, tx *btcjson.TxRawResult) (string,
 			continue
 		}
 
-		if addresses[0] != sender {
-			amount, err := b.getAmount(vout)
+		if slices.Contains(addresses, b.vaultAddr) {
+			a, err := getAmount(vout)
 			if err != nil {
 				continue
 			}
-			return addresses[0], amount, nil
+			amount = amount.Add(a)
 		}
 	}
-	return "", math.Uint{}, fmt.Errorf("Failed to get Vout")
+	return amount, !amount.IsZero()
 }
 
 // getAmount retrieves amount of tokens sent
-func (b *ChainClient) getAmount(vout btcjson.Vout) (math.Uint, error) {
+func getAmount(vout btcjson.Vout) (math.Uint, error) {
 	amount, err := btcutil.NewAmount(vout.Value)
 	if err != nil {
 		return math.Uint{}, errorsmod.Wrapf(err, "Failed to parse float value")
@@ -261,8 +258,8 @@ func (b *ChainClient) getAmount(vout btcjson.Vout) (math.Uint, error) {
 	return math.NewUint(uint64(amount.ToUnit(btcutil.AmountSatoshi))), nil
 }
 
-// getMemo retrieves data behind `OP_RETURN` Vout
-func (b *ChainClient) getMemo(tx *btcjson.TxRawResult) (string, error) {
+// getMemo retrieves data behind `OP_RETURN` Vout. Return false if can't get memo.
+func getMemo(tx *btcjson.TxRawResult) (string, bool) {
 	for _, vout := range tx.Vout {
 		if !strings.EqualFold(vout.ScriptPubKey.Type, "nulldata") {
 			continue
@@ -273,19 +270,18 @@ func (b *ChainClient) getMemo(tx *btcjson.TxRawResult) (string, error) {
 			// Decode $MEMO_DATA$ entry from the array
 			decoded, err := hex.DecodeString(fields[1])
 			if err != nil {
-				b.logger.Error("Failed to decode OP_RETURN field", err)
+				// TODO: log?
 				continue
 			}
-			return string(decoded), nil
+			// TODO: verify the memo format
+			return string(decoded), true
 		}
 	}
-	return "", fmt.Errorf("Memo not found")
+	return "", false
 }
 
+// getAddressesFromScriptPubKey extracts addresses from the Bitcoin script
 func (b *ChainClient) getAddressesFromScriptPubKey(key btcjson.ScriptPubKeyResult) ([]string, error) {
-	if len(key.Addresses) > 0 {
-		return key.Addresses, nil
-	}
 	if len(key.Hex) == 0 {
 		return nil, errors.New("Empty scriptPubKey hex")
 	}
@@ -293,7 +289,7 @@ func (b *ChainClient) getAddressesFromScriptPubKey(key btcjson.ScriptPubKeyResul
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "Failed to decode scriptPubKey hex")
 	}
-	_, extractedAddresses, _, err := txscript.ExtractPkScriptAddrs(buf, &chaincfg.TestNet3Params)
+	_, extractedAddresses, _, err := txscript.ExtractPkScriptAddrs(buf, &b.chainParams)
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "Failed to extract address from scriptPubKey")
 	}

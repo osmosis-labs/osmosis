@@ -34,6 +34,7 @@ type ChainClient struct {
 	outboundChan       chan observer.Transfer
 	lastObservedHeight atomic.Uint64
 	txConfig           cosmosclient.TxConfig
+	signerAddr         string // TODO: validate this address (probably using a private key)! otherwise everyone could act on behalf of the validator
 }
 
 // NewChainClient returns new instance of `Osmosis`
@@ -42,6 +43,7 @@ func NewChainClient(
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
 	txConfig cosmosclient.TxConfig,
+	signerAddr string,
 ) *ChainClient {
 	return &ChainClient{
 		logger:             logger.With("module", ModuleName),
@@ -51,12 +53,8 @@ func NewChainClient(
 		outboundChan:       make(chan observer.Transfer),
 		lastObservedHeight: atomic.Uint64{},
 		txConfig:           txConfig,
+		signerAddr:         signerAddr,
 	}
-}
-
-func (c *ChainClient) RpcSend(ctx context.Context, tx []byte) (*coretypes.ResultBroadcastTx, error) {
-	res, err := c.cometRpc.BroadcastTxSync(ctx, tx)
-	return res, err
 }
 
 // Start subscribes to the `NewBlock` events and starts listening to `EventOutboundTransfer` events
@@ -73,6 +71,7 @@ func (c *ChainClient) Start(ctx context.Context) error {
 
 	go c.observeEvents(ctx, txs)
 
+	c.logger.Info("Started Osmosis chain client")
 	return nil
 }
 
@@ -83,7 +82,14 @@ func (c *ChainClient) Stop(ctx context.Context) error {
 	if err := c.cometRpc.UnsubscribeAll(ctx, ModuleName); err != nil {
 		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
 	}
-	return c.cometRpc.Stop()
+
+	err := c.cometRpc.Stop()
+	if err != nil {
+		return errorsmod.Wrapf(err, "Failed to stop comet RPC")
+	}
+
+	c.logger.Info("Stopped Osmosis chain client")
+	return nil
 }
 
 // ListenOutboundTransfer returns receive-only channel with `OutboundTransfer` items
@@ -95,7 +101,7 @@ func (c *ChainClient) ListenOutboundTransfer() <-chan observer.Transfer {
 func (c *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Transfer) error {
 	msg := bridgetypes.NewMsgInboundTransfer(
 		in.Id,
-		in.Sender,
+		c.signerAddr, // NB! a current node should be a sender!
 		in.To,
 		bridgetypes.AssetID{
 			SourceChain: string(in.SrcChain),
@@ -212,13 +218,19 @@ func outboundTransferFromMsg(
 	}
 }
 
-// Returns current height of the chain
-func (c *ChainClient) Height() (uint64, error) {
+// Height returns current height of the chain
+func (c *ChainClient) Height(context.Context) (uint64, error) {
 	return c.lastObservedHeight.Load(), nil
 }
 
-// Returns number of required tx confirmations
-func (c *ChainClient) ConfirmationsRequired() (uint64, error) {
-	// Query bridge module
-	return 0, nil
+// ConfirmationsRequired returns number of required tx confirmations
+func (c *ChainClient) ConfirmationsRequired(
+	ctx context.Context,
+	id bridgetypes.AssetID,
+) (uint64, error) {
+	cr, err := c.osmoClient.ConfirmationsRequired(ctx, id)
+	if err != nil {
+		return 0, errorsmod.Wrapf(err, "Failed to get confirmations required")
+	}
+	return cr, nil
 }
