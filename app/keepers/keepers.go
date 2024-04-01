@@ -41,6 +41,7 @@ import (
 	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
@@ -81,6 +82,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v24/wasmbinding"
+	bridgekeeper "github.com/osmosis-labs/osmosis/v24/x/bridge/keeper"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v24/x/gamm/keeper"
@@ -165,6 +168,7 @@ type AppKeepers struct {
 	WasmKeeper                   *wasmkeeper.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
+	BridgeKeeper                 *bridgekeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
@@ -499,6 +503,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
+	bridgeKeeper := bridgekeeper.NewKeeper(
+		appKeepers.keys[bridgetypes.StoreKey],
+		appCodec,
+		appKeepers.GetSubspace(bridgetypes.ModuleName),
+		bApp.MsgServiceRouter(),
+		appKeepers.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	appKeepers.BridgeKeeper = &bridgeKeeper
+
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],
 		appKeepers.GetSubspace(valsetpreftypes.ModuleName),
@@ -745,6 +759,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(bridgetypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
@@ -868,6 +883,7 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasmtypes.StoreKey,
 		tokenfactorytypes.StoreKey,
+		bridgetypes.StoreKey,
 		valsetpreftypes.StoreKey,
 		protorevtypes.StoreKey,
 		ibchookstypes.StoreKey,

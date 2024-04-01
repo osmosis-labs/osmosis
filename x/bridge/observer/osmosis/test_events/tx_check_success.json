@@ -1,0 +1,13 @@
+{
+    "code": 0,
+    "data": null,
+    "log": "",
+    "info": "",
+    "gas_wanted": "200000",
+    "gas_used": "39377",
+    "events": [],
+    "codespace": "sdk",
+    "sender": "",
+    "priority": "0",
+    "mempoolError": ""
+}

@@ -17,8 +17,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/osmosis-labs/osmosis/v24/app"
 )
 
 var (
@@ -29,39 +27,26 @@ type Client struct {
 	chainId   string
 	keyring   keyring.Keyring
 	grpcConn  *grpc.ClientConn
-	txConfig  client.TxConfig
 	txClient  tx.ServiceClient
 	accClient authtypes.QueryClient
+	txConfig  client.TxConfig
 }
 
 // NewClient returns new instance of `Client` with
 // Tx service client and Auth query client created
 func NewClient(
 	chainId string,
-	rpcUrl string,
-	disableTls bool,
+	grpcConn *grpc.ClientConn,
 	keyring keyring.Keyring,
-) (Client, error) {
-	grpcConn, err := grpcConnection(rpcUrl, disableTls)
-	if err != nil {
-		return Client{}, errorsmod.Wrapf(ErrGrpcConnection, err.Error())
-	}
-
-	return NewClientWithConnection(chainId, grpcConn, keyring), nil
-}
-
-func NewClientWithConnection(
-	chainId string,
-	conn *grpc.ClientConn,
-	keyring keyring.Keyring,
-) Client {
-	return Client{
+	txConfig client.TxConfig,
+) *Client {
+	return &Client{
 		chainId:   chainId,
 		keyring:   keyring,
-		grpcConn:  conn,
-		txConfig:  app.GetEncodingConfig().TxConfig,
-		txClient:  tx.NewServiceClient(conn),
-		accClient: authtypes.NewQueryClient(conn),
+		grpcConn:  grpcConn,
+		txClient:  tx.NewServiceClient(grpcConn),
+		accClient: authtypes.NewQueryClient(grpcConn),
+		txConfig:  txConfig,
 	}
 }
 
@@ -227,7 +212,8 @@ func (c *Client) sign(
 	return txBytes, nil
 }
 
-func grpcConnection(url string, disableTls bool) (*grpc.ClientConn, error) {
+// GrpcConnection helper function to create gRPC connection
+func GrpcConnection(url string, disableTls bool) (*grpc.ClientConn, error) {
 	var creds credentials.TransportCredentials
 	if disableTls {
 		creds = insecure.NewCredentials()

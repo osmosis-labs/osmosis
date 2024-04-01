@@ -110,7 +110,7 @@ func TestAccountQuerySuccess(t *testing.T) {
 	defer conn.Close()
 
 	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
 
 	acc, err := client.Account(ctx, Addr1)
 	require.NoError(t, err)
@@ -165,7 +165,7 @@ func TestSignTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 	cpk, err := record.GetPubKey()
 	require.NoError(t, err)
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
 
 	coins := types.NewCoins(types.NewInt64Coin("uosmo", 100))
 	msg := banktypes.NewMsgSend(Addr1, Addr2, coins)
@@ -297,7 +297,7 @@ func TestBroadcastTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := osmosis.NewClientWithConnection(ChainId, conn, keyring)
+	client := osmosis.NewClient(ChainId, conn, keyring, app.GetEncodingConfig().TxConfig)
 
 	bytes, err := client.SignTx(ctx, msg, fees, gasLimit)
 	require.NoError(t, err)
