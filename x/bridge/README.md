@@ -48,7 +48,7 @@ The **Observer**, running as part of the `osmosisd` binary, operates exclusively
 
 * **External Chain Observers**: One for each chain, these observers track all transactions occurring within the vault. Upon identifying a valid transaction (e.g., one with the correct memo), they facilitate its transfer to Osmosis.
 * **External Chain Clients**: One for each chain, these clients communicate with external chains, allowing the **observer** to perform transfers and other supporting operations.
-* **Osmosis Observer**: This observer monitors all tx results on Osmosis, focusing only on relevant ones, such as **MsgOutboundTransfer**.
+* **Osmosis Observer**: This observer monitors all tx results on Osmosis, focusing only on relevant ones, such as **MsgOutboundTransfer**. There is only one Osmosis observer for all chains.
 * **Osmosis Client**: The client helps perform method calls to Osmosis, such as triggering **MsgInboundTransfer**.
 * **TSS Signer**: This component manages outbound transfers from Osmosis. It handles the signing of these transfers and selects a leader to broadcast them.
 
@@ -76,7 +76,7 @@ The 'last transfer height' refers to the latest block height on the asset’s ch
 
 ### Votes
 
-In the `x/bridge` module, a **vote** signifies that the member of the **super valset** has acknowledges, verified, and correctly processed the transfer.
+In the `x/bridge` module, a **vote** signifies that the member of the **super valset** has acknowledged, verified, and correctly processed the transfer.
 
 For inbound transfers, the `x/bridge` module employs the `votes_needed` parameter to determine the required number of votes for a transfer to be considered complete. When processing an inbound transfer, the module accumulates votes cast for that transfer. A validator casts a **vote** for an inbound transfer by sending a **MsgInboundTransfer** to the chain proposer after its observation. The transfer is deemed **finalized** and the minting process initiated once the number of votes reaches the `votes_needed`.
 
@@ -95,7 +95,7 @@ The transfer process is straightforward:
 
 ### Rate limiting
 
-**Rate limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 5 BTC every day. Should the module receive more than 5 BTC within this 24-hours timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
+**Rate limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 5 BTC every day. Should the module receive more than 5 BTC within this 24-hour timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
 
 ### Quarantine
 
