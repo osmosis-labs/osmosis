@@ -443,7 +443,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		// It does not exist, so we update the default config.toml to update
 		// We modify the default config.toml to have faster block times
 		// It will be written by server.InterceptConfigsPreRunHandler
-		tmcConfig.Consensus.TimeoutCommit = 3 * time.Second
+		tmcConfig.Consensus.TimeoutCommit = 2 * time.Second
 	} else {
 		// config.toml exists
 
@@ -469,8 +469,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}
 
 		// The original default is 5s and is set in Cosmos SDK.
-		// We lower it to 3s for faster block times.
-		serverCtx.Config.Consensus.TimeoutCommit = 3 * time.Second
+		// We lower it to 2s for faster block times.
+		serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
 
 		defer func() {
 			if err := recover(); err != nil {
