@@ -430,10 +430,10 @@ func NewOsmosisApp(
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
 		BlockSDKAnteHandlerParams{
-			freeLane:   freeLane,
-			mevLane:    mevLane,
+			freeLane:      freeLane,
+			mevLane:       mevLane,
 			auctionKeeper: *app.AppKeepers.AuctionKeeper,
-			txConfig: txConfig,
+			txConfig:      txConfig,
 		},
 	)
 

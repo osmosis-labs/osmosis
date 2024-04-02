@@ -4,25 +4,25 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	signerextraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
 	"github.com/skip-mev/block-sdk/block/base"
 	defaultlane "github.com/skip-mev/block-sdk/lanes/base"
 	freelane "github.com/skip-mev/block-sdk/lanes/free"
 	mevlane "github.com/skip-mev/block-sdk/lanes/mev"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 const (
-	maxTxPerMEVLane = 500 // this is the maximum # of bids that will be held in the app-side in-memory mempool
-	maxTxPerFreeLane = 1000 // this is the maximum # of free-txs that will be held in the app-side in-memory mempool
+	maxTxPerMEVLane     = 500  // this is the maximum # of bids that will be held in the app-side in-memory mempool
+	maxTxPerFreeLane    = 1000 // this is the maximum # of free-txs that will be held in the app-side in-memory mempool
 	maxTxPerDefaultLane = 3000 // all other txs
 )
 
 var (
-	freeLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.05")
+	freeLaneBlockspacePercentage    = math.LegacyMustNewDecFromStr("0.05")
 	defaultLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.85")
-	mevLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.1")
+	mevLaneBlockspacePercentage     = math.LegacyMustNewDecFromStr("0.1")
 )
 
 // CreateLanes walks through the process of creating the lanes for the block sdk. In this function
