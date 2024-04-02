@@ -12,8 +12,6 @@ import (
 
 // TestParams tests the query for params
 func (s *KeeperTestSuite) TestParams() {
-	// TODO: Move query server to normal
-	s.SetupPoolsTest()
 	ctx := sdk.WrapSDKContext(s.Ctx)
 	expectedParams := s.App.ProtoRevKeeper.GetParams(s.Ctx)
 
@@ -266,7 +264,6 @@ func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
 
 // TestGetProtoRevAdminAccount tests the query to retrieve the admin account
 func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
-	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAdminAccountRequest{}
 	res, err := s.queryClient.GetProtoRevAdminAccount(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
@@ -275,7 +272,6 @@ func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
 
 // TestGetProtoRevDeveloperAccount tests the query to retrieve the developer account
 func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
-	s.SetupPoolsTest()
 	// By default it should be empty
 	req := &types.QueryGetProtoRevDeveloperAccountRequest{}
 	res, err := s.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(s.Ctx), req)
@@ -294,7 +290,6 @@ func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 
 // TestGetProtoRevInfoByPoolType tests the query to retrieve the pool info
 func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
-	s.SetupPoolsTest()
 	// Set the pool weights
 	poolInfo := types.InfoByPoolType{
 		Stable:       types.StablePoolInfo{Weight: 1},
@@ -314,7 +309,6 @@ func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
 
 // TestGetProtoRevMaxPoolPointsPerTx tests the query to retrieve the max pool points per tx
 func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
-	s.SetupPoolsTest()
 	// Set the max pool points per tx
 	maxPoolPointsPerTx := types.MaxPoolPointsPerTx - 1
 	err := s.App.AppKeepers.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, maxPoolPointsPerTx)
@@ -328,7 +322,6 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
 
 // TestGetProtoRevMaxPoolPointsPerBlock tests the query to retrieve the max pool points per block
 func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
-	s.SetupPoolsTest()
 	// Set the max pool points per block
 	maxPoolPointsPerBlock := types.MaxPoolPointsPerBlock - 1
 	err := s.App.AppKeepers.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, maxPoolPointsPerBlock)
@@ -342,7 +335,6 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 
 // TestGetProtoRevBaseDenoms tests the query to retrieve the base denoms
 func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
-	s.SetupPoolsTest()
 	// base denoms already set in setup
 	baseDenoms, err := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
@@ -355,7 +347,6 @@ func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 
 // TestGetProtoRevEnabled tests the query to retrieve the enabled status of protorev
 func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
-	s.SetupPoolsTest()
 	// Set the enabled status
 	enabled := false
 	s.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, enabled)
@@ -399,7 +390,6 @@ func (s *KeeperTestSuite) TestGetProtoRevPool() {
 
 // TestGetAllProtocolRevenue tests the query for all protocol revenue profits
 func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
-	s.SetupPoolsTest()
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 	communityPoolDenom := "Akash"

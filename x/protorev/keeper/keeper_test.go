@@ -58,7 +58,10 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupNoPools() {
 	s.Setup()
 	s.setupParams()
-	s.Commit()
+
+	queryHelper := baseapp.NewQueryServerTestHelper(s.Ctx, s.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*s.App.AppKeepers.ProtoRevKeeper))
+	s.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (s *KeeperTestSuite) SetupTest() {
