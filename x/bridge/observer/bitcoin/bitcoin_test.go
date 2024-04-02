@@ -1,6 +1,7 @@
 package bitcoin_test
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -12,10 +13,18 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer/bitcoin"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
+)
+
+var (
+	BtcVault = "2N4qEFwruq3zznQs78twskBrNTc6kpq87j1"
 )
 
 type Response struct {
@@ -63,110 +72,73 @@ func success(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// TestObserverSuccess verifies Observer properly processes observed transactions
-func TestObserverSuccess(t *testing.T) {
-	s := httptest.NewServer(http.HandlerFunc(success(t)))
+func TestListenOutboundTransfer(t *testing.T) {
+	s := httptest.NewServer(success(t))
 	defer s.Close()
 
 	host, _ := strings.CutPrefix(s.URL, "http://")
-	cfg := bitcoin.RpcConfig{
-		Host:       host,
-		DisableTls: true,
-		User:       "test",
-		Pass:       "test",
-	}
+	client, err := rpcclient.New(&rpcclient.ConnConfig{
+		Host:         host,
+		DisableTLS:   true,
+		HTTPPostMode: true,
+		User:         "test",
+		Pass:         "test",
+		Params:       chaincfg.TestNet3Params.Name,
+	}, nil)
+	require.NoError(t, err)
 
 	initialHeight := uint64(2582657)
-	observer, err := bitcoin.NewObserver(
+	b, err := bitcoin.NewChainClient(
 		log.NewNopLogger(),
-		cfg,
-		"2N4qEFwruq3zznQs78twskBrNTc6kpq87j1",
-		initialHeight,
+		client,
+		BtcVault,
 		time.Second,
+		initialHeight,
+		chaincfg.TestNet3Params,
 	)
 	require.NoError(t, err)
 
-	observer.Start()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	err = b.Start(ctx)
+	require.NoError(t, err)
 
 	// We expect Observer to observe 1 block with 2 Txs
 	// Only 1 Tx is sent to our vault address,
 	// so we should receive only 1 TxIn
-	txs := observer.TxIns()
-	var tx bitcoin.TxIn
+	txs := b.ListenOutboundTransfer()
+	var out observer.Transfer
 	require.Eventually(t, func() bool {
-		tx = <-txs
+		out = <-txs
 		return true
-	}, time.Second, 100*time.Millisecond, "Timeout reading events from observer")
+	}, time.Second, 100*time.Millisecond, "Timeout reading transfer")
 
-	expectedTx := bitcoin.TxIn{
-		Id:          "f395b2cc8551aff25fe8d61fec159a6b93d29b9ff56a68c9d29df99a864fd74c",
-		Height:      initialHeight,
-		Sender:      "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
-		Destination: "2N4qEFwruq3zznQs78twskBrNTc6kpq87j1",
-		Amount:      math.NewUint(10000),
-		Memo:        "osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
+	expOut := observer.Transfer{
+		SrcChain: observer.ChainIdBitcoin,
+		DstChain: observer.ChainIdOsmosis,
+		Id:       "ef4cd511c64834bde624000b94110c9f184388566a97d68d355339294a72dadf",
+		Height:   initialHeight,
+		Sender:   "", // the sender is set in the osmosis chain client
+		To:       "osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
+		Asset:    string(bridgetypes.DefaultBitcoinDenomName),
+		Amount:   math.NewUint(10000),
 	}
-	require.Equal(t, expectedTx, tx)
+	require.Equal(t, expOut, out)
 	require.Equal(t, 0, len(txs))
 
-	observer.Stop()
-}
-
-func TestInvalidRpcCfg(t *testing.T) {
-	tests := []struct {
-		name string
-		cfg  bitcoin.RpcConfig
-	}{
-		{
-			name: "Invalid Host URL",
-			cfg: bitcoin.RpcConfig{
-				Host:       "",
-				DisableTls: true,
-				User:       "test",
-				Pass:       "test",
-			},
-		},
-		{
-			name: "Invalid User",
-			cfg: bitcoin.RpcConfig{
-				Host:       "127.0.0.1:1234",
-				DisableTls: true,
-				User:       "",
-				Pass:       "test",
-			},
-		},
-		{
-			name: "Invalid Pass",
-			cfg: bitcoin.RpcConfig{
-				Host:       "127.0.0.1:1234",
-				DisableTls: true,
-				User:       "test",
-				Pass:       "",
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		_, err := bitcoin.NewObserver(log.NewNopLogger(), tc.cfg, "", 0, time.Second)
-		require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
-	}
+	err = b.Stop(ctx)
+	require.NoError(t, err)
 }
 
 func TestInvalidVaultAddress(t *testing.T) {
-	cfg := bitcoin.RpcConfig{
-		Host:       "127.0.0.1:1234",
-		DisableTls: true,
-		User:       "test",
-		Pass:       "test",
-	}
-
-	initialHeight := uint64(2582657)
-	_, err := bitcoin.NewObserver(
+	_, err := bitcoin.NewChainClient(
 		log.NewNopLogger(),
-		cfg,
+		nil,
 		"",
-		initialHeight,
 		time.Second,
+		0,
+		chaincfg.TestNet3Params,
 	)
 	require.ErrorIs(t, err, bitcoin.ErrInvalidCfg)
 }

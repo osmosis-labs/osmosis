@@ -250,17 +250,6 @@ func TestMsgOutboundTransfer(t *testing.T) {
 			expectedErr:     sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid destination addr",
-			msg: types.MsgOutboundTransfer{
-				Sender:   addr1,
-				DestAddr: "qwerty",
-				AssetId:  assetID1,
-				Amount:   math.NewInt(100),
-			},
-			expectedSigners: []sdk.AccAddress{addr1Bytes},
-			expectedErr:     sdkerrors.ErrInvalidAddress,
-		},
-		{
 			name: "empty asset id",
 			msg: types.MsgOutboundTransfer{
 				Sender:   addr1,

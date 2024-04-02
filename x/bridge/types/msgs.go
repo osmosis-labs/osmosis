@@ -80,8 +80,7 @@ func (m MsgOutboundTransfer) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	_, err = sdk.AccAddressFromBech32(m.DestAddr)
-	if err != nil {
+	if len(m.DestAddr) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid destination address (%s)", err)
 	}
 
