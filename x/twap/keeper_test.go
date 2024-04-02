@@ -324,6 +324,15 @@ func (s *TestSuite) preSetRecords(records []types.TwapRecord) {
 	}
 }
 
+// preSetRecords pre sets records on the twap keeper to the
+// given records. The records are updated to use the provided pool ID
+func (s *TestSuite) preSetRecordsWithPoolId(poolId uint64, records []types.TwapRecord) {
+	for _, record := range records {
+		record.PoolId = poolId
+		s.twapkeeper.StoreNewRecord(s.Ctx, record)
+	}
+}
+
 // getAllHistoricalRecordsForPool returns all historical records for a given pool.
 func (s *TestSuite) getAllHistoricalRecordsForPool(poolId uint64) []types.TwapRecord {
 	allRecords, err := s.twapkeeper.GetAllHistoricalPoolIndexedTWAPs(s.Ctx)

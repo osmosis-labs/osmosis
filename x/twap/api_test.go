@@ -357,13 +357,14 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			expectSpErr:  baseTime,
 		},
 	}
+	counter := uint64(0)
 	for name, test := range tests {
+		curPoolId := counter
 		s.Run(name, func() {
-			s.SetupTest()
-			s.preSetRecords(test.recordsToSet)
+			s.preSetRecordsWithPoolId(curPoolId, test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
-			twap, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
+			twap, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, curPoolId,
 				test.input.baseAssetDenom, test.input.quoteAssetDenom,
 				test.input.startTime, test.input.endTime)
 
@@ -376,6 +377,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expTwap, twap)
 		})
+		counter++
 	}
 }
 
@@ -577,16 +579,17 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		},
 	}
 
+	counter := uint64(0)
 	for name, test := range tests {
+		curPoolId := counter // Capture the current value of the counter for use within the goroutine
 		s.Run(name, func() {
-			s.SetupTest()
-			s.preSetRecords(test.recordsToSet)
+			s.preSetRecordsWithPoolId(curPoolId, test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
 			var twap osmomath.Dec
 			var err error
 
-			twap, err = s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
+			twap, err = s.twapkeeper.GetArithmeticTwap(s.Ctx, curPoolId,
 				test.input.baseAssetDenom, test.input.quoteAssetDenom,
 				test.input.startTime, test.input.endTime)
 
@@ -598,6 +601,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expTwap, twap)
 		})
+		counter++
 	}
 }
 
@@ -757,17 +761,18 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			expectedError: errSpotPrice,
 		},
 	}
+	counter := uint64(0)
 	for name, test := range tests {
+		curPoolId := counter
 		s.Run(name, func() {
-			s.SetupTest()
-			s.preSetRecords(test.recordsToSet)
+			s.preSetRecordsWithPoolId(curPoolId, test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
 			var twap osmomath.Dec
 			var err error
 
 			// test the values of `GetArithmeticTwapToNow` if bool in test field is true
-			twap, err = s.twapkeeper.GetArithmeticTwapToNow(s.Ctx, test.input.poolId,
+			twap, err = s.twapkeeper.GetArithmeticTwapToNow(s.Ctx, curPoolId,
 				test.input.baseAssetDenom, test.input.quoteAssetDenom,
 				test.input.startTime)
 
@@ -779,6 +784,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expTwap, twap)
 		})
+		counter++
 	}
 }
 
