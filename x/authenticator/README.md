@@ -2,10 +2,96 @@
 
 ## General Explanation
 
-The `x/authenticators` module provides a robust and extensible framework for authenticating transactions.
+The `x/authenticator` module provides a robust and extensible framework for authenticating transactions.
 
 Unlike traditional authentication methods, this module allows you to use multiple types of authenticators,
 each with their own set of rules and conditions for transaction approval.
+
+## Architecture Overview
+
+### Circuit Breaker
+
+The module is designed to be used as a replacement for the default Cosmos SDK authentication mechanism. This is 
+configured as an ante handler (executed before the transaction messages are processed). For safety, we have included
+a circuit breaker that allows the module to be disabled if necessary. Once the module is enabled, the user needs to 
+opt-in into using authenticators by selecting the authenticators it wants to use for each message. This is specified
+in the `selected_authenticators` field of the transaction extension. If selected_authenticators are not provided, the
+transaction defaults to the classic Cosmos SDK authentication method.
+
+The flow is as follows:
+
+![Circuit Breaker](/x/authenticator/images/circuit_breaker.jpg)
+
+### Authenticator Flow
+
+After passing the circuit breaker, if the transaction uses authenticators, the flow becomes as follows:
+
+The authenticator ante handler iterates over each message in the transaction. For each message, the following steps occur:
+
+ * The message signer is selected as the "account" for this message. The authenticator for that account is selected based on the selected_authenticator provided in the tx
+    * Validation occurs to ensure that the selected authenticator is valid and that the account has the authenticator.
+ * The selected authenticator attempts to authenticate the message by calling its Authenticate() function. 
+   * If authentication fails, the process stops and the transaction is rejected. No changes to state are made.
+   * If authentication succeeds, closure is generated for the message.
+     * This closure remembers which authenticator was used and will be called later if the whole tx (all messages) are authenticated. 
+ * Fees for the transaction are collected
+
+ After all messages are authenticated successfully:
+
+ * The Call Track() on all messages step is executed, notifying the authenticators involved.
+ * If all track calls finish successfully, the changes are written to the data store.
+
+The process then executes all the authenticated messages. If the transaction fails at this point, the execution 
+changes are discarded. Please note that the authenticator changes (committed in track) are not reverted!
+
+If the execution is successful, we continue in the post handler:
+
+ * For each message, an account and authenticator are selected again.
+ * The ConfirmExecution() function is called on the selected authenticator, allowing it to enforce post-execution rules.
+   * If ConfirmExecution() succeeds for all authenticators, the changes are written to the data store.
+   * If ConfirmExecution() fails for any authenticator, or if the "Execute All Messages" step fails, the changes are discarded.
+
+![Authenticator Flow](/x/authenticator/images/authentication_flow.jpg)
+
+### Authenticator Implementations
+
+The implementation of each authenticator type is done by a Go struct that implements the `Authenticator` interface. 
+This interface defines the functions that need to be implemented and will be described in detail in the next section. 
+
+For authenticators to be available, they need to be registered with the `AuthenticatorManager`. This manager is 
+responsible for retrieving authenticators by their unique type.
+
+![Authenticator Implementations](/x/authenticator/images/authenticator_manager.jpg)
+
+Since implementations are custom code, they can encode complex authentication logic like calling each other, or
+calling cosmwasm contracts to authenticate the messages.
+
+### Authenticator configuration for accounts
+
+Accounts have the flexibility to be linked with multiple authenticators, a setup maintained in the system's storage 
+and managed by the module's Keeper. The keeper is responsible for adding and removing 
+authenticators, as well as storing any user data that the authenticators may need. 
+
+This is where the association of specific authenticators with accounts is stored. 
+
+![Account Authenticator Configuration](/x/authenticator/images/keeper.jpg)
+
+One way of seeing this data is as the instantiation information necessary to use the authenticator for a specific 
+account. For example, a `SignatureVerificationAuthenticator` contains the code necessary to verify a signature, but
+it needs to know which public key to use when verifying it. An account can configure the 
+`SignatureVerificationAuthenticator` to be one of their authenticators and would need to provide the public key it wants 
+to use for verification in the configuration data.
+
+
+To make an authenticator work for a specific account, you just need to feed it the right information. For example, 
+the `SignatureVerificationAuthenticator` needs to know which public key to check when verifying a signature. 
+So, if you're setting this up for your account, you have to configure it with the public key you want as part of the 
+account-authenticator link.
+
+This is done by using the `MsgAddAuthenticator` message, which is covered in detail in a later section. When 
+authenticators are added to accounts, they should validate that the necessary data is available and correct in their
+`OnAuthenticatorAdded` function.
+
 
 ## Authenticator Interface
 
