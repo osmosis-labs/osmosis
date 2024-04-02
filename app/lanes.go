@@ -108,7 +108,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 func WithdrawStakingRewardsMatchHandler() base.MatchHandler {
 	return func(ctx sdk.Context, tx sdk.Tx) bool {
 		for _, msg := range tx.GetMsgs() {
-			if _, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward); ok {
+			if _, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward); ok && len(tx.GetMsgs()) == 1 {
 				return true
 			}
 		}
