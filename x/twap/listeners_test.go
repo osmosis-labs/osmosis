@@ -342,7 +342,6 @@ func (s *TestSuite) TestPoolStateChange() {
 	}
 
 	for name, tc := range tests {
-		s.SetupTest()
 		s.Run(name, func() {
 			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
 
