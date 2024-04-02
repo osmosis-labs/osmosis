@@ -861,8 +861,6 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 		weightB := osmomath.NewInt(int64(sdkrand.RandIntBetween(r, 1, 1000)))
 
 		s.Run(fmt.Sprintf("elapsedTimeMs=%d, weightA=%d, tokenASupply=%d, weightB=%d, tokenBSupply=%d", elapsedTimeMs, weightA, tokenASupply, weightB, tokenBSupply), func() {
-			s.SetupTest()
-
 			ctx := s.Ctx
 			app := s.App
 
@@ -877,7 +875,7 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 				},
 			}
 
-			s.PrepareCustomBalancerPool(assets, balancer.PoolParams{
+			poolId := s.PrepareCustomBalancerPool(assets, balancer.PoolParams{
 				SwapFee: osmomath.ZeroDec(),
 				ExitFee: osmomath.ZeroDec(),
 			})
@@ -890,10 +888,10 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 
 			ctx = ctx.WithBlockTime(newTime)
 
-			spotPrice, err := app.GAMMKeeper.CalculateSpotPrice(ctx, 1, denom1, denom0)
+			spotPrice, err := app.GAMMKeeper.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 			s.Require().NoError(err)
 
-			twap, err := app.TwapKeeper.GetGeometricTwapToNow(ctx, 1, denom0, denom1, oldTime)
+			twap, err := app.TwapKeeper.GetGeometricTwapToNow(ctx, poolId, denom0, denom1, oldTime)
 			s.Require().NoError(err)
 
 			osmomath.ErrTolerance{
