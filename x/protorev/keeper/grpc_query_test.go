@@ -12,6 +12,8 @@ import (
 
 // TestParams tests the query for params
 func (s *KeeperTestSuite) TestParams() {
+	// TODO: Move query server to normal
+	s.SetupPoolsTest()
 	ctx := sdk.WrapSDKContext(s.Ctx)
 	expectedParams := s.App.ProtoRevKeeper.GetParams(s.Ctx)
 
@@ -22,6 +24,7 @@ func (s *KeeperTestSuite) TestParams() {
 
 // TestGetProtoRevNumberOfTrades tests the query for number of trades
 func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
+	s.SetupPoolsTest()
 	// Initially should throw an error
 	_, err := s.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(s.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
 	s.Require().Error(err)
@@ -52,6 +55,7 @@ func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 
 // TestGetProtoRevProfitsByDenom tests the query for profits by denom
 func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: types.OsmosisDenomination,
 	}
@@ -87,6 +91,7 @@ func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 
 // TestGetProtoRevAllProfits tests the query for all profits
 func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAllProfitsRequest{}
 	res, err := s.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
@@ -121,6 +126,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
 
 // TestGetProtoRevStatisticsByRoute tests the query for statistics by route
 func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
+	s.SetupPoolsTest()
 	// Request with no trades should return an error
 	req := &types.QueryGetProtoRevStatisticsByRouteRequest{
 		Route: []uint64{1, 2, 3},
@@ -171,6 +177,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 
 // TestGetProtoRevAllRouteStatistics tests the query for all route statistics
 func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAllRouteStatisticsRequest{}
 
 	res, err := s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
@@ -246,6 +253,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 
 // TestGetProtoRevTokenPairArbRoutes tests the query to retrieve all token pair arb routes
 func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevTokenPairArbRoutesRequest{}
 	res, err := s.queryClient.GetProtoRevTokenPairArbRoutes(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
@@ -258,6 +266,7 @@ func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
 
 // TestGetProtoRevAdminAccount tests the query to retrieve the admin account
 func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAdminAccountRequest{}
 	res, err := s.queryClient.GetProtoRevAdminAccount(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
@@ -266,6 +275,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
 
 // TestGetProtoRevDeveloperAccount tests the query to retrieve the developer account
 func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
+	s.SetupPoolsTest()
 	// By default it should be empty
 	req := &types.QueryGetProtoRevDeveloperAccountRequest{}
 	res, err := s.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(s.Ctx), req)
@@ -284,6 +294,7 @@ func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 
 // TestGetProtoRevInfoByPoolType tests the query to retrieve the pool info
 func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
+	s.SetupPoolsTest()
 	// Set the pool weights
 	poolInfo := types.InfoByPoolType{
 		Stable:       types.StablePoolInfo{Weight: 1},
@@ -303,6 +314,7 @@ func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
 
 // TestGetProtoRevMaxPoolPointsPerTx tests the query to retrieve the max pool points per tx
 func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
+	s.SetupPoolsTest()
 	// Set the max pool points per tx
 	maxPoolPointsPerTx := types.MaxPoolPointsPerTx - 1
 	err := s.App.AppKeepers.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, maxPoolPointsPerTx)
@@ -316,6 +328,7 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
 
 // TestGetProtoRevMaxPoolPointsPerBlock tests the query to retrieve the max pool points per block
 func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
+	s.SetupPoolsTest()
 	// Set the max pool points per block
 	maxPoolPointsPerBlock := types.MaxPoolPointsPerBlock - 1
 	err := s.App.AppKeepers.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, maxPoolPointsPerBlock)
@@ -329,6 +342,7 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 
 // TestGetProtoRevBaseDenoms tests the query to retrieve the base denoms
 func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
+	s.SetupPoolsTest()
 	// base denoms already set in setup
 	baseDenoms, err := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
@@ -341,6 +355,7 @@ func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 
 // TestGetProtoRevEnabled tests the query to retrieve the enabled status of protorev
 func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
+	s.SetupPoolsTest()
 	// Set the enabled status
 	enabled := false
 	s.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, enabled)
@@ -361,6 +376,7 @@ func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 
 // TestGetProtoRevPool tests the query for getting the highest liquidity pool stored
 func (s *KeeperTestSuite) TestGetProtoRevPool() {
+	s.SetupPoolsTest()
 	// Request without setting pool for the base denom and other denom should return an error
 	req := &types.QueryGetProtoRevPoolRequest{
 		BaseDenom:  "uosmo",
@@ -383,6 +399,7 @@ func (s *KeeperTestSuite) TestGetProtoRevPool() {
 
 // TestGetAllProtocolRevenue tests the query for all protocol revenue profits
 func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
+	s.SetupPoolsTest()
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 	communityPoolDenom := "Akash"

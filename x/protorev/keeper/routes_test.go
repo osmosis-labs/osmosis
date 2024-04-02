@@ -14,6 +14,7 @@ type TestRoute struct {
 
 // TestBuildRoutes tests the BuildRoutes function
 func (s *KeeperTestSuite) TestBuildRoutes() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description    string
 		inputDenom     string
@@ -129,6 +130,8 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 
 // TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
 func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
+	// TODO:
+	s.SetupPoolsTest()
 	cases := []struct {
 		description              string
 		swapDenom                string
@@ -243,6 +246,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 // TestBuildTwoPoolRoute tests the BuildTwoPoolRoute function
 func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description   string
 		swapDenom     types.BaseDenom
@@ -336,6 +340,7 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 
 // TestBuildHotRoutes tests the BuildHotRoutes function
 func (s *KeeperTestSuite) TestBuildHotRoutes() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description             string
 		swapIn                  string
@@ -416,6 +421,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 
 // TestCalculateRoutePoolPoints tests the CalculateRoutePoolPoints function
 func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description             string
 		route                   poolmanagertypes.SwapAmountInRoutes
@@ -466,12 +472,10 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		},
 	}
 
+	s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
+	s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.SetupTest()
-			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
-			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
-
 			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {
 				s.Require().NoError(err)

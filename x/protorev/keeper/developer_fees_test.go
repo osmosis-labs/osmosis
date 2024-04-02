@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			suite.SetupTest()
+			suite.SetupNoPools()
 
 			commAccount := suite.App.AppKeepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
 			commBalanceBefore := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, commAccount, tc.denom)
