@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
 * [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
 * [#7805](https://github.com/osmosis-labs/osmosis/pull/7805) Migrate remaining cl incentive accumulators
-* [#7833](https://github.com/osmosis-labs/osmosis/pull/7883) Bump max gas wanted per tx to 6 mil
+* [#7833](https://github.com/osmosis-labs/osmosis/pull/7833) Bump max gas wanted per tx to 60 mil
 * [#7839](https://github.com/osmosis-labs/osmosis/pull/7839) Add ICA controller
 * [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
 * [#7855](https://github.com/osmosis-labs/osmosis/pull/7855) Whitelist address parameter for setting fee tokens
