@@ -25,10 +25,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/keeper"
-	mempool1559 "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
+	mempool1559 "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 var (
@@ -123,6 +123,7 @@ func (AppModule) QuerierRoute() string { return "" }
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 }
 

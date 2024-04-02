@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/config"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -280,8 +280,6 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 
 func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig, isLegacy bool) (uint64, error) {
 	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(false, isLegacy)
-
-	chainANode.DepositProposal(propNumber, true)
 
 	AllValsVoteOnProposal(c, propNumber)
 

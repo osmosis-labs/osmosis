@@ -9,7 +9,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	proto "github.com/cosmos/gogoproto/proto"
 
-	bridge "github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	bridge "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 const ModuleNameSigner = "signer"

@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 // Test authz serialize and de-serializes for bridge msg.
@@ -422,9 +422,10 @@ func TestMsgUpdateParams(t *testing.T) {
 				NewParams: types.Params{
 					Signers: []string{addr1, addr2},
 					Assets: []types.Asset{{
-						Id:       assetID1,
-						Status:   types.AssetStatus_ASSET_STATUS_UNSPECIFIED, // invalid status
-						Exponent: types.DefaultBitcoinExponent,
+						Id:                    assetID1,
+						Status:                types.AssetStatus_ASSET_STATUS_UNSPECIFIED, // invalid status
+						Exponent:              types.DefaultBitcoinExponent,
+						ExternalConfirmations: types.DefaultBitcoinConfirmations,
 					}},
 					VotesNeeded: types.DefaultVotesNeeded,
 					Fee:         math.LegacyNewDecWithPrec(5, 1),

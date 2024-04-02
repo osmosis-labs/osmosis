@@ -32,17 +32,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v24/app"
 
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v24/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -206,20 +206,7 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 }
 
 func (s *KeeperTestHelper) setupGeneral() {
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
-	if s.withCaching {
-		s.Ctx, _ = s.Ctx.CacheContext()
-	}
-	s.QueryHelper = &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: s.App.GRPCQueryRouter(),
-		Ctx:             s.Ctx,
-	}
-
-	s.SetEpochStartTime()
-	s.TestAccs = []sdk.AccAddress{}
-	s.TestAccs = append(s.TestAccs, baseTestAccts...)
-	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
-	s.hasUsedAbci = false
+	s.setupGeneralCustomChainId("osmosis-1")
 }
 
 func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {

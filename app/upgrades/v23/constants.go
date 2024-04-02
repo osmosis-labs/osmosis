@@ -1,7 +1,7 @@
 package v23
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -16,4 +16,13 @@ var Upgrade = upgrades.Upgrade{
 		Added:   []string{},
 		Deleted: []string{},
 	},
+}
+
+var MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{
+	1423: {},
+	1213: {},
+	1298: {},
+	1297: {},
+	1292: {},
+	1431: {},
 }

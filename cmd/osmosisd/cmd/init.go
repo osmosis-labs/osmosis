@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v24/app"
 )
 
 const (
@@ -119,7 +119,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.StateSync.TrustPeriod = 112 * time.Hour
 
 			// Consensus
-			config.Consensus.TimeoutCommit = 3 * time.Second
+			config.Consensus.TimeoutCommit = 2 * time.Second
 			config.Consensus.PeerGossipSleepDuration = 10 * time.Millisecond
 
 			// Other
