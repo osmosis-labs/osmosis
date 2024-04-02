@@ -112,45 +112,31 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 	return genesisState
 }
 
+var defaultGenesisStatebytes = []byte{}
+
 // SetupWithCustomHome initializes a new OsmosisApp with a custom home directory
 func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
-	db := cometbftdb.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
-	if !isCheckTx {
-		genesisState := GenesisStateWithValSet(app)
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
-
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: sims.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-				ChainId:         "osmosis-1",
-			},
-		)
-	}
-
-	return app
+	return SetupWithCustomHomeAndChainId(isCheckTx, dir, "osmosis-1")
 }
 
 func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *OsmosisApp {
 	db := cometbftdb.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
 	if !isCheckTx {
-		genesisState := GenesisStateWithValSet(app)
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
+		if len(defaultGenesisStatebytes) == 0 {
+			var err error
+			genesisState := GenesisStateWithValSet(app)
+			defaultGenesisStatebytes, err = json.Marshal(genesisState)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
+				AppStateBytes:   defaultGenesisStatebytes,
 				ChainId:         chainId,
 			},
 		)
