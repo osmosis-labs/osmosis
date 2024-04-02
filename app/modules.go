@@ -331,5 +331,5 @@ func (app *OsmosisApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {
 }
 
 func (app *OsmosisApp) GetTxConfig() client.TxConfig {
-	return MakeEncodingConfig().TxConfig
+	return GetEncodingConfig().TxConfig
 }
