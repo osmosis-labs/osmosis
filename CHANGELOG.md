@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7855](https://github.com/osmosis-labs/osmosis/pull/7855) Whitelist address parameter for setting fee tokens
 * [#7857](https://github.com/osmosis-labs/osmosis/pull/7857) SuperfluidDelegationsByValidatorDenom query now returns equivalent staked amount
 * [#7912](https://github.com/osmosis-labs/osmosis/pull/7912) Default timeoutCommit to 2s
+* [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
 
 ### SDK
 
