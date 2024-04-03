@@ -204,7 +204,7 @@ func (c *ChainClient) processNewBlockTxs(ctx context.Context, height uint64, txs
 			)
 			if err != nil {
 				c.logger.Error(fmt.Sprintf(
-					"Invalid outbound destination addresss in Tx %s, block %d: %s",
+					"Invalid outbound destination address in Tx %s, block %d: %s",
 					txHash,
 					height,
 					err.Error(),
