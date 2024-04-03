@@ -96,8 +96,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	// NOTE: these no longer work as expected in versions later than v23, in v23 we decide between the old and new scaling factor.
-	// Since we're removing this choice, these test are not worrking as expected
 	// Migrated pool: ensure that the claimable incentives are the same before and after migration
 	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
 	s.Require().NoError(err)

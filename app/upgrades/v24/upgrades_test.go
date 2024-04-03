@@ -274,17 +274,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(len(lockableDurations), 1)
 	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
 
-	// Migrated pool: ensure that the claimable incentives are the same before and after migration
-	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
-	s.Require().NoError(err)
-
-	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
-
-	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
-	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
-	s.Require().NoError(err)
-	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
-
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)

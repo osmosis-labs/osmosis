@@ -11,7 +11,7 @@ import (
 // MigrateMainnetPools migrates the specified mainnet pools to the new accumulator scaling factor.
 func MigrateMainnetPools(ctx sdk.Context, concentratedKeeper Keeper) error {
 	// Define params to ensure the function runs as expected
-	numberOfPoolsToMigratePerBlock := 2
+	numberOfPoolsToMigratePerBlock := 1
 	finalPoolID := uint64(1066)
 
 	// Migrate concentrated pools, thresholdID starts at 1496
