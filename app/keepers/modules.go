@@ -35,6 +35,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge"
 	clclient "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
 	cwpoolclient "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/client"
@@ -122,6 +123,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tokenfactory.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
+	bridge.AppModuleBasic{},
 	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},

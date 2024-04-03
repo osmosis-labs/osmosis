@@ -22,8 +22,8 @@ import (
 var (
 	ModuleName    = "osmosis-chain"
 	OsmoGasLimit  = uint64(200000)
-	OsmoFeeAmount = sdktypes.NewIntFromUint64(1000)
-	OsmoFeeDenom  = "uosmo"
+	OsmoFeeAmount = sdktypes.NewIntFromUint64(100000)
+	OsmoFeeDenom  = "stake"
 )
 
 type ChainClient struct {
@@ -109,12 +109,15 @@ func (c *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Tra
 		},
 		math.Int(in.Amount),
 	)
+
 	fees := sdktypes.NewCoins(sdktypes.NewCoin(OsmoFeeDenom, OsmoFeeAmount))
+
 	bytes, err := c.osmoClient.SignTx(ctx, msg, fees, OsmoGasLimit)
 	if err != nil {
 		return errorsmod.Wrapf(err, "Failed to sign tx for inbound transfer %s", in.Id)
 	}
-	_, err = c.osmoClient.BroadcastTx(ctx, bytes)
+
+	txResp, err := c.osmoClient.BroadcastTx(ctx, bytes)
 	if err != nil {
 		return errorsmod.Wrapf(
 			err,
@@ -122,6 +125,10 @@ func (c *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Tra
 			in.Id,
 		)
 	}
+
+	c.logger.With("tx_hash", txResp.TxHash).
+		Info("The tx is broadcasted")
+
 	return nil
 }
 

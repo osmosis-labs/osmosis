@@ -117,6 +117,8 @@ func (o *Observer) addTxToQueue(ctx context.Context, tx Transfer) {
 		return
 	}
 
+	o.logger.Info("Adding new item to the queue", "tx", tx)
+
 	o.outTxQueue[tx.SrcChain] = append(o.outTxQueue[tx.SrcChain], TxQueueItem{tx, cr})
 }
 
@@ -157,8 +159,13 @@ func (o *Observer) sendOutbound(ctx context.Context) {
 				continue
 			}
 
+			o.logger.With("dst_chain", out.Tx.DstChain, "src_chain", out.Tx.SrcChain, "id", out.Tx.Id, "dst_addr", out.Tx.To).
+				Info("Signaling the dest chain about the inbound transfer")
+
 			err = o.chains[out.Tx.DstChain].SignalInboundTransfer(ctx, out.Tx)
 			if err != nil {
+				o.logger.With("dst_chain", out.Tx.DstChain).
+					Error(fmt.Sprintf("Failed to SignalInboundTransfer: %s", err.Error()))
 				newQueue = append(newQueue, out)
 			}
 		}

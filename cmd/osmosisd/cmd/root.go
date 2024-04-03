@@ -24,6 +24,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
+	bridgecli "github.com/osmosis-labs/osmosis/v24/x/bridge/client/cli"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
@@ -683,6 +684,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 		snapshot.Cmd(newApp),
 		pruning.Cmd(newApp, osmosis.DefaultNodeHome),
+		bridgecli.BridgeCmd(),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)

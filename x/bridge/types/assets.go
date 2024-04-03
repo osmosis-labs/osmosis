@@ -13,7 +13,7 @@ func DefaultAssets() []Asset {
 				SourceChain: DefaultBitcoinChainName,
 				Denom:       DefaultBitcoinDenomName,
 			},
-			Status:                AssetStatus_ASSET_STATUS_BLOCKED_BOTH,
+			Status:                AssetStatus_ASSET_STATUS_OK, //
 			Exponent:              DefaultBitcoinExponent,
 			ExternalConfirmations: DefaultBitcoinConfirmations,
 		},

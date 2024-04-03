@@ -22,6 +22,8 @@ import (
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
+	"github.com/osmosis-labs/osmosis/v24/x/bridge"
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
@@ -129,6 +131,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.TakerFeeCollectorName:        nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	bridgetypes.ModuleName:                   nil,
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
@@ -194,6 +197,7 @@ func appModules(
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper, app.GetSubspace(icqtypes.ModuleName)),
+		bridge.NewAppModule(*app.BridgeKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
@@ -246,6 +250,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
+	// NOTE: Bridge module must occur after tokenfactory so that it can create all
+	// denoms available for bridging.
 	return []string{
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -274,6 +280,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		bridgetypes.ModuleName,
 		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,

@@ -19,7 +19,7 @@ import (
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
-var ModuleNameClient = "osmo-client"
+var ModuleNameClient = "my_validator"
 
 type Client struct {
 	chainId      string
@@ -40,12 +40,13 @@ func NewClient(
 	txConfig client.TxConfig,
 ) *Client {
 	return &Client{
-		chainId:   chainId,
-		keyring:   keyring,
-		grpcConn:  grpcConn,
-		txClient:  tx.NewServiceClient(grpcConn),
-		accClient: authtypes.NewQueryClient(grpcConn),
-		txConfig:  txConfig,
+		chainId:      chainId,
+		keyring:      keyring,
+		grpcConn:     grpcConn,
+		txClient:     tx.NewServiceClient(grpcConn),
+		accClient:    authtypes.NewQueryClient(grpcConn),
+		bridgeClient: bridgetypes.NewQueryClient(grpcConn),
+		txConfig:     txConfig,
 	}
 }
 
