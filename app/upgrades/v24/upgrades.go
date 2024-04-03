@@ -2,7 +2,6 @@ package v24
 
 import (
 	"sort"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -56,23 +55,11 @@ func CreateUpgradeHandler(
 		// and spread the pruning time across multiple blocks to avoid a single block taking too long.
 		keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
 
-		// restrict lockable durations to 2 weeks per
-		// https://wallet.keplr.app/chains/osmosis/proposals/400
-		chainID := ctx.ChainID()
-
-		if chainID == mainnetChainID || chainID == edgenetChainID {
-			keepers.IncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
-				time.Hour * 24 * 14,
-			})
-			keepers.PoolIncentivesKeeper.SetLockableDurations(ctx, []time.Duration{
-				time.Hour * 24 * 14,
-			})
-		}
-
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyMinValueForDistr, incentivestypes.DefaultMinValueForDistr)
 
+		chainID := ctx.ChainID()
 		// We only perform the migration on mainnet pools since we hard-coded the pool IDs to migrate
 		// in the types package. And the testnet was migrated in v24
 		if chainID == mainnetChainID || chainID == edgenetChainID {
