@@ -130,7 +130,6 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 
 // TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
 func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
-	// TODO:
 	s.SetupPoolsTest()
 	cases := []struct {
 		description              string
