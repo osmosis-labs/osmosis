@@ -10,6 +10,7 @@ import (
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	for _, tokenPair := range s.tokenPairArbRoutes {
 		tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetTokenPairArbRoutes(s.Ctx, tokenPair.TokenIn, tokenPair.TokenOut)
@@ -25,6 +26,7 @@ func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 
 // TestGetAllTokenPairArbRoutes tests the GetAllTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
 
@@ -38,6 +40,7 @@ func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 
 // TestDeleteAllTokenPairArbRoutes tests the DeleteAllTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
 
@@ -320,6 +323,7 @@ func (s *KeeperTestSuite) TestGetInfoByPoolType() {
 }
 
 func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
+	s.SetupPoolsTest()
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 	communityPoolDenom := "Akash"
