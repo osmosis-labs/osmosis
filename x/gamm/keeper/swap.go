@@ -209,6 +209,10 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
+	// Emit swap event. Note that we emit these at the layer of each pool module rather than the poolmanager module
+	// since poolmanager has many swap wrapper APIs that we would need to consider.
+	// Search for references to this function to see where else it is used.
+	// Each new pool module will have to emit this event separately
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.hooks.AfterCFMMSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)

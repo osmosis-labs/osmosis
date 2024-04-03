@@ -774,8 +774,10 @@ func (k Keeper) updatePoolForSwap(
 
 	k.listeners.AfterConcentratedPoolSwap(ctx, swapDetails.Sender, poolId, sdk.Coins{swapDetails.TokenIn}, sdk.Coins{swapDetails.TokenOut})
 
-	// TODO: move this to poolmanager and remove from here.
-	// Also, remove from gamm.
+	// Emit swap event. Note that we emit these at the layer of each pool module rather than the poolmanager module
+	// since poolmanager has many swap wrapper APIs that we would need to consider.
+	// Search for references to this function to see where else it is used.
+	// Each new pool module will have to emit this event separately
 	events.EmitSwapEvent(ctx, swapDetails.Sender, pool.GetId(), sdk.Coins{swapDetails.TokenIn}, sdk.Coins{swapDetails.TokenOut})
 
 	return err
