@@ -11,8 +11,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
-	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
@@ -85,8 +85,8 @@ func CreateUpgradeHandler(
 
 		// White Whale uploaded a broken contract. They later migrated cwpool via the governance
 		// proposal in x/cosmwasmpool
-		// However, there was a problem in the migration logic where the CosmWasmpool state CodeId  did not get updated.
-		// As a result, the CodeID for the contract that is tracked in x/wasmd  was migrated correctly. However, the code ID that we track in the x/cosmwasmpool  state did not.
+		// However, there was a problem in the migration logic where the CosmWasmpool state CodeId did not get updated.
+		// As a result, the CodeID for the contract that is tracked in x/wasmd was migrated correctly. However, the code ID that we track in the x/cosmwasmpool state did not.
 		// Therefore, we should perform a migration for each of the hardcoded white whale pools.
 		poolIds := []uint64{1463, 1462, 1461}
 		for _, poolId := range poolIds {
@@ -120,8 +120,8 @@ func CreateUpgradeHandler(
 
 // migrateMainnetPools migrates the specified mainnet pools to the new accumulator scaling factor.
 func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
-	poolIDsToMigrate := make([]uint64, 0, len(FinalIncentiveAccumulatorPoolIDsToMigrate))
-	for poolID := range FinalIncentiveAccumulatorPoolIDsToMigrate {
+	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrate))
+	for poolID := range concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrate {
 		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
 	}
 
@@ -143,7 +143,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 		}
 
 		// This should never happen, this check is defence in depth in case we have wrong data by accident
-		_, isMigrated := v23.MigratedIncentiveAccumulatorPoolIDs[poolID]
+		_, isMigrated := concentratedtypes.MigratedIncentiveAccumulatorPoolIDs[poolID]
 		if isMigrated {
 			continue
 		}
