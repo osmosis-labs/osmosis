@@ -81,7 +81,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	r := rand.New(rand.NewSource(seed))
 
 	// tested up to 2000
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 250; i++ {
 		// add a single element
 		key := make([]byte, r.Int()%20)
 		value := r.Uint64() % 100

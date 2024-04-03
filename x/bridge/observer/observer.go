@@ -2,118 +2,212 @@ package observer
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"sync"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cometbft/cometbft/libs/pubsub/query"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	comettypes "github.com/cometbft/cometbft/types"
+
+	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
-const ModuleNameObserver = "observer"
+const ModuleName = "observer"
+
+type TxQueueItem struct {
+	Tx                    Transfer
+	ConfirmationsRequired uint64
+}
 
 type Observer struct {
-	logger        log.Logger
-	cometRpc      *rpchttp.HTTP
-	stopChan      chan struct{}
-	eventsOutChan chan abcitypes.Event
+	logger     log.Logger
+	chains     map[ChainId]Client
+	outTxQueue map[ChainId][]TxQueueItem
+	outLock    sync.Mutex
+	sendPeriod time.Duration
+	stopChan   chan struct{}
 }
 
-// NewObserver returns new instance of `Observer` with RPC client created
-func NewObserver(logger log.Logger, rpcUrl string) (Observer, error) {
-	if len(rpcUrl) == 0 {
-		return Observer{}, errors.New("RPC URL can't be empty")
+// NewObserver returns new instance of `Observer`
+func NewObserver(
+	logger log.Logger,
+	chains map[ChainId]Client,
+	sendPeriod time.Duration,
+) *Observer {
+	return &Observer{
+		logger:     logger.With("module", ModuleName),
+		chains:     chains,
+		outTxQueue: make(map[ChainId][]TxQueueItem),
+		outLock:    sync.Mutex{},
+		sendPeriod: sendPeriod,
+		stopChan:   make(chan struct{}),
 	}
-
-	rpc, err := rpchttp.New(rpcUrl, "/websocket")
-	if err != nil {
-		return Observer{}, errorsmod.Wrapf(err, "Failed to create RPC client")
-	}
-
-	return Observer{
-		logger:        logger.With("module", ModuleNameObserver),
-		cometRpc:      rpc,
-		stopChan:      make(chan struct{}),
-		eventsOutChan: make(chan abcitypes.Event),
-	}, nil
 }
 
-// Start starts the RPC client, subscribes to events for provided query and starts listening to the events
-func (o *Observer) Start(ctx context.Context, queryStr string, observeEvents []string) error {
-	err := o.cometRpc.Start()
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to start RPC client")
+// Start starts all underlying chains and starts processing transfers
+func (o *Observer) Start(ctx context.Context) error {
+	for id, c := range o.chains {
+		err := c.Start(ctx)
+		if err != nil {
+			return errorsmod.Wrapf(err, "Failed to start chain %s", id)
+		}
 	}
 
-	query, err := query.New(queryStr)
-	if err != nil {
-		return errorsmod.Wrapf(err, "Invalid query")
-	}
-
-	txs, err := o.cometRpc.Subscribe(ctx, ModuleNameObserver, query.String())
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to subscribe to RPC client")
-	}
-
-	o.logger.Info("Observer starting listening for events at RPC", o.cometRpc.Remote())
-	go o.processEvents(ctx, txs, observeEvents)
+	go o.collectOutbound(ctx)
+	go o.processOutbound(ctx)
 
 	return nil
 }
 
-// Stop stops listening to events, unsubscribes from the RPC client and stops the RPC channel
+// Stop stops all underlying chains and stops processing transfers
 func (o *Observer) Stop(ctx context.Context) error {
+	for id, c := range o.chains {
+		err := c.Stop(ctx)
+		if err != nil {
+			o.logger.Error(fmt.Sprintf("Failed to stop chain %s", id))
+			continue
+		}
+	}
 	close(o.stopChan)
-	if err := o.cometRpc.UnsubscribeAll(ctx, ModuleNameObserver); err != nil {
-		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
-	}
-	return o.cometRpc.Stop()
+	return nil
 }
 
-// Events returns receive-only part of the observed events
-func (o *Observer) Events() <-chan abcitypes.Event {
-	return o.eventsOutChan
-}
+func (o *Observer) collectOutbound(ctx context.Context) {
+	aggregate := make(chan Transfer)
+	wg := sync.WaitGroup{}
 
-func (o *Observer) processEvents(ctx context.Context, txs <-chan coretypes.ResultEvent, observeEvents []string) {
-	defer close(o.eventsOutChan)
-	events := make(map[string]struct{})
-	for _, e := range observeEvents {
-		events[e] = struct{}{}
+	for _, chain := range o.chains {
+		wg.Add(1)
+		ch := chain.ListenOutboundTransfer()
+		go func() {
+			defer wg.Done()
+			for t := range ch {
+				aggregate <- t
+			}
+		}()
 	}
 
+	go func() {
+		wg.Wait()
+		close(aggregate)
+	}()
+
+	for out := range aggregate {
+		o.addTxToQueue(ctx, out)
+	}
+}
+
+func (o *Observer) addTxToQueue(ctx context.Context, tx Transfer) {
+	o.outLock.Lock()
+	defer o.outLock.Unlock()
+
+	_, ok := o.chains[tx.DstChain]
+	if !ok {
+		o.logger.Error(fmt.Sprintf(
+			"Unknown destination chain %s in outbound transfer %s",
+			tx.DstChain,
+			tx.Id,
+		))
+		return
+	}
+	cr, err := o.getConfirmationsRequired(ctx, tx)
+	if err != nil {
+		o.logger.With("error", err, "id", tx.Id).
+			Error("Failed to get confirmations required for outbound transfer")
+		return
+	}
+
+	o.outTxQueue[tx.SrcChain] = append(o.outTxQueue[tx.SrcChain], TxQueueItem{tx, cr})
+}
+
+func (o *Observer) processOutbound(ctx context.Context) {
 	for {
 		select {
 		case <-o.stopChan:
+			o.sendOutbound(ctx)
 			return
-		case event := <-txs:
-			if newBlock, ok := event.Data.(comettypes.EventDataNewBlock); ok {
-				results, err := o.cometRpc.BlockResults(ctx, &newBlock.Block.Height)
-				if err != nil {
-					o.logger.Error("Observer failed to fetch block results for block", newBlock.Block.Height)
-					continue
-				}
-
-				for _, r := range results.TxsResults {
-					if r.IsErr() {
-						continue
-					}
-					for _, e := range r.Events {
-						if _, ok := events[e.Type]; !ok {
-							continue
-						}
-						select {
-						case o.eventsOutChan <- e:
-						case <-o.stopChan:
-							o.logger.Info("Observer exiting early, event skipped: ", e)
-							return
-						}
-					}
-				}
-			}
+		case <-time.After(o.sendPeriod):
+			o.sendOutbound(ctx)
 		}
 	}
+}
+
+func (o *Observer) sendOutbound(ctx context.Context) {
+	o.outLock.Lock()
+	defer o.outLock.Unlock()
+
+	for srcId, queue := range o.outTxQueue {
+		srcChain := o.chains[srcId]
+		height, err := srcChain.Height(ctx)
+		if err != nil {
+			o.logger.Error(fmt.Sprintf("Failed to get height for %s: %s", srcId, err.Error()))
+			continue
+		}
+
+		var newQueue []TxQueueItem
+		for _, out := range queue {
+			confirmed, err := o.isTxConfirmed(ctx, height, &out)
+			if err != nil {
+				o.logger.Error(fmt.Sprintf("Failed to confirm tx %s", err.Error()))
+				newQueue = append(newQueue, out)
+				continue
+			}
+			if !confirmed {
+				newQueue = append(newQueue, out)
+				continue
+			}
+
+			err = o.chains[out.Tx.DstChain].SignalInboundTransfer(ctx, out.Tx)
+			if err != nil {
+				newQueue = append(newQueue, out)
+			}
+		}
+		o.outTxQueue[srcId] = newQueue
+	}
+}
+
+func (o *Observer) getConfirmationsRequired(ctx context.Context, tx Transfer) (uint64, error) {
+	if tx.SrcChain == ChainIdOsmosis {
+		return 1, nil
+	}
+
+	chain, ok := o.chains[ChainIdOsmosis]
+	if !ok {
+		return 0, fmt.Errorf("chain client for %s not found", ChainIdOsmosis)
+	}
+	cr, err := chain.ConfirmationsRequired(ctx, bridgetypes.AssetID{
+		SourceChain: string(tx.SrcChain),
+		Denom:       tx.Asset,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return cr, nil
+}
+
+func (o *Observer) isTxConfirmed(
+	ctx context.Context,
+	curHeight uint64,
+	item *TxQueueItem,
+) (bool, error) {
+	// In Bitcoin, the number of confirmations: currentHeight - txHeight + 1, so the first block counts as 1.
+	// Therefore, count the first block as 1 for all other chains.
+	if curHeight-item.Tx.Height+1 < item.ConfirmationsRequired {
+		return false, nil
+	}
+	// If the number of confirmations is reached, request the required number of confirmations again
+	// to check whether the bridge parameters were changed while transactions was being processed
+	cr, err := o.getConfirmationsRequired(ctx, item.Tx)
+	if err != nil {
+		return false, errorsmod.Wrapf(
+			err,
+			"Failed to get confirmations required for outbound transfer %s",
+			item.Tx.Id,
+		)
+	}
+	if curHeight-item.Tx.Height+1 < cr {
+		item.ConfirmationsRequired = cr
+		return false, nil
+	}
+	return true, nil
 }

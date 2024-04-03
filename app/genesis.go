@@ -15,8 +15,29 @@ import (
 // object provided to it during init.
 type GenesisState map[string]json.RawMessage
 
+// CloneGenesisState creates a deep clone of the provided GenesisState.
+func cloneGenesisState(original GenesisState) GenesisState {
+	clone := make(GenesisState, len(original))
+	for key, value := range original {
+		// Make a copy of the json.RawMessage (which is a []byte slice).
+		copiedValue := make(json.RawMessage, len(value))
+		copy(copiedValue, value)
+		if len(copiedValue) == 0 {
+			// If the value is empty, set it to nil.
+			copiedValue = nil
+		}
+		clone[key] = copiedValue
+	}
+	return clone
+}
+
+var defaultGenesisState GenesisState = nil
+
 // NewDefaultGenesisState generates the default state for the application.
 func NewDefaultGenesisState() GenesisState {
+	if defaultGenesisState != nil {
+		return cloneGenesisState(defaultGenesisState)
+	}
 	encCfg := MakeEncodingConfig()
 	gen := ModuleBasics.DefaultGenesis(encCfg.Marshaler)
 
@@ -28,5 +49,6 @@ func NewDefaultGenesisState() GenesisState {
 		},
 	}
 	gen[wasmtypes.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)
+	defaultGenesisState = cloneGenesisState(gen)
 	return gen
 }

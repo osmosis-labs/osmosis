@@ -3,26 +3,31 @@ package v24_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	twap "github.com/osmosis-labs/osmosis/v23/x/twap"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
+	"github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
 )
 
 const (
@@ -96,6 +101,64 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(twapRecord1, twapRecords[0])
 	s.Require().Equal(twapRecord2, twapRecords[1])
 
+	// INCENTIVES Setup
+	//
+
+	concentratedPoolIDs := []uint64{}
+
+	// Create two sets of all pool types
+	allPoolsOne := s.PrepareAllSupportedPools()
+	allPoolsTwo := s.PrepareAllSupportedPools()
+
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsOne.ConcentratedPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, allPoolsTwo.ConcentratedPoolID)
+
+	// Update authorized quote denoms
+	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
+
+	// Create two more concentrated pools with positions
+	secondLastPoolID := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
+	lastPoolID := secondLastPoolID + 1
+	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
+	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
+	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
+		{"uion", "uosmo"},
+		{apptesting.ETH, apptesting.USDC},
+	})
+
+	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
+
+	// Create incentive record for last pool
+	incentiveCoin := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Create incentive record for second last pool
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, secondLastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
+
+	// Make 60 seconds pass
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, lastPoolID)
+	s.Require().NoError(err)
+
+	// Migrated pool claim
+	migratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(migratedPoolBeforeUpgradeIncentives)
+
+	// Non-migrated pool claim
+	nonMigratedPoolBeforeUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
+
+	// Overwrite the migration list with the desired pool ID.
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
+	v24.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
+
 	// PROTOREV Setup
 	//
 
@@ -115,6 +178,36 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	newBaseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
+
+	// INCENTIVE Setup
+	//
+
+	// check that old lockable durations were not single param
+	oldLockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(oldLockableDurations), 4)
+	oldLockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(oldLockableDurations), 3)
+
+	// fund test acc and create non-perpetual gauge
+	lockDuration := time.Hour
+	incentive := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)))
+	expectedShareDenom := "foo"
+	s.FundAcc(s.TestAccs[1], incentive)
+
+	shareLock := sdk.NewCoins(sdk.NewCoin(expectedShareDenom, osmomath.NewInt(1_000_000)))
+	s.FundAcc(s.TestAccs[1], shareLock)
+	shareCoins := sdk.NewCoins(sdk.NewInt64Coin(expectedShareDenom, int64(1_000_000)))
+	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[1], shareCoins, lockDuration)
+	s.Require().NoError(err)
+
+	gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, true, s.TestAccs[1], incentive, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         expectedShareDenom,
+		Duration:      lockDuration,
+	}, s.Ctx.BlockTime(), 1, 0)
+	s.Require().NoError(err)
+	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+	s.Require().NoError(err)
 
 	whiteWhalePoolIds := []uint64{1463, 1462, 1461}
 	for _, poolId := range whiteWhalePoolIds {
@@ -153,9 +246,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP records indexed by pool ID should be untouched.
 	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 2)
-	s.Require().Equal(twapRecord1, twapRecords[0])
-	s.Require().Equal(twapRecord2, twapRecords[1])
+	s.Require().Len(twapRecords, 6)
+	s.Require().Equal(twapRecord1, twapRecords[4])
+	s.Require().Equal(twapRecord2, twapRecords[5])
 
 	// PROTOREV Tests
 	//
@@ -173,6 +266,29 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// INCENTIVES Tests
 	//
 
+	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivestypes.Gauge{*gauge})
+	s.Require().NoError(err)
+	s.Require().Equal(incentive.String(), coins.String())
+
+	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(lockableDurations), 1)
+	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
+
+	lockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+	s.Require().Equal(len(lockableDurations), 1)
+	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
+
+	// Migrated pool: ensure that the claimable incentives are the same before and after migration
+	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
+	s.Require().NoError(err)
+
+	s.Require().Equal(migratedPoolBeforeUpgradeIncentives.String(), migratedPoolAfterUpgradeIncentives.String())
+
+	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
+	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+	s.Require().NoError(err)
+	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
+
 	// Check that the new min value for distribution has been set
 	params := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	s.Require().Equal(incentivestypes.DefaultMinValueForDistr, params.MinValueForDistribution)
@@ -182,6 +298,14 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Test that the white whale pools have been updated
 	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+
+	// TXFEES Tests
+	//
+
+	// Check that the whitelisted fee token address has been set
+	whitelistedFeeTokenSetters := s.App.TxFeesKeeper.GetParams(s.Ctx).WhitelistedFeeTokenSetters
+	s.Require().Len(whitelistedFeeTokenSetters, 1)
+	s.Require().Equal(whitelistedFeeTokenSetters, v24.WhitelistedFeeTokenSetters)
 }
 
 func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {
