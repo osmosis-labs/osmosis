@@ -795,6 +795,9 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	concentratedPool := s.PrepareConcentratedPool()
 	poolID := concentratedPool.GetId()
 
+	// Setup migration threshold above the pool ID so that we do not apply scaling factor before migration.
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, poolID)
+
 	// Create position one
 	// It has position accumulator snapshot of zero
 	positionOneID, positionOneLiquidity := s.CreateFullRangePosition(concentratedPool, DefaultCoins)
@@ -837,7 +840,7 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 
 	// Ensure that the accumulator has been properly initialized
-	expectedInitialAccumulatorGrowth := sdk.NewDecCoins(sdk.NewDecCoinFromDec(incentiveDenom, osmomath.NewDec(60).MulMut(cl.PerUnitLiqScalingFactor).QuoTruncate(positionOneLiquidity)))
+	expectedInitialAccumulatorGrowth := sdk.NewDecCoins(sdk.NewDecCoinFromDec(incentiveDenom, osmomath.NewDec(60).QuoTruncate(positionOneLiquidity)))
 	s.Require().Equal(len(types.SupportedUptimes), len(uptimeAcc))
 	s.Require().Equal(expectedInitialAccumulatorGrowth.String(), uptimeAcc[0].GetValue().String())
 
@@ -852,6 +855,9 @@ func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
 	// System under test.
 	err = s.App.ConcentratedLiquidityKeeper.MigrateAccumulatorToScalingFactor(s.Ctx, poolID)
 	s.Require().NoError(err)
+
+	// Note: we must now reset the migration threshold so that a scaling factor is chosen appropriately for this pool.
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, poolID-1)
 
 	// Ensure that the pool accumulator has been properly migrated
 	expectedMigratedAccumulatorGrowth := expectedInitialAccumulatorGrowth.MulDecTruncate(cl.PerUnitLiqScalingFactor)

@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	//v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
 	"github.com/osmosis-labs/osmosis/v24/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client/cli"
 	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client/queryproto"
@@ -122,7 +123,12 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	err := clkeeper.MigrateMainnetPools(ctx, am.keeper)
+	if err != nil {
+		ctx.Logger().Error(err.Error())
+	}
+}
 
 // EndBlock performs a no-op.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {

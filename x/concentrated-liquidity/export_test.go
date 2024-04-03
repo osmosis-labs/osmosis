@@ -24,6 +24,7 @@ var (
 	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
 	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
 	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
+	OneDecScalingFactor     = oneDecScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -332,6 +333,10 @@ func (k Keeper) TransferPositions(ctx sdk.Context, positionIds []uint64, sender 
 
 func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix string, cosmwasmAddress string) error {
 	return k.setPoolHookContract(ctx, poolID, actionPrefix, cosmwasmAddress)
+}
+
+func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	return k.getIncentiveScalingFactorForPool(ctx, poolID)
 }
 
 func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBuilderFn func(poolId uint64) ([]byte, error), poolId uint64, actionPrefix string) (err error) {
