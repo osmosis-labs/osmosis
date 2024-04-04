@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"sync/atomic"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,6 +12,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	btcdchaincfg "github.com/btcsuite/btcd/chaincfg"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -22,13 +24,6 @@ import (
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
-type Mode = string
-
-const (
-	ModeMainnet Mode = "mainnet"
-	ModeTestnet Mode = "testnet"
-)
-
 var (
 	ModuleName    = "osmosis-chain"
 	OsmoGasLimit  = uint64(200000)
@@ -38,7 +33,7 @@ var (
 
 type ChainClient struct {
 	logger             log.Logger
-	mode               Mode
+	cfg                observer.ChainConfig
 	osmoClient         *Client
 	cometRpc           *rpchttp.HTTP
 	stopChan           chan struct{}
@@ -51,7 +46,7 @@ type ChainClient struct {
 // NewChainClient returns new instance of `Osmosis`
 func NewChainClient(
 	logger log.Logger,
-	mode Mode,
+	cfg observer.ChainConfig,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
 	txConfig cosmosclient.TxConfig,
@@ -59,7 +54,7 @@ func NewChainClient(
 ) *ChainClient {
 	return &ChainClient{
 		logger:             logger.With("module", ModuleName),
-		mode:               mode,
+		cfg:                cfg,
 		osmoClient:         osmoClient,
 		cometRpc:           cometRpc,
 		stopChan:           make(chan struct{}),
@@ -154,6 +149,12 @@ func (c *ChainClient) observeEvents(ctx context.Context, txs <-chan coretypes.Re
 				continue
 			}
 
+			js, err := cmtjson.Marshal(event)
+			fmt.Println("js: ", err)
+			path := fmt.Sprintf("./test_events/blocks/block_%d.json", newBlock.Block.Height)
+			err = os.WriteFile(path, js, 0644)
+			fmt.Println("file: ", err)
+
 			c.lastObservedHeight.Store(math.Max(
 				c.lastObservedHeight.Load(),
 				uint64(newBlock.Block.Height),
@@ -196,9 +197,12 @@ func (c *ChainClient) processNewBlockTxs(ctx context.Context, height uint64, txs
 			if !ok {
 				continue
 			}
+			if outbound.Amount.LT(math.Int(c.cfg.MinOutboundTransferAmount)) {
+				continue
+			}
 
 			err = verifyOutboundDestAddress(
-				c.mode,
+				c.cfg.Mode,
 				observer.ChainId(outbound.AssetId.SourceChain),
 				outbound.DestAddr,
 			)
@@ -250,14 +254,14 @@ func outboundTransferFromMsg(
 	}
 }
 
-func verifyOutboundDestAddress(mode Mode, chainId observer.ChainId, addr string) error {
+func verifyOutboundDestAddress(mode observer.Mode, chainId observer.ChainId, addr string) error {
 	switch chainId {
 	case observer.ChainIdBitcoin:
 		switch mode {
-		case ModeMainnet:
+		case observer.ModeMainnet:
 			_, err := btcutil.DecodeAddress(addr, &btcdchaincfg.MainNetParams)
 			return err
-		case ModeTestnet:
+		case observer.ModeTestnet:
 			_, err := btcutil.DecodeAddress(addr, &btcdchaincfg.TestNet3Params)
 			return err
 		}
