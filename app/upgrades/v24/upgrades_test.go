@@ -156,8 +156,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
 
 	// Overwrite the migration list with the desired pool ID.
-	concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
-	concentratedtypes.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDsV24 = map[uint64]struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDsV24[lastPoolID] = struct{}{}
 
 	// PROTOREV Setup
 	//

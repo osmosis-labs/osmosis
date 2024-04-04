@@ -3742,9 +3742,17 @@ func (s *KeeperTestSuite) TestComputeTotalIncentivesToEmit() {
 func (s *KeeperTestSuite) TestGetIncentiveScalingFactorForPool() {
 	// Grab an example of the overwrite pool from map
 	s.Require().NotZero(len(types.MigratedIncentiveAccumulatorPoolIDs))
+	s.Require().NotZero(len(types.MigratedIncentiveAccumulatorPoolIDsV24))
+
 	var exampleOverwritePoolID uint64
 	for poolID := range types.MigratedIncentiveAccumulatorPoolIDs {
 		exampleOverwritePoolID = poolID
+		break
+	}
+
+	var exampleOverwritePoolIDv24 uint64
+	for poolIDv24 := range types.MigratedIncentiveAccumulatorPoolIDs {
+		exampleOverwritePoolIDv24 = poolIDv24
 		break
 	}
 
@@ -3776,6 +3784,11 @@ func (s *KeeperTestSuite) TestGetIncentiveScalingFactorForPool() {
 
 	// Overwrite pool ID has non-1 scaling factor (migrated)
 	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, exampleOverwritePoolID)
+	s.Require().NoError(err)
+	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
+
+	// Overwrite pool IDv24 has non-1 scaling factor (migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, exampleOverwritePoolIDv24)
 	s.Require().NoError(err)
 	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
 }

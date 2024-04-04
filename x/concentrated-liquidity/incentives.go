@@ -1132,7 +1132,8 @@ func (k Keeper) getIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64)
 		return perUnitLiqScalingFactor, nil
 	}
 
-	_, isMigrated = types.FinalIncentiveAccumulatorPoolIDsToMigrate[poolID]
+	// If the given pool ID is in the migrated incentive accumulator pool IDs (v24), we return the perUnitLiqScalingFactor.
+	_, isMigrated = types.MigratedIncentiveAccumulatorPoolIDsV24[poolID]
 	if isMigrated {
 		return perUnitLiqScalingFactor, nil
 	}
