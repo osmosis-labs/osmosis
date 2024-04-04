@@ -40,7 +40,6 @@ func NewGRPCCLient(grpcAddress string, grpxMaxCallSizeBytes int, appCodec codec.
 
 // PushData implements domain.GracefulSQSGRPClient.
 func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdomain.PoolI, takerFeesMap sqsdomain.TakerFeeMap) (err error) {
-
 	// If sqs service is unavailable, we should reset the connection
 	// and attempt to reconnect during the next block.
 	var shouldResetConnection bool
@@ -94,7 +93,6 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdom
 
 	_, err = ingesterClient.ProcessBlock(ctx, &req)
 	if err != nil {
-
 		status, ok := status.FromError(err)
 
 		// If the connection is unavailable, we should reset the connection

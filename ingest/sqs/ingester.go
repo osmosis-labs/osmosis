@@ -12,11 +12,9 @@ var _ domain.Ingester = &sqsIngester{}
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
-	poolsTransformer     domain.PoolsTransformer
-	keepers              domain.SQSIngestKeepers
-	grpcAddress          string
-	grpcMaxCallSizeBytes int
-	sqsGRPCClient        domain.GracefulSQSGRPClient
+	poolsTransformer domain.PoolsTransformer
+	keepers          domain.SQSIngestKeepers
+	sqsGRPCClient    domain.GracefulSQSGRPClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
