@@ -32,14 +32,14 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/service"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/service/writelistener"
 

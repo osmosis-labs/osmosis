@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
-	sqsdomainmocks "github.com/osmosis-labs/sqs/sqsdomain/mocks"
-	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -467,18 +465,8 @@ func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
 // https://app.clickup.com/t/86a1b3t6p
 func (s *IngesterTestSuite) TestProcessBlock() {
 	s.Setup()
-	var (
-		redisRepoMock   = &sqsdomainmocks.RedisPoolsRepositoryMock{}
-		redisRouterMock = &sqsdomainmocks.RedisRouterRepositoryMock{
-			TakerFees: sqsdomain.TakerFeeMap{},
-		}
-		assetListGetterMock = &mocks.AssetListGetterMock{}
 
-		// Note: this is a dummy tx that is not initialized correctly.
-		// We do note expect it to be called or used by the system under test
-		// due to using the mock repository.
-		redisTx = repository.NewRedisTx(nil)
-	)
+	assetListGetterMock := &mocks.AssetListGetterMock{}
 
 	// Set the default taker fee
 	s.setDefaultPoolManagerTakerFee()
@@ -515,7 +503,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	cosmWasmPool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolsData.CosmWasmPoolID)
 	s.Require().NoError(err)
 
-	poolIngester := poolsingester.NewPoolIngester(redisRepoMock, redisRouterMock, nil, assetListGetterMock, sqsKeepers)
+	poolTransformer := poolsingester.NewPoolTransformer(assetListGetterMock, sqsKeepers)
 
 	blockPools := domain.BlockPools{
 		ConcentratedPools: []poolmanagertypes.PoolI{
@@ -531,10 +519,8 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		},
 	}
 
-	err = poolIngester.ProcessPoolState(s.Ctx, redisTx, blockPools)
+	allPools, takerFeesMap, err := poolTransformer.Transform(s.Ctx, blockPools)
 	s.Require().NoError(err)
-
-	allPools, err := redisRepoMock.GetAllPools(sdk.WrapSDKContext(s.Ctx))
 	s.Require().NoError(err)
 
 	s.Require().Len(allPools, 2+2+1)
@@ -553,16 +539,14 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	s.Require().Equal(poolsData.CosmWasmPoolID, allPools[4].GetId())
 
 	// Validate taker fee for the custom pool
-	actualTakerFee, err := redisRouterMock.GetTakerFee(sdk.WrapSDKContext(s.Ctx), customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1())
-	s.Require().NoError(err)
+	actualTakerFee := takerFeesMap.GetTakerFee(customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1())
 	// Custom taker fee
 	s.Require().Equal(defaultCustomTakerFee, actualTakerFee)
 
 	// Validate taker fee for one of the default taker fee pools
 	defaultConcentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
 	s.Require().NoError(err)
-	actualTakerFee, err = redisRouterMock.GetTakerFee(sdk.WrapSDKContext(s.Ctx), defaultConcentratedPool.GetToken0(), defaultConcentratedPool.GetToken1())
-	s.Require().NoError(err)
+	actualTakerFee = takerFeesMap.GetTakerFee(defaultConcentratedPool.GetToken0(), defaultConcentratedPool.GetToken1())
 	// Poolmanager params taker fee
 	s.Require().Equal(defaultPoolManagerTakerFee, actualTakerFee)
 }
@@ -581,7 +565,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 	s.Require().Equal(expectedPool.GetType(), actualPool.GetType())
 
 	// Validate TVL
-	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUOSMO().String())
+	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUSDC().String())
 	sqsPoolModel := actualPool.GetSQSPoolModel()
 	s.Require().Contains(sqsPoolModel.TotalValueLockedError, expectTVLErrorStr)
 
@@ -599,7 +583,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 	s.Require().Equal(expectedBalances.String(), sqsPoolModel.Balances.String())
 }
 
-func (s *IngesterTestSuite) initializePoolIngester() *poolsingester.PoolIngester {
+func (s *IngesterTestSuite) initializePoolIngester() *poolsingester.PoolTransformer {
 
 	sqsKeepers := domain.SQSIngestKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
@@ -610,8 +594,8 @@ func (s *IngesterTestSuite) initializePoolIngester() *poolsingester.PoolIngester
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
-	atomicIngester := poolsingester.NewPoolIngester(nil, nil, nil, nil, sqsKeepers)
-	poolIngester, ok := atomicIngester.(*poolsingester.PoolIngester)
+	atomicIngester := poolsingester.NewPoolTransformer(nil, sqsKeepers)
+	poolIngester, ok := atomicIngester.(*poolsingester.PoolTransformer)
 	s.Require().True(ok)
 	return poolIngester
 }
