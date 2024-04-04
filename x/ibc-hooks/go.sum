@@ -601,8 +601,6 @@ github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 h1:41iFGWnSlI2gVpmOtVTJZNodLdLQLn/KsJqFvXwnd/s=
 github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
-github.com/bits-and-blooms/bitset v1.8.0 h1:FD+XqgOZDUxxZ8hzoBFuV9+cGWY9CslN6d5MS5JVb4c=
-github.com/bits-and-blooms/bitset v1.8.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/boombuler/barcode v1.0.0/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/boombuler/barcode v1.0.1/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/btcsuite/btcd/btcec/v2 v2.3.2 h1:5n0X6hX0Zk+6omWcihdYvdAlGf2DfasC0GMf7DClJ3U=
@@ -1234,10 +1232,10 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c h1:RpMTLOn+flnC85P2WkyeUlhtXo3KclJ/ZrTRurHGA3k=
-github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-1.0.20240312182012-369f6c70481c/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-1 h1:4A1wE3r21NfvGXt8wXcHCgcUwIp4uFe7zmjvZfZgXdw=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-1/go.mod h1:My+hyHX37Pe/6GKyo4veTXCHPu2vi5X3r18Y7E5AkPw=
+github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2 h1:3k4I3zCxdNP+mjhR7AtKr1PPuGR58CcVTMZN0aV/iL4=
+github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1-iavl-v1 h1:QZJehvU2FrmtwMp7Mvg7QLZ2ehZLbo1V+2JpYkEpX/s=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1-iavl-v1/go.mod h1:BmDcImvyDAgnZLlpuCaDMrqQ+29HVLV8rxWe7wIQafc=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60 h1:n4Zw/bWkooNPrAskOxTZcFWj/f4H5DIPuGUoGlQPiGE=
 github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60/go.mod h1:7QGFTgdTvlZLcYHUPuNuZJg1+G1mVrd0dWDpLiD4jOo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60 h1:4iq0tvpzm6U0J4z6Fm95AmIFiEADE06lrBXr7HUMkdg=

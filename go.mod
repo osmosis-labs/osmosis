@@ -9,16 +9,15 @@ require (
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
 	github.com/CosmWasm/wasmvm v1.5.2
-	github.com/btcsuite/btcd v0.23.0
-	github.com/btcsuite/btcd/btcutil v1.1.3
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2
+	github.com/btcsuite/btcd v0.24.0
+	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3-0.20240228213828-cce7f56d000b
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092633-b306e7a706e1
 	github.com/cosmos/ibc-go/v7 v7.3.2
@@ -32,7 +31,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240312193551-6c010fa93f60
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240312193551-6c010fa93f60
+	github.com/osmosis-labs/osmosis/osmoutils v0.47.5-v23-osmo-1-iavl-v1
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240312193551-6c010fa93f60
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312193551-6c010fa93f60
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e
@@ -79,8 +78,8 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/bits-and-blooms/bitset v1.8.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd // indirect
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792 // indirect
@@ -217,7 +216,7 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/docker/cli v23.0.1+incompatible // indirect
-	github.com/docker/docker v24.0.7+incompatible // indirect
+	github.com/docker/docker v24.0.9+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -407,7 +406,13 @@ replace (
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-3
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1-iavl-v1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+	// Local replaces commented for development
+	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 
 	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e
 
@@ -416,12 +421,6 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
-
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0
-
-	// Local replaces commented for development
-	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 // github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
