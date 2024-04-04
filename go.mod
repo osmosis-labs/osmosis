@@ -94,7 +94,6 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
-	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
@@ -107,7 +106,6 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/emicklei/dot v1.4.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/ghostiam/protogetter v0.2.3 // indirect
@@ -406,7 +404,14 @@ replace (
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+	// Local replaces commented for development
+	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 
 	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e
 
@@ -415,12 +420,6 @@ replace (
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
-
-// Local replaces commented for development
-// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
-// github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
 // exclusion so we use v1.0.0
