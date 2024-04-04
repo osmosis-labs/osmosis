@@ -23,7 +23,7 @@ e2e-build-script:
 
 e2e-docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker build --build-arg BUILD_TAGS="netgo,muslc,excludeIncrement" -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
-	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
+	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:threedebug
 
 e2e-docker-build-e2e-init-chain:
 	@DOCKER_BUILDKIT=1 docker build --build-arg BUILD_TAGS="netgo,muslc,excludeIncrement" -t osmolabs/osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
