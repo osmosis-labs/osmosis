@@ -21,10 +21,10 @@ var MigratedIncentiveAccumulatorPoolIDsV24 = map[uint64]struct{}{
 	1276: {},
 	// token0 usdc
 	// token1 dai
-	// liqudity 1.55k
+	// liquidity 1.55k
 	1275: {},
 	// token0 usdc
 	// token1 dai
-	// liqudity 52.9k
+	// liquidity 52.9k
 	1260: {},
 }

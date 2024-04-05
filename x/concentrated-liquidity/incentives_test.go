@@ -3751,7 +3751,7 @@ func (s *KeeperTestSuite) TestGetIncentiveScalingFactorForPool() {
 	}
 
 	var exampleOverwritePoolIDv24 uint64
-	for poolIDv24 := range types.MigratedIncentiveAccumulatorPoolIDs {
+	for poolIDv24 := range types.MigratedIncentiveAccumulatorPoolIDsV24 {
 		exampleOverwritePoolIDv24 = poolIDv24
 		break
 	}
