@@ -255,7 +255,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	//
 
 	// Test that the white whale pools have been updated
-	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 641)
 
 	// TXFEES Tests
 	//
