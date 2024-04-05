@@ -3,7 +3,6 @@ package osmosis_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -18,12 +17,10 @@ import (
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmtrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
-	comettypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -43,7 +40,7 @@ var (
 	TestCfg = observer.ChainConfig{
 		Id:                        observer.ChainIdOsmosis,
 		Mode:                      observer.ModeTestnet,
-		MinOutboundTransferAmount: math.NewUint(1000),
+		MinOutboundTransferAmount: math.NewUint(5),
 	}
 	BtcAddr              = "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ"
 	OsmosisValidatorAddr = "osmo1ajaeadkj8u4wgw3sfm8szu8hl992nngaex40fs"
@@ -85,7 +82,7 @@ type OsmosisTestSuite struct {
 func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 	ts := NewTestSuite(t)
 
-	s := httptest.NewServer(http.HandlerFunc(success(t)))
+	s := httptest.NewServer(http.HandlerFunc(outbound(t)))
 	cometRpc, err := rpchttp.New(s.URL, "/websocket")
 	require.NoError(t, err)
 
@@ -127,10 +124,10 @@ func (ots *OsmosisTestSuite) Start(t *testing.T, ctx context.Context) {
 }
 
 func (ots *OsmosisTestSuite) Stop(t *testing.T, ctx context.Context) {
-	err := ots.o.Stop(ctx)
-	require.NoError(t, err)
 	ots.hs.Close()
 	ots.ts.Close(t)
+	err := ots.o.Stop(ctx)
+	require.NoError(t, err)
 }
 
 var upgrader = websocket.Upgrader{}
@@ -159,7 +156,7 @@ func readTxCheckBytes(t *testing.T, id int, path string) []byte {
 	return checkResultsRaw
 }
 
-func success(t *testing.T) http.HandlerFunc {
+func outbound(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -188,7 +185,7 @@ func success(t *testing.T) http.HandlerFunc {
 
 			var resp []byte
 			switch id {
-			case 1:
+			case 2:
 				resp = readTxCheckBytes(t, id, "./test_events/tx_check_error.json")
 			default:
 				resp = readTxCheckBytes(t, id, "./test_events/tx_check_success.json")
@@ -287,11 +284,10 @@ func TestSignalInboundTransfer(t *testing.T) {
 			return expResp2, nil
 		})
 	ots.Start(t, ctx)
+	defer ots.Stop(t, ctx)
 
 	err = ots.o.SignalInboundTransfer(ctx, in)
 	require.NoError(t, err)
-
-	ots.Stop(t, ctx)
 }
 
 // ListenOutboundTransfer verifies Osmosis properly collects transfers
@@ -325,9 +321,9 @@ func TestListenOutboundTransfer(t *testing.T) {
 	expTransfer := observer.Transfer{
 		SrcChain: observer.ChainIdOsmosis,
 		DstChain: observer.ChainIdBitcoin,
-		Id:       "8eb4b69be7144690f82a4e1485f4b85d23adc5267db5d3dab7affae57c8ce2a4",
-		Height:   2801,
-		Sender:   "osmo1pldlhnwegsj3lqkarz0e4flcsay3fuqgkd35ww",
+		Id:       "f182a4f6d759b8d9b229547814f2b32a28a12912652e3d993099d3f422d84172",
+		Height:   59,
+		Sender:   "osmo1ftcrqh3k025y2vmlp8z8uazcu3q7dvln2ta5x5",
 		To:       "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
 		Asset:    bridgetypes.DefaultBitcoinDenomName,
 		Amount:   math.NewUint(10),
@@ -338,211 +334,4 @@ func TestListenOutboundTransfer(t *testing.T) {
 	height, err = ots.o.Height(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expTransfer.Height, height)
-}
-
-///////////////////////////
-
-func TestParseBlock(t *testing.T) {
-	t.SkipNow()
-
-	event := readNewBlockEvent(t, "./test_events/blocks/block_370.json")
-
-	newBlock, ok := event.Data.(comettypes.EventDataNewBlock)
-	require.True(t, ok)
-
-	js, err := json.MarshalIndent(newBlock, "", "  ")
-	require.NoError(t, err)
-	fmt.Println(string(js))
-
-	dec := app.GetEncodingConfig().TxConfig.TxDecoder()
-	for _, tx := range newBlock.Block.Txs {
-		decoded, err := dec(tx)
-		require.NoError(t, err)
-		for _, msg := range decoded.GetMsgs() {
-			outbound, ok := msg.(*bridgetypes.MsgOutboundTransfer)
-			require.True(t, ok)
-			fmt.Println(outbound)
-		}
-	}
-}
-
-func TestBlocks(t *testing.T) {
-	t.SkipNow()
-
-	url := "http://127.0.0.1:26657"
-	rpc, err := rpchttp.New(url, "/websocket")
-	require.NoError(t, err)
-	fmt.Println("Rpc")
-
-	o := osmosis.NewChainClient(log.NewNopLogger(), TestCfg, nil, rpc, app.GetEncodingConfig().TxConfig, ValAddr)
-	fmt.Println("Client")
-	err = o.Start(context.Background())
-	require.NoError(t, err)
-
-	time.Sleep(time.Hour)
-
-	o.Stop(context.Background())
-}
-
-var (
-	ValMnemonic = "accident pipe try devote coin pet label brush fun myself carbon screen pen type impose grow marine famous live endless worth crew pact cute"
-	ValAddr     = "osmo1pldlhnwegsj3lqkarz0e4flcsay3fuqgkd35ww"
-)
-
-func TestParams(t *testing.T) {
-	t.SkipNow()
-
-	ctx := context.Background()
-
-	grpcUrl := "127.0.0.1:9090"
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err := keyring.NewAccount(
-		osmosis.ModuleNameClient,
-		ValMnemonic,
-		"",
-		types.FullFundraiserPath,
-		hd.Secp256k1,
-	)
-	require.NoError(t, err)
-
-	conn, err := grpc.Dial(grpcUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err)
-	o := osmosis.NewClient("my-test-chain", conn, keyring, app.GetEncodingConfig().TxConfig)
-	require.NoError(t, err)
-
-	msg := &bridgetypes.MsgUpdateParams{
-		Sender: ValAddr,
-		NewParams: bridgetypes.Params{
-			Signers: []string{ValAddr},
-			Assets: []bridgetypes.Asset{
-				{
-					Exponent:              10,
-					ExternalConfirmations: 6,
-					Id: bridgetypes.AssetID{
-						SourceChain: "bitcoin",
-						Denom:       "btc",
-					},
-					Status: bridgetypes.AssetStatus_ASSET_STATUS_OK,
-				},
-			},
-			VotesNeeded: 1,
-			Fee:         math.LegacyNewDec(0),
-		},
-	}
-	fees := types.NewCoins(types.NewCoin("stake", math.NewInt(3000)))
-	gasLimit := 1200000
-	bytes, err := o.SignTx(ctx, msg, fees, uint64(gasLimit))
-	require.NoError(t, err)
-
-	resp, err := o.BroadcastTx(ctx, bytes)
-	require.NoError(t, err)
-	fmt.Println(resp)
-	o.Close()
-}
-
-func TestInbound(t *testing.T) {
-	t.SkipNow()
-
-	ctx := context.Background()
-
-	grpcUrl := "127.0.0.1:9090"
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err := keyring.NewAccount(
-		osmosis.ModuleNameClient,
-		ValMnemonic,
-		"",
-		types.FullFundraiserPath,
-		hd.Secp256k1,
-	)
-	require.NoError(t, err)
-
-	conn, err := grpc.Dial(grpcUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err)
-	o := osmosis.NewClient("my-test-chain", conn, keyring, app.GetEncodingConfig().TxConfig)
-	require.NoError(t, err)
-
-	msg := &bridgetypes.MsgInboundTransfer{
-		ExternalId:     "deadbeef",
-		ExternalHeight: 42,
-		Sender:         ValAddr,
-		DestAddr:       ValAddr,
-		AssetId: bridgetypes.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		},
-		Amount: math.Int(math.NewUint(10000)),
-	}
-	fees := types.NewCoins(types.NewCoin("stake", math.NewInt(1000)))
-	gasLimit := 200000
-	bytes, err := o.SignTx(ctx, msg, fees, uint64(gasLimit))
-	require.NoError(t, err)
-
-	resp, err := o.BroadcastTx(ctx, bytes)
-	require.NoError(t, err)
-	fmt.Println(resp)
-	o.Close()
-}
-
-func TestOutbound(t *testing.T) {
-	t.SkipNow()
-
-	ctx := context.Background()
-
-	grpcUrl := "127.0.0.1:9090"
-	keyring := keyring.NewInMemory(app.GetEncodingConfig().Marshaler)
-	_, err := keyring.NewAccount(
-		osmosis.ModuleNameClient,
-		ValMnemonic,
-		"",
-		types.FullFundraiserPath,
-		hd.Secp256k1,
-	)
-	require.NoError(t, err)
-
-	conn, err := grpc.Dial(grpcUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err)
-	o := osmosis.NewClient("my-test-chain", conn, keyring, app.GetEncodingConfig().TxConfig)
-	require.NoError(t, err)
-
-	msg := &bridgetypes.MsgOutboundTransfer{
-		Sender:   ValAddr,
-		DestAddr: BtcAddr,
-		AssetId: bridgetypes.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		},
-		Amount: math.Int(math.NewUint(10)),
-	}
-	msg1 := msg
-	msg2 := &bridgetypes.MsgOutboundTransfer{
-		Sender:   ValAddr,
-		DestAddr: Addr1.String(),
-		AssetId: bridgetypes.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		},
-		Amount: math.NewInt(10),
-	}
-	msg3 := &bridgetypes.MsgOutboundTransfer{
-		Sender:   ValAddr,
-		DestAddr: BtcAddr,
-		AssetId: bridgetypes.AssetID{
-			SourceChain: "bitcoin",
-			Denom:       "btc",
-		},
-		Amount: math.NewInt(1),
-	}
-	fees := types.NewCoins(types.NewCoin("stake", math.NewInt(1000)))
-	gasLimit := 200000
-
-	msgs := []sdk.Msg{msg3, msg2, msg1, msg}
-	for _, m := range msgs {
-		bytes, err := o.SignTx(ctx, m, fees, uint64(gasLimit))
-		require.NoError(t, err)
-		resp, err := o.BroadcastTx(ctx, bytes)
-		require.NoError(t, err)
-		fmt.Println(resp)
-	}
-
-	o.Close()
 }

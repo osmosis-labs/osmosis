@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"sync/atomic"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
 	btcdchaincfg "github.com/btcsuite/btcd/chaincfg"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -87,13 +86,29 @@ func (c *ChainClient) Start(ctx context.Context) error {
 func (c *ChainClient) Stop(ctx context.Context) error {
 	close(c.stopChan)
 	c.osmoClient.Close()
-	if err := c.cometRpc.UnsubscribeAll(ctx, ModuleName); err != nil {
-		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
-	}
 
-	err := c.cometRpc.Stop()
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to stop comet RPC")
+	const shutdownTimeout = 3 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+	defer cancel()
+	stop := make(chan struct{})
+
+	go func() {
+		err := c.cometRpc.UnsubscribeAll(ctx, ModuleName)
+		if err != nil {
+			c.logger.Error("Failed to unsubscribe from RPC client: ", err.Error())
+		}
+		err = c.cometRpc.Stop()
+		if err != nil {
+			c.logger.Error("Failed to stop RPC client: ", err.Error())
+		}
+		c.cometRpc.Wait()
+		close(stop)
+	}()
+
+	select {
+	case <-ctx.Done():
+		c.logger.Error("Failed to shutdown RPC client")
+	case <-stop:
 	}
 
 	c.logger.Info("Stopped Osmosis chain client")
@@ -148,12 +163,6 @@ func (c *ChainClient) observeEvents(ctx context.Context, txs <-chan coretypes.Re
 			if !ok {
 				continue
 			}
-
-			js, err := cmtjson.Marshal(event)
-			fmt.Println("js: ", err)
-			path := fmt.Sprintf("./test_events/blocks/block_%d.json", newBlock.Block.Height)
-			err = os.WriteFile(path, js, 0644)
-			fmt.Println("file: ", err)
 
 			c.lastObservedHeight.Store(math.Max(
 				c.lastObservedHeight.Load(),
