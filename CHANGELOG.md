@@ -66,7 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
 * [#7623](https://github.com/osmosis-labs/osmosis/pull/7623) Add query for querying all before send hooks
 * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Remove duplicate CL accumulator update logic.
-* [#7503](https://github.com/osmosis-labs/osmosis/pull/7677) feat(x/incentives): Restrict lockable durations to 2 weeks.
 * [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
 * [#7685](https://github.com/osmosis-labs/osmosis/pull/7685) Speedup CL actions by only marshalling for CL hooks if they will be used.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
@@ -76,13 +75,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7768](https://github.com/osmosis-labs/osmosis/pull/7768) Allow governance module account to transfer any CL position
 * [#7746](https://github.com/osmosis-labs/osmosis/pull/7746) Make forfeited incentives redeposit into the pool instead of sending to community pool
 * [#7785](https://github.com/osmosis-labs/osmosis/pull/7785) Remove reward claiming during position transfers
-* [#7805](https://github.com/osmosis-labs/osmosis/pull/7805) Migrate remaining cl incentive accumulators
 * [#7833](https://github.com/osmosis-labs/osmosis/pull/7833) Bump max gas wanted per tx to 60 mil
 * [#7839](https://github.com/osmosis-labs/osmosis/pull/7839) Add ICA controller
 * [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
 * [#7855](https://github.com/osmosis-labs/osmosis/pull/7855) Whitelist address parameter for setting fee tokens
 * [#7857](https://github.com/osmosis-labs/osmosis/pull/7857) SuperfluidDelegationsByValidatorDenom query now returns equivalent staked amount
 * [#7912](https://github.com/osmosis-labs/osmosis/pull/7912) Default timeoutCommit to 2s
+* [#7951](https://github.com/osmosis-labs/osmosis/pull/7951) Only migrate selected cl incentives
+* [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
+* [#7957](https://github.com/osmosis-labs/osmosis/pull/7957) Update to the latest version of ibc-go
 
 ### SDK
 

@@ -23,7 +23,6 @@ import (
 	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
 	"github.com/osmosis-labs/osmosis/v24/x/twap/types"
@@ -156,8 +155,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
 
 	// Overwrite the migration list with the desired pool ID.
-	v24.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
-	v24.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDsV24 = map[uint64]struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDsV24[lastPoolID] = struct{}{}
 
 	// PROTOREV Setup
 	//
@@ -178,36 +177,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	newBaseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(protorevtypes.DefaultBaseDenoms, newBaseDenoms)
-
-	// INCENTIVE Setup
-	//
-
-	// check that old lockable durations were not single param
-	oldLockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
-	s.Require().Equal(len(oldLockableDurations), 4)
-	oldLockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
-	s.Require().Equal(len(oldLockableDurations), 3)
-
-	// fund test acc and create non-perpetual gauge
-	lockDuration := time.Hour
-	incentive := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)))
-	expectedShareDenom := "foo"
-	s.FundAcc(s.TestAccs[1], incentive)
-
-	shareLock := sdk.NewCoins(sdk.NewCoin(expectedShareDenom, osmomath.NewInt(1_000_000)))
-	s.FundAcc(s.TestAccs[1], shareLock)
-	shareCoins := sdk.NewCoins(sdk.NewInt64Coin(expectedShareDenom, int64(1_000_000)))
-	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[1], shareCoins, lockDuration)
-	s.Require().NoError(err)
-
-	gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, true, s.TestAccs[1], incentive, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         expectedShareDenom,
-		Duration:      lockDuration,
-	}, s.Ctx.BlockTime(), 1, 0)
-	s.Require().NoError(err)
-	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-	s.Require().NoError(err)
 
 	whiteWhalePoolIds := []uint64{1463, 1462, 1461}
 	for _, poolId := range whiteWhalePoolIds {
@@ -266,18 +235,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// INCENTIVES Tests
 	//
 
-	coins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []incentivestypes.Gauge{*gauge})
-	s.Require().NoError(err)
-	s.Require().Equal(incentive.String(), coins.String())
-
-	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
-	s.Require().Equal(len(lockableDurations), 1)
-	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
-
-	lockableDurations = s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
-	s.Require().Equal(len(lockableDurations), 1)
-	s.Require().Equal(lockableDurations[0], time.Hour*24*14)
-
 	// Migrated pool: ensure that the claimable incentives are the same before and after migration
 	migratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID)
 	s.Require().NoError(err)
@@ -286,6 +243,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
 	nonMigratedPoolAfterUpgradeIncentives, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, lastPoolPositionID-1)
+
 	s.Require().NoError(err)
 	s.Require().Equal(nonMigratedPoolBeforeUpgradeIncentives.String(), nonMigratedPoolAfterUpgradeIncentives.String())
 

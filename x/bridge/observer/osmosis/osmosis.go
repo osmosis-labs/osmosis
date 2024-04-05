@@ -23,6 +23,13 @@ import (
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
+type Mode = string
+
+const (
+	ModeMainnet Mode = "mainnet"
+	ModeTestnet Mode = "testnet"
+)
+
 var (
 	ModuleName    = "osmosis-chain"
 	OsmoGasLimit  = uint64(200000)
