@@ -18,6 +18,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
+	_ "github.com/osmosis-labs/osmosis/v24/app/params" // init Osmosis address prefixes
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer"
 	"github.com/osmosis-labs/osmosis/v24/x/bridge/observer/bitcoin"
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
@@ -104,9 +105,16 @@ func TestListenOutboundTransfer(t *testing.T) {
 	err = b.Start(ctx)
 	require.NoError(t, err)
 
-	// We expect Observer to observe 1 block with 2 Txs
-	// Only 1 Tx is sent to our vault address,
-	// so we should receive only 1 TxIn
+	// We expect Observer to observe 1 block with 8 Txs:
+	// - tx to our vault but without memo
+	// - tx to our vault with memo with invalid address
+	// - tx to our vault but with zero tokens
+	// - tx to our vault with invalid script type for output Vout
+	// - tx to our vault with invalid script type for memo Vout
+	// - tx to our vault with invalid tokens amount
+	// - unrelated tx
+	// + valid tx to our vault
+	// So, we should receive only 1 Transfer
 	txs := b.ListenOutboundTransfer()
 	var out observer.Transfer
 	require.Eventually(t, func() bool {
