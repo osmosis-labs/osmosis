@@ -55,7 +55,7 @@ var (
 
 	OracleDecPrecision = 8
 
-	faucetAccountName = tokenfactorytypes.ModuleName
+	FaucetAccountName = tokenfactorytypes.ModuleName
 )
 
 type KeeperTestSuite struct {
@@ -78,13 +78,13 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs)*10))))
-	s.App.BankKeeper.MintCoins(s.Ctx, faucetAccountName, totalSupply)
+	s.App.BankKeeper.MintCoins(s.Ctx, FaucetAccountName, totalSupply)
 
-	s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs))))))
+	s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs))))))
 
 	for _, addr := range Addrs {
 		s.App.AccountKeeper.SetAccount(s.Ctx, authtypes.NewBaseAccountWithAddress(addr))
-		err := s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, faucetAccountName, addr, InitCoins)
+		err := s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, FaucetAccountName, addr, InitCoins)
 		s.Require().NoError(err)
 	}
 
@@ -93,7 +93,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	for _, denom := range defaults.Whitelist {
 		s.App.OracleKeeper.SetTobinTax(s.Ctx, denom.Name, denom.TobinTax)
 	}
-
 	s.valPubKeys = CreateTestPubKeys(5)
 }
 
@@ -112,11 +111,11 @@ func (s *KeeperTestSuite) NewTestMsgCreateValidator(address sdk.ValAddress, pubK
 // sending the coins to the address. This should be used for testing purposes
 // only!
 func (s *KeeperTestSuite) FundAccount(addr sdk.AccAddress, amounts sdk.Coins) error {
-	if err := s.App.BankKeeper.MintCoins(s.Ctx, faucetAccountName, amounts); err != nil {
+	if err := s.App.BankKeeper.MintCoins(s.Ctx, FaucetAccountName, amounts); err != nil {
 		return err
 	}
 
-	return s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, faucetAccountName, addr, amounts)
+	return s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, FaucetAccountName, addr, amounts)
 }
 
 // CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
@@ -188,17 +187,17 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 	s.Require().True(numExchangeRates == 3)
 }
 
-func (s *KeeperTestSuite) TestIterateLunaExchangeRates() {
+func (s *KeeperTestSuite) TestIterateOsmoExchangeRates() {
 	cnyExchangeRate := sdk.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 	gbpExchangeRate := sdk.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 	krwExchangeRate := sdk.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	lunaExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	osmoExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.BaseCoinUnit, lunaExchangeRate)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.BaseCoinUnit, osmoExchangeRate)
 
 	s.App.OracleKeeper.IterateLunaExchangeRates(s.Ctx, func(denom string, rate sdk.Dec) (stop bool) {
 		switch denom {
@@ -209,7 +208,7 @@ func (s *KeeperTestSuite) TestIterateLunaExchangeRates() {
 		case appparams.MicroKRWDenom:
 			s.Require().Equal(krwExchangeRate, rate)
 		case appparams.BaseCoinUnit:
-			s.Require().Equal(lunaExchangeRate, rate)
+			s.Require().Equal(osmoExchangeRate, rate)
 		}
 		return false
 	})
@@ -423,8 +422,7 @@ func (s *KeeperTestSuite) TestTobinTaxGetSet() {
 	tobinTaxes := map[string]sdk.Dec{
 		appparams.MicroSDRDenom: sdk.NewDec(1),
 		appparams.MicroUSDDenom: sdk.NewDecWithPrec(1, 3),
-		appparams.MicroKRWDenom: sdk.NewDecWithPrec(123, 3),
-		appparams.MicroMNTDenom: sdk.NewDecWithPrec(1423, 4),
+		appparams.StakeDenom:    sdk.NewDec(1),
 	}
 
 	for denom, tobinTax := range tobinTaxes {

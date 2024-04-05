@@ -10,5 +10,7 @@ const (
 	MicroGBPDenom = "ugbp"
 	MicroMNTDenom = "umnt"
 
+	StakeDenom = "stake"
+
 	MicroUnit = int64(1e6)
 )

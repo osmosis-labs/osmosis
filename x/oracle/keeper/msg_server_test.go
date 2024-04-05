@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestMsgServer_FeederDelegation() {
 
 	// Case 2: Normal Prevote - without delegation
 	prevoteMsg := types.NewMsgAggregateExchangeRatePrevote(hash, Addrs[0], ValAddrs[0])
-	_, err = msgServer.AggregateExchangeRatePrevote(sdk.WrapSDKContext(s.Ctx), prevoteMsg)
+	_, err = msgServer.AggregateExchangeRatePrevote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(0)), prevoteMsg)
 	s.Require().NoError(err)
 
 	// Case 2.1: Normal Prevote - with delegation fails
@@ -89,12 +89,12 @@ func (s *KeeperTestSuite) TestMsgServer_FeederDelegation() {
 
 	// Case 4.3: Normal Vote - without delegation fails
 	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, Addrs[2], ValAddrs[0])
-	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(1)), voteMsg)
+	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(2)), voteMsg)
 	s.Require().Error(err)
 
 	// Case 4.4: Normal Vote - with delegation succeeds
 	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, Addrs[1], ValAddrs[0])
-	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(1)), voteMsg)
+	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(2)), voteMsg)
 	s.Require().NoError(err)
 }
 
@@ -102,10 +102,10 @@ func (s *KeeperTestSuite) TestMsgServer_AggregatePrevoteVote() {
 	msgServer := s.setupServer()
 
 	salt := "1"
-	exchangeRatesStr := fmt.Sprintf("1000.23%s,0.29%s,0.27%s", appparams.MicroKRWDenom, appparams.MicroUSDDenom, appparams.MicroSDRDenom)
-	otherExchangeRateStr := fmt.Sprintf("1000.12%s,0.29%s,0.27%s", appparams.MicroKRWDenom, appparams.MicroUSDDenom, appparams.MicroUSDDenom)
-	unintendedExchageRateStr := fmt.Sprintf("1000.23%s,0.29%s,0.27%s", appparams.MicroKRWDenom, appparams.MicroUSDDenom, appparams.MicroCNYDenom)
-	invalidExchangeRateStr := fmt.Sprintf("1000.23%s,0.29%s,0.27", appparams.MicroKRWDenom, appparams.MicroUSDDenom)
+	exchangeRatesStr := fmt.Sprintf("1000.23%s,0.29%s", appparams.MicroUSDDenom, appparams.MicroSDRDenom)
+	otherExchangeRateStr := fmt.Sprintf("1000.12%s,0.29%s", appparams.MicroUSDDenom, appparams.MicroUSDDenom)
+	unintendedExchageRateStr := fmt.Sprintf("1000.23%s,0.29%s", appparams.MicroUSDDenom, appparams.MicroCNYDenom)
+	invalidExchangeRateStr := fmt.Sprintf("1000.23%s,0.29", appparams.MicroUSDDenom)
 
 	hash := types.GetAggregateVoteHash(salt, exchangeRatesStr, ValAddrs[0])
 
@@ -134,7 +134,7 @@ func (s *KeeperTestSuite) TestMsgServer_AggregatePrevoteVote() {
 	s.Require().Error(err)
 
 	// Invalid reveal period
-	s.Ctx = s.Ctx.WithBlockHeight(2)
+	s.Ctx = s.Ctx.WithBlockHeight(1)
 	aggregateExchangeRateVoteMsg = types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, Addrs[0], ValAddrs[0])
 	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx), aggregateExchangeRateVoteMsg)
 	s.Require().Error(err)
@@ -162,8 +162,8 @@ func (s *KeeperTestSuite) TestMsgServer_AggregatePrevoteVote() {
 	s.Require().Error(err)
 
 	// Valid exchange rate reveal submission
-	s.Ctx = s.Ctx.WithBlockHeight(1)
+	s.Ctx = s.Ctx.WithBlockHeight(2)
 	aggregateExchangeRateVoteMsg = types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, Addrs[0], ValAddrs[0])
-	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx), aggregateExchangeRateVoteMsg)
+	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(2)), aggregateExchangeRateVoteMsg)
 	s.Require().NoError(err)
 }
