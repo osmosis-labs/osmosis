@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestOsmosisPoolDeltaUpdate() {
 // TestReplenishPools tests that
 // each pools move towards base pool
 func (s *KeeperTestSuite) TestReplenishPools() {
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, sdk.OneDec())
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, sdk.OneDec())
 
 	basePool := s.App.MarketKeeper.BasePool(s.Ctx)
 	terraPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)

@@ -9,7 +9,7 @@ import (
 
 func (s *KeeperTestSuite) TestApplySwapToPool() {
 	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
 
 	offerCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))
 	askCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, sdk.NewInt(1700))
@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) TestApplySwapToPool() {
 func (s *KeeperTestSuite) TestComputeSwap() {
 	// Set Oracle Price
 	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
 
 	for i := 0; i < 100; i++ {
 		swapAmountInSDR := osmoPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestComputeSwap() {
 func (s *KeeperTestSuite) TestComputeInternalSwap() {
 	// Set Oracle Price
 	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
 
 	for i := 0; i < 100; i++ {
 		offerCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, osmoPriceInSDR.MulInt64(rand.Int63()+1).TruncateInt())
@@ -79,8 +79,8 @@ func (s *KeeperTestSuite) TestIlliquidTobinTaxListParams() {
 	// Set Oracle Price
 	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
 	osmoPriceInMNT := sdk.NewDecWithPrec(7652, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroMNTDenom, osmoPriceInMNT)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroMNTDenom, osmoPriceInMNT)
 
 	tobinTax := sdk.NewDecWithPrec(25, 4)
 	params := s.App.MarketKeeper.GetParams(s.Ctx)

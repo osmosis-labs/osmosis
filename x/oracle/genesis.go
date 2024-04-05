@@ -28,7 +28,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 	}
 
 	for _, ex := range data.ExchangeRates {
-		keeper.SetLunaExchangeRate(ctx, ex.Denom, ex.ExchangeRate)
+		keeper.SetOsmoExchangeRate(ctx, ex.Denom, ex.ExchangeRate)
 	}
 
 	for _, mc := range data.MissCounters {

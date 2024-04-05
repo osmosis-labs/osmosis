@@ -154,27 +154,27 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 	lunaExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
-	rate, err := s.App.OracleKeeper.GetLunaExchangeRate(s.Ctx, appparams.MicroCNYDenom)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
+	rate, err := s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroCNYDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(cnyExchangeRate, rate)
 
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
-	rate, err = s.App.OracleKeeper.GetLunaExchangeRate(s.Ctx, appparams.MicroGBPDenom)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
+	rate, err = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroGBPDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(gbpExchangeRate, rate)
 
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
-	rate, err = s.App.OracleKeeper.GetLunaExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
+	rate, err = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(krwExchangeRate, rate)
 
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.BaseCoinUnit, lunaExchangeRate)
-	rate, _ = s.App.OracleKeeper.GetLunaExchangeRate(s.Ctx, appparams.BaseCoinUnit)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.BaseCoinUnit, lunaExchangeRate)
+	rate, _ = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.BaseCoinUnit)
 	s.Require().Equal(sdk.OneDec(), rate)
 
-	s.App.OracleKeeper.DeleteLunaExchangeRate(s.Ctx, appparams.MicroKRWDenom)
-	_, err = s.App.OracleKeeper.GetLunaExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	s.App.OracleKeeper.DeleteOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	_, err = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom)
 	s.Require().Error(err)
 
 	numExchangeRates := 0
@@ -194,10 +194,10 @@ func (s *KeeperTestSuite) TestIterateOsmoExchangeRates() {
 	osmoExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.BaseCoinUnit, osmoExchangeRate)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.BaseCoinUnit, osmoExchangeRate)
 
 	s.App.OracleKeeper.IterateLunaExchangeRates(s.Ctx, func(denom string, rate sdk.Dec) (stop bool) {
 		switch denom {

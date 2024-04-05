@@ -141,12 +141,12 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 		return offerCoin, nil
 	}
 
-	offerRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
+	offerRate, err := k.OracleKeeper.GetOsmoExchangeRate(ctx, offerCoin.Denom)
 	if err != nil {
 		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
 	}
 
-	askRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, askDenom)
+	askRate, err := k.OracleKeeper.GetOsmoExchangeRate(ctx, askDenom)
 	if err != nil {
 		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, askDenom)
 	}

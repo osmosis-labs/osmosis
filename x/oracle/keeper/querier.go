@@ -41,7 +41,7 @@ func (q querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	exchangeRate, err := q.GetLunaExchangeRate(ctx, req.Denom)
+	exchangeRate, err := q.GetOsmoExchangeRate(ctx, req.Denom)
 	if err != nil {
 		return nil, err
 	}
