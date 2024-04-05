@@ -4,18 +4,26 @@ go 1.21
 
 require (
 	cosmossdk.io/errors v1.0.1
-	github.com/CosmWasm/wasmd v0.40.1
+	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-go/v7 v7.3.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.61.1
 	google.golang.org/protobuf v1.32.0
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10
+	github.com/spf13/cobra v1.8.0
+	google.golang.org/grpc v1.62.1
+	google.golang.org/protobuf v1.33.0
+>>>>>>> 95a2d3bc (chore: update go mods (#7970))
 )
 
 require (
@@ -79,7 +87,11 @@ require (
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
+<<<<<<< HEAD
 	github.com/go-logr/logr v1.2.4 // indirect
+=======
+	github.com/go-logr/logr v1.4.1 // indirect
+>>>>>>> 95a2d3bc (chore: update go mods (#7970))
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
@@ -89,7 +101,7 @@ require (
 	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -101,7 +113,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
@@ -158,7 +170,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
@@ -170,9 +182,17 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.etcd.io/bbolt v1.3.8 // indirect
 	go.opencensus.io v0.24.0 // indirect
+<<<<<<< HEAD
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
+=======
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
+	go.opentelemetry.io/otel v1.24.0 // indirect
+	go.opentelemetry.io/otel/metric v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
+>>>>>>> 95a2d3bc (chore: update go mods (#7970))
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
@@ -206,9 +226,15 @@ replace (
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/e1d3e4c19113972586994fb56566f5d957b76607
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-7-iavl-v1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-7-iavl-v1
+=======
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5f7f1a1d22b8cbf86cdd2ab965e82f0ade6a96f9
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-4
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-4
+>>>>>>> 95a2d3bc (chore: update go mods (#7970))
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
