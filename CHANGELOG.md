@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7951](https://github.com/osmosis-labs/osmosis/pull/7951) Only migrate selected cl incentives
 * [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
 * [#7957](https://github.com/osmosis-labs/osmosis/pull/7957) Update to the latest version of ibc-go
+* [#7966](https://github.com/osmosis-labs/osmosis/pull/7966) Update all governance migrated white whale pools to code id 641
 
 ### SDK
 
