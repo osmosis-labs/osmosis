@@ -71,6 +71,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7839](https://github.com/osmosis-labs/osmosis/pull/7839) Add ICA controller
 * [#7527](https://github.com/osmosis-labs/osmosis/pull/7527) Add 30M gas limit to CW pool contract calls
 * [#7857](https://github.com/osmosis-labs/osmosis/pull/7857) SuperfluidDelegationsByValidatorDenom query now returns equivalent staked amount
+<<<<<<< HEAD
+=======
+* [#7912](https://github.com/osmosis-labs/osmosis/pull/7912) Default timeoutCommit to 2s
+* [#7951](https://github.com/osmosis-labs/osmosis/pull/7951) Only migrate selected cl incentives
+* [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
+* [#7957](https://github.com/osmosis-labs/osmosis/pull/7957) Update to the latest version of ibc-go
+>>>>>>> f682cfab (chore: update to the latest version of ibc-go (#7957))
 
 ### SDK
 
