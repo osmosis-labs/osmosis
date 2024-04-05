@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
@@ -91,10 +92,12 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
-	// Burn offered coins and subtract from the trader's account
-	err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, offerCoins)
-	if err != nil {
-		return nil, err
+	if offerCoin.Denom != appparams.BaseCoinUnit {
+		// Burn offered coins and subtract from the trader's account
+		err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, offerCoins)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Mint asked coins and credit Trader's account

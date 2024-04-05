@@ -25,7 +25,7 @@ var (
 
 // Default parameter values
 const (
-	DefaultVotePeriod               = appparams.BlocksPerMinute * 2 // 30 seconds
+	DefaultVotePeriod               = appparams.BlocksPerMinute / 2 // 30 seconds
 	DefaultSlashWindow              = appparams.BlocksPerWeek       // window for a week
 	DefaultRewardDistributionWindow = appparams.BlocksPerYear       // window for a year
 )

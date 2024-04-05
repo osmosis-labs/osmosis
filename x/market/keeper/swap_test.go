@@ -8,8 +8,8 @@ import (
 )
 
 func (s *KeeperTestSuite) TestApplySwapToPool() {
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, lunaPriceInSDR)
+	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
 
 	offerCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))
 	askCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, sdk.NewInt(1700))
@@ -40,47 +40,47 @@ func (s *KeeperTestSuite) TestApplySwapToPool() {
 
 func (s *KeeperTestSuite) TestComputeSwap() {
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, lunaPriceInSDR)
+	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
 
 	for i := 0; i < 100; i++ {
-		swapAmountInSDR := lunaPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
+		swapAmountInSDR := osmoPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 		offerCoin := sdk.NewCoin(appparams.MicroSDRDenom, swapAmountInSDR)
 		retCoin, spread, err := s.App.MarketKeeper.ComputeSwap(s.Ctx, offerCoin, appparams.BaseCoinUnit)
 
 		s.Require().NoError(err)
 		s.Require().True(spread.GTE(s.App.MarketKeeper.MinStabilitySpread(s.Ctx)))
-		s.Require().Equal(sdk.NewDecFromInt(offerCoin.Amount).Quo(lunaPriceInSDR), retCoin.Amount)
+		s.Require().Equal(sdk.NewDecFromInt(offerCoin.Amount).Quo(osmoPriceInSDR), retCoin.Amount)
 	}
 
-	offerCoin := sdk.NewCoin(appparams.MicroSDRDenom, lunaPriceInSDR.QuoInt64(2).TruncateInt())
+	offerCoin := sdk.NewCoin(appparams.MicroSDRDenom, osmoPriceInSDR.QuoInt64(2).TruncateInt())
 	_, _, err := s.App.MarketKeeper.ComputeSwap(s.Ctx, offerCoin, appparams.BaseCoinUnit)
 	s.Require().Error(err)
 }
 
 func (s *KeeperTestSuite) TestComputeInternalSwap() {
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, lunaPriceInSDR)
+	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
 
 	for i := 0; i < 100; i++ {
-		offerCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, lunaPriceInSDR.MulInt64(rand.Int63()+1).TruncateInt())
+		offerCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, osmoPriceInSDR.MulInt64(rand.Int63()+1).TruncateInt())
 		retCoin, err := s.App.MarketKeeper.ComputeInternalSwap(s.Ctx, offerCoin, appparams.BaseCoinUnit)
 		s.Require().NoError(err)
-		s.Require().Equal(offerCoin.Amount.Quo(lunaPriceInSDR), retCoin.Amount)
+		s.Require().Equal(offerCoin.Amount.Quo(osmoPriceInSDR), retCoin.Amount)
 	}
 
-	offerCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, lunaPriceInSDR.QuoInt64(2).TruncateInt())
+	offerCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, osmoPriceInSDR.QuoInt64(2).TruncateInt())
 	_, err := s.App.MarketKeeper.ComputeInternalSwap(s.Ctx, offerCoin, appparams.BaseCoinUnit)
 	s.Require().Error(err)
 }
 
 func (s *KeeperTestSuite) TestIlliquidTobinTaxListParams() {
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	lunaPriceInMNT := sdk.NewDecWithPrec(7652, 1)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, lunaPriceInSDR)
-	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroMNTDenom, lunaPriceInMNT)
+	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	osmoPriceInMNT := sdk.NewDecWithPrec(7652, 1)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, appparams.MicroMNTDenom, osmoPriceInMNT)
 
 	tobinTax := sdk.NewDecWithPrec(25, 4)
 	params := s.App.MarketKeeper.GetParams(s.Ctx)
@@ -90,7 +90,7 @@ func (s *KeeperTestSuite) TestIlliquidTobinTaxListParams() {
 	s.App.OracleKeeper.SetTobinTax(s.Ctx, appparams.MicroSDRDenom, tobinTax)
 	s.App.OracleKeeper.SetTobinTax(s.Ctx, appparams.MicroMNTDenom, tobinTax.Mul(illiquidFactor))
 
-	swapAmountInSDR := lunaPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
+	swapAmountInSDR := osmoPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 	offerCoin := sdk.NewCoin(appparams.MicroSDRDenom, swapAmountInSDR)
 	_, spread, err := s.App.MarketKeeper.ComputeSwap(s.Ctx, offerCoin, appparams.MicroMNTDenom)
 	s.Require().NoError(err)
