@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7912](https://github.com/osmosis-labs/osmosis/pull/7912) Default timeoutCommit to 2s
 * [#7951](https://github.com/osmosis-labs/osmosis/pull/7951) Only migrate selected cl incentives
 * [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
+* [#7957](https://github.com/osmosis-labs/osmosis/pull/7957) Update to the latest version of ibc-go
 
 ### SDK
 
