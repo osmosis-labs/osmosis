@@ -27,6 +27,7 @@ var ModuleName = "bitcoin-chain"
 
 type ChainClient struct {
 	logger             log.Logger
+	cfg                observer.ChainConfig
 	btcRpc             *rpcclient.Client
 	vaultAddr          string
 	stopChan           chan struct{}
@@ -39,6 +40,7 @@ type ChainClient struct {
 // NewChainClient returns new instance of `ChainClient`
 func NewChainClient(
 	logger log.Logger,
+	cfg observer.ChainConfig,
 	btcRpc *rpcclient.Client,
 	vaultAddr string,
 	fetchInterval time.Duration,
@@ -52,6 +54,7 @@ func NewChainClient(
 
 	c := &ChainClient{
 		logger:             logger.With("module", ModuleName),
+		cfg:                cfg,
 		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
 		stopChan:           make(chan struct{}),
@@ -245,7 +248,7 @@ func (b *ChainClient) isTxRelevant(tx *btcjson.TxRawResult) (math.Uint, bool) {
 			amount = amount.Add(a)
 		}
 	}
-	return amount, !amount.IsZero()
+	return amount, amount.GTE(b.cfg.MinOutboundTransferAmount)
 }
 
 // getAmount retrieves amount of tokens sent

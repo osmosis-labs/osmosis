@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -38,7 +39,7 @@ var (
 
 type ChainClient struct {
 	logger             log.Logger
-	mode               Mode
+	cfg                observer.ChainConfig
 	osmoClient         *Client
 	cometRpc           *rpchttp.HTTP
 	stopChan           chan struct{}
@@ -51,7 +52,7 @@ type ChainClient struct {
 // NewChainClient returns new instance of `Osmosis`
 func NewChainClient(
 	logger log.Logger,
-	mode Mode,
+	cfg observer.ChainConfig,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
 	txConfig cosmosclient.TxConfig,
@@ -59,7 +60,7 @@ func NewChainClient(
 ) *ChainClient {
 	return &ChainClient{
 		logger:             logger.With("module", ModuleName),
-		mode:               mode,
+		cfg:                cfg,
 		osmoClient:         osmoClient,
 		cometRpc:           cometRpc,
 		stopChan:           make(chan struct{}),
@@ -92,13 +93,29 @@ func (c *ChainClient) Start(ctx context.Context) error {
 func (c *ChainClient) Stop(ctx context.Context) error {
 	close(c.stopChan)
 	c.osmoClient.Close()
-	if err := c.cometRpc.UnsubscribeAll(ctx, ModuleName); err != nil {
-		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
-	}
 
-	err := c.cometRpc.Stop()
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to stop comet RPC")
+	const shutdownTimeout = 3 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+	defer cancel()
+	stop := make(chan struct{})
+
+	go func() {
+		err := c.cometRpc.UnsubscribeAll(ctx, ModuleName)
+		if err != nil {
+			c.logger.Error("Failed to unsubscribe from RPC client: ", err.Error())
+		}
+		err = c.cometRpc.Stop()
+		if err != nil {
+			c.logger.Error("Failed to stop RPC client: ", err.Error())
+		}
+		c.cometRpc.Wait()
+		close(stop)
+	}()
+
+	select {
+	case <-ctx.Done():
+		c.logger.Error("Failed to shutdown RPC client")
+	case <-stop:
 	}
 
 	c.logger.Info("Stopped Osmosis chain client")
@@ -196,9 +213,12 @@ func (c *ChainClient) processNewBlockTxs(ctx context.Context, height uint64, txs
 			if !ok {
 				continue
 			}
+			if outbound.Amount.LT(math.Int(c.cfg.MinOutboundTransferAmount)) {
+				continue
+			}
 
 			err = verifyOutboundDestAddress(
-				c.mode,
+				c.cfg.Mode,
 				observer.ChainId(outbound.AssetId.SourceChain),
 				outbound.DestAddr,
 			)
@@ -250,14 +270,14 @@ func outboundTransferFromMsg(
 	}
 }
 
-func verifyOutboundDestAddress(mode Mode, chainId observer.ChainId, addr string) error {
+func verifyOutboundDestAddress(mode observer.Mode, chainId observer.ChainId, addr string) error {
 	switch chainId {
 	case observer.ChainIdBitcoin:
 		switch mode {
-		case ModeMainnet:
+		case observer.ModeMainnet:
 			_, err := btcutil.DecodeAddress(addr, &btcdchaincfg.MainNetParams)
 			return err
-		case ModeTestnet:
+		case observer.ModeTestnet:
 			_, err := btcutil.DecodeAddress(addr, &btcdchaincfg.TestNet3Params)
 			return err
 		}
