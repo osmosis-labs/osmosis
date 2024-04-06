@@ -401,6 +401,120 @@
             "blocktime": 1710850637
         },
         {
+            "__test_comment": "token amount below threshold",
+            "hex": "01000000000101bd0f7fefbee41f76f0678f217b8ef0d23d77037dc9433b757c88ba8b562d848f010000002322002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29ffffffff02102700000000000017a9147f17c07273e76cdd381c2d64b2739c770e9b390887cc3d00000000000017a9140872c5adfb84ba69c97e9298954f61b9706cae4e87040047304402202a02c91ad3e046b924166f451a6fdf7f72fdaca63d338ff9aba3465537553bff0220478e20adc238999354275aa6665bcdd09538834d42eadcbd24d10ea763b4176901473044022059fcb64ef800d07d3ec383fcfad5331e1335a49e786094426049ea4f0fe99694022046669e4fe71dff08928e031bf801718be26b515b1fafc808a220d01dad3f2d4401475221027299b68fa5a810b23dffdc44a9c618da489f55da55d985d39fd06205f74e03872103cad331ece1c0d820bab125237e04536cb5021f1a9bf8a5ae36a82529c98c629952ae00000000",
+            "txid": "f395b2cc8551aff25fe8d61fec159a6b93d29b9ff56a68c9d29df99a864fd74c",
+            "hash": "ef4cd511c64834bde624000b94110c9f184388566a97d68d355339294a72dadf",
+            "size": 370,
+            "vsize": 205,
+            "weight": 820,
+            "version": 1,
+            "locktime": 0,
+            "vin": [
+                {
+                    "txid": "8f842d568bba887c753b43c97d03773dd2f08e7b218f67f0761fe4beef7f0fbd",
+                    "vout": 1,
+                    "scriptSig": {
+                        "asm": "002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29",
+                        "hex": "22002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29"
+                    },
+                    "txinwitness": [
+                        "",
+                        "304402202a02c91ad3e046b924166f451a6fdf7f72fdaca63d338ff9aba3465537553bff0220478e20adc238999354275aa6665bcdd09538834d42eadcbd24d10ea763b4176901",
+                        "3044022059fcb64ef800d07d3ec383fcfad5331e1335a49e786094426049ea4f0fe99694022046669e4fe71dff08928e031bf801718be26b515b1fafc808a220d01dad3f2d4401",
+                        "5221027299b68fa5a810b23dffdc44a9c618da489f55da55d985d39fd06205f74e03872103cad331ece1c0d820bab125237e04536cb5021f1a9bf8a5ae36a82529c98c629952ae"
+                    ],
+                    "sequence": 4294967295
+                }
+            ],
+            "vout": [
+                {
+                    "value": 0.000001,
+                    "n": 0,
+                    "scriptPubKey": {
+                        "asm": "OP_HASH160 7f17c07273e76cdd381c2d64b2739c770e9b3908 OP_EQUAL",
+                        "hex": "a9147f17c07273e76cdd381c2d64b2739c770e9b390887",
+                        "type": "scripthash"
+                    }
+                },
+                {
+                    "value": 0.0001582,
+                    "n": 1,
+                    "scriptPubKey": {
+                        "asm": "OP_HASH160 0872c5adfb84ba69c97e9298954f61b9706cae4e OP_EQUAL",
+                        "hex": "a9140872c5adfb84ba69c97e9298954f61b9706cae4e87",
+                        "type": "scripthash"
+                    }
+                },
+                {
+                    "value": 0.0,
+                    "n": 2,
+                    "scriptPubKey": {
+                        "asm": "OP_RETURN 6f736d6f313367323363727a66703939786732386e68306a34656d346e73716e61757230326e656b327774",
+                        "hex": "6a2b6f736d6f313367323363727a66703939786732386e68306a34656d346e73716e61757230326e656b327774",
+                        "type": "nulldata"
+                    }
+                }
+            ]
+        },
+        {
+            "__test_comment": "valid transaction to the vault 2N4qEFwruq3zznQs78twskBrNTc6kpq87j1 with memo osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
+            "hex": "01000000000101bd0f7fefbee41f76f0678f217b8ef0d23d77037dc9433b757c88ba8b562d848f010000002322002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29ffffffff02102700000000000017a9147f17c07273e76cdd381c2d64b2739c770e9b390887cc3d00000000000017a9140872c5adfb84ba69c97e9298954f61b9706cae4e87040047304402202a02c91ad3e046b924166f451a6fdf7f72fdaca63d338ff9aba3465537553bff0220478e20adc238999354275aa6665bcdd09538834d42eadcbd24d10ea763b4176901473044022059fcb64ef800d07d3ec383fcfad5331e1335a49e786094426049ea4f0fe99694022046669e4fe71dff08928e031bf801718be26b515b1fafc808a220d01dad3f2d4401475221027299b68fa5a810b23dffdc44a9c618da489f55da55d985d39fd06205f74e03872103cad331ece1c0d820bab125237e04536cb5021f1a9bf8a5ae36a82529c98c629952ae00000000",
+            "txid": "f395b2cc8551aff25fe8d61fec159a6b93d29b9ff56a68c9d29df99a864fd74c",
+            "hash": "ef4cd511c64834bde624000b94110c9f184388566a97d68d355339294a72dadf",
+            "size": 370,
+            "vsize": 205,
+            "weight": 820,
+            "version": 1,
+            "locktime": 0,
+            "vin": [
+                {
+                    "txid": "8f842d568bba887c753b43c97d03773dd2f08e7b218f67f0761fe4beef7f0fbd",
+                    "vout": 1,
+                    "scriptSig": {
+                        "asm": "002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29",
+                        "hex": "22002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29"
+                    },
+                    "txinwitness": [
+                        "",
+                        "304402202a02c91ad3e046b924166f451a6fdf7f72fdaca63d338ff9aba3465537553bff0220478e20adc238999354275aa6665bcdd09538834d42eadcbd24d10ea763b4176901",
+                        "3044022059fcb64ef800d07d3ec383fcfad5331e1335a49e786094426049ea4f0fe99694022046669e4fe71dff08928e031bf801718be26b515b1fafc808a220d01dad3f2d4401",
+                        "5221027299b68fa5a810b23dffdc44a9c618da489f55da55d985d39fd06205f74e03872103cad331ece1c0d820bab125237e04536cb5021f1a9bf8a5ae36a82529c98c629952ae"
+                    ],
+                    "sequence": 4294967295
+                }
+            ],
+            "vout": [
+                {
+                    "value": 0.0001,
+                    "n": 0,
+                    "scriptPubKey": {
+                        "asm": "OP_HASH160 7f17c07273e76cdd381c2d64b2739c770e9b3908 OP_EQUAL",
+                        "hex": "a9147f17c07273e76cdd381c2d64b2739c770e9b390887",
+                        "type": "scripthash"
+                    }
+                },
+                {
+                    "value": 0.0001582,
+                    "n": 1,
+                    "scriptPubKey": {
+                        "asm": "OP_HASH160 0872c5adfb84ba69c97e9298954f61b9706cae4e OP_EQUAL",
+                        "hex": "a9140872c5adfb84ba69c97e9298954f61b9706cae4e87",
+                        "type": "scripthash"
+                    }
+                },
+                {
+                    "value": 0.0,
+                    "n": 2,
+                    "scriptPubKey": {
+                        "asm": "OP_RETURN 6f736d6f313367323363727a66703939786732386e68306a34656d346e73716e61757230326e656b327774",
+                        "hex": "6a2b6f736d6f313367323363727a66703939786732386e68306a34656d346e73716e61757230326e656b327774",
+                        "type": "nulldata"
+                    }
+                }
+            ]
+        },
+        {
             "__test_comment": "valid transaction to the vault 2N4qEFwruq3zznQs78twskBrNTc6kpq87j1 with memo osmo13g23crzfp99xg28nh0j4em4nsqnaur02nek2wt",
             "hex": "01000000000101bd0f7fefbee41f76f0678f217b8ef0d23d77037dc9433b757c88ba8b562d848f010000002322002046fbc84ccf1163f3556e59cd98778897f00fc898816106efd096b68fa4361b29ffffffff02102700000000000017a9147f17c07273e76cdd381c2d64b2739c770e9b390887cc3d00000000000017a9140872c5adfb84ba69c97e9298954f61b9706cae4e87040047304402202a02c91ad3e046b924166f451a6fdf7f72fdaca63d338ff9aba3465537553bff0220478e20adc238999354275aa6665bcdd09538834d42eadcbd24d10ea763b4176901473044022059fcb64ef800d07d3ec383fcfad5331e1335a49e786094426049ea4f0fe99694022046669e4fe71dff08928e031bf801718be26b515b1fafc808a220d01dad3f2d4401475221027299b68fa5a810b23dffdc44a9c618da489f55da55d985d39fd06205f74e03872103cad331ece1c0d820bab125237e04536cb5021f1a9bf8a5ae36a82529c98c629952ae00000000",
             "txid": "f395b2cc8551aff25fe8d61fec159a6b93d29b9ff56a68c9d29df99a864fd74c",
