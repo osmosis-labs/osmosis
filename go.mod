@@ -17,7 +17,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
-	github.com/cosmos/ibc-go/v7 v7.3.2
+	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.55.2
@@ -27,9 +27,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320224647-4a4af33c828f
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240408215903-982774264b61
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408215903-982774264b61
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150
 	github.com/pkg/errors v0.9.1
@@ -88,7 +88,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v0.20.1 // indirect
+	github.com/cosmos/iavl v1.0.2-0.20240221171955-e019f7411ec7 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
@@ -102,7 +102,6 @@ require (
 	github.com/ghostiam/protogetter v0.2.3 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
@@ -121,7 +120,6 @@ require (
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/linxGnu/grocksdb v1.8.11 // indirect
 	github.com/macabu/inamedparam v0.1.2 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
@@ -391,6 +389,9 @@ replace (
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-5
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+
+	// We replace IAVL due to API breakages. go mod tidy updates to the incorrect version unless we replace manually.
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.1
 
 	// Replace ibc-go with a version that hase the soft fork applied.
 	github.com/cosmos/ibc-go/v7 v7.3.2 => github.com/osmosis-labs/ibc-go/v7 v7.3.3
