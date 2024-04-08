@@ -27,10 +27,12 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "::set-output name=branch::${{ github.event.inputs.branch }}"
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
+            # For testing purposes, using a hard-coded branch name when triggered by a pull request
+            echo "::set-output name=branch::osmo/v0.47.5"
           else
             echo "::set-output name=branch::main"
           fi
+
 
       - name: Fetch Latest Commit Hash
         id: fetch-commit
@@ -61,6 +63,7 @@ jobs:
             fi
           done
         shell: bash
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
