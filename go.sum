@@ -990,9 +990,8 @@ github.com/gobwas/httphead v0.1.0/go.mod h1:O/RXo79gxV8G+RqlR/otEwx4Q36zl9rqC5u1
 github.com/gobwas/pool v0.2.0/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
 github.com/gobwas/pool v0.2.1 h1:xfeeEhW7pwmX8nuLVlqbzVc7udMDrwetjEv+TZIz1og=
 github.com/gobwas/pool v0.2.1/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
+github.com/gobwas/ws v1.0.2 h1:CoAavW/wd/kulfZmSIBt6p24n4j7tHgNVCjsfHVNUbo=
 github.com/gobwas/ws v1.0.2/go.mod h1:szmBTxLgaFppYjEmNtny/v3w89xOydFnnZMcgRRu/EM=
-github.com/gobwas/ws v1.1.0 h1:7RFti/xnNkMJnrK7D1yQ/iCIB5OrrY/54/H930kIbHA=
-github.com/gobwas/ws v1.1.0/go.mod h1:nzvNcVha5eUziGrbxFCo6qFIojQHjJV5cLYIbezhfL0=
 github.com/goccy/go-json v0.9.11/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
@@ -1510,33 +1509,18 @@ github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1 h1:+IPd/6PvbivqKa1
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1/go.mod h1:V2jvQRGwuRWs/1aXi3RKx9vh9WtlqrN3OSviG7KH9Xs=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-<<<<<<< HEAD
 github.com/osmosis-labs/ibc-go/v7 v7.3.3 h1:aSqu18eqAR9tMjIrqYSy5GezIBPvZbvOEyZeM/5VgEo=
 github.com/osmosis-labs/ibc-go/v7 v7.3.3/go.mod h1:IMeOXb7gwpZ+/nOG5BuUkdW4weM1ezvN4PQPws4uzOI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e h1:4bLqdUaQQjCQIlnCOngPe+YCfkvHAAL4FhUwJ9gK/u8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e/go.mod h1:+o8/uhRPPQpa+49spHW5mMXqlZTxLMF4SqnH2sNmj9w=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e h1:2zyumLlF8u2yS1h4BKTcOOGv/KnrTbiE7Ep/FfHQN50=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e/go.mod h1:QDxcS7yKSTw6+UR7TeuucT2nkgO/1akGnTTYN/1WQgQ=
-github.com/osmosis-labs/osmosis/v22 v22.0.5 h1:HXTjhUXNZHm322NF6ayusifqAi/0PN8LYhOdC8mYmjk=
-github.com/osmosis-labs/osmosis/v22 v22.0.5/go.mod h1:x4ja17vrHP6mEGvIVMGH1g5cDR0aUdicqEZ2V3EO+2o=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240312201712-59e5f097899e h1:Hj064S6jKL/D4hAGi2/0t1fEGl5srhYzCRlonAePfwM=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240312201712-59e5f097899e/go.mod h1:Yq+jGBhzAVFZYg3mU8kVvjsADlTjHzJmoOnvX2ivGKw=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320224647-4a4af33c828f h1:IdKyxumv+Hz+zNTnM0jwg/AmY9gJOfHXkVXnFNYzQbE=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320224647-4a4af33c828f/go.mod h1:pYp9pdd9sNGjUNpvJWEqw5wPLmw8Oba+VmqS6B7o/AE=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1 h1:JtVqBY+kya7X1ThqVXgUGOaWgBa1IXkXg4ZQm8lQ50Q=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1/go.mod h1:a7uZGMazdDcZNWeqb3IRG8MSWsMcBwQF0NprPqCi0bM=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e h1:R2teVVWZ07hSX8w7JguOCB136E5hZ2DaCbvZyJC+zvM=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e/go.mod h1:AcOG6Uz0i1n9Ph6GbvJlQ4dGKUwLb+eq6QW7ww7Sonw=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927 h1:W6Lku84w46SwDE3goes4Nczyssu8hNdc79s8qNOrjmU=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927/go.mod h1:c9HXAhpU4krtKreNGWNJoQR+9utkHBV2u8ENwwqkkT4=
-=======
-github.com/osmosis-labs/osmosis/osmomath v0.0.10 h1:jPkTVhSRgG9htHKet6L/n/WHMtI0RWCPIAXT6JfkQTc=
-github.com/osmosis-labs/osmosis/osmomath v0.0.10/go.mod h1:Fc6Py4owiAdAcMWop0jVRtjdQEiioYWKibYS0lwQhic=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.10 h1:zGRWznWGEzf5mtuVSz1+ftrsSn+1FR0pvAeUauw+HWU=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.10/go.mod h1:YarPkHSL/1vze6/I59wDCDmptsW+54DuHA+j8O0XX6s=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.6 h1:Qg8AiS24ip/bs9AiQ9+uXenI3FPYv/TDaM2xazY+H3M=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.6/go.mod h1:mwyfVBl0HQbGhfMBmOTRO/GydGP9lh6Bd6MqqyF9RNg=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.12 h1:mwrmo1XdpnT9gKkyzQ7BbfT7Lr1AhSa0P74r0oTrzX8=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.12/go.mod h1:mhZiul/iTlncSZnqsDeqVHoeWJ2m9/LFbF5HI3faDOI=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 h1:mvkk1A/jIe+lsFFpRNfyd9UfvhagATdpnjy8K7kANeo=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
->>>>>>> 180da251 (feat(SQS): ADR-006 stage 2 - GRPC ingest (#7952))
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150 h1:z490JBjgVkvreJNeFE9es16rhc0rurM2GRhwqW0wEoY=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150/go.mod h1:H6XfDqE0PiUoIXaTTVipupfbrpz7Cu95jYbu2yYo6Tg=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
@@ -1632,11 +1616,6 @@ github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Ung
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 h1:N/ElC8H3+5XpJzTSTfLsJV/mx9Q9g7kxmchpfZyxgzM=
 github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
-<<<<<<< HEAD
-github.com/redis/go-redis/v9 v9.4.0 h1:Yzoz33UZw9I/mFhx4MNrB6Fk+XHO1VukNcCa1+lwyKk=
-github.com/redis/go-redis/v9 v9.4.0/go.mod h1:hdY0cQFCN4fnSYT6TkisLufl/4W5UIXyv0b/CLO2V2M=
-=======
->>>>>>> 180da251 (feat(SQS): ADR-006 stage 2 - GRPC ingest (#7952))
 github.com/regen-network/protobuf v1.3.3-alpha.regen.1 h1:OHEc+q5iIAXpqiqFKeLpu5NwTIkVXUs48vFMwzqpqY4=
 github.com/regen-network/protobuf v1.3.3-alpha.regen.1/go.mod h1:2DjTFR1HhMQhiWC5sZ4OhQ3+NtdbZ6oBDKQwq5Ou+FI=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
