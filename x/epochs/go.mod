@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240408225837-67f8c78738d5
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -51,7 +51,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac // indirect
+	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7 // indirect
 	github.com/cosmos/ibc-go/v7 v7.4.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
@@ -111,7 +111,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
-	github.com/osmosis-labs/osmosis/osmomath v0.0.9-0.20240408224931-1b68816684bf // indirect
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240408225837-67f8c78738d5 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
