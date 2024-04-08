@@ -565,7 +565,7 @@ func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanag
 	s.Require().Equal(expectedPool.GetType(), actualPool.GetType())
 
 	// Validate TVL
-	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUOSMO().String())
+	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUSDC().String())
 	sqsPoolModel := actualPool.GetSQSPoolModel()
 	s.Require().Contains(sqsPoolModel.TotalValueLockedError, expectTVLErrorStr)
 
