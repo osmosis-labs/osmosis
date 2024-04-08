@@ -27,14 +27,13 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320224647-4a4af33c828f
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/redis/go-redis/v9 v9.4.0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -97,7 +96,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
@@ -120,7 +118,6 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -132,8 +129,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.14.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
@@ -402,7 +397,7 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// We explicitly use commits from the `v23.x` branch in https://github.com/osmosis-labs/sqs
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 

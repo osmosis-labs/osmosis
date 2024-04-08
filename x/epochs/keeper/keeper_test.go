@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v23/app"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )

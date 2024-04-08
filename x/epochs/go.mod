@@ -10,7 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312200410-a7cc6376cdec
-	github.com/osmosis-labs/osmosis/v22 v22.0.5
+	github.com/osmosis-labs/osmosis/v23 v23.0.1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -86,7 +86,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
@@ -127,6 +127,7 @@ require (
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/linxGnu/grocksdb v1.8.11 // indirect
@@ -146,7 +147,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312200410-a7cc6376cdec // indirect
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8 // indirect
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
