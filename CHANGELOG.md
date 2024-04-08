@@ -81,6 +81,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
 * [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
 
+<<<<<<< HEAD
+=======
+### CometBFT
+
+* [#5](https://github.com/osmosis-labs/cometbft/pull/5) Batch verification
+* [#11](https://github.com/osmosis-labs/cometbft/pull/11) Skip verification of commit sigs
+* [#13](https://github.com/osmosis-labs/cometbft/pull/13) Avoid double-saving ABCI responses
+* [#20](https://github.com/osmosis-labs/cometbft/pull/20) Fix the rollback command
+
+## v23.0.11-iavl-v1 & v23.0.11
+
+* [#7987](https://github.com/osmosis-labs/osmosis/pull/7987) Added soft-forked-ibc for ASA-2024-007 (#7987)
+
+>>>>>>> 2199d75f (chore: adding v23.0.11 changelog (#7988))
 ## v23.0.8-iavl-v1 & v23.0.8
 
 * [#7769](https://github.com/osmosis-labs/osmosis/pull/7769) Set and default timeout commit to 3s. Add flag to prevent custom overrides if not desired.
