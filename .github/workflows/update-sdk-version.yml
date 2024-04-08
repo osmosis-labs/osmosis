@@ -1,0 +1,68 @@
+name: Update SDK Version with Commit Hash and Create PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
+        required: true
+        default: 'main' # Default branch
+
+jobs:
+  update-sdk-version-and-create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.17' # Specify your Go version here
+
+      - name: Fetch Latest Commit Hash
+        id: fetch-commit
+        run: |
+          BRANCH=${{ github.event.inputs.branch }}
+          COMMIT_HASH=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                               -H "Accept: application/vnd.github.v3+json" \
+                               "https://api.github.com/repos/osmosis-labs/cosmos-sdk/commits/$BRANCH" \
+                               | jq -r '.sha')
+          echo "Latest commit hash in $BRANCH branch is $COMMIT_HASH"
+          echo "::set-output name=commit_hash::$COMMIT_HASH"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update SDK Version in Go Mod Files
+        run: |
+          VERSION=$(echo "v0.0.0-$(date +%Y%m%d%H%M%S)-${{ steps.fetch-commit.outputs.commit_hash }}")
+          echo "Formatted version: $VERSION"
+          MODFILES="./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod"
+          for modfile in $MODFILES; do
+            if [ -e "$modfile" ]; then
+              sed -i "s|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $VERSION|g" $modfile
+              cd `dirname $modfile`
+              go mod tidy
+              cd - > /dev/null
+            else
+              echo "File $modfile does not exist"
+            fi
+          done
+        shell: bash
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "auto: update osmosis-labs/cosmos-sdk to latest commit on branch ${{ github.event.inputs.branch }}"
+          commit-message: "auto: update osmosis-labs/cosmos-sdk dependency"
+          body: |
+            **Automated pull request**
+
+            Updating osmosis-labs/cosmos-sdk dependency to the latest commit on branch ${{ github.event.inputs.branch }}.
+          base: main # Specify the base branch for the PR
+          branch-suffix: random
+          delete-branch: true
+          assignees: ${{ github.actor }}
+          draft: true
+          labels: "T:auto,T:code-hygiene,V:state/compatible/no_backport,A:no-changelog"
