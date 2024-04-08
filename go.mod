@@ -396,6 +396,9 @@ replace (
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-5
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+
+	// Replace ibc-go with a version that hase the soft fork applied.
+	github.com/cosmos/ibc-go/v7 v7.3.2 => github.com/osmosis-labs/ibc-go/v7 v7.3.3
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// We explicitly use commits from the `v23.x` branch in https://github.com/osmosis-labs/sqs
