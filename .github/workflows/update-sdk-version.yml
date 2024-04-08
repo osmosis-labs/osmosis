@@ -1,12 +1,13 @@
-name: Update SDK Version with Commit Hash and Create PR
-
 on:
   workflow_dispatch:
     inputs:
       branch:
         description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
         required: true
-        default: 'osmo/v0.47.5' # Default branch
+        default: 'main' # Default branch
+  pull_request:
+    branches: 
+      - main # or any other branches you want to include
 
 jobs:
   update-sdk-version-and-create-pr:
@@ -18,12 +19,23 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '^1.20' 
+          go-version: '^1.17' # Specify your Go version here
+
+      - name: Determine Branch for Latest Commit
+        id: get-branch
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "::set-output name=branch::${{ github.event.inputs.branch }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
+          else
+            echo "::set-output name=branch::main"
+          fi
 
       - name: Fetch Latest Commit Hash
         id: fetch-commit
         run: |
-          BRANCH=${{ github.event.inputs.branch }}
+          BRANCH=${{ steps.get-branch.outputs.branch }}
           COMMIT_HASH=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                                -H "Accept: application/vnd.github.v3+json" \
                                "https://api.github.com/repos/osmosis-labs/cosmos-sdk/commits/$BRANCH" \
@@ -49,7 +61,6 @@ jobs:
             fi
           done
         shell: bash
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
