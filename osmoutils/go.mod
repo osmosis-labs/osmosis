@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
+	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10
 	github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0
@@ -155,9 +155,9 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/onsi/gomega v1.28.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.6 // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.12 // indirect
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240327132234-be32305a2a6e // indirect
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.5-0.20240408224931-1b68816684bf // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240408224931-1b68816684bf // indirect
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
