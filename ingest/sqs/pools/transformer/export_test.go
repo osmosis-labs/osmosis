@@ -1,4 +1,4 @@
-package poolsingester
+package poolstransformer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,10 +18,10 @@ const (
 
 type (
 	DenomRoutingInfo = denomRoutingInfo
-	PoolIngester     = poolIngester
+	PoolTransformer  = poolTransformer
 )
 
-func (pi *poolIngester) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, tokenPrecisionMap map[string]int) (sqsdomain.PoolI, error) {
+func (pi *poolTransformer) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, tokenPrecisionMap map[string]int) (sqsdomain.PoolI, error) {
 	return pi.convertPool(ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap, tokenPrecisionMap)
 }
 
