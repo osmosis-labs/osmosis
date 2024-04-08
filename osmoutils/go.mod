@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd
+	github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10
 	github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0
