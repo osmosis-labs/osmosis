@@ -990,8 +990,9 @@ github.com/gobwas/httphead v0.1.0/go.mod h1:O/RXo79gxV8G+RqlR/otEwx4Q36zl9rqC5u1
 github.com/gobwas/pool v0.2.0/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
 github.com/gobwas/pool v0.2.1 h1:xfeeEhW7pwmX8nuLVlqbzVc7udMDrwetjEv+TZIz1og=
 github.com/gobwas/pool v0.2.1/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
-github.com/gobwas/ws v1.0.2 h1:CoAavW/wd/kulfZmSIBt6p24n4j7tHgNVCjsfHVNUbo=
 github.com/gobwas/ws v1.0.2/go.mod h1:szmBTxLgaFppYjEmNtny/v3w89xOydFnnZMcgRRu/EM=
+github.com/gobwas/ws v1.1.0 h1:7RFti/xnNkMJnrK7D1yQ/iCIB5OrrY/54/H930kIbHA=
+github.com/gobwas/ws v1.1.0/go.mod h1:nzvNcVha5eUziGrbxFCo6qFIojQHjJV5cLYIbezhfL0=
 github.com/goccy/go-json v0.9.11/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
@@ -1513,8 +1514,8 @@ github.com/osmosis-labs/ibc-go/v7 v7.3.3 h1:aSqu18eqAR9tMjIrqYSy5GezIBPvZbvOEyZe
 github.com/osmosis-labs/ibc-go/v7 v7.3.3/go.mod h1:IMeOXb7gwpZ+/nOG5BuUkdW4weM1ezvN4PQPws4uzOI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e h1:4bLqdUaQQjCQIlnCOngPe+YCfkvHAAL4FhUwJ9gK/u8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e/go.mod h1:+o8/uhRPPQpa+49spHW5mMXqlZTxLMF4SqnH2sNmj9w=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320224647-4a4af33c828f h1:IdKyxumv+Hz+zNTnM0jwg/AmY9gJOfHXkVXnFNYzQbE=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240320224647-4a4af33c828f/go.mod h1:pYp9pdd9sNGjUNpvJWEqw5wPLmw8Oba+VmqS6B7o/AE=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240408215903-982774264b61 h1:/oW6BBrlJzrkAoBxko3tV6dQWpcxY7x9/vupzjzbZ6o=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240408215903-982774264b61/go.mod h1:WKx1fxH/B99wfclOCRm8m9zW6TCtgDdsxhdXZNOKsK8=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1 h1:JtVqBY+kya7X1ThqVXgUGOaWgBa1IXkXg4ZQm8lQ50Q=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1/go.mod h1:a7uZGMazdDcZNWeqb3IRG8MSWsMcBwQF0NprPqCi0bM=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e h1:R2teVVWZ07hSX8w7JguOCB136E5hZ2DaCbvZyJC+zvM=
