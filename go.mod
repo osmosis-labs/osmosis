@@ -31,7 +31,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.9-0.20240408223651-0be3f33db537
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.6
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.12
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
@@ -402,6 +402,8 @@ replace (
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
