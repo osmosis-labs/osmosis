@@ -5,9 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"github.com/btcsuite/btcd/btcutil"
+	btcdchaincfg "github.com/btcsuite/btcd/chaincfg"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -19,6 +23,13 @@ import (
 	bridgetypes "github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
+type Mode = string
+
+const (
+	ModeMainnet Mode = "mainnet"
+	ModeTestnet Mode = "testnet"
+)
+
 var (
 	ModuleName    = "osmosis-chain"
 	OsmoGasLimit  = uint64(200000)
@@ -28,6 +39,7 @@ var (
 
 type ChainClient struct {
 	logger             log.Logger
+	cfg                observer.ChainConfig
 	osmoClient         *Client
 	cometRpc           *rpchttp.HTTP
 	stopChan           chan struct{}
@@ -40,6 +52,7 @@ type ChainClient struct {
 // NewChainClient returns new instance of `Osmosis`
 func NewChainClient(
 	logger log.Logger,
+	cfg observer.ChainConfig,
 	osmoClient *Client,
 	cometRpc *rpchttp.HTTP,
 	txConfig cosmosclient.TxConfig,
@@ -47,6 +60,7 @@ func NewChainClient(
 ) *ChainClient {
 	return &ChainClient{
 		logger:             logger.With("module", ModuleName),
+		cfg:                cfg,
 		osmoClient:         osmoClient,
 		cometRpc:           cometRpc,
 		stopChan:           make(chan struct{}),
@@ -79,13 +93,29 @@ func (c *ChainClient) Start(ctx context.Context) error {
 func (c *ChainClient) Stop(ctx context.Context) error {
 	close(c.stopChan)
 	c.osmoClient.Close()
-	if err := c.cometRpc.UnsubscribeAll(ctx, ModuleName); err != nil {
-		return errorsmod.Wrapf(err, "Failed to unsubscribe from RPC client")
-	}
 
-	err := c.cometRpc.Stop()
-	if err != nil {
-		return errorsmod.Wrapf(err, "Failed to stop comet RPC")
+	const shutdownTimeout = 3 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+	defer cancel()
+	stop := make(chan struct{})
+
+	go func() {
+		err := c.cometRpc.UnsubscribeAll(ctx, ModuleName)
+		if err != nil {
+			c.logger.Error("Failed to unsubscribe from RPC client: ", err.Error())
+		}
+		err = c.cometRpc.Stop()
+		if err != nil {
+			c.logger.Error("Failed to stop RPC client: ", err.Error())
+		}
+		c.cometRpc.Wait()
+		close(stop)
+	}()
+
+	select {
+	case <-ctx.Done():
+		c.logger.Error("Failed to shutdown RPC client")
+	case <-stop:
 	}
 
 	c.logger.Info("Stopped Osmosis chain client")
@@ -114,13 +144,16 @@ func (c *ChainClient) SignalInboundTransfer(ctx context.Context, in observer.Tra
 	if err != nil {
 		return errorsmod.Wrapf(err, "Failed to sign tx for inbound transfer %s", in.Id)
 	}
-	_, err = c.osmoClient.BroadcastTx(ctx, bytes)
+	resp, err := c.osmoClient.BroadcastTx(ctx, bytes)
 	if err != nil {
 		return errorsmod.Wrapf(
 			err,
 			"Failed to broadcast tx to Osmosis for inbound transfer %s",
 			in.Id,
 		)
+	}
+	if resp.Code != abcitypes.CodeTypeOK {
+		return fmt.Errorf("Tx for inbound transfer %s failed inside Osmosis: %s", in.Id, resp.RawLog)
 	}
 	return nil
 }
@@ -170,6 +203,7 @@ func (c *ChainClient) processNewBlockTxs(ctx context.Context, height uint64, txs
 			))
 			continue
 		}
+
 		if res.IsErr() {
 			continue
 		}
@@ -177,6 +211,24 @@ func (c *ChainClient) processNewBlockTxs(ctx context.Context, height uint64, txs
 		for _, msg := range decoded.GetMsgs() {
 			outbound, ok := msg.(*bridgetypes.MsgOutboundTransfer)
 			if !ok {
+				continue
+			}
+			if outbound.Amount.LT(math.Int(c.cfg.MinOutboundTransferAmount)) {
+				continue
+			}
+
+			err = verifyOutboundDestAddress(
+				c.cfg.Mode,
+				observer.ChainId(outbound.AssetId.SourceChain),
+				outbound.DestAddr,
+			)
+			if err != nil {
+				c.logger.Error(fmt.Sprintf(
+					"Invalid outbound destination address in Tx %s, block %d: %s",
+					txHash,
+					height,
+					err.Error(),
+				))
 				continue
 			}
 
@@ -216,6 +268,21 @@ func outboundTransferFromMsg(
 		Asset:    msg.AssetId.Denom,
 		Amount:   math.Uint(msg.Amount),
 	}
+}
+
+func verifyOutboundDestAddress(mode observer.Mode, chainId observer.ChainId, addr string) error {
+	switch chainId {
+	case observer.ChainIdBitcoin:
+		switch mode {
+		case observer.ModeMainnet:
+			_, err := btcutil.DecodeAddress(addr, &btcdchaincfg.MainNetParams)
+			return err
+		case observer.ModeTestnet:
+			_, err := btcutil.DecodeAddress(addr, &btcdchaincfg.TestNet3Params)
+			return err
+		}
+	}
+	return fmt.Errorf("Unsupported outbound destination chain: %s", chainId)
 }
 
 // Height returns current height of the chain

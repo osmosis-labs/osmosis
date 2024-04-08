@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -28,6 +27,7 @@ var ModuleName = "bitcoin-chain"
 
 type ChainClient struct {
 	logger             log.Logger
+	cfg                observer.ChainConfig
 	btcRpc             *rpcclient.Client
 	vaultAddr          string
 	stopChan           chan struct{}
@@ -40,6 +40,7 @@ type ChainClient struct {
 // NewChainClient returns new instance of `ChainClient`
 func NewChainClient(
 	logger log.Logger,
+	cfg observer.ChainConfig,
 	btcRpc *rpcclient.Client,
 	vaultAddr string,
 	fetchInterval time.Duration,
@@ -53,6 +54,7 @@ func NewChainClient(
 
 	c := &ChainClient{
 		logger:             logger.With("module", ModuleName),
+		cfg:                cfg,
 		btcRpc:             btcRpc,
 		vaultAddr:          vaultAddr,
 		stopChan:           make(chan struct{}),
@@ -205,7 +207,7 @@ func (b *ChainClient) processTx(height uint64, tx *btcjson.TxRawResult) (observe
 
 	memo, contains := getMemo(tx)
 	if !contains {
-		return observer.Transfer{}, false, fmt.Errorf("failed to get Tx memo")
+		return observer.Transfer{}, false, fmt.Errorf("malformed Tx memo")
 	}
 
 	return observer.Transfer{
@@ -222,7 +224,7 @@ func (b *ChainClient) processTx(height uint64, tx *btcjson.TxRawResult) (observe
 
 // isTxRelevant checks if a tx contains transfers to the BTC vault and calculates the total amount to transfer.
 // This method goes through all the Vouts and accumulates their values if Vouts.account[0] == vault.
-// Returns true is the tx is not relevant. Otherwise, false and the total amount to transfer.
+// Returns false if the tx is not relevant. Otherwise, true and the total amount to transfer.
 func (b *ChainClient) isTxRelevant(tx *btcjson.TxRawResult) (math.Uint, bool) {
 	var amount = sdk.NewUint(0)
 	for _, vout := range tx.Vout {
@@ -238,7 +240,7 @@ func (b *ChainClient) isTxRelevant(tx *btcjson.TxRawResult) (math.Uint, bool) {
 			continue
 		}
 
-		if slices.Contains(addresses, b.vaultAddr) {
+		if addresses[0] == b.vaultAddr {
 			a, err := getAmount(vout)
 			if err != nil {
 				continue
@@ -246,7 +248,7 @@ func (b *ChainClient) isTxRelevant(tx *btcjson.TxRawResult) (math.Uint, bool) {
 			amount = amount.Add(a)
 		}
 	}
-	return amount, !amount.IsZero()
+	return amount, amount.GTE(b.cfg.MinOutboundTransferAmount)
 }
 
 // getAmount retrieves amount of tokens sent
@@ -273,7 +275,10 @@ func getMemo(tx *btcjson.TxRawResult) (string, bool) {
 				// TODO: log?
 				continue
 			}
-			// TODO: verify the memo format
+			_, err = sdk.AccAddressFromBech32(string(decoded))
+			if err != nil {
+				continue
+			}
 			return string(decoded), true
 		}
 	}

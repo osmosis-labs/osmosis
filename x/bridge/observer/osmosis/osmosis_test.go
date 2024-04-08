@@ -3,6 +3,7 @@ package osmosis_test
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -36,6 +37,11 @@ import (
 )
 
 var (
+	TestCfg = observer.ChainConfig{
+		Id:                        observer.ChainIdOsmosis,
+		Mode:                      observer.ModeTestnet,
+		MinOutboundTransferAmount: math.NewUint(5),
+	}
 	BtcAddr              = "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ"
 	OsmosisValidatorAddr = "osmo1ajaeadkj8u4wgw3sfm8szu8hl992nngaex40fs"
 )
@@ -76,7 +82,7 @@ type OsmosisTestSuite struct {
 func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 	ts := NewTestSuite(t)
 
-	s := httptest.NewServer(http.HandlerFunc(success(t)))
+	s := httptest.NewServer(http.HandlerFunc(outbound(t)))
 	cometRpc, err := rpchttp.New(s.URL, "/websocket")
 	require.NoError(t, err)
 
@@ -100,6 +106,7 @@ func NewOsmosisTestSuite(t *testing.T, ctx context.Context) OsmosisTestSuite {
 	client := osmosis.NewClient(ChainId, conn, kr, app.GetEncodingConfig().TxConfig)
 	o := osmosis.NewChainClient(
 		log.NewNopLogger(),
+		TestCfg,
 		client,
 		cometRpc,
 		app.GetEncodingConfig().TxConfig,
@@ -117,10 +124,10 @@ func (ots *OsmosisTestSuite) Start(t *testing.T, ctx context.Context) {
 }
 
 func (ots *OsmosisTestSuite) Stop(t *testing.T, ctx context.Context) {
-	err := ots.o.Stop(ctx)
-	require.NoError(t, err)
 	ots.hs.Close()
 	ots.ts.Close(t)
+	err := ots.o.Stop(ctx)
+	require.NoError(t, err)
 }
 
 var upgrader = websocket.Upgrader{}
@@ -134,23 +141,29 @@ func readNewBlockEvent(t *testing.T, path string) coretypes.ResultEvent {
 	return result
 }
 
-func readTxCheck(t *testing.T, path string) abci.ResponseCheckTx {
+func readTxCheckBytes(t *testing.T, id int, path string) []byte {
 	dataStr, err := os.ReadFile(path)
 	require.NoError(t, err)
 	result := abci.ResponseCheckTx{}
 	err = json.Unmarshal([]byte(dataStr), &result)
 	require.NoError(t, err)
-	return result
+	checkResultsResp := cmtrpctypes.NewRPCSuccessResponse(
+		cmtrpctypes.JSONRPCIntID(id),
+		result,
+	)
+	checkResultsRaw, err := json.Marshal(checkResultsResp)
+	require.NoError(t, err)
+	return checkResultsRaw
 }
 
-func success(t *testing.T) http.HandlerFunc {
+func outbound(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			c, err := upgrader.Upgrade(w, r, nil)
 			require.NoError(t, err)
 			defer c.Close()
-			newBlock := readNewBlockEvent(t, "./test_events/new_block_success.json")
+			newBlock := readNewBlockEvent(t, "./test_events/new_block.json")
 			newBlockResp := cmtrpctypes.NewRPCSuccessResponse(
 				cmtrpctypes.JSONRPCIntID(1),
 				newBlock,
@@ -160,14 +173,25 @@ func success(t *testing.T) http.HandlerFunc {
 			err = c.WriteMessage(1, newBlockRaw)
 			require.NoError(t, err)
 		case http.MethodPost:
-			checkResults := readTxCheck(t, "./test_events/tx_check_success.json")
-			checkResultsResp := cmtrpctypes.NewRPCSuccessResponse(
-				cmtrpctypes.JSONRPCIntID(0),
-				checkResults,
-			)
-			checkResultsRaw, err := json.Marshal(checkResultsResp)
+			bytes, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
-			_, err = w.Write(checkResultsRaw)
+			require.NoError(t, r.Body.Close())
+			var req cmtrpctypes.RPCRequest
+			err = json.Unmarshal(bytes, &req)
+			require.NoError(t, err)
+			jsonId, ok := req.ID.(cmtrpctypes.JSONRPCIntID)
+			require.True(t, ok)
+			id := int(jsonId)
+
+			var resp []byte
+			switch id {
+			case 2:
+				resp = readTxCheckBytes(t, id, "./test_events/tx_check_error.json")
+			default:
+				resp = readTxCheckBytes(t, id, "./test_events/tx_check_success.json")
+			}
+
+			_, err = w.Write(resp)
 			require.NoError(t, err)
 		default:
 			t.Fatal("Unexpected request method", r.Method)
@@ -260,11 +284,10 @@ func TestSignalInboundTransfer(t *testing.T) {
 			return expResp2, nil
 		})
 	ots.Start(t, ctx)
+	defer ots.Stop(t, ctx)
 
 	err = ots.o.SignalInboundTransfer(ctx, in)
 	require.NoError(t, err)
-
-	ots.Stop(t, ctx)
 }
 
 // ListenOutboundTransfer verifies Osmosis properly collects transfers
@@ -282,6 +305,12 @@ func TestListenOutboundTransfer(t *testing.T) {
 	ots.Start(t, ctx)
 	defer ots.Stop(t, ctx)
 
+	// We expect to observe 1 block with 3 Txs each with a `MsgOutboundTransfer` message:
+	// - valid tx to BTC address
+	// - failed tx
+	// - tx with invalid destination address
+	// - tx with amount of tokens below threshold
+	// So, we should to receive only 1 Transfer
 	transfers := ots.o.ListenOutboundTransfer()
 	var transfer observer.Transfer
 	require.Eventually(t, func() bool {
@@ -292,9 +321,9 @@ func TestListenOutboundTransfer(t *testing.T) {
 	expTransfer := observer.Transfer{
 		SrcChain: observer.ChainIdOsmosis,
 		DstChain: observer.ChainIdBitcoin,
-		Id:       "8593aa191651f6a3e2978fb5334b3e5b1e20abd72ad539f15c76f241fa696d3e",
-		Height:   881,
-		Sender:   "osmo1pldlhnwegsj3lqkarz0e4flcsay3fuqgkd35ww",
+		Id:       "f182a4f6d759b8d9b229547814f2b32a28a12912652e3d993099d3f422d84172",
+		Height:   59,
+		Sender:   "osmo1ftcrqh3k025y2vmlp8z8uazcu3q7dvln2ta5x5",
 		To:       "2Mt1ttL5yffdfCGxpfxmceNE4CRUcAsBbgQ",
 		Asset:    bridgetypes.DefaultBitcoinDenomName,
 		Amount:   math.NewUint(10),
