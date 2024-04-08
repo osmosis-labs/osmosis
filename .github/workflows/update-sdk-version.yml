@@ -6,7 +6,7 @@ on:
       branch:
         description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
         required: true
-        default: 'main' # Default branch
+        default: 'osmo/v0.47.5' # Default branch
 
 jobs:
   update-sdk-version-and-create-pr:
@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '^1.17' # Specify your Go version here
+          go-version: '^1.20' 
 
       - name: Fetch Latest Commit Hash
         id: fetch-commit
@@ -60,7 +60,7 @@ jobs:
             **Automated pull request**
 
             Updating osmosis-labs/cosmos-sdk dependency to the latest commit on branch ${{ github.event.inputs.branch }}.
-          base: main # Specify the base branch for the PR
+          base: main
           branch-suffix: random
           delete-branch: true
           assignees: ${{ github.actor }}
