@@ -26,6 +26,8 @@ type AuthenticationRequest struct {
 	AuthenticatorId string         `json:"authenticator_id"`
 	Account         sdk.AccAddress `json:"account"`
 	FeePayer        sdk.AccAddress `json:"fee_payer"`
+	FeeGranter      sdk.AccAddress `json:"fee_granter,omitempty"`
+	Fee             sdk.Coins      `json:"fee"`
 	Msg             LocalAny       `json:"msg"`
 
 	// Since array size is int, and size depends on the system architecture,
