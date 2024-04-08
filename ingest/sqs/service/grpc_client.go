@@ -27,7 +27,7 @@ type GRPCClient struct {
 }
 
 var (
-	_ domain.GracefulSQSGRPClient = &GRPCClient{}
+	_ domain.SQSGRPClient = &GRPCClient{}
 )
 
 func NewGRPCCLient(grpcAddress string, grpxMaxCallSizeBytes int, appCodec codec.Codec) *GRPCClient {

@@ -42,10 +42,10 @@ type BlockPools struct {
 	CFMMPools []poolmanagertypes.PoolI
 }
 
-// GracefulSQSGRPClient is an interface that defines the methods for the graceful SQS GRPC client.
+// SQSGRPClient is an interface that defines the methods for the graceful SQS GRPC client.
 // It handles graceful connection management. So that, if a GRPC ingest method returns status.Unavailable,
 // the GRPC client will reset the connection and attempt to recreate it before retrying the ingest method.
-type GracefulSQSGRPClient interface {
+type SQSGRPClient interface {
 	// PushData pushes the height, pools and taker fee data to SQS via GRPC.
 	// Returns error if the GRPC client fails to push data.
 	// On status.Unavailable, it closes the connection and attempts to re-establish it during the next GRPC call.
