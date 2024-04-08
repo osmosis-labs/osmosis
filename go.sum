@@ -656,10 +656,6 @@ github.com/breml/bidichk v0.2.7 h1:dAkKQPLl/Qrk7hnP6P+E0xOodrq8Us7+U0o4UBOAlQY=
 github.com/breml/bidichk v0.2.7/go.mod h1:YodjipAGI9fGcYM7II6wFvGhdMYsC5pHDlGzqvEW3tQ=
 github.com/breml/errchkjson v0.3.6 h1:VLhVkqSBH96AvXEyclMR37rZslRrY2kcyq+31HCsVrA=
 github.com/breml/errchkjson v0.3.6/go.mod h1:jhSDoFheAF2RSDOlCfhHO9KqhZgAYLyvHe7bRCX8f/U=
-github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
-github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
-github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=
-github.com/bsm/gomega v1.27.10/go.mod h1:JyEr/xRbxbtgWNi8tIEVPUYZ5Dzef52k01W3YH0H+O0=
 github.com/btcsuite/btcd v0.20.1-beta/go.mod h1:wVuoA8VJLEcwgqHBwHmzLRazpKxTv13Px/pDuV7OomQ=
 github.com/btcsuite/btcd v0.22.0-beta.0.20220111032746-97732e52810c/go.mod h1:tjmYdS6MLJ5/s0Fj4DbLgSbDHbEqLJrtnHecBFkdz5M=
 github.com/btcsuite/btcd v0.23.0 h1:V2/ZgjfDFIygAX3ZapeigkVBoVUtOJKSwrhZdlpSvaA=
@@ -840,8 +836,6 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZm
 github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2/go.mod h1:SqUrOPUnsFjfmXRMNPybcSiG0BgUW2AuFH8PAnS2iTw=
 github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 h1:fAjc9m62+UWV/WAFKLNi6ZS0675eEUC9y3AlwSbQu1Y=
 github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13/go.mod h1:SqUrOPUnsFjfmXRMNPybcSiG0BgUW2AuFH8PAnS2iTw=
-github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
-github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/docker/cli v23.0.1+incompatible h1:LRyWITpGzl2C9e9uGxzisptnxAn1zfZKXy13Ul2Q5oM=
 github.com/docker/cli v23.0.1+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
 github.com/docker/distribution v2.8.2+incompatible h1:T3de5rq0dB1j30rp0sA2rER+m322EBzniBPB6ZIzuh8=
@@ -1516,6 +1510,7 @@ github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1 h1:+IPd/6PvbivqKa1
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1/go.mod h1:V2jvQRGwuRWs/1aXi3RKx9vh9WtlqrN3OSviG7KH9Xs=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
+<<<<<<< HEAD
 github.com/osmosis-labs/ibc-go/v7 v7.3.3 h1:aSqu18eqAR9tMjIrqYSy5GezIBPvZbvOEyZeM/5VgEo=
 github.com/osmosis-labs/ibc-go/v7 v7.3.3/go.mod h1:IMeOXb7gwpZ+/nOG5BuUkdW4weM1ezvN4PQPws4uzOI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e h1:4bLqdUaQQjCQIlnCOngPe+YCfkvHAAL4FhUwJ9gK/u8=
@@ -1530,6 +1525,18 @@ github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e/go.mod h1:AcOG6Uz0i1n9Ph6GbvJlQ4dGKUwLb+eq6QW7ww7Sonw=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927 h1:W6Lku84w46SwDE3goes4Nczyssu8hNdc79s8qNOrjmU=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208034521-124b6eed4927/go.mod h1:c9HXAhpU4krtKreNGWNJoQR+9utkHBV2u8ENwwqkkT4=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.10 h1:jPkTVhSRgG9htHKet6L/n/WHMtI0RWCPIAXT6JfkQTc=
+github.com/osmosis-labs/osmosis/osmomath v0.0.10/go.mod h1:Fc6Py4owiAdAcMWop0jVRtjdQEiioYWKibYS0lwQhic=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10 h1:zGRWznWGEzf5mtuVSz1+ftrsSn+1FR0pvAeUauw+HWU=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.10/go.mod h1:YarPkHSL/1vze6/I59wDCDmptsW+54DuHA+j8O0XX6s=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.6 h1:Qg8AiS24ip/bs9AiQ9+uXenI3FPYv/TDaM2xazY+H3M=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.6/go.mod h1:mwyfVBl0HQbGhfMBmOTRO/GydGP9lh6Bd6MqqyF9RNg=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.12 h1:mwrmo1XdpnT9gKkyzQ7BbfT7Lr1AhSa0P74r0oTrzX8=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.12/go.mod h1:mhZiul/iTlncSZnqsDeqVHoeWJ2m9/LFbF5HI3faDOI=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 h1:mvkk1A/jIe+lsFFpRNfyd9UfvhagATdpnjy8K7kANeo=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
+>>>>>>> 180da251 (feat(SQS): ADR-006 stage 2 - GRPC ingest (#7952))
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
@@ -1625,8 +1632,11 @@ github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Ung
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 h1:N/ElC8H3+5XpJzTSTfLsJV/mx9Q9g7kxmchpfZyxgzM=
 github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
+<<<<<<< HEAD
 github.com/redis/go-redis/v9 v9.4.0 h1:Yzoz33UZw9I/mFhx4MNrB6Fk+XHO1VukNcCa1+lwyKk=
 github.com/redis/go-redis/v9 v9.4.0/go.mod h1:hdY0cQFCN4fnSYT6TkisLufl/4W5UIXyv0b/CLO2V2M=
+=======
+>>>>>>> 180da251 (feat(SQS): ADR-006 stage 2 - GRPC ingest (#7952))
 github.com/regen-network/protobuf v1.3.3-alpha.regen.1 h1:OHEc+q5iIAXpqiqFKeLpu5NwTIkVXUs48vFMwzqpqY4=
 github.com/regen-network/protobuf v1.3.3-alpha.regen.1/go.mod h1:2DjTFR1HhMQhiWC5sZ4OhQ3+NtdbZ6oBDKQwq5Ou+FI=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=

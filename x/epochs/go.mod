@@ -10,7 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
-	github.com/osmosis-labs/osmosis/v22 v22.0.5
+	github.com/osmosis-labs/osmosis/v22 v22.0.0-rc0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -60,7 +60,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd // indirect
+	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7 // indirect
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 // indirect
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 // indirect
 	github.com/cosmos/ibc-go/v7 v7.3.2 // indirect
@@ -148,6 +148,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e // indirect
+	github.com/osmosis-labs/sqs v0.0.0-20240109224414-786ae137f7c4 // indirect
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240116020611-aadf5f1ce0e8 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect

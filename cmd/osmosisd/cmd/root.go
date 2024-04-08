@@ -636,9 +636,10 @@ adaptive-fee-enabled = "true"
 # SQS service is disabled by default.
 is-enabled = "false"
 
-# The hostname and address of the sidecar query server storage.
-db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
-db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
+# The hostname of the GRPC sqs service
+grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
+# The maximum size of the GRPC message that can be received by the sqs service in bytes.
+grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
 
 ###############################################################################
 ###              		       Wasm Configuration    					    ###
