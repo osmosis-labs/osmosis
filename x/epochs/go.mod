@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240409161506-a48ca4af185c
 	github.com/osmosis-labs/osmosis/v23 v23.0.8
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
@@ -146,8 +146,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e // indirect
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240409161506-a48ca4af185c // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240409161506-a48ca4af185c // indirect
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
@@ -215,9 +215,9 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/245b6fffc58ca64ea65d2fa1d67d93aa277b747c
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-8-iavl-v1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2176742bfa0af7d7fce20b6deda962d3f724826a
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-9-iavl-v1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-9-iavl-v1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-sdk v0.47.8
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240409161506-a48ca4af185c
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 
@@ -100,9 +100,9 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/245b6fffc58ca64ea65d2fa1d67d93aa277b747c
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-8-iavl-v1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2176742bfa0af7d7fce20b6deda962d3f724826a
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-9-iavl-v1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-9-iavl-v1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

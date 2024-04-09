@@ -27,10 +27,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240408215903-982774264b61
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408210315-2d436adde9e1
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e
+	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240409161506-a48ca4af185c
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240409161506-a48ca4af185c
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240409161506-a48ca4af185c
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240409161506-a48ca4af185c
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -389,12 +389,14 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/245b6fffc58ca64ea65d2fa1d67d93aa277b747c
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-8-iavl-v1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2176742bfa0af7d7fce20b6deda962d3f724826a
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-9-iavl-v1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-9-iavl-v1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
-	// Replace ibc-go with a version that hase the soft fork applied.
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
+
+	// Replace ibc-go with a version that has the soft fork applied.
 	github.com/cosmos/ibc-go/v7 v7.3.2 => github.com/osmosis-labs/ibc-go/v7 v7.3.3
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
