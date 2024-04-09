@@ -81,6 +81,8 @@ func GenerateAuthenticationRequest(
 	sigModeHandler authsigning.SignModeHandler,
 	account sdk.AccAddress,
 	feePayer sdk.AccAddress,
+	feeGranter sdk.AccAddress,
+	fee sdk.Coins,
 	msg sdk.Msg,
 	tx sdk.Tx,
 	msgIndex int,
@@ -172,12 +174,14 @@ func GenerateAuthenticationRequest(
 	}
 
 	authRequest := AuthenticationRequest{
-		Account:   account,
-		FeePayer:  feePayer,
-		Msg:       txData.Msgs[msgIndex],
-		MsgIndex:  uint64(msgIndex),
-		Signature: msgSignature,
-		TxData:    txData,
+		Account:    account,
+		FeePayer:   feePayer,
+		FeeGranter: feeGranter,
+		Fee:        fee,
+		Msg:        txData.Msgs[msgIndex],
+		MsgIndex:   uint64(msgIndex),
+		Signature:  msgSignature,
+		TxData:     txData,
 		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
 			Direct: signBytes,
 		},

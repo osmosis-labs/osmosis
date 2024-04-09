@@ -304,7 +304,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], nil, feeCoins, testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 	request.AuthenticatorId = "0"
 
@@ -314,11 +314,12 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	msg = s.QueryLatestSudoCall(addr)
 	request.AuthenticatorParams = []byte(params)
+	request.FeeGranter = sdk.AccAddress{}
 	s.Require().Equal(authenticator.SudoMsg{
 		Authenticate: &request,
 	}, msg, "Should match latest sudo msg ")
 
-	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], accounts[0], testMsg, 0, "0")
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().NoError(err, "Track should succeed")
 
 	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
@@ -330,6 +331,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			AuthenticatorId: "0",
 			Account:         accounts[0],
 			FeePayer:        accounts[0],
+			FeeGranter:      sdk.AccAddress{},
+			Fee:             feeCoins,
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -347,6 +350,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			AuthenticatorId: "0",
 			Account:         accounts[0],
 			FeePayer:        accounts[0],
+			FeeGranter:      sdk.AccAddress{},
+			Fee:             feeCoins,
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -430,7 +435,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	s.T().Skip("TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better cosigner implementation later?")
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], nil, sdk.NewCoins(), testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)

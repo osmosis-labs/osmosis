@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	errorsmod "cosmossdk.io/errors"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,20 +99,14 @@ func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request authenticator.Au
 	return nil
 }
 
-func (s SpyAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string,
-) error {
-	encodedMsg, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
-	}
+func (s SpyAuthenticator) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.Track = SpyTrackRequest{
-			AuthenticatorId: authenticatorId,
-			Account:         account,
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
-			MsgIndex:        msgIndex,
+			AuthenticatorId: request.AuthenticatorId,
+			Account:         request.Account,
+			Msg:             request.Msg,
+			MsgIndex:        request.MsgIndex,
 		}
 		return calls
 	})

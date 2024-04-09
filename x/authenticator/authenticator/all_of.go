@@ -104,8 +104,8 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 	return nil
 }
 
-func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
-	return subTrack(ctx, account, feePayer, msg, msgIndex, authenticatorId, aoa.SubAuthenticators)
+func (aoa AllOfAuthenticator) Track(ctx sdk.Context, request AuthenticationRequest) error {
+	return subTrack(ctx, request, aoa.SubAuthenticators)
 }
 
 func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {

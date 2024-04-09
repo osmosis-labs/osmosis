@@ -86,9 +86,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	if len(msgs) == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no messages in transaction")
 	}
+
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
 	// The fee payer is the first signer of the transaction. This should have been enforced by the
 	// LimitFeePayerDecorator
-	feePayer := msgs[0].GetSigners()[0]
+	feePayer := feeTx.FeePayer()
+	feeGranter := feeTx.FeeGranter()
+	fee := feeTx.GetFee()
 
 	selectedAuthenticators, err := ad.GetSelectedAuthenticators(tx, len(msgs))
 	if err != nil {
@@ -133,6 +141,8 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			ad.sigModeHandler,
 			account,
 			feePayer,
+			feeGranter,
+			fee,
 			msg,
 			tx,
 			msgIndex,
@@ -168,7 +178,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 			// Append the track closure to be called after every message is authenticated
 			tracks = append(tracks, func() error {
-				err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
+				err := a11r.Track(cacheCtx, authenticationRequest)
 
 				if err != nil {
 					// track should not fail in normal circumstances, since it is intended to update track state before execution.

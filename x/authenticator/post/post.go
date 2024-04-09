@@ -69,6 +69,8 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 
 	// The fee payer by default is the first signer of the transaction
 	feePayer := feeTx.FeePayer()
+	feeGranter := feeTx.FeeGranter()
+	fee := feeTx.GetFee()
 
 	for msgIndex, msg := range tx.GetMsgs() {
 		// When using a smart account we enforce one signer per transaction in the AnteHandler,
@@ -94,6 +96,8 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 			ad.sigModeHandler,
 			account,
 			feePayer,
+			feeGranter,
+			fee,
 			msg,
 			tx,
 			msgIndex,

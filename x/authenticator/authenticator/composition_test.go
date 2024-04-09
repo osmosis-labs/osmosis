@@ -185,7 +185,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -309,7 +309,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -403,7 +403,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			err = initializedTop.Authenticate(s.Ctx, request)
@@ -589,6 +589,8 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			AuthenticatorId:     tc.id,
 			Account:             s.TestAccAddress[0],
 			FeePayer:            s.TestAccAddress[0],
+			FeeGranter:          nil,
+			Fee:                 sdk.NewCoins(),
 			Msg:                 authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
 			MsgIndex:            0,
 			Signature:           []byte{1, 1, 1, 1, 1},
@@ -601,7 +603,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		// make calls
 		auth.OnAuthenticatorAdded(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
 		auth.Authenticate(s.Ctx, authReq)
-		auth.Track(s.Ctx, authReq.Account, authReq.FeePayer, msg, authReq.MsgIndex, tc.id)
+		auth.Track(s.Ctx, authReq)
 		auth.ConfirmExecution(s.Ctx, authReq)
 		auth.OnAuthenticatorRemoved(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
 

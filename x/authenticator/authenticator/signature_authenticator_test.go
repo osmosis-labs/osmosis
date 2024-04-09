@@ -263,7 +263,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, addr, addr, tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, addr, addr, nil, sdk.NewCoins(), tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().NoError(err)
 
 				// Test Authenticate method
@@ -277,7 +277,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().Error(err)
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, addr, addr, tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				_, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, addr, addr, nil, sdk.NewCoins(), tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().Error(err)
 			}
 		})

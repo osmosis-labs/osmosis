@@ -126,8 +126,8 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 	return nil
 }
 
-func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error {
-	return subTrack(ctx, account, feePayer, msg, msgIndex, authenticatorId, aoa.SubAuthenticators)
+func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, request AuthenticationRequest) error {
+	return subTrack(ctx, request, aoa.SubAuthenticators)
 }
 
 // ConfirmExecution is called on all sub-authenticators, but only the changes made by the authenticator that succeeds are written.

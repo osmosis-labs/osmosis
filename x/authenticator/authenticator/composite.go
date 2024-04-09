@@ -16,15 +16,15 @@ type SubAuthenticatorInitData struct {
 
 func subTrack(
 	ctx sdk.Context,
-	account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string,
+	request AuthenticationRequest,
 	subAuthenticators []Authenticator,
 ) error {
+	baseId := request.AuthenticatorId
 	for id, auth := range subAuthenticators {
-		subId := compositeId(authenticatorId, id)
-		err := auth.Track(ctx, account, feePayer, msg, msgIndex, subId)
+		request.AuthenticatorId = compositeId(baseId, id)
+		err := auth.Track(ctx, request)
 		if err != nil {
-			return errorsmod.Wrapf(err, "sub-authenticator track failed (sub-authenticator id = %s)", subId)
+			return errorsmod.Wrapf(err, "sub-authenticator track failed (sub-authenticator id = %s)", request.AuthenticatorId)
 		}
 	}
 	return nil
