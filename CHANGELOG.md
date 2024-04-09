@@ -91,8 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
 * [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
 
-<<<<<<< HEAD
-=======
 ### CometBFT
 
 * [#5](https://github.com/osmosis-labs/cometbft/pull/5) Batch verification
@@ -104,7 +102,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
 
->>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 ## v23.0.11-iavl-v1 & v23.0.11
 
 * [#7987](https://github.com/osmosis-labs/osmosis/pull/7987) Added soft-forked-ibc for ASA-2024-007
