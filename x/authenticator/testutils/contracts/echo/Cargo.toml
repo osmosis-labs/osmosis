@@ -40,7 +40,7 @@ serde = {version = "1.0.145", default-features = false, features = ["derive"]}
 osmosis-std = "0.20.1"
 thiserror = {version = "1.0.31"}
 #base64-simd = "0.8.0"
-osmosis-authenticators = "0.22.0-alpha.17"
+osmosis-authenticators = "0.22.0-alpha.19"
 sha2 = "0.10.8"
 
 [dev-dependencies]

@@ -314,7 +314,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	msg = s.QueryLatestSudoCall(addr)
 	request.AuthenticatorParams = []byte(params)
-	// TODO: to make this pass, needs to update osmosis-authenticator-crate
+	request.FeeGranter = sdk.AccAddress{}
 	s.Require().Equal(authenticator.SudoMsg{
 		Authenticate: &request,
 	}, msg, "Should match latest sudo msg ")
@@ -331,7 +331,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			AuthenticatorId: "0",
 			Account:         accounts[0],
 			FeePayer:        accounts[0],
-			FeeGranter:      nil,
+			FeeGranter:      sdk.AccAddress{},
 			Fee:             feeCoins,
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
@@ -350,7 +350,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			AuthenticatorId: "0",
 			Account:         accounts[0],
 			FeePayer:        accounts[0],
-			FeeGranter:      nil,
+			FeeGranter:      sdk.AccAddress{},
 			Fee:             feeCoins,
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
