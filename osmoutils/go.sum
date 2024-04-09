@@ -703,17 +703,10 @@ github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiK
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
-<<<<<<< HEAD
 github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd h1:tta7R0AxvI6QgSB4Rkbpvn+hkwG9PrOEfcXMPWoWx4s=
 github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1 h1:PqIK9vTr6zxCdQmrDZwxwL4KMAqg/GRGsiMEiaMP4wA=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.1/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
-=======
-github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac h1:D1OG5ugS4r1Jq8U331gB4mrYsX7JQsasfWkFvdva4KI=
-github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3 h1:MZGDMETv72suFpTAD6VPGqSIm1FJcChtk2HmVh9D+Bo=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
->>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 h1:02RCbih5lQ8aGdDMSvxhTnk5JDLEDitn17ytEE1Qhko=
 github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1/go.mod h1:LvVkEXTORVgd87W2Yu7ZY3acKKeTMq/txdTworn8EZI=
 github.com/cosmos/ibc-go/v7 v7.3.2 h1:FeUDcBX7VYY0e0iRmcVkPPUjYfAqIc//QuHXo8JHz9c=
@@ -1244,7 +1237,6 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-<<<<<<< HEAD
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3 h1:HJItohXCYHMTd1x938+zpxswkzdKFikHPz9xkHFtpBk=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-7-iavl-v1 h1:IYZQhCJmLqwHN+GCbvkdtUmkNzHut6KmkEleknyx9Kk=
@@ -1259,22 +1251,6 @@ github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10 h1:s4Y1ZeOmQ+iTgODCbnuge0mcB
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10/go.mod h1:G3FNk7hOfmKKHP5aaDShRi93i3c7s6jok+gPS7It9rI=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975 h1:3XxOVETjEfUTFprMaE3aKPzKiB00OTi2xDzvschdMFo=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240208035010-35d5b08f4975/go.mod h1:xwisuj2W2+dwsjNodLTFxLyvUb6u+0kj2kBQbGXJPuQ=
-=======
-github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2 h1:3k4I3zCxdNP+mjhR7AtKr1PPuGR58CcVTMZN0aV/iL4=
-github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
-github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240408225837-67f8c78738d5 h1:pZyMCkTQ4nMp1ChbNgzKXrYpcIxLk6AX+9e8NZIJU6k=
-github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240408225837-67f8c78738d5/go.mod h1:hYwwJYaa/ZMMOnt1ZI4l+PUm6DHOXQ9Y6z/2X2KuLeA=
-github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0 h1:wAcm5rvcAMwSPFWgzUr/lR7U+e+4PvZ8fkehhpwiJho=
-github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0/go.mod h1:5QdPU/ttG3dPeg1EtX/LVT7yuxdz3E+BXnEqxwgh+ec=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240408225837-67f8c78738d5 h1:f1J5crRylc5M4O+Yd1pT0D+AidQlr/CCcMdxYJaIoF8=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240408225837-67f8c78738d5/go.mod h1:maN3wKem02iu0qE0YGZpMOJqaxyOpjROE5c4lpQaPRM=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240408225837-67f8c78738d5 h1:DX1/Fn+8wzuMnuq8OSuvdefmbGClmUfWRhqatLDqIlY=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240408225837-67f8c78738d5/go.mod h1:q0xsK7pab7ekvxM1YvoZ/DMW4gdTwFoz2jXTqNLuG7w=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 h1:mvkk1A/jIe+lsFFpRNfyd9UfvhagATdpnjy8K7kANeo=
-github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
->>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=

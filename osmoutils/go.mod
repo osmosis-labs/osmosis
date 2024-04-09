@@ -10,17 +10,10 @@ require (
 	github.com/cometbft/cometbft-db v0.10.0
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
-<<<<<<< HEAD
 	github.com/cosmos/iavl v1.1.2-0.20240322194608-8a38162c01cd
 	github.com/cosmos/ibc-go/v7 v7.3.2
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312201712-59e5f097899e
 	github.com/osmosis-labs/osmosis/v23 v23.0.1
-=======
-	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
-	github.com/cosmos/ibc-go/v7 v7.4.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240408225837-67f8c78738d5
-	github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0
->>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -128,13 +121,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/onsi/gomega v1.28.1 // indirect
-<<<<<<< HEAD
-=======
-	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240408225837-67f8c78738d5 // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240408225837-67f8c78738d5 // indirect
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 // indirect
->>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -192,18 +178,10 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-<<<<<<< HEAD
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5-iavl-v1, current branch: osmo-v23/v0.47.5-iavl-v1. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/245b6fffc58ca64ea65d2fa1d67d93aa277b747c
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-8-iavl-v1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-8-iavl-v1
-=======
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2384e2b96adf19abed82f7320da9ab314bcfba98
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
->>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
-
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
