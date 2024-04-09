@@ -178,7 +178,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 			// Append the track closure to be called after every message is authenticated
 			tracks = append(tracks, func() error {
-				err := a11r.Track(cacheCtx, account, feePayer, msg, uint64(msgIndex), stringId)
+				err := a11r.Track(cacheCtx, authenticationRequest)
 
 				if err != nil {
 					// track should not fail in normal circumstances, since it is intended to update track state before execution.

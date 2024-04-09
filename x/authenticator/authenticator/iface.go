@@ -33,7 +33,7 @@ type Authenticator interface {
 	// Track allows the authenticator to record information, regardless of the transaction's authentication method.
 	// NOTE: Any state changes made by this function will be written to the store as long as Authenticate succeeds and will not be reverted if the message execution fails.
 	// This function is used for the authenticator to acknowledge the execution of specific messages by an account.
-	Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error
+	Track(ctx sdk.Context, request AuthenticationRequest) error
 
 	// ConfirmExecution enforces transaction rules post-transaction, like spending and transaction limits.
 	// It is used to verify execution-specific state and values, to allow authentication to be dependent on the effects of a transaction.

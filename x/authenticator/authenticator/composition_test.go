@@ -603,7 +603,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		// make calls
 		auth.OnAuthenticatorAdded(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
 		auth.Authenticate(s.Ctx, authReq)
-		auth.Track(s.Ctx, authReq.Account, authReq.FeePayer, msg, authReq.MsgIndex, tc.id)
+		auth.Track(s.Ctx, authReq)
 		auth.ConfirmExecution(s.Ctx, authReq)
 		auth.OnAuthenticatorRemoved(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
 

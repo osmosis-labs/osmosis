@@ -43,9 +43,7 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, request authenticat
 	return nil
 }
 
-func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string,
-) error {
+func (s StatefulAuthenticator) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
 	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx)}
 	if statefulData.Value > 10 {
 		return fmt.Errorf("Value is too high: %d", statefulData.Value)

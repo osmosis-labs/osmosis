@@ -314,11 +314,12 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	msg = s.QueryLatestSudoCall(addr)
 	request.AuthenticatorParams = []byte(params)
+	// TODO: to make this pass, needs to update osmosis-authenticator-crate
 	s.Require().Equal(authenticator.SudoMsg{
 		Authenticate: &request,
 	}, msg, "Should match latest sudo msg ")
 
-	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), accounts[0], accounts[0], testMsg, 0, "0")
+	err = auth.Track(s.Ctx.WithBlockTime(time.Now()), request)
 	s.Require().NoError(err, "Track should succeed")
 
 	encodedMsg, err := codectypes.NewAnyWithValue(testMsg)
@@ -330,6 +331,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			AuthenticatorId: "0",
 			Account:         accounts[0],
 			FeePayer:        accounts[0],
+			FeeGranter:      nil,
+			Fee:             feeCoins,
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,
@@ -347,6 +350,8 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 			AuthenticatorId: "0",
 			Account:         accounts[0],
 			FeePayer:        accounts[0],
+			FeeGranter:      nil,
+			Fee:             feeCoins,
 			Msg: authenticator.LocalAny{
 				TypeURL: encodedMsg.TypeUrl,
 				Value:   encodedMsg.Value,

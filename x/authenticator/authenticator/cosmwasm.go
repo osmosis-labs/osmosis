@@ -93,22 +93,13 @@ func (cwa CosmwasmAuthenticator) Authenticate(ctx sdk.Context, request Authentic
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64,
-	authenticatorId string) error {
-	encodedMsg, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to encode msg")
-	}
-
+func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, request AuthenticationRequest) error {
 	trackRequest := TrackRequest{
-		AuthenticatorId: authenticatorId,
-		Account:         account,
-		FeePayer:        feePayer,
-		Msg: LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
-		},
-		MsgIndex:            msgIndex,
+		AuthenticatorId:     request.AuthenticatorId,
+		Account:             request.Account,
+		FeePayer:            request.FeePayer,
+		Msg:                 request.Msg,
+		MsgIndex:            request.MsgIndex,
 		AuthenticatorParams: cwa.authenticatorParams,
 	}
 	bz, err := json.Marshal(SudoMsg{Track: &trackRequest})
