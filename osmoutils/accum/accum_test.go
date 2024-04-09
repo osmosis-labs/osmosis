@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
@@ -17,7 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/osmoutils/wrapper"
 )
 
 type AccumTestSuite struct {
@@ -108,9 +106,10 @@ func withUnclaimedRewards(record accumPackage.Record, unclaimedRewards sdk.DecCo
 
 // Sets/resets KVStore to use for tests under `suite.store`
 func (suite *AccumTestSuite) SetupTest() {
-	db := wrapper.NewCosmosDB(dbm.NewMemDB())
-	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
-	_, _, err := tree.SaveVersion()
+	db := dbm.NewMemDB()
+	tree, err := iavl.NewMutableTree(db, 100, false)
+	suite.Require().NoError(err)
+	_, _, err = tree.SaveVersion()
 	suite.Require().Nil(err)
 	kvstore := iavlstore.UnsafeNewStore(tree)
 	suite.store = kvstore
