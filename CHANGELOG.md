@@ -44,6 +44,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+<<<<<<< HEAD
+=======
+### State Compatible
+
+## v24.0.1
+
+* [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
+
+## v24.0.0
+
+### Osmosis
+
+>>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 * [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
@@ -81,9 +94,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
 * [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
 
+<<<<<<< HEAD
+=======
+### CometBFT
+
+* [#5](https://github.com/osmosis-labs/cometbft/pull/5) Batch verification
+* [#11](https://github.com/osmosis-labs/cometbft/pull/11) Skip verification of commit sigs
+* [#13](https://github.com/osmosis-labs/cometbft/pull/13) Avoid double-saving ABCI responses
+* [#20](https://github.com/osmosis-labs/cometbft/pull/20) Fix the rollback command
+
+## v23.0.12-iavl-v1
+
+* [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
+
+>>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 ## v23.0.11-iavl-v1 & v23.0.11
 
-* [#7987](https://github.com/osmosis-labs/osmosis/pull/7987) Added soft-forked-ibc for ASA-2024-007 (#7987)
+* [#7987](https://github.com/osmosis-labs/osmosis/pull/7987) Added soft-forked-ibc for ASA-2024-007
 
 ## v23.0.8-iavl-v1 & v23.0.8
 

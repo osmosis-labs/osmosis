@@ -27,11 +27,19 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240408215903-982774264b61
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.6-0.20240408215903-982774264b61
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.11-0.20240312201712-59e5f097899e
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240408225837-67f8c78738d5
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240408225837-67f8c78738d5
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240408225837-67f8c78738d5
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240408225837-67f8c78738d5
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
+>>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.6.0
@@ -385,6 +393,7 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v23/v0.47.5, current branch: osmo-v23/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/f49152f2ec1750b0d744f74892d341ce93c6a421
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-5
@@ -395,6 +404,14 @@ replace (
 
 	// Replace ibc-go with a version that hase the soft fork applied.
 	github.com/cosmos/ibc-go/v7 v7.3.2 => github.com/osmosis-labs/ibc-go/v7 v7.3.3
+=======
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2384e2b96adf19abed82f7320da9ab314bcfba98
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
+	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
+>>>>>>> 4b58243f (chore: bump sdk/iavl for async pruning (#7994))
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// We explicitly use commits from the `v23.x` branch in https://github.com/osmosis-labs/sqs
