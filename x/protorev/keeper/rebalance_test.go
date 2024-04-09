@@ -231,6 +231,7 @@ var cwPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 }
 
 func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
+	s.SetupPoolsTest()
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
 		expectedAmtIn   osmomath.Int
@@ -418,6 +419,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 }
 
 func (s *KeeperTestSuite) TestExecuteTrade() {
+	s.SetupPoolsTest()
 	type param struct {
 		route          poolmanagertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -580,6 +582,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 }
 
 func (s *KeeperTestSuite) TestIterateRoutes() {
+	s.SetupPoolsTest()
 	type paramm struct {
 		routes                     []poolmanagertypes.SwapAmountInRoutes
 		expectedMaxProfitAmount    osmomath.Int
@@ -688,6 +691,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 
 // Test logic that compares proftability of routes with different assets
 func (s *KeeperTestSuite) TestConvertProfits() {
+	s.SetupPoolsTest()
 	type param struct {
 		inputCoin           sdk.Coin
 		profit              osmomath.Int
@@ -788,8 +792,6 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.SetupTest()
-
 			err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, tc.maxRoutesPerTx)
 			s.Require().NoError(err)
 
@@ -806,6 +808,7 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 }
 
 func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.SetupPoolsTest()
 	s.Run("Extended search on stable pools", func() {
 		route := keeper.RouteMetaData{
 			Route:    extendedRangeRoute,

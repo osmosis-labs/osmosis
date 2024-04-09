@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
@@ -75,4 +76,5 @@ type PoolManagerKeeper interface {
 type ConcentratedKeeper interface {
 	PoolKeeper
 	GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, int64, error)
+	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (concentratedtypes.ConcentratedPoolExtension, error)
 }

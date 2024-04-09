@@ -22,6 +22,7 @@ func (s *KeeperTestSuite) TestParams() {
 
 // TestGetProtoRevNumberOfTrades tests the query for number of trades
 func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
+	s.SetupPoolsTest()
 	// Initially should throw an error
 	_, err := s.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(s.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
 	s.Require().Error(err)
@@ -52,6 +53,7 @@ func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 
 // TestGetProtoRevProfitsByDenom tests the query for profits by denom
 func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: types.OsmosisDenomination,
 	}
@@ -87,6 +89,7 @@ func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 
 // TestGetProtoRevAllProfits tests the query for all profits
 func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAllProfitsRequest{}
 	res, err := s.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
@@ -121,6 +124,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
 
 // TestGetProtoRevStatisticsByRoute tests the query for statistics by route
 func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
+	s.SetupPoolsTest()
 	// Request with no trades should return an error
 	req := &types.QueryGetProtoRevStatisticsByRouteRequest{
 		Route: []uint64{1, 2, 3},
@@ -171,6 +175,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 
 // TestGetProtoRevAllRouteStatistics tests the query for all route statistics
 func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAllRouteStatisticsRequest{}
 
 	res, err := s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
@@ -246,6 +251,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 
 // TestGetProtoRevTokenPairArbRoutes tests the query to retrieve all token pair arb routes
 func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevTokenPairArbRoutesRequest{}
 	res, err := s.queryClient.GetProtoRevTokenPairArbRoutes(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
@@ -361,6 +367,7 @@ func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 
 // TestGetProtoRevPool tests the query for getting the highest liquidity pool stored
 func (s *KeeperTestSuite) TestGetProtoRevPool() {
+	s.SetupPoolsTest()
 	// Request without setting pool for the base denom and other denom should return an error
 	req := &types.QueryGetProtoRevPoolRequest{
 		BaseDenom:  "uosmo",

@@ -206,20 +206,7 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 }
 
 func (s *KeeperTestHelper) setupGeneral() {
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
-	if s.withCaching {
-		s.Ctx, _ = s.Ctx.CacheContext()
-	}
-	s.QueryHelper = &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: s.App.GRPCQueryRouter(),
-		Ctx:             s.Ctx,
-	}
-
-	s.SetEpochStartTime()
-	s.TestAccs = []sdk.AccAddress{}
-	s.TestAccs = append(s.TestAccs, baseTestAccts...)
-	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
-	s.hasUsedAbci = false
+	s.setupGeneralCustomChainId("osmosis-1")
 }
 
 func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {

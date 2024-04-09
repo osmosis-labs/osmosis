@@ -913,9 +913,8 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
-	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolManagerParams.AuthorizedQuoteDenoms = append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
-	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
+	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
 }
 
 func (s *ConcentratedKeeperTestHelper) SetupTest() {

@@ -83,7 +83,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 		wg.Add(1)
 		go func(node *chain.NodeConfig) {
 			defer wg.Done()
-			if err := node.Run(false); err != nil {
+			if err := node.Run(true); err != nil {
 				errCh <- err
 			}
 		}(node)

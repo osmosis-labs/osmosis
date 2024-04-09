@@ -6,4 +6,6 @@ const (
 	DefaultBitcoinConfirmations = 6
 	DefaultBitcoinExponent      = 10 // TODO: decide
 	DefaultVotesNeeded          = 1
+
+	DefaultOsmosisChainName = "osmosis"
 )

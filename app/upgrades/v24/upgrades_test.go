@@ -155,8 +155,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeIncentives)
 
 	// Overwrite the migration list with the desired pool ID.
-	v24.FinalIncentiveAccumulatorPoolIDsToMigrate = map[uint64]struct{}{}
-	v24.FinalIncentiveAccumulatorPoolIDsToMigrate[lastPoolID] = struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDsV24 = map[uint64]struct{}{}
+	concentratedtypes.MigratedIncentiveAccumulatorPoolIDsV24[lastPoolID] = struct{}{}
 
 	// PROTOREV Setup
 	//
@@ -255,7 +255,15 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	//
 
 	// Test that the white whale pools have been updated
-	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 572)
+	s.requirePoolsHaveCodeId(whiteWhalePoolIds, 641)
+
+	// TXFEES Tests
+	//
+
+	// Check that the whitelisted fee token address has been set
+	whitelistedFeeTokenSetters := s.App.TxFeesKeeper.GetParams(s.Ctx).WhitelistedFeeTokenSetters
+	s.Require().Len(whitelistedFeeTokenSetters, 1)
+	s.Require().Equal(whitelistedFeeTokenSetters, v24.WhitelistedFeeTokenSetters)
 }
 
 func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {

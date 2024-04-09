@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 			tc.param.executeSwap()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 			tc.param.executeLiquidityProviding()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
@@ -379,7 +379,7 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 			poolId := tc.param.executePoolCreation()
 			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, tc.param.matchDenom)
 
@@ -452,7 +452,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Run any state preparation
 			tc.param.prepareState()
@@ -545,7 +545,7 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Create the pool
 			poolId := tc.param.executePoolCreation()
@@ -620,7 +620,7 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// All pools are already created in the setup
 			s.App.ProtoRevKeeper.StoreJoinExitPoolSwaps(s.Ctx, s.TestAccs[0], tc.param.poolId, tc.param.denom, tc.param.isJoin)
@@ -832,7 +832,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Run any state preparation and get the pool id to compare to the stored pool
 			expectedStoredPoolId, comparePoolId := tc.param.prepareStateAndGetPoolIdToCompare()
@@ -879,7 +879,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Set base denoms
 			baseDenoms := []types.BaseDenom{

@@ -1,58 +1,102 @@
 package sqs
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
-	"github.com/osmosis-labs/osmosis/v24/ingest"
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
 )
 
-const sqsIngesterName = "sidecar-query-server"
-
-var _ ingest.Ingester = &sqsIngester{}
+var _ domain.Ingester = &sqsIngester{}
 
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
-	txManager         repository.TxManager
-	poolsIngester     domain.AtomicIngester
-	chainInfoIngester domain.AtomicIngester
+	poolsTransformer domain.PoolsTransformer
+	keepers          domain.SQSIngestKeepers
+	sqsGRPCClient    domain.SQSGRPClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester, chainInfoIngester domain.AtomicIngester, txManager repository.TxManager) ingest.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
 	return &sqsIngester{
-		txManager:         txManager,
-		chainInfoIngester: chainInfoIngester,
-		poolsIngester:     poolsIngester,
+		poolsTransformer: poolsIngester,
+		keepers:          keepers,
+		sqsGRPCClient:    sqsGRPCClient,
 	}
 }
 
-// ProcessBlock implements ingest.Ingester.
-func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
-	// Start atomic transaction
-	tx := i.txManager.StartTx()
+// ProcessAllBlockData implements ingest.Ingester.
+func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) error {
+	// Concentrated pools
 
-	goCtx := sdk.WrapSDKContext(ctx)
-
-	// Process block by reading and writing data and ingesting data into sinks
-	if err := i.poolsIngester.ProcessBlock(ctx, tx); err != nil {
+	concentratedPools, err := i.keepers.ConcentratedKeeper.GetPools(ctx)
+	if err != nil {
 		return err
 	}
 
-	// Process block by reading and writing data and ingesting data into sinks
-	if err := i.chainInfoIngester.ProcessBlock(ctx, tx); err != nil {
+	// CFMM pools
+
+	cfmmPools, err := i.keepers.GammKeeper.GetPools(ctx)
+	if err != nil {
 		return err
 	}
 
-	// Flush all writes atomically
-	return tx.Exec(goCtx)
+	// CosmWasm pools
+
+	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
+	if err != nil {
+		return err
+	}
+
+	blockPools := domain.BlockPools{
+		ConcentratedPools: concentratedPools,
+		CosmWasmPools:     cosmWasmPools,
+		CFMMPools:         cfmmPools,
+	}
+
+	// Process block by reading and writing data and ingesting data into sinks
+	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, blockPools)
+	if err != nil {
+		return err
+	}
+
+	return i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
 }
 
-// GetName implements ingest.Ingester.
-func (*sqsIngester) GetName() string {
-	return sqsIngesterName
+// ProcessChangedBlockData implements ingest.Ingester.
+func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools domain.BlockPools) error {
+	concentratedPoolIDTickChange := changedPools.ConcentratedPoolIDTickChange
+
+	// Copy over the pools that were changed in the block
+	for _, pool := range changedPools.ConcentratedPools {
+		changedPools.ConcentratedPoolIDTickChange[pool.GetId()] = struct{}{}
+	}
+
+	// Update concentrated pools
+	for poolID := range concentratedPoolIDTickChange {
+		// Skip if the pool if it is already tracked
+		if _, ok := changedPools.ConcentratedPoolIDTickChange[poolID]; ok {
+			continue
+		}
+
+		pool, err := i.keepers.ConcentratedKeeper.GetConcentratedPoolById(ctx, poolID)
+		if err != nil {
+			return err
+		}
+
+		changedPools.ConcentratedPools = append(changedPools.ConcentratedPools, pool)
+
+		changedPools.ConcentratedPoolIDTickChange[poolID] = struct{}{}
+	}
+
+	// Process block by reading and writing data and ingesting data into sinks
+	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, changedPools)
+	if err != nil {
+		return err
+	}
+
+	return i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
 }

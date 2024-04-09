@@ -1,4 +1,4 @@
-package poolsingester_test
+package poolstransformer_test
 
 import (
 	"fmt"
@@ -8,22 +8,20 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
-	sqsdomainmocks "github.com/osmosis-labs/sqs/sqsdomain/mocks"
-	"github.com/osmosis-labs/sqs/sqsdomain/repository"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain/mocks"
-	poolsingester "github.com/osmosis-labs/osmosis/v24/ingest/sqs/pools/ingester"
+	poolstransformer "github.com/osmosis-labs/osmosis/v24/ingest/sqs/pools/transformer"
 	clqueryproto "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client/queryproto"
 	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
-type IngesterTestSuite struct {
+type PoolTransformerTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
@@ -34,7 +32,7 @@ const (
 	// about lexographical order
 	USDW = "usdw"
 
-	UOSMO = poolsingester.UOSMO
+	UOSMO = poolstransformer.UOSMO
 
 	noTotalValueLockedErrorStr = ""
 )
@@ -46,21 +44,21 @@ var (
 	// Sets precision tof test tokens to match the precision of UOSMO
 	// for simplicity.
 	defaultOneToOneUosmoPrecisionMap = map[string]int{
-		USDT: poolsingester.OneToOnePrecision,
-		USDC: poolsingester.OneToOnePrecision,
-		USDW: poolsingester.OneToOnePrecision,
+		USDT: poolstransformer.OneToOnePrecision,
+		USDC: poolstransformer.OneToOnePrecision,
+		USDW: poolstransformer.OneToOnePrecision,
 	}
 )
 
-func TestIngesterTestSuite(t *testing.T) {
-	suite.Run(t, new(IngesterTestSuite))
+func TestPoolTransformerTestSuite(t *testing.T) {
+	suite.Run(t, new(PoolTransformerTestSuite))
 }
 
 // This test validates that converting a pool that has to get TVL from another
 // pool with empty denom to routing info map works as expected.
 // Additionally, it also validates that the input denomPairToTakerFeeMap is mutated correctly
 // with the taker fee retrieved from the pool manager params.
-func (s *IngesterTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee() {
+func (s *PoolTransformerTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee() {
 	s.Setup()
 
 	s.setDefaultPoolManagerTakerFee()
@@ -91,7 +89,7 @@ func (s *IngesterTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee()
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, stableCoinPoolID)
 	s.Require().NoError(err)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester()
@@ -112,7 +110,7 @@ func (s *IngesterTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMa_TakerFee()
 
 // This test validates that converting a pool that has to get TVL from another
 // pool with non-empty denom to routing info map works as expected.
-func (s *IngesterTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
+func (s *PoolTransformerTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
 	s.Setup()
 
 	// Create OSMO / USDT pool and set the protorev route
@@ -125,7 +123,7 @@ func (s *IngesterTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
 	usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDC, usdcOsmoPoolID)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{
 		USDC: {
 			PoolID: usdcOsmoPoolID,
 			// Make the spot price 4 OSMO = 1 USDC
@@ -155,7 +153,7 @@ func (s *IngesterTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
 
 // This test validates that converting an OSMO paired pool that has to get TVL from another
 // pool with empty denom to routing info map works as expected.
-func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPool() {
+func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPool() {
 	s.Setup()
 	// Create OSMO / USDT pool
 	// Note that spot price is 1 OSMO = 2 USDT
@@ -166,7 +164,7 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPoo
 	usdcOsmoPoolIDSpotPrice := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdcOsmoPoolIDSpotPrice)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	// Fetch the pool from state.
@@ -187,14 +185,14 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInOtherPoo
 
 // This test validates that converting an OSMO paired pool that has to get TVL from itself
 // with empty denom to routing info map works as expected.
-func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsItself() {
+func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsItself() {
 	s.Setup()
 	// Create OSMO / USDT pool and set the protorev route
 	// Note that spot price is 1 OSMO = 2 USDT
 	usdtOsmoPoolIDConverted := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdtOsmoPoolIDConverted)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	// Fetch the pool from state.
@@ -215,7 +213,7 @@ func (s *IngesterTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsItself()
 
 // Tests that if no route is set, the pool is converted correctly and the method does not error.
 // However, the error flag is updated.
-func (s *IngesterTestSuite) TestConvertPool_NoRouteSet() {
+func (s *PoolTransformerTestSuite) TestConvertPool_NoRouteSet() {
 	s.Setup()
 	// Create OSMO / USDT pool and set the protorev route
 	// Note that spot price is 1 OSMO = 2 USDT
@@ -223,7 +221,7 @@ func (s *IngesterTestSuite) TestConvertPool_NoRouteSet() {
 	// Purposefully remove the route set in the after pool created hook.
 	s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, UOSMO)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	// Fetch the pool from state.
@@ -246,7 +244,7 @@ func (s *IngesterTestSuite) TestConvertPool_NoRouteSet() {
 }
 
 // Tests that if route is set incorrectly, the error is silently skipped and the error flag is set.
-func (s *IngesterTestSuite) TestConvertPool_InvalidPoolSetInRoutes_SilentSpotPriceError() {
+func (s *PoolTransformerTestSuite) TestConvertPool_InvalidPoolSetInRoutes_SilentSpotPriceError() {
 	s.Setup()
 	// Create OSMO / USDT pool and set the protorev route
 	// Note that spot price is 1 OSMO = 2 USDT
@@ -254,7 +252,7 @@ func (s *IngesterTestSuite) TestConvertPool_InvalidPoolSetInRoutes_SilentSpotPri
 	// Purposefully set a non-existent pool
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdtOsmoPoolIDConverted+1)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	// Fetch the pool from state.
@@ -269,14 +267,14 @@ func (s *IngesterTestSuite) TestConvertPool_InvalidPoolSetInRoutes_SilentSpotPri
 	// Only counts half amount of OSMO because USDT has no route set.
 	expectedTVL := halfDefaultAmount
 	// Note: empty string is set for simplicity, omitting the actual error in the assertion
-	expectTVLErrorStr := fmt.Sprintf(poolsingester.SpotPriceErrorFmtStr, USDT, "")
+	expectTVLErrorStr := fmt.Sprintf(poolstransformer.SpotPriceErrorFmtStr, USDT, "")
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
 // This test validates that converting a concentrated pool works as expected.
 // This pool type also has tick data set on it.
-func (s *IngesterTestSuite) TestConvertPool_Concentrated() {
+func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated() {
 	s.Setup()
 
 	// Prepare a stablecoin pool that we attempt to convert
@@ -292,7 +290,7 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated() {
 	concentratedPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, concentratedPool.GetId())
 	s.Require().NoError(err)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester()
@@ -338,14 +336,14 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated() {
 
 // This test validates that CL pools with no liquidity are converted correctly.
 // The relevant no liquidity flag is set where applicable
-func (s *IngesterTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
+func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	s.Setup()
 
 	// Prepare a stablecoin pool that we attempt to convert
 
 	concentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, UOSMO, 1, osmomath.ZeroDec())
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester()
@@ -386,7 +384,7 @@ func (s *IngesterTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 
 // This test validates TVL calculation for a pool that has a token with non-osmo (6) precision
 // that is set by the precision map given as a parameter.c
-func (s *IngesterTestSuite) TestConvertPool_NonOsmoPrecision() {
+func (s *PoolTransformerTestSuite) TestConvertPool_NonOsmoPrecision() {
 	s.Setup()
 
 	s.setDefaultPoolManagerTakerFee()
@@ -403,7 +401,7 @@ func (s *IngesterTestSuite) TestConvertPool_NonOsmoPrecision() {
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, stableCoinPoolID)
 	s.Require().NoError(err)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 	customPrecisionMap := map[string]int{
 		USDT: 18,
@@ -423,7 +421,7 @@ func (s *IngesterTestSuite) TestConvertPool_NonOsmoPrecision() {
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
 
-func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
+func (s *PoolTransformerTestSuite) TestConvertPool_NoPrecisionInMap() {
 	s.Setup()
 
 	s.setDefaultPoolManagerTakerFee()
@@ -440,7 +438,7 @@ func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, stableCoinPoolID)
 	s.Require().NoError(err)
 
-	denomToRoutingInfoMap := map[string]poolsingester.DenomRoutingInfo{}
+	denomToRoutingInfoMap := map[string]poolstransformer.DenomRoutingInfo{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 	emptyPrecisionMap := map[string]int{}
 
@@ -453,7 +451,7 @@ func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
 	// 1 for the OSMO-denominated TVL. No USDT-denominated TVL because precision is not given in the map
 	expectedTVL := defaultAmount.MulRaw(1)
 	// TVL error due to no USDT precision in the map.
-	expectTVLErrorStr := fmt.Sprintf(poolsingester.NoTokenPrecisionErrorFmtStr, USDT)
+	expectTVLErrorStr := fmt.Sprintf(poolstransformer.NoTokenPrecisionErrorFmtStr, USDT)
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, defaultAmount))
 	s.validatePoolConversion(pool, expectedTVL, expectTVLErrorStr, actualPool, expectedBalances)
 }
@@ -465,20 +463,10 @@ func (s *IngesterTestSuite) TestConvertPool_NoPrecisionInMap() {
 //
 // TODO: add tests for TVL setting.
 // https://app.clickup.com/t/86a1b3t6p
-func (s *IngesterTestSuite) TestProcessBlock() {
+func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	s.Setup()
-	var (
-		redisRepoMock   = &sqsdomainmocks.RedisPoolsRepositoryMock{}
-		redisRouterMock = &sqsdomainmocks.RedisRouterRepositoryMock{
-			TakerFees: sqsdomain.TakerFeeMap{},
-		}
-		assetListGetterMock = &mocks.AssetListGetterMock{}
 
-		// Note: this is a dummy tx that is not initialized correctly.
-		// We do note expect it to be called or used by the system under test
-		// due to using the mock repository.
-		redisTx = repository.NewRedisTx(nil)
-	)
+	assetListGetterMock := &mocks.AssetListGetterMock{}
 
 	// Set the default taker fee
 	s.setDefaultPoolManagerTakerFee()
@@ -499,17 +487,45 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
-	poolIngester := poolsingester.NewPoolIngester(redisRepoMock, redisRouterMock, nil, assetListGetterMock, sqsKeepers)
-
-	err := poolIngester.ProcessBlock(s.Ctx, redisTx)
+	// Get concentrated pool
+	concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
 	s.Require().NoError(err)
 
-	allPools, err := redisRepoMock.GetAllPools(sdk.WrapSDKContext(s.Ctx))
+	// Get balancer pool
+	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.BalancerPoolID)
+	s.Require().NoError(err)
+
+	// Get stable swap pool
+	stableSwapPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolsData.StableSwapPoolID)
+	s.Require().NoError(err)
+
+	// Get cosm wasm pool
+	cosmWasmPool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolsData.CosmWasmPoolID)
+	s.Require().NoError(err)
+
+	poolTransformer := poolstransformer.NewPoolTransformer(assetListGetterMock, sqsKeepers)
+
+	blockPools := domain.BlockPools{
+		ConcentratedPools: []poolmanagertypes.PoolI{
+			concentratedPool,
+			customTakerFeeConcentratedPool,
+		},
+		CFMMPools: []poolmanagertypes.PoolI{
+			balancerPool,
+			stableSwapPool,
+		},
+		CosmWasmPools: []poolmanagertypes.PoolI{
+			cosmWasmPool,
+		},
+	}
+
+	allPools, takerFeesMap, err := poolTransformer.Transform(s.Ctx, blockPools)
+	s.Require().NoError(err)
 	s.Require().NoError(err)
 
 	s.Require().Len(allPools, 2+2+1)
 
-	// Order of pooks is by order of writes:
+	// Order of pools is by order of writes:
 	// 1. CFMM
 	// 2. Concentrated
 	// 3. Cosmwasm
@@ -523,16 +539,14 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 	s.Require().Equal(poolsData.CosmWasmPoolID, allPools[4].GetId())
 
 	// Validate taker fee for the custom pool
-	actualTakerFee, err := redisRouterMock.GetTakerFee(sdk.WrapSDKContext(s.Ctx), customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1())
-	s.Require().NoError(err)
+	actualTakerFee := takerFeesMap.GetTakerFee(customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1())
 	// Custom taker fee
 	s.Require().Equal(defaultCustomTakerFee, actualTakerFee)
 
 	// Validate taker fee for one of the default taker fee pools
 	defaultConcentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolsData.ConcentratedPoolID)
 	s.Require().NoError(err)
-	actualTakerFee, err = redisRouterMock.GetTakerFee(sdk.WrapSDKContext(s.Ctx), defaultConcentratedPool.GetToken0(), defaultConcentratedPool.GetToken1())
-	s.Require().NoError(err)
+	actualTakerFee = takerFeesMap.GetTakerFee(defaultConcentratedPool.GetToken0(), defaultConcentratedPool.GetToken1())
 	// Poolmanager params taker fee
 	s.Require().Equal(defaultPoolManagerTakerFee, actualTakerFee)
 }
@@ -543,7 +557,7 @@ func (s *IngesterTestSuite) TestProcessBlock() {
 // - the pool type of the actual pool is equal to the expected pool type.
 // - the TVL of the actual pool is equal to the expected TVL.
 // - the balances of the actual pool is equal to the expected balances.
-func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes.PoolI, expectedTVL osmomath.Int, expectTVLErrorStr string, actualPool sqsdomain.PoolI, expectedBalances sdk.Coins) {
+func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanagertypes.PoolI, expectedTVL osmomath.Int, expectTVLErrorStr string, actualPool sqsdomain.PoolI, expectedBalances sdk.Coins) {
 	// Correct ID
 	s.Require().Equal(expectedPool.GetId(), actualPool.GetId())
 
@@ -569,7 +583,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 	s.Require().Equal(expectedBalances.String(), sqsPoolModel.Balances.String())
 }
 
-func (s *IngesterTestSuite) initializePoolIngester() *poolsingester.PoolIngester {
+func (s *PoolTransformerTestSuite) initializePoolIngester() *poolstransformer.PoolTransformer {
 
 	sqsKeepers := domain.SQSIngestKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
@@ -580,8 +594,8 @@ func (s *IngesterTestSuite) initializePoolIngester() *poolsingester.PoolIngester
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 	}
 
-	atomicIngester := poolsingester.NewPoolIngester(nil, nil, nil, nil, sqsKeepers)
-	poolIngester, ok := atomicIngester.(*poolsingester.PoolIngester)
+	atomicIngester := poolstransformer.NewPoolTransformer(nil, sqsKeepers)
+	poolIngester, ok := atomicIngester.(*poolstransformer.PoolTransformer)
 	s.Require().True(ok)
 	return poolIngester
 }

@@ -443,7 +443,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		// It does not exist, so we update the default config.toml to update
 		// We modify the default config.toml to have faster block times
 		// It will be written by server.InterceptConfigsPreRunHandler
-		tmcConfig.Consensus.TimeoutCommit = 3 * time.Second
+		tmcConfig.Consensus.TimeoutCommit = 2 * time.Second
 	} else {
 		// config.toml exists
 
@@ -469,8 +469,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}
 
 		// The original default is 5s and is set in Cosmos SDK.
-		// We lower it to 3s for faster block times.
-		serverCtx.Config.Consensus.TimeoutCommit = 3 * time.Second
+		// We lower it to 2s for faster block times.
+		serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -592,7 +592,6 @@ func initAppConfig() (string, interface{}) {
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
 	srvCfg.API.Enable = true
-	srvCfg.StateSync.SnapshotInterval = 1500
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
 
@@ -635,9 +634,10 @@ adaptive-fee-enabled = "true"
 # SQS service is disabled by default.
 is-enabled = "false"
 
-# The hostname and address of the sidecar query server storage.
-db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
-db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
+# The hostname of the GRPC sqs service
+grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
+# The maximum size of the GRPC message that can be received by the sqs service in bytes.
+grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
 
 ###############################################################################
 ###              		       Wasm Configuration    					    ###
