@@ -302,7 +302,13 @@ func (d BigDec) AddMut(d2 BigDec) BigDec {
 
 // subtraction
 func (d BigDec) Sub(d2 BigDec) BigDec {
-	res := new(big.Int).Sub(d.i, d2.i)
+	copy := d.Clone()
+	copy.SubMut(d2)
+	return copy
+}
+
+func (d BigDec) SubMut(d2 BigDec) BigDec {
+	res := d.i.Sub(d.i, d2.i)
 
 	if res.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -555,7 +561,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 		return absRoot.MulInt64(-1), err
 	}
 
-	if root == 1 || d.IsZero() || d.Equal(OneBigDec()) {
+	if root == 1 || d.IsZero() || d.Equal(oneBigDec) {
 		return d, nil
 	}
 
@@ -572,7 +578,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 			prev = SmallestBigDec()
 		}
 		delta = d.Quo(prev)
-		delta = delta.Sub(guess)
+		delta.SubMut(guess)
 		delta = delta.QuoInt(rootInt)
 
 		guess = guess.Add(delta)
@@ -583,6 +589,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
 // of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
+// TODO: Optimize this to be faster just using native big int sqrt.
 func (d BigDec) ApproxSqrt() (BigDec, error) {
 	return d.ApproxRoot(2)
 }
@@ -1271,6 +1278,7 @@ func (d BigDec) Power(power BigDec) BigDec {
 	if power.Abs().GT(maxSupportedExponent) {
 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
 	}
+	// TODO: Potentially expensive??
 	if power.IsInteger() {
 		return d.PowerInteger(power.TruncateInt().Uint64())
 	}
@@ -1280,7 +1288,7 @@ func (d BigDec) Power(power BigDec) BigDec {
 	if d.IsZero() {
 		return ZeroBigDec()
 	}
-	if d.LT(OneBigDec()) {
+	if d.LT(oneBigDec) {
 		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
 	}
 	if d.Equal(twoBigDec) {
