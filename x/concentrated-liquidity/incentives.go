@@ -362,8 +362,10 @@ func scaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmoma
 	return incentiveAmount.ToLegacyDec().QuoTruncateMut(scalingFactor).TruncateInt()
 }
 
-// scaleDownIncentiveAmount scales down the incentive amount by the scaling factor.
-func scaleDownIncentiveAmountNew(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
+// scaleDownSpreadRewardAmount scales down the spread reward amount by the scaling factor.
+// This method differs from scaleDownIncentiveAmount in that it not only returns the scaled amount, but also the truncated decimal, which is dust
+// that is added back to the global accumulator.
+func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
 	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
 	scaledAmount = scaledDec.TruncateInt()
 	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())

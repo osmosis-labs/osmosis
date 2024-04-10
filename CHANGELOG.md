@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#7876](https://github.com/osmosis-labs/osmosis/pull/7876) Migrate subset of spread reward accumulators
+
 ### State Compatible
 
 ## v24.0.1

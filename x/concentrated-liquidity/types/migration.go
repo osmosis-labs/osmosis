@@ -1,5 +1,14 @@
 package types
 
+var MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{
+	1423: {},
+	1213: {},
+	1298: {},
+	1297: {},
+	1292: {},
+	1431: {},
+}
+
 var MigratedSpreadFactorAccumulatorPoolIDs = map[uint64]struct{}{
 	// token0 usdc
 	// token1 dai
@@ -25,15 +34,6 @@ var MigratedSpreadFactorAccumulatorPoolIDs = map[uint64]struct{}{
 	// token1 osmo
 	// liquidity 554k
 	1281: {},
-}
-
-var MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{
-	1423: {},
-	1213: {},
-	1298: {},
-	1297: {},
-	1292: {},
-	1431: {},
 }
 
 // MigratedIncentiveAccumulatorPoolIDsV24 is a map that defines pools to migrate to the latest scalingFactor for v24.

@@ -269,7 +269,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	// We always truncate down in the pool's favor.
 	spreadRewardsClaimed := sdk.NewCoins()
 	for _, coin := range spreadRewardsClaimedScaled {
-		scaledCoinAmt, truncatedAmt := scaleDownIncentiveAmountNew(coin.Amount, spreadFactorScalingFactor)
+		scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
 		if !scaledCoinAmt.IsZero() {
 			spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
 		}
