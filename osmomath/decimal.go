@@ -428,24 +428,21 @@ func (d BigDec) QuoRaw(d2 int64) BigDec {
 // quotient truncate
 func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
 	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, squaredPrecisionReuse)
-
+	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
 	quo := mul.Quo(mul, d2.i)
-	chopped := chopPrecisionAndTruncateMut(quo, defaultBigDecPrecisionReuse)
 
-	if chopped.BitLen() > maxDecBitLen {
+	if quo.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{chopped}
+	return BigDec{quo}
 }
 
 // quotient truncate (mutative)
 func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
 	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
+	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
-	chopPrecisionAndTruncateMut(d.i, defaultBigDecPrecisionReuse)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
