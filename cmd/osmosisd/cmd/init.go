@@ -110,7 +110,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.P2P.Seeds = strings.Join(seeds, ",")
 			config.P2P.MaxNumInboundPeers = 80
 			config.P2P.MaxNumOutboundPeers = 60
-			config.P2P.FlushThrottleTimeout = 10 * time.Millisecond
+			// config.P2P.FlushThrottleTimeout = 10 * time.Millisecond
 
 			// Mempool
 			config.Mempool.Size = 10000
@@ -120,7 +120,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			// Consensus
 			config.Consensus.TimeoutCommit = 2 * time.Second
-			config.Consensus.PeerGossipSleepDuration = 10 * time.Millisecond
+			// config.Consensus.PeerGossipSleepDuration = 10 * time.Millisecond
 
 			// Other
 			config.Moniker = args[0]
