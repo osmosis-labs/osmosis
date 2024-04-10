@@ -281,7 +281,8 @@ The configuration json file contains the following parameters:
 :::
 
 ::: warning
-There is now a 100 OSMO fee for creating pools.
+There is now a 100 OSMO fee for creating pools. 
+This is separate from tx fees and is spent from the creating wallet automatically.
 :::
 
 ### Join pool
