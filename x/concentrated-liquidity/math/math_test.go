@@ -472,11 +472,33 @@ type sqrtRoundingTestCase struct {
 	expected         osmomath.BigDec
 }
 
+type sqrtRoundingDecTestCase struct {
+	sqrtPriceCurrent osmomath.BigDec
+	liquidity        osmomath.Dec
+	amountRemaining  osmomath.BigDec
+	expected         osmomath.BigDec
+}
+
 func runSqrtRoundingTestCase(
 	t *testing.T,
 	name string,
 	fn func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec,
 	cases map[string]sqrtRoundingTestCase,
+) {
+	for name, tc := range cases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
+			require.Equal(t, tc.expected.String(), sqrtPriceNext.String())
+		})
+	}
+}
+
+func runSqrtRoundingDecTestCase(
+	t *testing.T,
+	name string,
+	fn func(osmomath.BigDec, osmomath.Dec, osmomath.BigDec) osmomath.BigDec,
+	cases map[string]sqrtRoundingDecTestCase,
 ) {
 	for name, tc := range cases {
 		tc := tc
@@ -554,39 +576,39 @@ func TestGetNextSqrtPriceFromAmount0OutRoundingUp(t *testing.T) {
 
 // Estimates are computed with x/concentrated-liquidity/python/clmath.py
 func TestGetNextSqrtPriceFromAmount1InRoundingDown(t *testing.T) {
-	tests := map[string]sqrtRoundingTestCase{
+	tests := map[string]sqrtRoundingDecTestCase{
 		"rounded down at precision end": {
 			sqrtPriceCurrent: sqrt5000BigDec,
-			liquidity:        osmomath.MustNewBigDecFromStr("3035764687.503020836176699298"),
+			liquidity:        osmomath.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountRemaining:  osmomath.MustNewBigDecFromStr("8398"),
 
 			expected: osmomath.MustNewBigDecFromStr("70.710680885008822823343339270800000167"),
 		},
 		"no round up due zeroes at precision end": {
 			sqrtPriceCurrent: osmomath.MustNewBigDecFromStr("2.5"),
-			liquidity:        osmomath.MustNewBigDecFromStr("1"),
+			liquidity:        osmomath.OneDec(),
 			amountRemaining:  osmomath.MustNewBigDecFromStr("10"),
 			// sqrt_next = sqrt_cur + token_in / liq
 			expected: osmomath.MustNewBigDecFromStr("12.5"),
 		},
 		"happy path": {
-			liquidity:        osmomath.MustNewBigDecFromStr("1519437308.014768571721000000"), // liquidity1 calculated above
-			sqrtPriceCurrent: sqrt5000BigDec,                                                 // 5000000000
+			liquidity:        osmomath.MustNewDecFromStr("1519437308.014768571721000000"), // liquidity1 calculated above
+			sqrtPriceCurrent: sqrt5000BigDec,                                              // 5000000000
 			amountRemaining:  osmomath.NewBigDec(42000000),
 			// sqrt_next = sqrt_cur + token_in / liq
 			// calculated with x/concentrated-liquidity/python/clmath.py  round_decimal(sqrt_next, 36, ROUND_FLOOR)
 			expected: osmomath.MustNewBigDecFromStr("70.738319930382329008049494613660784220"),
 		},
 		"low price range": {
-			liquidity:        smallLiquidity,
+			liquidity:        smallLiquidity.Dec(),
 			sqrtPriceCurrent: sqrtANearMin,
 			amountRemaining:  smallValue,
 			// from clmath decimal import *
 			// get_next_sqrt_price_from_amount1_in_round_down(liq, sqrtPriceA, amountRemaining)
-			expected: osmomath.MustNewBigDecFromStr("31964936923603.477920799226065501544948016880497639"),
+			expected: osmomath.MustNewBigDecFromStr("31964941472737.900293161392817774305123129525585219"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
+	runSqrtRoundingDecTestCase(t, "TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
 }
 
 func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
