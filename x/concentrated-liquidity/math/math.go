@@ -81,8 +81,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// This leads to a smaller error amplification. This only matters in cases where at least one of the sqrt prices is below 1.
 		// TODO (perf): Don't truncate after liq.MulRoundUp(diff), we actually scale by that in the next Quo
 		// TODO (perf): QuoRoundUpMut with no reallocation for internal scratch var.
-		// TODO (perf): Combine QuoRoundUpMut and CeilMut into one function.
-		return liq.MulRoundUp(diff).QuoRoundUpMut(sqrtPriceB).QuoRoundUpMut(sqrtPriceA).CeilMut()
+		return liq.MulRoundUp(diff).QuoRoundUpMut(sqrtPriceB).QuoRoundUpNextIntMut(sqrtPriceA)
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
