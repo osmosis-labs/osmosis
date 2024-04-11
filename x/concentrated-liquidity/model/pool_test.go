@@ -605,7 +605,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta:              defaultLiquidityDelta,
 			shouldTestRoundingInvariant: true,
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).Dec(),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).Dec(),
 			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, lowerSqrtPriceBigDec, true).Dec(),
 		},
 		"current in range, negative liquidity": {
@@ -614,7 +614,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).Dec(),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).Dec(),
 			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, lowerSqrtPriceBigDec, false).Dec(),
 		},
 		"current below range, positive liquidity": {
@@ -623,7 +623,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta,
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).Dec(),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).Dec(),
 			expectedAmount1: osmomath.ZeroDec(),
 		},
 		"current below range, negative liquidity": {
@@ -632,7 +632,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).Dec(),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).Dec(),
 			expectedAmount1: osmomath.ZeroDec(),
 		},
 		"current above range, positive liquidity": {

@@ -293,7 +293,7 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 		var isWithinDesiredBucketAfterSwap bool
 		if isZeroForOne {
 			// Round up so that we cross the tick by default.
-			curAmountIn := math.CalcAmount0Delta(osmomath.BigDecFromDec(currentLiquidity), curSqrtPrice, nextInitTickSqrtPrice, true).DecRoundUp()
+			curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).DecRoundUp()
 
 			amountIn = amountIn.Add(curAmountIn)
 
@@ -316,7 +316,7 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
 				// We discount by half so that we do no cross any tick and remain in the same bucket.
-				curAmountIn := math.CalcAmount0Delta(osmomath.BigDecFromDec(currentLiquidity), curSqrtPrice, nextInitTickSqrtPrice, true).QuoInt64(2).DecRoundUp()
+				curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).QuoInt64(2).DecRoundUp()
 				amountIn = amountIn.Add(curAmountIn)
 			}
 		} else {
@@ -409,7 +409,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 			}
 		} else {
 			// Round up so that we cross the tick by default.
-			curAmountOut := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false)
+			curAmountOut := math.CalcAmount0Delta(currentLiquidity.Dec(), curSqrtPrice, nextInitTickSqrtPrice, false)
 			amountOut = amountOut.Add(curAmountOut.Dec())
 
 			// The tick should be crossed if currentTick <= expectedTickToSwapTo, unless the intention
@@ -643,7 +643,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		if tickToSwapTo < nr1Position.lowerTick {
 			sqrtPriceLowerTickOne := s.tickToSqrtPrice(nr1Position.lowerTick)
 
-			amountZeroIn = math.CalcAmount0Delta(osmomath.BigDecFromDec(liquidity), sqrtPriceLowerTickOne, sqrtPriceStart, true).Dec()
+			amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceLowerTickOne, sqrtPriceStart, true).Dec()
 
 			sqrtPriceStart = sqrtPriceLowerTickOne
 
@@ -652,7 +652,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 		// This is the total amount necessary to cross the lower tick of narrow position.
 		// Note it is rounded up to ensure that the tick is crossed.
-		amountZeroIn = math.CalcAmount0Delta(osmomath.BigDecFromDec(liquidity), sqrtPriceTarget, sqrtPriceStart, true).DecRoundUp().Add(amountZeroIn)
+		amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).DecRoundUp().Add(amountZeroIn)
 
 		tokenZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.Ceil().TruncateInt())
 
@@ -1212,7 +1212,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 				// Since amount in is overestimated, this done in favor of the pool.
 				updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount1OutRoundingDown(nextSqrtPrice, liq.Dec(), amountOutDifference)
 				// Round up since we want to overestimate the amount in in favor of the pool.
-				return math.CalcAmount0Delta(liq, updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
+				return math.CalcAmount0Delta(liq.Dec(), updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
 			}
 
 			// Round up since we want to overestimate the change in sqrt price stemming from the amount out going left-to-right

@@ -57,7 +57,7 @@ func Liquidity1(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // CalcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
+func CalcAmount0Delta(liq osmomath.Dec, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
@@ -81,7 +81,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// This leads to a smaller error amplification. This only matters in cases where at least one of the sqrt prices is below 1.
 		// TODO (perf): Don't truncate after liq.MulRoundUp(diff), we actually scale by that in the next Quo. ALT: Switch liq to Dec
 		// TODO (perf): QuoRoundUpMut with no reallocation for internal scratch var.
-		return diff.MulRoundUp(liq).QuoRoundUpMut(sqrtPriceB).QuoRoundUpNextIntMut(sqrtPriceA)
+		return diff.MulRoundUpDec(liq).QuoRoundUpMut(sqrtPriceB).QuoRoundUpNextIntMut(sqrtPriceA)
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
@@ -89,7 +89,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// Each intermediary step is truncated at precision end to get a smaller final amount.
 	// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
 	// This leads to a smaller error amplification.
-	return diff.MulTruncate(liq).QuoTruncateMut(sqrtPriceB).QuoTruncateMut(sqrtPriceA)
+	return diff.MulTruncateDec(liq).QuoTruncateMut(sqrtPriceB).QuoTruncateMut(sqrtPriceA)
 }
 
 // CalcAmount1Delta takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
