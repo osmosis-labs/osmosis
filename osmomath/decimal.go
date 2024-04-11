@@ -489,6 +489,19 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// quotient, round up
+func (d BigDec) QuoByDecRoundUp(d2 Dec) BigDec {
+	mul := new(big.Int).Mul(d.i, precisionReuseSDKDec)
+
+	chopped, rem := mul.QuoRem(mul, d2.BigIntMut(), new(big.Int))
+	if rem.Sign() > 0 {
+		chopped.Add(chopped, oneInt)
+	}
+
+	assertMaxBitLen(chopped)
+	return BigDec{chopped}
+}
+
 // quotient, round up (mutative)
 func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
 	d.i.Mul(d.i, defaultBigDecPrecisionReuse)

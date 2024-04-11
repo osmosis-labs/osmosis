@@ -535,6 +535,11 @@ func (s *decimalTestSuite) TestArithmetic() {
 			s.Require().True(tc.expQuoRoundUp.Equal(resQuoRoundUp), "exp %v, res %v, tc %d",
 				tc.expQuoRoundUp.String(), resQuoRoundUp.String(), tcIndex)
 
+			resQuoRoundUpDec := tc.d1.QuoByDecRoundUp(tc.d2.Dec())
+			expResQuoRoundUpDec := tc.d1.QuoRoundUp(osmomath.BigDecFromDec(tc.d2.Dec()))
+			s.Require().True(expResQuoRoundUpDec.Equal(resQuoRoundUpDec), "exp %v, res %v, tc %d",
+				expResQuoRoundUpDec.String(), resQuoRoundUpDec.String(), tcIndex)
+
 			resQuoTruncate := tc.d1.QuoTruncate(tc.d2)
 			s.Require().True(tc.expQuoTruncate.Equal(resQuoTruncate), "exp %v, res %v, tc %d",
 				tc.expQuoTruncate.String(), resQuoTruncate.String(), tcIndex)
