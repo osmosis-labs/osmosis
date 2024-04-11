@@ -1239,10 +1239,10 @@ github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2 h1:3k4I3zCxdNP+mjhR7AtKr1PPu
 github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
-github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411090936-c4c24f07055b h1:xoqEpefWRr/5REEbrtBIswKMgrbOMVszAVO91qPBDE0=
-github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411090936-c4c24f07055b/go.mod h1:QgluPESktAZYPQHPwLU7woP0+VeUNCfZpjwoQJnqJr4=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411090936-c4c24f07055b h1:+zYuf/AGc9R9h3RiWQfgxnuEBtzLmnz0kdgw7K+JWAA=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411090936-c4c24f07055b/go.mod h1:QqH0gW3eEHooG/xCD0JFNgBpLPURn/JKn1+AC6Dicso=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411093700-2c528700ffb8 h1:69V6PWMnpphBgCU4HPAc3pg7ZYr3lPbfEx1wcQ9JY5U=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411093700-2c528700ffb8/go.mod h1:OYSoz1RjihXPt2VOKrLBHIeNuHyRMFCxFJQCuWeXxww=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411093700-2c528700ffb8 h1:eq5YyHIxN1uLWVxLjaCyzqtWP4xFaqFg8F1HAsKf2gQ=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411093700-2c528700ffb8/go.mod h1:Md+3fQfQQCR/IU0E0CbwGJ+Feu9NOSGhehkprBkNc94=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=

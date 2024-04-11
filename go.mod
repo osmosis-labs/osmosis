@@ -30,10 +30,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411090936-c4c24f07055b
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411090936-c4c24f07055b
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240411090936-c4c24f07055b
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240411090936-c4c24f07055b
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411093700-2c528700ffb8
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411093700-2c528700ffb8
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240411093700-2c528700ffb8
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240411093700-2c528700ffb8
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
