@@ -178,6 +178,53 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 	}
 }
 
+var interestingDecNumbers = []string{
+	"123456789012345678901234567890123456.123456789012345678",
+	"111111111111111111111111111111111111.111111111111111111",
+	"999999999999999999999999999999999999.999999999999999999",
+	"314159265358979323846264338327950288.419716939937510582", // Approximation of Pi
+	"161803398874989484820458683436563811.772030917980576286", // Approximation of Phi
+	"271828182845904523536028747135266249.775724709369995957", // Approximation of e
+	"101010101010101010101010101010101010.101010101010101010", // Binary pattern
+	"123456789987654321123456789987654321.123456789987654321", // Ascending and descending pattern
+	"112358132134558914423337761098715972.584418167651094617", // Inspired by Fibonacci sequence
+	"142857142857142857142857142857142857.142857142857142857", // Repeating decimal for 1/7
+}
+
+var interestingDecNumbersDec = []osmomath.Dec{}
+
+func init() {
+	for _, str := range interestingDecNumbers {
+		d, err := osmomath.NewDecFromStr(str)
+		if err != nil {
+			panic(fmt.Sprintf("error parsing decimal string %v: %v", str, err))
+		}
+		interestingDecNumbersDec = append(interestingDecNumbersDec, d)
+	}
+}
+
+func (s *decimalTestSuite) TestNewBigDecFromDecMulDec() {
+	type testcase struct {
+		s1, s2 osmomath.Dec
+	}
+	tests := []testcase{}
+	for _, d1 := range interestingDecNumbersDec {
+		for _, d2 := range interestingDecNumbersDec {
+			tests = append(tests, testcase{d1, d2})
+		}
+	}
+	for _, tc := range tests {
+		s.Run(fmt.Sprintf("d1=%v, d2=%v", tc.s1, tc.s2), func() {
+			s1D := osmomath.BigDecFromDec(tc.s1)
+			s2D := osmomath.BigDecFromDec(tc.s2)
+			expected := s1D.MulMut(s2D)
+			actual := osmomath.NewBigDecFromDecMulDec(tc.s1, tc.s2)
+			s.Require().True(expected.Equal(actual), "expected %v, got %v", expected, actual)
+		})
+	}
+	s.Require().True(len(tests) > 20)
+}
+
 func (s *decimalTestSuite) TestDecString() {
 	tests := []struct {
 		d    osmomath.BigDec

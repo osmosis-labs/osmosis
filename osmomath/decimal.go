@@ -174,6 +174,11 @@ func NewBigDecFromIntWithPrec(i BigInt, prec int64) BigDec {
 	}
 }
 
+func NewBigDecFromDecMulDec(a, b Dec) BigDec {
+	newBi := new(big.Int).Mul(a.BigIntMut(), b.BigIntMut())
+	return BigDec{newBi}
+}
+
 // create a decimal from an input decimal string.
 // valid must come in the form:
 //

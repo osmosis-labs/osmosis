@@ -62,13 +62,13 @@ func (s oneForZeroStrategy) GetSqrtTargetPrice(nextTickSqrtPrice osmomath.BigDec
 func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountOneInRemaining osmomath.Dec) (osmomath.BigDec, osmomath.Dec, osmomath.Dec, osmomath.Dec) {
 	// TODO: Change to Dec
 	liquidityBigDec := osmomath.BigDecFromDec(liquidity)
+	// TODO: Undo this cast, and do NewBigDecFromDecMulDec in line 72
 	amountOneInRemainingBigDec := osmomath.BigDecFromDec(amountOneInRemaining)
 
 	// Estimate the amount of token one needed until the target sqrt price is reached.
 	amountOneIn := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceTarget, sqrtPriceCurrent, true)
 
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
-	// TODO: Use MulTruncateDec
 	amountOneInRemainingLessSpreadReward := amountOneInRemainingBigDec.MulTruncate(oneBigDec.Sub(osmomath.BigDecFromDec(s.spreadFactor)))
 
 	var sqrtPriceNext osmomath.BigDec
