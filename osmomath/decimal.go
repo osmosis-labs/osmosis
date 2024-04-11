@@ -44,12 +44,14 @@ var (
 	squaredPrecisionReuse        = new(big.Int).Mul(defaultBigDecPrecisionReuse, defaultBigDecPrecisionReuse)
 	bigDecDecPrecisionFactorDiff = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision-DecPrecision), nil)
 
+	tenTimesPrecision   = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision+1), nil)
 	fivePrecision       = new(big.Int).Quo(defaultBigDecPrecisionReuse, big.NewInt(2))
 	fivePrecisionSDKDec = new(big.Int).Quo(precisionReuseSDKDec, big.NewInt(2))
 
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
+	fiveInt              = big.NewInt(5)
 	tenInt               = big.NewInt(10)
 
 	// log_2(e)
@@ -405,6 +407,7 @@ func (d BigDec) Quo(d2 BigDec) BigDec {
 // mutative quotient
 func (d BigDec) QuoMut(d2 BigDec) BigDec {
 	// multiply precision twice
+	// TODO: Use lower overhead thing here
 	d.i.Mul(d.i, squaredPrecisionReuse)
 
 	d.i.Quo(d.i, d2.i)
@@ -415,6 +418,7 @@ func (d BigDec) QuoMut(d2 BigDec) BigDec {
 }
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
+	// TODO: There is certainly more efficient ways to do this, come back later
 	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
 
 	quo := mul.Quo(mul, big.NewInt(d2))
@@ -476,7 +480,6 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 
 // quotient, round up (mutative)
 func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
-	// multiply precision twice
 	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
 	_, rem := d.i.QuoRem(d.i, d2.i, new(big.Int))
 
