@@ -171,8 +171,8 @@ func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent osmomath.BigDec,
 // When we swap for token zero in given token one out, the price is decrearing and we need to move the price down enough
 // so that we get the desired output amount out.
 // sqrt_next = sqrt_cur - token_out / liq
-func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
-	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUp(liquidity))
+func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent osmomath.BigDec, liquidity osmomath.Dec, amountOneRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
+	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoByDecRoundUp(liquidity))
 }
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1

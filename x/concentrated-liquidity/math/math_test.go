@@ -612,23 +612,23 @@ func TestGetNextSqrtPriceFromAmount1InRoundingDown(t *testing.T) {
 }
 
 func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
-	tests := map[string]sqrtRoundingTestCase{
+	tests := map[string]sqrtRoundingDecTestCase{
 		"rounded down at precision end": {
 			sqrtPriceCurrent: sqrt5000BigDec,
-			liquidity:        osmomath.MustNewBigDecFromStr("3035764687.503020836176699298"),
+			liquidity:        osmomath.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountRemaining:  osmomath.MustNewBigDecFromStr("8398"),
 			// round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
 			expected: osmomath.MustNewBigDecFromStr("70.710675352300682056656660729199999832"),
 		},
 		"no round up due zeroes at precision end": {
 			sqrtPriceCurrent: osmomath.MustNewBigDecFromStr("12.5"),
-			liquidity:        osmomath.MustNewBigDecFromStr("1"),
+			liquidity:        osmomath.MustNewDecFromStr("1"),
 			amountRemaining:  osmomath.MustNewBigDecFromStr("10"),
 			// round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
 			expected: osmomath.MustNewBigDecFromStr("2.5"),
 		},
 		"low price range": {
-			liquidity:        smallLiquidity,
+			liquidity:        smallLiquidity.Dec(),
 			sqrtPriceCurrent: sqrtANearMin,
 			amountRemaining:  smallValue,
 			// from clmath decimal import *
@@ -636,8 +636,8 @@ func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 			// While a negative sqrt price value is invalid and should be caught by the caller,
 			// we mostly focus on testing rounding behavior and math correctness at low spot prices.
 			// For the purposes of our test, this result is acceptable.
-			expected: osmomath.MustNewBigDecFromStr("-31964936923603.477920799226065453921424417717867010"),
+			expected: osmomath.MustNewBigDecFromStr("-31964941472737.900293161392817726681599530362954590"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
+	runSqrtRoundingDecTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
 }
