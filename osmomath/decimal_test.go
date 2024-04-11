@@ -179,27 +179,29 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 }
 
 var interestingDecNumbers = []string{
-	"123456789012345678901234567890123456.123456789012345678",
-	"111111111111111111111111111111111111.111111111111111111",
-	"999999999999999999999999999999999999.999999999999999999",
-	"314159265358979323846264338327950288.419716939937510582", // Approximation of Pi
-	"161803398874989484820458683436563811.772030917980576286", // Approximation of Phi
-	"271828182845904523536028747135266249.775724709369995957", // Approximation of e
-	"101010101010101010101010101010101010.101010101010101010", // Binary pattern
-	"123456789987654321123456789987654321.123456789987654321", // Ascending and descending pattern
-	"112358132134558914423337761098715972.584418167651094617", // Inspired by Fibonacci sequence
-	"142857142857142857142857142857142857.142857142857142857", // Repeating decimal for 1/7
+	"123456789012345678901234567890123456789012345678901234567890.123456789012345678901234567890123456",
+	"111111111111111111111111111111111111111111111111111111111111.111111111111111111111111111111111111",
+	"999999999999999999999999999999999999999999999999999999999999.999999999999999999999999999999999999",
+	"3141592653589793238462643383279502884197169399375105820974944.592307816406286208998628034825342117", // Approximation of Pi, extended
+	"1618033988749894848204586834365638117720309179805762862135448.622705260462818902449707207204189391", // Approximation of Phi, extended
+	"2718281828459045235360287471352662497757247093699959574966967.627724076630353547594571382178525166", // Approximation of e, extended
+	"101010101010101010101010101010101010101010101010101010101010.101010101010101010101010101010101010",  // Binary pattern extended
+	"1234567899876543210123456789987654321012345678998765432101234.567899876543210123456789987654321012", // Ascending and descending pattern extended
+	"1123581321345589144233377610987159725844181676510946173113801.986211915342546982272763642843251547", // Inspired by Fibonacci sequence, creatively adjusted
+	"1428571428571428571428571428571428571428571428571428571428571.428571428571428571428571428571428571", // Repeating decimal for 1/7 extended
 }
 
+var interestingDecNumbersBigDec = []osmomath.BigDec{}
 var interestingDecNumbersDec = []osmomath.Dec{}
 
 func init() {
 	for _, str := range interestingDecNumbers {
-		d, err := osmomath.NewDecFromStr(str)
+		d, err := osmomath.NewBigDecFromStr(str)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing decimal string %v: %v", str, err))
 		}
-		interestingDecNumbersDec = append(interestingDecNumbersDec, d)
+		interestingDecNumbersBigDec = append(interestingDecNumbersBigDec, d)
+		interestingDecNumbersDec = append(interestingDecNumbersDec, d.Dec())
 	}
 }
 
@@ -213,6 +215,7 @@ func (s *decimalTestSuite) TestNewBigDecFromDecMulDec() {
 			tests = append(tests, testcase{d1, d2})
 		}
 	}
+	s.Require().True(len(tests) > 20, "no tests to run")
 	for _, tc := range tests {
 		s.Run(fmt.Sprintf("d1=%v, d2=%v", tc.s1, tc.s2), func() {
 			s1D := osmomath.BigDecFromDec(tc.s1)
@@ -222,7 +225,26 @@ func (s *decimalTestSuite) TestNewBigDecFromDecMulDec() {
 			s.Require().True(expected.Equal(actual), "expected %v, got %v", expected, actual)
 		})
 	}
-	s.Require().True(len(tests) > 20)
+}
+
+func (s *decimalTestSuite) TestQuoRoundUpNextIntMut() {
+	type testcase struct {
+		s1, s2 osmomath.BigDec
+	}
+	tests := []testcase{}
+	for _, d1 := range interestingDecNumbersBigDec {
+		for _, d2 := range interestingDecNumbersBigDec {
+			tests = append(tests, testcase{d1, d2})
+		}
+	}
+	s.Require().True(len(tests) > 20, "no tests to run")
+	for _, tc := range tests {
+		s.Run(fmt.Sprintf("d1=%v, d2=%v", tc.s1, tc.s2), func() {
+			expected := tc.s1.QuoRoundUp(tc.s2).CeilMut()
+			actual := tc.s1.QuoRoundUpNextIntMut(tc.s2)
+			s.Require().True(expected.Equal(actual), "expected %v, got %v", expected, actual)
+		})
+	}
 }
 
 func (s *decimalTestSuite) TestDecString() {

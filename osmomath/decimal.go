@@ -492,6 +492,16 @@ func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
 	return BigDec{d.i}
 }
 
+// quotient, round up to next integer (mutative)
+func (d BigDec) QuoRoundUpNextIntMut(d2 BigDec) BigDec {
+	_, rem := d.i.QuoRem(d.i, d2.i, new(big.Int))
+
+	d.i = incBasedOnRem(rem, d.i)
+	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
+	assertMaxBitLen(d.i)
+	return BigDec{d.i}
+}
+
 // quotient
 func (d BigDec) QuoInt(i BigInt) BigDec {
 	mul := new(big.Int).Quo(d.i, i.i)
