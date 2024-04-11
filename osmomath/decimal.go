@@ -387,6 +387,14 @@ func (d BigDec) MulRoundUp(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// multiplication round up by Dec
+func (d BigDec) MulRoundUpDec(d2 Dec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.BigIntMut())
+	chopped := chopPrecisionAndRoundUpMut(mul, precisionReuseSDKDec)
+	assertMaxBitLen(chopped)
+	return BigDec{chopped}
+}
+
 // multiplication
 func (d BigDec) MulInt(i BigInt) BigDec {
 	mul := new(big.Int).Mul(d.i, i.i)
@@ -445,7 +453,6 @@ func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
 	// multiply bigDec precision
 	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
-
 	assertMaxBitLen(d.i)
 	return d
 }
