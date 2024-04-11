@@ -429,7 +429,6 @@ func (d BigDec) QuoRaw(d2 int64) BigDec {
 
 // quotient truncate
 func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
-	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
 	quo := mul.Quo(mul, d2.i)
 	assertMaxBitLen(quo)
