@@ -79,6 +79,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// The denominator is truncated to get a higher final amount.
 		// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
 		// This leads to a smaller error amplification. This only matters in cases where at least one of the sqrt prices is below 1.
+		// TODO (perf): Don't truncate after liq.MulRoundUp(diff), we actually scale by that in the next Quo
 		// TODO (perf): QuoRoundUpMut with no reallocation.
 		return liq.MulRoundUp(diff).QuoRoundUpMut(sqrtPriceB).QuoRoundUpMut(sqrtPriceA).CeilMut()
 	}
