@@ -426,12 +426,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	// Get paths to config.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
-
 	configParentDirPath := filepath.Join(rootDir, "config")
 	configFilePath := filepath.Join(configParentDirPath, "config.toml")
-
-	// Initialize default config
-	tmcConfig := tmcfg.DefaultConfig()
 
 	fileInfo, err := os.Stat(configFilePath)
 	if err != nil {
@@ -439,11 +435,6 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
 		}
-
-		// It does not exist, so we update the default config.toml to update
-		// We modify the default config.toml to have faster block times
-		// It will be written by server.InterceptConfigsPreRunHandler
-		tmcConfig.Consensus.TimeoutCommit = 2 * time.Second
 	} else {
 		// config.toml exists
 
