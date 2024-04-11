@@ -618,7 +618,7 @@ func (s *decimalTestSuite) TestApproxRoot() {
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)
 		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).AbsMut().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }
 

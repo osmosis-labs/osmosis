@@ -1283,6 +1283,7 @@ github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2 h1:3k4I3zCxdNP+mjhR7AtKr1PPu
 github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240409164616-caf6b6543d4b h1:hZQXid/cFL99otySUdTvbhA3Bvm7armJpg0eoYNWOVU=
 github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240409164616-caf6b6543d4b/go.mod h1:VVYCajgH7LwyzCt/5jpGLF6miIge14f+qffBnhQtHzg=
 github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0 h1:wAcm5rvcAMwSPFWgzUr/lR7U+e+4PvZ8fkehhpwiJho=
@@ -1291,6 +1292,16 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240409164616-caf6b6543d4b h1
 github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240409164616-caf6b6543d4b/go.mod h1:0Z9guabFPOQVHMNXmJ7TdqmRpEMPp4WmjztSErsFB2E=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240409164616-caf6b6543d4b h1:M+MaVJCPKMQHcZ54ODbMTyE0vPZXXtA9IopTGqRDWZY=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240409164616-caf6b6543d4b/go.mod h1:ULsY82IKYeDHry0MRMvzg/QG6wTzFLYZLhB1h+5yXUM=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240410095049-0ddea0b91fb3 h1:2FRCIC8gXSACn9SMmZivBXYdND/O/xrYK9rRzdY/fSY=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240410095049-0ddea0b91fb3/go.mod h1:I1Nw0VK1JOaZH5f0AFl4iFB2Qp2ckbH9a3Z4UZLpDbs=
+github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0 h1:wAcm5rvcAMwSPFWgzUr/lR7U+e+4PvZ8fkehhpwiJho=
+github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0/go.mod h1:5QdPU/ttG3dPeg1EtX/LVT7yuxdz3E+BXnEqxwgh+ec=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240410095049-0ddea0b91fb3 h1:UGxPvBFipIM8q3SJUYRjSP0+D/3Y8BkZGLvO+ov/fYs=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240410095049-0ddea0b91fb3/go.mod h1:N2+CB3wWEN/HmtWNK9DjAN1WGLgqeRiGjs+ZhK3RXdQ=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240410095049-0ddea0b91fb3 h1:QHtWt4M49bYH64Vy0DetURTtLGUIGWTpLOBIH9q/bhQ=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240410095049-0ddea0b91fb3/go.mod h1:C4/AaeluMrYxFehK61WGXVG7DvofFUyit7Xb0QKyQPA=
+>>>>>>> b56059e4 (BigDec operation speedups (#8006))
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 h1:mvkk1A/jIe+lsFFpRNfyd9UfvhagATdpnjy8K7kANeo=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
