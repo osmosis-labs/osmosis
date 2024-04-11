@@ -1219,7 +1219,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 			// Round up since we want to overestimate the change in sqrt price stemming from the amount out going left-to-right
 			// from the current sqrt price. This overestimated value is then used to calculate amount in charged on the user.
 			// Since amount in is overestimated, this is done in favor of the pool.
-			updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount0OutRoundingUp(nextSqrtPrice, liq, amountOutDifference)
+			updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount0OutRoundingUp(nextSqrtPrice, liq, amountOutDifference.Dec())
 			// Round up since we want to overestimate the amount in in favor of the pool.
 			return math.CalcAmount1Delta(liq.Dec(), updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
 		}
