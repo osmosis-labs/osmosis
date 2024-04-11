@@ -11,8 +11,13 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-go/v7 v7.3.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240409161506-a48ca4af185c
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.10-0.20240409161506-a48ca4af185c
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240410095049-0ddea0b91fb3
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240410095049-0ddea0b91fb3
+>>>>>>> b56059e4 (BigDec operation speedups (#8006))
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.61.1
 	google.golang.org/protobuf v1.32.0

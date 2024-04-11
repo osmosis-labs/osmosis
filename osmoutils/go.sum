@@ -1266,6 +1266,7 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
+<<<<<<< HEAD
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3 h1:HJItohXCYHMTd1x938+zpxswkzdKFikHPz9xkHFtpBk=
 github.com/osmosis-labs/cometbft v0.37.4-v23-osmo-3/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v23-osmo-9-iavl-v1 h1:cJfWAQHK2Em6cE5w3Uev3AysCvjenchKBuliiXjxcxg=
@@ -1280,6 +1281,22 @@ github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10 h1:s4Y1ZeOmQ+iTgODCbnuge0mcB
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.10/go.mod h1:G3FNk7hOfmKKHP5aaDShRi93i3c7s6jok+gPS7It9rI=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150 h1:z490JBjgVkvreJNeFE9es16rhc0rurM2GRhwqW0wEoY=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240328223248-ae061110b150/go.mod h1:H6XfDqE0PiUoIXaTTVipupfbrpz7Cu95jYbu2yYo6Tg=
+=======
+github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2 h1:3k4I3zCxdNP+mjhR7AtKr1PPuGR58CcVTMZN0aV/iL4=
+github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
+github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240410095049-0ddea0b91fb3 h1:2FRCIC8gXSACn9SMmZivBXYdND/O/xrYK9rRzdY/fSY=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240410095049-0ddea0b91fb3/go.mod h1:I1Nw0VK1JOaZH5f0AFl4iFB2Qp2ckbH9a3Z4UZLpDbs=
+github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0 h1:wAcm5rvcAMwSPFWgzUr/lR7U+e+4PvZ8fkehhpwiJho=
+github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0/go.mod h1:5QdPU/ttG3dPeg1EtX/LVT7yuxdz3E+BXnEqxwgh+ec=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240410095049-0ddea0b91fb3 h1:UGxPvBFipIM8q3SJUYRjSP0+D/3Y8BkZGLvO+ov/fYs=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240410095049-0ddea0b91fb3/go.mod h1:N2+CB3wWEN/HmtWNK9DjAN1WGLgqeRiGjs+ZhK3RXdQ=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240410095049-0ddea0b91fb3 h1:QHtWt4M49bYH64Vy0DetURTtLGUIGWTpLOBIH9q/bhQ=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240410095049-0ddea0b91fb3/go.mod h1:C4/AaeluMrYxFehK61WGXVG7DvofFUyit7Xb0QKyQPA=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 h1:mvkk1A/jIe+lsFFpRNfyd9UfvhagATdpnjy8K7kANeo=
+github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
+>>>>>>> b56059e4 (BigDec operation speedups (#8006))
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
