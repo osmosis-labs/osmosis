@@ -145,13 +145,13 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 // When we swap for token one in given token zero out, the price is increasing and we need to move the price up enough
 // so that we get the desired output amount out. Therefore, we round up.
 // sqrt_next = liq * sqrt_cur / (liq - token_out * sqrt_cur)
-func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amountZeroRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
+func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity osmomath.BigDec, amountZeroRemainingOut osmomath.Dec) (sqrtPriceNext osmomath.BigDec) {
 	if amountZeroRemainingOut.IsZero() {
 		return sqrtPriceCurrent
 	}
 
 	// mul round up to make the final denominator smaller and final result larger
-	product := amountZeroRemainingOut.MulRoundUp(sqrtPriceCurrent)
+	product := sqrtPriceCurrent.MulRoundUpDec(amountZeroRemainingOut)
 	denominator := liquidity.Sub(product)
 	// mul round up numerator to make the final result larger
 	// quo round up to make the final result larger
