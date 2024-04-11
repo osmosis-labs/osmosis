@@ -97,6 +97,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 // CalcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
 	// make sqrtPriceA the smaller value amongst sqrtPriceA and sqrtPriceB
+	// TODO: Remove this GT check and just do .AbsMut
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
