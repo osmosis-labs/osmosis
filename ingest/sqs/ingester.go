@@ -92,6 +92,16 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 		changedPools.ConcentratedPoolIDTickChange[poolID] = struct{}{}
 	}
 
+	// NOTE: we are failing to detect CW pool store updates which were noticed post-release.
+	// As a result, we push all of them every block.
+	// https://linear.app/osmosis/issue/STABI-103/push-updated-pools-into-sqs-instead-of-all-every-block
+	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
+	if err != nil {
+		return err
+	}
+
+	changedPools.CosmWasmPools = cosmWasmPools
+
 	// Process block by reading and writing data and ingesting data into sinks
 	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, changedPools)
 	if err != nil {
