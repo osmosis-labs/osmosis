@@ -164,7 +164,7 @@ func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amoun
 // avoid overpaying out of the pool. Therefore, we round down.
 // sqrt_next = sqrt_cur + token_in / liq
 func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent osmomath.BigDec, liquidity osmomath.Dec, amountOneRemainingIn osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
-	return sqrtPriceCurrent.Add(amountOneRemainingIn.QuoTruncateDec(liquidity))
+	return amountOneRemainingIn.QuoTruncateDec(liquidity).AddMut(sqrtPriceCurrent)
 }
 
 // GetNextSqrtPriceFromAmount1OutRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
