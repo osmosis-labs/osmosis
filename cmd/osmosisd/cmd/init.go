@@ -128,9 +128,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			// Get bip39 mnemonic and initialize node validator files
 			var mnemonic string
+			var err error
 			recover, _ := cmd.Flags().GetBool(FlagRecover)
 			if recover {
-				var err error
 				inBuf := bufio.NewReader(cmd.InOrStdin())
 				mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 				if err != nil {
@@ -165,7 +165,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				// If fail, generate a new genesis file
 				err := downloadGenesis(config)
 				if err != nil {
-					fmt.Println("Failed to download genesis file, using default")
+					// TODO: Maybe we should just fail in this case?
+					fmt.Println("Failed to download genesis file, using a random chain ID and genesis file for local testing")
 					genesisFileDownloadFailed = true
 					chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 				} else {
