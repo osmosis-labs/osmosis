@@ -2054,7 +2054,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 		s.Require().True(toTick > pool.GetCurrentTick())
 
-		amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
+		amountOneIn := math.CalcAmount1Delta(pool.GetLiquidity(), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
 		coinOneIn := sdk.NewCoin(denom1, amountOneIn.Dec().TruncateInt())
 
 		return coinOneIn

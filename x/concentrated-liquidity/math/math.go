@@ -96,7 +96,7 @@ func CalcAmount0Delta(liq osmomath.Dec, sqrtPriceA, sqrtPriceB osmomath.BigDec, 
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // CalcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
-func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
+func CalcAmount1Delta(liq osmomath.Dec, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
 	diff := sqrtPriceB.Sub(sqrtPriceA).AbsMut()
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we don't round at all
@@ -111,13 +111,14 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// Examples include:
 		// - calculating amountIn during swap
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
-		return diff.MulMut(liq).CeilMut()
+		// TODO: Make a MulDecCeilMut to save more internal ops
+		return diff.MulDecMut(liq).CeilMut()
 	}
 	// This is truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
 	// The denominator is rounded up to get a higher final amount.
-	return diff.MulTruncate(liq)
+	return diff.MulTruncateDec(liq)
 }
 
 // GetNextSqrtPriceFromAmount0InRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs

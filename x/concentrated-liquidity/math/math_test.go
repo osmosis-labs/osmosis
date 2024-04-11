@@ -267,7 +267,7 @@ func TestCalcAmount0Delta(t *testing.T) {
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func TestCalcAmount1Delta(t *testing.T) {
 	testCases := map[string]struct {
-		liquidity       osmomath.BigDec
+		liquidity       osmomath.Dec
 		sqrtPA          osmomath.BigDec
 		sqrtPB          osmomath.BigDec
 		exactEqual      bool
@@ -275,9 +275,9 @@ func TestCalcAmount1Delta(t *testing.T) {
 		amount1Expected osmomath.BigDec
 	}{
 		"round down": {
-			liquidity: osmomath.MustNewBigDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
-			sqrtPA:    sqrt5000BigDec,                                                 // 5000
-			sqrtPB:    sqrt4545BigDec,                                                 // 4545
+			liquidity: osmomath.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
+			sqrtPA:    sqrt5000BigDec,                                              // 5000
+			sqrtPB:    sqrt4545BigDec,                                              // 4545
 			roundUp:   false,
 			// calculated with x/concentrated-liquidity/python/clmath.py
 			amount1Expected: osmomath.MustNewBigDecFromStr("4999999999.999999999999999999696837821702147054"),
@@ -292,7 +292,7 @@ func TestCalcAmount1Delta(t *testing.T) {
 			// min_sqrt_p = Decimal("0.000000152731791058")
 			// liq = Decimal("931361973132462178951297")
 			// liq * (max_sqrt_p - min_sqrt_p)
-			liquidity: osmomath.MustNewBigDecFromStr("931361973132462178951297"),
+			liquidity: osmomath.MustNewDecFromStr("931361973132462178951297"),
 			// price: 0.000000000000023327
 			sqrtPA: osmomath.MustNewBigDecFromStr("0.000000152731791058"),
 			// price: 952361284325389721913
@@ -311,7 +311,7 @@ func TestCalcAmount1Delta(t *testing.T) {
 			// min_sqrt_p = Decimal("0.000000152731791058")
 			// liq = Decimal("931361973132462178951297")
 			// liq * (max_sqrt_p - min_sqrt_p)
-			liquidity: osmomath.MustNewBigDecFromStr("931361973132462178951297"),
+			liquidity: osmomath.MustNewDecFromStr("931361973132462178951297"),
 			// price: 0.000000000000023327
 			sqrtPA: osmomath.MustNewBigDecFromStr("0.000000152731791058"),
 			// price: 952361284325389721913
@@ -320,24 +320,24 @@ func TestCalcAmount1Delta(t *testing.T) {
 			amount1Expected: osmomath.MustNewBigDecFromStr("28742157707995443393876876754535992.801567623738751734").Ceil(), // round up at precision end.
 		},
 		"low price range (no round up)": {
-			liquidity: smallLiquidity,
+			liquidity: smallLiquidity.Dec(),
 			sqrtPA:    sqrtANearMin,
 			sqrtPB:    sqrtBNearMin,
 			roundUp:   false,
 			// from clmath decimal import *
 			// from math import *
 			// calc_amount_one_delta(liq, sqrtPriceA, sqrtPriceB, False)
-			amount1Expected: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000103787162"),
+			amount1Expected: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000103787148"),
 		},
 		"low price range (with round up)": {
-			liquidity: smallLiquidity,
+			liquidity: smallLiquidity.Dec(),
 			sqrtPA:    sqrtANearMin,
 			sqrtPB:    sqrtBNearMin,
 			roundUp:   true,
 			// from clmath decimal import *
 			// calc_amount_one_delta(liq, sqrtPriceA, sqrtPriceB, False)
-			// Actual result: 0.000000000000000000000000000103787163
-			amount1Expected: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000103787163").Ceil(),
+			// Actual result: 0.000000000000000000000000000103787149
+			amount1Expected: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000103787149").Ceil(),
 		},
 	}
 

@@ -574,8 +574,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			return sqrtPrice
 		}
 
-		defaultLiquidityDelta       = osmomath.NewDec(1000)
-		defaultLiquidityDeltaBigDec = osmomath.NewBigDec(1000)
+		defaultLiquidityDelta = osmomath.NewDec(1000)
 
 		lowerTick            = int64(-99)
 		lowerSqrtPriceBigDec = tickToSqrtPrice(lowerTick)
@@ -606,7 +605,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			shouldTestRoundingInvariant: true,
 
 			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).Dec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, lowerSqrtPriceBigDec, true).Dec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, midSqrtPriceBigDec, lowerSqrtPriceBigDec, true).Dec(),
 		},
 		"current in range, negative liquidity": {
 			currentTick:    midtick,
@@ -615,7 +614,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
 			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).Dec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, lowerSqrtPriceBigDec, false).Dec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), midSqrtPriceBigDec, lowerSqrtPriceBigDec, false).Dec(),
 		},
 		"current below range, positive liquidity": {
 			currentTick:    lowerTick,
@@ -642,7 +641,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta,
 
 			expectedAmount0: osmomath.ZeroDec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, lowerSqrtPriceBigDec, midSqrtPriceBigDec, true).Dec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, lowerSqrtPriceBigDec, midSqrtPriceBigDec, true).Dec(),
 		},
 		"current above range, negative liquidity": {
 			currentTick:    uppertick,
@@ -651,7 +650,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
 			expectedAmount0: osmomath.ZeroDec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), lowerSqrtPriceBigDec, midSqrtPriceBigDec, false).Dec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), lowerSqrtPriceBigDec, midSqrtPriceBigDec, false).Dec(),
 		},
 
 		// errors
