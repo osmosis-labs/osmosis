@@ -480,10 +480,7 @@ func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
 	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
 	_, rem := d.i.QuoRem(d.i, d2.i, new(big.Int))
 
-	if rem.Sign() > 0 {
-		d.i.Add(d.i, oneInt)
-	}
-
+	d.i = incBasedOnRem(rem, d.i)
 	assertMaxBitLen(d.i)
 	return BigDec{d.i}
 }
