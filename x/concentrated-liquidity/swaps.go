@@ -53,8 +53,11 @@ type SwapState struct {
 	// Global spread reward growth per-current swap.
 	// Initialized to zero.
 	// Updated after every swap step.
+	// This value is persisted in the pool's tick accumulators.
 	globalSpreadRewardGrowthPerUnitLiquidity osmomath.Dec
-	// global spread reward growth
+
+	// Global spread reward growth
+	// Is used to determine how much the user sends to the spread reward address.
 	globalSpreadRewardGrowth osmomath.Dec
 
 	swapStrategy swapstrategy.SwapStrategy
@@ -128,6 +131,9 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmo
 	}
 
 	// Update global spread reward growth with the UNSCALED total
+	// We could scale this up, but we would need to scale it right back down at the end of the swap.
+	// The globalSpreadRewardGrowth is used to determine how much the user sends to the spread reward address,
+	// and is not persisted in the pool's tick accumulators.
 	ss.globalSpreadRewardGrowth = ss.globalSpreadRewardGrowth.Add(spreadRewardChargeTotal)
 
 	// If liquidity is zero, return early to avoid division by zero
@@ -460,7 +466,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 
 		if updateAccumulators {
-			// Update the spread reward growth for the entire swap using the total spread factors charged.
+			// Calculate the spread reward growth for the entire swap using the total spread factors charged, scaling the spread reward by the scaling factor.
 			scaledSpreadFactorsAccruedPerUnitOfLiquidity, err := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge, scalingFactor)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
@@ -603,6 +609,7 @@ func (k Keeper) computeInAmtGivenOut(
 		}
 
 		if updateAccumulators {
+			// Calculate the spread reward growth for the entire swap using the total spread factors charged, scaling the spread reward by the scaling factor.
 			scaledSpreadFactorsAccruedPerUnitOfLiquidity, err := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, scalingFactor)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
