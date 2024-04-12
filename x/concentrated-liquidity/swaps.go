@@ -425,9 +425,13 @@ func (k Keeper) computeOutAmtGivenIn(
 		return SwapResult{}, PoolUpdates{}, err
 	}
 
-	scalingFactor, err := k.getSpreadFactorScalingFactorForPool(ctx, poolId)
-	if err != nil {
-		return SwapResult{}, PoolUpdates{}, err
+	scalingFactor := oneDec
+	if updateAccumulators {
+		// We only need the scaling factor if we are updating the accumulators
+		scalingFactor, err = k.getSpreadFactorScalingFactorForPool(ctx, poolId)
+		if err != nil {
+			return SwapResult{}, PoolUpdates{}, err
+		}
 	}
 
 	// initialize swap state with the following parameters:
@@ -570,9 +574,13 @@ func (k Keeper) computeInAmtGivenOut(
 		return SwapResult{}, PoolUpdates{}, err
 	}
 
-	scalingFactor, err := k.getSpreadFactorScalingFactorForPool(ctx, poolId)
-	if err != nil {
-		return SwapResult{}, PoolUpdates{}, err
+	scalingFactor := oneDec
+	if updateAccumulators {
+		// We only need the scaling factor if we are updating the accumulators
+		scalingFactor, err = k.getSpreadFactorScalingFactorForPool(ctx, poolId)
+		if err != nil {
+			return SwapResult{}, PoolUpdates{}, err
+		}
 	}
 
 	// initialize swap state with the following parameters:
