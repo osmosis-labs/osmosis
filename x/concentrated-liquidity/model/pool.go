@@ -125,7 +125,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 	if baseAssetDenom == p.Token0 {
 		return osmomath.BigDecFromDecMut(priceSquared.Dec()), nil
 	}
-	return osmomath.BigDecFromDecMut(osmomath.OneBigDec().Quo(priceSquared).Dec()), nil
+	return osmomath.BigDecFromDecMut(osmomath.OneBigDec().QuoMut(priceSquared).Dec()), nil
 }
 
 // GetToken0 returns the token0 of the pool

@@ -1247,6 +1247,11 @@ func (d BigDec) PowerInteger(power uint64) BigDec {
 func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 	if power == 0 {
 		return OneBigDec()
+	} else if power == 1 {
+		return d
+	} else if power == 2 {
+		// save a oneBigDec allocation
+		return d.MulMut(d)
 	}
 	tmp := OneBigDec()
 
