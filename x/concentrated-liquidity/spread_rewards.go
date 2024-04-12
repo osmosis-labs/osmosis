@@ -276,7 +276,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		forfeitedDust = forfeitedDustScaled
 	} else {
 		// If the scaling factor is not 1, we scale down the spread rewards, and calculate the forfeited dust
-		// from the scaled down spread rewards (disregarding the forfeited dust calculated in the previous step).
+		// from the scaled down spread rewards, and disregard the forfeited dust calculated in the previous step.
 		for _, coin := range spreadRewardsClaimedScaled {
 			scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
 			if !scaledCoinAmt.IsZero() {
