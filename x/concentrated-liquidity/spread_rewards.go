@@ -254,7 +254,9 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	spreadRewardsClaimedScaled, forfeitedDustScaled, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
+	// We throw away the dust return value here, because the spreadRewardsClaimedScaled is going to be scaled down later in this method,
+	// and the dust from that scaling down will be added back to the global accumulator.
+	spreadRewardsClaimedScaled, _, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
@@ -268,18 +270,19 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	// However, once we compute the total for the liquidity entitlement, we must scale it back down.
 	// We always truncate down in the pool's favor.
 	spreadRewardsClaimed := sdk.NewCoins()
+	forfeitedDust := sdk.DecCoins{}
 	for _, coin := range spreadRewardsClaimedScaled {
 		scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
 		if !scaledCoinAmt.IsZero() {
 			spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
 		}
 		if !truncatedAmt.IsZero() {
-			forfeitedDustScaled = forfeitedDustScaled.Add(sdk.NewDecCoinFromDec(coin.Denom, truncatedAmt))
+			forfeitedDust = forfeitedDust.Add(sdk.NewDecCoinFromDec(coin.Denom, truncatedAmt))
 		}
 	}
 
 	// add forfeited dust back to the global accumulator
-	if !forfeitedDustScaled.IsZero() {
+	if !forfeitedDust.IsZero() {
 		// Refetch the spread reward accumulator as the number of shares has changed after claiming.
 		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 		if err != nil {
@@ -292,7 +295,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
-			forfeitedDustScaledPerShare := forfeitedDustScaled.QuoDecTruncate(totalSharesRemaining)
+			forfeitedDustScaledPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
 			spreadRewardAccumulator.AddToAccumulator(forfeitedDustScaledPerShare)
 		}
 	}
