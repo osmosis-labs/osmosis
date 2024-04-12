@@ -254,9 +254,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	// We throw away the dust return value here, because the spreadRewardsClaimedScaled is going to be scaled down later in this method,
-	// and the dust from that scaling down will be added back to the global accumulator.
-	spreadRewardsClaimedScaled, _, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
+	spreadRewardsClaimedScaled, forfeitedDustScaled, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
@@ -271,13 +269,22 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	// We always truncate down in the pool's favor.
 	spreadRewardsClaimed := sdk.NewCoins()
 	forfeitedDust := sdk.DecCoins{}
-	for _, coin := range spreadRewardsClaimedScaled {
-		scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
-		if !scaledCoinAmt.IsZero() {
-			spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
-		}
-		if !truncatedAmt.IsZero() {
-			forfeitedDust = forfeitedDust.Add(sdk.NewDecCoinFromDec(coin.Denom, truncatedAmt))
+	if spreadFactorScalingFactor.Equal(sdk.OneDec()) {
+		// If the scaling factor is 1, we don't need to scale down the spread rewards.
+		// We also use the forfeited dust calculated in the previous step as it is already scaled down.
+		spreadRewardsClaimed = spreadRewardsClaimedScaled
+		forfeitedDust = forfeitedDustScaled
+	} else {
+		// If the scaling factor is not 1, we scale down the spread rewards, and calculate the forfeited dust
+		// from the scaled down spread rewards (disregarding the forfeited dust calculated in the previous step).
+		for _, coin := range spreadRewardsClaimedScaled {
+			scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
+			if !scaledCoinAmt.IsZero() {
+				spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
+			}
+			if !truncatedAmt.IsZero() {
+				forfeitedDust = forfeitedDust.Add(sdk.NewDecCoinFromDec(coin.Denom, truncatedAmt))
+			}
 		}
 	}
 
