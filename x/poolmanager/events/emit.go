@@ -5,9 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 )
 
+// Emit swap event. Note that we emit these at the layer of each pool module rather than the poolmanager module
+// since poolmanager has many swap wrapper APIs that we would need to consider.
+// Search for references to this function to see where else it is used.
+// Each new pool module will have to emit this event separately
 func EmitSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	ctx.EventManager().EmitEvents(sdk.Events{
 		newSwapEvent(sender, poolId, input, output),

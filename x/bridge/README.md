@@ -4,6 +4,7 @@
 
 This README provides a detailed outline of the bridging mechanism implementation, which facilitates cross-chain asset transfers between Osmosis and various external chains. The mechanism aims to integrate Osmosis with other blockchains, beginning with the BTC network. The primary objective is to enable decentralized cross-chain asset transfers, seamlessly connecting Osmosis with other blockchain ecosystems.
 
+
 ## Contents
 
 * **[Concepts](#concepts)**
@@ -13,26 +14,21 @@ This README provides a detailed outline of the bridging mechanism implementation
   * **[Asset](#asset)**
   * **[Minting and burning](#minting-and-burning)**
   * **[Votes](#votes)**
+  * **[Rate limiting](#rate-limiting)**
+  * **[Quarantine](#quarantine)**
   * **[Validator fee](#validator-fee)**
   * **[Refunds](#refunds)**
 * **[Design](#design)**
   * **[Inbound transfers](#inbound-transfers)**
   * **[Outbound transfers](#outbound-transfers)**
   * **[Observer](#observer-1)**
+  * **[Quarantine](#quarantine-1)**
+  * **[Validators reviving](#validator-reviving)**
 * **[State](#state)**
-  * **[Inbound transfer](#inbound-transfer)**
-  * **[Finalized transfer](#finalized-transfer)**
-  * **[Last transfer height](#last-transfer-height)**
-  * **[Params](#params)**
 * **[Query Server](#query-server)**
-  * **[QueryParams](#params-1)**
-  * **[QueryLastTransferHeight](#lasttransferheight)**
 * **[Message Server](#message-server)**
-  * **[InboundTransfer](#inboundtransfer)**
-  * **[OutboundTransfer](#outboundtransfer)**
-  * **[UpdateParams](#updateparams)**
-  * **[ChangeAssetStatus](#changeassetstatus)**
 * **[Events](#events)**
+
 
 ## Concepts
 
@@ -52,8 +48,8 @@ The **Observer**, running as part of the `osmosisd` binary, operates exclusively
 
 * **External Chain Observers**: One for each chain, these observers track all transactions occurring within the vault. Upon identifying a valid transaction (e.g., one with the correct memo), they facilitate its transfer to Osmosis.
 * **External Chain Clients**: One for each chain, these clients communicate with external chains, allowing the **observer** to perform transfers and other supporting operations.
-* **Osmosis Observer**: This observer monitors all tx results on Osmosis, focusing only on relevant ones such as **MsgOutboundTransfer**.
-* **Osmosis Client**: The client helps perform method calls to Osmosis such as triggering **MsgInboundTransfer**.
+* **Osmosis Observer**: This observer monitors all tx results on Osmosis, focusing only on relevant ones, such as **MsgOutboundTransfer**.
+* **Osmosis Client**: The client helps perform method calls to Osmosis, such as triggering **MsgInboundTransfer**.
 * **TSS Signer**: This component manages outbound transfers from Osmosis. It handles the signing of these transfers and selects a leader to broadcast them.
 
 _Additional components are to be determined._
@@ -97,6 +93,18 @@ The transfer process is straightforward:
 * When the `x/bridge` module receives an inbound transfer, it starts accumulating votes for this transfer. Once the vote threshold is met, it employs the tokenfactory's [Mint](../tokenfactory/README.md#mint) method to mint the appropriate amount of coins for the destination address.
 * For an outbound transfer, the `x/bridge` module uses the tokenfactory's [Burn](../tokenfactory/README.md#burn) method to burn the specified amount of coins from the sender's address. Subsequently, an **EventOutboundTransfer** event is emitted and handled by the **super valset** through the **observer**.
 
+### Rate limiting
+
+**Rate limiting** is a strategy used to restrict the amount of incoming volume over a specified period of time. For instance, consider a scenario where the limit is set to 5 BTC every day. Should the module receive more than 5 BTC within this 24-hours timeframe, any excess volume above the permitted amount would not be minted and instead be placed in **quarantine** (for more details, please see the [Quarantine](#quarantine) section). This approach is crucial for ensuring chain security, as it prevents the system from being overwhelmed by excessive, uncontrolled minting. Essentially, rate limiting acts as a safeguard, setting a maximum on potential losses the chain might incur due to unforeseen malicious activities.
+
+### Quarantine
+
+The **quarantine** mechanism ensures the smooth handling of inbound transfers, even during periods when asset activity is paused due to rate limiting, maintenance, or other factors that might otherwise halt the minting process.
+
+The **quarantine** solves the following problem: when the module is unable to process transfers for reasons like exceeding rate limits, maintenance shutdowns, or other transfer-blocking circumstances, it cannot accept new transfers. For outbound transfers, this is straightforward, as new requests are simply rejected with an error message. However, managing inbound transfers is more complex. Users perceive inbound transfers as transactions to the dedicated **vault**, and since the incoming flow on external chains can't be directly controlled, users might continue sending transfers irrespective of module availability.
+
+Refunding these transfers could be an option, but it's neither efficient nor entirely secure. Therefore, the **quarantine** approach is employed. Transfers that cannot be minted immediately are placed in the **quarantine**, to be processed at a later, more suitable time. Crucially, **quarantine** does not block transfers; it merely defers them. This process is transparent, informing users that their transfers are delayed but will be processed as soon as conditions allow.
+
 ### Validator fee
 
 _To be determined._
@@ -104,6 +112,7 @@ _To be determined._
 ### Refunds
 
 _To be determined._
+
 
 ## Design
 
@@ -126,6 +135,8 @@ The following provides a high-level overview of the transfer design. For more in
 
 ![inbound_transfers](images/inbound_transfer.png)
 
+As a security precaution, all non-finalized transfers are recorded in the state using a `external_id | external_height` composite key during the vote accumulation phase. This approach is designed to guard against the potential of malicious validators submitting transfers with incorrect `external_height` values. Essentially, a transfer entry that has an incorrect `external_height` is unlikely to receive sufficient confirmations, and as a result, it will not reach the finalization stage.
+
 ### Outbound transfers
 
 1. The transfer process begins when the client invokes the **OutboundTransfer** method via the message server.
@@ -143,6 +154,75 @@ The following provides a high-level overview of the transfer design. For more in
 _Detailed description is to be done._
 
 ![observer](images/observer.png)
+
+### Quarantine
+
+The **quarantining** might be initiated right after an inbound transfer reaches the required number of votes for processing. When a transfer receives the final necessary vote, the module evaluates it against the asset's rate limits. If the transfer exceeds these limits, it is added to the end of the quarantine queue. This queue can be activated for processing through a governance proposal. Notably, **quarantining** allows for partial execution: if a part of the transfer falls within the rate limits, that portion will be minted, while the remainder goes into the queue.
+
+There are two methods for managing quarantined assets:
+
+* Simply storing the queue in the state. Here, if rate limits are exceeded, the coins are added to the state queue without minting. Upon release, the tokenfactory's Mint function is called for the relevant addresses.
+* Minting all coins to a special **quarantine** address (not the destination address) immediately after finalization. The coins are then transferred to their intended addresses upon release following a governance proposal. This method still requires the state queue, but operations are based solely on straightforward transfers. It also offers a transparent view of the **quarantine**, represented by a dedicated **quarantine** vault on Osmosis.
+
+![quarantine](images/quarantine.png)
+
+For **quarantining**, a queue is utilized instead of a map to allow sequential execution of transfers and to potentially filter out malicious transactions. To better understand the difference, consider the following example.
+
+Suppose transfers are stored in a map. In this case, when releasing assets from the **quarantining** vault, the only available figure is the total volume of transfers to addresses, as depicted in the following diagram:
+
+```text
+Alice_destination_addr -> 9 + 7 + 3 = 19
+...
+Bob_destination_addr   -> 1 + 2 = 3
+...
+```
+
+Conversely, when using a queue, the same data might be represented as follows:
+
+```text
+[
+  {
+    dest  : Alice_destination_addr
+    amount: 9
+    height: 2
+  }
+  {
+    dest  : Alice_destination_addr
+    amount: 7
+    height: 1
+  }
+  {
+    dest  : Alice_destination_addr
+    amount: 3
+    height: 6
+  }
+  ...
+  
+  {
+    dest  : Bob_destination_addr
+    amount: 1
+    height: 2
+  }
+  {
+    dest  : Bob_destination_addr
+    amount: 2
+    height: 8
+  }
+  ...
+]
+```
+
+Imagine the module detects unusual activity at height 6. It could then decide to mint all coins except those associated with that specific height. It's important to note that the order of elements in the queue is not significant. The queue is merely a practical data structure for storage purposes.
+
+While the queue cannot eliminate all malicious transfers, it can help segregate them and make them less harmful. As a security measure, periodically matching the total supply of minted assets with the balances in external vaults can help identify fraudulent activity.
+
+### Validator reviving
+
+The module uses a combination of the finalization flag and the last transfer height value to ensure that validators can join the valset at any time and begin processing transfers from any height without compromising the integrity of the bridging process.
+
+The last transfer height is crucial for coordinating validators, guiding them to the appropriate starting point for their observations. Validators have the option to rely on this module's height value or to use their own local height checkpoints for starting or continuing observation. The last transfer height, linked to each asset, is updated whenever a transfer involving the asset occurs, calculated as `max(current_last_height, new_last_height)`, where `current_last_height` is the value from the state, and `new_last_height` is obtained during finalizing the transfer. This is necessary because the module cannot ensure a sequential order for processing transfers.
+
+Despite validators having the flexibility to start observing from any height, it doesn't pose a risk to the module's operations. This is because transfers that have already been finalized will not trigger the finalization again, thereby maintaining the system's integrity.
 
 
 ## State
@@ -245,11 +325,15 @@ message AssetID {
 message Asset {
   // ID is the asset's primary key
   AssetID id = 1
-  [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
+      [ (gogoproto.moretags) = "yaml:\"id\"", (gogoproto.nullable) = false ];
   // Status is a current status of the asset
   AssetStatus status = 2 [ (gogoproto.moretags) = "yaml:\"status\"" ];
   // Exponent represents the power of 10 used for coin representation
   uint64 exponent = 3 [ (gogoproto.moretags) = "yaml:\"exponent\"" ];
+  // ExternalConfirmations is a number of the confirmations on the external
+  // chain needed to consider the transfer confirmed
+  uint64 external_confirmations = 4
+      [ (gogoproto.moretags) = "yaml:\"external_confirmations\"" ];
 }
 
 enum AssetStatus {
@@ -260,6 +344,7 @@ enum AssetStatus {
   ASSET_STATUS_BLOCKED_BOTH = 4;
 }
 ```
+
 
 ## Query server
 
@@ -282,7 +367,7 @@ message QueryParamsResponse {
 
 ### LastTransferHeight
 
-This method allows to get the last transfer height for the provided asset.
+This method allows getting the last transfer height for the provided asset.
 
 ```protobuf
 // LastTransferHeightRequest is the request type for the
@@ -302,11 +387,12 @@ message LastTransferHeightResponse {
 }
 ```
 
+
 ## Message server
 
 ### InboundTransfer
 
-Each validator invokes this method when processing the **MsgInboundTransfer** message. This message contains all information about the transfer, including the unique primary key from the external chain, such as the Bitcoin transaction hash, and the external chain height at which the transfer was witnessed. Can be called only by the members of the **super valset**.
+Each validator invokes this method when processing the **MsgInboundTransfer** message. This message contains all information about the transfer, including the unique primary key from the external chain, such as the Bitcoin transaction hash, and the external chain height at which the transfer was witnessed. This method can be called only by the members of the **super valset**.
 
 ```protobuf
 // MsgInboundTransfer defines the message structure for the InboundTransfer gRPC
@@ -403,7 +489,7 @@ message MsgUpdateParams {
 
 ### ChangeAssetStatus
 
-This method allows to update the status of the given asset. Only members of the **super valset** can invoke this method.
+This method allows updating the status of the given asset. Only members of the **super valset** can invoke this method.
 
 ```protobuf
 // MsgChangeAssetStatus changes the status of the provided asset.
@@ -422,6 +508,7 @@ message MsgChangeAssetStatus {
   AssetStatus new_status = 3 [ (gogoproto.moretags) = "yaml:\"new_status\"" ];
 }
 ```
+
 
 ## Events
 

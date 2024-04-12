@@ -1,10 +1,10 @@
-package poolsingester_test
+package poolstransformer_test
 
 import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolsingester "github.com/osmosis-labs/osmosis/v23/ingest/sqs/pools/ingester"
+	poolstransformer "github.com/osmosis-labs/osmosis/v24/ingest/sqs/pools/transformer"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 
 // Tests that the taker fee is correctly retrieved for the given denoms
 // and the map is correctly mutated.
-func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
+func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 	type denomPairTakerFee struct {
 		denomPair sqsdomain.DenomPair
 		takerFee  osmomath.Dec
@@ -150,7 +150,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 				s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, takerFeePair.denomPair.Denom0, takerFeePair.denomPair.Denom1, takerFeePair.takerFee)
 			}
 
-			err := poolsingester.RetrieveTakerFeeToMapIfNotExists(s.Ctx, tc.denoms, tc.denomPairToTakerFeeMap, s.App.PoolManagerKeeper)
+			err := poolstransformer.RetrieveTakerFeeToMapIfNotExists(s.Ctx, tc.denoms, tc.denomPairToTakerFeeMap, s.App.PoolManagerKeeper)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -164,7 +164,7 @@ func (s *IngesterTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 }
 
 // Sets default poolmanager taker fee
-func (s *IngesterTestSuite) setDefaultPoolManagerTakerFee() {
+func (s *PoolTransformerTestSuite) setDefaultPoolManagerTakerFee() {
 	poolmanagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolmanagerParams.TakerFeeParams.DefaultTakerFee = defaultPoolManagerTakerFee
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolmanagerParams)

@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -365,8 +365,6 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 		}
 		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), true)
-
-		node.DepositProposal(propNumber, false)
 
 		chain.AllValsVoteOnProposal(chainConfig, propNumber)
 	}

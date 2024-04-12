@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 const (
@@ -24,8 +24,6 @@ var (
 	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
 	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
 	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
-
-	OneDecScalingFactor = oneDecScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -336,6 +334,10 @@ func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 	return k.setPoolHookContract(ctx, poolID, actionPrefix, cosmwasmAddress)
 }
 
+func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	return k.getIncentiveScalingFactorForPool(ctx, poolID)
+}
+
 func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBuilderFn func(poolId uint64) ([]byte, error), poolId uint64, actionPrefix string) (err error) {
 	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, actionPrefix)
 }
@@ -350,10 +352,6 @@ func ScaleUpTotalEmittedAmount(totalEmittedAmount osmomath.Dec, scalingFactor os
 
 func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
 	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
-}
-
-func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
-	return k.getIncentiveScalingFactorForPool(ctx, poolID)
 }
 
 func ScaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {

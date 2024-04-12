@@ -6,8 +6,8 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 var (
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			suite.SetupTest()
+			suite.SetupNoPools()
 
 			commAccount := suite.App.AppKeepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
 			commBalanceBefore := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, commAccount, tc.denom)

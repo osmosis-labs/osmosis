@@ -6,10 +6,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
@@ -242,6 +243,12 @@ func (k Keeper) SwapExactAmountIn(
 		return osmomath.Int{}, err
 	}
 
+	// Emit swap event. Note that we emit these at the layer of each pool module rather than the poolmanager module
+	// since poolmanager has many swap wrapper APIs that we would need to consider.
+	// Search for references to this function to see where else it is used.
+	// Each new pool module will have to emit this event separately
+	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{sdk.Coin{Denom: tokenOutDenom, Amount: response.TokenOutAmount}})
+
 	return response.TokenOutAmount, nil
 }
 
@@ -342,6 +349,12 @@ func (k Keeper) SwapExactAmountOut(
 			return osmomath.Int{}, err
 		}
 	}
+
+	// Emit swap event. Note that we emit these at the layer of each pool module rather than the poolmanager module
+	// since poolmanager has many swap wrapper APIs that we would need to consider.
+	// Search for references to this function to see where else it is used.
+	// Each new pool module will have to emit this event separately
+	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{sdk.Coin{Denom: tokenInDenom, Amount: response.TokenInAmount}}, sdk.Coins{tokenOut})
 
 	return response.TokenInAmount, nil
 }

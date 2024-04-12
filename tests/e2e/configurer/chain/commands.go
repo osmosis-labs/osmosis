@@ -16,13 +16,13 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/util"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,7 +31,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
 
-	app "github.com/osmosis-labs/osmosis/v23/app"
+	app "github.com/osmosis-labs/osmosis/v24/app"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
@@ -392,18 +392,6 @@ func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords s
 	return n.SubmitProposal(cmd, isExpedited, "tick spacing reduction proposal", isLegacy)
 }
 
-func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
-	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinDepositValue)).String()
-	if isExpedited {
-		deposit = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinExpeditedDepositValue)).String()
-	}
-	cmd := []string{"osmosisd", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully deposited on proposal %d", proposalNumber)
-}
-
 func (n *NodeConfig) VoteYesProposal(from string, proposalNumber int) {
 	n.LogActionF("voting yes on proposal: %d", proposalNumber)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "yes", fmt.Sprintf("--from=%s", from)}
@@ -733,7 +721,6 @@ func (n *NodeConfig) SendIBCNoMutex(srcChain, dstChain *Config, recipient string
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string, isLegacy bool) {
 	propNumber := n.SubmitSuperfluidProposal(denom, isLegacy)
-	n.DepositProposal(propNumber, false)
 
 	AllValsVoteOnProposal(srcChain, propNumber)
 }

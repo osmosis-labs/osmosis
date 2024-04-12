@@ -8,8 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
@@ -148,8 +148,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 // returns (1 - takerFee) * tokenIn, takerFee * tokenIn
 func CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {
 	takerFeeFactor := osmomath.OneDec().SubMut(takerFee)
-	// TODO: Remove .ToLegacyDec and instead do MulInt. Need to test state compat.
-	amountInAfterSubTakerFee := tokenIn.Amount.ToLegacyDec().MulTruncate(takerFeeFactor)
+	amountInAfterSubTakerFee := takerFeeFactor.MulIntMut(tokenIn.Amount)
 	tokenInAfterSubTakerFee := sdk.Coin{Denom: tokenIn.Denom, Amount: amountInAfterSubTakerFee.TruncateInt()}
 	takerFeeCoin := sdk.Coin{Denom: tokenIn.Denom, Amount: tokenIn.Amount.Sub(tokenInAfterSubTakerFee.Amount)}
 

@@ -6,12 +6,12 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)
@@ -231,6 +231,7 @@ var cwPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 }
 
 func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
+	s.SetupPoolsTest()
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
 		expectedAmtIn   osmomath.Int
@@ -418,6 +419,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 }
 
 func (s *KeeperTestSuite) TestExecuteTrade() {
+	s.SetupPoolsTest()
 	type param struct {
 		route          poolmanagertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -580,6 +582,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 }
 
 func (s *KeeperTestSuite) TestIterateRoutes() {
+	s.SetupPoolsTest()
 	type paramm struct {
 		routes                     []poolmanagertypes.SwapAmountInRoutes
 		expectedMaxProfitAmount    osmomath.Int
@@ -688,6 +691,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 
 // Test logic that compares proftability of routes with different assets
 func (s *KeeperTestSuite) TestConvertProfits() {
+	s.SetupPoolsTest()
 	type param struct {
 		inputCoin           sdk.Coin
 		profit              osmomath.Int
@@ -788,8 +792,6 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.SetupTest()
-
 			err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, tc.maxRoutesPerTx)
 			s.Require().NoError(err)
 
@@ -806,6 +808,7 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 }
 
 func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.SetupPoolsTest()
 	s.Run("Extended search on stable pools", func() {
 		route := keeper.RouteMetaData{
 			Route:    extendedRangeRoute,

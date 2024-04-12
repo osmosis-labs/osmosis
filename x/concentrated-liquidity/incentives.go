@@ -15,8 +15,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 // We choose 10^27 to allow sufficient buffer before the accumulator starts getting truncated again.
@@ -213,7 +213,8 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		for uptimeIndex := range uptimeAccums {
 			// Get relevant uptime-level values
 			curUptimeDuration := types.SupportedUptimes[uptimeIndex]
-			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords, poolId, incentiveScalingFactorForPool)
+			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(
+				ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords, poolId, incentiveScalingFactorForPool)
 			if err != nil {
 				return err
 			}
@@ -246,7 +247,15 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
-func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, liquidityInAccum osmomath.Dec, timeElapsed osmomath.Dec, poolIncentiveRecords []types.IncentiveRecord, poolID uint64, incentiveScalingFactorForPool osmomath.Dec) (sdk.DecCoins, []types.IncentiveRecord, error) {
+func calcAccruedIncentivesForAccum(
+	ctx sdk.Context,
+	accumUptime time.Duration,
+	liquidityInAccum osmomath.Dec,
+	timeElapsed osmomath.Dec,
+	poolIncentiveRecords []types.IncentiveRecord,
+	poolID uint64,
+	incentiveScalingFactorForPool osmomath.Dec,
+) (sdk.DecCoins, []types.IncentiveRecord, error) {
 	if !liquidityInAccum.IsPositive() || !timeElapsed.IsPositive() {
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, types.QualifyingLiquidityOrTimeElapsedNotPositiveError{QualifyingLiquidity: liquidityInAccum, TimeElapsed: timeElapsed}
 	}
@@ -1103,12 +1112,6 @@ func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 	return getLargestDuration(k.GetParams(ctx).AuthorizedUptimes)
 }
 
-// nolint: unused
-// getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
-func (k Keeper) getLargestSupportedUptimeDuration() time.Duration {
-	return getLargestDuration(types.SupportedUptimes)
-}
-
 // getIncentiveScalingFactorForPool returns the scaling factor for the given pool.
 // It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
 // It returns oneDecScalingFactor otherwise.
@@ -1129,8 +1132,20 @@ func (k Keeper) getIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64)
 		return perUnitLiqScalingFactor, nil
 	}
 
+	// If the given pool ID is in the migrated incentive accumulator pool IDs (v24), we return the perUnitLiqScalingFactor.
+	_, isMigrated = types.MigratedIncentiveAccumulatorPoolIDsV24[poolID]
+	if isMigrated {
+		return perUnitLiqScalingFactor, nil
+	}
+
 	// Otherwise, we return the oneDecScalingFactor.
 	return oneDecScalingFactor, nil
+}
+
+// nolint: unused
+// getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
+func (k Keeper) getLargestSupportedUptimeDuration() time.Duration {
+	return getLargestDuration(types.SupportedUptimes)
 }
 
 // SetIncentivePoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID.

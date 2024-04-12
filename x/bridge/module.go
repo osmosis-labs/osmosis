@@ -17,10 +17,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/bridge/types"
+	"github.com/osmosis-labs/osmosis/v24/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/client/cli"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/keeper"
+	"github.com/osmosis-labs/osmosis/v24/x/bridge/types"
 )
 
 var (

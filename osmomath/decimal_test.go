@@ -618,7 +618,7 @@ func (s *decimalTestSuite) TestApproxRoot() {
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)
 		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).AbsMut().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }
 
@@ -640,35 +640,6 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		s.Require().NoError(err)
 		s.Require().Equal(tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}
-}
-
-func (s *decimalTestSuite) TestDecSortableBytes() {
-	tests := []struct {
-		d    osmomath.BigDec
-		want []byte
-	}{
-		{osmomath.NewBigDec(0), []byte("000000000000000000000000000000000000.000000000000000000000000000000000000")},
-		{osmomath.NewBigDec(1), []byte("000000000000000000000000000000000001.000000000000000000000000000000000000")},
-		{osmomath.NewBigDec(10), []byte("000000000000000000000000000000000010.000000000000000000000000000000000000")},
-		{osmomath.NewBigDec(12340), []byte("000000000000000000000000000000012340.000000000000000000000000000000000000")},
-		{osmomath.NewBigDecWithPrec(12340, 4), []byte("000000000000000000000000000000000001.234000000000000000000000000000000000")},
-		{osmomath.NewBigDecWithPrec(12340, 5), []byte("000000000000000000000000000000000000.123400000000000000000000000000000000")},
-		{osmomath.NewBigDecWithPrec(12340, 8), []byte("000000000000000000000000000000000000.000123400000000000000000000000000000")},
-		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), []byte("000000000000000000000000000000000010.090090090090090090000000000000000000")},
-		{osmomath.NewBigDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000000000000000000000010.090090090090090090000000000000000000")},
-		{osmomath.MustNewBigDecFromStr("1000000000000000000000000000000000000"), []byte("max")},
-		{osmomath.MustNewBigDecFromStr("-1000000000000000000000000000000000000"), []byte("--")},
-	}
-	for tcIndex, tc := range tests {
-		s.Require().Equal(tc.want, osmomath.SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
-	}
-
-	s.Require().Panics(func() {
-		osmomath.SortableDecBytes(osmomath.MustNewBigDecFromStr("1000000000000000000000000000000000001"))
-	})
-	s.Require().Panics(func() {
-		osmomath.SortableDecBytes(osmomath.MustNewBigDecFromStr("-1000000000000000000000000000000000001"))
-	})
 }
 
 func (s *decimalTestSuite) TestDecEncoding() {

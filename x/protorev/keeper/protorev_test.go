@@ -4,12 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	for _, tokenPair := range s.tokenPairArbRoutes {
 		tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetTokenPairArbRoutes(s.Ctx, tokenPair.TokenIn, tokenPair.TokenOut)
@@ -25,6 +26,7 @@ func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 
 // TestGetAllTokenPairArbRoutes tests the GetAllTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
 
@@ -38,6 +40,7 @@ func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 
 // TestDeleteAllTokenPairArbRoutes tests the DeleteAllTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
 
@@ -320,6 +323,7 @@ func (s *KeeperTestSuite) TestGetInfoByPoolType() {
 }
 
 func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
+	s.SetupPoolsTest()
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 	communityPoolDenom := "Akash"

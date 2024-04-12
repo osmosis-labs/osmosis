@@ -14,10 +14,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/util"
 )
 
 // baseConfigurer is the base implementation for the
@@ -83,7 +83,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 		wg.Add(1)
 		go func(node *chain.NodeConfig) {
 			defer wg.Done()
-			if err := node.Run(false); err != nil {
+			if err := node.Run(true); err != nil {
 				errCh <- err
 			}
 		}(node)
