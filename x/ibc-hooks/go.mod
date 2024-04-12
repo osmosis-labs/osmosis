@@ -11,8 +11,13 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240409164616-caf6b6543d4b
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240409164616-caf6b6543d4b
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411125512-cb0fada2dee8
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411125512-cb0fada2dee8
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0

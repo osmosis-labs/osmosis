@@ -23,17 +23,14 @@ import (
 // If spread factor is negative, it panics.
 // If spread factor is 0, returns 0. Otherwise, computes and returns the spread factor charge per step.
 func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, spreadFactor osmomath.Dec) osmomath.Dec {
-	spreadRewardChargeTotal := osmomath.ZeroDec()
-
-	if spreadFactor.IsNegative() {
+	if spreadFactor.IsZero() {
+		return osmomath.ZeroDec()
+	} else if spreadFactor.IsNegative() {
 		// This should never happen but is added as a defense-in-depth measure.
 		panic(fmt.Errorf("spread factor must be non-negative, was (%s)", spreadFactor))
 	}
 
-	if spreadFactor.IsZero() {
-		return spreadRewardChargeTotal
-	}
-
+	var spreadRewardChargeTotal osmomath.Dec
 	if hasReachedTarget {
 		// This branch implies two options:
 		// 1) either sqrtPriceNextTick is reached
@@ -61,6 +58,7 @@ func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amoun
 // Computes amountIn * spreadFactor / (1 - spreadFactor) where math operations round up
 // at precision end. This is necessary to ensure that the spread factor charge is always
 // rounded in favor of the pool.
+// TODO: Change this fn to take in 1 - spreadFactor as it should already have been computed.
 func computeSpreadRewardChargeFromAmountIn(amountIn osmomath.Dec, spreadFactor osmomath.Dec) osmomath.Dec {
 	return amountIn.MulRoundUp(spreadFactor).QuoRoundupMut(osmomath.OneDec().SubMut(spreadFactor))
 }

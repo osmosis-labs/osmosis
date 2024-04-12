@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+<<<<<<< HEAD
+=======
+* [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
+
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 ## v24.0.1
 
 * [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
