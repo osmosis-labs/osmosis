@@ -367,8 +367,13 @@ func scaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmoma
 // that is added back to the global accumulator.
 func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
 	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
+
+	// Scaled down amount, which is used to distribute to user
 	scaledAmount = scaledDec.TruncateInt()
+
+	// Truncated decimal, which is dust that is added back to the global accumulator
 	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())
+
 	return scaledAmount, truncatedDec
 }
 
@@ -1181,7 +1186,7 @@ func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, e
 	return threshold, nil
 }
 
-// getSpreadFactorScalingFactorForPool returns the scaling factor for the given pool.
+// getSpreadFactorScalingFactorForPool returns the spread factor scaling factor for the given pool.
 // It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
 // It returns oneDecScalingFactor otherwise.
 func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
@@ -1195,7 +1200,7 @@ func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint
 		return perUnitLiqScalingFactor, nil
 	}
 
-	// If the given pool ID is in the migrated spread factor accumulator pool IDs, we return the perUnitLiqScalingFactor.
+	// If the given pool ID is one of the migrated spread factor accumulator pool IDs, we return the perUnitLiqScalingFactor.
 	_, isMigrated := types.MigratedSpreadFactorAccumulatorPoolIDs[poolID]
 	if isMigrated {
 		return perUnitLiqScalingFactor, nil
@@ -1207,9 +1212,7 @@ func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint
 
 // SetSpreadFactorPoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID for spread factor accumulators.
 func (k Keeper) SetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
-	// Set the pool ID migration threshold to the last pool ID
 	store := ctx.KVStore(k.storeKey)
-
 	store.Set(types.KeySpreadRewardAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
 }
 
@@ -1218,7 +1221,6 @@ func (k Keeper) GetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context) (uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeySpreadRewardAccumulatorMigrationThreshold)
-
 	if bz == nil {
 		return 0, fmt.Errorf("spread reward accumulator migration threshold not found")
 	}

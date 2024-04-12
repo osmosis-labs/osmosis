@@ -388,6 +388,8 @@ func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickInde
 // AddToSpreadRewardAccumulator adds the given fee to pool by updating
 // the internal per-pool accumulator that tracks fee growth per one unit of
 // liquidity.
+//
+// NOTE: This method takes the unscaled fee amount and scales it by the liquidity scaling factor.
 func (s *KeeperTestSuite) AddToSpreadRewardAccumulator(poolId uint64, feeUpdate sdk.DecCoin) {
 	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
