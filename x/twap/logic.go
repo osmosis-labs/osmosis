@@ -123,12 +123,6 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 			ctx.Logger().Error("Error pruning old twaps at the end block", err)
 		}
 	}
-
-	// If we still have more deprecated historical twaps to prune, then we prune up to the per block limit.
-	// TODO: Can remove this in the v25 upgrade or after.
-	if k.IsDeprecatedHistoricalTWAPsPruning(ctx) {
-		k.DeleteHistoricalTimeIndexedTWAPs(ctx)
-	}
 }
 
 // updateRecords updates all records for a given pool id.

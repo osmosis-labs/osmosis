@@ -26,7 +26,8 @@ const (
 )
 
 var (
-	PruningStateKey                       = []byte{0x01}
+	PruningStateKey = []byte{0x01}
+	// TODO: Delete in v26
 	DeprecatedHistoricalTWAPsIsPruningKey = []byte{0x02}
 	mostRecentTWAPsNoSeparator            = "recent_twap"
 	historicalTWAPPoolIndexNoSeparator    = "historical_pool_index"
