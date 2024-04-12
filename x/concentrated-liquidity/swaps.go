@@ -57,7 +57,8 @@ type SwapState struct {
 	globalSpreadRewardGrowthPerUnitLiquidity osmomath.Dec
 
 	// Global spread reward growth
-	// Is used to determine how much the user sends to the spread reward address.
+	// This value is not persisted in the pool's tick accumulators, and is instead
+	// used to determine how much the user must send to the spread reward address.
 	globalSpreadRewardGrowth osmomath.Dec
 
 	swapStrategy swapstrategy.SwapStrategy

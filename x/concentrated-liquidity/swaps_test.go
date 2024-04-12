@@ -1770,6 +1770,12 @@ var (
 			// from math import *
 			// from decimal import *
 
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
@@ -1777,15 +1783,12 @@ var (
 			// token_out = Decimal("42000000")
 			// liq = Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
-
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
-			// sqrt_delta = (token_out / liq).quantize(precision, rounding=rounding_direction)
-			// sqrt_next = sqrt_cur - sqrt_delta
 			// spread_factor = Decimal("0.01")
 
-			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
+			// sqrt_next = get_next_sqrt_price_from_amount1_out_round_down(liq, sqrt_cur, token_out)
+			// token_in = ceil(calc_amount_zero_delta(liq, sqrt_cur, sqrt_next, True))
 			// spread_factor = token_in *  spread_factor / (1 - spread_factor)
-			// spread_factor = spread_factor.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor = spread_factor.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_scaled = spread_factor * Decimal('1e27')
 
 			// # Summary:
@@ -1821,17 +1824,16 @@ var (
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// token_out = Decimal("8398")
 			// liq = Decimal("1517882343.751510417627556287") * 2
 			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
-			// sqrt_next = get_next_sqrt_price_from_amount0_out_round_up(liq, sqrt_cur, token_out)
 			// spread_factor = Decimal("0.03")
 
-			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
+			// sqrt_next = get_next_sqrt_price_from_amount0_out_round_up(liq, sqrt_cur, token_out)
+			// token_in = ceil(calc_amount_one_delta(liq, sqrt_cur, sqrt_next, True))
 			// spread_factor = token_in *  spread_factor / (1 - spread_factor)
-			// spread_factor = spread_factor.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor = spread_factor.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_scaled = spread_factor * Decimal('1e27')
 
 			// # Summary:
@@ -1868,7 +1870,6 @@ var (
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Range 1: From 5000 to 5500
 			// token_out = Decimal("1820630")
@@ -1880,9 +1881,9 @@ var (
 			// spread_factor = Decimal("0.001")
 
 			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_next_1, sqrt_cur, False))
-			// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1 ))
+			// token_in_1 = ceil(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
-			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
@@ -1892,10 +1893,10 @@ var (
 			// liq_2 = Decimal("1197767444.955508123483846019")
 			// sqrt_next_2 = get_next_sqrt_price_from_amount0_out_round_up(liq_2, sqrt_next_1, token_out)
 
-			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
-			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
+			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
+			// token_in_2 = ceil(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
-			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// # Summary:
@@ -1933,7 +1934,6 @@ var (
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Swap step 1
 			// token_out = Decimal("9321276930")
@@ -1945,7 +1945,7 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
-			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
@@ -1958,7 +1958,7 @@ var (
 			// token_out_2 = round_sdk_prec_down(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
 			// token_in_2 = ceil(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
-			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// token_out = token_out - token_out_2
@@ -1970,16 +1970,16 @@ var (
 			// token_out_3 = round_sdk_prec_down(calc_amount_one_delta(liq_3, sqrt_next_2, sqrt_next_3, False))
 			// token_in_3 = ceil(calc_amount_zero_delta(liq_3, sqrt_next_2, sqrt_next_3, True))
 			// spread_factor_3 = token_in_3 *  spread_factor / (1 - spread_factor)
-			// spread_factor_3 = spread_factor_3.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_3 = spread_factor_3.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_3_scaled = spread_factor_3 * Decimal('1e27')
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2
+			// token_in = ceil(token_in_1 + spread_factor_1 + token_in_2 + spread_factor_2 + token_in_3 + spread_factor_3)
 			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2 + spread_factor_3_scaled / liq_3
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			// print(token_out_2)
+			// print(token_out_1 + token_out_2 + token_out_3)
 			ExpectedTokenIn:   sdk.NewCoin("eth", osmomath.NewInt(2222223)),
 			ExpectedTokenOut:  sdk.NewCoin("usdc", osmomath.NewInt(9321276930)),
 			ExpectedTick:      30129083,
@@ -2013,7 +2013,6 @@ var (
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Swap step 1
 			// token_out = Decimal("1609138")
@@ -2025,7 +2024,7 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
-			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
@@ -2038,7 +2037,7 @@ var (
 			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
 			// token_in_2 = ceil(calc_amount_one_delta(liq_2, sqrt_next_1, sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
-			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// token_out = token_out - token_out_2
@@ -2050,16 +2049,16 @@ var (
 			// token_out_3 = round_sdk_prec_down(calc_amount_zero_delta(liq_3, sqrt_next_2, sqrt_next_3, False))
 			// token_in_3 = ceil(calc_amount_one_delta(liq_3, sqrt_next_2, sqrt_next_3, True))
 			// spread_factor_3 = token_in_3 *  spread_factor / (1 - spread_factor)
-			// spread_factor_3 = spread_factor_3.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_3 = spread_factor_3.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_3_scaled = spread_factor_3 * Decimal('1e27')
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2 + token_in_3
+			// token_in = ceil(token_in_1 + spread_factor_1 + token_in_2 + spread_factor_2 + token_in_3 + spread_factor_3)
 			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2 + spread_factor_3_scaled / liq_3
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			// print(token_out_2)
+			// print(token_out_1 + token_out_2 + token_out_3)
 			ExpectedTokenIn:  sdk.NewCoin(USDC, osmomath.NewInt(8947367851)),
 			ExpectedTokenOut: sdk.NewCoin(ETH, osmomath.NewInt(1609138)),
 			ExpectedSecondLowerTickSpreadRewardGrowth: secondPosition{TickIndex: 310010, ExpectedSpreadRewardGrowth: cl.EmptyCoins},
@@ -2089,7 +2088,6 @@ var (
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Swap step 1
 			// token_out = Decimal("1820545")
@@ -2101,7 +2099,7 @@ var (
 			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
-			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// token_out = token_out - token_out_1
@@ -2111,19 +2109,19 @@ var (
 			// liq_2 = Decimal("1199528406.187413669481596330")
 			// sqrt_next_2 = get_next_sqrt_price_from_amount0_out_round_up(liq_2, sqrt_cur_2, token_out)
 
-			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
+			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_cur_2, sqrt_next_2, False))
 			// token_in_2 = ceil(calc_amount_one_delta(liq_2, sqrt_cur_2 , sqrt_next_2, True))
 			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
-			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_2 = spread_factor_2.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_2_scaled = spread_factor_2 * Decimal('1e27')
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2
+			// token_in = ceil(token_in_1 + spread_factor_1 + token_in_2 + spread_factor_2)
 			// spread_rewards_growth = spread_factor_1_scaled / liq_1 + spread_factor_2_scaled / liq_2
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			// print(token_out_2)
+			// print(token_out_1 + token_out_2)
 			ExpectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			ExpectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(10002995655)),
 			ExpectedTick:      32105554,
@@ -2141,10 +2139,16 @@ var (
 			SpreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
+
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
 			// getcontext().prec = 60
 			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// eighteen_decimal_precision = Decimal('1.000000000000000000')
-			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 
 			// # Range 1: From 5000 to 5002
 			// token_out = Decimal("1820545")
@@ -2153,10 +2157,10 @@ var (
 			// sqrt_next_1 = Decimal("5002").sqrt()
 			// spread_factor = Decimal("0.01")
 
-			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
-			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
+			// token_out_1 =  round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, False))
+			// token_in_1 = ceil(calc_amount_one_delta(liq_1, sqrt_cur, sqrt_next_1, True))
 			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
-			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, rounding_direction)
+			// spread_factor_1 = spread_factor_1.quantize(eighteen_decimal_precision, ROUND_UP)
 			// spread_factor_1_scaled = spread_factor_1 * Decimal('1e27')
 
 			// # Summary:
@@ -2165,6 +2169,7 @@ var (
 			// print(sqrt_next_1)
 			// print(token_in)
 			// print(spread_rewards_growth)
+			// print(token_out_1)
 			ExpectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(4291)),
 			ExpectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(21680760)),
 			ExpectedTick:      31002000,
@@ -2612,8 +2617,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// token_in = 42000000
 			//
 			// precision = Decimal('1.000000000000000000') # 18 decimal precision
-			// rounding_direction = ROUND_DOWN # round delta down since we're swapping asset 1 in
-			// sqrt_delta = (token_in / liquidity).quantize(precision, rounding=rounding_direction)
+			// sqrt_delta = (token_in / liquidity).quantize(precision, rounding=ROUND_DOWN)
 			// sqrt_next = sqrt_cur + sqrt_delta
 			//
 			// # Round token in up to nearest integer and token out down to nearest integer
@@ -2641,7 +2645,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// token_in = 13370
 			//
 			// precision = Decimal('1.000000000000000000') # 18 decimal precision
-			// rounding_direction = ROUND_UP # round delta up since we're swapping asset 0 in
 			// sqrt_next = liquidity * sqrt_cur / (liquidity + token_in * sqrt_cur)
 			//
 			// # Round token out down to nearest integer
