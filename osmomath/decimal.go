@@ -41,11 +41,24 @@ var (
 	squaredPrecisionReuse        = new(big.Int).Mul(precisionReuse, precisionReuse)
 	precisionReuseSDK            = new(big.Int).Exp(big.NewInt(10), big.NewInt(DecPrecision), nil)
 	bigDecDecPrecisionFactorDiff = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision-DecPrecision), nil)
+<<<<<<< HEAD
 	fivePrecision                = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers         []*big.Int
 	zeroInt                      = big.NewInt(0)
 	oneInt                       = big.NewInt(1)
 	tenInt                       = big.NewInt(10)
+=======
+
+	tenTimesPrecision   = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision+1), nil)
+	fivePrecision       = new(big.Int).Quo(defaultBigDecPrecisionReuse, big.NewInt(2))
+	fivePrecisionSDKDec = new(big.Int).Quo(precisionReuseSDKDec, big.NewInt(2))
+
+	precisionMultipliers []*big.Int
+	zeroInt              = big.NewInt(0)
+	oneInt               = big.NewInt(1)
+	fiveInt              = big.NewInt(5)
+	tenInt               = big.NewInt(10)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
@@ -165,6 +178,11 @@ func NewBigDecFromIntWithPrec(i BigInt, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
 	}
+}
+
+func NewBigDecFromDecMulDec(a, b Dec) BigDec {
+	newBi := new(big.Int).Mul(a.BigIntMut(), b.BigIntMut())
+	return BigDec{newBi}
 }
 
 // create a decimal from an input decimal string.
@@ -288,20 +306,29 @@ func (d BigDec) Add(d2 BigDec) BigDec {
 func (d BigDec) AddMut(d2 BigDec) BigDec {
 	d.i.Add(d.i, d2.i)
 
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+	assertMaxBitLen(d.i)
 
 	return d
 }
 
 // subtraction
 func (d BigDec) Sub(d2 BigDec) BigDec {
+<<<<<<< HEAD
 	res := new(big.Int).Sub(d.i, d2.i)
 
 	if res.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
+=======
+	copy := d.Clone()
+	copy.SubMut(d2)
+	return copy
+}
+
+func (d BigDec) SubMut(d2 BigDec) BigDec {
+	res := d.i.Sub(d.i, d2.i)
+	assertMaxBitLen(res)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	return BigDec{res}
 }
 
@@ -332,12 +359,11 @@ func (d BigDec) MulMut(d2 BigDec) BigDec {
 	d.i.Mul(d.i, d2.i)
 	d.i = chopPrecisionAndRound(d.i)
 
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+	assertMaxBitLen(d.i)
 	return BigDec{d.i}
 }
 
+<<<<<<< HEAD
 // multiplication truncate
 func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 	mul := new(big.Int).Mul(d.i, d2.i)
@@ -346,27 +372,61 @@ func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
+=======
+func (d BigDec) MulDec(d2 Dec) BigDec {
+	copy := d.Clone()
+	copy.MulDecMut(d2)
+	return copy
+}
+
+func (d BigDec) MulDecMut(d2 Dec) BigDec {
+	d.i.Mul(d.i, d2.BigIntMut())
+	d.i = chopPrecisionAndRoundSdkDec(d.i)
+
+	assertMaxBitLen(d.i)
+	return BigDec{d.i}
+}
+
+// multiplication truncate
+func (d BigDec) MulTruncate(d2 BigDec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.i)
+	chopped := chopPrecisionAndTruncateMut(mul, defaultBigDecPrecisionReuse)
+	assertMaxBitLen(chopped)
+	return BigDec{chopped}
+}
+
+func (d BigDec) MulTruncateDec(d2 Dec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.BigIntMut())
+	chopped := chopPrecisionAndTruncateMut(mul, precisionReuseSDKDec)
+	assertMaxBitLen(chopped)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	return BigDec{chopped}
 }
 
 // multiplication round up
 func (d BigDec) MulRoundUp(d2 BigDec) BigDec {
 	mul := new(big.Int).Mul(d.i, d2.i)
+<<<<<<< HEAD
 	chopped := chopPrecisionAndRoundUpBigDec(mul)
+=======
+	chopped := chopPrecisionAndRoundUpMut(mul, defaultBigDecPrecisionReuse)
+	assertMaxBitLen(chopped)
+	return BigDec{chopped}
+}
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+// multiplication round up by Dec
+func (d BigDec) MulRoundUpDec(d2 Dec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.BigIntMut())
+	chopped := chopPrecisionAndRoundUpMut(mul, precisionReuseSDKDec)
+	assertMaxBitLen(chopped)
 	return BigDec{chopped}
 }
 
 // multiplication
 func (d BigDec) MulInt(i BigInt) BigDec {
 	mul := new(big.Int).Mul(d.i, i.i)
-
-	if mul.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+	assertMaxBitLen(mul)
 	return BigDec{mul}
 }
 
@@ -374,10 +434,7 @@ func (d BigDec) MulInt(i BigInt) BigDec {
 func (d BigDec) MulInt64(i int64) BigDec {
 	bi := big.NewInt(i)
 	mul := bi.Mul(d.i, bi)
-
-	if mul.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+	assertMaxBitLen(mul)
 	return BigDec{mul}
 }
 
@@ -391,32 +448,38 @@ func (d BigDec) Quo(d2 BigDec) BigDec {
 // mutative quotient
 func (d BigDec) QuoMut(d2 BigDec) BigDec {
 	// multiply precision twice
+<<<<<<< HEAD
 	d.i.Mul(d.i, precisionReuse)
 	d.i.Mul(d.i, precisionReuse)
+=======
+	// TODO: Use lower overhead thing here
+	d.i.Mul(d.i, squaredPrecisionReuse)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 
 	d.i.Quo(d.i, d2.i)
 	chopPrecisionAndRound(d.i)
 
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+	assertMaxBitLen(d.i)
 	return d
 }
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
+<<<<<<< HEAD
 	mul := new(big.Int).Mul(d.i, precisionReuse)
+=======
+	// TODO: There is certainly more efficient ways to do this, come back later
+	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 
 	quo := mul.Quo(mul, big.NewInt(d2))
 	chopped := chopPrecisionAndRound(quo)
-
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+	assertMaxBitLen(chopped)
 	return BigDec{chopped}
 }
 
 // quotient truncate
 func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
+<<<<<<< HEAD
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -428,6 +491,12 @@ func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
 		panic("Int overflow")
 	}
 	return BigDec{chopped}
+=======
+	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
+	quo := mul.Quo(mul, d2.i)
+	assertMaxBitLen(quo)
+	return BigDec{quo}
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 }
 
 // quotient truncate (mutative)
@@ -435,16 +504,40 @@ func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
 	// multiply precision twice
 	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
+<<<<<<< HEAD
 
 	chopPrecisionAndTruncateMut(d.i)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
+=======
+	assertMaxBitLen(d.i)
+	return d
+}
+
+// quotient truncate
+func (d BigDec) QuoTruncateDec(d2 Dec) BigDec {
+	// multiply Dec Precision
+	mul := new(big.Int).Mul(d.i, precisionReuseSDKDec)
+	quo := mul.Quo(mul, d2.BigIntMut())
+	assertMaxBitLen(quo)
+	return BigDec{quo}
+}
+
+// quotient truncate (mutative)
+func (d BigDec) QuoTruncateDecMut(d2 Dec) BigDec {
+	// multiply Dec Precision
+	d.i.Mul(d.i, precisionReuseSDKDec)
+	d.i.Quo(d.i, d2.BigIntMut())
+
+	assertMaxBitLen(d.i)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	return d
 }
 
 // quotient, round up
 func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
+<<<<<<< HEAD
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -454,21 +547,53 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
+=======
+	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
+
+	chopped, rem := mul.QuoRem(mul, d2.i, new(big.Int))
+	if rem.Sign() > 0 {
+		chopped.Add(chopped, oneInt)
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	}
+
+	assertMaxBitLen(chopped)
+	return BigDec{chopped}
+}
+
+// quotient, round up
+func (d BigDec) QuoByDecRoundUp(d2 Dec) BigDec {
+	mul := new(big.Int).Mul(d.i, precisionReuseSDKDec)
+
+	chopped, rem := mul.QuoRem(mul, d2.BigIntMut(), new(big.Int))
+	if rem.Sign() > 0 {
+		chopped.Add(chopped, oneInt)
+	}
+
+	assertMaxBitLen(chopped)
 	return BigDec{chopped}
 }
 
 // quotient, round up (mutative)
 func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
-	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
+	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
+	_, rem := d.i.QuoRem(d.i, d2.i, new(big.Int))
 
+<<<<<<< HEAD
 	chopPrecisionAndRoundUpMut(d.i, precisionReuse)
+=======
+	d.i = incBasedOnRem(rem, d.i)
+	assertMaxBitLen(d.i)
+	return BigDec{d.i}
+}
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
+// quotient, round up to next integer (mutative)
+func (d BigDec) QuoRoundUpNextIntMut(d2 BigDec) BigDec {
+	_, rem := d.i.QuoRem(d.i, d2.i, new(big.Int))
+
+	d.i = incBasedOnRem(rem, d.i)
+	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
+	assertMaxBitLen(d.i)
 	return BigDec{d.i}
 }
 
@@ -530,6 +655,12 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	}
 
 	return guess, nil
+}
+
+func assertMaxBitLen(i *big.Int) {
+	if i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
@@ -781,6 +912,13 @@ func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
 	return chopPrecisionAndRoundUpMut(copy, precisionReuseSDK)
 }
 
+func incBasedOnRem(rem *big.Int, d *big.Int) *big.Int {
+	if rem.Sign() == 0 {
+		return d
+	}
+	return d.Add(d, oneInt)
+}
+
 // chopPrecisionAndRoundUp removes a Precision amount of rightmost digits and rounds up.
 // Mutates input d.
 // Mutations occur:
@@ -799,12 +937,7 @@ func chopPrecisionAndRoundUpMut(d *big.Int, precisionReuse *big.Int) *big.Int {
 
 	// get the truncated quotient and remainder
 	_, rem := d.QuoRem(d, precisionReuse, big.NewInt(0))
-
-	if rem.Sign() == 0 { // remainder is zero
-		return d
-	}
-
-	return d.Add(d, oneInt)
+	return incBasedOnRem(rem, d)
 }
 
 func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
@@ -1163,6 +1296,11 @@ func (d BigDec) PowerInteger(power uint64) BigDec {
 func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 	if power == 0 {
 		return OneBigDec()
+	} else if power == 1 {
+		return d
+	} else if power == 2 {
+		// save a oneBigDec allocation
+		return d.MulMut(d)
 	}
 	tmp := OneBigDec()
 

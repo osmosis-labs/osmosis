@@ -90,7 +90,7 @@ type SwapStrategy interface {
 }
 
 var (
-	oneBigDec = osmomath.OneBigDec()
+	oneDec = osmomath.OneDec()
 )
 
 // New returns a swap strategy based on the provided zeroForOne parameter

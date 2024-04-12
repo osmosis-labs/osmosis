@@ -9,10 +9,17 @@ require (
 	github.com/cometbft/cometbft-db v0.10.0
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ibc-go/v7 v7.3.2
 	github.com/osmosis-labs/osmosis/osmomath v0.0.10-0.20240312200410-a7cc6376cdec
 	github.com/osmosis-labs/osmosis/v23 v23.0.1
+=======
+	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
+	github.com/cosmos/ibc-go/v7 v7.4.0
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240411125512-cb0fada2dee8
+	github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -119,6 +126,13 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/onsi/gomega v1.28.1 // indirect
+<<<<<<< HEAD
+=======
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240411125512-cb0fada2dee8 // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240411125512-cb0fada2dee8 // indirect
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 // indirect
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

@@ -44,6 +44,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+<<<<<<< HEAD
+=======
+### State Compatible
+
+* [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
+
+## v24.0.1
+
+* [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
+
+## v24.0.0
+
+### Osmosis
+
+>>>>>>> 7b599d55 (Speedup quo round up, start CL speedup integration (#8014))
 * [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
