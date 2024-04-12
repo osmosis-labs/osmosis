@@ -37,15 +37,20 @@ const (
 )
 
 var (
-	precisionReuse               = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision), nil)
-	squaredPrecisionReuse        = new(big.Int).Mul(precisionReuse, precisionReuse)
-	precisionReuseSDK            = new(big.Int).Exp(big.NewInt(10), big.NewInt(DecPrecision), nil)
+	defaultBigDecPrecisionReuse = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision), nil)
+	precisionReuseSDKDec        = new(big.Int).Exp(big.NewInt(10), big.NewInt(DecPrecision), nil)
+
+	bigDecDecPrecision           = new(big.Int).Mul(defaultBigDecPrecisionReuse, precisionReuseSDKDec)
+	squaredPrecisionReuse        = new(big.Int).Mul(defaultBigDecPrecisionReuse, defaultBigDecPrecisionReuse)
 	bigDecDecPrecisionFactorDiff = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision-DecPrecision), nil)
-	fivePrecision                = new(big.Int).Quo(precisionReuse, big.NewInt(2))
-	precisionMultipliers         []*big.Int
-	zeroInt                      = big.NewInt(0)
-	oneInt                       = big.NewInt(1)
-	tenInt                       = big.NewInt(10)
+
+	fivePrecision       = new(big.Int).Quo(defaultBigDecPrecisionReuse, big.NewInt(2))
+	fivePrecisionSDKDec = new(big.Int).Quo(precisionReuseSDKDec, big.NewInt(2))
+
+	precisionMultipliers []*big.Int
+	zeroInt              = big.NewInt(0)
+	oneInt               = big.NewInt(1)
+	tenInt               = big.NewInt(10)
 
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
@@ -88,7 +93,7 @@ func init() {
 }
 
 func precisionInt() *big.Int {
-	return new(big.Int).Set(precisionReuse)
+	return new(big.Int).Set(defaultBigDecPrecisionReuse)
 }
 
 func ZeroBigDec() BigDec     { return BigDec{new(big.Int).Set(zeroInt)} }
@@ -256,7 +261,8 @@ func (d BigDec) LT(d2 BigDec) bool    { return (d.i).Cmp(d2.i) < 0 }           /
 func (d BigDec) LTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) <= 0 }          // less than or equal
 func (d BigDec) Neg() BigDec          { return BigDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
 // nolint: stylecheck
-func (d BigDec) Abs() BigDec { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
+func (d BigDec) Abs() BigDec    { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
+func (d BigDec) AbsMut() BigDec { d.i.Abs(d.i); return d }               // absolute value
 
 // BigInt returns a copy of the underlying big.Int.
 func (d BigDec) BigInt() *big.Int {
@@ -297,7 +303,13 @@ func (d BigDec) AddMut(d2 BigDec) BigDec {
 
 // subtraction
 func (d BigDec) Sub(d2 BigDec) BigDec {
-	res := new(big.Int).Sub(d.i, d2.i)
+	copy := d.Clone()
+	copy.SubMut(d2)
+	return copy
+}
+
+func (d BigDec) SubMut(d2 BigDec) BigDec {
+	res := d.i.Sub(d.i, d2.i)
 
 	if res.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -338,10 +350,36 @@ func (d BigDec) MulMut(d2 BigDec) BigDec {
 	return BigDec{d.i}
 }
 
+func (d BigDec) MulDec(d2 Dec) BigDec {
+	copy := d.Clone()
+	copy.MulDecMut(d2)
+	return copy
+}
+
+func (d BigDec) MulDecMut(d2 Dec) BigDec {
+	d.i.Mul(d.i, d2.BigIntMut())
+	d.i = chopPrecisionAndRoundSdkDec(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{d.i}
+}
+
 // multiplication truncate
 func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 	mul := new(big.Int).Mul(d.i, d2.i)
-	chopped := chopPrecisionAndTruncate(mul)
+	chopped := chopPrecisionAndTruncateMut(mul, defaultBigDecPrecisionReuse)
+
+	if chopped.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{chopped}
+}
+
+func (d BigDec) MulTruncateDec(d2 Dec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.BigIntMut())
+	chopped := chopPrecisionAndTruncateMut(mul, precisionReuseSDKDec)
 
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -352,7 +390,7 @@ func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 // multiplication round up
 func (d BigDec) MulRoundUp(d2 BigDec) BigDec {
 	mul := new(big.Int).Mul(d.i, d2.i)
-	chopped := chopPrecisionAndRoundUpBigDec(mul)
+	chopped := chopPrecisionAndRoundUpMut(mul, defaultBigDecPrecisionReuse)
 
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -391,8 +429,7 @@ func (d BigDec) Quo(d2 BigDec) BigDec {
 // mutative quotient
 func (d BigDec) QuoMut(d2 BigDec) BigDec {
 	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, squaredPrecisionReuse)
 
 	d.i.Quo(d.i, d2.i)
 	chopPrecisionAndRound(d.i)
@@ -404,7 +441,7 @@ func (d BigDec) QuoMut(d2 BigDec) BigDec {
 }
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
-	mul := new(big.Int).Mul(d.i, precisionReuse)
+	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
 
 	quo := mul.Quo(mul, big.NewInt(d2))
 	chopped := chopPrecisionAndRound(quo)
@@ -418,25 +455,45 @@ func (d BigDec) QuoRaw(d2 int64) BigDec {
 // quotient truncate
 func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
 	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
-
+	mul := new(big.Int).Mul(d.i, defaultBigDecPrecisionReuse)
 	quo := mul.Quo(mul, d2.i)
-	chopped := chopPrecisionAndTruncate(quo)
 
-	if chopped.BitLen() > maxDecBitLen {
+	if quo.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{chopped}
+	return BigDec{quo}
 }
 
 // quotient truncate (mutative)
 func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
-	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
+	// multiply bigDec precision
+	d.i.Mul(d.i, defaultBigDecPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
-	chopPrecisionAndTruncateMut(d.i)
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
+
+// quotient truncate
+func (d BigDec) QuoTruncateDec(d2 Dec) BigDec {
+	// multiply Dec Precision
+	mul := new(big.Int).Mul(d.i, precisionReuseSDKDec)
+	quo := mul.Quo(mul, d2.BigIntMut())
+
+	if quo.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{quo}
+}
+
+// quotient truncate (mutative)
+func (d BigDec) QuoTruncateDecMut(d2 Dec) BigDec {
+	// multiply Dec Precision
+	d.i.Mul(d.i, precisionReuseSDKDec)
+	d.i.Quo(d.i, d2.BigIntMut())
+
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -446,11 +503,10 @@ func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
 // quotient, round up
 func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
+	mul := new(big.Int).Mul(d.i, squaredPrecisionReuse)
 
-	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRoundUpBigDec(quo)
+	quo := mul.Quo(mul, d2.i)
+	chopped := chopPrecisionAndRoundUpMut(quo, defaultBigDecPrecisionReuse)
 
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -464,7 +520,7 @@ func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
 	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
-	chopPrecisionAndRoundUpMut(d.i, precisionReuse)
+	chopPrecisionAndRoundUpMut(d.i, defaultBigDecPrecisionReuse)
 
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -506,7 +562,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 		return absRoot.MulInt64(-1), err
 	}
 
-	if root == 1 || d.IsZero() || d.Equal(OneBigDec()) {
+	if root == 1 || d.IsZero() || d.Equal(oneBigDec) {
 		return d, nil
 	}
 
@@ -523,7 +579,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 			prev = SmallestBigDec()
 		}
 		delta = d.Quo(prev)
-		delta = delta.Sub(guess)
+		delta.SubMut(guess)
 		delta = delta.QuoInt(rootInt)
 
 		guess = guess.Add(delta)
@@ -534,13 +590,14 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
 // of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
+// TODO: Optimize this to be faster just using native big int sqrt.
 func (d BigDec) ApproxSqrt() (BigDec, error) {
 	return d.ApproxRoot(2)
 }
 
 // is integer, e.g. decimals are zero
 func (d BigDec) IsInteger() bool {
-	return new(big.Int).Rem(d.i, precisionReuse).Sign() == 0
+	return new(big.Int).Rem(d.i, defaultBigDecPrecisionReuse).Sign() == 0
 }
 
 // format decimal state
@@ -746,7 +803,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 
 	// get the truncated quotient and remainder
 	quo, rem := d, big.NewInt(0)
-	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+	quo, rem = quo.QuoRem(d, defaultBigDecPrecisionReuse, rem)
 
 	if rem.Sign() == 0 { // remainder is zero
 		return quo
@@ -766,19 +823,44 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 }
 
-// chopPrecisionAndRoundUpBigDec removes a Precision amount of rightmost digits and rounds up.
-// Non-mutative.
-func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
-	// make copy
-	copy := new(big.Int).Set(d)
-	return chopPrecisionAndRoundUpMut(copy, precisionReuse)
+// TODO: Abstract code
+func chopPrecisionAndRoundSdkDec(d *big.Int) *big.Int {
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		d = chopPrecisionAndRoundSdkDec(d)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo, rem := d, big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuseSDKDec, rem)
+
+	if rem.Sign() == 0 { // remainder is zero
+		return quo
+	}
+
+	switch rem.Cmp(fivePrecisionSDKDec) {
+	case -1:
+		return quo
+	case 1:
+		return quo.Add(quo, oneInt)
+	default: // bankers rounding must take place
+		// always round to an even number
+		if quo.Bit(0) == 0 {
+			return quo
+		}
+		return quo.Add(quo, oneInt)
+	}
 }
 
-// chopPrecisionAndRoundUpDec removes  DecPrecision amount of rightmost digits and rounds up.
+// chopPrecisionAndRoundUpDec removes DecPrecision amount of rightmost digits and rounds up.
 // Non-mutative.
 func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
 	copy := new(big.Int).Set(d)
-	return chopPrecisionAndRoundUpMut(copy, precisionReuseSDK)
+	return chopPrecisionAndRoundUpMut(copy, precisionReuseSDKDec)
 }
 
 // chopPrecisionAndRoundUp removes a Precision amount of rightmost digits and rounds up.
@@ -792,7 +874,7 @@ func chopPrecisionAndRoundUpMut(d *big.Int, precisionReuse *big.Int) *big.Int {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
 		// truncate since d is negative...
-		d = chopPrecisionAndTruncateMut(d)
+		d = chopPrecisionAndTruncateMut(d, precisionReuse)
 		d = d.Neg(d)
 		return d
 	}
@@ -828,19 +910,19 @@ func (d BigDec) RoundInt() BigInt {
 
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
 // but always rounds down. It does not mutate the input.
-func chopPrecisionAndTruncate(d *big.Int) *big.Int {
+func chopPrecisionAndTruncate(d *big.Int, precisionReuse *big.Int) *big.Int {
 	return new(big.Int).Quo(d, precisionReuse)
 }
 
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
 // but always rounds down. It mutates the input.
-func chopPrecisionAndTruncateMut(d *big.Int) *big.Int {
+func chopPrecisionAndTruncateMut(d, precisionReuse *big.Int) *big.Int {
 	return d.Quo(d, precisionReuse)
 }
 
 // TruncateInt64 truncates the decimals from the number and returns an int64
 func (d BigDec) TruncateInt64() int64 {
-	chopped := chopPrecisionAndTruncate(d.i)
+	chopped := chopPrecisionAndTruncate(d.i, defaultBigDecPrecisionReuse)
 	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
@@ -849,12 +931,12 @@ func (d BigDec) TruncateInt64() int64 {
 
 // TruncateInt truncates the decimals from the number and returns an Int
 func (d BigDec) TruncateInt() BigInt {
-	return NewBigIntFromBigInt(chopPrecisionAndTruncate(d.i))
+	return NewBigIntFromBigInt(chopPrecisionAndTruncate(d.i, defaultBigDecPrecisionReuse))
 }
 
 // TruncateDec truncates the decimals from the number and returns a Dec
 func (d BigDec) TruncateDec() BigDec {
-	return NewBigDecFromBigInt(chopPrecisionAndTruncate(d.i))
+	return NewBigDecFromBigInt(chopPrecisionAndTruncate(d.i, defaultBigDecPrecisionReuse))
 }
 
 // Ceil returns the smallest integer value (as a decimal) that is greater than
@@ -866,7 +948,7 @@ func (d BigDec) Ceil() BigDec {
 
 func (d BigDec) CeilMut() BigDec {
 	quo, rem := d.i, big.NewInt(0)
-	quo, rem = quo.QuoRem(quo, precisionReuse, rem)
+	quo, rem = quo.QuoRem(quo, defaultBigDecPrecisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
 	if rem.Sign() <= 0 {
@@ -1197,6 +1279,7 @@ func (d BigDec) Power(power BigDec) BigDec {
 	if power.Abs().GT(maxSupportedExponent) {
 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
 	}
+	// TODO: Potentially expensive??
 	if power.IsInteger() {
 		return d.PowerInteger(power.TruncateInt().Uint64())
 	}
@@ -1206,7 +1289,7 @@ func (d BigDec) Power(power BigDec) BigDec {
 	if d.IsZero() {
 		return ZeroBigDec()
 	}
-	if d.LT(OneBigDec()) {
+	if d.LT(oneBigDec) {
 		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
 	}
 	if d.Equal(twoBigDec) {

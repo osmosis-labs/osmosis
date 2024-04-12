@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8006](https://github.com/osmosis-labs/osmosis/pull/8006) Speedup many BigDec operations
+
 ## v24.0.1
 
 * [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
