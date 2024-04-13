@@ -53,7 +53,7 @@ func CreateUpgradeHandler(
 		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
 		// since we only need the pool indexed TWAPs. We set the is pruning store value to true
 		// and spread the pruning time across multiple blocks to avoid a single block taking too long.
-		keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
+		// keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
 
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
