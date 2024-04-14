@@ -57,7 +57,7 @@ func Liquidity1(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // CalcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
+func CalcAmount0Delta(liq osmomath.Dec, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
@@ -79,8 +79,9 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// The denominator is truncated to get a higher final amount.
 		// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
 		// This leads to a smaller error amplification. This only matters in cases where at least one of the sqrt prices is below 1.
-		// TODO (perf): QuoRoundUpMut with no reallocation.
-		return liq.MulRoundUp(diff).QuoRoundUpMut(sqrtPriceB).QuoRoundUpMut(sqrtPriceA).CeilMut()
+		// TODO (perf): Don't truncate after liq.MulRoundUp(diff), we actually scale by that in the next Quo. ALT: Switch liq to Dec
+		// TODO (perf): QuoRoundUpMut with no reallocation for internal scratch var.
+		return diff.MulRoundUpDec(liq).QuoRoundUpMut(sqrtPriceB).QuoRoundUpNextIntMut(sqrtPriceA)
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
@@ -88,19 +89,15 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// Each intermediary step is truncated at precision end to get a smaller final amount.
 	// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
 	// This leads to a smaller error amplification.
-	return liq.MulTruncate(diff).QuoTruncateMut(sqrtPriceB).QuoTruncateMut(sqrtPriceA)
+	return diff.MulTruncateDec(liq).QuoTruncateMut(sqrtPriceB).QuoTruncateMut(sqrtPriceA)
 }
 
 // CalcAmount1Delta takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // CalcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
-func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
-	// make sqrtPriceA the smaller value amongst sqrtPriceA and sqrtPriceB
-	if sqrtPriceA.GT(sqrtPriceB) {
-		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
-	}
-	diff := sqrtPriceB.Sub(sqrtPriceA)
+func CalcAmount1Delta(liq osmomath.Dec, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool) osmomath.BigDec {
+	diff := sqrtPriceB.Sub(sqrtPriceA).AbsMut()
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we don't round at all
 	// this is to prevent removing more from the pool than expected due to rounding
@@ -114,13 +111,14 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// Examples include:
 		// - calculating amountIn during swap
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
-		return liq.Mul(diff).CeilMut()
+		// TODO: Make a MulDecCeilMut to save more internal ops
+		return diff.MulDecMut(liq).CeilMut()
 	}
 	// This is truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
 	// The denominator is rounded up to get a higher final amount.
-	return liq.MulTruncate(diff)
+	return diff.MulTruncateDec(liq)
 }
 
 // GetNextSqrtPriceFromAmount0InRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
@@ -147,13 +145,13 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 // When we swap for token one in given token zero out, the price is increasing and we need to move the price up enough
 // so that we get the desired output amount out. Therefore, we round up.
 // sqrt_next = liq * sqrt_cur / (liq - token_out * sqrt_cur)
-func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amountZeroRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
+func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity osmomath.BigDec, amountZeroRemainingOut osmomath.Dec) (sqrtPriceNext osmomath.BigDec) {
 	if amountZeroRemainingOut.IsZero() {
 		return sqrtPriceCurrent
 	}
 
 	// mul round up to make the final denominator smaller and final result larger
-	product := amountZeroRemainingOut.MulRoundUp(sqrtPriceCurrent)
+	product := sqrtPriceCurrent.MulRoundUpDec(amountZeroRemainingOut)
 	denominator := liquidity.Sub(product)
 	// mul round up numerator to make the final result larger
 	// quo round up to make the final result larger
@@ -165,8 +163,8 @@ func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amoun
 // When we swap for token zero out given token one in, the price is increasing and we need to move the sqrt price (increase it) less to
 // avoid overpaying out of the pool. Therefore, we round down.
 // sqrt_next = sqrt_cur + token_in / liq
-func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingIn osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
-	return sqrtPriceCurrent.Add(amountOneRemainingIn.QuoTruncate(liquidity))
+func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent osmomath.BigDec, liquidity osmomath.Dec, amountOneRemainingIn osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
+	return amountOneRemainingIn.QuoTruncateDec(liquidity).AddMut(sqrtPriceCurrent)
 }
 
 // GetNextSqrtPriceFromAmount1OutRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
@@ -174,8 +172,8 @@ func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amou
 // When we swap for token zero in given token one out, the price is decrearing and we need to move the price down enough
 // so that we get the desired output amount out.
 // sqrt_next = sqrt_cur - token_out / liq
-func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
-	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUp(liquidity))
+func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent osmomath.BigDec, liquidity osmomath.Dec, amountOneRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
+	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoByDecRoundUp(liquidity))
 }
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1

@@ -64,6 +64,9 @@ func CreateUpgradeHandler(
 			return nil, errors.New("unsupported chain ID")
 		}
 
+    // Now that all deprecated historical TWAPs have been pruned via v24, we can delete is isPruning state entry as well
+		keepers.TwapKeeper.DeleteDeprecatedHistoricalTWAPsIsPruning(ctx)
+
 		return migrations, nil
 	}
 }
