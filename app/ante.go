@@ -19,8 +19,8 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	authante "github.com/osmosis-labs/osmosis/v24/x/authenticator/ante"
-	authenticators "github.com/osmosis-labs/osmosis/v24/x/authenticator/keeper"
+	authante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
+	authenticators "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"

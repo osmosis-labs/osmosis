@@ -34,7 +34,7 @@ import (
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	authenticator "github.com/osmosis-labs/osmosis/v24/x/authenticator"
+	authenticator "github.com/osmosis-labs/osmosis/v24/x/smart-account"
 
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client"

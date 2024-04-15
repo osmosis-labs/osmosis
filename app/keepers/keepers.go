@@ -78,9 +78,9 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 
-	"github.com/osmosis-labs/osmosis/v24/x/authenticator/authenticator"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/authenticator/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v24/wasmbinding"
