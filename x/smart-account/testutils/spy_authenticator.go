@@ -100,7 +100,6 @@ func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request authenticator.Au
 }
 
 func (s SpyAuthenticator) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
-
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.Track = SpyTrackRequest{
 			AuthenticatorId: request.AuthenticatorId,
