@@ -1594,3 +1594,36 @@ func (s *KeeperTestSuite) collectSpreadRewardsAndCheckInvariance(ctx sdk.Context
 	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedSpreadRewardDenoms)
 	return totalSpreadRewardsCollected
 }
+
+func (s *KeeperTestSuite) TestScaleDownSpreadRewardAmount() {
+	tests := []struct {
+		name            string
+		incentiveAmount osmomath.Int
+		scalingFactor   osmomath.Dec
+		expectedAmount  osmomath.Int
+		expectedDust    osmomath.Dec
+	}{
+		{
+			name:            "PerUnitLiqScalingFactor with no remainder",
+			incentiveAmount: osmomath.MustNewDecFromStr("123456789").Mul(apptesting.PerUnitLiqScalingFactor).TruncateInt(),
+			scalingFactor:   apptesting.PerUnitLiqScalingFactor,
+			expectedAmount:  osmomath.NewInt(123456789),
+			expectedDust:    osmomath.ZeroDec(),
+		},
+		{
+			name:            "PerUnitLiqScalingFactor with remainder",
+			incentiveAmount: osmomath.MustNewDecFromStr("123456789.123456789123456789").Mul(apptesting.PerUnitLiqScalingFactor).TruncateInt(),
+			scalingFactor:   apptesting.PerUnitLiqScalingFactor,
+			expectedAmount:  osmomath.NewInt(123456789),
+			expectedDust:    osmomath.MustNewDecFromStr("0.123456789123456789"),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			scaledAmount, truncatedDec := cl.ScaleDownSpreadRewardAmount(test.incentiveAmount, test.scalingFactor)
+			s.Require().Equal(test.expectedAmount, scaledAmount, "scaledAmount does not match")
+			s.Require().True(test.expectedDust.Equal(truncatedDec), "truncatedDec does not match")
+		})
+	}
+}
