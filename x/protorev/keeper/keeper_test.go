@@ -55,49 +55,24 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupNoPools() {
 	s.Setup()
+	s.setupParams()
 
-	// Genesis on init should be the same as the default genesis
-	exportDefaultGenesis := s.App.ProtoRevKeeper.ExportGenesis(s.Ctx)
-	s.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
+	queryHelper := baseapp.NewQueryServerTestHelper(s.Ctx, s.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*s.App.AppKeepers.ProtoRevKeeper))
+	s.queryClient = types.NewQueryClient(queryHelper)
+}
 
-	// Init module state for testing (params may differ from default params)
-	s.App.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, true)
-	s.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(s.Ctx, 0)
-	s.App.ProtoRevKeeper.SetLatestBlockHeight(s.Ctx, uint64(s.Ctx.BlockHeight()))
-	s.App.ProtoRevKeeper.SetPointCountForBlock(s.Ctx, 0)
+func (s *KeeperTestSuite) SetupTest() {
+	s.SetupNoPools()
+}
 
-	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
-	// take per block
-	if err := s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100); err != nil {
-		panic(err)
-	}
-	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
-	// per tx
-	if err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 18); err != nil {
-		panic(err)
-	}
+func (s *KeeperTestSuite) SetupPoolsTest() {
+	s.Setup()
+	s.setupParams()
 
-	// Configure the initial base denoms used for cyclic route building
-	baseDenomPriorities := []types.BaseDenom{
-		{
-			Denom:    types.OsmosisDenomination,
-			StepSize: osmomath.NewInt(1_000_000),
-		},
-		{
-			Denom:    "Atom",
-			StepSize: osmomath.NewInt(1_000_000),
-		},
-		{
-			Denom:    "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-			StepSize: osmomath.NewInt(1_000_000),
-		},
-	}
-	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
-	s.Require().NoError(err)
-
-	encodingConfig := osmosisapp.MakeEncodingConfig()
+	encodingConfig := osmosisapp.GetEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -139,7 +114,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("stake", osmomath.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
-	s.Commit()
 
 	// Init pools
 	s.setUpPools()
@@ -149,14 +123,55 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.setUpTokenPairRoutes()
 	s.Commit()
 
-	// Set the Admin Account
-	s.adminAccount = apptesting.CreateRandomAccounts(1)[0]
-	err = protorev.HandleSetProtoRevAdminAccount(s.Ctx, *s.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: s.adminAccount.String()})
-	s.Require().NoError(err)
-
 	queryHelper := baseapp.NewQueryServerTestHelper(s.Ctx, s.App.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*s.App.AppKeepers.ProtoRevKeeper))
 	s.queryClient = types.NewQueryClient(queryHelper)
+}
+
+func (s *KeeperTestSuite) setupParams() {
+	// Genesis on init should be the same as the default genesis
+	exportDefaultGenesis := s.App.ProtoRevKeeper.ExportGenesis(s.Ctx)
+	s.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
+
+	// Init module state for testing (params may differ from default params)
+	s.App.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, true)
+	s.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(s.Ctx, 0)
+	s.App.ProtoRevKeeper.SetLatestBlockHeight(s.Ctx, uint64(s.Ctx.BlockHeight()))
+	s.App.ProtoRevKeeper.SetPointCountForBlock(s.Ctx, 0)
+
+	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
+	// take per block
+	if err := s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100); err != nil {
+		panic(err)
+	}
+	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
+	// per tx
+	if err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 18); err != nil {
+		panic(err)
+	}
+
+	// Set the Admin Account
+	s.adminAccount = apptesting.CreateRandomAccounts(1)[0]
+	err := protorev.HandleSetProtoRevAdminAccount(s.Ctx, *s.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: s.adminAccount.String()})
+	s.Require().NoError(err)
+
+	// Configure the initial base denoms used for cyclic route building
+	baseDenomPriorities := []types.BaseDenom{
+		{
+			Denom:    types.OsmosisDenomination,
+			StepSize: osmomath.NewInt(1_000_000),
+		},
+		{
+			Denom:    "Atom",
+			StepSize: osmomath.NewInt(1_000_000),
+		},
+		{
+			Denom:    "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+			StepSize: osmomath.NewInt(1_000_000),
+		},
+	}
+	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
+	s.Require().NoError(err)
 }
 
 // setUpPools sets up the pools needed for testing

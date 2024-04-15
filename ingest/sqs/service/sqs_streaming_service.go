@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/types"
@@ -68,6 +69,12 @@ func (s *sqsStreamingService) ListenDeliverTx(ctx context.Context, req types.Req
 }
 
 func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
+	blockProcessStartTime := time.Now()
+	defer func() {
+		// Emit telemetry for the duration of processing the block.
+		telemetry.MeasureSince(blockProcessStartTime, domain.SQSProcessBlockDurationMetricName)
+	}()
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Always return nil to avoid making this consensus breaking.
 	_ = s.processBlockRecoverError(sdkCtx)

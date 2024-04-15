@@ -3674,8 +3674,8 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	desiredCurrentSqrtPrice, err := math.TickToSqrtPrice(desiredCurrentTick)
 	s.Require().NoError(err)
 
-	amount0 := math.CalcAmount0Delta(desiredLiquidity, desiredCurrentSqrtPrice, types.MaxSqrtPriceBigDec, true).Dec().TruncateInt()
-	amount1 := math.CalcAmount1Delta(desiredLiquidity, types.MinSqrtPriceBigDec, desiredCurrentSqrtPrice, true).Dec().TruncateInt()
+	amount0 := math.CalcAmount0Delta(desiredLiquidity.Dec(), desiredCurrentSqrtPrice, types.MaxSqrtPriceBigDec, true).Dec().TruncateInt()
+	amount1 := math.CalcAmount1Delta(desiredLiquidity.Dec(), types.MinSqrtPriceBigDec, desiredCurrentSqrtPrice, true).Dec().TruncateInt()
 
 	lpCoins := sdk.NewCoins(sdk.NewCoin(ETH, amount0), sdk.NewCoin(USDC, amount1))
 	s.FundAcc(s.TestAccs[0], lpCoins)
@@ -3733,6 +3733,64 @@ func (s *KeeperTestSuite) TestComputeTotalIncentivesToEmit() {
 	_, err = cl.ComputeTotalIncentivesToEmit(oneHundredYearsSecs, oneE60Dec.MulInt64(1_000_000_000_000))
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "overflow")
+}
+
+// This test shows that the scaling factor is applied correctly based on the pool ID.
+// If the pool ID is below or at the migration threshold, the scaling factor is 1.
+// If the pool ID is above the migration threshold, the scaling factor is the per unit liquidity scaling factor.
+// If he pool ID is in the overwrite map, the scaling factor is the per unit liquidity scaling factor.
+func (s *KeeperTestSuite) TestGetIncentiveScalingFactorForPool() {
+	// Grab an example of the overwrite pool from map
+	s.Require().NotZero(len(types.MigratedIncentiveAccumulatorPoolIDs))
+	s.Require().NotZero(len(types.MigratedIncentiveAccumulatorPoolIDsV24))
+
+	var exampleOverwritePoolID uint64
+	for poolID := range types.MigratedIncentiveAccumulatorPoolIDs {
+		exampleOverwritePoolID = poolID
+		break
+	}
+
+	var exampleOverwritePoolIDv24 uint64
+	for poolIDv24 := range types.MigratedIncentiveAccumulatorPoolIDsV24 {
+		exampleOverwritePoolIDv24 = poolIDv24
+		break
+	}
+
+	var (
+		oneDec = osmomath.OneDec()
+
+		// Make migration threshold 1000 pool IDs higher
+		migrationThreshold = exampleOverwritePoolID + 1000
+	)
+
+	s.SetupTest()
+
+	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, migrationThreshold)
+
+	// One below the threshold has scaling factor of 1 (non-migrated)
+	scalingFactor, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold-1)
+	s.Require().NoError(err)
+	s.Require().Equal(oneDec, scalingFactor)
+
+	// At threshold, scaling factor is 1 (non-migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold)
+	s.Require().NoError(err)
+	s.Require().Equal(oneDec, scalingFactor)
+
+	// One above the threshold has non-1 scaling factor (migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, migrationThreshold+1)
+	s.Require().NoError(err)
+	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
+
+	// Overwrite pool ID has non-1 scaling factor (migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, exampleOverwritePoolID)
+	s.Require().NoError(err)
+	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
+
+	// Overwrite pool IDv24 has non-1 scaling factor (migrated)
+	scalingFactor, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveScalingFactorForPool(s.Ctx, exampleOverwritePoolIDv24)
+	s.Require().NoError(err)
+	s.Require().Equal(cl.PerUnitLiqScalingFactor, scalingFactor)
 }
 
 // scaleUptimeAccumulators scales the uptime accumulators by the scaling factor.

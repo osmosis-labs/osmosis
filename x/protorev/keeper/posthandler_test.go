@@ -74,6 +74,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 }
 
 func (s *KeeperTestSuite) TestPostHandle() {
+	s.SetupPoolsTest()
 	type param struct {
 		trades              []types.Trade
 		expectedNumOfTrades osmomath.Int
@@ -706,7 +707,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	// Create a new test suite
 	s := new(KeeperTestSuite)
 	s.SetT(&testing.T{})
-	s.SetupTest()
+	s.SetupPoolsTest()
 
 	// Set up the app to the correct state to run the test
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())

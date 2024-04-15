@@ -27,8 +27,8 @@ import (
 
 	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v22/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v22/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 // BlockSDKAnteHandlerParams are the parameters necessary to configure the block-sdk antehandlers
