@@ -3674,8 +3674,8 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	desiredCurrentSqrtPrice, err := math.TickToSqrtPrice(desiredCurrentTick)
 	s.Require().NoError(err)
 
-	amount0 := math.CalcAmount0Delta(desiredLiquidity, desiredCurrentSqrtPrice, types.MaxSqrtPriceBigDec, true).Dec().TruncateInt()
-	amount1 := math.CalcAmount1Delta(desiredLiquidity, types.MinSqrtPriceBigDec, desiredCurrentSqrtPrice, true).Dec().TruncateInt()
+	amount0 := math.CalcAmount0Delta(desiredLiquidity.Dec(), desiredCurrentSqrtPrice, types.MaxSqrtPriceBigDec, true).Dec().TruncateInt()
+	amount1 := math.CalcAmount1Delta(desiredLiquidity.Dec(), types.MinSqrtPriceBigDec, desiredCurrentSqrtPrice, true).Dec().TruncateInt()
 
 	lpCoins := sdk.NewCoins(sdk.NewCoin(ETH, amount0), sdk.NewCoin(USDC, amount1))
 	s.FundAcc(s.TestAccs[0], lpCoins)
