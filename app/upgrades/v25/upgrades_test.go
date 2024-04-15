@@ -38,7 +38,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 
-	preMigrationSigningInfo := s.prepareMissedBlocksCounter()
+	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -46,7 +46,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	s.executeMissedBlocksCounter(preMigrationSigningInfo)
+	s.executeMissedBlocksCounterTest(preMigrationSigningInfo)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -60,7 +60,7 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	s.Ctx = s.Ctx.WithBlockHeight(v25UpgradeHeight)
 }
 
-func (s *UpgradeTestSuite) prepareMissedBlocksCounter() slashingtypes.ValidatorSigningInfo {
+func (s *UpgradeTestSuite) prepareMissedBlocksCounterTest() slashingtypes.ValidatorSigningInfo {
 	cdc := moduletestutil.MakeTestEncodingConfig(slashing.AppModuleBasic{}).Codec
 	slashingStoreKey := s.App.AppKeepers.GetKey(slashingtypes.StoreKey)
 	store := s.Ctx.KVStore(slashingStoreKey)
@@ -81,7 +81,7 @@ func (s *UpgradeTestSuite) prepareMissedBlocksCounter() slashingtypes.ValidatorS
 	return preMigrationSigningInfo
 }
 
-func (s *UpgradeTestSuite) executeMissedBlocksCounter(preMigrationSigningInfo slashingtypes.ValidatorSigningInfo) {
+func (s *UpgradeTestSuite) executeMissedBlocksCounterTest(preMigrationSigningInfo slashingtypes.ValidatorSigningInfo) {
 	postMigrationSigningInfo, found := s.App.SlashingKeeper.GetValidatorSigningInfo(s.Ctx, consAddr)
 	s.Require().True(found)
 
