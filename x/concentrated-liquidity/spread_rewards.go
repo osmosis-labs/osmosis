@@ -272,12 +272,12 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	forfeitedDust := sdk.DecCoins{}
 	if spreadFactorScalingFactor.Equal(sdk.OneDec()) {
 		// If the scaling factor is 1, we don't need to scale down the spread rewards.
-		// We also use the forfeited dust calculated in the previous step as it is already scaled down.
+		// We also use the forfeited dust calculated updateAccumAndClaimRewards since it is already scaled down.
 		spreadRewardsClaimed = spreadRewardsClaimedScaled
 		forfeitedDust = forfeitedDustScaled
 	} else {
-		// If the scaling factor is not 1, we scale down the spread rewards, and calculate the forfeited dust
-		// from the scaled down spread rewards, and disregard the forfeited dust calculated in the previous step.
+		// If the scaling factor is not 1, we scale down the spread rewards and calculate the forfeited dust
+		// from the scaled down spread rewards (disregarding the forfeited dust calculated from updateAccumAndClaimRewards).
 		for _, coin := range spreadRewardsClaimedScaled {
 			scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
 			if !scaledCoinAmt.IsZero() {
@@ -303,8 +303,8 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
-			forfeitedDustScaledPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
-			spreadRewardAccumulator.AddToAccumulator(forfeitedDustScaledPerShare)
+			forfeitedDustPerShareScaled := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
+			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShareScaled)
 		}
 	}
 

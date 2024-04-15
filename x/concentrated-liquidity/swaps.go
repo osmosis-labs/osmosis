@@ -59,6 +59,9 @@ type SwapState struct {
 	// Global spread reward growth
 	// This value is not persisted in the pool's tick accumulators, and is instead
 	// used to determine how much the user must send to the spread reward address.
+	//
+	// NOTE: Even if there is a scaling factor, this value is not scaled.
+	// The scaling factor only applies when we are updating the pool's tick accumulators.
 	globalSpreadRewardGrowth osmomath.Dec
 
 	swapStrategy swapstrategy.SwapStrategy
@@ -119,13 +122,13 @@ var (
 //
 // Returns the spread factors accrued per unit of liquidity.
 func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec, scalingFactor osmomath.Dec) (osmomath.Dec, error) {
-	// Initialize scaledSpreadRewardChargeTotal with the original value
-	scaledSpreadRewardChargeTotal := spreadRewardChargeTotal
+	// Initialize spreadRewardChargeTotalScaled with the original unscaled value
+	spreadRewardChargeTotalScaled := spreadRewardChargeTotal
 
 	// Only scale if the scaling factor is not equal to oneDecScalingFactor
 	if !scalingFactor.Equal(oneDecScalingFactor) {
 		var err error
-		scaledSpreadRewardChargeTotal, err = scaleUpTotalEmittedAmount(spreadRewardChargeTotal, scalingFactor)
+		spreadRewardChargeTotalScaled, err = scaleUpTotalEmittedAmount(spreadRewardChargeTotal, scalingFactor)
 		if err != nil {
 			return osmomath.ZeroDec(), fmt.Errorf("failed to scale up spread reward charge: %w", err)
 		}
@@ -143,12 +146,12 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmo
 	}
 
 	// Calculate spread factors accrued per unit of liquidity, rounding down to avoid overdistribution
-	scaledSpreadFactorsAccruedPerUnitOfLiquidity := scaledSpreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+	spreadFactorsAccruedPerUnitOfLiquidityScaled := spreadRewardChargeTotalScaled.QuoTruncate(ss.liquidity)
 
 	// Update global spread reward growth per unit liquidity
-	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(scaledSpreadFactorsAccruedPerUnitOfLiquidity)
+	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(spreadFactorsAccruedPerUnitOfLiquidityScaled)
 
-	return scaledSpreadFactorsAccruedPerUnitOfLiquidity, nil
+	return spreadFactorsAccruedPerUnitOfLiquidityScaled, nil
 }
 
 func (k Keeper) SwapExactAmountIn(
@@ -471,14 +474,14 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 
 		if updateAccumulators {
-			// Calculate the spread reward growth for the entire swap using the total spread factors charged, scaling the spread reward by the scaling factor.
-			scaledSpreadFactorsAccruedPerUnitOfLiquidity, err := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge, scalingFactor)
+			// Calculate the spread reward growth for the swap step using the total spread factors charged, scaling the spread reward by the scaling factor.
+			spreadFactorsAccruedPerUnitOfLiquidityScaled, err := swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge, scalingFactor)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
 			}
 
 			// Emit telemetry to detect spread reward truncation.
-			emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, scaledSpreadFactorsAccruedPerUnitOfLiquidity, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", "true")
+			emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, spreadFactorsAccruedPerUnitOfLiquidityScaled, spreadRewardCharge, poolId, swapState.liquidity, "is_out_given_in", "true")
 		}
 
 		ctx.Logger().Debug("cl calc out given in")
@@ -618,14 +621,14 @@ func (k Keeper) computeInAmtGivenOut(
 		}
 
 		if updateAccumulators {
-			// Calculate the spread reward growth for the entire swap using the total spread factors charged, scaling the spread reward by the scaling factor.
-			scaledSpreadFactorsAccruedPerUnitOfLiquidity, err := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, scalingFactor)
+			// Calculate the spread reward growth for the swap step using the total spread factors charged, scaling the spread reward by the scaling factor.
+			spreadFactorsAccruedPerUnitOfLiquidityScaled, err := swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, scalingFactor)
 			if err != nil {
 				return SwapResult{}, PoolUpdates{}, err
 			}
 
 			// Emit telemetry to detect spread reward truncation.
-			emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, scaledSpreadFactorsAccruedPerUnitOfLiquidity, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", "false")
+			emitAccumulatorUpdateTelemetry(types.SpreadFactorTruncationTelemetryName, spreadFactorsAccruedPerUnitOfLiquidityScaled, spreadRewardChargeTotal, poolId, swapState.liquidity, "is_out_given_in", "false")
 		}
 
 		ctx.Logger().Debug("cl calc in given out")

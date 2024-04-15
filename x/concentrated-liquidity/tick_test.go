@@ -451,7 +451,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clPool := s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
-			// Upscale accum values
+			// Upscale accum value
 			test.expectedTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = test.expectedTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal.MulDecTruncate(cl.PerUnitLiqScalingFactor)
 
 			if test.preInitUptimeAccumValues != nil {
