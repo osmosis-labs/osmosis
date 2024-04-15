@@ -348,6 +348,21 @@ func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorOb
 	return nil
 }
 
+// scaleDownSpreadRewardAmount scales down the spread reward amount by the scaling factor.
+// This method differs from scaleDownIncentiveAmount in that it not only returns the scaled amount, but also the truncated decimal, which is dust
+// that is added back to the global accumulator.
+func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
+	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
+
+	// Scaled down amount, which is used to distribute to user
+	scaledAmount = scaledDec.TruncateInt()
+
+	// Truncated decimal, which is dust that is added back to the global accumulator
+	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())
+
+	return scaledAmount, truncatedDec
+}
+
 // getSpreadFactorScalingFactorForPool returns the spread factor scaling factor for the given pool.
 // It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
 // It returns oneDecScalingFactor otherwise.

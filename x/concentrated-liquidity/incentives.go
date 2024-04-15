@@ -362,21 +362,6 @@ func scaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmoma
 	return incentiveAmount.ToLegacyDec().QuoTruncateMut(scalingFactor).TruncateInt()
 }
 
-// scaleDownSpreadRewardAmount scales down the spread reward amount by the scaling factor.
-// This method differs from scaleDownIncentiveAmount in that it not only returns the scaled amount, but also the truncated decimal, which is dust
-// that is added back to the global accumulator.
-func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
-	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
-
-	// Scaled down amount, which is used to distribute to user
-	scaledAmount = scaledDec.TruncateInt()
-
-	// Truncated decimal, which is dust that is added back to the global accumulator
-	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())
-
-	return scaledAmount, truncatedDec
-}
-
 // computeTotalIncentivesToEmit computes the total incentives to emit based on the time elapsed and emission rate.
 // Returns error if timeElapsed or emissionRate are too high, causing overflow during multiplication.
 func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate osmomath.Dec) (totalEmittedAmount osmomath.Dec, err error) {
