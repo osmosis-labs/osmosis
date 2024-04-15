@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v24/app"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -265,7 +265,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorState() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000)),
 	}
 
-	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]}
+	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[smartaccounttypes.AuthenticatorStoreKey]}
 	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
 	_, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -291,7 +291,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsg() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
-	storeKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
+	storeKey := s.app.GetKVStoreKey()[smartaccounttypes.AuthenticatorStoreKey]
 	maxAmount := testutils.MaxAmountAuthenticator{KvStoreKey: storeKey}
 	stateful := testutils.StatefulAuthenticator{KvStoreKey: storeKey}
 

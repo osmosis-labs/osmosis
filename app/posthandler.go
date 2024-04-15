@@ -6,7 +6,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	authpost "github.com/osmosis-labs/osmosis/v24/x/smart-account/post"
+	smartaccountpost "github.com/osmosis-labs/osmosis/v24/x/smart-account/post"
 
 	protorevkeeper "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
 )
@@ -19,7 +19,7 @@ func NewPostHandler(
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
-		authpost.NewAuthenticatorPostDecorator(
+		smartaccountpost.NewAuthenticatorPostDecorator(
 			smartAccountKeeper,
 			accountKeeper,
 			sigModeHandler,

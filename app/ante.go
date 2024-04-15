@@ -19,7 +19,7 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	authante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
+	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
@@ -66,12 +66,12 @@ func NewAnteHandler(
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
-		authante.LimitFeePayerDecorator{},
-		authante.NewSetPubKeyDecorator(accountKeeper),
+		smartaccountante.LimitFeePayerDecorator{},
+		smartaccountante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
 		// is enbedded in the authenticator decorator
-		authante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
+		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 		deductFeeDecorator,
@@ -91,7 +91,7 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
-		authante.NewCircuitBreakerDecorator(
+		smartaccountante.NewCircuitBreakerDecorator(
 			smartAccountKeeper,
 			authenticatorVerificationDecorator,
 			classicSignatureVerificationDecorator,
