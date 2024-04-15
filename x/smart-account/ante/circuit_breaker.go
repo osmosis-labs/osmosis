@@ -5,26 +5,26 @@ import (
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 // CircuitBreakerDecorator routes transactions through appropriate ante handlers based on
 // the IsCircuitBreakActive function.
 type CircuitBreakerDecorator struct {
-	authenticatorKeeper          *authenticatorkeeper.Keeper
+	smartAccountKeeper           *smartaccountkeeper.Keeper
 	authenticatorAnteHandlerFlow sdk.AnteHandler
 	originalAnteHandlerFlow      sdk.AnteHandler
 }
 
 // NewCircuitBreakerDecorator creates a new instance of CircuitBreakerDecorator with the provided parameters.
 func NewCircuitBreakerDecorator(
-	authenticatorKeeper *authenticatorkeeper.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	auth sdk.AnteHandler,
 	classic sdk.AnteHandler,
 ) CircuitBreakerDecorator {
 	return CircuitBreakerDecorator{
-		authenticatorKeeper:          authenticatorKeeper,
+		smartAccountKeeper:           smartAccountKeeper,
 		authenticatorAnteHandlerFlow: auth,
 		originalAnteHandlerFlow:      classic,
 	}
@@ -38,7 +38,7 @@ func (ad CircuitBreakerDecorator) AnteHandle(
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
 	// Check that the authenticator flow is active
-	if active, _ := IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper); active {
+	if active, _ := IsCircuitBreakActive(ctx, tx, ad.smartAccountKeeper); active {
 		// Return and call the AnteHandle function on all the original decorators.
 		return ad.originalAnteHandlerFlow(ctx, tx, simulate)
 	}
@@ -52,30 +52,30 @@ func (ad CircuitBreakerDecorator) AnteHandle(
 func IsCircuitBreakActive(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	authenticatorKeeper *authenticatorkeeper.Keeper,
-) (bool, authenticatortypes.AuthenticatorTxOptions) {
-	authenticatorParams := authenticatorKeeper.GetParams(ctx)
+	smartAccountKeeper *smartaccountkeeper.Keeper,
+) (bool, smartaccounttypes.AuthenticatorTxOptions) {
+	authenticatorParams := smartAccountKeeper.GetParams(ctx)
 	if !authenticatorParams.IsSmartAccountActive {
 		return true, nil
 	}
 
 	// Get the selected authenticator options from the transaction.
-	return IsSelectedAuthenticatorTxExtensionMissing(tx, authenticatorKeeper)
+	return IsSelectedAuthenticatorTxExtensionMissing(tx, smartAccountKeeper)
 }
 
 // IsSelectedAuthenticatorTxExtensionMissing checks to see if the transaction has the correct
 // extension, it returns false if we continue to the authenticator flow.
 func IsSelectedAuthenticatorTxExtensionMissing(
 	tx sdk.Tx,
-	authenticatorKeeper *authenticatorkeeper.Keeper,
-) (bool, authenticatortypes.AuthenticatorTxOptions) {
+	smartAccountKeeper *smartaccountkeeper.Keeper,
+) (bool, smartaccounttypes.AuthenticatorTxOptions) {
 	extTx, ok := tx.(authante.HasExtensionOptionsTx)
 	if !ok {
 		return true, nil
 	}
 
 	// Get the selected authenticator options from the transaction.
-	txOptions := authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	txOptions := smartAccountKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 
 	// Check if authenticator transaction options are present and there is at least 1 selected.
 	if txOptions == nil || len(txOptions.GetSelectedAuthenticators()) < 1 {

@@ -12,7 +12,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
@@ -302,7 +302,7 @@ func SignAuthenticatorMsg(
 		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
 	}
 	if len(selectedAuthenticators) > 0 {
-		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+		value, err := types.NewAnyWithValue(&smartaccounttypes.TxExtension{
 			SelectedAuthenticators: selectedAuthenticators,
 		})
 		if err != nil {
@@ -489,7 +489,7 @@ func SignAuthenticatorMsgWithCompoundSigs(
 		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
 	}
 	if len(selectedAuthenticators) > 0 {
-		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+		value, err := types.NewAnyWithValue(&smartaccounttypes.TxExtension{
 			SelectedAuthenticators: selectedAuthenticators,
 		})
 		if err != nil {

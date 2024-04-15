@@ -3,12 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
@@ -97,18 +96,26 @@ func (m msgServer) SetActiveState(goCtx context.Context, msg *types.MsgSetActive
 	// `MsgSetActiveState` must have only one signer
 	signer := msg.GetSigners()[0]
 
-	// check if signer is authorized to set the active state
-	isAuthorized := false
-	params := m.Keeper.GetParams(ctx)
-
-	for _, controller := range params.CircuitBreakerControllers {
-		if controller == signer.String() {
-			isAuthorized = true
-			break
+	if msg.Active == true {
+		// Only the circuit breaker governor can set the active state of the authenticator to true
+		if !signer.Equals(m.Keeper.CircuitBreakerGovernor) {
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer is not the circuit breaker governor")
 		}
-	}
-	if !isAuthorized {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer is not a circuit breaker controller")
+	} else {
+		// The circuit breaker can state can be set to false by any of the circuit breaker controllers
+		isAuthorized := false
+		params := m.Keeper.GetParams(ctx)
+
+		for _, controller := range params.CircuitBreakerControllers {
+			if controller == signer.String() {
+				isAuthorized = true
+				break
+			}
+		}
+		if !isAuthorized {
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer is not a circuit breaker controller")
+
+		}
 	}
 
 	// Set the active state of the authenticator

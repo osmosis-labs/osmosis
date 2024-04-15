@@ -12,32 +12,32 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	authenticatorante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
+	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 // AuthenticatorPostDecorator handles post-transaction tasks for smart accounts.
 type AuthenticatorPostDecorator struct {
-	authenticatorKeeper *authenticatorkeeper.Keeper
-	accountKeeper       *authkeeper.AccountKeeper
-	sigModeHandler      authsigning.SignModeHandler
-	next                sdk.PostHandler
+	smartAccountKeeper *smartaccountkeeper.Keeper
+	accountKeeper      *authkeeper.AccountKeeper
+	sigModeHandler     authsigning.SignModeHandler
+	next               sdk.PostHandler
 }
 
 // NewAuthenticatorPostDecorator creates a new AuthenticatorPostDecorator with necessary dependencies.
 func NewAuthenticatorPostDecorator(
-	authenticatorKeeper *authenticatorkeeper.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
 	next sdk.PostHandler,
 ) AuthenticatorPostDecorator {
 	return AuthenticatorPostDecorator{
-		authenticatorKeeper: authenticatorKeeper,
-		accountKeeper:       accountKeeper,
-		sigModeHandler:      sigModeHandler,
-		next:                next,
+		smartAccountKeeper: smartAccountKeeper,
+		accountKeeper:      accountKeeper,
+		sigModeHandler:     sigModeHandler,
+		next:               next,
 	}
 }
 
@@ -54,7 +54,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 	prevGasConsumed := ctx.GasMeter().GasConsumed()
 
 	// Ensure that the transaction is an authenticator transaction
-	active, txOptions := authenticatorante.IsCircuitBreakActive(ctx, tx, ad.authenticatorKeeper)
+	active, txOptions := smartaccountante.IsCircuitBreakActive(ctx, tx, ad.smartAccountKeeper)
 	if active {
 		return ad.next(ctx, tx, simulate, success)
 	}
@@ -78,7 +78,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		account := msg.GetSigners()[0]
 
 		selectedAuthenticatorId := int(selectedAuthenticatorsFromExtension[msgIndex])
-		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
+		selectedAuthenticator, err := ad.smartAccountKeeper.GetInitializedAuthenticatorForAccount(
 			ctx,
 			account,
 			selectedAuthenticatorId,

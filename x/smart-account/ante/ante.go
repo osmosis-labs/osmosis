@@ -14,28 +14,28 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
 // before transaction execution.
 type AuthenticatorDecorator struct {
-	authenticatorKeeper *authenticatorkeeper.Keeper
-	accountKeeper       authante.AccountKeeper
-	sigModeHandler      authsigning.SignModeHandler
+	smartAccountKeeper *smartaccountkeeper.Keeper
+	accountKeeper      authante.AccountKeeper
+	sigModeHandler     authsigning.SignModeHandler
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
-	authenticatorKeeper *authenticatorkeeper.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
-		authenticatorKeeper: authenticatorKeeper,
-		accountKeeper:       accountKeeper,
-		sigModeHandler:      sigModeHandler,
+		smartAccountKeeper: smartAccountKeeper,
+		accountKeeper:      accountKeeper,
+		sigModeHandler:     sigModeHandler,
 	}
 }
 
@@ -61,7 +61,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
-	authenticatorParams := ad.authenticatorKeeper.GetParams(ctx)
+	authenticatorParams := ad.smartAccountKeeper.GetParams(ctx)
 	payerGasMeter := sdk.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
@@ -124,7 +124,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		// Get the currently selected authenticator
 		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
-		selectedAuthenticator, err := ad.authenticatorKeeper.GetInitializedAuthenticatorForAccount(
+		selectedAuthenticator, err := ad.smartAccountKeeper.GetInitializedAuthenticatorForAccount(
 			cacheCtx,
 			account,
 			selectedAuthenticatorId,
@@ -184,7 +184,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					// track should not fail in normal circumstances, since it is intended to update track state before execution.
 					// If it does fail, we log the error.
 					telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
-					ad.authenticatorKeeper.Logger(ctx).Error(
+					ad.smartAccountKeeper.Logger(ctx).Error(
 						"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
 
 					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
@@ -233,7 +233,7 @@ func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	}
 
 	// Get the selected authenticator options from the transaction.
-	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	txOptions := ad.smartAccountKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
 	if txOptions == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
 			"Cannot get AuthenticatorTxOptions from tx")

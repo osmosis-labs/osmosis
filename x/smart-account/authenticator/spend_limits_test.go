@@ -90,16 +90,16 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
 
 	s.AlwaysPassAuth = testutils.TestingAuthenticator{Approve: testutils.Always, Confirm: testutils.Always, GasConsumption: 0}
-	s.OsmosisApp.AuthenticatorKeeper.AuthenticatorManager.RegisterAuthenticator(s.AlwaysPassAuth)
+	s.OsmosisApp.SmartAccountKeeper.AuthenticatorManager.RegisterAuthenticator(s.AlwaysPassAuth)
 
 	s.AuthenticatorAnteDecorator = ante.NewAuthenticatorDecorator(
-		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 	)
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
-		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 		// Add an empty handler here to enable a circuit breaker pattern
@@ -157,7 +157,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	contractAddr := s.InstantiateContract(string(bz), codeId)
 
 	// add new authenticator
-	ak := s.OsmosisApp.AppKeepers.AuthenticatorKeeper
+	ak := s.OsmosisApp.AppKeepers.SmartAccountKeeper
 
 	authAcc := s.TestAccAddress[1]
 	authAccPriv := s.TestPrivKeys[1]

@@ -5,7 +5,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	authenticators "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 	authpost "github.com/osmosis-labs/osmosis/v24/x/smart-account/post"
 
 	protorevkeeper "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
@@ -13,14 +13,14 @@ import (
 
 func NewPostHandler(
 	protoRevKeeper *protorevkeeper.Keeper,
-	authenticatorKeeper *authenticators.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
 		authpost.NewAuthenticatorPostDecorator(
-			authenticatorKeeper,
+			smartAccountKeeper,
 			accountKeeper,
 			sigModeHandler,
 			// Add an empty handler here to enable a circuit breaker pattern

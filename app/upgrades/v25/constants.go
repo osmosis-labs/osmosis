@@ -5,7 +5,7 @@ import (
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v25 upgrade.
@@ -16,8 +16,8 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
-			authenticatortypes.ManagerStoreKey,
-			authenticatortypes.AuthenticatorStoreKey,
+			smartaccounttypes.ManagerStoreKey,
+			smartaccounttypes.AuthenticatorStoreKey,
 		},
 		Deleted: []string{},
 	},

@@ -17,7 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	"github.com/osmosis-labs/osmosis/v24/app"
 	"github.com/osmosis-labs/osmosis/v24/app/params"
@@ -132,7 +132,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sd
 		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
 	}
 	if len(selectedAuthenticators) > 0 {
-		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+		value, err := types.NewAnyWithValue(&smartaccounttypes.TxExtension{
 			SelectedAuthenticators: selectedAuthenticators,
 		})
 		if err != nil {

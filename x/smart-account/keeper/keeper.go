@@ -27,9 +27,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	paramSpace paramtypes.Subspace
+	storeKey               storetypes.StoreKey
+	cdc                    codec.BinaryCodec
+	paramSpace             paramtypes.Subspace
+	CircuitBreakerGovernor sdk.AccAddress
 
 	AuthenticatorManager *authenticator.AuthenticatorManager
 }
@@ -37,6 +38,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	managerStoreKey storetypes.StoreKey,
+	govModuleAddr sdk.AccAddress,
 	ps paramtypes.Subspace,
 	authenticatorManager *authenticator.AuthenticatorManager,
 ) Keeper {
@@ -46,10 +48,11 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:             managerStoreKey,
-		cdc:                  cdc,
-		paramSpace:           ps,
-		AuthenticatorManager: authenticatorManager,
+		storeKey:               managerStoreKey,
+		cdc:                    cdc,
+		CircuitBreakerGovernor: govModuleAddr,
+		paramSpace:             ps,
+		AuthenticatorManager:   authenticatorManager,
 	}
 }
 

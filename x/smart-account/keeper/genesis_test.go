@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	err := s.App.AuthenticatorKeeper.AddAuthenticatorWithId(
+	err := s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	)
 	s.Require().NoError(err)
 
-	err = s.App.AuthenticatorKeeper.AddAuthenticatorWithId(
+	err = s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -39,11 +39,11 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	)
 	s.Require().NoError(err)
 
-	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
+	authenticators, err := s.App.SmartAccountKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
 	s.Require().NoError(err)
 	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 
-	err = s.App.AuthenticatorKeeper.AddAuthenticatorWithId(
+	err = s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	s.Require().ErrorContains(err, "invalid secp256k1 public key size")
 
 	s.App.AuthenticatorManager.ResetAuthenticators()
-	err = s.App.AuthenticatorKeeper.AddAuthenticatorWithId(
+	err = s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
 	for i := 1; i <= 5; i++ {
-		id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
+		id, err := s.App.SmartAccountKeeper.AddAuthenticator(
 			ctx,
 			accAddress,
 			"SignatureVerificationAuthenticator",
@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 		s.Require().Equal(uint64(i), id)
 	}
 
-	authenticators, err := s.App.AuthenticatorKeeper.GetAllAuthenticatorData(ctx)
+	authenticators, err := s.App.SmartAccountKeeper.GetAllAuthenticatorData(ctx)
 	s.Require().NoError(err, "Error getting authenticator data")
 	s.Require().Equal(5, len(authenticators[0].Authenticators), "Getting authenticators returning incorrect data")
 	s.Require().Equal(accAddress.String(), authenticators[0].Address, "Authenticator Address is incorrect")

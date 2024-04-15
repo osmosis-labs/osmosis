@@ -79,8 +79,8 @@ import (
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v24/wasmbinding"
@@ -172,7 +172,7 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
-	AuthenticatorKeeper          *authenticatorkeeper.Keeper
+	SmartAccountKeeper           *smartaccountkeeper.Keeper
 	AuthenticatorManager         *authenticator.AuthenticatorManager
 
 	// IBC modules
@@ -233,14 +233,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authenticator.NewPartitionedAnyOfAuthenticator(appKeepers.AuthenticatorManager),
 		authenticator.NewPartitionedAllOfAuthenticator(appKeepers.AuthenticatorManager),
 	})
+	govModuleAddr := appKeepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
-	authenticatorKeeper := authenticatorkeeper.NewKeeper(
+	smartAccountKeeper := smartaccountkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[authenticatortypes.ManagerStoreKey],
-		appKeepers.GetSubspace(authenticatortypes.ModuleName),
+		appKeepers.keys[smartaccounttypes.ManagerStoreKey],
+		govModuleAddr,
+		appKeepers.GetSubspace(smartaccounttypes.ModuleName),
 		appKeepers.AuthenticatorManager,
 	)
-	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
+	appKeepers.SmartAccountKeeper = &smartAccountKeeper
 
 	authzKeeper := authzkeeper.NewKeeper(
 		appKeepers.keys[authzkeeper.StoreKey],
@@ -779,7 +781,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
-	paramsKeeper.Subspace(authenticatortypes.ModuleName).WithKeyTable(authenticatortypes.ParamKeyTable())
+	paramsKeeper.Subspace(smartaccounttypes.ModuleName).WithKeyTable(smartaccounttypes.ParamKeyTable())
 	paramsKeeper.Subspace(txfeestypes.ModuleName)
 
 	return paramsKeeper
@@ -903,7 +905,7 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		authenticatortypes.ManagerStoreKey,
-		authenticatortypes.AuthenticatorStoreKey,
+		smartaccounttypes.ManagerStoreKey,
+		smartaccounttypes.AuthenticatorStoreKey,
 	}
 }

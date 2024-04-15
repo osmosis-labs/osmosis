@@ -15,7 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/testutils"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 type AggregatedAuthenticatorsTest struct {
@@ -62,7 +62,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 		Confirm:        testutils.Always,
 	}
 	s.spyAuth = testutils.NewSpyAuthenticator(
-		s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey],
+		s.OsmosisApp.GetKVStoreKey()[smartaccounttypes.AuthenticatorStoreKey],
 	)
 
 	am.RegisterAuthenticator(s.AnyOfAuth)

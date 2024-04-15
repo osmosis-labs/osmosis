@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -77,7 +77,7 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 	}
 
 	s.AuthenticatorDecorator = ante.NewAuthenticatorDecorator(
-		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 	)
@@ -139,7 +139,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
@@ -148,7 +148,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	s.Require().NoError(err)
 	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
-	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
@@ -190,7 +190,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}
 
 	// fee payer is authenticated
-	sigId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sigId, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
@@ -202,7 +202,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
-	excessGasId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	excessGasId, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		alwaysHigher.Type(),
@@ -263,7 +263,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	sig1Id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sig1Id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
@@ -272,7 +272,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	s.Require().NoError(err)
 	s.Require().Equal(sig1Id, uint64(1), "Adding authenticator returning incorrect id")
 
-	sig2Id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	sig2Id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
@@ -373,7 +373,7 @@ func GenTx(
 		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
 	}
 	if len(selectedAuthenticators) > 0 {
-		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+		value, err := types.NewAnyWithValue(&smartaccounttypes.TxExtension{
 			SelectedAuthenticators: selectedAuthenticators,
 		})
 		if err != nil {

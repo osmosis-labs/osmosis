@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	id, err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -56,7 +56,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
 	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
-	id, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"MessageFilterAuthenticator",
@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
 	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
-	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	s.Require().Error(err, "Should have failed as OnAuthenticatorAdded fails")
 
 	s.App.AuthenticatorManager.ResetAuthenticators()
-	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"MessageFilterAuthenticator",
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	_, err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -100,7 +100,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 	)
 	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
 
-	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 	)
 	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
 
-	authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
+	authenticators, err := s.App.SmartAccountKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
 	s.Require().NoError(err)
 	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 }
@@ -116,10 +116,10 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	ctx := s.Ctx
 
-	authenticatorId := s.App.AuthenticatorKeeper.GetNextAuthenticatorId(ctx)
+	authenticatorId := s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
 	s.Require().Equal(uint64(1), authenticatorId, "Get authenticator id returned incorrect id")
 
-	authenticatorId = s.App.AuthenticatorKeeper.GetNextAuthenticatorId(ctx)
+	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
 	s.Require().Equal(uint64(1), authenticatorId, "Get authenticator id returned incorrect id")
 
 	// Set up account
@@ -128,7 +128,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	_, err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -136,10 +136,10 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	)
 	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
 
-	authenticatorId = s.App.AuthenticatorKeeper.GetNextAuthenticatorId(ctx)
+	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
 	s.Require().Equal(authenticatorId, uint64(2), "Get authenticator id returned incorrect id")
 
-	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	)
 	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
 
-	authenticatorId = s.App.AuthenticatorKeeper.GetNextAuthenticatorId(ctx)
+	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
 	s.Require().Equal(authenticatorId, uint64(3), "Get authenticator id returned incorrect id")
 }
 
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	priv := &secp256k1.PrivKey{Key: bz}
 	accAddress := sdk.AccAddress(priv.PubKey().Address())
 
-	_, err := s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"SignatureVerificationAuthenticator",
@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	)
 	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
 
-	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"MessageFilterAuthenticator",
@@ -177,16 +177,16 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
 
 	// Test getting a selected authenticator from the store
-	selectedAuthenticator, err := s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
+	selectedAuthenticator, err := s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
 	s.Require().NoError(err)
 	s.Require().Equal(selectedAuthenticator.Authenticator.Type(), "MessageFilterAuthenticator", "Getting authenticators returning incorrect data")
 
-	selectedAuthenticator, err = s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 1)
+	selectedAuthenticator, err = s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 1)
 	s.Require().NoError(err)
 	s.Require().Equal(selectedAuthenticator.Authenticator.Type(), "SignatureVerificationAuthenticator", "Getting authenticators returning incorrect data")
 	s.Require().Equal(selectedAuthenticator.Id, uint64(1), "Incorrect ID returned from store")
 
-	_, err = s.App.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
 		"MessageFilterAuthenticator",
@@ -198,13 +198,13 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	s.App.AuthenticatorManager.UnregisterAuthenticator(authenticator.MessageFilterAuthenticator{})
 
 	// Try to get an authenticator that has been removed from the store
-	selectedAuthenticator, err = s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
+	selectedAuthenticator, err = s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "authenticator id 2 failed to initialize, authenticator type MessageFilterAuthenticator not registered in manager: internal logic error")
 
 	// Reset the authenticator manager to see how GetInitializedAuthenticatorForAccount behaves
 	s.App.AuthenticatorManager.ResetAuthenticators()
-	selectedAuthenticator, err = s.App.AuthenticatorKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2323)
+	selectedAuthenticator, err = s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2323)
 	s.Require().Error(err)
 	s.Require().Equal(selectedAuthenticator.Id, uint64(0), "Incorrect ID returned from store")
 	s.Require().Equal(selectedAuthenticator.Authenticator, nil, "Returned authenticator from store but nothing registered in manager")

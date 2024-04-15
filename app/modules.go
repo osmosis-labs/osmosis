@@ -65,8 +65,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	authenticator "github.com/osmosis-labs/osmosis/v24/x/smart-account"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
@@ -135,7 +135,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
-	authenticatortypes.ModuleName:            nil,
+	smartaccounttypes.ModuleName:             nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -201,7 +201,7 @@ func appModules(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
-		authenticator.NewAppModule(appCodec, *app.AuthenticatorKeeper),
+		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
 	}
 }
 
@@ -269,7 +269,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
-		authenticatortypes.ModuleName,
+		smartaccounttypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,

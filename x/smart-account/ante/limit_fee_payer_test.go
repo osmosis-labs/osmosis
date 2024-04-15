@@ -16,7 +16,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
@@ -36,7 +36,7 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	_, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	_, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
@@ -44,7 +44,7 @@ func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {
 	)
 	s.Require().NoError(err)
 
-	_, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	_, err = s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
@@ -141,7 +141,7 @@ func GenTxWithCustomFeePayer(
 		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
 	}
 	if len(selectedAuthenticators) > 0 {
-		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+		value, err := types.NewAnyWithValue(&smartaccounttypes.TxExtension{
 			SelectedAuthenticators: selectedAuthenticators,
 		})
 		if err != nil {

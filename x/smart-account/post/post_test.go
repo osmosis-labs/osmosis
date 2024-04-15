@@ -24,7 +24,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/post"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/testutils"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -75,7 +75,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 	}
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
-		s.OsmosisApp.AuthenticatorKeeper,
+		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 		// Add an empty handler here to enable a circuit breaker pattern
@@ -103,7 +103,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Add the authenticators for the accounts
-	id, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
 		"SignatureVerificationAuthenticator",
@@ -112,7 +112,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	s.Require().NoError(err)
 	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
-	id, err = s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(
+	id, err = s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
 		"SignatureVerificationAuthenticator",
@@ -177,7 +177,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution
 		Confirm:        testutils.Never,
 	}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(approveAndBlock)
-	approveAndBlockId, err := s.OsmosisApp.AuthenticatorKeeper.AddAuthenticator(s.Ctx, s.TestAccAddress[0], approveAndBlock.Type(), []byte{})
+	approveAndBlockId, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(s.Ctx, s.TestAccAddress[0], approveAndBlock.Type(), []byte{})
 	s.Require().NoError(err, "Should have been able to add an authenticator")
 
 	// Create a test messages for signing
@@ -240,7 +240,7 @@ func GenTx(
 		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
 	}
 	if len(selectedAuthenticators) > 0 {
-		value, err := types.NewAnyWithValue(&authenticatortypes.TxExtension{
+		value, err := types.NewAnyWithValue(&smartaccounttypes.TxExtension{
 			SelectedAuthenticators: selectedAuthenticators,
 		})
 		if err != nil {
