@@ -5,8 +5,8 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	authenticators "github.com/osmosis-labs/osmosis/v24/x/authenticator/keeper"
-	authpost "github.com/osmosis-labs/osmosis/v24/x/authenticator/post"
+	authenticators "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	authpost "github.com/osmosis-labs/osmosis/v24/x/smart-account/post"
 
 	protorevkeeper "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
 )

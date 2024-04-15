@@ -12,7 +12,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 

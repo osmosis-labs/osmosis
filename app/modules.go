@@ -65,8 +65,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	authenticator "github.com/osmosis-labs/osmosis/v24/x/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
+	authenticator "github.com/osmosis-labs/osmosis/v24/x/smart-account"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
