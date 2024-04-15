@@ -295,16 +295,10 @@ func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 	}
 }
 
-// IsDeprecatedHistoricalTWAPsPruning returns whether the deprecated historical twaps are being pruned.
-func (k Keeper) IsDeprecatedHistoricalTWAPsPruning(ctx sdk.Context) bool {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.DeprecatedHistoricalTWAPsIsPruningKey)
-	return bz != nil
-}
-
-// SetDeprecatedHistoricalTWAPsIsPruning sets the state entry that determines if we are still
+// DeleteDeprecatedHistoricalTWAPsIsPruning the state entry that determines if we are still
 // executing pruning logic in the end blocker.
-func (k Keeper) SetDeprecatedHistoricalTWAPsIsPruning(ctx sdk.Context) {
+// TODO: Remove this in v26
+func (k Keeper) DeleteDeprecatedHistoricalTWAPsIsPruning(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.DeprecatedHistoricalTWAPsIsPruningKey, sentinelExistsValue)
+	store.Delete(types.DeprecatedHistoricalTWAPsIsPruningKey)
 }
