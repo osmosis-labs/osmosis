@@ -527,10 +527,13 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			}
 
 			// Find the opening and closing quotes
-			openQuoteIndex := strings.Index(fileContent[index:], "\"")
+			re := regexp.MustCompile(`["']`)
+			quoteCharacter := re.FindString(fileContent[index:])
+
+			openQuoteIndex := strings.Index(fileContent[index:], quoteCharacter)
 			openQuoteIndex += index
 
-			closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
+			closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], quoteCharacter)
 			closingQuoteIndex += openQuoteIndex + 1
 
 			// Replace the old value with the new value
