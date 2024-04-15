@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/authenticator/params.proto";
 import "osmosis/authenticator/models.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/authenticator/types";
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/authenticator/types";
 
 // AuthenticatorData represents a genesis exported account with Authenticators.
 // The address is used as the key, and the account authenticators are stored in

@@ -13,8 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 const (
@@ -64,7 +64,11 @@ func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
 		currentSuite.iteration = i
 
 		t.Run(fmt.Sprintf("Fuzz %d, seed: %d", i, currentSeed), func(t *testing.T) {
-			t.Parallel()
+			// This is commented out temporarily to avoid issues with the wasmStoreKey being
+			// a global in the wasm light client.
+			// See https://github.com/cosmos/ibc-go/blob/modules/light-clients/08-wasm/v0.1.0%2Bibc-go-v7.3-wasmvm-v1.5/modules/light-clients/08-wasm/internal/ibcwasm/wasm.go#L15-L17
+			// Once we move to ibc v8 we can make these tests run in parallel again.
+			//t.Parallel()
 
 			currentSuite.individualFuzz(r, i, numSwaps, numPositions)
 		})
@@ -332,7 +336,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		RoundingDir: osmomath.RoundDown,
 	}
 
-	result := errTolerance.CompareBigDec(osmomath.BigDecFromDec(swapInFunded.Amount.ToLegacyDec()), osmomath.BigDecFromDec(amountInSwapResult.Amount.ToLegacyDec()))
+	result := errTolerance.CompareBigDec(osmomath.BigDecFromDecMut(swapInFunded.Amount.ToLegacyDec()), osmomath.BigDecFromDecMut(amountInSwapResult.Amount.ToLegacyDec()))
 
 	if result != 0 {
 		// Note: did some investigations into why this happens.

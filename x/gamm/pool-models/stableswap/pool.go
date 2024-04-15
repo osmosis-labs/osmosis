@@ -10,9 +10,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var (
@@ -317,7 +317,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return osmomath.BigDecFromDec(spotPriceDec), nil
+	return osmomath.BigDecFromDecMut(spotPriceDec), nil
 }
 
 func (p Pool) Copy() Pool {

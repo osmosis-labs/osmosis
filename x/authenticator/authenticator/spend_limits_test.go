@@ -14,19 +14,19 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/post"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/ante"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/post"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/testutils"
 )
 
 type SpendLimitAuthenticatorTest struct {

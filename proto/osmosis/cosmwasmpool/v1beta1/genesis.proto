@@ -4,12 +4,10 @@ package osmosis.cosmwasmpool.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/protobuf/duration.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
 import "osmosis/cosmwasmpool/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types";
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types";
 
 // GenesisState defines the cosmwasmpool module's genesis state.
 message GenesisState {

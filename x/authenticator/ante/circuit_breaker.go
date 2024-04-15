@@ -5,8 +5,8 @@ import (
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v24/x/authenticator/keeper"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 )
 
 // CircuitBreakerDecorator routes transactions through appropriate ante handlers based on

@@ -1,7 +1,7 @@
-keeper: 
-  path: "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
+keeper:
+  path: "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/client"
+client_path: "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/client"
 queries:
   Params:
     proto_wrapper:

@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v24/x/mint/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -93,6 +93,11 @@ var _ epochstypes.EpochHooks = Hooks{}
 // Return the wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
+}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return types.ModuleName
 }
 
 // epochs hooks.

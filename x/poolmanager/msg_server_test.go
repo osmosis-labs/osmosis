@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v23/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v24/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var (
@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 			tokenoutMinAmount: min_amount,
 
 			expectedSplitRouteSwapEvent: 1,
-			expectedMessageEvents:       15, // 4 pool creation + 11 events in SplitRouteExactAmountIn keeper methods
+			expectedMessageEvents:       12, // 4 pool creation + 8 events in SplitRouteExactAmountIn keeper methods
 		},
 		"error: empty route": {
 			routes:            []types.SwapAmountInSplitRoute{},
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 			tokenoutMaxAmount: max_amount,
 
 			expectedSplitRouteSwapEvent: 1,
-			expectedMessageEvents:       16, // 4 pool creation + 12 events in SplitRouteExactAmountOut keeper methods
+			expectedMessageEvents:       12, // 4 pool creation + 8 events in SplitRouteExactAmountOut keeper methods
 		},
 		"error: empty route": {
 			routes:            []types.SwapAmountOutSplitRoute{},

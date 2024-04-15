@@ -12,7 +12,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
@@ -23,7 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v24/app"
 )
 
 const SimAppChainID = "simulation-app"

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,10 +25,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/ante"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/testutils"
 )
 
 type AuthenticatorAnteSuite struct {

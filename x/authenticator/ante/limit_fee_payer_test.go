@@ -2,6 +2,9 @@ package ante_test
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,10 +14,9 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
-	"math/rand"
-	"time"
+
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/ante"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 )
 
 func (s *AuthenticatorAnteSuite) TestCustomFeePayerBlocked() {

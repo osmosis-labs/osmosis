@@ -1,0 +1,52 @@
+# This is a scheduled workflow that runs on the 1st and 15th day of every month at 00:00 UTC and can also be triggered manually.
+# To run locally one could use the following command:
+#   act workflow_dispatch -j update-asset-lists --secret-file .env --input source-branch=7859
+#
+# Workflow does the following when triggered:
+# - Runs a script to update asset lists.
+# - Commits and pushes changes to the source-branch ( default: main ).
+# - Opens a PR from the source branch to the target-branch ( default: main ).
+#
+# PR is created using DEFAULT strategy of peter-evans/create-pull-request action:
+# - If there are changes in the source branch, a PR is created.
+# - If there are no changes in the source branch, no PR is created.
+# - If there is an existing PR from the source branch to the target branch, it is updated.
+# - If there is an existing PR from the source branch to the target branch, and there are no changes in the source branch, the PR is closed.
+# See more: https://github.com/peter-evans/create-pull-request?tab=readme-ov-file#action-behaviour
+name: Update Asset Lists
+on:
+  schedule:
+    - cron:  '0 0 1,15 * *'
+  workflow_dispatch:
+    inputs:
+      target-branch:
+        description: "Target Branch"
+        type: string
+        default: "main"
+        required: true
+      source-branch:
+        description: "Source Branch"
+        type: string
+        default: "main"
+        required: true
+jobs:
+  update-asset-lists:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source-branch || 'main' }}
+      - name: Run update script
+        run: ./scripts/update_asset_lists.sh
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "auto: update asset lists on branch ${{ inputs.target-branch || 'main' }}"
+          commit-message: "auto: update asset lists"
+          body: "**Automated pull request**\n\nUpdating asset lists"
+          branch: "${{ inputs.source-branch || 'main' }}-update-asset-lists"
+          delete-branch: true
+          assignees: ${{ github.actor }}
+          draft: true
+          labels: T:auto,T:code-hygiene,V:state/compatible/no_backport,A:no-changelog

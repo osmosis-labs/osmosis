@@ -10,7 +10,7 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 var _ Authenticator = &MessageFilterAuthenticator{}

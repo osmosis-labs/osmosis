@@ -15,12 +15,12 @@ import (
 
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/authenticator"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 type BaseAuthenticatorSuite struct {

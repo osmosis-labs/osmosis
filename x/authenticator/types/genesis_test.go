@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

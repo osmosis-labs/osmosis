@@ -18,8 +18,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -211,9 +211,15 @@ func parseMigratePoolContractsProposal(cmd *cobra.Command, args []string) (govty
 		return nil, err
 	}
 
-	wasm, err := parseWasmByteCode(args[2])
-	if err != nil {
-		return nil, err
+	wasm := []byte{}
+	// Only attempt to parse the bytecode if code ID is not
+	// given (i.e. 0)
+	if newCodeId == 0 {
+		byteCodeFileName := args[2]
+		wasm, err = parseWasmByteCode(byteCodeFileName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO: implement this later if needed.

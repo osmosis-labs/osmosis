@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)
@@ -268,7 +268,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
-	_, _, err = k.collectIncentives(ctx, owner, positionId)
+	_, totalForefeitedIncentives, scaledForfeitedIncentivesByUptime, err := k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
@@ -289,15 +289,18 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
+	// If the position has any forfeited incentives, re-deposit them into the pool.
+	err = k.redepositForfeitedIncentives(ctx, position.PoolId, owner, scaledForfeitedIncentivesByUptime, totalForefeitedIncentives)
+	if err != nil {
+		return osmomath.Int{}, osmomath.Int{}, err
+	}
+
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
-	// process also clears position records from spread factor and incentive accumulators.
+	// Ensure we collect any outstanding spread factors prior to deleting the position from state. Outstanding incentives
+	// should already be fully claimed by this point. This claiming process also clears position records from spread factor
+	// and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
-			return osmomath.Int{}, osmomath.Int{}, err
-		}
-
-		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return osmomath.Int{}, osmomath.Int{}, err
 		}
 
@@ -478,21 +481,14 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return types.UpdatePositionData{}, err
 	}
 
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return types.UpdatePositionData{}, err
-	}
-
-	currentTick := pool.GetCurrentTick()
-
 	// update lower tickInfo state
-	lowerTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
+	lowerTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
 
 	// update upper tickInfo state
-	upperTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
+	upperTickIsEmpty, err := k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
@@ -505,7 +501,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// Refetch pool to get the updated pool.
 	// Note that updateUptimeAccumulatorsToNow may modify the pool state and rewrite it to the store.
-	pool, err = k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return types.UpdatePositionData{}, err
 	}
@@ -569,11 +565,12 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	if err != nil {
 		return err
 	}
+	initialCurSqrtPriceBigDec := osmomath.BigDecFromDecMut(initialCurSqrtPrice)
 
 	// Calculate the initial tick from the initial spot price
 	// We round down here so that the tick is rounded to
 	// the nearest possible value given the tick spacing.
-	initialTick, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(initialCurSqrtPrice), pool.GetTickSpacing())
+	initialTick, err := math.SqrtPriceToTickRoundDownSpacing(initialCurSqrtPriceBigDec, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}
@@ -585,7 +582,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// However, there are ticks only at 100_000_000 X/Y and 100_000_100 X/Y.
 	// In such a case, we do not want to round the sqrt price to 100_000_000 X/Y, but rather
 	// let it float within the possible tick range.
-	pool.SetCurrentSqrtPrice(osmomath.BigDecFromDec(initialCurSqrtPrice))
+	pool.SetCurrentSqrtPrice(initialCurSqrtPriceBigDec)
 	pool.SetCurrentTick(initialTick)
 	err = k.setPool(ctx, pool)
 	if err != nil {

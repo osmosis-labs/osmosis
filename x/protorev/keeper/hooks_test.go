@@ -2,12 +2,14 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 // Tests the hook implementation that is called after swapping
@@ -128,7 +130,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 			tc.param.executeSwap()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
@@ -233,7 +235,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 			tc.param.executeLiquidityProviding()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
@@ -377,7 +379,7 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 			poolId := tc.param.executePoolCreation()
 			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, tc.param.matchDenom)
 
@@ -450,7 +452,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Run any state preparation
 			tc.param.prepareState()
@@ -543,7 +545,7 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Create the pool
 			poolId := tc.param.executePoolCreation()
@@ -618,7 +620,7 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// All pools are already created in the setup
 			s.App.ProtoRevKeeper.StoreJoinExitPoolSwaps(s.Ctx, s.TestAccs[0], tc.param.poolId, tc.param.denom, tc.param.isJoin)
@@ -830,7 +832,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			// Run any state preparation and get the pool id to compare to the stored pool
 			expectedStoredPoolId, comparePoolId := tc.param.prepareStateAndGetPoolIdToCompare()
@@ -845,6 +847,113 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				s.Require().NoError(err)
 				s.Require().Equal(expectedStoredPoolId, storedPoolId)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestAfterEpochEnd() {
+	tests := []struct {
+		name       string
+		arbProfits sdk.Coins
+	}{
+		{
+			name:       "osmo denom only",
+			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000))),
+		},
+		{
+			name: "osmo denom and another base denom",
+			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)),
+				sdk.NewCoin("juno", osmomath.NewInt(100000000))),
+		},
+		{
+			name: "osmo denom, another base denom, and a non base denom",
+			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)),
+				sdk.NewCoin("juno", osmomath.NewInt(100000000)),
+				sdk.NewCoin("eth", osmomath.NewInt(100000000))),
+		},
+		{
+			name:       "no profits",
+			arbProfits: sdk.Coins{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupPoolsTest()
+
+			// Set base denoms
+			baseDenoms := []types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: osmomath.NewInt(1_000_000),
+				},
+				{
+					Denom:    "juno",
+					StepSize: osmomath.NewInt(1_000_000),
+				},
+			}
+			s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenoms)
+
+			// Set protorev developer account
+			devAccount := apptesting.CreateRandomAccounts(1)[0]
+			s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
+
+			err := s.App.BankKeeper.MintCoins(s.Ctx, types.ModuleName, tc.arbProfits)
+			s.Require().NoError(err)
+
+			communityPoolBalancePre := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+
+			// System under test
+			err = s.App.ProtoRevKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+
+			expectedDevProfit := sdk.Coins{}
+			expectedOsmoBurn := sdk.Coins{}
+			arbProfitsBaseDenoms := sdk.Coins{}
+			arbProfitsNonBaseDenoms := sdk.Coins{}
+
+			// Split the profits into base and non base denoms
+			for _, coin := range tc.arbProfits {
+				isBaseDenom := false
+				for _, baseDenom := range baseDenoms {
+					if coin.Denom == baseDenom.Denom {
+						isBaseDenom = true
+						break
+					}
+				}
+				if isBaseDenom {
+					arbProfitsBaseDenoms = append(arbProfitsBaseDenoms, coin)
+				} else {
+					arbProfitsNonBaseDenoms = append(arbProfitsNonBaseDenoms, coin)
+				}
+			}
+			profitSplit := types.ProfitSplitPhase1
+			for _, arbProfit := range arbProfitsBaseDenoms {
+				devProfitAmount := arbProfit.Amount.MulRaw(profitSplit).QuoRaw(100)
+				expectedDevProfit = append(expectedDevProfit, sdk.NewCoin(arbProfit.Denom, devProfitAmount))
+			}
+
+			// Get the developer account balance
+			devAccountBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, devAccount)
+			s.Require().Equal(expectedDevProfit, devAccountBalance)
+
+			// Get the burn address balance
+			burnAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+			if arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).IsPositive() {
+				expectedOsmoBurn = sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).Sub(expectedDevProfit.AmountOf(types.OsmosisDenomination))))
+				s.Require().Equal(expectedOsmoBurn, burnAddressBalance)
+			} else {
+				s.Require().Equal(sdk.Coins{}, burnAddressBalance)
+			}
+
+			// Get the community pool balance
+			communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+			actualCommunityPool := communityPoolBalancePost.Sub(communityPoolBalancePre...)
+			expectedCommunityPool := arbProfitsBaseDenoms.Sub(expectedDevProfit...).Sub(expectedOsmoBurn...)
+			s.Require().Equal(expectedCommunityPool, actualCommunityPool)
+
+			// The protorev module account should only contain the non base denoms if there are any
+			protorevModuleAccount := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+			s.Require().Equal(arbProfitsNonBaseDenoms, protorevModuleAccount)
 		})
 	}
 }

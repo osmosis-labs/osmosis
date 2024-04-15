@@ -2,15 +2,17 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +20,7 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -256,8 +258,16 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
-		telemetry.IncrCounter(1, types.NoPoolIdForGaugeTelemetryName)
-		ctx.Logger().Error(types.NoPoolIdForGaugeTelemetryName, "gaugeId", gaugeId, "duration", lockableDuration)
+		telemetry.IncrCounterWithLabels([]string{types.NoPoolIdForGaugeTelemetryName}, 1, []metrics.Label{
+			{
+				Name:  "gauge_id",
+				Value: strconv.FormatUint(gaugeId, 10),
+			},
+			{
+				Name:  "duration",
+				Value: lockableDuration.String(),
+			},
+		})
 		return 0, types.NoPoolAssociatedWithGaugeError{GaugeId: gaugeId, Duration: lockableDuration}
 	}
 

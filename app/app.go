@@ -29,11 +29,21 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service/writelistener"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -77,36 +87,36 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
-	v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22"
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
-	v24 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v24"
-	v3 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v23/ingest"
-	"github.com/osmosis-labs/osmosis/v23/x/mint"
+	"github.com/osmosis-labs/osmosis/v24/app/keepers"
+	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
+	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
+	v25 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v25"
+	v3 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v24/x/mint"
 )
 
 const appName = "OsmosisApp"
@@ -144,8 +154,11 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
+
+	// rpcAddressConfigName is the name of the config key that holds the RPC address.
+	rpcAddressConfigName = "rpc.laddr"
 )
 
 // OsmosisApp extends an ABCI application, but with most of its parameters exported.
@@ -232,6 +245,12 @@ func NewOsmosisApp(
 	app.homePath = homePath
 	dataDir := filepath.Join(homePath, "data")
 	wasmDir := filepath.Join(homePath, "wasm")
+	ibcWasmConfig :=
+		ibcwasmtypes.WasmConfig{
+			DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
+			SupportedCapabilities: "iterator",
+			ContractDebugMode:     false,
+		}
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
 	// wasmConfig.ContractDebugMode = true
@@ -258,10 +277,8 @@ func NewOsmosisApp(
 		wasmConfig,
 		wasmOpts,
 		app.BlockedAddrs(),
+		ibcWasmConfig,
 	)
-
-	// Initialize the ingest manager for propagating data to external sinks.
-	app.IngestManager = ingest.NewIngestManager()
 
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
@@ -276,13 +293,32 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
+		// Initialize the SQS ingester.
 		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
 		if err != nil {
 			panic(err)
 		}
 
-		// Set the sidecar query server ingester to the ingest manager.
-		app.IngestManager.RegisterIngester(sqsIngester)
+		// Create pool tracker that tracks pool updates
+		// made by the write listenetrs.
+		poolTracker := service.NewPoolTracker()
+
+		// Create write listeners for the SQS service.
+		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
+
+		// Create the SQS streaming service by setting up the write listeners,
+		// the SQS ingester, and the pool tracker.
+		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
+
+		// Register the SQS streaming service with the app.
+		app.SetStreamingService(sqsStreamingService)
 	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
@@ -352,10 +388,7 @@ func NewOsmosisApp(
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
-	reflectionSvc, err := runtimeservices.NewReflectionService()
-	if err != nil {
-		panic(err)
-	}
+	reflectionSvc := getReflectionService()
 	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	app.sm.RegisterStoreDecoders()
@@ -394,6 +427,13 @@ func NewOsmosisApp(
 		if err != nil {
 			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
 		}
+
+		err = manager.RegisterExtensions(
+			ibcwasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), app.IBCWasmClientKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
 	}
 
 	if loadLatest {
@@ -407,9 +447,44 @@ func NewOsmosisApp(
 		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
+
+		if err := ibcwasmkeeper.InitializePinnedCodes(ctx, appCodec); err != nil {
+			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+		}
 	}
 
 	return app
+}
+
+// getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
+	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+
+	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
+		writelistener.NewConcentrated(blockPoolUpdateTracker),
+	}
+	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
+		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
+	}
+	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
+		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+	}
+	return writeListeners
+}
+
+// we cache the reflectionService to save us time within tests.
+var cachedReflectionService *runtimeservices.ReflectionService = nil
+
+func getReflectionService() *runtimeservices.ReflectionService {
+	if cachedReflectionService != nil {
+		return cachedReflectionService
+	}
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	cachedReflectionService = reflectionSvc
+	return reflectionSvc
 }
 
 // InitOsmosisAppForTestnet is broken down into two sections:
@@ -575,6 +650,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	defaultCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
+		sdk.NewInt64Coin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", 1000000000000), // USDC, for pool creation fee
 		sdk.NewInt64Coin("uosmo", 1000000000000),
 		sdk.NewInt64Coin("uion", 1000000000))
 
@@ -674,8 +750,6 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	// Process the block and ingest data into various sinks.
-	app.IngestManager.ProcessBlock(ctx)
 	return app.mm.EndBlock(ctx, req)
 }
 

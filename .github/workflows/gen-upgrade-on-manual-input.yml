@@ -24,19 +24,17 @@ jobs:
   post_release:
     runs-on: ubuntu-latest
     steps:
-      - 
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v4
-      - 
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v5
         with:
-          go-version: '^1.20'
+          go-version: '^1.21'
       - 
         name: Specify input
         run: |
           env=${{ inputs.version }}
-          if [[ $env != '' ]]; then 
+          if [[ $env != '' ]]; then
             echo $env
             echo "input=$env" >> $GITHUB_ENV
           else

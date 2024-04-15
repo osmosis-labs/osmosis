@@ -5,10 +5,10 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	authenticators "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
-	authpost "github.com/osmosis-labs/osmosis/v23/x/authenticator/post"
+	authenticators "github.com/osmosis-labs/osmosis/v24/x/authenticator/keeper"
+	authpost "github.com/osmosis-labs/osmosis/v24/x/authenticator/post"
 
-	protorevkeeper "github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
 )
 
 func NewPostHandler(

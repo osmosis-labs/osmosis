@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 )
 
 // GetParams get all parameters as types.Params

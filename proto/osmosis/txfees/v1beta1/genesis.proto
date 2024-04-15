@@ -4,8 +4,9 @@ package osmosis.txfees.v1beta1;
 import "gogoproto/gogo.proto";
 import "osmosis/txfees/v1beta1/feetoken.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/txfees/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/txfees/types";
 
 // GenesisState defines the txfees module's genesis state.
 message GenesisState {
@@ -16,4 +17,7 @@ message GenesisState {
   // TxFeesTracker txFeesTracker = 3;
   reserved 3;
   reserved "txFeesTracker";
+
+  // params is the container of txfees parameters.
+  Params params = 4 [ (gogoproto.nullable) = false ];
 }

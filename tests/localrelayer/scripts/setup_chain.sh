@@ -26,44 +26,44 @@ edit_genesis () {
     GENESIS=$CONFIG_FOLDER/genesis.json
 
     # Update staking module
-    dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '240s'
+    dasel put -t string -f $GENESIS '.app_state.staking.params.bond_denom' -v 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.staking.params.unbonding_time' -v '240s'
 
     # Update crisis module
-    dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.crisis.constant_fee.denom' -v 'uosmo'
 
     # Update gov module
-    dasel put string -f $GENESIS '.app_state.gov.voting_params.voting_period' '60s'
-    dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'uosmo'
+    dasel put -t string -f $GENESIS '.app_state.gov.voting_params.voting_period' -v '60s'
+    dasel put -t string -f $GENESIS '.app_state.gov.params.min_deposit.[0].denom' -v 'uosmo'
 
     # Update epochs module
-    dasel put string -f $GENESIS '.app_state.epochs.epochs.[1].duration' "60s"
+    dasel put -t string -f $GENESIS '.app_state.epochs.epochs.[1].duration' -v "60s"
 
     # Update poolincentives module
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' "120s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' "180s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' "240s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.params.minted_denom' -v "uosmo"
 
     # Update incentives module
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' "1s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' "120s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' "180s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' "240s"
-    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "day"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' -v "1s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' -v "day"
 
     # Update mint module
-    dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
-    dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "day"
+    dasel put -t string -f $GENESIS '.app_state.mint.params.mint_denom' -v "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.mint.params.epoch_identifier' -v "day"
 
     # Update gamm module
-    dasel put string -f $GENESIS '.app_state.gamm.params.pool_creation_fee.[0].denom' "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.gamm.params.pool_creation_fee.[0].denom' -v "uosmo"
 
     # Update txfee basedenom
-    dasel put string -f $GENESIS '.app_state.txfees.basedenom' "uosmo"
+    dasel put -t string -f $GENESIS '.app_state.txfees.basedenom' -v "uosmo"
 
     # Update wasm permission (Nobody or Everybody)
-    dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+    dasel put -t string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' -v "Everybody"
 }
 
 add_genesis_accounts () {
@@ -92,10 +92,10 @@ add_genesis_accounts () {
 
 edit_config () {
     # Remove seeds
-    dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' -v ''
 
     # Expose the rpc
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' -v "tcp://0.0.0.0:26657"
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]

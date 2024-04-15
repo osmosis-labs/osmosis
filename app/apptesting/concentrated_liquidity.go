@@ -6,12 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clmath "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 )
 
 type ConcentratedKeeperTestHelper struct {
@@ -912,9 +912,8 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
-	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolManagerParams.AuthorizedQuoteDenoms = append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
-	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
+	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
 }
 
 func (s *ConcentratedKeeperTestHelper) SetupTest() {

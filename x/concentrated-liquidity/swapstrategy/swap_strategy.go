@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -90,7 +90,7 @@ type SwapStrategy interface {
 }
 
 var (
-	oneBigDec = osmomath.OneBigDec()
+	oneDec = osmomath.OneDec()
 )
 
 // New returns a swap strategy based on the provided zeroForOne parameter
@@ -143,7 +143,7 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}
-		return osmomath.BigDecFromDec(sqrtPriceLimit), nil
+		return osmomath.BigDecFromDecMut(sqrtPriceLimit), nil
 	}
 
 	// On the newly extended lower price range, utilize the 36 decimal

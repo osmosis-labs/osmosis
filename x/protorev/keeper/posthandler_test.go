@@ -13,10 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -74,6 +74,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 }
 
 func (s *KeeperTestSuite) TestPostHandle() {
+	s.SetupPoolsTest()
 	type param struct {
 		trades              []types.Trade
 		expectedNumOfTrades osmomath.Int
@@ -706,7 +707,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	// Create a new test suite
 	s := new(KeeperTestSuite)
 	s.SetT(&testing.T{})
-	s.SetupTest()
+	s.SetupPoolsTest()
 
 	// Set up the app to the correct state to run the test
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())

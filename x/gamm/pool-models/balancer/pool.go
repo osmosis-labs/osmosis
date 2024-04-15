@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 //nolint:deadcode
@@ -500,9 +500,9 @@ func (p Pool) CalcOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 
-	tokenAmountInAfterFee := tokenIn.Amount.ToLegacyDec().Mul(osmomath.OneDec().Sub(spreadFactor))
+	tokenAmountInAfterFee := tokenIn.Amount.ToLegacyDec().MulMut(oneDec.Sub(spreadFactor))
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToLegacyDec()
-	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
+	poolPostSwapInBalance := tokenAmountInAfterFee.AddMut(poolTokenInBalance)
 
 	// deduct spread factor on the tokensIn
 	// delta balanceOut is positive(tokens inside the pool decreases)
@@ -645,7 +645,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 	supplyRatio := quote.Token.Amount.ToLegacyDec().Quo(base.Token.Amount.ToLegacyDec())
 	spotPriceDec := supplyRatio.Mul(invWeightRatio)
 
-	return osmomath.BigDecFromDec(spotPriceDec), err
+	return osmomath.BigDecFromDecMut(spotPriceDec), err
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.

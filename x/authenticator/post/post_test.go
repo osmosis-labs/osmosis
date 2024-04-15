@@ -20,11 +20,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/post"
-	"github.com/osmosis-labs/osmosis/v23/x/authenticator/testutils"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/post"
+	"github.com/osmosis-labs/osmosis/v24/x/authenticator/testutils"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
 
 	"github.com/stretchr/testify/suite"
 )

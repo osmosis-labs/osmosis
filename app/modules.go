@@ -12,6 +12,8 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
@@ -28,8 +30,8 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
-	downtimemodule "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/module"
-	downtimetypes "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/types"
+	downtimemodule "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/types"
 
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
@@ -63,41 +65,42 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
-	authenticator "github.com/osmosis-labs/osmosis/v23/x/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v23/x/authenticator/types"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	cwpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/ibcratelimitmodule"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v23/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
-	poolmanager "github.com/osmosis-labs/osmosis/v23/x/poolmanager/module"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	superfluid "github.com/osmosis-labs/osmosis/v23/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/twapmodule"
-	twaptypes "github.com/osmosis-labs/osmosis/v23/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v23/x/valset-pref/valpref-module"
+	authenticator "github.com/osmosis-labs/osmosis/v24/x/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v24/x/authenticator/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v24/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	cwpoolmodule "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/module"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v24/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v24/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v24/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v24/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v24/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	superfluid "github.com/osmosis-labs/osmosis/v24/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v24/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v24/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -105,32 +108,34 @@ import (
 // moduleAccountPermissions defines module account permissions
 // TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
 var moduleAccountPermissions = map[string][]string{
-	authtypes.FeeCollectorName:                    nil,
-	distrtypes.ModuleName:                         nil,
-	ibchookstypes.ModuleName:                      nil,
-	icatypes.ModuleName:                           nil,
-	icqtypes.ModuleName:                           nil,
-	minttypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
-	minttypes.DeveloperVestingModuleAcctName:      nil,
-	stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
-	govtypes.ModuleName:                           {authtypes.Burner},
-	ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-	gammtypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
-	incentivestypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
-	protorevtypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
-	lockuptypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-	poolincentivestypes.ModuleName:                nil,
-	superfluidtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
-	txfeestypes.ModuleName:                        nil,
-	txfeestypes.FeeCollectorForStakingRewardsName: nil,
-	txfeestypes.FeeCollectorForCommunityPoolName:  nil,
-	wasmtypes.ModuleName:                          {authtypes.Burner},
-	tokenfactorytypes.ModuleName:                  {authtypes.Minter, authtypes.Burner},
-	valsetpreftypes.ModuleName:                    {authtypes.Staking},
-	poolmanagertypes.ModuleName:                   nil,
-	cosmwasmpooltypes.ModuleName:                  nil,
-	authenticatortypes.ModuleName:                 nil,
+	authtypes.FeeCollectorName:               nil,
+	distrtypes.ModuleName:                    nil,
+	ibchookstypes.ModuleName:                 nil,
+	icatypes.ModuleName:                      nil,
+	icqtypes.ModuleName:                      nil,
+	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	minttypes.DeveloperVestingModuleAcctName: nil,
+	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
+	govtypes.ModuleName:                      {authtypes.Burner},
+	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
+	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+	protorevtypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
+	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+	poolincentivestypes.ModuleName:           nil,
+	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+	txfeestypes.ModuleName:                   nil,
+	txfeestypes.NonNativeTxFeeCollectorName:  nil,
+	txfeestypes.TakerFeeStakersName:          nil,
+	txfeestypes.TakerFeeCommunityPoolName:    nil,
+	txfeestypes.TakerFeeCollectorName:        nil,
+	wasmtypes.ModuleName:                     {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	valsetpreftypes.ModuleName:               {authtypes.Staking},
+	poolmanagertypes.ModuleName:              nil,
+	cosmwasmpooltypes.ModuleName:             nil,
+	authenticatortypes.ModuleName:            nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -163,7 +168,8 @@ func appModules(
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
-		ica.NewAppModule(nil, app.ICAHostKeeper),
+		ibcwasm.NewAppModule(*app.IBCWasmClientKeeper),
+		ica.NewAppModule(app.ICAControllerKeeper, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, *app.AppKeepers.ConsensusParamsKeeper),
 		app.RawIcs20TransferAppModule,
@@ -203,8 +209,11 @@ func appModules(
 func orderBeginBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
 	// Upgrades should be run VERY first
-	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
-	// But would have to be a holistic change with other pipelines taken into account.
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end,
+	// but would have to be a holistic change with other pipelines taken into account.
+	// Epochs must come before staking, because txfees epoch hook sends fees to the auth "fee collector"
+	// module account, which is then distributed to stakers. If staking comes before epochs, then the
+	// funds will not be distributed to stakers as expected.
 	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
 
 	// Staking ordering
@@ -280,6 +289,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibcratelimittypes.ModuleName,
 		// wasm after ibc transfer
 		wasmtypes.ModuleName,
+		ibcwasmtypes.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
 		icqtypes.ModuleName,
@@ -327,5 +337,5 @@ func (app *OsmosisApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {
 }
 
 func (app *OsmosisApp) GetTxConfig() client.TxConfig {
-	return MakeEncodingConfig().TxConfig
+	return GetEncodingConfig().TxConfig
 }
