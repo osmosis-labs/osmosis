@@ -53,7 +53,7 @@ func CreateUpgradeHandler(
 		// Now that the TWAP keys are refactored, we can delete all time indexed TWAPs
 		// since we only need the pool indexed TWAPs. We set the is pruning store value to true
 		// and spread the pruning time across multiple blocks to avoid a single block taking too long.
-		keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
+		// keepers.TwapKeeper.SetDeprecatedHistoricalTWAPsIsPruning(ctx)
 
 		// Set the new min value for distribution for the incentives module.
 		// https://www.mintscan.io/osmosis/proposals/733
@@ -75,7 +75,7 @@ func CreateUpgradeHandler(
 		// However, there was a problem in the migration logic where the CosmWasmpool state CodeId did not get updated.
 		// As a result, the CodeID for the contract that is tracked in x/wasmd was migrated correctly. However, the code ID that we track in the x/cosmwasmpool state did not.
 		// Therefore, we should perform a migration for each of the hardcoded white whale pools.
-		poolIds := []uint64{1463, 1462, 1461}
+		poolIds := []uint64{1584, 1575, 1514, 1463, 1462, 1461}
 		for _, poolId := range poolIds {
 			pool, err := keepers.CosmwasmPoolKeeper.GetPool(ctx, poolId)
 			if err != nil {
@@ -89,13 +89,13 @@ func CreateUpgradeHandler(
 					ActualPool: pool,
 				}
 			}
-			if cwPool.GetCodeId() != 503 {
+			if cwPool.GetCodeId() != 503 && cwPool.GetCodeId() != 572 {
 				ctx.Logger().Error("Pool has incorrect code id", "poolId", poolId, "codeId", cwPool.GetCodeId())
 				return nil, cwpooltypes.InvalidPoolTypeError{
 					ActualPool: pool,
 				}
 			}
-			cwPool.SetCodeId(572)
+			cwPool.SetCodeId(641)
 			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
 		}
 

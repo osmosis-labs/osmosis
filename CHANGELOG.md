@@ -44,7 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
+
 ### State Compatible
+
+* [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
+
+## v24.0.1
+
+* [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
 
 ## v24.0.0
 
@@ -84,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7951](https://github.com/osmosis-labs/osmosis/pull/7951) Only migrate selected cl incentives
 * [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
 * [#7957](https://github.com/osmosis-labs/osmosis/pull/7957) Update to the latest version of ibc-go
+* [#7966](https://github.com/osmosis-labs/osmosis/pull/7966) Update all governance migrated white whale pools to code id 641
 
 ### SDK
 
@@ -100,6 +109,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#11](https://github.com/osmosis-labs/cometbft/pull/11) Skip verification of commit sigs
 * [#13](https://github.com/osmosis-labs/cometbft/pull/13) Avoid double-saving ABCI responses
 * [#20](https://github.com/osmosis-labs/cometbft/pull/20) Fix the rollback command
+
+## v23.0.12-iavl-v1
+
+* [#7994](https://github.com/osmosis-labs/osmosis/pull/7994) Async pruning for IAVL v1
+
+## v23.0.11-iavl-v1 & v23.0.11
+
+* [#7987](https://github.com/osmosis-labs/osmosis/pull/7987) Added soft-forked-ibc for ASA-2024-007
 
 ## v23.0.8-iavl-v1 & v23.0.8
 

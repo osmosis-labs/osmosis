@@ -9,11 +9,23 @@ import (
 )
 
 type ChainId string
+type Mode string
 
 const (
 	ChainIdOsmosis ChainId = "osmosis"
 	ChainIdBitcoin ChainId = "bitcoin"
 )
+
+const (
+	ModeMainnet Mode = "mainnet"
+	ModeTestnet Mode = "testnet"
+)
+
+type ChainConfig struct {
+	Id                        ChainId
+	Mode                      Mode
+	MinOutboundTransferAmount math.Uint
+}
 
 type Transfer struct {
 	SrcChain ChainId
