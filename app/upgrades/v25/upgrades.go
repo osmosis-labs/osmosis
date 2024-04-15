@@ -28,6 +28,8 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		keepers.TwapKeeper.DeleteDeprecatedHistoricalTWAPsIsPruning(ctx)
+
 		return migrations, nil
 	}
 }

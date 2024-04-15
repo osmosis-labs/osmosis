@@ -44,7 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+<<<<<<< HEAD
 * [#7935](https://github.com/osmosis-labs/osmosis/pull/7935) Add block sdk and top of block auction from skip-mev :handshake:
+=======
+* [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
+>>>>>>> main
 
 ### State Compatible
 
