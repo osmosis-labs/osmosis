@@ -182,7 +182,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			// If this is not a mainnet node, or the genesis file download failed, generate a new genesis file
 			if genesisFileDownloadFailed || !isMainnet {
 				// If the chainID is not blank or genesis file download failed, generate a new genesis file
-				var genDoc *types.GenesisDoc
+				var genDoc types.GenesisDoc
 
 				appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
 				if err != nil {
@@ -194,16 +194,17 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 						return err
 					}
 				} else {
-					genDoc, err = types.GenesisDocFromFile(genFilePath)
+					genDocFromFile, err := types.GenesisDocFromFile(genFilePath)
 					if err != nil {
 						return errors.Wrap(err, "Failed to read genesis doc from file")
 					}
+					genDoc = *genDocFromFile
 				}
 
 				genDoc.ChainID = chainID
 				genDoc.Validators = nil
 				genDoc.AppState = appState
-				if err = genutil.ExportGenesisFile(genDoc, genFilePath); err != nil {
+				if err = genutil.ExportGenesisFile(&genDoc, genFilePath); err != nil {
 					return errors.Wrap(err, "Failed to export genesis file")
 				}
 
