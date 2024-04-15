@@ -10,7 +10,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 
 	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
@@ -19,8 +18,6 @@ import (
 const (
 	v25UpgradeHeight = int64(10)
 )
-
-var perUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
@@ -33,6 +30,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 
+	// Setup spread factor migration test environment
 	oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeIncentives, nonMigratedPoolBeforeUpgradeIncentives := s.PrepareSpreadRewardsMigrationTestEnv()
 
 	// Run the upgrade

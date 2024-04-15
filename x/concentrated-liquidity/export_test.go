@@ -358,6 +358,10 @@ func ScaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmoma
 	return scaleDownIncentiveAmount(incentiveAmount, scalingFactor)
 }
 
+func ScaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
+	return scaleDownSpreadRewardAmount(incentiveAmount, scalingFactor)
+}
+
 func (k Keeper) RedepositForfeitedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {
 	return k.redepositForfeitedIncentives(ctx, poolId, owner, scaledForfeitedIncentivesByUptime, totalForefeitedIncentives)
 }
