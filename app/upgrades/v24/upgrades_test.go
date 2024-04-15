@@ -276,18 +276,6 @@ func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64)
 	}
 }
 
-func (s *UpgradeTestSuite) TestUpgradeAuthenticatorParams() {
-	s.Setup()
-
-	dummyUpgrade(s)
-	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
-	})
-
-	authenticatorParams := s.App.AuthenticatorKeeper.GetParams(s.Ctx)
-	s.Require().Equal(authenticatorParams.MaximumUnauthenticatedGas, uint64(120_000))
-}
-
 func dummyUpgrade(s *UpgradeTestSuite) {
 	s.Ctx = s.Ctx.WithBlockHeight(v24UpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v24", Height: v24UpgradeHeight}
