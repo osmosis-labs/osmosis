@@ -19,8 +19,8 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	authante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
-	authenticators "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
@@ -36,7 +36,7 @@ func NewAnteHandler(
 	wasmConfig wasmtypes.WasmConfig,
 	txCounterStoreKey storetypes.StoreKey,
 	accountKeeper ante.AccountKeeper,
-	authenticatorKeeper *authenticators.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
@@ -66,12 +66,12 @@ func NewAnteHandler(
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
-		authante.LimitFeePayerDecorator{},
-		authante.NewSetPubKeyDecorator(accountKeeper),
+		smartaccountante.LimitFeePayerDecorator{},
+		smartaccountante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
 		// is enbedded in the authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
+		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 		deductFeeDecorator,
@@ -91,8 +91,8 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
-		authante.NewCircuitBreakerDecorator(
-			authenticatorKeeper,
+		smartaccountante.NewCircuitBreakerDecorator(
+			smartAccountKeeper,
 			authenticatorVerificationDecorator,
 			classicSignatureVerificationDecorator,
 		),

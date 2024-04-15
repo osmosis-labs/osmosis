@@ -26,10 +26,10 @@ func CreateUpgradeHandler(
 		keepers.TwapKeeper.DeleteDeprecatedHistoricalTWAPsIsPruning(ctx)
 
 		// Set the authenticator params in the store
-		authenticatorParams := keepers.AuthenticatorKeeper.GetParams(ctx)
+		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
 		authenticatorParams.MaximumUnauthenticatedGas = 120_000
 		authenticatorParams.IsSmartAccountActive = false
-		keepers.AuthenticatorKeeper.SetParams(ctx, authenticatorParams)
+		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
 
 		return migrations, nil
 	}

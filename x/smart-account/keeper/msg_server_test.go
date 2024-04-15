@@ -12,7 +12,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+	msgServer := keeper.NewMsgServerImpl(*s.App.SmartAccountKeeper)
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+	msgServer := keeper.NewMsgServerImpl(*s.App.SmartAccountKeeper)
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
-	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+	msgServer := keeper.NewMsgServerImpl(*s.App.SmartAccountKeeper)
 	ctx := s.Ctx
 
 	// Set up account
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
-	ak := *s.App.AuthenticatorKeeper
+	ak := *s.App.SmartAccountKeeper
 	msgServer := keeper.NewMsgServerImpl(ak)
 	ctx := s.Ctx
 
@@ -119,13 +119,13 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	unauthorizedAccAddress := sdk.AccAddress(priv.PubKey().Address())
 
 	// activated by default
-	initialParams := s.App.AuthenticatorKeeper.GetParams(ctx)
+	initialParams := s.App.SmartAccountKeeper.GetParams(ctx)
 	s.Require().True(initialParams.IsSmartAccountActive)
 
 	// Set the authorized account as the circuit breaker controller
-	initialParams = s.App.AuthenticatorKeeper.GetParams(ctx)
+	initialParams = s.App.SmartAccountKeeper.GetParams(ctx)
 	initialParams.CircuitBreakerControllers = []string{authorizedAccAddress.String()}
-	s.App.AuthenticatorKeeper.SetParams(ctx, initialParams)
+	s.App.SmartAccountKeeper.SetParams(ctx, initialParams)
 
 	// deactivate by unauthorized account
 	_, err := msgServer.SetActiveState(
@@ -156,14 +156,24 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	params.IsSmartAccountActive = initialParams.IsSmartAccountActive
 	s.Require().Equal(params, initialParams)
 
-	// reactivate
+	// reactivate by a controller (unauthorized)
 	_, err = msgServer.SetActiveState(
 		sdk.WrapSDKContext(ctx),
 		&types.MsgSetActiveState{
 			Sender: authorizedAccAddress.String(),
 			Active: true,
 		})
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "signer is not the circuit breaker governor: unauthorized")
 
+	// reactivate by gov
+	governor := s.App.SmartAccountKeeper.CircuitBreakerGovernor
+	_, err = msgServer.SetActiveState(
+		sdk.WrapSDKContext(ctx),
+		&types.MsgSetActiveState{
+			Sender: governor.String(),
+			Active: true,
+		})
 	s.Require().NoError(err)
 
 	// active state should be true
