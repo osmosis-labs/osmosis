@@ -96,7 +96,7 @@ func (m msgServer) SetActiveState(goCtx context.Context, msg *types.MsgSetActive
 	// `MsgSetActiveState` must have only one signer
 	signer := msg.GetSigners()[0]
 
-	if msg.Active == true {
+	if msg.Active {
 		// Only the circuit breaker governor can set the active state of the authenticator to true
 		if !signer.Equals(m.Keeper.CircuitBreakerGovernor) {
 			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer is not the circuit breaker governor")
@@ -114,7 +114,6 @@ func (m msgServer) SetActiveState(goCtx context.Context, msg *types.MsgSetActive
 		}
 		if !isAuthorized {
 			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer is not a circuit breaker controller")
-
 		}
 	}
 
