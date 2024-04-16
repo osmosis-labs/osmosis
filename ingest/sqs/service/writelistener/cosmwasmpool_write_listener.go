@@ -27,11 +27,10 @@ func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.Write
 
 // OnWrite implements types.WriteListener.
 func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
-	fmt.Println("AAA storeKey", storeKey)
 	if storeKey.Name() == wasmtypes.StoreKey {
-		fmt.Println("AAA key", key)
+		// fmt.Println("AAA key", key)
 		fmt.Println("AAA key string", string(key))
-		fmt.Println("AAA value", value)
+		// fmt.Println("AAA value", value)
 		fmt.Println("AAA value string", string(value))
 	}
 	// Track the changed pool.
