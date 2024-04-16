@@ -37,7 +37,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -467,7 +466,7 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
 		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
 	}
-	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
+	writeListeners[app.GetKey(wasmtypes.StoreKey)] = []storetypes.WriteListener{
 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
 	}
 	return writeListeners

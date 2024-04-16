@@ -2,7 +2,6 @@ package writelistener
 
 import (
 	"bytes"
-	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +25,6 @@ func NewConcentrated(poolTracker domain.BlockPoolUpdateTracker) storetypes.Write
 
 // OnWrite implements types.WriteListener.
 func (s *concentratedPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
-	fmt.Println("AAA cl storeKey", storeKey)
 	if len(key) == 0 {
 		return nil
 	}
