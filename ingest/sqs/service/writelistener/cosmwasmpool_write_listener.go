@@ -3,6 +3,7 @@ package writelistener
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
@@ -28,10 +29,13 @@ func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.Write
 // OnWrite implements types.WriteListener.
 func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
 	if storeKey.Name() == wasmtypes.StoreKey {
-		// fmt.Println("AAA key", key)
-		fmt.Println("AAA key string", string(key))
-		// fmt.Println("AAA value", value)
-		fmt.Println("AAA value string", string(value))
+		if strings.Contains(string(key), "routing_table") {
+			fmt.Println("AAA key", key)
+			fmt.Println("AAA key string", string(key))
+			fmt.Println("AAA value", value)
+			fmt.Println("AAA value string", string(value))
+			fmt.Println()
+		}
 	}
 	// Track the changed pool.
 	if len(key) > 0 && bytes.Equal(cosmwasmpooltypes.PoolsKey, key[:1]) {
