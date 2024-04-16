@@ -65,6 +65,7 @@ func (s *UpgradeTestSuite) prepareMissedBlocksCounterTest() slashingtypes.Valida
 	slashingStoreKey := s.App.AppKeepers.GetKey(slashingtypes.StoreKey)
 	store := s.Ctx.KVStore(slashingStoreKey)
 
+	// Replicate current mainnet state where, someones missed block counter is greater than their actual missed blocks
 	preMigrationSigningInfo := slashingtypes.ValidatorSigningInfo{
 		Address:             consAddr.String(),
 		StartHeight:         10,
@@ -73,6 +74,17 @@ func (s *UpgradeTestSuite) prepareMissedBlocksCounterTest() slashingtypes.Valida
 		Tombstoned:          false,
 		MissedBlocksCounter: 1000,
 	}
+
+	// Set the missed blocks for the validator
+	for i := 0; i < 10; i++ {
+		err := s.App.SlashingKeeper.SetMissedBlockBitmapValue(s.Ctx, consAddr, int64(i), true)
+		s.Require().NoError(err)
+	}
+
+	// Validate that the missed block bitmap value is of length 10 (the real missed blocks value), differing from the missed blocks counter of 1000 (the incorrect value)
+	missedBlocks, err := s.App.SlashingKeeper.GetValidatorMissedBlocks(s.Ctx, consAddr)
+	s.Require().NoError(err)
+	s.Require().Len(missedBlocks, 10)
 
 	// store old signing info and bitmap entries
 	bz := cdc.MustMarshal(&preMigrationSigningInfo)
@@ -85,8 +97,8 @@ func (s *UpgradeTestSuite) executeMissedBlocksCounterTest(preMigrationSigningInf
 	postMigrationSigningInfo, found := s.App.SlashingKeeper.GetValidatorSigningInfo(s.Ctx, consAddr)
 	s.Require().True(found)
 
-	// Check that the missed blocks counter was reset to zero
-	s.Require().Equal(int64(0), postMigrationSigningInfo.MissedBlocksCounter)
+	// Check that the missed blocks counter was set to the correct value
+	s.Require().Equal(int64(10), postMigrationSigningInfo.MissedBlocksCounter)
 
 	// Check that all other fields are the same
 	s.Require().Equal(preMigrationSigningInfo.Address, postMigrationSigningInfo.Address)

@@ -41,8 +41,13 @@ func CreateUpgradeHandler(
 func resetMissedBlocksCounter(ctx sdk.Context, slashingKeeper *slashing.Keeper) {
 	// Iterate over all validators signing info
 	slashingKeeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+		missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, address)
+		if err != nil {
+			panic(err)
+		}
+
 		// Reset missed blocks counter
-		info.MissedBlocksCounter = 0
+		info.MissedBlocksCounter = int64(len(missedBlocks))
 		slashingKeeper.SetValidatorSigningInfo(ctx, address, info)
 
 		return false
