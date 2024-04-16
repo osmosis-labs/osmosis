@@ -245,7 +245,7 @@ replace (
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath
-// github.com/osmosis-labs/osmosis/v22 => ./../
+// github.com/osmosis-labs/osmosis/v24 => ./../
 )
 
 exclude github.com/cometbft/cometbft v0.38.0

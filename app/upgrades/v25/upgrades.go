@@ -23,6 +23,11 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// update block-sdk params
+		if err := keepers.AuctionKeeper.SetParams(ctx, AuctionParams); err != nil {
+			return nil, err
+		}
+
 		keepers.TwapKeeper.DeleteDeprecatedHistoricalTWAPsIsPruning(ctx)
 
 		return migrations, nil
