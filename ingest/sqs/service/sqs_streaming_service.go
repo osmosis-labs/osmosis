@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var _ baseapp.StreamingService = (*sqsStreamingService)(nil)
@@ -82,10 +83,10 @@ func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.Requ
 }
 
 // processBlockRecoverError processes the block data and ingests it into SQS. Recovers from panics and returns them as errors.
-// It controls an internal flag shouldProceessAllBlockData to determine if the block data should be processed in full.
+// It controls an internal flag shouldProcessAllBlockData to determine if the block data should be processed in full.
 // It resets the pool tracker after processing the block data.
-// It sets shouldProceessAllBlockData to true if a panic occurs while processing the block data.
-// It sets shouldProceessAllBlockData to true if an error occurs while processing the block data.
+// It sets shouldProcessAllBlockData to true if a panic occurs while processing the block data.
+// It sets shouldProcessAllBlockData to true if an error occurs while processing the block data.
 // Always returns nil to avoid making this consensus breaking.
 // WARNING: this method emits sdk events for testability. Ensure that the caller discards the events.
 func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err error) {
@@ -149,7 +150,7 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 //
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
-	// If cold start, we use SQS ingestert to process the intire block.
+	// If cold start, we use SQS ingester to process the entire block.
 	if s.shouldProcessAllBlockData {
 		// Detect syncing
 		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
@@ -165,8 +166,12 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		}
 
 		// Process the entire block if the node is caught up
-		if err := s.sqsIngester.ProcessAllBlockData(ctx); err != nil {
-			return err
+		err = s.sqsIngester.ProcessAllBlockData(ctx, func(cwPool poolmanagertypes.PoolI) {
+			// Generate the initial pool address to pool mapping for CosmWasm pools
+			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(cwPool)
+		})
+		if err != nil {
+			return fmt.Errorf("failed to process all block data: %w", err)
 		}
 
 		// Successfully processed the block, no longer need to process full block data.

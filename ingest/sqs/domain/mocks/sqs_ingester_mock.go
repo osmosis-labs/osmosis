@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var _ domain.Ingester = &SQSIngesterMock{}
@@ -26,7 +28,7 @@ type SQSIngesterMock struct {
 }
 
 // ProcessAllBlockData implements domain.Ingester.
-func (s *SQSIngesterMock) ProcessAllBlockData(ctx types.Context) error {
+func (s *SQSIngesterMock) ProcessAllBlockData(ctx types.Context, onCosmWasmPool func(pool poolmanagertypes.PoolI)) error {
 	if s.ProcessAllBlockDataPanicMsg != "" {
 		panic(s.ProcessAllBlockDataPanicMsg)
 	}

@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var _ domain.Ingester = &sqsIngester{}
@@ -29,7 +30,7 @@ func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCod
 }
 
 // ProcessAllBlockData implements ingest.Ingester.
-func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) error {
+func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context, onCosmWasmPool func(cwPool poolmanagertypes.PoolI)) error {
 	// Concentrated pools
 
 	concentratedPools, err := i.keepers.ConcentratedKeeper.GetPools(ctx)
@@ -49,6 +50,15 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) error {
 	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
 		return err
+	}
+
+	// Call the callback function for each cwPool so we can create the initial cwPool address to pool object mapping
+	// This then gets modified as cwPools are created and/or migrated
+
+	for _, cwPool := range cosmWasmPools {
+		if onCosmWasmPool != nil {
+			onCosmWasmPool(cwPool)
+		}
 	}
 
 	blockPools := domain.BlockPools{
@@ -91,16 +101,6 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 
 		changedPools.ConcentratedPoolIDTickChange[poolID] = struct{}{}
 	}
-
-	// NOTE: we are failing to detect CW pool store updates which were noticed post-release.
-	// As a result, we push all of them every block.
-	// https://linear.app/osmosis/issue/STABI-103/push-updated-pools-into-sqs-instead-of-all-every-block
-	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
-	if err != nil {
-		return err
-	}
-
-	changedPools.CosmWasmPools = cosmWasmPools
 
 	// Process block by reading and writing data and ingesting data into sinks
 	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, changedPools)
