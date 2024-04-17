@@ -28,7 +28,7 @@ var Upgrade = upgrades.Upgrade{
 
 // AuctionParams expected initial params for the block-sdk
 var AuctionParams = auctiontypes.Params{
-	MaxBundleSize:          3,
+	MaxBundleSize:          5,
 	ReserveFee:             sdk.NewCoin(AuctionUSDCDenom, sdk.NewInt(1000000)),
 	MinBidIncrement:        sdk.NewCoin(AuctionUSDCDenom, sdk.NewInt(1000000)),
 	EscrowAccountAddress:   auctiontypes.DefaultEscrowAccountAddress,
