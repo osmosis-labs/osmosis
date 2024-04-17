@@ -171,7 +171,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(cwPool)
 		})
 		if err != nil {
-			return fmt.Errorf("failed to process all block data: %w", err)
+			return err
 		}
 
 		// Successfully processed the block, no longer need to process full block data.
