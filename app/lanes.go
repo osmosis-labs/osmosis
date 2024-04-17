@@ -16,8 +16,8 @@ const (
 )
 
 var (
-	defaultLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.95")
-	mevLaneBlockspacePercentage     = math.LegacyMustNewDecFromStr("0.05")
+	defaultLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.90")
+	mevLaneBlockspacePercentage     = math.LegacyMustNewDecFromStr("0.10")
 )
 
 // CreateLanes walks through the process of creating the lanes for the block sdk. In this function
