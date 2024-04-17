@@ -561,7 +561,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToLegacyDec().Quo(amount0Desired.ToLegacyDec())
 	// TODO: any concerns with this being an osmomath.Dec?
-	initialCurSqrtPrice, err := osmomath.MonotonicSqrt(initialSpotPrice)
+	initialCurSqrtPrice, err := osmomath.MonotonicSqrtMut(initialSpotPrice)
 	if err != nil {
 		return err
 	}
