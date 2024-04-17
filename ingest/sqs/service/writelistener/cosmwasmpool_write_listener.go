@@ -64,7 +64,6 @@ func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey,
 	if len(key) > 0 && bytes.Equal(banktypes.BalancesPrefix, key[:1]) {
 		// The key is a balance change. Check if the address in question is a cwpool address
 		cwPoolMap := s.poolTracker.GetCosmWasmPoolsAddressToIDMap()
-		fmt.Println("cwPoolMap", cwPoolMap)
 		fmt.Println("string(key[1:]", string(key[2:]))
 		if pool, ok := cwPoolMap[string(key[2:])]; ok {
 			// The address is a cwpool address. Add the pool to the pool tracker
