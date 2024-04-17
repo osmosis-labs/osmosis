@@ -95,7 +95,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		s.poolTracker.Reset()
 
 		if r := recover(); r != nil {
-			// Due to panic, we set shouldProceessAllBlockData to true to reprocess the entire block.
+			// Due to panic, we set shouldProcessAllBlockData to true to reprocess the entire block.
 			// Be careful when changing this behavior.
 			s.shouldProcessAllBlockData = true
 
@@ -108,7 +108,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 
 	// Process the block data.
 	if err := s.processBlock(ctx); err != nil {
-		// Due to error, we set shouldProceessAllBlockData to true to reprocess the entire block.
+		// Due to error, we set shouldProcessAllBlockData to true to reprocess the entire block.
 		// Be careful when changing this behavior.
 		s.shouldProcessAllBlockData = true
 
@@ -141,7 +141,7 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 // It processes only the pools that were changed in the block in the following cases:
 // - The node is not in cold start and the previous block was processed successfully.
 //
-// An internal flag shouldProceessAllBlockData is used to determine if the block data should be processed in full.
+// An internal flag shouldProcessAllBlockData is used to determine if the block data should be processed in full.
 //
 // This method is a no-op in the following two cases:
 // - The node is syncing.
