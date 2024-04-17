@@ -30,7 +30,7 @@ func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.Write
 //
 // NOTE: This only detects cwPools that have been created or migrated. It does not detect changes in balances (i.e. swaps / position creation / withdraws)
 func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
-	// Track the cw pool that was just created/migrated
+	// Track the cwPool that was just created/migrated
 	if len(key) > 0 && bytes.Equal(cosmwasmpooltypes.PoolsKey, key[:1]) {
 		var pool cosmwasmpoolmodel.CosmWasmPool
 		if err := pool.Unmarshal(value); err != nil {
@@ -39,8 +39,8 @@ func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []
 
 		s.poolTracker.TrackCosmWasm(&pool)
 
-		// Add the pool in the address to pool map
-		// This is used to check if a balance change is for a cwPool address, and if so, we can retrieve the pool from this map
+		// Create/modify the cwPool address to pool mapping
+		// This is used to check if a balance change is for a cwPool address, and if so, we can retrieve the pool from this mapping
 		var poolI poolmanagertypes.PoolI = &pool
 		s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(poolI)
 	}
@@ -75,7 +75,7 @@ func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey,
 
 		cwPoolMap := s.poolTracker.GetCosmWasmPoolsAddressToIDMap()
 		if pool, ok := cwPoolMap[addressStr]; ok {
-			// The address is a cwPool address. Add the pool to the pool tracker
+			// The address is a cwPool address. Add the cwPool to the cwPool tracker
 			s.poolTracker.TrackCosmWasm(pool)
 		}
 	}

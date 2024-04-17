@@ -1,8 +1,7 @@
 package writelistener_test
 
 import (
-	"fmt"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service"
@@ -107,8 +106,6 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 	err = cosmWasmPoolWriteListener.OnWrite(cosmwasmPoolKVStore, cosmwasmpooltypes.FormatPoolsPrefix(cosmWasmPoolModel.PoolId), concentratedPoolModelBz, false)
 	s.Require().NoError(err)
 
-	fmt.Println("cosmWasmPoolModel.ContractAddress", cosmWasmPoolModel.ContractAddress)
-
 	// Reset pool tracker, so it will flush the pool changes tracker but keep the address to pool mapping
 	poolTracker.Reset()
 
@@ -124,13 +121,13 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 		{
 			name: "balance write unrelated to cosmwasm pool, no-op",
 
-			key:   banktypes.CreateAccountBalancesPrefix(s.TestAccs[0].Bytes()),
+			key:   banktypes.CreateAccountBalancesPrefix(s.TestAccs[0]),
 			value: someValue, // value is not used for balance changes
 		},
 		{
 			name: "balance write to cosmwasm pool",
 
-			key:   banktypes.CreateAccountBalancesPrefix([]byte(cosmWasmPoolModel.ContractAddress)),
+			key:   banktypes.CreateAccountBalancesPrefix(sdk.MustAccAddressFromBech32(cosmWasmPoolModel.ContractAddress)),
 			value: someValue, // value is not used for balance changes
 
 			expectedPoolUpdate: true,
