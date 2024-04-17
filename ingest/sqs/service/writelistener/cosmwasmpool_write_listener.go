@@ -77,7 +77,6 @@ func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey,
 		addressBytes := key[1+1 : 1+addressLength+1]
 		address := sdk.AccAddress(addressBytes)
 		addressStr := address.String()
-		//fmt.Println("addressStr", addressStr)
 
 		cwPoolMap := s.poolTracker.GetCosmWasmPoolsAddressToIDMap()
 		if pool, ok := cwPoolMap[addressStr]; ok {

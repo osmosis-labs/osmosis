@@ -28,13 +28,13 @@ type SQSIngesterMock struct {
 }
 
 // ProcessAllBlockData implements domain.Ingester.
-func (s *SQSIngesterMock) ProcessAllBlockData(ctx types.Context) ([]poolmanagertypes.PoolI, error) {
+func (s *SQSIngesterMock) ProcessAllBlockData(ctx types.Context, onCosmWasmPool func(pool poolmanagertypes.PoolI)) error {
 	if s.ProcessAllBlockDataPanicMsg != "" {
 		panic(s.ProcessAllBlockDataPanicMsg)
 	}
 
 	s.IsProcessAllBlockDataCalled = true
-	return s.LastChangedPoolsObserved.CosmWasmPools, s.AllBlockDataError
+	return s.AllBlockDataError
 }
 
 // ProcessChangedBlockData implements domain.Ingester.

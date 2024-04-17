@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var _ baseapp.StreamingService = (*sqsStreamingService)(nil)
@@ -167,16 +168,13 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		}
 
 		// Process the entire block if the node is caught up
-		cwPools, err := s.sqsIngester.ProcessAllBlockData(ctx)
+		err = s.sqsIngester.ProcessAllBlockData(ctx, func(cwPool poolmanagertypes.PoolI) {
+			// Generate the initial contract address to pool mapping for CosmWasm pools
+			fmt.Println("cwPool", cwPool.GetId())
+			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(cwPool)
+		})
 		if err != nil {
 			return fmt.Errorf("failed to process all block data: %w", err)
-		}
-
-		// Generate the initial contract address to pool mapping for CosmWasm pools
-		fmt.Println("process block")
-		for _, pool := range cwPools {
-			fmt.Println("tracking pool", pool.GetId())
-			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(pool)
 		}
 
 		// Successfully processed the block, no longer need to process full block data.
