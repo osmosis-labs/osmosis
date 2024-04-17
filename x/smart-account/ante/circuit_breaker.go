@@ -55,6 +55,7 @@ func IsCircuitBreakActive(
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 ) (bool, smartaccounttypes.AuthenticatorTxOptions) {
 	authenticatorParams := smartAccountKeeper.GetParams(ctx)
+	// If the smart accounts are not active, the circuit breaker activates (i.e. return true).
 	if !authenticatorParams.IsSmartAccountActive {
 		return true, nil
 	}
