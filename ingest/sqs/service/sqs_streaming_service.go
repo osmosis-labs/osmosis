@@ -149,7 +149,7 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 //
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
-	// If cold start, we use SQS ingestert to process the intire block.
+	// If cold start, we use SQS ingestert to process the entire block.
 	if s.shouldProcessAllBlockData {
 		// Detect syncing
 		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
@@ -165,8 +165,14 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		}
 
 		// Process the entire block if the node is caught up
-		if err := s.sqsIngester.ProcessAllBlockData(ctx); err != nil {
-			return err
+		cwPools, err := s.sqsIngester.ProcessAllBlockData(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to process all block data: %w", err)
+		}
+
+		// Generate the initial contract address to pool mapping for CosmWasm pools
+		for _, pool := range cwPools {
+			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(pool)
 		}
 
 		// Successfully processed the block, no longer need to process full block data.
