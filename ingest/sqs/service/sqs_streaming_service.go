@@ -171,7 +171,9 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		}
 
 		// Generate the initial contract address to pool mapping for CosmWasm pools
+		fmt.Println("process block")
 		for _, pool := range cwPools {
+			fmt.Println("tracking pool", pool.GetId())
 			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(pool)
 		}
 
