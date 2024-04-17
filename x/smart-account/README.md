@@ -20,7 +20,7 @@ transaction defaults to the classic Cosmos SDK authentication method.
 
 The flow is as follows:
 
-![Circuit Breaker](/x/authenticator/images/circuit_breaker.jpg)
+![Circuit Breaker](/x/smart-account/images/circuit_breaker.jpg)
 
 ### Authenticator Flow
 
@@ -51,7 +51,7 @@ If the execution is successful, we continue in the post handler:
    * If ConfirmExecution() succeeds for all authenticators, the changes are written to the data store.
    * If ConfirmExecution() fails for any authenticator, or if the "Execute All Messages" step fails, the changes are discarded.
 
-![Authenticator Flow](/x/authenticator/images/authentication_flow.jpg)
+![Authenticator Flow](/x/smart-account/images/authentication_flow.jpg)
 
 ### Authenticator Implementations
 
@@ -61,7 +61,7 @@ This interface defines the functions that need to be implemented and will be des
 For authenticators to be available, they need to be registered with the `AuthenticatorManager`. This manager is 
 responsible for retrieving authenticators by their unique type.
 
-![Authenticator Implementations](/x/authenticator/images/authenticator_manager.jpg)
+![Authenticator Implementations](/x/smart-account/images/authenticator_manager.jpg)
 
 Since implementations are custom code, they can encode complex authentication logic like calling each other, or
 calling cosmwasm contracts to authenticate the messages.
@@ -74,7 +74,7 @@ authenticators, as well as storing any user data that the authenticators may nee
 
 This is where the association of specific authenticators with accounts is stored. 
 
-![Account Authenticator Configuration](/x/authenticator/images/keeper.jpg)
+![Account Authenticator Configuration](/x/smart-account/images/keeper.jpg)
 
 One way of seeing this data is as the instantiation information necessary to use the authenticator for a specific 
 account. For example, a `SignatureVerificationAuthenticator` contains the code necessary to verify a signature, but
