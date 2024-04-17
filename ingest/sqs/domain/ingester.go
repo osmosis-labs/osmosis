@@ -15,7 +15,7 @@ import (
 type Ingester interface {
 	// ProcessAllBlockData processes the block and ingests data into a sink.
 	// Returns error if the ingester fails to ingest data.
-	// Also returns cwpools, which is used to create the initial address to pool mapping.
+	// Also creates an initial cwPool Address to cwPool object map.
 	ProcessAllBlockData(ctx sdk.Context, onCosmWasmPool func(cwPool poolmanagertypes.PoolI)) error
 
 	// ProcessChangedBlockData processes only the pools that were changed in the block.

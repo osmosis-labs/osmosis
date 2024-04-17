@@ -52,7 +52,8 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context, onCosmWasmPool func(c
 		return err
 	}
 
-	// Call the callback function for each CosmWasm pool so we can track the pool's contract ID to pool object mapping
+	// Call the callback function for each CosmWasm pool so we can create the initial pool contract ID to pool object mapping
+	// This then gets modified as cwPools are created and/or migrated
 
 	for _, cwPool := range cosmWasmPools {
 		if onCosmWasmPool != nil {

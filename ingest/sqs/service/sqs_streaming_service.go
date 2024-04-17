@@ -151,7 +151,6 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	// If cold start, we use SQS ingester to process the entire block.
-	fmt.Println("s.shouldProcessAllBlockData", s.shouldProcessAllBlockData)
 	if s.shouldProcessAllBlockData {
 		// Detect syncing
 		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
@@ -163,14 +162,12 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 			return fmt.Errorf("failed to check if node is syncing: %w", err)
 		}
 		if isNodesyncing {
-			fmt.Println("node is syncing, skipping block processing")
 			return fmt.Errorf("node is syncing, skipping block processing")
 		}
 
 		// Process the entire block if the node is caught up
 		err = s.sqsIngester.ProcessAllBlockData(ctx, func(cwPool poolmanagertypes.PoolI) {
-			// Generate the initial contract address to pool mapping for CosmWasm pools
-			fmt.Println("cwPool", cwPool.GetId())
+			// Generate the initial pool address to pool mapping for CosmWasm pools
 			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(cwPool)
 		})
 		if err != nil {
