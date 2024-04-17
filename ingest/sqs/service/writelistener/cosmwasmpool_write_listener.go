@@ -68,6 +68,8 @@ func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey,
 	// Check if the key is a balance change for any address
 	if len(key) > 0 && key[0] == banktypes.BalancesPrefix[0] {
 		// The key is a balance change. Check if the address in question is a cwpool address
+		fmt.Println("key[0]", key[0])
+		fmt.Println("banktypes.BalancesPrefix[0]", banktypes.BalancesPrefix[0])
 
 		// We expect the key to be of the form:
 		// <prefix> (length 1)
@@ -75,6 +77,7 @@ func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey,
 		// <address> (length address_length)
 		addressLength := key[1]
 		addressBytes := key[1+1 : 1+addressLength+1]
+		fmt.Println("addressBytes", addressBytes)
 		address, err := sdk.AccAddressFromBech32(string(addressBytes))
 		if err != nil {
 			// The address is not a valid bech32 address. Ignore it
