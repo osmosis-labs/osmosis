@@ -8,7 +8,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	"github.com/skip-mev/block-sdk/block"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -30,7 +29,6 @@ import (
 
 // BlockSDKAnteHandlerParams are the parameters necessary to configure the block-sdk antehandlers
 type BlockSDKAnteHandlerParams struct {
-	freeLane      block.Lane
 	mevLane       auctionante.MEVLane
 	auctionKeeper auctionkeeper.Keeper
 	txConfig      client.TxConfig
@@ -73,10 +71,7 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
-		block.NewIgnoreDecorator(
-			deductFeeDecorator,
-			blockSDKParams.freeLane,
-		),
+		deductFeeDecorator,
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),

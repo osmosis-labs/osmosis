@@ -401,12 +401,12 @@ func NewOsmosisApp(
 	app.sm.RegisterStoreDecoders()
 
 	// initialize lanes + mempool
-	mevLane, freeLane, defaultLane := CreateLanes(app, txConfig)
+	mevLane, defaultLane := CreateLanes(app, txConfig)
 
 	// create the mempool
 	lanedMempool, err := block.NewLanedMempool(
 		app.Logger(),
-		[]block.Lane{mevLane, freeLane, defaultLane},
+		[]block.Lane{mevLane, defaultLane},
 	)
 	if err != nil {
 		panic(err)
@@ -431,7 +431,6 @@ func NewOsmosisApp(
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
 		BlockSDKAnteHandlerParams{
-			freeLane:      freeLane,
 			mevLane:       mevLane,
 			auctionKeeper: *app.AppKeepers.AuctionKeeper,
 			txConfig:      txConfig,
@@ -444,7 +443,6 @@ func NewOsmosisApp(
 	}
 	mevLane.WithOptions(opt...)
 	defaultLane.WithOptions(opt...)
-	freeLane.WithOptions(opt...)
 
 	// ABCI handlers
 	// prepare proposal
