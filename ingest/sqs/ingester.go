@@ -30,35 +30,26 @@ func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCod
 }
 
 // ProcessAllBlockData implements ingest.Ingester.
-func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context, onCosmWasmPool func(cwPool poolmanagertypes.PoolI)) error {
+func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	// Concentrated pools
 
 	concentratedPools, err := i.keepers.ConcentratedKeeper.GetPools(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// CFMM pools
 
 	cfmmPools, err := i.keepers.GammKeeper.GetPools(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// CosmWasm pools
 
 	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
-		return err
-	}
-
-	// Call the callback function for each cwPool so we can create the initial cwPool address to pool object mapping
-	// This then gets modified as cwPools are created and/or migrated
-
-	for _, cwPool := range cosmWasmPools {
-		if onCosmWasmPool != nil {
-			onCosmWasmPool(cwPool)
-		}
+		return nil, err
 	}
 
 	blockPools := domain.BlockPools{
@@ -70,10 +61,15 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context, onCosmWasmPool func(c
 	// Process block by reading and writing data and ingesting data into sinks
 	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, blockPools)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+	err = i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return cosmWasmPools, nil
 }
 
 // ProcessChangedBlockData implements ingest.Ingester.
