@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
+* [#8073](https://github.com/osmosis-labs/osmosis/pull/8073) Speedup CL spread factor calculations, but mildly changes rounding behavior in the final decimal place.
+
 
 ### State Compatible
 
