@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -12,6 +13,10 @@ import (
 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+)
+
+const (
+	transmuterAddress = "osmo10c8y69yylnlwrhu32ralf08ekladhfknfqrjsy9yqc9ml8mlxpqq2sttzk"
 )
 
 var _ storetypes.WriteListener = (*cosmwasmPoolWriteListener)(nil)
@@ -61,15 +66,19 @@ func NewCosmwasmPoolBalance(poolTracker domain.BlockPoolUpdateTracker) storetype
 // Tracks balance changes for cwpools (i.e. swaps / position creation / withdraws)
 func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
 	// Check if the key is a balance change for any address
+
 	if len(key) > 0 && bytes.Equal(banktypes.BalancesPrefix, key[:1]) {
-		// The key is a balance change. Check if the address in question is a cwpool address
-		cwPoolMap := s.poolTracker.GetCosmWasmPoolsAddressToIDMap()
-		fmt.Println("string(key[1:]", string(key[2:]))
-		if pool, ok := cwPoolMap[string(key[2:])]; ok {
-			// The address is a cwpool address. Add the pool to the pool tracker
-			fmt.Println("track")
-			s.poolTracker.TrackCosmWasm(pool)
+
+		addressLength := key[1]
+		address := key[1+1 : 1+addressLength+1]
+		fmt.Println("address", address)
+		addressSr := sdk.AccAddress(address)
+		fmt.Println("string(key[1:]", addressSr.String())
+
+		if addressSr.String() == transmuterAddress {
+			fmt.Println("transmuterAddress", transmuterAddress)
 		}
+
 	}
 	return nil
 }
