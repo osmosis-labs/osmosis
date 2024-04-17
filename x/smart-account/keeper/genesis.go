@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
+	"strings"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
@@ -21,9 +21,9 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 			return err
 		}
 
-		// The authenticator store key looks like "2|osms1<address>|<authenticator_id>" we need the address to
+		// The authenticator store key looks like "2|osmo1<address>|<authenticator_id>" we need the address to
 		// successfully import and export the authenticator module
-		accountAddr := string(key[4:47])
+		accountAddr := strings.Split(string(key), "|")[1]
 
 		// Find existing AuthenticatorData for the account address
 		var found bool

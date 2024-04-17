@@ -184,10 +184,9 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 
 	// Get the next global id value for authenticators from the store
 	id := k.GetNextAuthenticatorId(ctx)
-	stringId := strconv.FormatUint(id, 10)
 
 	// Each authenticator has a custom OnAuthenticatorAdded function
-	err := impl.OnAuthenticatorAdded(ctx, account, data, stringId)
+	err := impl.OnAuthenticatorAdded(ctx, account, data, strconv.FormatUint(id, 10))
 	if err != nil {
 		return 0, errorsmod.Wrapf(err, "`OnAuthenticatorAdded` failed on authenticator type %s", authenticatorType)
 	}
@@ -222,10 +221,8 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 		return fmt.Errorf("authenticator type %s is not registered", existing.Type)
 	}
 
-	stringId := strconv.FormatInt(int64(authenticatorId), 10)
-
 	// Authenticators can prevent removal. This should be used sparingly
-	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data, stringId)
+	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data, strconv.FormatUint(authenticatorId, 10))
 	if err != nil {
 		return errorsmod.Wrapf(err, "`OnAuthenticatorRemoved` failed on authenticator type %s", existing.Type)
 	}

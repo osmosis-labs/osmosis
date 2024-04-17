@@ -54,14 +54,13 @@ func (m msgServer) AddAuthenticator(
 		return nil, err
 	}
 
-	stringId := strconv.FormatUint(id, 10)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
-			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, stringId),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, strconv.FormatUint(id, 10)),
 		),
 	})
 

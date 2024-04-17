@@ -2,6 +2,7 @@ package authenticator
 
 import "sort"
 
+// AuthenticatorManager is a manager for all registered authenticators.
 type AuthenticatorManager struct {
 	registeredAuthenticators map[string]Authenticator
 	orderedKeys              []string // slice to keep track of the keys in sorted order
