@@ -82,10 +82,10 @@ func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.Requ
 }
 
 // processBlockRecoverError processes the block data and ingests it into SQS. Recovers from panics and returns them as errors.
-// It controls an internal flag shouldProceessAllBlockData to determine if the block data should be processed in full.
+// It controls an internal flag shouldProcessAllBlockData to determine if the block data should be processed in full.
 // It resets the pool tracker after processing the block data.
-// It sets shouldProceessAllBlockData to true if a panic occurs while processing the block data.
-// It sets shouldProceessAllBlockData to true if an error occurs while processing the block data.
+// It sets shouldProcessAllBlockData to true if a panic occurs while processing the block data.
+// It sets shouldProcessAllBlockData to true if an error occurs while processing the block data.
 // Always returns nil to avoid making this consensus breaking.
 // WARNING: this method emits sdk events for testability. Ensure that the caller discards the events.
 func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err error) {
@@ -149,7 +149,8 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 //
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
-	// If cold start, we use SQS ingestert to process the entire block.
+	// If cold start, we use SQS ingester to process the entire block.
+	fmt.Println("s.shouldProcessAllBlockData", s.shouldProcessAllBlockData)
 	if s.shouldProcessAllBlockData {
 		// Detect syncing
 		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
@@ -161,6 +162,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 			return fmt.Errorf("failed to check if node is syncing: %w", err)
 		}
 		if isNodesyncing {
+			fmt.Println("node is syncing, skipping block processing")
 			return fmt.Errorf("node is syncing, skipping block processing")
 		}
 
