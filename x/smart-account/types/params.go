@@ -1,4 +1,4 @@
-package types
+gpackage types
 
 import (
 	fmt "fmt"
@@ -17,7 +17,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		MaximumUnauthenticatedGas: 20000,
+		MaximumUnauthenticatedGas: 120_000,
 		IsSmartAccountActive:      true,
 		CircuitBreakerControllers: []string{},
 	}
@@ -39,6 +39,21 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	err := validateMaximumUnauthenticatedGas(p.MaximumUnauthenticatedGas)
+	if err != nil {
+		return err
+	}
+
+	err = validateIsSmartAccountActive(p.IsSmartAccountActive)
+	if err != nil {
+		return err
+	}
+
+	err = validateCircuitBreakerControllers(p.CircuitBreakerControllers)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
