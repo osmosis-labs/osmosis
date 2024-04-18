@@ -73,8 +73,8 @@ func CreateUpgradeHandler(
 
 // migrateMainnetPoolsSpreadFactor migrates the specified mainnet pools to the new spread factor accumulator scaling factor.
 func migrateMainnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
-	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs))
-	for poolID := range concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs {
+	poolIDsToMigrate := make([]uint64, 0, len(concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDsV25))
+	for poolID := range concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDsV25 {
 		poolIDsToMigrate = append(poolIDsToMigrate, poolID)
 	}
 

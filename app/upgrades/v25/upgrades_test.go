@@ -98,9 +98,9 @@ func (s *UpgradeTestSuite) PrepareSpreadRewardsMigrationTestEnv() (map[uint64]st
 	s.Require().NotEmpty(nonMigratedPoolBeforeUpgradeSpreadRewards)
 
 	// Overwrite the migration list with the desired pool ID.
-	oldMigrationList := concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs
-	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs = map[uint64]struct{}{}
-	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDs[migratedPoolID] = struct{}{}
+	oldMigrationList := concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDsV25
+	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDsV25 = map[uint64]struct{}{}
+	concentratedtypes.MigratedSpreadFactorAccumulatorPoolIDsV25[migratedPoolID] = struct{}{}
 
 	return oldMigrationList, migratedPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards
 }

@@ -952,8 +952,8 @@ func (s *KeeperTestSuite) TestMigrateSpreadFactorAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 
 	// Manually change the pool IDs list to the pool ID in the test
-	types.MigratedSpreadFactorAccumulatorPoolIDs = map[uint64]struct{}{}
-	types.MigratedSpreadFactorAccumulatorPoolIDs[poolIDMigrated] = struct{}{}
+	types.MigratedSpreadFactorAccumulatorPoolIDsV25 = map[uint64]struct{}{}
+	types.MigratedSpreadFactorAccumulatorPoolIDsV25[poolIDMigrated] = struct{}{}
 
 	// Non-migrated pool: ensure that the claimable incentives are the same before and after migration
 	nonMigratedPoolAfterUpgradeSpreadFactor, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, poolNonMigratedPositionID)

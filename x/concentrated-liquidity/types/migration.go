@@ -9,7 +9,9 @@ var MigratedIncentiveAccumulatorPoolIDs = map[uint64]struct{}{
 	1431: {},
 }
 
-var MigratedSpreadFactorAccumulatorPoolIDs = map[uint64]struct{}{
+// MigratedSpreadFactorAccumulatorPoolIDsV25 is a map that defines pools to migrate to the latest scalingFactor for v25.
+// These are ordered from the pool that has triggered the truncation alert the most to the least.
+var MigratedSpreadFactorAccumulatorPoolIDsV25 = map[uint64]struct{}{
 	// token0 usdc
 	// token1 dai
 	// liquidity 55.8k

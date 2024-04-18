@@ -378,7 +378,7 @@ func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint
 	}
 
 	// If the given pool ID is one of the migrated spread factor accumulator pool IDs, we return the perUnitLiqScalingFactor.
-	_, isMigrated := types.MigratedSpreadFactorAccumulatorPoolIDs[poolID]
+	_, isMigrated := types.MigratedSpreadFactorAccumulatorPoolIDsV25[poolID]
 	if isMigrated {
 		return perUnitLiqScalingFactor, nil
 	}
