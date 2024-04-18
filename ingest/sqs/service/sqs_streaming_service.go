@@ -167,7 +167,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		// Process the entire block if the node is caught up
 		cwPools, err := s.sqsIngester.ProcessAllBlockData(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to process all block data: %w", err)
+			return err
 		}
 
 		// Generate the initial cwPool address to pool mapping
