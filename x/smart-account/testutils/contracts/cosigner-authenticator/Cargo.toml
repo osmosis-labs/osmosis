@@ -13,7 +13,7 @@ cw-storage-plus = "1.1.0"
 osmosis-authenticators = "0.22.0-alpha.3"
 schemars = "0.8.12"
 serde = "1.0.180"
-serde-json-wasm = "1.0.0"
+serde-json-wasm = "1.0.1"
 sylvia = "0.9.2"
 
 [dev-dependencies]
