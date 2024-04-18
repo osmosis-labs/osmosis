@@ -44,4 +44,4 @@ osmosis-authenticators = "0.22.0-alpha.19"
 sha2 = "0.10.8"
 
 [dev-dependencies]
-serde-json-wasm = "1.0.0"
+serde-json-wasm = "1.0.1"
