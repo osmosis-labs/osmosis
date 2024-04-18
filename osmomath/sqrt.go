@@ -18,10 +18,6 @@ var oneBigInt = big.NewInt(1)
 // the returned root r, will be such that r^2 >= d
 // This function is monotonic, i.e. if d1 >= d2, then sqrt(d1) >= sqrt(d2)
 func MonotonicSqrt(d Dec) (Dec, error) {
-	return MonotonicSqrtMut(d.Clone())
-}
-
-func MonotonicSqrtMut(d Dec) (Dec, error) {
 	if d.IsNegative() {
 		return d, errors.New("cannot take square root of negative number")
 	}
@@ -35,7 +31,7 @@ func MonotonicSqrtMut(d Dec) (Dec, error) {
 	//
 	// We can than interpret sqrt(10^18 * v) as our resulting decimal and return it.
 	// monotonicity is guaranteed by correctness of integer square root.
-	dBi := d.BigIntMut()
+	dBi := d.BigInt()
 	r := big.NewInt(0).Mul(dBi, tenTo18)
 	r.Sqrt(r)
 	// However this square root r is s.t. r^2 <= d. We want to flip this to be r^2 >= d.
@@ -47,16 +43,12 @@ func MonotonicSqrtMut(d Dec) (Dec, error) {
 	if check.Cmp(shiftedD) == -1 {
 		r.Add(r, oneBigInt)
 	}
+	root := NewDecFromBigIntWithPrec(r, 18)
 
-	dBi.Set(r)
-	return d, nil
+	return root, nil
 }
 
 func MonotonicSqrtBigDec(d BigDec) (BigDec, error) {
-	return MonotonicSqrtBigDecMut(d.Clone())
-}
-
-func MonotonicSqrtBigDecMut(d BigDec) (BigDec, error) {
 	if d.IsNegative() {
 		return d, errors.New("cannot take square root of negative number")
 	}
@@ -70,7 +62,7 @@ func MonotonicSqrtBigDecMut(d BigDec) (BigDec, error) {
 	//
 	// We can than interpret sqrt(10^18 * v) as our resulting decimal and return it.
 	// monotonicity is guaranteed by correctness of integer square root.
-	dBi := d.BigIntMut()
+	dBi := d.BigInt()
 	r := big.NewInt(0).Mul(dBi, tenTo36)
 	r.Sqrt(r)
 	// However this square root r is s.t. r^2 <= d. We want to flip this to be r^2 >= d.
@@ -82,9 +74,9 @@ func MonotonicSqrtBigDecMut(d BigDec) (BigDec, error) {
 	if check.Cmp(shiftedD) == -1 {
 		r.Add(r, oneBigInt)
 	}
-	dBi.Set(r)
+	root := NewBigDecFromBigIntMutWithPrec(r, 36)
 
-	return d, nil
+	return root, nil
 }
 
 // MustMonotonicSqrt returns the output of MonotonicSqrt, panicking on error.
