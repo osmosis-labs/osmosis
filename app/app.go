@@ -469,6 +469,9 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
 	}
+	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
+		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
+	}
 	return writeListeners
 }
 
