@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
-	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092633-b306e7a706e1
+	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -32,10 +32,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240417060052-9e327b629aab
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240411125512-cb0fada2dee8
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240417073936-6421bb194a2f
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240417073936-6421bb194a2f
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240411125512-cb0fada2dee8
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240411125512-cb0fada2dee8
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240418073227-bc05dc507bff
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -64,7 +64,7 @@ require (
 	cloud.google.com/go/compute v1.24.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.6 // indirect
-	cloud.google.com/go/storage v1.36.0 // indirect
+	cloud.google.com/go/storage v1.37.0 // indirect
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/log v1.3.0 // indirect
@@ -166,7 +166,6 @@ require (
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.162.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
@@ -241,7 +240,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
+	github.com/gogo/protobuf v1.3.3
 	github.com/golang/glog v1.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect

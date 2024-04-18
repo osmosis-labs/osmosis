@@ -34,6 +34,10 @@ import (
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
+
+	"github.com/skip-mev/block-sdk/x/auction"
+
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
@@ -61,7 +65,6 @@ import (
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v24/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
-	"github.com/skip-mev/block-sdk/x/auction"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -132,4 +135,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
 	auction.AppModuleBasic{},
+	smartaccount.AppModuleBasic{},
 }

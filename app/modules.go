@@ -5,6 +5,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -40,7 +41,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -68,6 +68,9 @@ import (
 	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
+	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v24/simulation/simtypes"
@@ -136,6 +139,7 @@ var moduleAccountPermissions = map[string][]string{
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
 	auctiontypes.ModuleName:                  nil, // initialize a module account
+	smartaccounttypes.ModuleName:             nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -205,6 +209,7 @@ func appModules(
 			appCodec,
 			*app.AuctionKeeper,
 		),
+		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
 	}
 }
 
@@ -272,6 +277,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
+		smartaccounttypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,

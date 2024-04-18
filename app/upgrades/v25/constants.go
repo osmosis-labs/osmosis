@@ -7,6 +7,8 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v25 upgrade.
@@ -21,7 +23,11 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{auctiontypes.StoreKey},
+		Added: []string{
+			auctiontypes.StoreKey,
+			smartaccounttypes.ManagerStoreKey,
+			smartaccounttypes.AuthenticatorStoreKey,
+		},
 		Deleted: []string{},
 	},
 }
