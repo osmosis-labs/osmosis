@@ -270,7 +270,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	// We always truncate down in the pool's favor.
 	spreadRewardsClaimed := sdk.NewCoins()
 	forfeitedDust := sdk.DecCoins{}
-	if spreadFactorScalingFactor.Equal(sdk.OneDec()) {
+	if spreadFactorScalingFactor.Equal(oneDec) {
 		// If the scaling factor is 1, we don't need to scale down the spread rewards.
 		// We also use the forfeited dust calculated updateAccumAndClaimRewards since it is already scaled down.
 		spreadRewardsClaimed = spreadRewardsClaimedScaled
