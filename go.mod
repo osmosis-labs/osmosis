@@ -96,7 +96,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7 // indirect
+	github.com/cosmos/iavl v1.1.3-0.20240418004230-368ab429efd8 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
@@ -400,10 +400,10 @@ replace (
 
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v24/v0.47.5, current branch: osmo-v24/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5f7f1a1d22b8cbf86cdd2ab965e82f0ade6a96f9
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240418010030-7b7eb4cc2e96
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.3-0.20240418004230-368ab429efd8
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04

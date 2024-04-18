@@ -1513,8 +1513,8 @@ github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4a
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
 github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2 h1:3k4I3zCxdNP+mjhR7AtKr1PPuGR58CcVTMZN0aV/iL4=
 github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2/go.mod h1:fE+yBeExsJHA35plOZ7FmC/JejO5UdEHNcwO3dj2wc8=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
-github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240418010030-7b7eb4cc2e96 h1:sSorMmNo0v/hckqvNfeh+loNPKZ9urVjOYRS9k17FTw=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240418010030-7b7eb4cc2e96/go.mod h1:oJ25BWG0K7xwFEDXTmRL4K1M/BmL568f5P+vI/+PmSQ=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240412194904-615994cda7a7 h1:enWciQKZWpgKmtH4FWJlfwe6bFAtntOEq6vS4DHLdMs=

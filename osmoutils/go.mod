@@ -231,10 +231,10 @@ replace (
 
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v24/v0.47.5, current branch: osmo-v24/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5f7f1a1d22b8cbf86cdd2ab965e82f0ade6a96f9
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240418010030-7b7eb4cc2e96
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.3-0.20240418004230-368ab429efd8
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
