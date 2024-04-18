@@ -90,7 +90,7 @@ type SwapStrategy interface {
 }
 
 var (
-	oneBigDec = osmomath.OneBigDec()
+	oneDec = osmomath.OneDec()
 )
 
 // New returns a swap strategy based on the provided zeroForOne parameter
@@ -139,7 +139,7 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 	if priceLimit.GTE(types.MinSpotPriceBigDec) {
 		// Truncation is fine since previous Osmosis version only supported
 		// 18 decimal price ranges.
-		sqrtPriceLimit, err := osmomath.MonotonicSqrt(priceLimit.Dec())
+		sqrtPriceLimit, err := osmomath.MonotonicSqrtMut(priceLimit.Dec())
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}

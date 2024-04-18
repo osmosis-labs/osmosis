@@ -44,7 +44,7 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
 		// As a result, there is no data loss.
 		price := priceBigDec.Dec()
 
-		sqrtPrice, err := osmomath.MonotonicSqrt(price)
+		sqrtPrice, err := osmomath.MonotonicSqrtMut(price)
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}

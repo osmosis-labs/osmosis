@@ -107,7 +107,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 }
 
 func (h Hooks) GetModuleName() string {
-	return epochstypes.ModuleName
+	return types.ModuleName
 }
 
 // ----------------------------------------------------------------------------
