@@ -90,20 +90,20 @@ VALIDATOR4_APP_TOML=$HOME/.osmosisd/validator4/config/app.toml
 sed -i -E 's|0.0.0.0:9090|0.0.0.0:9050|g' $VALIDATOR1_APP_TOML
 
 # validator2
-sed -i -E 's|tcp://0.0.0.0:1317|tcp://0.0.0.0:1316|g' $VALIDATOR2_APP_TOML
-sed -i -E 's|0.0.0.0:9090|0.0.0.0:9088|g' $VALIDATOR2_APP_TOML
-sed -i -E 's|0.0.0.0:9091|0.0.0.0:9089|g' $VALIDATOR2_APP_TOML
+sed -i -E 's|localhost:1317|localhost:1316|g' $VALIDATOR2_APP_TOML
+sed -i -E 's|localhost:9090|localhost:9088|g' $VALIDATOR2_APP_TOML
+sed -i -E 's|localhost:9091|localhost:9089|g' $VALIDATOR2_APP_TOML
 
 # validator3
-sed -i -E 's|tcp://0.0.0.0:1317|tcp://0.0.0.0:1315|g' $VALIDATOR3_APP_TOML
-sed -i -E 's|0.0.0.0:9090|0.0.0.0:9086|g' $VALIDATOR3_APP_TOML
-sed -i -E 's|0.0.0.0:9091|0.0.0.0:9087|g' $VALIDATOR3_APP_TOML
+sed -i -E 's|localhost:1317|localhost:1315|g' $VALIDATOR3_APP_TOML
+sed -i -E 's|localhost:9090|localhost:9086|g' $VALIDATOR3_APP_TOML
+sed -i -E 's|localhost:9091|localhost:9087|g' $VALIDATOR3_APP_TOML
 sed -i -E 's|adaptive-fee-enabled = "false"|adaptive-fee-enabled = "true"|g' $VALIDATOR3_APP_TOML
 
 # validator4
-sed -i -E 's|tcp://0.0.0.0:1317|tcp://0.0.0.0:1314|g' $VALIDATOR4_APP_TOML
-sed -i -E 's|0.0.0.0:9090|0.0.0.0:9084|g' $VALIDATOR4_APP_TOML
-sed -i -E 's|0.0.0.0:9091|0.0.0.0:9085|g' $VALIDATOR4_APP_TOML
+sed -i -E 's|localhost:1317|localhost:1314|g' $VALIDATOR4_APP_TOML
+sed -i -E 's|localhost:9090|localhost:9084|g' $VALIDATOR4_APP_TOML
+sed -i -E 's|localhost:9091|localhost:9085|g' $VALIDATOR4_APP_TOML
 sed -i -E 's|adaptive-fee-enabled = "false"|adaptive-fee-enabled = "true"|g' $VALIDATOR4_APP_TOML
 
 
