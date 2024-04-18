@@ -64,13 +64,13 @@ func NewAnteHandler(
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)
 
-	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
+	// authenticatorVerificationDecorator is the new authenticator flow that's embedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
 		smartaccountante.LimitFeePayerDecorator{},
 		smartaccountante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
-		// is enbedded in the authenticator decorator
+		// is embedded in the authenticator decorator
 		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
