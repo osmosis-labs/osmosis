@@ -32,6 +32,12 @@ func CreateUpgradeHandler(
 		// Reset missed blocks counter for all validators
 		resetMissedBlocksCounter(ctx, keepers.SlashingKeeper)
 
+		// Set the authenticator params in the store
+		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
+		authenticatorParams.MaximumUnauthenticatedGas = 120_000
+		authenticatorParams.IsSmartAccountActive = false
+		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
+
 		return migrations, nil
 	}
 }

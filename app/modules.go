@@ -5,6 +5,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -40,7 +41,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -65,6 +65,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
+	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v24/simulation/simtypes"
@@ -132,6 +135,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
+	smartaccounttypes.ModuleName:             nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -197,6 +201,7 @@ func appModules(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
+		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
 	}
 }
 
@@ -264,6 +269,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
+		smartaccounttypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,

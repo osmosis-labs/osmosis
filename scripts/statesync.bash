@@ -18,7 +18,7 @@ go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbl
 
 # MAKE HOME FOLDER AND GET GENESIS
 osmosisd init test
-wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/osmosis/raw/main/networks/osmosis-1/genesis.json
+wget -O ~/.osmosisd/config/genesis.json https://ipfs.io/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs?filename=osmosis-genesis.json
 
 
 INTERVAL=1500

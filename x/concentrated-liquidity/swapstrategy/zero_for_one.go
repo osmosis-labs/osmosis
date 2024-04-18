@@ -24,6 +24,9 @@ type zeroForOneStrategy struct {
 	sqrtPriceLimit osmomath.BigDec
 	storeKey       storetypes.StoreKey
 	spreadFactor   osmomath.Dec
+
+	// oneMinusSpreadFactor is 1 - spreadFactor
+	oneMinusSpreadFactor osmomath.Dec
 }
 
 var _ SwapStrategy = (*zeroForOneStrategy)(nil)
@@ -66,7 +69,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
-	oneMinusTakerFee := oneDec.Sub(s.spreadFactor)
+	oneMinusTakerFee := s.getOneMinusSpreadFactor()
 	amountZeroInRemainingLessSpreadReward := osmomath.NewBigDecFromDecMulDec(amountZeroInRemaining, oneMinusTakerFee)
 
 	var sqrtPriceNext osmomath.BigDec
@@ -96,7 +99,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroInFinal, amountZeroInRemaining, s.spreadFactor)
+	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroInFinal, amountZeroInRemaining, s.spreadFactor, s.getOneMinusSpreadFactor)
 
 	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext, amountZeroInFinal, amountOneOut.Dec(), spreadRewardChargeTotal
@@ -158,7 +161,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountZeroInFinal, s.spreadFactor)
+	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountZeroInFinal, s.spreadFactor, s.getOneMinusSpreadFactor())
 
 	// Cap the output amount to not exceed the remaining output amount.
 	// The reason why we must do this for in given out and NOT out given in is the following:
@@ -177,6 +180,13 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 
 	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext, amountOneOut.Dec(), amountZeroInFinal, spreadRewardChargeTotal
+}
+
+func (s zeroForOneStrategy) getOneMinusSpreadFactor() osmomath.Dec {
+	if s.oneMinusSpreadFactor.IsNil() {
+		s.oneMinusSpreadFactor = oneDec.Sub(s.spreadFactor)
+	}
+	return s.oneMinusSpreadFactor
 }
 
 // InitializeNextTickIterator returns iterator that searches for the next tick given currentTickIndex.

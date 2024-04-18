@@ -737,7 +737,11 @@ func (d *BigDec) ChopPrecision(precision uint64) BigDec {
 // Round up at precision end.
 // Values in any additional decimal places are truncated.
 func (d BigDec) DecRoundUp() Dec {
-	return NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpDec(d.i), DecPrecision)
+	dec := math.LegacyZeroDec()
+	decBi := dec.BigIntMut()
+	decBi, rem := decBi.QuoRem(d.i, bigDecDecPrecisionFactorDiff, big.NewInt(0))
+	incBasedOnRem(rem, decBi)
+	return dec
 }
 
 // BigDecFromDec returns the BigDec representation of an Dec.
