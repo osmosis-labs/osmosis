@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var _ domain.Ingester = &sqsIngester{}
@@ -29,26 +30,26 @@ func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCod
 }
 
 // ProcessAllBlockData implements ingest.Ingester.
-func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) error {
+func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	// Concentrated pools
 
 	concentratedPools, err := i.keepers.ConcentratedKeeper.GetPools(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// CFMM pools
 
 	cfmmPools, err := i.keepers.GammKeeper.GetPools(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// CosmWasm pools
 
 	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	blockPools := domain.BlockPools{
@@ -60,10 +61,15 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) error {
 	// Process block by reading and writing data and ingesting data into sinks
 	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, blockPools)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+	err = i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return cosmWasmPools, nil
 }
 
 // ProcessChangedBlockData implements ingest.Ingester.
@@ -91,16 +97,6 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 
 		changedPools.ConcentratedPoolIDTickChange[poolID] = struct{}{}
 	}
-
-	// NOTE: we are failing to detect CW pool store updates which were noticed post-release.
-	// As a result, we push all of them every block.
-	// https://linear.app/osmosis/issue/STABI-103/push-updated-pools-into-sqs-instead-of-all-every-block
-	cosmWasmPools, err := i.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
-	if err != nil {
-		return err
-	}
-
-	changedPools.CosmWasmPools = cosmWasmPools
 
 	// Process block by reading and writing data and ingesting data into sinks
 	pools, takerFeesMap, err := i.poolsTransformer.Transform(ctx, changedPools)
