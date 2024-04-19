@@ -35,6 +35,11 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
+// ReserveName returns the reserve market module's name
+func (AppModuleBasic) ReserveName() string {
+	return types.ReserveModuleName
+}
+
 // RegisterLegacyAminoCodec registers the module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
