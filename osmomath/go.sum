@@ -82,8 +82,8 @@ github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiK
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
 github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
-github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac h1:D1OG5ugS4r1Jq8U331gB4mrYsX7JQsasfWkFvdva4KI=
-github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
+github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7 h1:eGi/RRQ5K+C6J8aCSRYXuS5NFiSe+S46F1zMOEQmykY=
+github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/cosmos/ledger-cosmos-go v0.12.4 h1:drvWt+GJP7Aiw550yeb3ON/zsrgW0jgh5saFCr7pDnw=
@@ -263,13 +263,8 @@ github.com/onsi/gomega v1.28.1 h1:MijcGUbfYuznzK/5R4CPNoUP/9Xvuo20sXfEm6XxoTA=
 github.com/onsi/gomega v1.28.1/go.mod h1:9sxs+SwGrKI0+PWe4Fxa9tFQQBG5xSsSbMXOI8PPpoQ=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
-<<<<<<< HEAD
-github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240409164616-caf6b6543d4b h1:7cMn+l3A0u38AOP9jdLW9J8ZqGCoARuu4UKvrg6xQSk=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240409164616-caf6b6543d4b/go.mod h1:pBGdIh7mLeiZPCAAT48sBR863JhUbtoFb6v7XOo0aNM=
-=======
 github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240417073936-6421bb194a2f h1:xSa3zxR53mvkP4+VGklrZHKYwCnNZoTXC5XHDYDwYzw=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240417073936-6421bb194a2f/go.mod h1:zDh6WrVu3iwAcJ8qJwlg8syR5vDx8vjFz++9BxVyBJ8=
->>>>>>> 2c102945 (Speedup CL pool key formatting (#8075))
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
 github.com/pelletier/go-toml/v2 v2.1.0/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=

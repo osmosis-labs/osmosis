@@ -19,7 +19,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
-	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092633-b306e7a706e1
+	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -30,10 +30,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240412194904-615994cda7a7
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240412194904-615994cda7a7
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240412194904-615994cda7a7
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240412194904-615994cda7a7
+	github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240417064914-57cce9c39b17
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240417064914-57cce9c39b17
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240417064914-57cce9c39b17
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240417064914-57cce9c39b17
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -46,7 +46,7 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	go.uber.org/multierr v1.11.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80
+	google.golang.org/genproto/googleapis/api v0.0.0-20240125205218-1f4bbc51befe
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -60,13 +60,8 @@ require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-<<<<<<< HEAD
-	cloud.google.com/go/iam v1.1.5 // indirect
-	cloud.google.com/go/storage v1.36.0 // indirect
-=======
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.37.0 // indirect
->>>>>>> 2c102945 (Speedup CL pool key formatting (#8075))
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/log v1.3.0 // indirect
@@ -159,7 +154,7 @@ require (
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go-simpler.org/sloglint v0.1.2 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.47.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
@@ -168,15 +163,10 @@ require (
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-<<<<<<< HEAD
-	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.155.0 // indirect
-=======
 	google.golang.org/api v0.162.0 // indirect
->>>>>>> 2c102945 (Speedup CL pool key formatting (#8075))
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240125205218-1f4bbc51befe // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )

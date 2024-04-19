@@ -13,11 +13,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
 	github.com/cosmos/ibc-go/v7 v7.4.0
-<<<<<<< HEAD
-	github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240409164616-caf6b6543d4b
-=======
 	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240417073936-6421bb194a2f
->>>>>>> 2c102945 (Speedup CL pool key formatting (#8075))
 	github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
@@ -159,13 +155,8 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/onsi/gomega v1.28.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-<<<<<<< HEAD
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240409164616-caf6b6543d4b // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240409164616-caf6b6543d4b // indirect
-=======
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240417073936-6421bb194a2f // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240417073936-6421bb194a2f // indirect
->>>>>>> 2c102945 (Speedup CL pool key formatting (#8075))
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
