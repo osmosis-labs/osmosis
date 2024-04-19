@@ -87,7 +87,7 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.Ctx = s.Ctx.WithBlockTime(time.Now())
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
+	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.AppCodec())
 
 	s.AlwaysPassAuth = testutils.TestingAuthenticator{Approve: testutils.Always, Confirm: testutils.Always, GasConsumption: 0}
 	s.OsmosisApp.SmartAccountKeeper.AuthenticatorManager.RegisterAuthenticator(s.AlwaysPassAuth)
