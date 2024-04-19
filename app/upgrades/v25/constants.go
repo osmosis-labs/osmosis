@@ -16,8 +16,7 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
-			smartaccounttypes.ManagerStoreKey,
-			smartaccounttypes.AuthenticatorStoreKey,
+			smartaccounttypes.StoreKey,
 		},
 		Deleted: []string{},
 	},

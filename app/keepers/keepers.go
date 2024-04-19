@@ -237,7 +237,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	smartAccountKeeper := smartaccountkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[smartaccounttypes.ManagerStoreKey],
+		appKeepers.keys[smartaccounttypes.StoreKey],
 		govModuleAddr,
 		appKeepers.GetSubspace(smartaccounttypes.ModuleName),
 		appKeepers.AuthenticatorManager,
@@ -905,7 +905,6 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		smartaccounttypes.ManagerStoreKey,
-		smartaccounttypes.AuthenticatorStoreKey,
+		smartaccounttypes.StoreKey,
 	}
 }
