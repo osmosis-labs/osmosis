@@ -37,13 +37,14 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 // AfterEpochEnd is the epoch end hook.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if h.k.GetProtoRevEnabled(ctx) {
-		// Calculate and distribute protorev profits
-		err := h.CalculateDistributeProfits(ctx)
-		if err != nil {
-			return err
-		}
 		switch epochIdentifier {
 		case "day":
+			// Calculate and distribute protorev profits
+			err := h.CalculateDistributeProfits(ctx)
+			if err != nil {
+				return err
+			}
+
 			// Increment number of days since module genesis to properly calculate developer fees after cyclic arbitrage trades
 			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
 				h.k.SetDaysSinceModuleGenesis(ctx, 1)
