@@ -14,7 +14,6 @@ import (
 // GetAllAuthenticatorData is used in genesis export to export all the authenticator for all accounts
 func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorData, error) {
 	var accountAuthenticators []types.AuthenticatorData
-	accountIndexMap := make(map[string]int) // Map to store the index of the account in accountAuthenticators
 
 	parse := func(key []byte, value []byte) error {
 		var authenticator types.AccountAuthenticator
@@ -23,25 +22,27 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 			return err
 		}
 
-		// The authenticator store key looks like "2|osmo1<address>|<authenticator_id>" we need the address to
-		// successfully import and export the authenticator module
+		// Extract account address from key
 		accountAddr := strings.Split(string(key), "|")[1]
 
-		if index, found := accountIndexMap[accountAddr]; found {
-			// Update existing AuthenticatorData if found
-			accountAuthenticators[index].Authenticators = append(accountAuthenticators[index].Authenticators, authenticator)
-		} else {
-			// Create new AuthenticatorData entry if not found
+		// Check if this entry is for a new address or the same as the last one processed
+		if len(accountAuthenticators) == 0 ||
+			accountAuthenticators[len(accountAuthenticators)-1].Address != accountAddr {
+			// If it's a new address, create a new AuthenticatorData entry
 			accountAuthenticators = append(accountAuthenticators, types.AuthenticatorData{
 				Address:        accountAddr,
 				Authenticators: []types.AccountAuthenticator{authenticator},
 			})
-			accountIndexMap[accountAddr] = len(accountAuthenticators) - 1 // Store the new index
+		} else {
+			// If it's the same address, append the authenticator to the last entry in the list
+			lastIndex := len(accountAuthenticators) - 1
+			accountAuthenticators[lastIndex].Authenticators = append(accountAuthenticators[lastIndex].Authenticators, authenticator)
 		}
 
 		return nil
 	}
 
+	// Iterate over all entries in the store using a prefix iterator
 	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.KeyAccountAuthenticatorsPrefixId())
 	defer iterator.Close()
 
