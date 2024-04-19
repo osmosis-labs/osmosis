@@ -62,7 +62,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 		Confirm:        testutils.Always,
 	}
 	s.spyAuth = testutils.NewSpyAuthenticator(
-		s.OsmosisApp.GetKVStoreKey()[smartaccounttypes.AuthenticatorStoreKey],
+		s.OsmosisApp.GetKVStoreKey()[smartaccounttypes.StoreKey],
 	)
 
 	am.RegisterAuthenticator(s.AnyOfAuth)

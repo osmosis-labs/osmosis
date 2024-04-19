@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"time"
@@ -48,6 +49,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyAnteHandler)
+
+	// Authenticators don't support manually setting the fee payer
+	err = ValidateAuthenticatorFeePayer(tx)
+	if err != nil {
+		return sdk.Context{}, err
+	}
 
 	// Performing fee payer authentication with minimal gas allocation
 	// serves as a spam-prevention strategy to prevent users from adding multiple
@@ -216,6 +223,35 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.GaugeKeyAnteHandlerGasConsumed)
 
 	return next(ctx, tx, simulate)
+}
+
+// ValidateAuthenticatorFeePayer enforces that the tx fee payer has not been set manually
+// to an account different to the signer of the first message. This is a requirement
+// for the authenticator module.
+// The only user of a manually set fee payer is with fee grants, which are not
+// available on osmosis
+func ValidateAuthenticatorFeePayer(tx sdk.Tx) error {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	// The fee payer by default is the first signer of the transaction
+	feePayer := feeTx.FeePayer()
+
+	msgs := tx.GetMsgs()
+	if len(msgs) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must contain at least one message")
+	}
+	signers := msgs[0].GetSigners()
+	if len(signers) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx message must contain at least one signer")
+	}
+
+	if !bytes.Equal(feePayer, signers[0]) {
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "fee payer must be the first signer")
+	}
+	return nil
 }
 
 // GetSelectedAuthenticators retrieves the selected authenticators for the provided transaction extension

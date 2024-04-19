@@ -85,15 +85,16 @@ func NewAnteHandler(
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's embedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
-		smartaccountante.LimitFeePayerDecorator{},
 		smartaccountante.NewSetPubKeyDecorator(accountKeeper),
-		ante.NewValidateSigCountDecorator(accountKeeper),
+		ante.NewValidateSigCountDecorator(accountKeeper), // we can probably remove this as multisigs are not supported here
 		// Both the signature verification and gas consumption functionality
 		// is embedded in the authenticator decorator
 		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
+		// deductFeeDecorator is called after the authenticator decorator to ensure the fees are not yet reflected as
+		// a state change.
+		deductFeeDecorator,
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
-		deductFeeDecorator,
 		// auction module antehandler
 		auctionante.NewAuctionDecorator(
 			blockSDKParams.auctionKeeper,

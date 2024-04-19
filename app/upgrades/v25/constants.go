@@ -25,8 +25,7 @@ var Upgrade = upgrades.Upgrade{
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			auctiontypes.StoreKey,
-			smartaccounttypes.ManagerStoreKey,
-			smartaccounttypes.AuthenticatorStoreKey,
+			smartaccounttypes.StoreKey,
 		},
 		Deleted: []string{},
 	},

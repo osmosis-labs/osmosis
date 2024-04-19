@@ -265,7 +265,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorState() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000)),
 	}
 
-	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[smartaccounttypes.AuthenticatorStoreKey]}
+	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[smartaccounttypes.StoreKey]}
 	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
 	_, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -291,7 +291,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsg() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
-	storeKey := s.app.GetKVStoreKey()[smartaccounttypes.AuthenticatorStoreKey]
+	storeKey := s.app.GetKVStoreKey()[smartaccounttypes.StoreKey]
 	maxAmount := testutils.MaxAmountAuthenticator{KvStoreKey: storeKey}
 	stateful := testutils.StatefulAuthenticator{KvStoreKey: storeKey}
 
