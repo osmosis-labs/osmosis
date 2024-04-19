@@ -403,6 +403,7 @@ func NewOsmosisApp(
 		wasmConfig,
 		app.GetKey(wasmtypes.StoreKey),
 		app.AccountKeeper,
+		app.SmartAccountKeeper,
 		app.BankKeeper,
 		app.TxFeesKeeper,
 		app.GAMMKeeper,
@@ -415,7 +416,7 @@ func NewOsmosisApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
-	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper, app.SmartAccountKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.
@@ -467,6 +468,9 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	}
 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+	}
+	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
+		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
 	}
 	return writeListeners
 }

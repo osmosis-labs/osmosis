@@ -8,6 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	slashing "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 
@@ -67,6 +70,15 @@ func CreateUpgradeHandler(
 		// Now that all deprecated historical TWAPs have been pruned via v24, we can delete is isPruning state entry as well
 		keepers.TwapKeeper.DeleteDeprecatedHistoricalTWAPsIsPruning(ctx)
 
+		// Reset missed blocks counter for all validators
+		resetMissedBlocksCounter(ctx, keepers.SlashingKeeper)
+
+		// Set the authenticator params in the store
+		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
+		authenticatorParams.MaximumUnauthenticatedGas = 120_000
+		authenticatorParams.IsSmartAccountActive = false
+		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
+
 		return migrations, nil
 	}
 }
@@ -113,4 +125,22 @@ func migrateAllTestnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper conc
 	concentratedKeeper.SetSpreadFactorPoolIDMigrationThreshold(ctx, 0)
 
 	return nil
+}
+
+// resetMissedBlocksCounter resets the missed blocks counter for all validators back to zero.
+// This corrects a mistake that was overlooked in v24, where we cleared all missedBlocks but did not reset the counter.
+func resetMissedBlocksCounter(ctx sdk.Context, slashingKeeper *slashing.Keeper) {
+	// Iterate over all validators signing info
+	slashingKeeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+		missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, address)
+		if err != nil {
+			panic(err)
+		}
+
+		// Reset missed blocks counter
+		info.MissedBlocksCounter = int64(len(missedBlocks))
+		slashingKeeper.SetValidatorSigningInfo(ctx, address, info)
+
+		return false
+	})
 }
