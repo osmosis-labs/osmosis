@@ -2,11 +2,11 @@ package authenticator
 
 import (
 	"fmt"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -77,7 +77,7 @@ func GetSignerAndSignatures(
 
 func GenerateAuthenticationRequest(
 	ctx sdk.Context,
-	ak *keeper.AccountKeeper,
+	ak authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
 	account sdk.AccAddress,
 	feePayer sdk.AccAddress,
