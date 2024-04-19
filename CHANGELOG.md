@@ -44,12 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#8053](https://github.com/osmosis-labs/osmosis/pull/8053) Reset validator signing info missed blocks counter
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
 * [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module.
 
 ### State Compatible
 
 * [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
+* [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet
 
 ## v24.0.1
 
@@ -63,20 +65,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7472](https://github.com/osmosis-labs/osmosis/pull/7472) Refactor TWAP keys to only require a single key format. Significantly lowers TWAP-caused writes
 * [#7499](https://github.com/osmosis-labs/osmosis/pull/7499) Slight speed/gas improvements to CL CreatePosition and AddToPosition
 * [#7564](https://github.com/osmosis-labs/osmosis/pull/7564) Move protorev dev account bank sends from every backrun to once per epoch
-* [#7508](https://github.com/osmosis-labs/osmosis/pull/7508) Improve protorev performance by removing iterator and storing base denoms as a single object rather than an array.
+* [#7508](https://github.com/osmosis-labs/osmosis/pull/7508) Improve protorev performance by removing iterator and storing base denoms as a single object rather than an array
 * [#7509](https://github.com/osmosis-labs/osmosis/pull/7509) Distributing ProtoRev profits to the community pool and burn address
-* [#7524](https://github.com/osmosis-labs/osmosis/pull/7524) Poolmanager: ListPoolsByDenom will now skip pools that cannot correctly return their constituent denoms.
-* [#7550](https://github.com/osmosis-labs/osmosis/pull/7550) Speedup small CL swaps, by only fetching CL uptime accumulators if there is a tick crossing.
+* [#7524](https://github.com/osmosis-labs/osmosis/pull/7524) Poolmanager: ListPoolsByDenom will now skip pools that cannot correctly return their constituent denoms
+* [#7550](https://github.com/osmosis-labs/osmosis/pull/7550) Speedup small CL swaps, by only fetching CL uptime accumulators if there is a tick crossing
 * [#7555](https://github.com/osmosis-labs/osmosis/pull/7555) Refactor taker fees, distribute via a single module account, track once at epoch
-* [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations.
-* [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration.
-* [#7615](https://github.com/osmosis-labs/osmosis/pull/7615) Min value param for epoch distribution.
+* [#7562](https://github.com/osmosis-labs/osmosis/pull/7562) Speedup Protorev estimation logic by removing unnecessary taker fee simulations
+* [#7595](https://github.com/osmosis-labs/osmosis/pull/7595) Fix cosmwasm pool model code ID migration
+* [#7615](https://github.com/osmosis-labs/osmosis/pull/7615) Min value param for epoch distribution
 * [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
-* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
+* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events
 * [#7623](https://github.com/osmosis-labs/osmosis/pull/7623) Add query for querying all before send hooks
-* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Remove duplicate CL accumulator update logic.
-* [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
-* [#7685](https://github.com/osmosis-labs/osmosis/pull/7685) Speedup CL actions by only marshalling for CL hooks if they will be used.
+* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Remove duplicate CL accumulator update logic
+* [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns
+* [#7685](https://github.com/osmosis-labs/osmosis/pull/7685) Speedup CL actions by only marshalling for CL hooks if they will be used
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
 * [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
 * [#7745](https://github.com/osmosis-labs/osmosis/pull/7745) Add gauge id query to stargate whitelist
@@ -91,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7857](https://github.com/osmosis-labs/osmosis/pull/7857) SuperfluidDelegationsByValidatorDenom query now returns equivalent staked amount
 * [#7912](https://github.com/osmosis-labs/osmosis/pull/7912) Default timeoutCommit to 2s
 * [#7951](https://github.com/osmosis-labs/osmosis/pull/7951) Only migrate selected cl incentives
-* [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools.
+* [#7938](https://github.com/osmosis-labs/osmosis/pull/7938) Add missing swap events for missing swap event for cw pools
 * [#7957](https://github.com/osmosis-labs/osmosis/pull/7957) Update to the latest version of ibc-go
 * [#7966](https://github.com/osmosis-labs/osmosis/pull/7966) Update all governance migrated white whale pools to code id 641
 
