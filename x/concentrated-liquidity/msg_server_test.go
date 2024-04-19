@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               2, // 1 for collect send, 1 for forfeit send
+			expectedMessageEvents:               1, // 1 for collect send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               4, // 2 for collect send, 2 for forfeit send
+			expectedMessageEvents:               2, // 2 for collect send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               6, // 3 for collect send, 3 for forfeit send
+			expectedMessageEvents:               3, // 3 for collect send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
@@ -558,7 +558,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 		hasIncentivesToClaim           bool
 		hasSpreadRewardsToClaim        bool
 		expectedTransferPositionsEvent int
-		expectedMessageEvents          int
+		expectedMessageEvents          int // We expect these to always be 0 because no additional events are being triggered
 		isLastPositionInPool           bool
 		expectedError                  error
 	}{
@@ -572,14 +572,14 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasIncentivesToClaim:           true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          2, // 1 for collect incentives claim send, 1 for collect incentives forfeit send
+			expectedMessageEvents:          0,
 		},
 		"single position ID with claimable spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for collect spread rewards claim send
+			expectedMessageEvents:          0,
 		},
 		"single position ID with claimable incentives and spread rewards": {
 			positionIds:                    []uint64{DefaultPositionId},
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          3, // 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
+			expectedMessageEvents:          0,
 		},
 		"two position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
@@ -605,7 +605,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			hasSpreadRewardsToClaim:        true,
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          9, // 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
+			expectedMessageEvents:          0,
 		},
 		"two position IDs, second ID does not exist": {
 			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
@@ -636,8 +636,8 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			}
 
 			if tc.hasIncentivesToClaim {
-				s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.positionIds)
-				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+				s.fundIncentiveAddr(pool.GetIncentivesAddress(), tc.positionIds)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 			}
 
 			if tc.hasSpreadRewardsToClaim {

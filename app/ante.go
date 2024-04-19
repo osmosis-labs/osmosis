@@ -14,16 +14,16 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	osmoante "github.com/osmosis-labs/osmosis/v23/ante"
-	v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v24/ante"
+	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	authante "github.com/osmosis-labs/osmosis/v23/x/authenticator/ante"
-	authenticators "github.com/osmosis-labs/osmosis/v23/x/authenticator/keeper"
+	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:
@@ -36,7 +36,7 @@ func NewAnteHandler(
 	wasmConfig wasmtypes.WasmConfig,
 	txCounterStoreKey storetypes.StoreKey,
 	accountKeeper ante.AccountKeeper,
-	authenticatorKeeper *authenticators.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
@@ -52,6 +52,7 @@ func NewAnteHandler(
 
 	// classicSignatureVerificationDecorator is the old flow to enable a circuit breaker
 	classicSignatureVerificationDecorator := sdk.ChainAnteDecorators(
+		deductFeeDecorator,
 		// We use the old pubkey decorator here to ensure that accounts work as expected,
 		// in SetPubkeyDecorator we set a pubkey in the account store, for authenticators
 		// we avoid this code path completely.
@@ -63,16 +64,17 @@ func NewAnteHandler(
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)
 
-	// authenticatorVerificationDecorator is the new authenticator flow that's enbedded into the circuit breaker ante
+	// authenticatorVerificationDecorator is the new authenticator flow that's embedded into the circuit breaker ante
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
-		authante.LimitFeePayerDecorator{},
-		authante.NewSetPubKeyDecorator(accountKeeper),
+		smartaccountante.LimitFeePayerDecorator{},
+		smartaccountante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Both the signature verification and gas consumption functionality
-		// is enbedded in the authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, accountKeeper, signModeHandler),
+		// is embedded in the authenticator decorator
+		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		deductFeeDecorator,
 	)
 
 	return sdk.ChainAnteDecorators(
@@ -89,9 +91,8 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
-		deductFeeDecorator,
-		authante.NewCircuitBreakerDecorator(
-			authenticatorKeeper,
+		smartaccountante.NewCircuitBreakerDecorator(
+			smartAccountKeeper,
 			authenticatorVerificationDecorator,
 			classicSignatureVerificationDecorator,
 		),

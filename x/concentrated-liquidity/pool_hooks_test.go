@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 var (
@@ -167,12 +167,15 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 			s.Require().NoError(err)
 
 			// Marshal test case msg to pass into contract
-			msgBz, err := json.Marshal(tc.msg)
-			s.Require().NoError(err)
+			msgBuilderFn := func(uint64) ([]byte, error) {
+				msgBz, err := json.Marshal(tc.msg)
+				s.Require().NoError(err)
+				return msgBz, nil
+			}
 
 			// --- System under test ---
 
-			err = s.Clk.CallPoolActionListener(s.Ctx, msgBz, validPoolId, validActionPrefix)
+			err = s.Clk.CallPoolActionListener(s.Ctx, msgBuilderFn, validPoolId, validActionPrefix)
 
 			// --- Assertions ---
 

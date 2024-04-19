@@ -11,13 +11,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v24/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -78,6 +79,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	distributionParams.BonusProposerReward = osmomath.ZeroDec()
 	distributionParams.CommunityTax = osmomath.ZeroDec()
 	s.App.DistrKeeper.SetParams(s.Ctx, distributionParams)
+	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("stake", osmomath.NewInt(1)))
 }
 
 func (s *KeeperTestSuite) SetupDefaultPool() {

@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 type MsgServer struct {
@@ -148,9 +148,6 @@ func (m MsgServer) SetBaseDenoms(c context.Context, msg *types.MsgSetBaseDenoms)
 	for _, baseDenom := range baseDenoms {
 		m.k.DeleteAllPoolsForBaseDenom(ctx, baseDenom.Denom)
 	}
-
-	// Delete the old base denoms
-	m.k.DeleteBaseDenoms(ctx)
 
 	if err := m.k.SetBaseDenoms(ctx, msg.BaseDenoms); err != nil {
 		return nil, err

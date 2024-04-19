@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 // CosmWasmExtension
@@ -23,4 +23,6 @@ type CosmWasmExtension interface {
 	SetWasmKeeper(wasmKeeper WasmKeeper)
 
 	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
+
+	SetCodeId(codeId uint64)
 }

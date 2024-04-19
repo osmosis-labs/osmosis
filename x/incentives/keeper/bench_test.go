@@ -9,9 +9,9 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -49,7 +49,6 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 // genQueryCondition takes coins and durations and returns a QueryConditon struct.
 func genQueryCondition(
 	r *rand.Rand,
-	blocktime time.Time,
 	coins sdk.Coins,
 	durationOptions []time.Duration,
 ) lockuptypes.QueryCondition {
@@ -104,7 +103,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 		// isPerpetual := r.Int()%2 == 0
 		isPerpetual := true
-		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, durationOptions)
+		distributeTo := genQueryCondition(r, simCoins, durationOptions)
 		rewards := genRewardCoins(r, simCoins)
 		startTime := ctx.BlockTime().Add(time.Duration(-1) * time.Second)
 		durationMillisecs := distributeTo.Duration.Milliseconds()

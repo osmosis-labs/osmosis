@@ -11,8 +11,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -186,7 +186,7 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 	// sanity check, don't return error as not worth halting the LP. We know its not too much.
 	if sharesOut.LT(shareOutAmount) {
-		ctx.Logger().Error(fmt.Sprintf("Expected to JoinPoolNoSwap >= %s shares, actually did %s shares",
+		ctx.Logger().Debug(fmt.Sprintf("Expected to JoinPoolNoSwap >= %s shares, actually did %s shares",
 			shareOutAmount, sharesOut))
 	}
 

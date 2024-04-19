@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,6 +82,11 @@ var _ epochstypes.EpochHooks = Hooks{}
 // Hooks returns the hook wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
+}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return types.ModuleName
 }
 
 // BeforeEpochStart is the epoch start hook.

@@ -1,0 +1,52 @@
+syntax = "proto3";
+package osmosis.smartaccount.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/smart-account/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc AddAuthenticator(MsgAddAuthenticator)
+      returns (MsgAddAuthenticatorResponse);
+  rpc RemoveAuthenticator(MsgRemoveAuthenticator)
+      returns (MsgRemoveAuthenticatorResponse);
+
+  // SetActiveState sets the active state of the authenticator.
+  // Primarily used for circuit breaking.
+  rpc SetActiveState(MsgSetActiveState) returns (MsgSetActiveStateResponse);
+}
+
+// MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
+message MsgAddAuthenticator {
+  string sender = 1;
+  string type = 2;
+  bytes data = 3;
+}
+
+// MsgAddAuthenticatorResponse defines the Msg/AddAuthenticator response type.
+message MsgAddAuthenticatorResponse { bool success = 1; }
+
+// MsgRemoveAuthenticatorRequest defines the Msg/RemoveAuthenticator request
+// type.
+message MsgRemoveAuthenticator {
+  string sender = 1;
+  uint64 id = 2;
+}
+
+// MsgRemoveAuthenticatorResponse defines the Msg/RemoveAuthenticator response
+// type.
+message MsgRemoveAuthenticatorResponse { bool success = 1; }
+
+message MsgSetActiveState {
+  string sender = 1;
+  bool active = 2;
+}
+
+message MsgSetActiveStateResponse {}
+
+// TxExtension allows for additional authenticator-specific data in
+// transactions.
+message TxExtension {
+  // selected_authenticators holds the authenticator_id for the chosen
+  // authenticator per message.
+  repeated uint64 selected_authenticators = 1;
+}

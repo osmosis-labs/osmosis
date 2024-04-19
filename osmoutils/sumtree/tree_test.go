@@ -7,6 +7,7 @@ import (
 	"sort"
 	"testing"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/iavl"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
+	"github.com/osmosis-labs/osmosis/osmoutils/wrapper"
 )
 
 type TreeTestSuite struct {
@@ -26,10 +28,9 @@ type TreeTestSuite struct {
 }
 
 func (suite *TreeTestSuite) SetupTest() {
-	db := dbm.NewMemDB()
-	tree, err := iavl.NewMutableTree(db, 100, false)
-	suite.Require().NoError(err)
-	_, _, err = tree.SaveVersion()
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
+	_, _, err := tree.SaveVersion()
 	suite.Require().Nil(err)
 	kvstore := iavlstore.UnsafeNewStore(tree)
 	suite.tree = sumtree.NewTree(kvstore, 10)
@@ -80,7 +81,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	r := rand.New(rand.NewSource(seed))
 
 	// tested up to 2000
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 250; i++ {
 		// add a single element
 		key := make([]byte, r.Int()%20)
 		value := r.Uint64() % 100

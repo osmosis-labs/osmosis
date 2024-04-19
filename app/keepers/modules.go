@@ -27,39 +27,40 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	authenticator "github.com/osmosis-labs/osmosis/v23/x/authenticator"
+	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
 
-	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
-	clclient "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
-	cwpoolclient "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/client"
-	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
-	downtimemodule "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm"
-	gammclient "github.com/osmosis-labs/osmosis/v23/x/gamm/client"
-	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/ibcratelimitmodule"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives"
-	incentivesclient "github.com/osmosis-labs/osmosis/v23/x/incentives/client"
-	"github.com/osmosis-labs/osmosis/v23/x/lockup"
-	"github.com/osmosis-labs/osmosis/v23/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/client"
-	poolmanagerclient "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client"
-	poolmanager "github.com/osmosis-labs/osmosis/v23/x/poolmanager/module"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v23/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v23/x/superfluid/client"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/twapmodule"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees"
-	txfeesclient "github.com/osmosis-labs/osmosis/v23/x/txfees/client"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v23/x/valset-pref/valpref-module"
+	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/client"
+	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/module"
+	downtimemodule "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v24/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v24/x/gamm/client"
+	"github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/ibcratelimitmodule"
+	"github.com/osmosis-labs/osmosis/v24/x/incentives"
+	incentivesclient "github.com/osmosis-labs/osmosis/v24/x/incentives/client"
+	"github.com/osmosis-labs/osmosis/v24/x/lockup"
+	"github.com/osmosis-labs/osmosis/v24/x/mint"
+	poolincentives "github.com/osmosis-labs/osmosis/v24/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v24/x/poolmanager/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v24/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev"
+	superfluid "github.com/osmosis-labs/osmosis/v24/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v24/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v24/x/twap/twapmodule"
+	"github.com/osmosis-labs/osmosis/v24/x/txfees"
+	txfeesclient "github.com/osmosis-labs/osmosis/v24/x/txfees/client"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v24/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
@@ -127,8 +128,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
+	ibcwasm.AppModuleBasic{},
 	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
-	authenticator.AppModuleBasic{},
+	smartaccount.AppModuleBasic{},
 }

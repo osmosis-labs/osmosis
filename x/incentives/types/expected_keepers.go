@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -71,4 +71,9 @@ type GAMMKeeper interface {
 type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 	GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int
+	GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModule poolmanagertypes.PoolModuleI, pool poolmanagertypes.PoolI, err error)
+}
+
+type ProtorevKeeper interface {
+	GetPoolForDenomPairNoOrder(ctx sdk.Context, denom1, denom2 string) (uint64, error)
 }

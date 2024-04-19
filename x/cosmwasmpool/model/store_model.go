@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var (
@@ -100,4 +100,9 @@ func (p CosmWasmPool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 // GetPoolDenoms implements types.PoolI.
 func (p *CosmWasmPool) GetPoolDenoms(ctx sdk.Context) []string {
 	panic("CosmWasmPool.GetPoolDenoms not implemented")
+}
+
+// SetCodeId implements types.CosmWasmExtension.
+func (p *CosmWasmPool) SetCodeId(codeId uint64) {
+	p.CodeId = codeId
 }

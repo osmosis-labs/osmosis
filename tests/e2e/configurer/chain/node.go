@@ -12,8 +12,8 @@ import (
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -46,13 +46,13 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // Run runs a node container for the given nodeIndex.
 // The node configuration must be already added to the chain config prior to calling this
 // method.
-func (n *NodeConfig) Run() error {
+func (n *NodeConfig) Run(rejectConfigDefaults bool) error {
 	maxRetries := 3
 	currentRetry := 0
 
 	for currentRetry < maxRetries {
 		n.t.Logf("starting node container: %s", n.Name)
-		resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
+		resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir, rejectConfigDefaults)
 		if err != nil {
 			return err
 		}
@@ -160,7 +160,8 @@ func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) b
 		}
 		return
 	}
-	n.t.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.Logf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.FailNow()
 }
 
 func (n *NodeConfig) extractOperatorAddressIfValidator() error {

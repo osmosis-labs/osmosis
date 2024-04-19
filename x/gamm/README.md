@@ -257,7 +257,6 @@ The JSON [config-file] must specify the following parameters:
  "weights": [list weighted denoms],
  "initial-deposit": [list of denoms with initial deposit amount],
  "swap-fee": [spread factor in percentage],
- "exit-fee": [exit fee in percentage],
  "future-governor": [see options in pool parameters section above]
 }
 ```
@@ -275,7 +274,6 @@ The configuration json file contains the following parameters:
  "weights": "5ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,5uosmo",
  "initial-deposit": "499404ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,500000uosmo",
  "swap-fee": "0.003",
- "exit-fee": "0.00",
  "future-governor": ""
 }
 ```
@@ -283,7 +281,8 @@ The configuration json file contains the following parameters:
 :::
 
 ::: warning
-There is now a 100 OSMO fee for creating pools.
+There is now a 100 OSMO fee for creating pools. 
+This is separate from tx fees and is spent from the creating wallet automatically.
 :::
 
 ### Join pool

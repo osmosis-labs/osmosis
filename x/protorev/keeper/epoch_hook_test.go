@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
@@ -18,7 +18,7 @@ func BenchmarkEpochHook(b *testing.B) {
 	// Setup the test suite
 	s := new(KeeperTestSuite)
 	s.SetT(&testing.T{})
-	s.SetupTest()
+	s.SetupPoolsTest()
 
 	for i := 0; i < b.N; i++ {
 		b.StartTimer()
@@ -37,6 +37,7 @@ func BenchmarkEpochHook(b *testing.B) {
 // again to only include the pools that have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
 // DenomPairToPool stores.
 func (s *KeeperTestSuite) TestEpochHook() {
+	s.SetupPoolsTest()
 	// All of the pools initialized in the setup function are available in keeper_test.go
 	// akash <-> types.OsmosisDenomination
 	// juno <-> types.OsmosisDenomination
@@ -172,7 +173,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 		s.Run(tc.name, func() {
 			// SetupTest creates all the pools used in the ProtoRev test suite,
 			// including the pools with "epoch" prefixed denoms used in this test
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			err := s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, tc.inputBaseDenomPools)
 			s.Require().NoError(err)

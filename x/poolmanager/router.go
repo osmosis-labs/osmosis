@@ -13,9 +13,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
 var (
@@ -225,10 +225,27 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	return tokenOutAmount, nil
 }
 
+func (k Keeper) MultihopEstimateOutGivenExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+) (tokenOutAmount osmomath.Int, err error) {
+	return k.multihopEstimateOutGivenExactAmountInInternal(ctx, route, tokenIn, false)
+}
+
 func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	ctx sdk.Context,
 	route []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
+) (tokenOutAmount osmomath.Int, err error) {
+	return k.multihopEstimateOutGivenExactAmountInInternal(ctx, route, tokenIn, true)
+}
+
+func (k Keeper) multihopEstimateOutGivenExactAmountInInternal(
+	ctx sdk.Context,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	applyTakerFee bool,
 ) (tokenOutAmount osmomath.Int, err error) {
 	// recover from panic
 	defer func() {
@@ -254,14 +271,18 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
 
-		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
-		if err != nil {
-			return osmomath.Int{}, err
+		actualTokenIn := tokenIn
+		// apply taker fee if applicable
+		if applyTakerFee {
+			takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
+			if err != nil {
+				return osmomath.Int{}, err
+			}
+
+			actualTokenIn, _ = CalcTakerFeeExactIn(tokenIn, takerFee)
 		}
 
-		tokenInAfterSubTakerFee, _ := CalcTakerFeeExactIn(tokenIn, takerFee)
-
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, actualTokenIn, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
@@ -546,6 +567,7 @@ func (k Keeper) AllPools(
 // ListPoolsByDenom returns all pools by denom sorted by their ids
 // from every pool module registered in the
 // pool manager keeper.
+// N.B. It is possible for incorrectly implemented pools to be skipped
 func (k Keeper) ListPoolsByDenom(
 	ctx sdk.Context,
 	denom string,
@@ -559,9 +581,12 @@ func (k Keeper) ListPoolsByDenom(
 
 		var poolsByDenom []types.PoolI
 		for _, pool := range currentModulePools {
+			// If the pool is incorrectly implemented and we can't get the PoolDenoms
+			// skip the pool.
 			poolDenoms, err := poolModule.GetPoolDenoms(ctx, pool.GetId())
 			if err != nil {
-				return nil, err
+				ctx.Logger().Debug(fmt.Sprintf("Error getting pool denoms for pool %d: %s", pool.GetId(), err.Error()))
+				continue
 			}
 			if osmoutils.Contains(poolDenoms, denom) {
 				poolsByDenom = append(poolsByDenom, pool)
@@ -643,17 +668,6 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
-}
-
-// isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.
-// If it does, it returns true, otherwise false.
-func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
-	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
-		if denom == authorizedQuoteDenom {
-			return true
-		}
-	}
-	return false
 }
 
 // nolint: unused

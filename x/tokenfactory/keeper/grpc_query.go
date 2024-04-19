@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -49,4 +49,11 @@ func (k Keeper) BeforeSendHookAddress(ctx context.Context, req *types.QueryBefor
 	cosmwasmAddress := k.GetBeforeSendHook(sdkCtx, req.GetDenom())
 
 	return &types.QueryBeforeSendHookAddressResponse{CosmwasmAddress: cosmwasmAddress}, nil
+}
+
+func (k Keeper) AllBeforeSendHooksAddresses(ctx context.Context, req *types.QueryAllBeforeSendHooksAddressesRequest) (*types.QueryAllBeforeSendHooksAddressesResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	denoms, beforesendHookAddresses := k.GetAllBeforeSendHooks(sdkCtx)
+
+	return &types.QueryAllBeforeSendHooksAddressesResponse{Denoms: denoms, BeforeSendHookAddresses: beforesendHookAddresses}, nil
 }

@@ -8,11 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
 const (
@@ -402,10 +402,9 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			var pool types.ConcentratedPoolExtension
 			if tc.poolSetup {
 				pool = s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick()
 
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
+				s.initializeTick(s.Ctx, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
+				s.initializeTick(s.Ctx, tc.upperTick, defaultInitialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
 				pool.SetCurrentTick(tc.currentTick)
 				err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 				s.Require().NoError(err)
@@ -798,9 +797,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectSpreadRewards() {
 
 			s.initializeSpreadRewardAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
 
-			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
+			s.initializeTick(ctx, tc.lowerTick, tc.initialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
 
-			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
+			s.initializeTick(ctx, tc.upperTick, tc.initialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
 
 			validPool.SetCurrentTick(tc.currentTick)
 			err = clKeeper.SetPool(ctx, validPool)
@@ -1084,8 +1083,8 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			s.Require().NoError(err)
 
 			s.initializeSpreadRewardAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
-			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
-			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
+			s.initializeTick(ctx, tc.lowerTick, tc.initialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
+			s.initializeTick(ctx, tc.upperTick, tc.initialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
 			validPool.SetCurrentTick(tc.currentTick)
 
 			_ = clKeeper.SetPool(ctx, validPool)
@@ -1202,10 +1201,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateSpreadRewardAccumulatorPosition_Updati
 				s.crossTickAndChargeSpreadReward(poolId, DefaultLowerTick)
 			}
 
-			_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultLowerTick, DefaultLiquidityAmt, false)
+			_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, DefaultLowerTick, DefaultLiquidityAmt, false)
 			s.Require().NoError(err)
 
-			_, err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultUpperTick, DefaultLiquidityAmt, true)
+			_, err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, DefaultUpperTick, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// InitOrUpdateSpreadRewardAccumulatorPosition #1 lower tick to upper tick

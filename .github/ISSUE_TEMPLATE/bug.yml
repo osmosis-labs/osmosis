@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report!
         Before smashing the submit button please review the template.
-        Please also ensure that this is not a duplicate issue :)  
+        Please also ensure that this is not a duplicate issue :)
 
   - type: textarea
     id: what-happened

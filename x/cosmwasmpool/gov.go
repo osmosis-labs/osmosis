@@ -9,7 +9,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 )
 
 func NewCosmWasmPoolProposalHandler(k Keeper) govtypesv1.Handler {
@@ -122,6 +122,10 @@ func (k Keeper) migrateCosmwasmPools(ctx sdk.Context, poolIds []uint64, newCodeI
 		if err != nil {
 			return err
 		}
+
+		// Update code ID to the updated one in state
+		cwPool.SetCodeId(newCodeId)
+		k.SetPool(ctx, cwPool)
 	}
 
 	// Whitelist new code id. No-op if already whitelisted.

@@ -8,7 +8,7 @@ import (
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
 )
 
 // TODO: Consider moving this to its own package and having separate test instantiation for it.
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	chainANode.WaitUntil(hasSnapshotsAvailable)
 
 	// start the state synchin node.
-	err = stateSynchingNode.Run()
+	err = stateSynchingNode.Run(true)
 	s.Require().NoError(err)
 
 	// ensure that the state syncing node cathes up to the running node.
