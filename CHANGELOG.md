@@ -44,7 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8053](https://github.com/osmosis-labs/osmosis/pull/8053) Reset validator signing info missed blocks counter
+* [#8106](https://github.com/osmosis-labs/osmosis/pull/8106) Enable ProtoRev distro on epoch.
+* [#8053](https://github.com/osmosis-labs/osmosis/pull/8053) Reset validator signing info missed blocks counter.
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
 * [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module.
 
