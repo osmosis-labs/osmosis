@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"fmt"
+
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	errorsmod "cosmossdk.io/errors"

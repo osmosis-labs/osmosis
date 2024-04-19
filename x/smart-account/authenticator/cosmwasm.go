@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 
