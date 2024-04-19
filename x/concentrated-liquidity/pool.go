@@ -547,12 +547,6 @@ func (k Keeper) MigrateSpreadFactorAccumulatorToScalingFactor(ctx sdk.Context, p
 	// For each position ID, multiply the value by the per-unit liquidity scaling factor
 	// and overwrite the accumulator with the new value.
 	for _, positionId := range positionIDs {
-		// Get the position with the given ID.
-		position, err := k.GetPosition(ctx, positionId)
-		if err != nil {
-			return err
-		}
-
 		// Get the key for the position's accumulator in the spread reward accumulator.
 		positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
 
@@ -562,14 +556,15 @@ func (k Keeper) MigrateSpreadFactorAccumulatorToScalingFactor(ctx sdk.Context, p
 			return types.SpreadRewardPositionNotFoundError{PositionId: positionId}
 		}
 
-		// Compute the spread reward growth outside of the range between the position's lower and upper ticks.
-		spreadRewardGrowthOutside, err := k.getSpreadRewardGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
+		// Get the position's current accumulator value per share from the spread reward accumulator.
+		positionSnapshot, err := spreadRewardAccumulator.GetPosition(positionKey)
 		if err != nil {
 			return err
 		}
+		positionSnapshotValue := positionSnapshot.GetAccumValuePerShare()
 
 		// Multiply the value by the per-unit liquidity scaling factor
-		newValue := spreadRewardGrowthOutside.MulDecTruncate(perUnitLiqScalingFactor)
+		newValue := positionSnapshotValue.MulDecTruncate(perUnitLiqScalingFactor)
 
 		// Overwrite the position accumulator with the new value
 		if err := spreadRewardAccumulator.SetPositionIntervalAccumulation(positionKey, newValue); err != nil {
