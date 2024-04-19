@@ -232,7 +232,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("position", position.String())
+	fmt.Println("position Liq", position.Liquidity.String())
 
 	// Get the spread reward accumulator for the position's pool.
 	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
