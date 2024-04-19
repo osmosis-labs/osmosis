@@ -40,7 +40,7 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 		switch epochIdentifier {
 		case "day":
 			// Calculate and distribute protorev profits
-			err := h.CalculateDistributeProfits(ctx)
+			err := h.CalculateAndDistributeProfits(ctx)
 			if err != nil {
 				return err
 			}
@@ -60,8 +60,8 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 	return nil
 }
 
-// CalculateDistributeProfits is executed after epoch. It gets the current base denom profits and distributes them.
-func (h EpochHooks) CalculateDistributeProfits(ctx sdk.Context) error {
+// CalculateAndDistributeProfits is executed after epoch. It gets the current base denom profits and distributes them.
+func (h EpochHooks) CalculateAndDistributeProfits(ctx sdk.Context) error {
 	// Get the current arb profits (only in base denoms to prevent spam vector)
 	profit, err := h.k.CurrentBaseDenomProfits(ctx)
 	if err != nil {
