@@ -19,7 +19,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
-	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092633-b306e7a706e1
+	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -30,10 +30,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240412194904-615994cda7a7
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240412194904-615994cda7a7
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240412194904-615994cda7a7
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240412194904-615994cda7a7
+	github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240417064914-57cce9c39b17
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240417064914-57cce9c39b17
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240417064914-57cce9c39b17
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240417064914-57cce9c39b17
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
