@@ -14,6 +14,7 @@ import (
 // GetAllAuthenticatorData is used in genesis export to export all the authenticator for all accounts
 func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorData, error) {
 	var accountAuthenticators []types.AuthenticatorData
+	accountIndexMap := make(map[string]int) // Map to store the index of the account in accountAuthenticators
 
 	parse := func(key []byte, value []byte) error {
 		var authenticator types.AccountAuthenticator
@@ -26,31 +27,22 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 		// successfully import and export the authenticator module
 		accountAddr := strings.Split(string(key), "|")[1]
 
-		// Find existing AuthenticatorData for the account address
-		var found bool
-		for i := range accountAuthenticators {
-			if accountAuthenticators[i].Address == accountAddr {
-				accountAuthenticators[i].Authenticators = append(accountAuthenticators[i].Authenticators, authenticator)
-				found = true
-				break
-			}
-		}
-
-		// If AuthenticatorData doesn't exist, create a new one
-		if !found {
+		if index, found := accountIndexMap[accountAddr]; found {
+			// Update existing AuthenticatorData if found
+			accountAuthenticators[index].Authenticators = append(accountAuthenticators[index].Authenticators, authenticator)
+		} else {
+			// Create new AuthenticatorData entry if not found
 			accountAuthenticators = append(accountAuthenticators, types.AuthenticatorData{
 				Address:        accountAddr,
 				Authenticators: []types.AccountAuthenticator{authenticator},
 			})
+			accountIndexMap[accountAddr] = len(accountAuthenticators) - 1 // Store the new index
 		}
 
 		return nil
 	}
 
-	iterator := sdk.KVStorePrefixIterator(
-		ctx.KVStore(k.storeKey),
-		types.KeyAccountAuthenticatorsPrefixId(),
-	)
+	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.KeyAccountAuthenticatorsPrefixId())
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
