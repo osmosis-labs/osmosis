@@ -37,7 +37,7 @@ type Keeper struct {
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	managerStoreKey storetypes.StoreKey,
+	StoreKey storetypes.StoreKey,
 	govModuleAddr sdk.AccAddress,
 	ps paramtypes.Subspace,
 	authenticatorManager *authenticator.AuthenticatorManager,
@@ -48,7 +48,7 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:               managerStoreKey,
+		storeKey:               StoreKey,
 		cdc:                    cdc,
 		CircuitBreakerGovernor: govModuleAddr,
 		paramSpace:             ps,
