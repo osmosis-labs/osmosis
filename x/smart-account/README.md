@@ -1,8 +1,8 @@
-# x/authenticators Module
+# x/smart-account Module
 
 ## General Explanation
 
-The `x/authenticator` module provides a robust and extensible framework for authenticating transactions.
+The `x/smart-account` module provides a robust and extensible framework for authenticating transactions.
 
 Unlike traditional authentication methods, this module allows you to use multiple types of authenticators,
 each with their own set of rules and conditions for transaction approval.
@@ -124,7 +124,7 @@ type Authenticator interface {
     // Track allows the authenticator to record information, regardless of the transaction's authentication method.
     // NOTE: Any state changes made by this function will be written to the store as long as Authenticate succeeds and will not be reverted if the message execution fails.
     // This function is used for the authenticator to acknowledge the execution of specific messages by an account.
-    Track(ctx sdk.Context, account sdk.AccAddress, feePayer sdk.AccAddress, msg sdk.Msg, msgIndex uint64, authenticatorId string) error
+    Track(ctx sdk.Context, request AuthenticationRequest) error
 
     // ConfirmExecution enforces transaction rules post-transaction, like spending and transaction limits.
     // It is used to verify execution-specific state and values, to allow authentication to be dependent on the effects of a transaction.
@@ -241,6 +241,44 @@ The anyOf authenticator allows you to specify a list of authenticators. If any o
 ### AllOf Authenticator
 
 The allOf authenticator allows you to specify a list of authenticators. All authenticators in the list must successfully authenticate a message for the message to be authenticated.
+
+### MessageFilter Authenticator
+
+The message filter authenticator allows you to match the incoming message against a message pattern specified in the
+authenticator configuration for the user. If the message matches the pattern, the message is authenticated. Otherwise, 
+the message is rejected.
+
+#### Patterns
+
+The message filter patterns are specified as a json object with a `@type` field for the type of the message to match and
+a serialization of the remaining fields of the message. For example, to match a `MsgSend` message with a specific denom
+and recipient, the pattern would look like this:
+
+```json
+{
+  "@type": "/cosmos.bank.v1beta1.MsgSend",
+  "amount": [
+    {
+      "denom": "uatom"
+    }
+  ]
+}
+```
+
+Note that there are other fields in MsgSend that are not specified in the pattern. This is because the pattern only
+matches the fields that are specified; all other fields are ignored.
+
+Similarly, to match a `MsgSwapExactIn` message with a specific sender and token, the pattern would look like this:
+
+```json
+{
+   "@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn",
+   "sender":"osmo1...", 
+   "token_in":{
+      "denom":"inputDenom"
+   }
+}
+```
 
 ## CosmWasm Authenticator
 
