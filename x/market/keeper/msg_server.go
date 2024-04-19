@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 )
 
@@ -79,12 +79,6 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	// Subtract fee from the swap coin
 	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
 
-	// Update pool delta
-	err = k.ApplySwapToPool(ctx, offerCoin, swapDecCoin)
-	if err != nil {
-		return nil, err
-	}
-
 	// Send offer coins to module account
 	offerCoins := sdk.NewCoins(offerCoin)
 	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, trader, types.ModuleName, offerCoins)
@@ -112,22 +106,46 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	feeCoin, _ := feeDecCoin.TruncateDecimal()
 
 	mintCoins := sdk.NewCoins(swapCoin.Add(feeCoin))
-	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, mintCoins)
-	if err != nil {
-		return nil, err
+
+	// mint only stable coin
+	if askDenom != appparams.BaseCoinUnit {
+		err = k.BankKeeper.MintCoins(ctx, types.ModuleName, mintCoins)
+		if err != nil {
+			return nil, err
+		}
+
+		// Send swap coin to the trader
+		swapCoins := sdk.NewCoins(swapCoin)
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, swapCoins)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// native coin transfer using exchange vault
+		calculatedAskCoin := swapCoin.Add(feeCoin)
+
+		// check if vault have enough balance to make swap
+		marketAcc := k.GetMarketAccount(ctx)
+		if marketAcc == nil {
+			panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		}
+
+		marketVaultBalance := k.BankKeeper.GetBalance(ctx, marketAcc.GetAddress(), appparams.BaseCoinUnit)
+
+		if marketVaultBalance.Amount.LT(calculatedAskCoin.Amount) {
+			return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: %v, needed amount: %v", marketVaultBalance.Amount, calculatedAskCoin.Amount)
+		}
+
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// Send swap coin to the trader
-	swapCoins := sdk.NewCoins(swapCoin)
-	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, swapCoins)
-	if err != nil {
-		return nil, err
-	}
-
-	// Send swap fee to oracle account
+	// Send swap fee to reserve
 	if feeCoin.IsPositive() {
 		feeCoins := sdk.NewCoins(feeCoin)
-		if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, oracletypes.ModuleName, feeCoins); err != nil {
+		if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ReserveModuleName, feeCoins); err != nil {
 			return nil, err
 		}
 	}

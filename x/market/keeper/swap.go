@@ -9,42 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// ApplySwapToPool updates each pool with offerCoin and askCoin taken from swap operation,
-// OfferPool = OfferPool + offerAmt (Fills the swap pool with offerAmt)
-// AskPool = AskPool - askAmt       (Uses askAmt from the swap pool)
-func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk.DecCoin) error {
-	// No delta update in case uosmo to uosmo swap
-	if offerCoin.Denom != appParams.BaseCoinUnit && askCoin.Denom != appParams.BaseCoinUnit {
-		return nil
-	}
-
-	osmosisPoolDelta := k.GetOsmosisPoolDelta(ctx)
-
-	// In case swapping Terra to Luna, the terra swap pool(offer) must be increased and the luna swap pool(ask) must be decreased
-	if offerCoin.Denom != appParams.BaseCoinUnit && askCoin.Denom == appParams.BaseCoinUnit {
-		offerBaseCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), appParams.MicroSDRDenom)
-		if err != nil {
-			return err
-		}
-
-		osmosisPoolDelta = osmosisPoolDelta.Add(offerBaseCoin.Amount)
-	}
-
-	// In case swapping Luna to Terra, the luna swap pool(offer) must be increased and the terra swap pool(ask) must be decreased
-	if offerCoin.Denom == appParams.BaseCoinUnit && askCoin.Denom != appParams.BaseCoinUnit {
-		askBaseCoin, err := k.ComputeInternalSwap(ctx, askCoin, appParams.MicroSDRDenom)
-		if err != nil {
-			return err
-		}
-
-		osmosisPoolDelta = osmosisPoolDelta.Sub(askBaseCoin.Amount)
-	}
-
-	k.SetOsmosisPoolDelta(ctx, osmosisPoolDelta)
-
-	return nil
-}
-
 // ComputeSwap returns the amount of asked coins should be returned for a given offerCoin at the effective
 // exchange rate registered with the oracle.
 // Returns an Error if the swap is recursive, or the coins to be traded are unknown by the oracle, or the amount
@@ -81,9 +45,6 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 			return sdk.DecCoin{}, sdk.Dec{}, err2
 		}
 
-		//offerTobinTax := sdk.NewDecWithPrec(25, 4)
-		//askTobinTax := sdk.NewDecWithPrec(25, 4)
-
 		// Apply highest tobin tax for the denoms in the swap operation
 		if askTobinTax.GT(offerTobinTax) {
 			tobinTax = askTobinTax
@@ -107,7 +68,7 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	var offerPool sdk.Dec // base denom(usdr) unit
 	var askPool sdk.Dec   // base denom(usdr) unit
 	if offerCoin.Denom != appParams.BaseCoinUnit {
-		// Osmo->Luna swap
+		// Terra->Luna swap
 		offerPool = terraPool
 		askPool = lunaPool
 	} else {
@@ -150,9 +111,6 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 	if err != nil {
 		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, askDenom)
 	}
-
-	//offerRate := sdk.OneDec()
-	//askRate := sdk.OneDec()
 
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
 	if retAmount.LTE(sdk.ZeroDec()) {

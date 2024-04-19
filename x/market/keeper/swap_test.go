@@ -7,37 +7,6 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 )
 
-func (s *KeeperTestSuite) TestApplySwapToPool() {
-	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
-
-	offerCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))
-	askCoin := sdk.NewDecCoin(appparams.MicroSDRDenom, sdk.NewInt(1700))
-	oldSDRPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	s.App.MarketKeeper.ApplySwapToPool(s.Ctx, offerCoin, askCoin)
-	newSDRPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	sdrDiff := newSDRPoolDelta.Sub(oldSDRPoolDelta)
-	s.Require().Equal(sdk.NewDec(-1700), sdrDiff)
-
-	// reverse swap
-	offerCoin = sdk.NewCoin(appparams.MicroSDRDenom, sdk.NewInt(1700))
-	askCoin = sdk.NewDecCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))
-	oldSDRPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	s.App.MarketKeeper.ApplySwapToPool(s.Ctx, offerCoin, askCoin)
-	newSDRPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	sdrDiff = newSDRPoolDelta.Sub(oldSDRPoolDelta)
-	s.Require().Equal(sdk.NewDec(1700), sdrDiff)
-
-	// no pool changes are expected
-	offerCoin = sdk.NewCoin(appparams.MicroSDRDenom, sdk.NewInt(1700))
-	askCoin = sdk.NewDecCoin(appparams.MicroKRWDenom, sdk.NewInt(3400))
-	oldSDRPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	s.App.MarketKeeper.ApplySwapToPool(s.Ctx, offerCoin, askCoin)
-	newSDRPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	sdrDiff = newSDRPoolDelta.Sub(oldSDRPoolDelta)
-	s.Require().Equal(sdk.NewDec(0), sdrDiff)
-}
-
 func (s *KeeperTestSuite) TestComputeSwap() {
 	// Set Oracle Price
 	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)

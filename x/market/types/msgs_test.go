@@ -23,10 +23,10 @@ func TestMsgSwap(t *testing.T) {
 		askDenom    string
 		expectedErr string
 	}{
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.MicroSDRDenom, ""},
-		{sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.MicroSDRDenom, "Invalid trader address (empty address string is not allowed): invalid address"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.MicroSDRDenom, "0uosmo: invalid coins"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.MicroSDRDenom, "100000000000000000000000000000000000000000000000000000000uosmo: invalid coins"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, ""},
+		{sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid trader address (empty address string is not allowed): invalid address"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0uosmo: invalid coins"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000uosmo: invalid coins"},
 		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "uosmo: recursive swap"},
 	}
 
@@ -55,11 +55,11 @@ func TestMsgSwapSend(t *testing.T) {
 		askDenom    string
 		expectedErr string
 	}{
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.MicroSDRDenom, ""},
-		{addrs[0], sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.MicroSDRDenom, "Invalid to address (empty address string is not allowed): invalid address"},
-		{sdk.AccAddress{}, addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.MicroSDRDenom, "Invalid from address (empty address string is not allowed): invalid address"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.MicroSDRDenom, "0uosmo: invalid coins"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.MicroSDRDenom, "100000000000000000000000000000000000000000000000000000000uosmo: invalid coins"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, ""},
+		{addrs[0], sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid to address (empty address string is not allowed): invalid address"},
+		{sdk.AccAddress{}, addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid from address (empty address string is not allowed): invalid address"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0uosmo: invalid coins"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000uosmo: invalid coins"},
 		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "uosmo: recursive swap"},
 	}
 

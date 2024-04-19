@@ -3,11 +3,25 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	pubKey = secp256k1.GenPrivKey().PubKey()
+	Addr   = sdk.AccAddress(pubKey.Address())
+
+	InitTokens    = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+	InitBaseCoins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens))
+	InitUSDRCoins = sdk.NewCoins(sdk.NewCoin(appparams.MicroSDRDenom, InitTokens))
+
+	FaucetAccountName = tokenfactorytypes.ModuleName
 )
 
 type KeeperTestSuite struct {
@@ -28,6 +42,15 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
 	marketParams := s.App.MarketKeeper.GetParams(s.Ctx)
 	s.App.MarketKeeper.SetParams(s.Ctx, marketParams)
+
+	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addr)*10))))
+	err := s.App.BankKeeper.MintCoins(s.Ctx, FaucetAccountName, totalSupply)
+	s.Require().NoError(err)
+
+	s.App.AccountKeeper.SetAccount(s.Ctx, authtypes.NewBaseAccountWithAddress(Addr))
+
+	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, FaucetAccountName, Addr, InitBaseCoins)
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) TestOsmosisPoolDeltaUpdate() {
@@ -44,7 +67,7 @@ func (s *KeeperTestSuite) TestOsmosisPoolDeltaUpdate() {
 // TestReplenishPools tests that
 // each pools move towards base pool
 func (s *KeeperTestSuite) TestReplenishPools() {
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, sdk.OneDec())
+	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.StakeDenom, sdk.OneDec())
 
 	basePool := s.App.MarketKeeper.BasePool(s.Ctx)
 	terraPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
