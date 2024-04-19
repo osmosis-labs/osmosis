@@ -20,7 +20,7 @@ import (
 
 const (
 	mainnetChainID = "osmosis-1"
-	// Edgenet is to function exactly the samas mainnet, and expected
+	// Edgenet is to function exactly the same as mainnet, and expected
 	// to be state-exported from mainnet state.
 	edgenetChainID = "edgenet"
 	// Testnet will have its own state. Contrary to mainnet, we would
