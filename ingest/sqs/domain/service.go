@@ -27,6 +27,9 @@ type BlockPoolUpdateTracker interface {
 	// TrackCosmWasm tracks the CosmWasm pool.
 	TrackCosmWasm(pool poolmanagertypes.PoolI)
 
+	// TrackCosmWasmPoolsAddressToPoolMap tracks the CosmWasm pools address to the pool object map.
+	TrackCosmWasmPoolsAddressToPoolMap(pool poolmanagertypes.PoolI)
+
 	// GetConcentratedPools returns the tracked concentrated pools.
 	GetConcentratedPools() []poolmanagertypes.PoolI
 
@@ -38,6 +41,9 @@ type BlockPoolUpdateTracker interface {
 
 	// GetCosmWasmPools returns the tracked CosmWasm pools.
 	GetCosmWasmPools() []poolmanagertypes.PoolI
+
+	// GetCosmWasmPoolsAddressToIDMap returns the tracked CosmWasm pools address to pool object map.
+	GetCosmWasmPoolsAddressToIDMap() map[string]poolmanagertypes.PoolI
 
 	// Reset clears the internal state.
 	Reset()
