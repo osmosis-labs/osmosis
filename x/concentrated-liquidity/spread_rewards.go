@@ -232,38 +232,46 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("position", position)
 
 	// Get the spread reward accumulator for the position's pool.
 	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("spreadRewardAccumulator", spreadRewardAccumulator)
 
 	// Get the key for the position's accumulator in the spread reward accumulator.
 	positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
+	fmt.Println("positionKey", positionKey)
 
 	// Check if the position exists in the spread reward accumulator.
 	hasPosition := spreadRewardAccumulator.HasPosition(positionKey)
 	if !hasPosition {
 		return nil, types.SpreadRewardPositionNotFoundError{PositionId: positionId}
 	}
+	fmt.Println("hasPosition", hasPosition)
 
 	// Compute the spread reward growth outside of the range between the position's lower and upper ticks.
 	spreadRewardGrowthOutside, err := k.getSpreadRewardGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("spreadRewardGrowthOutside", spreadRewardGrowthOutside)
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
 	spreadRewardsClaimedScaled, forfeitedDustScaled, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("spreadRewardsClaimedScaled", spreadRewardsClaimedScaled)
+	fmt.Println("forfeitedDustScaled", forfeitedDustScaled)
 
 	spreadFactorScalingFactor, err := k.getSpreadFactorScalingFactorForPool(ctx, position.PoolId)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("spreadFactorScalingFactor", spreadFactorScalingFactor)
 
 	// We scale the spread factor per-unit of liquidity accumulator up to avoid truncation to zero.
 	// However, once we compute the total for the liquidity entitlement, we must scale it back down.
@@ -296,14 +304,17 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("spreadRewardAccumulator", spreadRewardAccumulator)
 
 		totalSharesRemaining := spreadRewardAccumulator.GetTotalShares()
+		fmt.Println("totalSharesRemaining", totalSharesRemaining)
 
 		// if there are no shares remaining, the dust is ignored. Otherwise, it is added back to the global accumulator.
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
 			forfeitedDustPerShareScaled := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
+			fmt.Println("forfeitedDustPerShareScaled", forfeitedDustPerShareScaled)
 			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShareScaled)
 		}
 	}
@@ -353,12 +364,15 @@ func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorOb
 // that is added back to the global accumulator.
 func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
 	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
+	fmt.Println("scaledDec", scaledDec)
 
 	// Scaled down amount, which is used to distribute to user
 	scaledAmount = scaledDec.TruncateInt()
+	fmt.Println("scaledAmount", scaledAmount)
 
 	// Truncated decimal, which is dust that is added back to the global accumulator
 	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())
+	fmt.Println("truncatedDec", truncatedDec)
 
 	return scaledAmount, truncatedDec
 }

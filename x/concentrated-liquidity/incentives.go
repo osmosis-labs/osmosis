@@ -695,6 +695,8 @@ func updateAccumAndClaimRewards(accum *accum.AccumulatorObject, positionKey stri
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
+	fmt.Println("incentivesClaimedCurrAccum", incentivesClaimedCurrAccum)
+	fmt.Println("dust", dust)
 
 	// Check if position record was deleted after claiming rewards.
 	hasPosition := accum.HasPosition(positionKey)
