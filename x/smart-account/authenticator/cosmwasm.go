@@ -3,20 +3,20 @@ package authenticator
 import (
 	"encoding/json"
 
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type CosmwasmAuthenticator struct {
-	contractKeeper *keeper.PermissionedKeeper
-	ak             *authkeeper.AccountKeeper
+	contractKeeper types.ContractKeeper
+	ak             authante.AccountKeeper
 	cdc            codectypes.AnyUnpacker
-	sigModeHandler authsigning.SignModeHandler
 
 	contractAddr        sdk.AccAddress
 	authenticatorParams []byte
@@ -24,10 +24,9 @@ type CosmwasmAuthenticator struct {
 
 var _ Authenticator = &CosmwasmAuthenticator{}
 
-func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, accountKeeper *authkeeper.AccountKeeper, sigModeHandler authsigning.SignModeHandler, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
+func NewCosmwasmAuthenticator(contractKeeper *keeper.PermissionedKeeper, accountKeeper authante.AccountKeeper, cdc codectypes.AnyUnpacker) CosmwasmAuthenticator {
 	return CosmwasmAuthenticator{
 		contractKeeper: contractKeeper,
-		sigModeHandler: sigModeHandler,
 		ak:             accountKeeper,
 		cdc:            cdc,
 	}
@@ -118,7 +117,6 @@ func (cwa CosmwasmAuthenticator) Track(ctx sdk.Context, request AuthenticationRe
 }
 
 func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
-	// TODO: Do we want to pass the authentication data here? Should we wait until we have a usecase where we need it?
 	confirmExecutionRequest := ConfirmExecutionRequest{
 		AuthenticatorId:     request.AuthenticatorId,
 		Account:             request.Account,

@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
@@ -110,11 +109,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	ak, ok := ad.accountKeeper.(*authkeeper.AccountKeeper)
-	if !ok {
-		return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "invalid account keeper type")
-	}
-
 	// tracks are used to make sure that we only write to the store after every message is successful
 	var tracks []func() error
 
@@ -144,7 +138,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Generate the authentication request data
 		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
-			ak,
+			ad.accountKeeper,
 			ad.sigModeHandler,
 			account,
 			feePayer,
