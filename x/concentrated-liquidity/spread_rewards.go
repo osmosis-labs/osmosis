@@ -239,7 +239,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("spreadRewardAccumulator", spreadRewardAccumulator)
+	fmt.Println("spreadRewardAccumulator vps", spreadRewardAccumulator.GetValue().String())
 
 	// Get the key for the position's accumulator in the spread reward accumulator.
 	positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
