@@ -7,19 +7,21 @@ import (
 
 // poolBlockUpdateTracker is a struct that tracks the pools that were updated in a block.
 type poolBlockUpdateTracker struct {
-	concentratedPools            map[uint64]poolmanagertypes.PoolI
-	concentratedPoolIDTickChange map[uint64]struct{}
-	cfmmPools                    map[uint64]poolmanagertypes.PoolI
-	cosmwasmPools                map[uint64]poolmanagertypes.PoolI
+	concentratedPools             map[uint64]poolmanagertypes.PoolI
+	concentratedPoolIDTickChange  map[uint64]struct{}
+	cfmmPools                     map[uint64]poolmanagertypes.PoolI
+	cosmwasmPools                 map[uint64]poolmanagertypes.PoolI
+	cosmwasmPoolsAddressToPoolMap map[string]poolmanagertypes.PoolI
 }
 
 // NewPoolTracker creates a new poolBlockUpdateTracker.
 func NewPoolTracker() domain.BlockPoolUpdateTracker {
 	return &poolBlockUpdateTracker{
-		concentratedPools:            map[uint64]poolmanagertypes.PoolI{},
-		concentratedPoolIDTickChange: map[uint64]struct{}{},
-		cfmmPools:                    map[uint64]poolmanagertypes.PoolI{},
-		cosmwasmPools:                map[uint64]poolmanagertypes.PoolI{},
+		concentratedPools:             map[uint64]poolmanagertypes.PoolI{},
+		concentratedPoolIDTickChange:  map[uint64]struct{}{},
+		cfmmPools:                     map[uint64]poolmanagertypes.PoolI{},
+		cosmwasmPools:                 map[uint64]poolmanagertypes.PoolI{},
+		cosmwasmPoolsAddressToPoolMap: map[string]poolmanagertypes.PoolI{},
 	}
 }
 
@@ -36,6 +38,11 @@ func (pt *poolBlockUpdateTracker) TrackCFMM(pool poolmanagertypes.PoolI) {
 // TrackCosmWasm implements PoolTracker.
 func (pt *poolBlockUpdateTracker) TrackCosmWasm(pool poolmanagertypes.PoolI) {
 	pt.cosmwasmPools[pool.GetId()] = pool
+}
+
+// TrackCosmWasmPoolsAddressToPoolMap implements PoolTracker.
+func (pt *poolBlockUpdateTracker) TrackCosmWasmPoolsAddressToPoolMap(pool poolmanagertypes.PoolI) {
+	pt.cosmwasmPoolsAddressToPoolMap[pool.GetAddress().String()] = pool
 }
 
 // TrackConcentratedPoolIDTickChange implements PoolTracker.
@@ -61,6 +68,11 @@ func (pt *poolBlockUpdateTracker) GetCFMMPools() []poolmanagertypes.PoolI {
 // GetCosmWasmPools implements PoolTracker.
 func (pt *poolBlockUpdateTracker) GetCosmWasmPools() []poolmanagertypes.PoolI {
 	return poolMapToSlice(pt.cosmwasmPools)
+}
+
+// GetCosmWasmPoolsAddressToIDMap implements PoolTracker.
+func (pt *poolBlockUpdateTracker) GetCosmWasmPoolsAddressToIDMap() map[string]poolmanagertypes.PoolI {
+	return pt.cosmwasmPoolsAddressToPoolMap
 }
 
 // Reset implements PoolTracker.

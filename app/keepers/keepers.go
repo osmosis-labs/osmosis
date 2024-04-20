@@ -78,6 +78,10 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 
+	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v24/wasmbinding"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
@@ -168,6 +172,8 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
+	SmartAccountKeeper           *smartaccountkeeper.Keeper
+	AuthenticatorManager         *authenticator.AuthenticatorManager
 
 	// IBC modules
 	// transfer module
@@ -216,6 +222,27 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.BankKeeper = &bankKeeper
+
+	// Initialize authenticators
+	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
+		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper),
+		authenticator.NewMessageFilterAuthenticator(encodingConfig),
+		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAnyOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAllOfAuthenticator(appKeepers.AuthenticatorManager),
+	})
+	govModuleAddr := appKeepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	smartAccountKeeper := smartaccountkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[smartaccounttypes.StoreKey],
+		govModuleAddr,
+		appKeepers.GetSubspace(smartaccounttypes.ModuleName),
+		appKeepers.AuthenticatorManager,
+	)
+	appKeepers.SmartAccountKeeper = &smartAccountKeeper
 
 	authzKeeper := authzkeeper.NewKeeper(
 		appKeepers.keys[authzkeeper.StoreKey],
@@ -550,6 +577,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
+	// register CosmWasm authenticator
+	appKeepers.AuthenticatorManager.RegisterAuthenticator(
+		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.AccountKeeper, appCodec))
+
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
@@ -750,6 +781,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
+	paramsKeeper.Subspace(smartaccounttypes.ModuleName).WithKeyTable(smartaccounttypes.ParamKeyTable())
 	paramsKeeper.Subspace(txfeestypes.ModuleName)
 
 	return paramsKeeper
@@ -873,5 +905,6 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
+		smartaccounttypes.StoreKey,
 	}
 }
