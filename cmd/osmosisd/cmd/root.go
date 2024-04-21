@@ -3,6 +3,7 @@ package cmd
 import (
 	// "fmt"
 
+	b "bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"text/template"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
@@ -60,6 +63,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -95,6 +100,68 @@ type Trace struct {
 type DenomUnitMap struct {
 	Base     string
 	Exponent uint64 `json:"exponent"`
+}
+
+type CustomAppConfig struct {
+	serverconfig.Config
+
+	OsmosisMempoolConfig txfeestypes.MempoolFeeOptions `mapstructure:"osmosis-mempool"`
+
+	SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
+
+	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+}
+
+var OsmosisAppTemplate = serverconfig.DefaultConfigTemplate + `
+###############################################################################
+###                      Osmosis Mempool Configuration                      ###
+###############################################################################
+
+[osmosis-mempool]
+# This is the max allowed gas any tx.
+# This is only for local mempool purposes, and thus	is only ran on check tx.
+max-gas-wanted-per-tx = "60000000"
+
+# This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
+# Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
+arbitrage-min-gas-fee = ".1"
+
+# This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
+# Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
+min-gas-price-for-high-gas-tx = ".0025"
+
+# This parameter enables EIP-1559 like fee market logic in the mempool
+adaptive-fee-enabled = "true"
+
+###############################################################################
+###              Osmosis Sidecar Query Server Configuration                 ###
+###############################################################################
+
+[osmosis-sqs]
+
+# SQS service is disabled by default.
+is-enabled = "false"
+
+# The hostname of the GRPC sqs service
+grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
+# The maximum size of the GRPC message that can be received by the sqs service in bytes.
+grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
+
+###############################################################################
+###              		       Wasm Configuration    					    ###
+###############################################################################
+` + wasmtypes.DefaultConfigTemplate()
+
+var configTemplate *template.Template
+
+func init() {
+	var err error
+
+	tmpl := template.New("appConfigFileTemplate")
+
+	if configTemplate, err = tmpl.Parse(OsmosisAppTemplate); err != nil {
+		panic(err)
+	}
 }
 
 const (
@@ -314,6 +381,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	SetCustomEnvVariablesFromClientToml(initClientCtx)
 	humanReadableDenomsInput, humanReadableDenomsOutput := GetHumanReadableDenomEnvVariables()
 
+	var customAppConfigExt CustomAppConfig
+
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
@@ -348,6 +417,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 			customAppTemplate, customAppConfig := initAppConfig()
+			customAppConfigExt = customAppConfig
 
 			// If enabled, CLI input will be parsed and human readable denominations will be automatically converted to ibc denoms.
 			if humanReadableDenomsInput {
@@ -419,7 +489,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	genAutoCompleteCmd(rootCmd)
 
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, encodingConfig, customAppConfigExt)
 
 	return rootCmd, encodingConfig
 }
@@ -481,7 +551,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 //
 // Silently handles and skips any error/panic due to write permission issues.
 // No-op otherwise.
-func overwriteAppTomlValues(serverCtx *server.Context) error {
+func overwriteAppTomlValues(serverCtx *server.Context, customAppConfig CustomAppConfig) error {
 	// Get paths to app.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
 
@@ -501,6 +571,14 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
 		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
 
+		// Check if customAppConfig can be asserted to CustomAppConfig
+		recommendedNewMaxGasWantedPerTxValueUint64, err := strconv.ParseUint(recommendedNewMaxGasWantedPerTxValue, 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse %s to uint64: %w", recommendedNewMaxGasWantedPerTxValue, err)
+		}
+		customAppConfig.OsmosisMempoolConfig.MaxGasWantedPerTx = recommendedNewMaxGasWantedPerTxValueUint64
+		customAppConfig.OsmosisMempoolConfig.MinGasPriceForArbitrageTx = osmomath.MustNewDecFromStr(recommendedNewArbitrageMinGasFeeValue)
+
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("failed to write to %s: %s\n", appFilePath, err)
@@ -512,7 +590,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
-			serverconfig.WriteConfigFile(appFilePath, serverCtx.Config)
+			WriteConfigFile(appFilePath, customAppConfig)
 		} else {
 			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
@@ -536,21 +614,7 @@ func getHomeEnvironment() string {
 
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func initAppConfig() (string, interface{}) {
-	type OsmosisMempoolConfig struct {
-		ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
-	}
-
-	type CustomAppConfig struct {
-		serverconfig.Config
-
-		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
-
-		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
-
-		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
-	}
-
+func initAppConfig() (string, CustomAppConfig) {
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
@@ -561,57 +625,17 @@ func initAppConfig() (string, interface{}) {
 	// 128MB IAVL cache
 	srvCfg.IAVLCacheSize = 781250
 
-	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.1"}
+	memCfg := txfeestypes.MempoolFeeOptions{MinGasPriceForArbitrageTx: osmomath.MustNewDecFromStr("0.1")}
 
 	sqsConfig := sqs.DefaultConfig
 
 	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig()}
 
-	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
-###############################################################################
-###                      Osmosis Mempool Configuration                      ###
-###############################################################################
-
-[osmosis-mempool]
-# This is the max allowed gas any tx.
-# This is only for local mempool purposes, and thus	is only ran on check tx.
-max-gas-wanted-per-tx = "60000000"
-
-# This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
-# Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
-arbitrage-min-gas-fee = ".1"
-
-# This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
-# Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
-min-gas-price-for-high-gas-tx = ".0025"
-
-# This parameter enables EIP-1559 like fee market logic in the mempool
-adaptive-fee-enabled = "true"
-
-###############################################################################
-###              Osmosis Sidecar Query Server Configuration                 ###
-###############################################################################
-
-[osmosis-sqs]
-
-# SQS service is disabled by default.
-is-enabled = "false"
-
-# The hostname of the GRPC sqs service
-grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
-# The maximum size of the GRPC message that can be received by the sqs service in bytes.
-grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
-
-###############################################################################
-###              		       Wasm Configuration    					    ###
-###############################################################################
-` + wasmtypes.DefaultConfigTemplate()
-
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
 
 // initRootCmd initializes root commands when creating a new root command for simd.
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, customAppConfig CustomAppConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -672,7 +696,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 						return err
 					}
 
-					err = overwriteAppTomlValues(serverCtx)
+					err = overwriteAppTomlValues(serverCtx, customAppConfig)
 					if err != nil {
 						return err
 					}
@@ -1005,4 +1029,23 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 		}
 	}
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
+}
+
+// WriteConfigFile renders config using the template and writes it to
+// configFilePath.
+func WriteConfigFile(configFilePath string, config interface{}) {
+	var buffer b.Buffer
+
+	if err := configTemplate.Execute(&buffer, config); err != nil {
+		panic(err)
+	}
+
+	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+}
+
+func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
+	if err := os.WriteFile(filePath, contents, mode); err != nil {
+		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
+		os.Exit(1)
+	}
 }
