@@ -12,11 +12,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/viper"
 
 	cometbftdb "github.com/cometbft/cometbft-db"
 
@@ -100,6 +98,7 @@ type DenomUnitMap struct {
 }
 
 const (
+	// app.toml
 	mempoolConfigName = "osmosis-mempool"
 
 	arbitrageMinGasFeeConfigName          = "arbitrage-min-gas-fee"
@@ -108,8 +107,11 @@ const (
 	maxGasWantedPerTxName                = "max-gas-wanted-per-tx"
 	recommendedNewMaxGasWantedPerTxValue = "60000000"
 
-	consensusConfigName     = "consensus"
-	timeoutCommitConfigName = "timeout_commit"
+	// config.toml
+	consensusConfigName = "consensus"
+
+	timeoutCommitConfigName          = "timeout_commit"
+	recommendedNewTimeoutCommitValue = "2s"
 )
 
 var (
@@ -422,10 +424,19 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-// overwrites config.toml values if it exists, otherwise it writes the default config.toml
+// overwriteConfigTomlValues overwrites config.toml values. Returns error if config.toml does not exist
+//
+// Currently, overwrites:
+// - timeout_commit value in config.toml to 2s.
+//
+// Also overwrites the respective viper config value.
+//
+// Silently handles and skips any error/panic due to write permission issues.
+// No-op otherwise.
 func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	// Get paths to config.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
+
 	configParentDirPath := filepath.Join(rootDir, "config")
 	configFilePath := filepath.Join(configParentDirPath, "config.toml")
 
@@ -438,30 +449,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	} else {
 		// config.toml exists
 
-		// Create a copy since the original viper from serverCtx
-		// contains app.toml config values that would get overwritten
-		// by ReadInConfig below.
-		viperCopy := viper.New()
-
-		viperCopy.SetConfigType("toml")
-		viperCopy.SetConfigName("config")
-		viperCopy.AddConfigPath(configParentDirPath)
-
-		// We read it in and modify the consensus timeout commit
-		// and write it back.
-		if err := viperCopy.ReadInConfig(); err != nil {
-			return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
-		}
-
-		consensusValues := viperCopy.GetStringMapString(consensusConfigName)
-		timeoutCommitValue, ok := consensusValues[timeoutCommitConfigName]
-		if !ok {
-			return fmt.Errorf("failed to get %s.%s from %s: %w", consensusConfigName, timeoutCommitValue, configFilePath, err)
-		}
-
-		// The original default is 5s and is set in Cosmos SDK.
-		// We lower it to 2s for faster block times.
-		serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
+		// Set new values in viper
+		serverCtx.Viper.Set(consensusConfigName+"."+timeoutCommitConfigName, recommendedNewTimeoutCommitValue)
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -475,27 +464,36 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
 			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+		} else {
+			fmt.Println("config.toml is not writable. Cannot apply update. Please consder manually changing timeout_commit to " + recommendedNewTimeoutCommitValue)
 		}
 	}
 	return nil
 }
 
-// overwrites app.toml values. Returns error if app.toml does not exist
+// overwriteAppTomlValues overwrites app.toml values. Returns error if app.toml does not exist
 //
-// Currently, overwrites arbitrage-min-gas-fee value in app.toml if it is set to 0.005. Similarly,
-// overwrites the given viper config value.
+// Currently, overwrites:
+// - arbitrage-min-gas-fee value in app.toml to 0.1.
+// - max-gas-wanted-per-tx value in app.toml to 60000000.
+//
+// Also overwrites the respective viper config value.
+//
 // Silently handles and skips any error/panic due to write permission issues.
 // No-op otherwise.
 func overwriteAppTomlValues(serverCtx *server.Context) error {
-	// Get paths to config.toml and config parent directory
+	// Get paths to app.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
 
 	configParentDirPath := filepath.Join(rootDir, "config")
-	configFilePath := filepath.Join(configParentDirPath, "app.toml")
+	appFilePath := filepath.Join(configParentDirPath, "app.toml")
 
-	fileInfo, err := os.Stat(configFilePath)
+	fileInfo, err := os.Stat(appFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		// something besides a does not exist error
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to read in %s: %w", appFilePath, err)
+		}
 	} else {
 		// app.toml exists
 
@@ -505,42 +503,16 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
+				fmt.Printf("failed to write to %s: %s\n", appFilePath, err)
 			}
 		}()
 
 		// Check if the file is writable
 		if fileInfo.Mode()&os.FileMode(0200) != 0 {
-			// Read the entire content of the file
-			content, err := os.ReadFile(configFilePath)
-			if err != nil {
-				return err
-			}
-
-			// Convert the content to a string
-			fileContent := string(content)
-
-			// Find the index of the search line
-			index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
-			if index == -1 {
-				return fmt.Errorf("search line not found in the file")
-			}
-
-			// Find the opening and closing quotes
-			openQuoteIndex := strings.Index(fileContent[index:], "\"")
-			openQuoteIndex += index
-
-			closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
-			closingQuoteIndex += openQuoteIndex + 1
-
-			// Replace the old value with the new value
-			newFileContent := fileContent[:openQuoteIndex+1] + recommendedNewArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
-
-			// Write the modified content back to the file
-			err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
-			if err != nil {
-				return err
-			}
+			// It will be re-read in server.InterceptConfigsPreRunHandler
+			// this may panic for permissions issues. So we catch the panic.
+			// Note that this exits with a non-zero exit code if fails to write the file.
+			serverconfig.WriteConfigFile(appFilePath, serverCtx.Config)
 		} else {
 			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
