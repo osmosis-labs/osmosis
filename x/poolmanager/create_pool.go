@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -154,6 +155,24 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
+	// TODO: This is a temporary solution to make tests pass. Make a better per-module test reset method.
+	if ctx.BlockHeight() < 1_000_000 {
+		for i := 0; i <= int(poolId)+100; i++ {
+			cachedPoolModules.Delete(poolId)
+		}
+	}
+}
+
+// map from poolId to the swap module + Gas consumed amount
+// note that after getPoolModule doesn't return an error
+// it will always return the same result. Meaning its perfect for a sync.map cache.
+var cachedPoolModules = sync.Map{}
+
+type poolModuleCacheValue struct {
+	module   types.PoolType
+	gasFlat  uint64
+	gasKey   uint64
+	gasValue uint64
 }
 
 // GetPoolModule returns the swap module for the given pool ID.
@@ -165,10 +184,16 @@ func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Pool
 // TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
 // for the upgrade handler logic and tests.
 func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI, error) {
+	poolModuleCandidate, ok := cachedPoolModules.Load(poolId)
+	if ok {
+		v := poolModuleCandidate.(poolModuleCacheValue)
+		osmoutils.ChargeMockReadGas(ctx, v.gasFlat, v.gasKey, v.gasValue)
+		return k.routes[v.module], nil
+	}
 	store := ctx.KVStore(k.storeKey)
 
 	moduleRoute := &types.ModuleRoute{}
-	found, err := osmoutils.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	found, gasFlat, gasKey, gasVal, err := osmoutils.TrackGasUsedInGet(store, types.FormatModuleRouteKey(poolId), moduleRoute)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +205,13 @@ func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI
 	if !routeExists {
 		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
 	}
+
+	cachedPoolModules.Store(poolId, poolModuleCacheValue{
+		module:   moduleRoute.PoolType,
+		gasFlat:  gasFlat,
+		gasKey:   gasKey,
+		gasValue: gasVal,
+	})
 
 	return swapModule, nil
 }
