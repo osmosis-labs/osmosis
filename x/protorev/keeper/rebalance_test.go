@@ -552,7 +552,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			remainingProtorevAccBal := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, protorevModuleAcc)
 
 			// Run the epoch hook
-			s.App.ProtoRevKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+			s.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(s.Ctx, "day", 1)
 
 			// Check the dev account was paid the correct amount after epoch
 			developerAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)

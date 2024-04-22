@@ -3,12 +3,12 @@ package authenticator
 import (
 	"fmt"
 
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -25,7 +25,7 @@ const (
 
 // signature authenticator
 type SignatureVerificationAuthenticator struct {
-	ak     *authkeeper.AccountKeeper
+	ak     authante.AccountKeeper
 	PubKey cryptotypes.PubKey
 }
 
@@ -39,7 +39,7 @@ func (sva SignatureVerificationAuthenticator) StaticGas() uint64 {
 }
 
 // NewSignatureVerificationAuthenticator creates a new SignatureVerificationAuthenticator
-func NewSignatureVerificationAuthenticator(ak *authkeeper.AccountKeeper) SignatureVerificationAuthenticator {
+func NewSignatureVerificationAuthenticator(ak authante.AccountKeeper) SignatureVerificationAuthenticator {
 	return SignatureVerificationAuthenticator{ak: ak}
 }
 
