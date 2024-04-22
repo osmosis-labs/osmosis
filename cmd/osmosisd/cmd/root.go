@@ -564,7 +564,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// Note that this exits with a non-zero exit code if fails to write the file.
 
 			// Write the new app.toml file
-			WriteConfigFile(appFilePath, customAppConfig)
+			WriteCustomAppConfigFile(appFilePath, customAppConfig)
 		} else {
 			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
@@ -588,7 +588,7 @@ func getHomeEnvironment() string {
 
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func initAppConfig() (string, CustomAppConfig) {
+func initAppConfig() (string, interface{}) {
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
@@ -1059,9 +1059,9 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
 }
 
-// WriteConfigFile renders config using the template and writes it to
-// configFilePath.
-func WriteConfigFile(configFilePath string, config CustomAppConfig) {
+// WriteCustomAppConfigFile first checks the provided config for a special case with the wasm config.
+// This determines what the template should be. Based on this, it writes the new app.toml config file.
+func WriteCustomAppConfigFile(configFilePath string, config CustomAppConfig) {
 	// There is a single wasm config that requres special logic to handle
 	// For some reason, they base a value on whether a line is commented out or not...
 
@@ -1073,6 +1073,7 @@ func WriteConfigFile(configFilePath string, config CustomAppConfig) {
 		OsmosisAppTemplate = strings.Replace(OsmosisAppTemplate, "# simulation_gas_limit =", "simulation_gas_limit = {{ .WasmConfig.SimulationGasLimit }}", 1)
 	}
 
+	// Create a template object via the app template string
 	var buffer b.Buffer
 	tmpl := template.New("appConfigFileTemplate")
 	configTemplate, err := tmpl.Parse(OsmosisAppTemplate)
@@ -1080,10 +1081,12 @@ func WriteConfigFile(configFilePath string, config CustomAppConfig) {
 		panic(err)
 	}
 
+	// Execute the template with the provided config
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		panic(err)
 	}
 
+	// Write the new app.toml file
 	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o644); err != nil {
 		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
 		os.Exit(1)
