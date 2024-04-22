@@ -99,8 +99,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
-	cacheCtx, writeCache := ctx.CacheContext()
-
 	msgs := tx.GetMsgs()
 	if len(msgs) == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no messages in transaction")
@@ -139,7 +137,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get the currently selected authenticator
 		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
 		selectedAuthenticator, err := ad.smartAccountKeeper.GetInitializedAuthenticatorForAccount(
-			cacheCtx,
+			ctx,
 			account,
 			selectedAuthenticatorId,
 		)
@@ -173,10 +171,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		authenticationRequest.AuthenticatorId = stringId
 
 		// Consume the authenticator's static gas
-		cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
+		ctx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
 		// Authenticate should never modify state. That's what track is for
-		neverWriteCtx, _ := cacheCtx.CacheContext()
+		neverWriteCtx, _ := ctx.CacheContext()
 		authErr := a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
 		// If authentication is successful, continue
@@ -194,14 +192,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				}
 				ctx.MultiStore().(sdk.CacheMultiStore).Write()
 
-				// Reset the has meter for both contexts
-				cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+				// Reset the gas meter
 				ctx = ctx.WithGasMeter(originalGasMeter)
 			}
 
 			// Append the track closure to be called after every message is authenticated
 			tracks = append(tracks, func() error {
-				err := a11r.Track(cacheCtx, authenticationRequest)
+				err := a11r.Track(ctx, authenticationRequest)
 				if err != nil {
 					// track should not fail in normal circumstances, since it is intended to update track state before execution.
 					// If it does fail, we log the error.
@@ -231,8 +228,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			return sdk.Context{}, err
 		}
 	}
-
-	writeCache()
 
 	updatedGasConsumed := ctx.GasMeter().GasConsumed()
 	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.GaugeKeyAnteHandlerGasConsumed)
