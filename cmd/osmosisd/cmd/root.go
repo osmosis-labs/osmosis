@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -63,8 +62,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -102,67 +99,31 @@ type DenomUnitMap struct {
 	Exponent uint64 `json:"exponent"`
 }
 
+type OsmosisMempoolConfig struct {
+	MaxGasWantedPerTx         string `mapstructure:"max-gas-wanted-per-tx"`
+	MinGasPriceForArbitrageTx string `mapstructure:"arbitrage-min-gas-fee"`
+	MinGasPriceForHighGasTx   string `mapstructure:"min-gas-price-for-high-gas-tx"`
+	Mempool1559Enabled        string `mapstructure:"adaptive-fee-enabled"`
+}
+
+var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
+	MaxGasWantedPerTx:         "60000000",
+	MinGasPriceForArbitrageTx: ".1",
+	MinGasPriceForHighGasTx:   ".0025",
+	Mempool1559Enabled:        "true",
+}
+
 type CustomAppConfig struct {
 	serverconfig.Config
 
-	OsmosisMempoolConfig txfeestypes.MempoolFeeOptions `mapstructure:"osmosis-mempool"`
+	OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
 
 	SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 
-	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+	WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 }
 
-var OsmosisAppTemplate = serverconfig.DefaultConfigTemplate + `
-###############################################################################
-###                      Osmosis Mempool Configuration                      ###
-###############################################################################
-
-[osmosis-mempool]
-# This is the max allowed gas any tx.
-# This is only for local mempool purposes, and thus	is only ran on check tx.
-max-gas-wanted-per-tx = "60000000"
-
-# This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
-# Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
-arbitrage-min-gas-fee = ".1"
-
-# This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
-# Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
-min-gas-price-for-high-gas-tx = ".0025"
-
-# This parameter enables EIP-1559 like fee market logic in the mempool
-adaptive-fee-enabled = "true"
-
-###############################################################################
-###              Osmosis Sidecar Query Server Configuration                 ###
-###############################################################################
-
-[osmosis-sqs]
-
-# SQS service is disabled by default.
-is-enabled = "false"
-
-# The hostname of the GRPC sqs service
-grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
-# The maximum size of the GRPC message that can be received by the sqs service in bytes.
-grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
-
-###############################################################################
-###              		       Wasm Configuration    					    ###
-###############################################################################
-` + wasmtypes.DefaultConfigTemplate()
-
-var configTemplate *template.Template
-
-func init() {
-	var err error
-
-	tmpl := template.New("appConfigFileTemplate")
-
-	if configTemplate, err = tmpl.Parse(OsmosisAppTemplate); err != nil {
-		panic(err)
-	}
-}
+var OsmosisAppTemplate string
 
 const (
 	// app.toml
@@ -571,13 +532,17 @@ func overwriteAppTomlValues(serverCtx *server.Context, customAppConfig CustomApp
 		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
 		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
 
-		// Check if customAppConfig can be asserted to CustomAppConfig
-		recommendedNewMaxGasWantedPerTxValueUint64, err := strconv.ParseUint(recommendedNewMaxGasWantedPerTxValue, 10, 64)
-		if err != nil {
-			return fmt.Errorf("failed to parse %s to uint64: %w", recommendedNewMaxGasWantedPerTxValue, err)
+		var config serverconfig.Config
+		if err := serverCtx.Viper.Unmarshal(&config); err != nil {
+			return fmt.Errorf("failed to unmarshal viper config: %w", err)
 		}
-		customAppConfig.OsmosisMempoolConfig.MaxGasWantedPerTx = recommendedNewMaxGasWantedPerTxValueUint64
-		customAppConfig.OsmosisMempoolConfig.MinGasPriceForArbitrageTx = osmomath.MustNewDecFromStr(recommendedNewArbitrageMinGasFeeValue)
+
+		var customAppConfigNew CustomAppConfig
+		if err := serverCtx.Viper.Unmarshal(&customAppConfigNew); err != nil {
+			return fmt.Errorf("failed to unmarshal viper config: %w", err)
+		}
+
+		test := CustomAppConfig{Config: config, OsmosisMempoolConfig: customAppConfigNew.OsmosisMempoolConfig, SidecarQueryServerConfig: customAppConfigNew.SidecarQueryServerConfig, WasmConfig: customAppConfigNew.WasmConfig}
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -590,7 +555,7 @@ func overwriteAppTomlValues(serverCtx *server.Context, customAppConfig CustomApp
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
-			WriteConfigFile(appFilePath, customAppConfig)
+			WriteConfigFile(appFilePath, test)
 		} else {
 			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
@@ -625,11 +590,65 @@ func initAppConfig() (string, CustomAppConfig) {
 	// 128MB IAVL cache
 	srvCfg.IAVLCacheSize = 781250
 
-	memCfg := txfeestypes.MempoolFeeOptions{MinGasPriceForArbitrageTx: osmomath.MustNewDecFromStr("0.1")}
+	memCfg := DefaultOsmosisMempoolConfig
 
 	sqsConfig := sqs.DefaultConfig
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig()}
+	wasmCfg := wasmtypes.DefaultWasmConfig()
+
+	OsmosisAppTemplate = serverconfig.DefaultConfigTemplate + `
+###############################################################################
+###                      Osmosis Mempool Configuration                      ###
+###############################################################################
+
+[osmosis-mempool]
+# This is the max allowed gas any tx.
+# This is only for local mempool purposes, and thus	is only ran on check tx.
+max-gas-wanted-per-tx = "{{ .OsmosisMempoolConfig.MaxGasWantedPerTx }}"
+
+# This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
+# Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
+arbitrage-min-gas-fee = "{{ .OsmosisMempoolConfig.MinGasPriceForArbitrageTx }}"
+
+# This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
+# Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
+min-gas-price-for-high-gas-tx = "{{ .OsmosisMempoolConfig.MinGasPriceForHighGasTx }}"
+
+# This parameter enables EIP-1559 like fee market logic in the mempool
+adaptive-fee-enabled = "{{ .OsmosisMempoolConfig.Mempool1559Enabled }}"
+
+###############################################################################
+###              Osmosis Sidecar Query Server Configuration                 ###
+###############################################################################
+
+[osmosis-sqs]
+
+# SQS service is disabled by default.
+is-enabled = "{{ .SidecarQueryServerConfig.IsEnabled }}"
+
+# The hostname of the GRPC sqs service
+grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
+# The maximum size of the GRPC message that can be received by the sqs service in bytes.
+grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
+
+###############################################################################
+###                            Wasm Configuration                           ###
+###############################################################################
+
+[wasm]
+# Smart query gas limit is the max gas to be used in a smart query contract call
+query_gas_limit = {{ .WasmConfig.SmartQueryGasLimit }}
+
+# in-memory cache for Wasm contracts. Set to 0 to disable.
+# The value is in MiB not bytes
+memory_cache_size = {{ .WasmConfig.MemoryCacheSize }}
+
+# Simulation gas limit is the max gas to be used in a tx simulation call.
+# When not set the consensus max block gas is used instead
+# simulation_gas_limit =
+`
+
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, WasmConfig: wasmCfg}
 
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
@@ -1033,18 +1052,28 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(configFilePath string, config interface{}) {
+func WriteConfigFile(configFilePath string, config CustomAppConfig) {
+	// Check if the simulation_gas_limit line should be commented out
+	isCommentedOut := config.WasmConfig.SimulationGasLimit == nil || *config.WasmConfig.SimulationGasLimit == 0
+
+	// Choose the appropriate template based on whether the line is commented out
+	if !isCommentedOut {
+		// Find the simulation_gas_limit line and prepend it with a #
+		OsmosisAppTemplate = strings.Replace(OsmosisAppTemplate, "# simulation_gas_limit =", "simulation_gas_limit = {{ .WasmConfig.SimulationGasLimit }}", 1)
+	}
+
 	var buffer b.Buffer
+	tmpl := template.New("appConfigFileTemplate")
+	configTemplate, err := tmpl.Parse(OsmosisAppTemplate)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		panic(err)
 	}
 
-	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
-}
-
-func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
-	if err := os.WriteFile(filePath, contents, mode); err != nil {
+	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o644); err != nil {
 		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
 		os.Exit(1)
 	}
