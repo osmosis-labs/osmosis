@@ -1062,7 +1062,7 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 // WriteCustomAppConfigFile first checks the provided config for a special case with the wasm config.
 // This determines what the template should be. Based on this, it writes the new app.toml config file.
 func WriteCustomAppConfigFile(configFilePath string, config CustomAppConfig) {
-	// There is a single wasm config that requres special logic to handle
+	// There is a single wasm config that requires special logic to handle
 	// For some reason, they base a value on whether a line is commented out or not...
 
 	// Check if the simulation_gas_limit line should be commented out (it is either nil or 0)
