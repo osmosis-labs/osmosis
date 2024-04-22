@@ -342,8 +342,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	SetCustomEnvVariablesFromClientToml(initClientCtx)
 	humanReadableDenomsInput, humanReadableDenomsOutput := GetHumanReadableDenomEnvVariables()
 
-	var customAppConfigExt CustomAppConfig
-
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
@@ -378,7 +376,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 			customAppTemplate, customAppConfig := initAppConfig()
-			customAppConfigExt = customAppConfig
 
 			// If enabled, CLI input will be parsed and human readable denominations will be automatically converted to ibc denoms.
 			if humanReadableDenomsInput {
@@ -450,7 +447,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	genAutoCompleteCmd(rootCmd)
 
-	initRootCmd(rootCmd, encodingConfig, customAppConfigExt)
+	initRootCmd(rootCmd, encodingConfig)
 
 	return rootCmd, encodingConfig
 }
@@ -512,7 +509,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 //
 // Silently handles and skips any error/panic due to write permission issues.
 // No-op otherwise.
-func overwriteAppTomlValues(serverCtx *server.Context, customAppConfig CustomAppConfig) error {
+func overwriteAppTomlValues(serverCtx *server.Context) error {
 	// Get paths to app.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
 
@@ -654,7 +651,7 @@ memory_cache_size = {{ .WasmConfig.MemoryCacheSize }}
 }
 
 // initRootCmd initializes root commands when creating a new root command for simd.
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, customAppConfig CustomAppConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -715,7 +712,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, c
 						return err
 					}
 
-					err = overwriteAppTomlValues(serverCtx, customAppConfig)
+					err = overwriteAppTomlValues(serverCtx)
 					if err != nil {
 						return err
 					}
