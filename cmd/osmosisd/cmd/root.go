@@ -566,7 +566,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// Write the new app.toml file
 			WriteCustomAppConfigFile(appFilePath, customAppConfig)
 		} else {
-			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
+			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + " and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
 	}
 	return nil
