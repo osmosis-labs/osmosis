@@ -3,6 +3,8 @@ package ante_test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	"math/rand"
 	"testing"
 	"time"
@@ -76,10 +78,13 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
 	}
 
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*s.OsmosisApp.TxFeesKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.BankKeeper, nil)
+
 	s.AuthenticatorDecorator = ante.NewAuthenticatorDecorator(
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
+		deductFeeDecorator,
 	)
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 }
@@ -125,6 +130,12 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInStore() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+
+	// Ensure the feepayer has funds
+	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	feePayer := s.TestPrivKeys[0].PubKey().Address()
+	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, feePayer.Bytes(), fees)
+	s.Require().NoError(err)
 
 	// Create a test messages for signing
 	testMsg1 := &banktypes.MsgSend{
@@ -181,6 +192,13 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+
+	// Ensure the feepayers have funds
+	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
+	s.Require().NoError(err)
+	err = testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[1].PubKey().Address().Bytes(), fees)
+	s.Require().NoError(err)
 
 	// This message will have several authenticators for s.TestPrivKeys[0] and one for s.TestPrivKeys[1] at the end
 	testMsg1 := &banktypes.MsgSend{
@@ -302,8 +320,16 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	baseGas := 2891              // base gas consimed before starting to iterate through authenticators
 	approachingGasPerSig := 5429 // Each signature consumes at least this amount (but not much more)
 
+	// Ensure the feepayer has funds
+	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2_500_000)}
+	err = testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
+	s.Require().NoError(err)
+	err = testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[1].PubKey().Address().Bytes(), fees)
+	s.Require().NoError(err)
+
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
+
 			tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 				testMsg1,
 			}, feeCoins, 300000, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{

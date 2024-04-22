@@ -560,3 +560,44 @@ func (s *AuthenticatorSuite) TestAuthenticatorAddRemove() {
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, allowRemoveId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 }
+
+func (s *AuthenticatorSuite) TestAnteWriting() {
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      coins,
+	}
+
+	val := s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
+	fmt.Println(val, "should be 0")
+
+	// Send msg from accounts default privkey
+	_, err := s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the first private key")
+
+	val = s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
+	fmt.Println(val, "should be 0")
+
+	// Change account's authenticator
+	_, err = s.app.SmartAccountKeeper.AddAuthenticator(
+		s.chainA.GetContext(),
+		s.Account.GetAddress(),
+		"SignatureVerificationAuthenticator",
+		s.PrivKeys[1].PubKey().Bytes(),
+	)
+	s.Require().NoError(err, "Failed to add authenticator")
+	// Submit a bank send tx using the second private key
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1}, sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the second private key")
+
+	val = s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
+	fmt.Println(val, "should be 1")
+
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg)
+	s.Require().Error(err, "Sending from the original PrivKey failed. This should succeed")
+
+	val = s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
+	fmt.Println(val, "should still be 1")
+
+}

@@ -3,6 +3,7 @@ package ante
 import (
 	"bytes"
 	"fmt"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	"strconv"
 	"time"
 
@@ -24,6 +25,7 @@ type AuthenticatorDecorator struct {
 	smartAccountKeeper *smartaccountkeeper.Keeper
 	accountKeeper      authante.AccountKeeper
 	sigModeHandler     authsigning.SignModeHandler
+	deductFeeDecorator txfeeskeeper.DeductFeeDecorator
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
@@ -31,12 +33,22 @@ func NewAuthenticatorDecorator(
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
+	deductFeeDecorator txfeeskeeper.DeductFeeDecorator,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		smartAccountKeeper: smartAccountKeeper,
 		accountKeeper:      accountKeeper,
 		sigModeHandler:     sigModeHandler,
+		deductFeeDecorator: deductFeeDecorator,
 	}
+}
+
+func noop(
+	ctx sdk.Context,
+	tx sdk.Tx,
+	simulate bool,
+) (newCtx sdk.Context, err error) {
+	return sdk.Context{}, nil
 }
 
 // AnteHandle is the authenticator ante handler responsible for processing authentication
@@ -100,7 +112,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// The fee payer is the first signer of the transaction. This should have been enforced by the
 	// LimitFeePayerDecorator
-	feePayer := feeTx.FeePayer()
+	feePayer := msgs[0].GetSigners()[0]
 	feeGranter := feeTx.FeeGranter()
 	fee := feeTx.GetFee()
 
@@ -172,7 +184,16 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			if account.Equals(feePayer) {
 				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
-				// Reset this for both contexts
+				// Once the fee payer is authenticated, we can deduct the fee.
+				// This change will persist regardless of weather the rest of messages pass authentication
+				// or not
+				_, err := ad.deductFeeDecorator.AnteHandle(cacheCtx, tx, simulate, noop)
+				if err != nil {
+					return sdk.Context{}, err
+				}
+				ctx.MultiStore().(sdk.CacheMultiStore).Write()
+
+				// Reset the has meter for both contexts
 				cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
 				ctx = ctx.WithGasMeter(originalGasMeter)
 			}

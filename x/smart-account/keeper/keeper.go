@@ -249,3 +249,26 @@ func (k Keeper) SetActiveState(ctx sdk.Context, active bool) {
 	params.IsSmartAccountActive = active
 	k.SetParams(ctx, params)
 }
+
+func (k Keeper) ExperimentIncrement(
+	ctx sdk.Context,
+) {
+	bz := ctx.KVStore(k.storeKey).Get([]byte("experiment"))
+	// parse as an int
+	var i int
+	if bz != nil {
+		i, _ = strconv.Atoi(string(bz))
+	}
+	i++
+	ctx.KVStore(k.storeKey).Set([]byte("experiment"), []byte(strconv.Itoa(i)))
+}
+
+func (k Keeper) ExperimentGet(ctx sdk.Context) int {
+	bz := ctx.KVStore(k.storeKey).Get([]byte("experiment"))
+	// parse as an int
+	var i int
+	if bz != nil {
+		i, _ = strconv.Atoi(string(bz))
+	}
+	return i
+}
