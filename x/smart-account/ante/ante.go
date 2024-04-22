@@ -3,9 +3,10 @@ package ante
 import (
 	"bytes"
 	"fmt"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	"strconv"
 	"time"
+
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -201,7 +202,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			// Append the track closure to be called after every message is authenticated
 			tracks = append(tracks, func() error {
 				err := a11r.Track(cacheCtx, authenticationRequest)
-
 				if err != nil {
 					// track should not fail in normal circumstances, since it is intended to update track state before execution.
 					// If it does fail, we log the error.
