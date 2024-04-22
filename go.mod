@@ -385,7 +385,7 @@ replace (
 
 	// Using branch osmo-v24/v0.37.4
 	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v24-osmo-2
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2.0.20240422220226-02192a8bccbf
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2.0.20240422223139-68b56df3df6a
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
