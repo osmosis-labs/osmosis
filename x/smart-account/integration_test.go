@@ -561,43 +561,142 @@ func (s *AuthenticatorSuite) TestAuthenticatorAddRemove() {
 	s.Require().NoError(err, "Failed to remove authenticator")
 }
 
-func (s *AuthenticatorSuite) TestAnteWriting() {
-	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
-	sendMsg := &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		Amount:      coins,
+func (s *AuthenticatorSuite) TestFeeDeduction() {
+	address1 := sdk.AccAddress(s.PrivKeys[0].PubKey().Address())
+	address2 := sdk.AccAddress(s.PrivKeys[1].PubKey().Address())
+	s.CreateAccount(s.PrivKeys[1], 500_000)
+
+	alwaysAuth := testutils.TestingAuthenticator{Approve: testutils.Always}
+	neverAuth := testutils.TestingAuthenticator{Approve: testutils.Never}
+
+	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysAuth)
+	s.app.AuthenticatorManager.RegisterAuthenticator(neverAuth)
+
+	payerYes, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), address1, alwaysAuth.Type(), []byte{})
+	s.Require().NoError(err)
+	payerNo, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), address1, neverAuth.Type(), []byte{})
+	s.Require().NoError(err)
+	otherYes, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), address2, alwaysAuth.Type(), []byte{})
+	s.Require().NoError(err)
+	otherNo, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), address2, neverAuth.Type(), []byte{})
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name                   string
+		signers                []cryptotypes.PrivKey
+		messages               []sdk.Msg
+		selectedAuthenticators []uint64
+		expectedError          bool
+		expectedErrorMsg       string
+	}{
+
+		{
+			name:                   "single message, authenticated, fee deducted + tx succeeded",
+			signers:                []cryptotypes.PrivKey{s.PrivKeys[0]},
+			selectedAuthenticators: []uint64{payerYes},
+			messages: []sdk.Msg{
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address1),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address1),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+				},
+			},
+			expectedError: false,
+		},
+
+		{
+			name:                   "single message, not authenticated, fee not deducted + tx failed",
+			signers:                []cryptotypes.PrivKey{s.PrivKeys[0]},
+			selectedAuthenticators: []uint64{payerNo},
+			messages: []sdk.Msg{
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address1),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address1),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+				},
+			},
+			expectedError:    true,
+			expectedErrorMsg: "unauthorized",
+		},
+
+		{
+			name:                   "multiple messages, all authenticated, fee deducted + tx succeeded",
+			signers:                []cryptotypes.PrivKey{s.PrivKeys[0], s.PrivKeys[1]},
+			selectedAuthenticators: []uint64{payerYes, otherYes},
+			messages: []sdk.Msg{
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address1),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address1),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+				},
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address2),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address2),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+				},
+			},
+			expectedError: false,
+		},
+
+		{
+			name:                   "multiple messages, fee payer authenticated but other not, fee deducted + tx failed",
+			signers:                []cryptotypes.PrivKey{s.PrivKeys[0], s.PrivKeys[1]},
+			selectedAuthenticators: []uint64{payerYes, otherNo},
+			messages: []sdk.Msg{
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address1),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address1),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+				},
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address2),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address2),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+				},
+			},
+			expectedError:    true,
+			expectedErrorMsg: "unauthorized",
+		},
+
+		{
+			name:                   "multiple messages, fee payer not authenticated, fee not deducted + tx failed",
+			signers:                []cryptotypes.PrivKey{s.PrivKeys[0], s.PrivKeys[1]},
+			selectedAuthenticators: []uint64{payerNo, otherNo},
+			messages: []sdk.Msg{
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address1),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address1),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+				},
+				&banktypes.MsgSend{
+					FromAddress: sdk.MustBech32ifyAddressBytes("osmo", address2),
+					ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", address2),
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+				},
+			},
+			expectedError:    true,
+			expectedErrorMsg: "unauthorized",
+		},
 	}
 
-	val := s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
-	fmt.Println(val, "should be 0")
-
-	// Send msg from accounts default privkey
-	_, err := s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
-	s.Require().NoError(err, "Failed to send bank tx using the first private key")
-
-	val = s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
-	fmt.Println(val, "should be 0")
-
-	// Change account's authenticator
-	_, err = s.app.SmartAccountKeeper.AddAuthenticator(
-		s.chainA.GetContext(),
-		s.Account.GetAddress(),
-		"SignatureVerificationAuthenticator",
-		s.PrivKeys[1].PubKey().Bytes(),
-	)
-	s.Require().NoError(err, "Failed to add authenticator")
-	// Submit a bank send tx using the second private key
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1}, sendMsg)
-	s.Require().NoError(err, "Failed to send bank tx using the second private key")
-
-	val = s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
-	fmt.Println(val, "should be 1")
-
-	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg)
-	s.Require().Error(err, "Sending from the original PrivKey failed. This should succeed")
-
-	val = s.app.SmartAccountKeeper.ExperimentGet(s.chainA.GetContext())
-	fmt.Println(val, "should still be 1")
-
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			initialBalance := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), sdk.AccAddress(tc.signers[0].PubKey().Address()))
+			_, err := s.chainA.SendMsgsFromPrivKeysWithAuthenticator(tc.signers, tc.signers, tc.selectedAuthenticators, tc.messages...)
+			if tc.expectedError {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedErrorMsg)
+			} else {
+				s.Require().NoError(err)
+			}
+			finalBalance := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), sdk.AccAddress(tc.signers[0].PubKey().Address()))
+			fee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000)
+			expectedBalance := initialBalance.Sub(fee)
+			if tc.selectedAuthenticators[0] == payerYes {
+				s.Require().True(expectedBalance.IsEqual(finalBalance), "Fee should be deducted")
+			} else {
+				s.Require().True(initialBalance.IsEqual(finalBalance), "Fee should not be deducted")
+			}
+		})
+	}
 }

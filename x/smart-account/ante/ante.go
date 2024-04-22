@@ -188,7 +188,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				// Once the fee payer is authenticated, we can deduct the fee.
 				// This change will persist regardless of weather the rest of messages pass authentication
 				// or not
-				_, err := ad.deductFeeDecorator.AnteHandle(cacheCtx, tx, simulate, noop)
+				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, noop)
 				if err != nil {
 					return sdk.Context{}, err
 				}

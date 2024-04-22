@@ -104,6 +104,7 @@ func GenerateAuthenticationRequest(
 		accNum = baseAccount.GetAccountNumber()
 	}
 	var sequence uint64
+	// TODO: let's just error if baseaccount is nil
 	if baseAccount != nil {
 		sequence = baseAccount.GetSequence()
 	}
@@ -156,11 +157,12 @@ func GenerateAuthenticationRequest(
 	var signatures [][]byte
 	var msgSignature []byte
 	for i, signature := range txSignatures {
-		err := replayProtection(&txData, &signature)
-		if err != nil {
-			return AuthenticationRequest{}, err
+		if account.Equals(txSigners[i]) {
+			err := replayProtection(&txData, &signature)
+			if err != nil {
+				return AuthenticationRequest{}, err
+			}
 		}
-
 		single, ok := signature.Data.(*signing.SingleSignatureData)
 		if !ok {
 			return AuthenticationRequest{},
