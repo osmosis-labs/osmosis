@@ -115,12 +115,9 @@ var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
 
 type CustomAppConfig struct {
 	serverconfig.Config
-
-	OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
-
-	SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
-
-	WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
+	OsmosisMempoolConfig     OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
+	SidecarQueryServerConfig sqs.Config           `mapstructure:"osmosis-sqs"`
+	WasmConfig               wasmtypes.WasmConfig `mapstructure:"wasm"`
 }
 
 var OsmosisAppTemplate string
@@ -478,6 +475,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		// config.toml exists
 
 		// Set new values in viper
+		//
+		// Set timeout_commit to 2s
 		serverCtx.Viper.Set(consensusConfigName+"."+timeoutCommitConfigName, recommendedNewTimeoutCommitValue)
 
 		defer func() {
@@ -526,20 +525,29 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		// app.toml exists
 
 		// Set new values in viper
+		//
+		// Set max-gas-wanted-per-tx to 60000000
 		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
+		// Set arbitrage-min-gas-fee to 0.1
 		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
 
-		var config serverconfig.Config
-		if err := serverCtx.Viper.Unmarshal(&config); err != nil {
+		// Unmarshal viper baseConfig to get the appConfig struct
+		// This must be done separately from the other appConfig values
+		// because the base configs aren't prepended with any specific key
+		var appConfig serverconfig.Config
+		if err := serverCtx.Viper.Unmarshal(&appConfig); err != nil {
+			return fmt.Errorf("failed to unmarshal viper appConfig: %w", err)
+		}
+
+		// Unmarshal the remaining viper app configs to get the remainingAppConfigs struct
+		// This houses the osmosis mempool, sidecar query server, and wasm configs
+		var remainingAppConfigs CustomAppConfig
+		if err := serverCtx.Viper.Unmarshal(&remainingAppConfigs); err != nil {
 			return fmt.Errorf("failed to unmarshal viper config: %w", err)
 		}
 
-		var customAppConfigNew CustomAppConfig
-		if err := serverCtx.Viper.Unmarshal(&customAppConfigNew); err != nil {
-			return fmt.Errorf("failed to unmarshal viper config: %w", err)
-		}
-
-		test := CustomAppConfig{Config: config, OsmosisMempoolConfig: customAppConfigNew.OsmosisMempoolConfig, SidecarQueryServerConfig: customAppConfigNew.SidecarQueryServerConfig, WasmConfig: customAppConfigNew.WasmConfig}
+		// Create a custom app config struct that brings together the appConfig and the remainingAppConfigs
+		customAppConfig := CustomAppConfig{Config: appConfig, OsmosisMempoolConfig: remainingAppConfigs.OsmosisMempoolConfig, SidecarQueryServerConfig: remainingAppConfigs.SidecarQueryServerConfig, WasmConfig: remainingAppConfigs.WasmConfig}
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -552,7 +560,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
-			WriteConfigFile(appFilePath, test)
+			WriteConfigFile(appFilePath, customAppConfig)
 		} else {
 			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
@@ -1050,12 +1058,14 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
 func WriteConfigFile(configFilePath string, config CustomAppConfig) {
-	// Check if the simulation_gas_limit line should be commented out
+	// There is a single wasm config that requres special logic to handle
+	// For some reason, they base a value on whether a line is commented out or not...
+
+	// Check if the simulation_gas_limit line should be commented out (it is either nil or 0)
 	isCommentedOut := config.WasmConfig.SimulationGasLimit == nil || *config.WasmConfig.SimulationGasLimit == 0
 
-	// Choose the appropriate template based on whether the line is commented out
+	// Modify the template by uncommenting the line if a value is provided for simulation_gas_limit
 	if !isCommentedOut {
-		// Find the simulation_gas_limit line and prepend it with a #
 		OsmosisAppTemplate = strings.Replace(OsmosisAppTemplate, "# simulation_gas_limit =", "simulation_gas_limit = {{ .WasmConfig.SimulationGasLimit }}", 1)
 	}
 
