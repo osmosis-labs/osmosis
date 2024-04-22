@@ -91,7 +91,7 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		TimeoutHeight:      timeoutHeight,
 	}
 
-	err := CheckAndUpdateRateLimits(ctx, i.ContractKeeper, "send_packet", contract, fullPacket)
+	err := CheckAndUpdateRateLimits(ctx, i.ContractKeeper, msgSend, contract, fullPacket)
 	if err != nil {
 		return 0, errorsmod.Wrap(err, "rate limit SendPacket failed to authorize transfer")
 	}
