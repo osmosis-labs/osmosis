@@ -490,6 +490,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
+
+			// Write the new config.toml file
 			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
 		} else {
 			fmt.Println("config.toml is not writable. Cannot apply update. Please consder manually changing timeout_commit to " + recommendedNewTimeoutCommitValue)
@@ -560,6 +562,8 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
+
+			// Write the new app.toml file
 			WriteConfigFile(appFilePath, customAppConfig)
 		} else {
 			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + "and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
@@ -597,9 +601,11 @@ func initAppConfig() (string, CustomAppConfig) {
 
 	memCfg := DefaultOsmosisMempoolConfig
 
-	sqsConfig := sqs.DefaultConfig
+	sqsCfg := sqs.DefaultConfig
 
 	wasmCfg := wasmtypes.DefaultWasmConfig()
+
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, WasmConfig: wasmCfg}
 
 	OsmosisAppTemplate = serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -652,8 +658,6 @@ memory_cache_size = {{ .WasmConfig.MemoryCacheSize }}
 # When not set the consensus max block gas is used instead
 # simulation_gas_limit =
 `
-
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, WasmConfig: wasmCfg}
 
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
