@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet
+* [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 
 ## v24.0.1
 
