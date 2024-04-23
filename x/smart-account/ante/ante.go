@@ -44,14 +44,6 @@ func NewAuthenticatorDecorator(
 	}
 }
 
-func noop(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	simulate bool,
-) (newCtx sdk.Context, err error) {
-	return sdk.Context{}, nil
-}
-
 // AnteHandle is the authenticator ante handler responsible for processing authentication
 // logic before transaction execution.
 func (ad AuthenticatorDecorator) AnteHandle(
@@ -186,7 +178,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				// Once the fee payer is authenticated, we can deduct the fee.
 				// This change will persist regardless of weather the rest of messages pass authentication
 				// or not
-				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, noop)
+				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, sdk.ChainAnteDecorators(sdk.Terminator{}))
 				if err != nil {
 					return sdk.Context{}, err
 				}
