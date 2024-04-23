@@ -971,7 +971,7 @@ func (s *KeeperTestSuite) TestMigrateSpreadFactorAccumulatorToScalingFactor() {
 	s.Require().NoError(err)
 	s.Require().Equal(nonMigratedPoolBeforeUpgradeSpreadFactor.String(), nonMigratedPoolAfterUpgradeSpreadFactor.String())
 
-	// Migrated pool: ensure that the claimable incentives are the same before and after migration
+	// Migrated pool: ensure that the claimable spread rewards are the same before and after migration
 	migratedPoolAfterUpgradeSpreadFactor, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, poolMigratedPositionID)
 	s.Require().NoError(err)
 	s.Require().Equal(migratedPoolBeforeUpgradeSpreadFactor.String(), migratedPoolAfterUpgradeSpreadFactor.String())
