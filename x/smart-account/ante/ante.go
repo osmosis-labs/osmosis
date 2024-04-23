@@ -188,7 +188,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				if !ok {
 					// This should never happen
 					return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrPanic, "expected CacheMultiStore")
-
 				}
 				cacheMultiStore.Write()
 
