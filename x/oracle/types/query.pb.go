@@ -31,7 +31,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryExchangeRateRequest is the request type for the Query/ExchangeRate RPC method.
+// QueryExchangeRateRequest is the request type for the Query/ExchangeRate RPC
+// method.
 type QueryExchangeRateRequest struct {
 	// denom defines the denomination to query for.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
@@ -73,7 +74,8 @@ var xxx_messageInfo_QueryExchangeRateRequest proto.InternalMessageInfo
 // QueryExchangeRateResponse is response type for the
 // Query/ExchangeRate RPC method.
 type QueryExchangeRateResponse struct {
-	// exchange_rate defines the exchange rate of Luna denominated in various Terra
+	// exchange_rate defines the exchange rate of Luna denominated in various
+	// Terra
 	ExchangeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=exchange_rate,json=exchangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"exchange_rate"`
 }
 
@@ -110,7 +112,8 @@ func (m *QueryExchangeRateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryExchangeRateResponse proto.InternalMessageInfo
 
-// QueryExchangeRatesRequest is the request type for the Query/ExchangeRates RPC method.
+// QueryExchangeRatesRequest is the request type for the Query/ExchangeRates RPC
+// method.
 type QueryExchangeRatesRequest struct {
 }
 
@@ -150,7 +153,8 @@ var xxx_messageInfo_QueryExchangeRatesRequest proto.InternalMessageInfo
 // QueryExchangeRatesResponse is response type for the
 // Query/ExchangeRates RPC method.
 type QueryExchangeRatesResponse struct {
-	// exchange_rates defines a list of the exchange rate for all whitelisted denoms.
+	// exchange_rates defines a list of the exchange rate for all whitelisted
+	// denoms.
 	ExchangeRates github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=exchange_rates,json=exchangeRates,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"exchange_rates"`
 }
 
@@ -273,7 +277,8 @@ func (m *QueryTobinTaxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTobinTaxResponse proto.InternalMessageInfo
 
-// QueryTobinTaxesRequest is the request type for the Query/TobinTaxes RPC method.
+// QueryTobinTaxesRequest is the request type for the Query/TobinTaxes RPC
+// method.
 type QueryTobinTaxesRequest struct {
 }
 
@@ -397,7 +402,8 @@ var xxx_messageInfo_QueryActivesRequest proto.InternalMessageInfo
 // QueryActivesResponse is response type for the
 // Query/Actives RPC method.
 type QueryActivesResponse struct {
-	// actives defines a list of the denomination which oracle prices aggreed upon.
+	// actives defines a list of the denomination which oracle prices aggreed
+	// upon.
 	Actives []string `protobuf:"bytes,1,rep,name=actives,proto3" json:"actives,omitempty"`
 }
 
@@ -441,7 +447,8 @@ func (m *QueryActivesResponse) GetActives() []string {
 	return nil
 }
 
-// QueryVoteTargetsRequest is the request type for the Query/VoteTargets RPC method.
+// QueryVoteTargetsRequest is the request type for the Query/VoteTargets RPC
+// method.
 type QueryVoteTargetsRequest struct {
 }
 
@@ -526,7 +533,8 @@ func (m *QueryVoteTargetsResponse) GetVoteTargets() []string {
 	return nil
 }
 
-// QueryFeederDelegationRequest is the request type for the Query/FeederDelegation RPC method.
+// QueryFeederDelegationRequest is the request type for the
+// Query/FeederDelegation RPC method.
 type QueryFeederDelegationRequest struct {
 	// validator defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
@@ -612,7 +620,8 @@ func (m *QueryFeederDelegationResponse) GetFeederAddr() string {
 	return ""
 }
 
-// QueryMissCounterRequest is the request type for the Query/MissCounter RPC method.
+// QueryMissCounterRequest is the request type for the Query/MissCounter RPC
+// method.
 type QueryMissCounterRequest struct {
 	// validator defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
@@ -698,7 +707,8 @@ func (m *QueryMissCounterResponse) GetMissCounter() uint64 {
 	return 0
 }
 
-// QueryAggregatePrevoteRequest is the request type for the Query/AggregatePrevote RPC method.
+// QueryAggregatePrevoteRequest is the request type for the
+// Query/AggregatePrevote RPC method.
 type QueryAggregatePrevoteRequest struct {
 	// validator defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
@@ -740,7 +750,8 @@ var xxx_messageInfo_QueryAggregatePrevoteRequest proto.InternalMessageInfo
 // QueryAggregatePrevoteResponse is response type for the
 // Query/AggregatePrevote RPC method.
 type QueryAggregatePrevoteResponse struct {
-	// aggregate_prevote defines oracle aggregate prevote submitted by a validator in the current vote period
+	// aggregate_prevote defines oracle aggregate prevote submitted by a validator
+	// in the current vote period
 	AggregatePrevote AggregateExchangeRatePrevote `protobuf:"bytes,1,opt,name=aggregate_prevote,json=aggregatePrevote,proto3" json:"aggregate_prevote"`
 }
 
@@ -784,7 +795,8 @@ func (m *QueryAggregatePrevoteResponse) GetAggregatePrevote() AggregateExchangeR
 	return AggregateExchangeRatePrevote{}
 }
 
-// QueryAggregatePrevotesRequest is the request type for the Query/AggregatePrevotes RPC method.
+// QueryAggregatePrevotesRequest is the request type for the
+// Query/AggregatePrevotes RPC method.
 type QueryAggregatePrevotesRequest struct {
 }
 
@@ -824,7 +836,8 @@ var xxx_messageInfo_QueryAggregatePrevotesRequest proto.InternalMessageInfo
 // QueryAggregatePrevotesResponse is response type for the
 // Query/AggregatePrevotes RPC method.
 type QueryAggregatePrevotesResponse struct {
-	// aggregate_prevotes defines all oracle aggregate prevotes submitted in the current vote period
+	// aggregate_prevotes defines all oracle aggregate prevotes submitted in the
+	// current vote period
 	AggregatePrevotes []AggregateExchangeRatePrevote `protobuf:"bytes,1,rep,name=aggregate_prevotes,json=aggregatePrevotes,proto3" json:"aggregate_prevotes"`
 }
 
@@ -868,7 +881,8 @@ func (m *QueryAggregatePrevotesResponse) GetAggregatePrevotes() []AggregateExcha
 	return nil
 }
 
-// QueryAggregateVoteRequest is the request type for the Query/AggregateVote RPC method.
+// QueryAggregateVoteRequest is the request type for the Query/AggregateVote RPC
+// method.
 type QueryAggregateVoteRequest struct {
 	// validator defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
@@ -910,7 +924,8 @@ var xxx_messageInfo_QueryAggregateVoteRequest proto.InternalMessageInfo
 // QueryAggregateVoteResponse is response type for the
 // Query/AggregateVote RPC method.
 type QueryAggregateVoteResponse struct {
-	// aggregate_vote defines oracle aggregate vote submitted by a validator in the current vote period
+	// aggregate_vote defines oracle aggregate vote submitted by a validator in
+	// the current vote period
 	AggregateVote AggregateExchangeRateVote `protobuf:"bytes,1,opt,name=aggregate_vote,json=aggregateVote,proto3" json:"aggregate_vote"`
 }
 
@@ -954,7 +969,8 @@ func (m *QueryAggregateVoteResponse) GetAggregateVote() AggregateExchangeRateVot
 	return AggregateExchangeRateVote{}
 }
 
-// QueryAggregateVotesRequest is the request type for the Query/AggregateVotes RPC method.
+// QueryAggregateVotesRequest is the request type for the Query/AggregateVotes
+// RPC method.
 type QueryAggregateVotesRequest struct {
 }
 
@@ -994,7 +1010,8 @@ var xxx_messageInfo_QueryAggregateVotesRequest proto.InternalMessageInfo
 // QueryAggregateVotesResponse is response type for the
 // Query/AggregateVotes RPC method.
 type QueryAggregateVotesResponse struct {
-	// aggregate_votes defines all oracle aggregate votes submitted in the current vote period
+	// aggregate_votes defines all oracle aggregate votes submitted in the current
+	// vote period
 	AggregateVotes []AggregateExchangeRateVote `protobuf:"bytes,1,rep,name=aggregate_votes,json=aggregateVotes,proto3" json:"aggregate_votes"`
 }
 

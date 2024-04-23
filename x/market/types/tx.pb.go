@@ -122,7 +122,8 @@ func (m *MsgSwapResponse) GetSwapFee() types.Coin {
 	return types.Coin{}
 }
 
-// MsgSwapSend represents a message to swap coin and send all result coin to recipient
+// MsgSwapSend represents a message to swap coin and send all result coin to
+// recipient
 type MsgSwapSend struct {
 	FromAddress string     `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
 	ToAddress   string     `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
@@ -276,8 +277,8 @@ type MsgClient interface {
 	// Swap defines a method for swapping coin from one denom to another
 	// denom.
 	Swap(ctx context.Context, in *MsgSwap, opts ...grpc.CallOption) (*MsgSwapResponse, error)
-	// SwapSend defines a method for swapping and sending coin from a account to other
-	// account.
+	// SwapSend defines a method for swapping and sending coin from a account to
+	// other account.
 	SwapSend(ctx context.Context, in *MsgSwapSend, opts ...grpc.CallOption) (*MsgSwapSendResponse, error)
 }
 
@@ -312,8 +313,8 @@ type MsgServer interface {
 	// Swap defines a method for swapping coin from one denom to another
 	// denom.
 	Swap(context.Context, *MsgSwap) (*MsgSwapResponse, error)
-	// SwapSend defines a method for swapping and sending coin from a account to other
-	// account.
+	// SwapSend defines a method for swapping and sending coin from a account to
+	// other account.
 	SwapSend(context.Context, *MsgSwapSend) (*MsgSwapSendResponse, error)
 }
 

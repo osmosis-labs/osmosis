@@ -16,7 +16,8 @@ service Query {
   }
 
   // OsmosisPoolDelta returns osmosis_pool_delta amount.
-  rpc OsmosisPoolDelta(QueryOsmosisPoolDeltaRequest) returns (QueryOsmosisPoolDeltaResponse) {
+  rpc OsmosisPoolDelta(QueryOsmosisPoolDeltaRequest)
+      returns (QueryOsmosisPoolDeltaResponse) {
     option (google.api.http).get = "/osmosis/market/v1beta1/osmosis_pool_delta";
   }
 
@@ -28,7 +29,7 @@ service Query {
 
 // QuerySwapRequest is the request type for the Query/Swap RPC method.
 message QuerySwapRequest {
-  option (gogoproto.equal)           = false;
+  option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
   // offer_coin defines the coin being offered (i.e. 1000000uluna)
@@ -40,17 +41,22 @@ message QuerySwapRequest {
 // QuerySwapResponse is the response type for the Query/Swap RPC method.
 message QuerySwapResponse {
   // return_coin defines the coin returned as a result of the swap simulation.
-  cosmos.base.v1beta1.Coin return_coin = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin return_coin = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryOsmosisPoolDeltaRequest is the request type for the Query/OsmosisPoolDelta RPC method.
+// QueryOsmosisPoolDeltaRequest is the request type for the
+// Query/OsmosisPoolDelta RPC method.
 message QueryOsmosisPoolDeltaRequest {}
 
-// QueryOsmosisPoolDeltaResponse is the response type for the Query/OsmosisPoolDelta RPC method.
+// QueryOsmosisPoolDeltaResponse is the response type for the
+// Query/OsmosisPoolDelta RPC method.
 message QueryOsmosisPoolDeltaResponse {
-  // osmosis_pool_delta defines the gap between the OsmosisPool and the OsmosisBasePool
-  bytes osmosis_pool_delta = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // osmosis_pool_delta defines the gap between the OsmosisPool and the
+  // OsmosisBasePool
+  bytes osmosis_pool_delta = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -59,5 +65,5 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }

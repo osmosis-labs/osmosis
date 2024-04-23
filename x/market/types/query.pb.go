@@ -118,7 +118,8 @@ func (m *QuerySwapResponse) GetReturnCoin() types.Coin {
 	return types.Coin{}
 }
 
-// QueryOsmosisPoolDeltaRequest is the request type for the Query/OsmosisPoolDelta RPC method.
+// QueryOsmosisPoolDeltaRequest is the request type for the
+// Query/OsmosisPoolDelta RPC method.
 type QueryOsmosisPoolDeltaRequest struct {
 }
 
@@ -155,9 +156,11 @@ func (m *QueryOsmosisPoolDeltaRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryOsmosisPoolDeltaRequest proto.InternalMessageInfo
 
-// QueryOsmosisPoolDeltaResponse is the response type for the Query/OsmosisPoolDelta RPC method.
+// QueryOsmosisPoolDeltaResponse is the response type for the
+// Query/OsmosisPoolDelta RPC method.
 type QueryOsmosisPoolDeltaResponse struct {
-	// osmosis_pool_delta defines the gap between the OsmosisPool and the OsmosisBasePool
+	// osmosis_pool_delta defines the gap between the OsmosisPool and the
+	// OsmosisBasePool
 	OsmosisPoolDelta github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=osmosis_pool_delta,json=osmosisPoolDelta,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"osmosis_pool_delta"`
 }
 
