@@ -3,11 +3,12 @@ package ante_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -329,7 +330,6 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-
 			tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
 				testMsg1,
 			}, feeCoins, 300000, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{
