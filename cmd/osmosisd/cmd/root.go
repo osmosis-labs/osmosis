@@ -96,21 +96,31 @@ type DenomUnitMap struct {
 	Exponent uint64 `json:"exponent"`
 }
 
-const (
+type SectionKeyValue struct {
+	Section string
+	Key     string
+	Value   any
+}
+
+var (
 	// app.toml
-	mempoolConfigName = "osmosis-mempool"
-
-	arbitrageMinGasFeeConfigName          = "arbitrage-min-gas-fee"
-	recommendedNewArbitrageMinGasFeeValue = "0.1"
-
-	maxGasWantedPerTxName                = "max-gas-wanted-per-tx"
-	recommendedNewMaxGasWantedPerTxValue = "60000000"
+	recommendedArbitrageMinGasFee = SectionKeyValue{
+		Section: "osmosis-mempool",
+		Key:     "arbitrage-min-gas-fee",
+		Value:   "0.1",
+	}
+	recommendedMaxGasWantedPerTx = SectionKeyValue{
+		Section: "osmosis-mempool",
+		Key:     "arbitrage-min-gas-fee",
+		Value:   "0.1",
+	}
 
 	// config.toml
-	consensusConfigName = "consensus"
-
-	timeoutCommitConfigName          = "timeout_commit"
-	recommendedNewTimeoutCommitValue = "2s"
+	recommendedTimeoutCommit = SectionKeyValue{
+		Section: "consensus",
+		Key:     "timeout_commit",
+		Value:   "2s",
+	}
 )
 
 var (
@@ -423,12 +433,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-type SectionKeyValue struct {
-	Section string
-	Key     string
-	Value   any
-}
-
 // overwriteConfigTomlValues overwrites config.toml values. Returns error if config.toml does not exist
 //
 // Currently, overwrites:
@@ -456,14 +460,14 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 
 		// Check if each key is already set to the recommended value
 		// If it is, we don't need to overwrite it and can also skip the app.toml overwrite
-		var sectionKeyValues []SectionKeyValue
+		var sectionKeyValuesToWrite []SectionKeyValue
 
 		// Set timeout_commit to 2s
-		currentTimeoutCommit := serverCtx.Viper.Get(consensusConfigName + "." + timeoutCommitConfigName)
-		shoudUpdateCurrentTimeoutCommit := currentTimeoutCommit != recommendedNewTimeoutCommitValue
+		currentTimeoutCommit := serverCtx.Viper.Get(recommendedTimeoutCommit.Section + "." + recommendedTimeoutCommit.Key)
+		shoudUpdateCurrentTimeoutCommit := currentTimeoutCommit != recommendedTimeoutCommit.Value
 		if shoudUpdateCurrentTimeoutCommit {
-			serverCtx.Viper.Set(consensusConfigName+"."+timeoutCommitConfigName, recommendedNewTimeoutCommitValue)
-			sectionKeyValues = append(sectionKeyValues, SectionKeyValue{Section: consensusConfigName, Key: timeoutCommitConfigName, Value: recommendedNewTimeoutCommitValue})
+			serverCtx.Viper.Set(recommendedTimeoutCommit.Section+"."+recommendedTimeoutCommit.Key, recommendedTimeoutCommit.Value)
+			sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, recommendedTimeoutCommit)
 		}
 
 		defer func() {
@@ -479,14 +483,14 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 			// Note that this exits with a non-zero exit code if fails to write the file.
 
 			// Write the new config.toml file
-			if len(sectionKeyValues) > 0 {
-				err := OverwriteWithCustomConfig(configFilePath, sectionKeyValues)
+			if len(sectionKeyValuesToWrite) > 0 {
+				err := OverwriteWithCustomConfig(configFilePath, sectionKeyValuesToWrite)
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			fmt.Println("config.toml is not writable. Cannot apply update. Please consder manually changing timeout_commit to " + recommendedNewTimeoutCommitValue)
+			fmt.Printf("config.toml is not writable. Cannot apply update. Please consider manually changing timeout_commit to %v\n", recommendedTimeoutCommit.Value)
 		}
 	}
 	return nil
@@ -520,22 +524,22 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 
 		// Check if each key is already set to the recommended value
 		// If it is, we don't need to overwrite it and can also skip the app.toml overwrite
-		var sectionKeyValues []SectionKeyValue
+		var sectionKeyValuesToWrite []SectionKeyValue
 
 		// Set max-gas-wanted-per-tx to 60000000
-		currentMaxGasWantedPerTx := serverCtx.Viper.Get(mempoolConfigName + "." + maxGasWantedPerTxName)
-		shoudUpdateMaxGasWantedPerTx := currentMaxGasWantedPerTx != recommendedNewMaxGasWantedPerTxValue
+		currentMaxGasWantedPerTx := serverCtx.Viper.Get(recommendedArbitrageMinGasFee.Section + "." + recommendedArbitrageMinGasFee.Key)
+		shoudUpdateMaxGasWantedPerTx := currentMaxGasWantedPerTx != recommendedArbitrageMinGasFee.Value
 		if shoudUpdateMaxGasWantedPerTx {
-			serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
-			sectionKeyValues = append(sectionKeyValues, SectionKeyValue{Section: mempoolConfigName, Key: maxGasWantedPerTxName, Value: recommendedNewMaxGasWantedPerTxValue})
+			serverCtx.Viper.Set(recommendedArbitrageMinGasFee.Section+"."+recommendedArbitrageMinGasFee.Key, recommendedArbitrageMinGasFee.Value)
+			sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, recommendedArbitrageMinGasFee)
 		}
 
 		// Set arbitrage-min-gas-fee to 0.1
-		currentArbitrageMinGasFee := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
-		shoudUpdateArbitrageMinGasFee := currentArbitrageMinGasFee != recommendedNewArbitrageMinGasFeeValue
+		currentArbitrageMinGasFee := serverCtx.Viper.Get(recommendedMaxGasWantedPerTx.Section + "." + recommendedMaxGasWantedPerTx.Key)
+		shoudUpdateArbitrageMinGasFee := currentArbitrageMinGasFee != recommendedMaxGasWantedPerTx.Value
 		if shoudUpdateArbitrageMinGasFee {
-			serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
-			sectionKeyValues = append(sectionKeyValues, SectionKeyValue{Section: mempoolConfigName, Key: arbitrageMinGasFeeConfigName, Value: recommendedNewArbitrageMinGasFeeValue})
+			serverCtx.Viper.Set(recommendedMaxGasWantedPerTx.Section+"."+recommendedMaxGasWantedPerTx.Key, recommendedMaxGasWantedPerTx.Value)
+			sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, recommendedMaxGasWantedPerTx)
 		}
 
 		// Check if the file is writable
@@ -545,14 +549,14 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// Note that this exits with a non-zero exit code if fails to write the file.
 
 			// Write the new app.toml file
-			if len(sectionKeyValues) > 0 {
-				err := OverwriteWithCustomConfig(appFilePath, sectionKeyValues)
+			if len(sectionKeyValuesToWrite) > 0 {
+				err := OverwriteWithCustomConfig(appFilePath, sectionKeyValuesToWrite)
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			fmt.Println("app.toml is not writable. Cannot apply update. Please consider manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + " and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
+			fmt.Printf("app.toml is not writable. Cannot apply update. Please consider manually changing arbitrage-min-gas-fee to %v and max-gas-wanted-per-tx to %v\n", recommendedTimeoutCommit.Value, recommendedMaxGasWantedPerTx.Value)
 		}
 	}
 	return nil
