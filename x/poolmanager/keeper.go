@@ -79,6 +79,10 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	}
 }
 
+func (k *Keeper) ResetCaches() {
+	k.cachedPoolModules = &sync.Map{}
+}
+
 // GetParams returns the total set of poolmanager parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
