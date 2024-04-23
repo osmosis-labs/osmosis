@@ -1050,8 +1050,9 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
 }
 
-// OverwriteWithCustomConfig searches the respective config file for the given section and key and overwrites the value with the given value.
+// OverwriteWithCustomConfig searches the respective config file for the given section and key and overwrites the current value with the given value.
 func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []SectionKeyValue) error {
+	// Open the file for reading and writing
 	file, err := os.OpenFile(configFilePath, os.O_RDWR, 0o644)
 	if err != nil {
 		return err
@@ -1059,12 +1060,15 @@ func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []Section
 	defer file.Close()
 
 	// Create a map from the sectionKeyValues array
+	// This map will be used to quickly look up the new values for each section and key
 	configMap := make(map[string]map[string]string)
 	for _, skv := range sectionKeyValues {
+		// If the section does not exist in the map, create it
 		if _, ok := configMap[skv.Section]; !ok {
 			configMap[skv.Section] = make(map[string]string)
 		}
-		// Check if the value is a string or a number
+		// Add the key and value to the section in the map
+		// If the value is a string, add quotes around it
 		switch v := skv.Value.(type) {
 		case string:
 			configMap[skv.Section][skv.Key] = "\"" + v + "\""
@@ -1073,38 +1077,47 @@ func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []Section
 		}
 	}
 
+	// Read the file line by line
 	var lines []string
 	scanner := bufio.NewScanner(file)
 	currentSection := ""
 	for scanner.Scan() {
 		line := scanner.Text()
+		// If the line is a section header, update the current section
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			currentSection = line[1 : len(line)-1]
 		} else if configMap[currentSection] != nil {
+			// If the line is in a section that needs to be overwritten, check each key
 			for key, value := range configMap[currentSection] {
+				// If the line contains the key, overwrite the line with the new key-value pair
 				if strings.Contains(line, key) {
 					line = key + " = " + value
 					break
 				}
 			}
 		}
+		// Add the line to the lines slice, whether it was overwritten or not
 		lines = append(lines, line)
 	}
 
+	// Check for errors from the scanner
 	if err := scanner.Err(); err != nil {
 		return err
 	}
 
+	// Seek to the beginning of the file
 	_, err = file.Seek(0, 0)
 	if err != nil {
 		return err
 	}
 
+	// Truncate the file to remove the old content
 	err = file.Truncate(0)
 	if err != nil {
 		return err
 	}
 
+	// Write the new lines to the file
 	for _, line := range lines {
 		if _, err := file.WriteString(line + "\n"); err != nil {
 			return err
