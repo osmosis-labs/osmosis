@@ -111,8 +111,8 @@ var (
 		},
 		{
 			Section: "osmosis-mempool",
-			Key:     "arbitrage-min-gas-fee",
-			Value:   "0.1",
+			Key:     "max-gas-wanted-per-tx",
+			Value:   "60000000",
 		}}
 
 	recommendedConfigTomlValues = []SectionKeyValue{
