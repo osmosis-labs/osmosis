@@ -467,6 +467,9 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		for _, rec := range recommendedConfigTomlValues {
 			currentValue := serverCtx.Viper.Get(rec.Section + "." + rec.Key)
 			if currentValue != rec.Value {
+				// Current value in config.toml is not the recommended value
+				// Set the value in viper to the recommended value
+				// and add it to the list of key values we will overwrite in the config.toml
 				serverCtx.Viper.Set(rec.Section+"."+rec.Key, rec.Value)
 				sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, rec)
 			}
@@ -531,6 +534,9 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		for _, rec := range recommendedAppTomlValues {
 			currentValue := serverCtx.Viper.Get(rec.Section + "." + rec.Key)
 			if currentValue != rec.Value {
+				// Current value in app.toml is not the recommended value
+				// Set the value in viper to the recommended value
+				// and add it to the list of key values we will overwrite in the app.toml
 				serverCtx.Viper.Set(rec.Section+"."+rec.Key, rec.Value)
 				sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, rec)
 			}
