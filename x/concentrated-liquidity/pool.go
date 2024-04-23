@@ -521,7 +521,7 @@ func (k Keeper) MigrateIncentivesAccumulatorToScalingFactor(ctx sdk.Context, poo
 }
 
 // MigrateSpreadFactorAccumulatorToScalingFactor multiplies the value of the spread reward accumulator, respective position accumulators
-// and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
+// and tick spread reward trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
 func (k Keeper) MigrateSpreadFactorAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
 	ctx.Logger().Info("migration start", "pool_id", poolId)
 	// Get the spread reward accumulator for the pool.
