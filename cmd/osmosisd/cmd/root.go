@@ -96,27 +96,6 @@ type DenomUnitMap struct {
 	Exponent uint64 `json:"exponent"`
 }
 
-type OsmosisMempoolConfig struct {
-	MaxGasWantedPerTx         string `mapstructure:"max-gas-wanted-per-tx"`
-	MinGasPriceForArbitrageTx string `mapstructure:"arbitrage-min-gas-fee"`
-	MinGasPriceForHighGasTx   string `mapstructure:"min-gas-price-for-high-gas-tx"`
-	Mempool1559Enabled        string `mapstructure:"adaptive-fee-enabled"`
-}
-
-var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
-	MaxGasWantedPerTx:         "60000000",
-	MinGasPriceForArbitrageTx: ".1",
-	MinGasPriceForHighGasTx:   ".0025",
-	Mempool1559Enabled:        "true",
-}
-
-type CustomAppConfig struct {
-	serverconfig.Config
-	OsmosisMempoolConfig     OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
-	SidecarQueryServerConfig sqs.Config           `mapstructure:"osmosis-sqs"`
-	WasmConfig               wasmtypes.WasmConfig `mapstructure:"wasm"`
-}
-
 const (
 	// app.toml
 	mempoolConfigName = "osmosis-mempool"
@@ -596,6 +575,26 @@ func getHomeEnvironment() string {
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
+	type OsmosisMempoolConfig struct {
+		MaxGasWantedPerTx         string `mapstructure:"max-gas-wanted-per-tx"`
+		MinGasPriceForArbitrageTx string `mapstructure:"arbitrage-min-gas-fee"`
+		MinGasPriceForHighGasTx   string `mapstructure:"min-gas-price-for-high-gas-tx"`
+		Mempool1559Enabled        string `mapstructure:"adaptive-fee-enabled"`
+	}
+
+	type CustomAppConfig struct {
+		serverconfig.Config
+		OsmosisMempoolConfig     OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
+		SidecarQueryServerConfig sqs.Config           `mapstructure:"osmosis-sqs"`
+		WasmConfig               wasmtypes.WasmConfig `mapstructure:"wasm"`
+	}
+
+	var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
+		MaxGasWantedPerTx:         "60000000",
+		MinGasPriceForArbitrageTx: ".1",
+		MinGasPriceForHighGasTx:   ".0025",
+		Mempool1559Enabled:        "true",
+	}
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
