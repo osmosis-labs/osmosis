@@ -156,11 +156,12 @@ func GenerateAuthenticationRequest(
 	var signatures [][]byte
 	var msgSignature []byte
 	for i, signature := range txSignatures {
-		err := replayProtection(&txData, &signature)
-		if err != nil {
-			return AuthenticationRequest{}, err
+		if account.Equals(txSigners[i]) {
+			err := replayProtection(&txData, &signature)
+			if err != nil {
+				return AuthenticationRequest{}, err
+			}
 		}
-
 		single, ok := signature.Data.(*signing.SingleSignatureData)
 		if !ok {
 			return AuthenticationRequest{},
