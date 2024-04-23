@@ -16,6 +16,12 @@ service Query {
     option (google.api.http).get = "/osmosis/smartaccount/params";
   }
 
+  rpc GetAuthenticator(GetAuthenticatorRequest)
+      returns (GetAuthenticatorResponse) {
+    option (google.api.http).get =
+        "/osmosis/smartaccount/authenticator/{account}/{authenticator_id}";
+  }
+
   rpc GetAuthenticators(GetAuthenticatorsRequest)
       returns (GetAuthenticatorsResponse) {
     option (google.api.http).get =
@@ -38,4 +44,15 @@ message GetAuthenticatorsRequest { string account = 1; }
 // MsgGetAuthenticatorsResponse defines the Msg/GetAuthenticators response type.
 message GetAuthenticatorsResponse {
   repeated AccountAuthenticator account_authenticators = 1;
+}
+
+// MsgGetAuthenticatorRequest defines the Msg/GetAuthenticator request type.
+message GetAuthenticatorRequest {
+  string account = 1;
+  uint64 authenticator_id = 2;
+}
+
+// MsgGetAuthenticatorResponse defines the Msg/GetAuthenticator response type.
+message GetAuthenticatorResponse {
+  AccountAuthenticator account_authenticator = 1;
 }
