@@ -68,13 +68,9 @@ func NewAnteHandler(
 	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
 		smartaccountante.NewSetPubKeyDecorator(accountKeeper),
 		ante.NewValidateSigCountDecorator(accountKeeper), // we can probably remove this as multisigs are not supported here
-		// Both the signature verification and gas consumption functionality
+		// Both the signature verification, fee deduction, and gas consumption functionality
 		// is embedded in the authenticator decorator
-		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler),
-		// deductFeeDecorator is called after the authenticator decorator to ensure the fees are not yet reflected as
-		// a state change.
-		deductFeeDecorator,
-		// ante.NewIncrementSequenceDecorator(accountKeeper),
+		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
 	)
 
 	return sdk.ChainAnteDecorators(
