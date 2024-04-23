@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet
 * [#8118](https://github.com/osmosis-labs/osmosis/pull/8118) Config.toml and app.toml overwrite improvements
-* [#8131](https://github.com/osmosis-labs/osmosis/pull/8131) Overwrite min-gas-prices to combat empty blocks
+* [#8131](https://github.com/osmosis-labs/osmosis/pull/8131) Overwrite min-gas-prices to 0uosmo (defaulting to the EIP 1559 calculated value) to combat empty blocks
 
 ## v24.0.1
 
