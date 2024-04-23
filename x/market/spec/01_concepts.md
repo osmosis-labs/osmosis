@@ -44,7 +44,7 @@ The primary advantage of Constant-Product over Columbus-2 is that it offers “u
 
 ## Virtual Liquidity Pools
 
-The market starts out with two liquidity pools of equal sizes, one representing Terra (all denominations) and another representing Luna, initialiazed by the parameter `BasePool`, which defines the initial size of the Terra and Luna liquidity pools.
+The market starts out with two liquidity pools of equal sizes, one representing Terra (all denominations) and another representing Luna, initialized by the parameter `BasePool`, which defines the initial size of the Terra and Luna liquidity pools.
 
 In practice, rather than keeping track of the sizes of the two pools, the information is encoded in a number `delta`, which the blockchain stores as `TerraPoolDelta`, representing the deviation of the Terra pool from its base size in units µSDR.
 

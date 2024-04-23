@@ -18,7 +18,7 @@ func (tt TobinTax) String() string {
 	return string(out)
 }
 
-// TobinTaxList is convience wrapper to handle TobinTax array
+// TobinTaxList is convenience wrapper to handle TobinTax array
 type TobinTaxList []TobinTax
 
 // String implements fmt.Stringer interface

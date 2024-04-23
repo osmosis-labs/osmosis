@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the market module's genesis state.
 type GenesisState struct {
-	// params defines all the paramaters of the module.
+	// params defines all the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// the gap between the OsmosisPool and the BasePool
 	OsmosisPoolDelta github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=osmosis_pool_delta,json=osmosisPoolDelta,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"osmosis_pool_delta"`

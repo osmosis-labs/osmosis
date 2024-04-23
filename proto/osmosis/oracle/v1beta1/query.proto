@@ -169,7 +169,7 @@ message QueryActivesRequest {}
 // QueryActivesResponse is response type for the
 // Query/Actives RPC method.
 message QueryActivesResponse {
-  // actives defines a list of the denomination which oracle prices aggreed
+  // actives defines a list of the denomination which oracle prices agreed
   // upon.
   repeated string actives = 1;
 }

@@ -402,7 +402,7 @@ var xxx_messageInfo_QueryActivesRequest proto.InternalMessageInfo
 // QueryActivesResponse is response type for the
 // Query/Actives RPC method.
 type QueryActivesResponse struct {
-	// actives defines a list of the denomination which oracle prices aggreed
+	// actives defines a list of the denomination which oracle prices agreed
 	// upon.
 	Actives []string `protobuf:"bytes,1,rep,name=actives,proto3" json:"actives,omitempty"`
 }

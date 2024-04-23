@@ -8,7 +8,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
 
 // GenesisState defines the market module's genesis state.
 message GenesisState {
-  // params defines all the paramaters of the module.
+  // params defines all the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
 
   // the gap between the OsmosisPool and the BasePool

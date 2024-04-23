@@ -6,7 +6,7 @@ order: 2
 
 ## OsmosisPoolDelta
 
-Market module provides swap functionality based on constant product mechanism. Osmo pool have to keep its delta to track the currency demands for swap spread. Luna pool can be retrived from Osmo pool delta with following equation:
+Market module provides swap functionality based on constant product mechanism. Osmo pool have to keep its delta to track the currency demands for swap spread. Luna pool can be retrieved from Osmo pool delta with following equation:
 
 ```go
 OsmoPool := BasePool + delta
