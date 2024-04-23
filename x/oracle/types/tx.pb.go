@@ -69,7 +69,8 @@ func (m *MsgAggregateExchangeRatePrevote) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAggregateExchangeRatePrevote proto.InternalMessageInfo
 
-// MsgAggregateExchangeRatePrevoteResponse defines the Msg/AggregateExchangeRatePrevote response type.
+// MsgAggregateExchangeRatePrevoteResponse defines the
+// Msg/AggregateExchangeRatePrevote response type.
 type MsgAggregateExchangeRatePrevoteResponse struct {
 }
 
@@ -150,7 +151,8 @@ func (m *MsgAggregateExchangeRateVote) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAggregateExchangeRateVote proto.InternalMessageInfo
 
-// MsgAggregateExchangeRateVoteResponse defines the Msg/AggregateExchangeRateVote response type.
+// MsgAggregateExchangeRateVoteResponse defines the
+// Msg/AggregateExchangeRateVote response type.
 type MsgAggregateExchangeRateVoteResponse struct {
 }
 
@@ -227,7 +229,8 @@ func (m *MsgDelegateFeedConsent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDelegateFeedConsent proto.InternalMessageInfo
 
-// MsgDelegateFeedConsentResponse defines the Msg/DelegateFeedConsent response type.
+// MsgDelegateFeedConsentResponse defines the Msg/DelegateFeedConsent response
+// type.
 type MsgDelegateFeedConsentResponse struct {
 }
 
