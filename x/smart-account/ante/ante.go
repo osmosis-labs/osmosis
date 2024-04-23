@@ -182,7 +182,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				if err != nil {
 					return sdk.Context{}, err
 				}
-				ctx.MultiStore().(sdk.CacheMultiStore).Write()
+
+				// Write the cache multi store to persist the fee deduction
+				cacheMultiStore, ok := ctx.MultiStore().(sdk.CacheMultiStore)
+				if !ok {
+					// This should never happen
+					return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrPanic, "expected CacheMultiStore")
+
+				}
+				cacheMultiStore.Write()
 
 				// Reset the gas meter
 				ctx = ctx.WithGasMeter(originalGasMeter)
