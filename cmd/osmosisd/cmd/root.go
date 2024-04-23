@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	// "fmt"
-
-	b "bytes"
+	"bufio"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -13,7 +11,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
@@ -119,8 +116,6 @@ type CustomAppConfig struct {
 	SidecarQueryServerConfig sqs.Config           `mapstructure:"osmosis-sqs"`
 	WasmConfig               wasmtypes.WasmConfig `mapstructure:"wasm"`
 }
-
-var OsmosisAppTemplate string
 
 const (
 	// app.toml
@@ -449,6 +444,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
+type SectionKeyValue struct {
+	Section string
+	Key     string
+	Value   any
+}
+
 // overwriteConfigTomlValues overwrites config.toml values. Returns error if config.toml does not exist
 //
 // Currently, overwrites:
@@ -474,10 +475,17 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	} else {
 		// config.toml exists
 
-		// Set new values in viper
-		//
+		// Check if each key is already set to the recommended value
+		// If it is, we don't need to overwrite it and can also skip the app.toml overwrite
+		var sectionKeyValues []SectionKeyValue
+
 		// Set timeout_commit to 2s
-		serverCtx.Viper.Set(consensusConfigName+"."+timeoutCommitConfigName, recommendedNewTimeoutCommitValue)
+		currentTimeoutCommit := serverCtx.Viper.Get(consensusConfigName + "." + timeoutCommitConfigName)
+		shoudUpdateCurrentTimeoutCommit := currentTimeoutCommit != recommendedNewTimeoutCommitValue
+		if shoudUpdateCurrentTimeoutCommit {
+			serverCtx.Viper.Set(consensusConfigName+"."+timeoutCommitConfigName, recommendedNewTimeoutCommitValue)
+			sectionKeyValues = append(sectionKeyValues, SectionKeyValue{Section: consensusConfigName, Key: timeoutCommitConfigName, Value: recommendedNewTimeoutCommitValue})
+		}
 
 		defer func() {
 			if err := recover(); err != nil {
@@ -492,7 +500,12 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 			// Note that this exits with a non-zero exit code if fails to write the file.
 
 			// Write the new config.toml file
-			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+			if len(sectionKeyValues) > 0 {
+				err := OverwriteWithCustomConfig(configFilePath, sectionKeyValues)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			fmt.Println("config.toml is not writable. Cannot apply update. Please consder manually changing timeout_commit to " + recommendedNewTimeoutCommitValue)
 		}
@@ -503,8 +516,8 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 // overwriteAppTomlValues overwrites app.toml values. Returns error if app.toml does not exist
 //
 // Currently, overwrites:
-// - arbitrage-min-gas-fee value in app.toml to 0.1.
-// - max-gas-wanted-per-tx value in app.toml to 60000000.
+// - arbitrage-min-gas-fee
+// - max-gas-wanted-per-tx
 //
 // Also overwrites the respective viper config value.
 //
@@ -526,36 +539,25 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 	} else {
 		// app.toml exists
 
-		// Set new values in viper
-		//
+		// Check if each key is already set to the recommended value
+		// If it is, we don't need to overwrite it and can also skip the app.toml overwrite
+		var sectionKeyValues []SectionKeyValue
+
 		// Set max-gas-wanted-per-tx to 60000000
-		serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
+		currentMaxGasWantedPerTx := serverCtx.Viper.Get(mempoolConfigName + "." + maxGasWantedPerTxName)
+		shoudUpdateMaxGasWantedPerTx := currentMaxGasWantedPerTx != recommendedNewMaxGasWantedPerTxValue
+		if shoudUpdateMaxGasWantedPerTx {
+			serverCtx.Viper.Set(mempoolConfigName+"."+maxGasWantedPerTxName, recommendedNewMaxGasWantedPerTxValue)
+			sectionKeyValues = append(sectionKeyValues, SectionKeyValue{Section: mempoolConfigName, Key: maxGasWantedPerTxName, Value: recommendedNewMaxGasWantedPerTxValue})
+		}
+
 		// Set arbitrage-min-gas-fee to 0.1
-		serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
-
-		// Unmarshal viper baseConfig to get the appConfig struct
-		// This must be done separately from the other appConfig values
-		// because the base configs aren't prepended with any specific key
-		var appConfig serverconfig.Config
-		if err := serverCtx.Viper.Unmarshal(&appConfig); err != nil {
-			return fmt.Errorf("failed to unmarshal viper appConfig: %w", err)
+		currentArbitrageMinGasFee := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
+		shoudUpdateArbitrageMinGasFee := currentArbitrageMinGasFee != recommendedNewArbitrageMinGasFeeValue
+		if shoudUpdateArbitrageMinGasFee {
+			serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, recommendedNewArbitrageMinGasFeeValue)
+			sectionKeyValues = append(sectionKeyValues, SectionKeyValue{Section: mempoolConfigName, Key: arbitrageMinGasFeeConfigName, Value: recommendedNewArbitrageMinGasFeeValue})
 		}
-
-		// Unmarshal the remaining viper app configs to get the remainingAppConfigs struct
-		// This houses the osmosis mempool, sidecar query server, and wasm configs
-		var remainingAppConfigs CustomAppConfig
-		if err := serverCtx.Viper.Unmarshal(&remainingAppConfigs); err != nil {
-			return fmt.Errorf("failed to unmarshal viper config: %w", err)
-		}
-
-		// Create a custom app config struct that brings together the appConfig and the remainingAppConfigs
-		customAppConfig := CustomAppConfig{Config: appConfig, OsmosisMempoolConfig: remainingAppConfigs.OsmosisMempoolConfig, SidecarQueryServerConfig: remainingAppConfigs.SidecarQueryServerConfig, WasmConfig: remainingAppConfigs.WasmConfig}
-
-		defer func() {
-			if err := recover(); err != nil {
-				fmt.Printf("failed to write to %s: %s\n", appFilePath, err)
-			}
-		}()
 
 		// Check if the file is writable
 		if fileInfo.Mode()&os.FileMode(0200) != 0 {
@@ -564,9 +566,14 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 			// Note that this exits with a non-zero exit code if fails to write the file.
 
 			// Write the new app.toml file
-			WriteCustomAppConfigFile(appFilePath, customAppConfig)
+			if len(sectionKeyValues) > 0 {
+				err := OverwriteWithCustomConfig(appFilePath, sectionKeyValues)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
-			fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + " and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
+			fmt.Println("app.toml is not writable. Cannot apply update. Please consider manually changing arbitrage-min-gas-fee to " + recommendedNewArbitrageMinGasFeeValue + " and max-gas-wanted-per-tx to " + recommendedNewMaxGasWantedPerTxValue)
 		}
 	}
 	return nil
@@ -593,7 +600,6 @@ func initAppConfig() (string, interface{}) {
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
 	srvCfg.API.Enable = true
-	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
 
 	// 128MB IAVL cache
@@ -607,7 +613,7 @@ func initAppConfig() (string, interface{}) {
 
 	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, WasmConfig: wasmCfg}
 
-	OsmosisAppTemplate = serverconfig.DefaultConfigTemplate + `
+	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
 ###                      Osmosis Mempool Configuration                      ###
 ###############################################################################
@@ -645,19 +651,7 @@ grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCal
 ###############################################################################
 ###                            Wasm Configuration                           ###
 ###############################################################################
-
-[wasm]
-# Smart query gas limit is the max gas to be used in a smart query contract call
-query_gas_limit = {{ .WasmConfig.SmartQueryGasLimit }}
-
-# in-memory cache for Wasm contracts. Set to 0 to disable.
-# The value is in MiB not bytes
-memory_cache_size = {{ .WasmConfig.MemoryCacheSize }}
-
-# Simulation gas limit is the max gas to be used in a tx simulation call.
-# When not set the consensus max block gas is used instead
-# simulation_gas_limit =
-`
+` + wasmtypes.DefaultConfigTemplate()
 
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
@@ -1059,36 +1053,66 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
 }
 
-// WriteCustomAppConfigFile first checks the provided config for a special case with the wasm config.
-// This determines what the template should be. Based on this, it writes the new app.toml config file.
-func WriteCustomAppConfigFile(configFilePath string, config CustomAppConfig) {
-	// There is a single wasm config that requires special logic to handle
-	// For some reason, they base a value on whether a line is commented out or not...
-
-	// Check if the simulation_gas_limit line should be commented out (it is either nil or 0)
-	isCommentedOut := config.WasmConfig.SimulationGasLimit == nil || *config.WasmConfig.SimulationGasLimit == 0
-
-	// Modify the template by uncommenting the line if a value is provided for simulation_gas_limit
-	if !isCommentedOut {
-		OsmosisAppTemplate = strings.Replace(OsmosisAppTemplate, "# simulation_gas_limit =", "simulation_gas_limit = {{ .WasmConfig.SimulationGasLimit }}", 1)
-	}
-
-	// Create a template object via the app template string
-	var buffer b.Buffer
-	tmpl := template.New("appConfigFileTemplate")
-	configTemplate, err := tmpl.Parse(OsmosisAppTemplate)
+// OverwriteWithCustomConfig searches the respective config file for the given section and key and overwrites the value with the given value.
+func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []SectionKeyValue) error {
+	file, err := os.OpenFile(configFilePath, os.O_RDWR, 0o644)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	defer file.Close()
+
+	// Create a map from the sectionKeyValues array
+	configMap := make(map[string]map[string]string)
+	for _, skv := range sectionKeyValues {
+		if _, ok := configMap[skv.Section]; !ok {
+			configMap[skv.Section] = make(map[string]string)
+		}
+		// Check if the value is a string or a number
+		switch v := skv.Value.(type) {
+		case string:
+			configMap[skv.Section][skv.Key] = "\"" + v + "\""
+		default:
+			configMap[skv.Section][skv.Key] = fmt.Sprintf("%v", v)
+		}
 	}
 
-	// Execute the template with the provided config
-	if err := configTemplate.Execute(&buffer, config); err != nil {
-		panic(err)
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	currentSection := ""
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			currentSection = line[1 : len(line)-1]
+		} else if configMap[currentSection] != nil {
+			for key, value := range configMap[currentSection] {
+				if strings.Contains(line, key) {
+					line = key + " = " + value
+					break
+				}
+			}
+		}
+		lines = append(lines, line)
 	}
 
-	// Write the new app.toml file
-	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o644); err != nil {
-		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
-		os.Exit(1)
+	if err := scanner.Err(); err != nil {
+		return err
 	}
+
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+
+	err = file.Truncate(0)
+	if err != nil {
+		return err
+	}
+
+	for _, line := range lines {
+		if _, err := file.WriteString(line + "\n"); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
