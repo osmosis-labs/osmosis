@@ -588,9 +588,12 @@ func initAppConfig() (string, interface{}) {
 
 	type CustomAppConfig struct {
 		serverconfig.Config
-		OsmosisMempoolConfig     OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
-		SidecarQueryServerConfig sqs.Config           `mapstructure:"osmosis-sqs"`
-		WasmConfig               wasmtypes.WasmConfig `mapstructure:"wasm"`
+
+		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
+
+		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
+
+		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
 	var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
