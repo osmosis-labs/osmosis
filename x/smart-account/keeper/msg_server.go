@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,16 +35,6 @@ func (m msgServer) AddAuthenticator(
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "invalid sender address")
-	}
-
-	authenticators, err := m.Keeper.GetAuthenticatorDataForAccount(ctx, sender)
-	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to get authenticators for account %s", sender)
-	}
-
-	// Limit the number of authenticators to prevent excessive iteration in the ante handler.
-	if len(authenticators) >= 15 {
-		return nil, fmt.Errorf("maximum authenticators reached (%d), attempting to add more than the maximum allowed", 15)
 	}
 
 	// Finally, add the authenticator to the store.

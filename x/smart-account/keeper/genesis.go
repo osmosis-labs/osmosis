@@ -22,35 +22,28 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 			return err
 		}
 
-		// The authenticator store key looks like "2|osmo1<address>|<authenticator_id>" we need the address to
-		// successfully import and export the authenticator module
+		// Extract account address from key
 		accountAddr := strings.Split(string(key), "|")[1]
 
-		// Find existing AuthenticatorData for the account address
-		var found bool
-		for i := range accountAuthenticators {
-			if accountAuthenticators[i].Address == accountAddr {
-				accountAuthenticators[i].Authenticators = append(accountAuthenticators[i].Authenticators, authenticator)
-				found = true
-				break
-			}
-		}
-
-		// If AuthenticatorData doesn't exist, create a new one
-		if !found {
+		// Check if this entry is for a new address or the same as the last one processed
+		if len(accountAuthenticators) == 0 ||
+			accountAuthenticators[len(accountAuthenticators)-1].Address != accountAddr {
+			// If it's a new address, create a new AuthenticatorData entry
 			accountAuthenticators = append(accountAuthenticators, types.AuthenticatorData{
 				Address:        accountAddr,
 				Authenticators: []types.AccountAuthenticator{authenticator},
 			})
+		} else {
+			// If it's the same address, append the authenticator to the last entry in the list
+			lastIndex := len(accountAuthenticators) - 1
+			accountAuthenticators[lastIndex].Authenticators = append(accountAuthenticators[lastIndex].Authenticators, authenticator)
 		}
 
 		return nil
 	}
 
-	iterator := sdk.KVStorePrefixIterator(
-		ctx.KVStore(k.storeKey),
-		types.KeyAccountAuthenticatorsPrefixId(),
-	)
+	// Iterate over all entries in the store using a prefix iterator
+	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.KeyAccountAuthenticatorsPrefixId())
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
