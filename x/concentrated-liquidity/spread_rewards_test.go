@@ -1005,7 +1005,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 		},
-		"dust reinvested: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
+		"dust: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
 			initialLiquidity: osmomath.NewDec(2),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
@@ -1021,10 +1021,8 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("6.7"))),
-			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
-			// This can be thought of as the difference between the non-truncated total amount of spread rewards and the truncated toal amount of spread rewards
-			// divided by the number of shares.
-			expectedReinvestedDustAmount: osmomath.MustNewDecFromStr("0.2"),
+			// we no longer reinvest dust, so we expect this to be thrown out
+			expectedReinvestedDustAmount: osmomath.ZeroDec(),
 		},
 		"swap occurs above the position, current tick > upper tick": {
 			initialLiquidity: osmomath.OneDec(),
@@ -1601,29 +1599,25 @@ func (s *KeeperTestSuite) TestScaleDownSpreadRewardAmount() {
 		incentiveAmount osmomath.Int
 		scalingFactor   osmomath.Dec
 		expectedAmount  osmomath.Int
-		expectedDust    osmomath.Dec
 	}{
 		{
 			name:            "PerUnitLiqScalingFactor with no remainder",
 			incentiveAmount: osmomath.MustNewDecFromStr("123456789").Mul(apptesting.PerUnitLiqScalingFactor).TruncateInt(),
 			scalingFactor:   apptesting.PerUnitLiqScalingFactor,
 			expectedAmount:  osmomath.NewInt(123456789),
-			expectedDust:    osmomath.ZeroDec(),
 		},
 		{
 			name:            "PerUnitLiqScalingFactor with remainder",
 			incentiveAmount: osmomath.MustNewDecFromStr("123456789.123456789123456789").Mul(apptesting.PerUnitLiqScalingFactor).TruncateInt(),
 			scalingFactor:   apptesting.PerUnitLiqScalingFactor,
 			expectedAmount:  osmomath.NewInt(123456789),
-			expectedDust:    osmomath.MustNewDecFromStr("0.123456789123456789"),
 		},
 	}
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			scaledAmount, truncatedDec := cl.ScaleDownSpreadRewardAmount(test.incentiveAmount, test.scalingFactor)
+			scaledAmount := cl.ScaleDownSpreadRewardAmount(test.incentiveAmount, test.scalingFactor)
 			s.Require().Equal(test.expectedAmount, scaledAmount, "scaledAmount does not match")
-			s.Require().True(test.expectedDust.Equal(truncatedDec), "truncatedDec does not match")
 		})
 	}
 }

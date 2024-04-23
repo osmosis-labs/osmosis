@@ -276,15 +276,11 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		spreadRewardsClaimed = spreadRewardsClaimedScaled
 		forfeitedDust = forfeitedDustScaled
 	} else {
-		// If the scaling factor is not 1, we scale down the spread rewards and calculate the forfeited dust
-		// from the scaled down spread rewards (disregarding the forfeited dust calculated from updateAccumAndClaimRewards).
+		// If the scaling factor is not 1, we scale down the spread rewards and throw away the dust.
 		for _, coin := range spreadRewardsClaimedScaled {
-			scaledCoinAmt, truncatedAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
+			scaledCoinAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
 			if !scaledCoinAmt.IsZero() {
 				spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
-			}
-			if !truncatedAmt.IsZero() {
-				forfeitedDust = forfeitedDust.Add(sdk.NewDecCoinFromDec(coin.Denom, truncatedAmt))
 			}
 		}
 	}
@@ -349,18 +345,8 @@ func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorOb
 }
 
 // scaleDownSpreadRewardAmount scales down the spread reward amount by the scaling factor.
-// This method differs from scaleDownIncentiveAmount in that it not only returns the scaled amount, but also the truncated decimal, which is dust
-// that is added back to the global accumulator.
-func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
-	scaledDec := incentiveAmount.ToLegacyDec().QuoTruncate(scalingFactor)
-
-	// Scaled down amount, which is used to distribute to user
-	scaledAmount = scaledDec.TruncateInt()
-
-	// Truncated decimal, which is dust that is added back to the global accumulator
-	truncatedDec = scaledDec.Sub(scaledAmount.ToLegacyDec())
-
-	return scaledAmount, truncatedDec
+func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return incentiveAmount.ToLegacyDec().QuoTruncateMut(scalingFactor).TruncateInt()
 }
 
 // getSpreadFactorScalingFactorForPool returns the spread factor scaling factor for the given pool.

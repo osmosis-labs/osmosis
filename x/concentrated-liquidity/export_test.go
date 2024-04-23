@@ -358,7 +358,7 @@ func ScaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmoma
 	return scaleDownIncentiveAmount(incentiveAmount, scalingFactor)
 }
 
-func ScaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledAmount osmomath.Int, truncatedDec osmomath.Dec) {
+func ScaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
 	return scaleDownSpreadRewardAmount(incentiveAmount, scalingFactor)
 }
 
