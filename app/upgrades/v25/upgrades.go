@@ -8,6 +8,8 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 )
@@ -37,6 +39,33 @@ func CreateUpgradeHandler(
 		authenticatorParams.MaximumUnauthenticatedGas = 120_000
 		authenticatorParams.IsSmartAccountActive = false
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
+
+		// Astroport uploaded a new contract and attempted to migrate their cw pools prior to the v24 upgrade.
+		// Their proposal to migrate the pool code IDs was only possible post v24 upgrade,
+		// due to this the pools are being manually upgraded as part of v25
+		poolIds := []uint64{1564, 1567, 1568, 1569, 1570, 1572, 1579, 1616, 1617, 1635, 1654}
+		for _, poolId := range poolIds {
+			pool, err := keepers.CosmwasmPoolKeeper.GetPool(ctx, poolId)
+			if err != nil {
+				// Skip non-existent pools. This way we don't need to create the pools on E2E tests
+				continue
+			}
+			cwPool, ok := pool.(cwpooltypes.CosmWasmExtension)
+			if !ok {
+				ctx.Logger().Error("Pool has incorrect type", "poolId", poolId, "pool", pool)
+				return nil, cwpooltypes.InvalidPoolTypeError{
+					ActualPool: pool,
+				}
+			}
+			if cwPool.GetCodeId() != 580 {
+				ctx.Logger().Error("Pool has incorrect code id", "poolId", poolId, "codeId", cwPool.GetCodeId())
+				return nil, cwpooltypes.InvalidPoolTypeError{
+					ActualPool: pool,
+				}
+			}
+			cwPool.SetCodeId(666)
+			keepers.CosmwasmPoolKeeper.SetPool(ctx, cwPool)
+		}
 
 		return migrations, nil
 	}
