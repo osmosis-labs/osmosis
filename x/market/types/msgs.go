@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -54,15 +55,15 @@ func (msg MsgSwap) GetSigners() []sdk.AccAddress {
 func (msg MsgSwap) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Trader)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid trader address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid trader address (%s)", err)
 	}
 
 	if msg.OfferCoin.Amount.LTE(sdk.ZeroInt()) || msg.OfferCoin.Amount.BigInt().BitLen() > 100 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.OfferCoin.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.OfferCoin.String())
 	}
 
 	if msg.OfferCoin.Denom == msg.AskDenom {
-		return sdkerrors.Wrap(ErrRecursiveSwap, msg.AskDenom)
+		return errorsmod.Wrap(ErrRecursiveSwap, msg.AskDenom)
 	}
 
 	return nil
@@ -103,20 +104,20 @@ func (msg MsgSwapSend) GetSigners() []sdk.AccAddress {
 func (msg MsgSwapSend) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid from address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid from address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.ToAddress)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid to address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid to address (%s)", err)
 	}
 
 	if msg.OfferCoin.Amount.LTE(sdk.ZeroInt()) || msg.OfferCoin.Amount.BigInt().BitLen() > 100 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.OfferCoin.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.OfferCoin.String())
 	}
 
 	if msg.OfferCoin.Denom == msg.AskDenom {
-		return sdkerrors.Wrap(ErrRecursiveSwap, msg.AskDenom)
+		return errorsmod.Wrap(ErrRecursiveSwap, msg.AskDenom)
 	}
 
 	return nil

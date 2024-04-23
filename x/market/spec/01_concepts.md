@@ -26,13 +26,13 @@ With Constant Product, we define a value `CP` set to the size of the Terra pool 
 
 > NOTE - Our implementation of Constant Product diverges from Uniswap's, as we use the fiat value of Luna instead of the size of the Luna pool. This nuance means changes in Luna's price don't affect the product, but rather the size of the Luna pool.
 
-```
+```go
 CP = TerraPool * LunaPool * LunaPrice / SDRPrice
 ```
 
 For example, we'll start with equal pools of Terra and Luna, both worth 1000 SDR total. The size of the Terra pool is 1000 SDT, and assuming the price of Luna<>SDR is 0.5, the size of the Luna pool is 2000 Luna. A swap of 100 SDT for Luna would return around 90.91 SDR worth of Luna (≈ 181.82 Luna). The offer of 100 SDT is added to the Terra pool, and the 90.91 SDT worth of Luna are taken out of the Luna pool.
 
-```
+```go
 CP = 1000000 SDR
 (1000 SDT) * (1000 SDR of Luna) = 1000000 SDR
 (1100 SDT) * (909.0909... SDR of Luna) = 1000000 SDR
@@ -50,7 +50,7 @@ In practice, rather than keeping track of the sizes of the two pools, the inform
 
 The size of the Terra and Luna liquidity pools can be generated from  using the following formulas:
 
-```
+```go
 TerraPool = BasePool + delta
 LunaPool * LunaPice / SDRPrice = (BasePool * BasePool) / TerraPool
 LunaPool = (SDRPrice / LunaPrice) * (BasePool * BasePool) / TerraPool

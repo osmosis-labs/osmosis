@@ -38,7 +38,6 @@ func (k Keeper) OrganizeBallotByDenom(ctx sdk.Context, validatorClaimMap map[str
 					),
 				)
 			}
-
 		}
 
 		return false

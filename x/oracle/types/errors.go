@@ -3,24 +3,23 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	crypto "github.com/cometbft/cometbft/crypto/tmhash"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Oracle Errors
 var (
-	ErrInvalidExchangeRate   = sdkerrors.Register(ModuleName, 2, "invalid exchange rate")
-	ErrNoPrevote             = sdkerrors.Register(ModuleName, 3, "no prevote")
-	ErrNoVote                = sdkerrors.Register(ModuleName, 4, "no vote")
-	ErrNoVotingPermission    = sdkerrors.Register(ModuleName, 5, "unauthorized voter")
-	ErrInvalidHash           = sdkerrors.Register(ModuleName, 6, "invalid hash")
-	ErrInvalidHashLength     = sdkerrors.Register(ModuleName, 7, fmt.Sprintf("invalid hash length; should equal %d", crypto.TruncatedSize))
-	ErrVerificationFailed    = sdkerrors.Register(ModuleName, 8, "hash verification failed")
-	ErrRevealPeriodMissMatch = sdkerrors.Register(ModuleName, 9, "reveal period of submitted vote do not match with registered prevote")
-	ErrInvalidSaltLength     = sdkerrors.Register(ModuleName, 10, "invalid salt length; should be 1~4")
-	ErrNoAggregatePrevote    = sdkerrors.Register(ModuleName, 11, "no aggregate prevote")
-	ErrNoAggregateVote       = sdkerrors.Register(ModuleName, 12, "no aggregate vote")
-	ErrNoTobinTax            = sdkerrors.Register(ModuleName, 13, "no tobin tax")
-	ErrUnknownDenom          = sdkerrors.Register(ModuleName, 14, "unknown denom")
+	ErrInvalidExchangeRate   = errorsmod.Register(ModuleName, 2, "invalid exchange rate")
+	ErrNoPrevote             = errorsmod.Register(ModuleName, 3, "no prevote")
+	ErrNoVote                = errorsmod.Register(ModuleName, 4, "no vote")
+	ErrNoVotingPermission    = errorsmod.Register(ModuleName, 5, "unauthorized voter")
+	ErrInvalidHash           = errorsmod.Register(ModuleName, 6, "invalid hash")
+	ErrInvalidHashLength     = errorsmod.Register(ModuleName, 7, fmt.Sprintf("invalid hash length; should equal %d", crypto.TruncatedSize))
+	ErrVerificationFailed    = errorsmod.Register(ModuleName, 8, "hash verification failed")
+	ErrRevealPeriodMissMatch = errorsmod.Register(ModuleName, 9, "reveal period of submitted vote do not match with registered prevote")
+	ErrInvalidSaltLength     = errorsmod.Register(ModuleName, 10, "invalid salt length; should be 1~4")
+	ErrNoAggregatePrevote    = errorsmod.Register(ModuleName, 11, "no aggregate prevote")
+	ErrNoAggregateVote       = errorsmod.Register(ModuleName, 12, "no aggregate vote")
+	ErrNoTobinTax            = errorsmod.Register(ModuleName, 13, "no tobin tax")
+	ErrUnknownDenom          = errorsmod.Register(ModuleName, 14, "unknown denom")
 )

@@ -19,7 +19,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	params := k.GetParams(ctx)
 	if appparams.IsPeriodLastBlock(ctx, params.VotePeriod) {
-
 		// Build claim map over all validators in active set
 		validatorClaimMap := make(map[string]types.Claim)
 
@@ -67,7 +66,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 			// Iterate through ballots and update exchange rates; drop if not enough votes have been achieved.
 			for denom, ballot := range voteMap {
-
 				// Convert ballot to cross exchange rates
 				if denom != referenceTerra {
 					ballot = ballot.ToCrossRateWithSort(voteMapRT)

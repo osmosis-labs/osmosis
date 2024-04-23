@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -40,7 +41,7 @@ func (ms msgServer) AggregateExchangeRatePrevote(goCtx context.Context, msg *typ
 	// Convert hex string to votehash
 	voteHash, err := types.AggregateVoteHashFromHexString(msg.Hash)
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalidHash, err.Error())
+		return nil, errorsmod.Wrap(types.ErrInvalidHash, err.Error())
 	}
 
 	aggregatePrevote := types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight()))
@@ -82,7 +83,7 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 
 	aggregatePrevote, err := ms.GetAggregateExchangeRatePrevote(ctx, valAddr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrNoAggregatePrevote, msg.Validator)
+		return nil, errorsmod.Wrap(types.ErrNoAggregatePrevote, msg.Validator)
 	}
 
 	// Check a msg is submitted proper period
@@ -92,20 +93,20 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 
 	exchangeRateTuples, err := types.ParseExchangeRateTuples(msg.ExchangeRates)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
 	}
 
 	// check all denoms are in the vote target
 	for _, tuple := range exchangeRateTuples {
 		if !ms.IsVoteTarget(ctx, tuple.Denom) {
-			return nil, sdkerrors.Wrap(types.ErrUnknownDenom, tuple.Denom)
+			return nil, errorsmod.Wrap(types.ErrUnknownDenom, tuple.Denom)
 		}
 	}
 
 	// Verify a exchange rate with aggregate prevote hash
 	hash := types.GetAggregateVoteHash(msg.Salt, msg.ExchangeRates, valAddr)
 	if aggregatePrevote.Hash != hash.String() {
-		return nil, sdkerrors.Wrapf(types.ErrVerificationFailed, "must be given %s not %s", aggregatePrevote.Hash, hash)
+		return nil, errorsmod.Wrapf(types.ErrVerificationFailed, "must be given %s not %s", aggregatePrevote.Hash, hash)
 	}
 
 	// Move aggregate prevote to aggregate vote with given exchange rates
@@ -144,7 +145,7 @@ func (ms msgServer) DelegateFeedConsent(goCtx context.Context, msg *types.MsgDel
 	// Check the delegator is a validator
 	val := ms.StakingKeeper.Validator(ctx, operatorAddr)
 	if val == nil {
-		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, msg.Operator)
+		return nil, errorsmod.Wrap(stakingtypes.ErrNoValidatorFound, msg.Operator)
 	}
 
 	// Set the delegation

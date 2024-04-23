@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
@@ -25,7 +26,6 @@ func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap ma
 		if (vote.ExchangeRate.GTE(weightedMedian.Sub(rewardSpread)) &&
 			vote.ExchangeRate.LTE(weightedMedian.Add(rewardSpread))) ||
 			!vote.ExchangeRate.IsPositive() {
-
 			key := vote.Voter.String()
 			claim := validatorClaimMap[key]
 			claim.Weight += vote.Power
@@ -38,7 +38,7 @@ func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap ma
 }
 
 // ballot for the asset is passing the threshold amount of voting power
-func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes sdk.Int) (sdk.Int, bool) {
+func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes math.Int) (math.Int, bool) {
 	ballotPower := sdk.NewInt(ballot.Power())
 	return ballotPower, !ballotPower.IsZero() && ballotPower.GTE(thresholdVotes)
 }
