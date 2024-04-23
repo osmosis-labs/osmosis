@@ -17,6 +17,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 )
 
 const (
@@ -38,6 +40,18 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 
+	// Create Astroport pools pre-upgrade
+	astroportCodeIds := []uint64{1564, 1567, 1568, 1569, 1570, 1572, 1579, 1616, 1617, 1635, 1654}
+	for _, poolId := range astroportCodeIds {
+		s.App.CosmwasmPoolKeeper.SetPool(s.Ctx, &model.CosmWasmPool{
+			ContractAddress: "foo",
+			PoolId:          poolId,
+			CodeId:          580,
+			InstantiateMsg:  []byte("bar"),
+		})
+	}
+	s.requirePoolsHaveCodeId(astroportCodeIds, 580)
+
 	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
 	// Run the upgrade
@@ -47,6 +61,13 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	})
 
 	s.executeMissedBlocksCounterTest(preMigrationSigningInfo)
+
+	// Pool Migration Tests
+	//
+
+	// Test that the Astroport pools have been updated
+	s.requirePoolsHaveCodeId(astroportCodeIds, 666)
+
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -106,4 +127,14 @@ func (s *UpgradeTestSuite) executeMissedBlocksCounterTest(preMigrationSigningInf
 	s.Require().Equal(preMigrationSigningInfo.IndexOffset, postMigrationSigningInfo.IndexOffset)
 	s.Require().Equal(preMigrationSigningInfo.JailedUntil, postMigrationSigningInfo.JailedUntil)
 	s.Require().Equal(preMigrationSigningInfo.Tombstoned, postMigrationSigningInfo.Tombstoned)
+}
+
+func (s *UpgradeTestSuite) requirePoolsHaveCodeId(pools []uint64, codeId uint64) {
+	for _, poolId := range pools {
+		pool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolId)
+		s.Require().NoError(err)
+		cwPool, ok := pool.(cwpooltypes.CosmWasmExtension)
+		s.Require().True(ok)
+		s.Require().EqualValues(codeId, cwPool.GetCodeId())
+	}
 }
