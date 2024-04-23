@@ -1478,8 +1478,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2.0.20240422223139-68b56df3df6a h1:tQkd5Scay2DtZjO/F+xgpo6My1UwjXm0bGOKqB039VU=
-github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2.0.20240422223139-68b56df3df6a/go.mod h1:ui6E/5wsay1U5OByKv3FsyxCRBINSy2bdLmR90zZhzc=
+github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2.0.20240423002139-865b91dab27e h1:t3DafnT4FJlSvXh1+V4zBJ59DRRK/5DOcXeIspPQvh4=
+github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-2.0.20240423002139-865b91dab27e/go.mod h1:ui6E/5wsay1U5OByKv3FsyxCRBINSy2bdLmR90zZhzc=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0cx/EaEnwHfYi4JN3rKkLU=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
