@@ -104,7 +104,6 @@ func GenerateAuthenticationRequest(
 		accNum = baseAccount.GetAccountNumber()
 	}
 	var sequence uint64
-	// TODO: let's just error if baseaccount is nil
 	if baseAccount != nil {
 		sequence = baseAccount.GetSequence()
 	}
