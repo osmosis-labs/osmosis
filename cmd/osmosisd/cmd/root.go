@@ -1095,8 +1095,14 @@ func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []Section
 		} else if configMap[currentSection] != nil {
 			// If the line is in a section that needs to be overwritten, check each key
 			for key, value := range configMap[currentSection] {
-				// If the line contains the key, overwrite the line with the new key-value pair
-				if strings.Contains(line, key) {
+				// Split the line into key and value parts
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) != 2 {
+					continue
+				}
+				// Trim spaces and compare the key part with the target key
+				if strings.TrimSpace(parts[0]) == key {
+					// If the keys match, overwrite the line with the new key-value pair
 					line = key + " = " + value
 					break
 				}
