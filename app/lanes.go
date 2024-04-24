@@ -11,35 +11,35 @@ import (
 )
 
 const (
-	maxTxPerMEVLane     = 500  // this is the maximum # of bids that will be held in the app-side in-memory mempool
-	maxTxPerDefaultLane = 3000 // all other txs
+	maxTxPerTopOfBlockAuctionLane = 500  // this is the maximum # of bids that will be held in the app-side in-memory mempool
+	maxTxPerDefaultLane           = 3000 // all other txs
 )
 
 var (
-	defaultLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.90")
-	mevLaneBlockspacePercentage     = math.LegacyMustNewDecFromStr("0.10")
+	defaultLaneBlockspacePercentage           = math.LegacyMustNewDecFromStr("0.90")
+	topOfBlockAuctionLaneBlockspacePercentage = math.LegacyMustNewDecFromStr("0.10")
 )
 
 // CreateLanes walks through the process of creating the lanes for the block sdk. In this function
 // we create three separate lanes - MEV, Free, and Default - and then return them.
 func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *base.BaseLane) {
-	// 1. Create the signer extractor. This is used to extract the expected signers from
+	// Create the signer extractor. This is used to extract the expected signers from
 	// a transaction. Each lane can have a different signer extractor if needed.
 	signerAdapter := signerextraction.NewDefaultAdapter()
 
-	// 2. Create the configurations for each lane. These configurations determine how many
+	// Create the configurations for each lane. These configurations determine how many
 	// transactions the lane can store, the maximum block space the lane can consume, and
 	// the signer extractor used to extract the expected signers from a transaction.
 
-	// Create a mev configuration that accepts maxTxPerMEVLane transactions and consumes mevLaneBlockspacePercentage of the
+	// Create a mev configuration that accepts maxTxPerTopOfBlockAuctionLane transactions and consumes topOfBlockAuctionLaneBlockspacePercentage of the
 	// block space.
 	mevConfig := base.LaneConfig{
 		Logger:          app.Logger(),
 		TxEncoder:       txConfig.TxEncoder(),
 		TxDecoder:       txConfig.TxDecoder(),
-		MaxBlockSpace:   mevLaneBlockspacePercentage,
+		MaxBlockSpace:   topOfBlockAuctionLaneBlockspacePercentage,
 		SignerExtractor: signerAdapter,
-		MaxTxs:          maxTxPerMEVLane,
+		MaxTxs:          maxTxPerTopOfBlockAuctionLane,
 	}
 
 	// Create a default configuration that accepts maxTxPerDefaultLane transactions and consumes defaultLaneBlockspacePercentage of the
@@ -53,7 +53,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		MaxTxs:          maxTxPerDefaultLane,
 	}
 
-	// 3. Create the match handlers for each lane. These match handlers determine whether or not
+	// Create the match handlers for each lane. These match handlers determine whether or not
 	// a transaction belongs in the lane.
 
 	// Create the final match handler for the mev lane.
@@ -64,7 +64,7 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	// not free nor mev to this lane
 	defaultMatchHandler := base.DefaultMatchHandler()
 
-	// 4. Create the lanes.
+	// Create the lanes.
 	mevLane := mevlane.NewMEVLane(
 		mevConfig,
 		factory,

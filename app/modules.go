@@ -138,7 +138,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
-	auctiontypes.ModuleName:                  nil, // initialize a module account
+	auctiontypes.ModuleName:                  nil,
 	smartaccounttypes.ModuleName:             nil,
 }
 
@@ -205,10 +205,7 @@ func appModules(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
-		auction.NewAppModule(
-			appCodec,
-			*app.AuctionKeeper,
-		),
+		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
 	}
 }
