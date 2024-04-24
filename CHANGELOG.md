@@ -49,11 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Compatible
 
 * [#8006](https://github.com/osmosis-labs/osmosis/pull/8006), [#8014](https://github.com/osmosis-labs/osmosis/pull/8014) Speedup many BigDec operations
-<<<<<<< HEAD
-=======
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet
 * [#8118](https://github.com/osmosis-labs/osmosis/pull/8118) Config.toml and app.toml overwrite improvements
->>>>>>> abb6ccf3 (fix: config.toml and app.toml overwrites (#8118))
 
 ## v24.0.1
 
