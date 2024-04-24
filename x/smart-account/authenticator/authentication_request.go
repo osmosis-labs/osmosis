@@ -164,6 +164,7 @@ func extractSignatures(txSigners []sdk.AccAddress, txSignatures []signing.Signat
 	return signatures, msgSignature, nil
 }
 
+// GenerateAuthenticationRequest creates an AuthenticationRequest for the transaction.
 func GenerateAuthenticationRequest(
 	ctx sdk.Context,
 	ak authante.AccountKeeper,
