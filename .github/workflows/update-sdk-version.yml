@@ -11,6 +11,9 @@ on:
         description: 'Version tag to use for osmosis-labs/cosmos-sdk'
         required: true
         default: 'v0.47.5-v24-osmo-4' # Default version
+  pull_request:
+    branches: 
+      - main # or any other branches you want to include
 
 jobs:
   update-sdk-version-and-create-pr:
