@@ -7,13 +7,10 @@ on:
         description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
         required: true
         default: 'main' # Default branch
-      version:
-        description: 'Version tag to use for osmosis-labs/cosmos-sdk'
-        required: true
-        default: 'v0.47.5-v24-osmo-4' # Default version
   pull_request:
     branches: 
       - main # or any other branches you want to include
+    
 
 jobs:
   update-sdk-version-and-create-pr:
@@ -29,7 +26,7 @@ jobs:
 
       - name: Update SDK Version in Go Mod Files
         run: |
-          VERSION="${{ github.event.inputs.version }}"
+          VERSION="v0.47.5-v24-osmo-4"
           echo "Using version: $VERSION"
           MODFILES="./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod"
           for modfile in $MODFILES; do
