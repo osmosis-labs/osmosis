@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	"os"
 	"testing"
 	"time"
@@ -92,10 +93,12 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.AlwaysPassAuth = testutils.TestingAuthenticator{Approve: testutils.Always, Confirm: testutils.Always, GasConsumption: 0}
 	s.OsmosisApp.SmartAccountKeeper.AuthenticatorManager.RegisterAuthenticator(s.AlwaysPassAuth)
 
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*s.OsmosisApp.TxFeesKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.BankKeeper, nil)
 	s.AuthenticatorAnteDecorator = ante.NewAuthenticatorDecorator(
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
+		deductFeeDecorator,
 	)
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
@@ -281,7 +284,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	s.Require().Contains(
 		err.Error(),
 		fmt.Sprintf(
-			"Current time %d.%d not within time limit None - %s.%s: execute wasm contract failed",
+			"Current time %d.%09d not within time limit None - %s.%s: execute wasm contract failed",
 			s.Ctx.BlockTime().Unix(), s.Ctx.BlockTime().Nanosecond(),
 			endTimeSecsStr, endTimeNanosStr,
 		),

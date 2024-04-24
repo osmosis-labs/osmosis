@@ -13,20 +13,20 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
-// PubKeys must be set in context for all signers before any other sigverify decorators run
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type SetPubKeyDecorator struct {
+// EmitPubKeyDecoratorEvents emits the events that the SetPubKeyDecorator would emit. This is needed for backwards
+// compatibility with the legacy account system even if the SetPubKeyDecorator is not used (as pubkeys should be set
+// on the account before using authenticators).
+type EmitPubKeyDecoratorEvents struct {
 	ak authante.AccountKeeper
 }
 
-func NewSetPubKeyDecorator(ak authante.AccountKeeper) SetPubKeyDecorator {
-	return SetPubKeyDecorator{
+func NewEmitPubKeyDecoratorEvents(ak authante.AccountKeeper) EmitPubKeyDecoratorEvents {
+	return EmitPubKeyDecoratorEvents{
 		ak: ak,
 	}
 }
 
-func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (spkd EmitPubKeyDecoratorEvents) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +26,7 @@ type AuthenticatorDecorator struct {
 	smartAccountKeeper *smartaccountkeeper.Keeper
 	accountKeeper      authante.AccountKeeper
 	sigModeHandler     authsigning.SignModeHandler
+	deductFeeDecorator txfeeskeeper.DeductFeeDecorator
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
@@ -31,11 +34,13 @@ func NewAuthenticatorDecorator(
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
 	sigModeHandler authsigning.SignModeHandler,
+	deductFeeDecorator txfeeskeeper.DeductFeeDecorator,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		smartAccountKeeper: smartAccountKeeper,
 		accountKeeper:      accountKeeper,
 		sigModeHandler:     sigModeHandler,
+		deductFeeDecorator: deductFeeDecorator,
 	}
 }
 
@@ -86,8 +91,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
-	cacheCtx, writeCache := ctx.CacheContext()
-
 	msgs := tx.GetMsgs()
 	if len(msgs) == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no messages in transaction")
@@ -100,7 +103,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// The fee payer is the first signer of the transaction. This should have been enforced by the
 	// LimitFeePayerDecorator
-	feePayer := feeTx.FeePayer()
+	feePayer := msgs[0].GetSigners()[0]
 	feeGranter := feeTx.FeeGranter()
 	fee := feeTx.GetFee()
 
@@ -126,7 +129,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get the currently selected authenticator
 		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
 		selectedAuthenticator, err := ad.smartAccountKeeper.GetInitializedAuthenticatorForAccount(
-			cacheCtx,
+			ctx,
 			account,
 			selectedAuthenticatorId,
 		)
@@ -160,10 +163,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		authenticationRequest.AuthenticatorId = stringId
 
 		// Consume the authenticator's static gas
-		cacheCtx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
+		ctx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
 
 		// Authenticate should never modify state. That's what track is for
-		neverWriteCtx, _ := cacheCtx.CacheContext()
+		neverWriteCtx, _ := ctx.CacheContext()
 		authErr := a11r.Authenticate(neverWriteCtx, authenticationRequest)
 
 		// If authentication is successful, continue
@@ -172,15 +175,29 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			if account.Equals(feePayer) {
 				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
-				// Reset this for both contexts
-				cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+				// Once the fee payer is authenticated, we can deduct the fee.
+				// This change will persist regardless of weather the rest of messages pass authentication
+				// or not
+				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, sdk.ChainAnteDecorators(sdk.Terminator{}))
+				if err != nil {
+					return sdk.Context{}, err
+				}
+
+				// Write the cache multi store to persist the fee deduction
+				cacheMultiStore, ok := ctx.MultiStore().(sdk.CacheMultiStore)
+				if !ok {
+					// This should never happen
+					return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrPanic, "expected CacheMultiStore")
+				}
+				cacheMultiStore.Write()
+
+				// Reset the gas meter
 				ctx = ctx.WithGasMeter(originalGasMeter)
 			}
 
 			// Append the track closure to be called after every message is authenticated
 			tracks = append(tracks, func() error {
-				err := a11r.Track(cacheCtx, authenticationRequest)
-
+				err := a11r.Track(ctx, authenticationRequest)
 				if err != nil {
 					// track should not fail in normal circumstances, since it is intended to update track state before execution.
 					// If it does fail, we log the error.
@@ -210,8 +227,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			return sdk.Context{}, err
 		}
 	}
-
-	writeCache()
 
 	updatedGasConsumed := ctx.GasMeter().GasConsumed()
 	telemetry.SetGauge(float32(updatedGasConsumed-prevGasConsumed), types.GaugeKeyAnteHandlerGasConsumed)

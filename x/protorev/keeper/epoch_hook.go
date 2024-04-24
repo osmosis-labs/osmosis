@@ -39,6 +39,12 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 	if h.k.GetProtoRevEnabled(ctx) {
 		switch epochIdentifier {
 		case "day":
+			// Calculate and distribute protorev profits
+			err := h.CalculateAndDistributeProfits(ctx)
+			if err != nil {
+				return err
+			}
+
 			// Increment number of days since module genesis to properly calculate developer fees after cyclic arbitrage trades
 			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
 				h.k.SetDaysSinceModuleGenesis(ctx, 1)
@@ -52,6 +58,47 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 	}
 
 	return nil
+}
+
+// CalculateAndDistributeProfits is executed after epoch. It gets the current base denom profits and distributes them.
+func (h EpochHooks) CalculateAndDistributeProfits(ctx sdk.Context) error {
+	// Get the current arb profits (only in base denoms to prevent spam vector)
+	profit, err := h.k.CurrentBaseDenomProfits(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Distribute profits to developer account, community pool, and burn osmo
+	err = h.k.DistributeProfit(ctx, profit)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CurrentBaseDenomProfits retrieves the current balance of the protorev module account and filters for base denoms.
+func (k Keeper) CurrentBaseDenomProfits(ctx sdk.Context) (sdk.Coins, error) {
+	moduleAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
+
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the current protorev balance of all denoms
+	protorevBalanceAllDenoms := k.bankKeeper.GetAllBalances(ctx, moduleAcc)
+
+	// Filter for base denoms
+	var protorevBalanceBaseDenoms sdk.Coins
+
+	for _, baseDenom := range baseDenoms {
+		amountOfBaseDenom := protorevBalanceAllDenoms.AmountOf(baseDenom.Denom)
+		if !amountOfBaseDenom.IsZero() {
+			protorevBalanceBaseDenoms = append(protorevBalanceBaseDenoms, sdk.NewCoin(baseDenom.Denom, amountOfBaseDenom))
+		}
+	}
+
+	return protorevBalanceBaseDenoms.Sort(), nil
 }
 
 // UpdatePools first deletes all of the pools paired with any base denom in the store and then adds the highest liquidity pools that match to the store
