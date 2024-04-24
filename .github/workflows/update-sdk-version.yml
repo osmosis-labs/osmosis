@@ -1,3 +1,5 @@
+name: Update Cosmos SDK Version
+
 on:
   workflow_dispatch:
     inputs:
@@ -5,9 +7,10 @@ on:
         description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
         required: true
         default: 'main' # Default branch
-  pull_request:
-    branches: 
-      - main # or any other branches you want to include
+      version:
+        description: 'Version tag to use for osmosis-labs/cosmos-sdk'
+        required: true
+        default: 'v0.47.5-v24-osmo-4' # Default version
 
 jobs:
   update-sdk-version-and-create-pr:
@@ -19,42 +22,16 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '^1.17' # Specify your Go version here
-
-      - name: Determine Branch for Latest Commit
-        id: get-branch
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "::set-output name=branch::${{ github.event.inputs.branch }}"
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            # For testing purposes, using a hard-coded branch name when triggered by a pull request
-            echo "::set-output name=branch::osmo/v0.47.5"
-          else
-            echo "::set-output name=branch::main"
-          fi
-
-
-      - name: Fetch Latest Commit Hash
-        id: fetch-commit
-        run: |
-          BRANCH=${{ steps.get-branch.outputs.branch }}
-          COMMIT_HASH=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                               -H "Accept: application/vnd.github.v3+json" \
-                               "https://api.github.com/repos/osmosis-labs/cosmos-sdk/commits/$BRANCH" \
-                               | jq -r '.sha')
-          echo "Latest commit hash in $BRANCH branch is $COMMIT_HASH"
-          echo "::set-output name=commit_hash::$COMMIT_HASH"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          go-version: '^1.20' # Specify your Go version here
 
       - name: Update SDK Version in Go Mod Files
         run: |
-          VERSION=$(echo "v0.0.0-$(date +%Y%m%d%H%M%S)-${{ steps.fetch-commit.outputs.commit_hash }}")
-          echo "Formatted version: $VERSION"
+          VERSION="${{ github.event.inputs.version }}"
+          echo "Using version: $VERSION"
           MODFILES="./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod"
           for modfile in $MODFILES; do
             if [ -e "$modfile" ]; then
-              sed -i "s|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $VERSION|g" $modfile
+              sed -i "s|github.com/cosmos/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $VERSION|g" $modfile
               cd `dirname $modfile`
               go mod tidy
               cd - > /dev/null
@@ -68,15 +45,15 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "auto: update osmosis-labs/cosmos-sdk to latest commit on branch ${{ github.event.inputs.branch }}"
-          commit-message: "auto: update osmosis-labs/cosmos-sdk dependency"
+          title: "auto: update osmosis-labs/cosmos-sdk to $VERSION"
+          commit-message: "auto: update osmosis-labs/cosmos-sdk to $VERSION"
           body: |
             **Automated pull request**
 
-            Updating osmosis-labs/cosmos-sdk dependency to the latest commit on branch ${{ github.event.inputs.branch }}.
+            Updating osmosis-labs/cosmos-sdk dependency to the specified version $VERSION.
           base: main
           branch-suffix: random
           delete-branch: true
           assignees: ${{ github.actor }}
           draft: true
-          labels: "T:auto,T:code-hygiene,V:state/compatible/no_backport,A:no-changelog"
+          labels: "T:auto,T:code-hygiene,V:state/compatible,no_backport,A:no-changelog"
