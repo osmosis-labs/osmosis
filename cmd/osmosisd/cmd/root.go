@@ -105,6 +105,11 @@ type SectionKeyValue struct {
 var (
 	recommendedAppTomlValues = []SectionKeyValue{
 		{
+			Section: "",
+			Key:     "minimum-gas-prices",
+			Value:   "0uosmo",
+		},
+		{
 			Section: "osmosis-mempool",
 			Key:     "arbitrage-min-gas-fee",
 			Value:   "0.1",
@@ -113,7 +118,8 @@ var (
 			Section: "osmosis-mempool",
 			Key:     "max-gas-wanted-per-tx",
 			Value:   "60000000",
-		}}
+		},
+	}
 
 	recommendedConfigTomlValues = []SectionKeyValue{
 		{
