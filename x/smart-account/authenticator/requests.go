@@ -39,7 +39,7 @@ type AuthenticationRequest struct {
 	// It is unsigned, so at this point, it can't be negative.
 	MsgIndex uint64 `json:"msg_index"`
 
-	// Only allowing messages with a single signer
+	// Only allowing messages with a single signer, so the signature can be a single byte array.
 	Signature           []byte                  `json:"signature"`
 	SignModeTxData      SignModeData            `json:"sign_mode_tx_data"`
 	TxData              ExplicitTxData          `json:"tx_data"`
