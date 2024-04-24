@@ -15,6 +15,7 @@ import (
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
@@ -31,7 +32,7 @@ const (
 	// Denom0 translates to a base asset while denom1 to a quote asset
 	// We want quote asset to be DAI so that when the limit orders on ticks
 	// are implemented, we have tick spacing in terms of DAI as the quote.
-	DesiredDenom0 = "uosmo"
+	DesiredDenom0 = appparams.BaseCoinUnit
 	TickSpacing   = 100
 
 	// isPermissionlessPoolCreationEnabledCL is a boolean that determines if
@@ -54,7 +55,7 @@ var (
 	// from tick to price conversion. These increments are in a human
 	// understandeable magnitude only for token1 as a quote.
 	authorizedQuoteDenoms []string = []string{
-		"uosmo",
+		appparams.BaseCoinUnit,
 		ATOMIBCDenom,
 		DAIIBCDenom,
 		USDCIBCDenom,

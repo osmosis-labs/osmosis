@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
 
@@ -467,7 +468,7 @@ func (s *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.Per
 	syntheticLocks, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, osmoToLock, twoWeekDuration)
 	s.Require().NoError(err)
 
-	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, syntheticLocks.ID, "uosmo", time.Minute, true)
+	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, syntheticLocks.ID, appparams.BaseCoinUnit, time.Minute, true)
 	s.Require().NoError(err)
 
 	locks = append(locks, syntheticLocks)

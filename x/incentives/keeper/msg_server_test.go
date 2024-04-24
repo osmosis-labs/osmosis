@@ -9,6 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
@@ -84,10 +85,13 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 	for _, tc := range tests {
 		s.SetupTest()
 
+		// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+		// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		ctx := s.Ctx
 		bankKeeper := s.App.BankKeeper
 		accountKeeper := s.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
@@ -99,7 +103,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 				"module",
 				"permission",
 			)
-			accountKeeper.SetModuleAccount(ctx, modAcc)
+			accountKeeper.SetModuleAccount(s.Ctx, modAcc)
 		}
 
 		s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
@@ -118,7 +122,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			NumEpochsPaidOver: 1,
 		}
 		// System under test.
-		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
+		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(s.Ctx), msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)
@@ -126,7 +130,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			s.Require().NoError(err)
 		}
 
-		balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
+		balanceAmount := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
 		if tc.expectErr {
 			s.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
@@ -269,19 +273,19 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 	}{
 		{
 			name:                 "user creates a non-perpetual group and fills group with all remaining tokens",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
 			groupFunds:           tenTokens,
 			numEpochsPaidOver:    3,
 		},
 		{
 			name:                 "user creates a perpetual group and fills group with all remaining tokens",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
 			groupFunds:           tenTokens,
 			numEpochsPaidOver:    0,
 		},
 		{
 			name:                 "user creates a non-perpetual group and fills group with some remaining tokens",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000000))),
 			groupFunds:           tenTokens,
 			numEpochsPaidOver:    3,
 		},
@@ -294,14 +298,14 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 		},
 		{
 			name:                 "user tries to create a non-perpetual group but does not have enough funds to pay for the create group fee",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(90000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(90000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
 			groupFunds:           tenTokens,
 			expectErr:            true,
 			numEpochsPaidOver:    3,
 		},
 		{
 			name:                 "one user tries to create a group, has enough funds to pay for the create group fee but not enough to fill the group funds",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(9000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(9000000))),
 			groupFunds:           tenTokens,
 			expectErr:            true,
 			numEpochsPaidOver:    3,
@@ -311,14 +315,17 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 	for _, tc := range tests {
 		s.SetupTest()
 
+		// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+		// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		ctx := s.Ctx
 		bankKeeper := s.App.BankKeeper
 		accountKeeper := s.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
-		groupCreationFee := s.App.IncentivesKeeper.GetParams(ctx).GroupCreationFee
+		groupCreationFee := s.App.IncentivesKeeper.GetParams(s.Ctx).GroupCreationFee
 
 		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
@@ -341,13 +348,13 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 		s.overwriteVolumes(poolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
 
 		// System under test.
-		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(ctx), msg)
+		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(s.Ctx), msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)
 		} else {
 			s.Require().NoError(err)
-			balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
+			balanceAmount := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
 			accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds...)
 			finalAccountBalance := accountBalance

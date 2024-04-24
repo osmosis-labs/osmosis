@@ -8,6 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
@@ -141,13 +142,13 @@ type distributionTestCase struct {
 var (
 	// distributed coin when there is one account receiving from one gauge
 	// since val tokens is 11000000 and reward is 20000, we get 18181stake
-	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 18181))
+	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 18181))
 	// distributed coins when there is two account receiving from one gauge
 	// since val tokens is 2100000 and reward is 20000, we get 9523stake
-	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9523))
+	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 9523))
 	// distributed coins when there is one account receiving from two gauge
 	// two lock distribution * 2
-	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19046))
+	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 19046))
 	distributionTestCases           = []distributionTestCase{
 		{
 			"happy path with single validator and delegator",
@@ -199,6 +200,10 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
 
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
@@ -259,6 +264,11 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 
 			s.Run(tc.name, func() {
 				s.SetupTest()
+
+				// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+				// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 				// create one more account to set reward receiver as arbitrary account
 				thirdTestAcc := CreateRandomAccounts(1)
 				s.TestAccs = append(s.TestAccs, thirdTestAcc...)

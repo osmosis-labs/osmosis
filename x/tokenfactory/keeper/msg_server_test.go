@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
@@ -217,12 +219,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    s.defaultDenom,
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
@@ -239,12 +241,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    fmt.Sprintf("factory/%s/litecoin", s.TestAccs[0].String()),
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),

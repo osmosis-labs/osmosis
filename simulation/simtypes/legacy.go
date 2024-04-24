@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 // TODO: Must delete
@@ -39,7 +40,7 @@ func GenAndDeliverTxWithRandFees(
 	}
 
 	// Only allow fees in "uosmo"
-	coins = sdk.NewCoins(sdk.NewCoin("uosmo", coins.AmountOf("uosmo")))
+	coins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, coins.AmountOf(appparams.BaseCoinUnit)))
 
 	fees, err = simulation.RandomFees(r, ctx, coins)
 	if err != nil {
