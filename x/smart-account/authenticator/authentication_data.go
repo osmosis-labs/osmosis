@@ -2,7 +2,6 @@ package authenticator
 
 import (
 	"fmt"
-
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,7 +23,8 @@ type SignModeData struct {
 	Textual string `json:"sign_mode_textual"`
 }
 
-// LocalAny holds a message with its type URL and byte value.
+// LocalAny holds a message with its type URL and byte value. This is necessary because the type Any fails
+// to serialize and deserialize properly in nested contexts.
 type LocalAny struct {
 	TypeURL string `json:"type_url"`
 	Value   []byte `json:"value"`
@@ -46,11 +46,13 @@ type ExplicitTxData struct {
 	Memo            string     `json:"memo"`
 }
 
-// GetSignersAndSignatures gets an array of signer and an array of signatures from the transaction
-// checks their the same length and returns both
-func GetSignerAndSignatures(
-	tx sdk.Tx,
-) (signers []sdk.AccAddress, signatures []signing.SignatureV2, err error) {
+// GetSignerAndSignatures gets an array of signer and an array of signatures from the transaction
+// checks they're the same length and returns both.
+//
+// A signer can only have one signature, so if it appears in multiple messages, the signatures must be
+// the same, and it will only be returned once by this function. This is to mimic the way the classic
+// sdk authentication works, and we will probably want to change this in the future
+func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []signing.SignatureV2, err error) {
 	// Attempt to cast the provided transaction to an authsigning.Tx.
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
@@ -76,6 +78,91 @@ func GetSignerAndSignatures(
 	return signers, signatures, nil
 }
 
+// getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
+func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
+	// Retrieve and build the signer data struct
+	baseAccount := ak.GetAccount(ctx, account)
+	genesis := ctx.BlockHeight() == 0
+	chainID := ctx.ChainID()
+	var accNum uint64
+	if !genesis {
+		accNum = baseAccount.GetAccountNumber()
+	}
+	var sequence uint64
+	if baseAccount != nil {
+		sequence = baseAccount.GetSequence()
+	}
+
+	return authsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      sequence,
+	}
+}
+
+// extractExplicitTxData makes the transaction data concrete for the authentication request. This is necessary to
+// pass the parsed data to the cosmwasm authenticator.
+func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (ExplicitTxData, error) {
+	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
+	if !ok {
+		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
+	}
+	memoTx, ok := tx.(sdk.TxWithMemo)
+	if !ok {
+		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+	}
+
+	// Encode messages as Anys and manually convert them to a struct we can serialize to json for cosmwasm.
+	txMsgs := tx.GetMsgs()
+	msgs := make([]LocalAny, len(txMsgs))
+	for i, txMsg := range txMsgs {
+		encodedMsg, err := types.NewAnyWithValue(txMsg)
+		if err != nil {
+			return ExplicitTxData{}, errorsmod.Wrap(err, "failed to encode msg")
+		}
+		msgs[i] = LocalAny{
+			TypeURL: encodedMsg.TypeUrl,
+			Value:   encodedMsg.Value,
+		}
+	}
+
+	return ExplicitTxData{
+		ChainID:         signerData.ChainID,
+		AccountNumber:   signerData.AccountNumber,
+		AccountSequence: signerData.Sequence,
+		TimeoutHeight:   timeoutTx.GetTimeoutHeight(),
+		Msgs:            msgs,
+		Memo:            memoTx.GetMemo(),
+	}, nil
+}
+
+// extractSignatures returns the signature data for each signature in the transaction and the one for the current signer.
+//
+// This function also checks for replay attacks. The replay protection needs to be able to match the signature to the
+// corresponding signer, which involves iterating over the signatures. To avoid iterating over the signatures twice,
+// we do replay protection here instead of in a separate replay protection function.
+//
+// Only SingleSignatureData is supported. Multisigs can be implemented by using partitioned compound authenticators
+func extractSignatures(txSigners []sdk.AccAddress, txSignatures []signing.SignatureV2, txData ExplicitTxData, account sdk.AccAddress, replayProtection ReplayProtection) (signatures [][]byte, msgSignature []byte, err error) {
+	for i, signature := range txSignatures {
+		single, ok := signature.Data.(*signing.SingleSignatureData)
+		if !ok {
+			return nil, nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
+		}
+
+		signatures = append(signatures, single.Signature)
+
+		if txSigners[i].Equals(account) {
+			err = replayProtection(&txData, &signature)
+			if err != nil {
+				return nil, nil, err
+			}
+			msgSignature = single.Signature
+		}
+	}
+	return signatures, msgSignature, nil
+}
+
 func GenerateAuthenticationRequest(
 	ctx sdk.Context,
 	ak authante.AccountKeeper,
@@ -90,92 +177,43 @@ func GenerateAuthenticationRequest(
 	simulate bool,
 	replayProtection ReplayProtection,
 ) (AuthenticationRequest, error) {
+	// Only supporting one signer per message. This will be enforced in sdk v0.50
+	signer := msg.GetSigners()[0]
+	if !signer.Equals(account) {
+		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid signer")
+	}
+
+	// Get the signers and signatures from the transaction. A signer can only have one signature, so if it
+	// appears in multiple messages, the signatures must be the same, and it will only be returned once by
+	// this function. This is to mimic the way the classic sdk authentication works, and we will probably want
+	// to change this in the future
 	txSigners, txSignatures, err := GetSignerAndSignatures(tx)
 	if err != nil {
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signers and signatures")
 	}
 
-	// Retrieve and build the signer data struct
-	baseAccount := ak.GetAccount(ctx, account)
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = baseAccount.GetAccountNumber()
-	}
-	var sequence uint64
-	if baseAccount != nil {
-		sequence = baseAccount.GetSequence()
-	}
+	// Get the signer data for the account. This is needed in the SignDoc
+	signerData := getSignerData(ctx, ak, account)
 
-	signerData := authsigning.SignerData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      sequence,
-	}
-
-	// This can also be extracted
+	// Get the sign bytes for the transaction
 	signBytes, err := sigModeHandler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
 
-	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
-	if !ok {
-		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
-	}
-	memoTx, ok := tx.(sdk.TxWithMemo)
-	if !ok {
-		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+	// Get the concrete transaction data to be passed to the authenticators
+	txData, err := extractExplicitTxData(tx, signerData)
+	if err != nil {
+		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get explicit tx data")
 	}
 
-	txMsgs := tx.GetMsgs()
-	msgs := make([]LocalAny, len(txMsgs))
-	for i, txMsg := range txMsgs {
-		encodedMsg, err := types.NewAnyWithValue(txMsg)
-		if err != nil {
-			return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to encode msg")
-		}
-		msgs[i] = LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
-		}
+	// Get the signatures for the transaction and execute replay protection
+	signatures, msgSignature, err := extractSignatures(txSigners, txSignatures, txData, account, replayProtection)
+	if err != nil {
+		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signatures")
 	}
 
-	txData := ExplicitTxData{
-		ChainID:         chainID,
-		AccountNumber:   accNum,
-		AccountSequence: sequence,
-		TimeoutHeight:   timeoutTx.GetTimeoutHeight(),
-		Msgs:            msgs,
-		Memo:            memoTx.GetMemo(),
-	}
-
-	// Only supporting one signer per message.
-	signer := msg.GetSigners()[0]
-	var signatures [][]byte
-	var msgSignature []byte
-	for i, signature := range txSignatures {
-		if account.Equals(txSigners[i]) {
-			err := replayProtection(&txData, &signature)
-			if err != nil {
-				return AuthenticationRequest{}, err
-			}
-		}
-		single, ok := signature.Data.(*signing.SingleSignatureData)
-		if !ok {
-			return AuthenticationRequest{},
-				errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast signature to SingleSignatureData")
-		}
-
-		signatures = append(signatures, single.Signature)
-
-		if txSigners[i].Equals(signer) {
-			msgSignature = single.Signature
-		}
-	}
-
-	authRequest := AuthenticationRequest{
+	return AuthenticationRequest{
 		Account:    account,
 		FeePayer:   feePayer,
 		FeeGranter: feeGranter,
@@ -193,7 +231,5 @@ func GenerateAuthenticationRequest(
 		},
 		Simulate:            simulate,
 		AuthenticatorParams: nil,
-	}
-
-	return authRequest, nil
+	}, nil
 }
