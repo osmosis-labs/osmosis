@@ -3,14 +3,17 @@ name: Update Cosmos SDK Version
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: 'SDK version to use'
+        required: true
       branch:
         description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
         required: true
         default: 'main' # Default branch
+
   pull_request:
     branches: 
       - main # or any other branches you want to include
-    
 
 jobs:
   update-sdk-version-and-create-pr:
@@ -31,7 +34,7 @@ jobs:
           MODFILES="./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod"
           for modfile in $MODFILES; do
             if [ -e "$modfile" ]; then
-              sed -i "s|github.com/cosmos/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $VERSION|g" $modfile
+              sed -i "s|github.com/osmosis-labs/cosmos-sdk v[0-9a-zA-Z.\-]*|github.com/osmosis-labs/cosmos-sdk $VERSION|g" $modfile
               cd `dirname $modfile`
               go mod tidy
               cd - > /dev/null
@@ -51,7 +54,7 @@ jobs:
             **Automated pull request**
 
             Updating osmosis-labs/cosmos-sdk dependency to the specified version $VERSION.
-          base: main
+          base: ${{ github.event.inputs.branch }}
           branch-suffix: random
           delete-branch: true
           assignees: ${{ github.actor }}
