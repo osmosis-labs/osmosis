@@ -43,8 +43,7 @@ func CreateUpgradeHandler(
 		// Astroport uploaded a new contract and attempted to migrate their cw pools prior to the v24 upgrade.
 		// Their proposal to migrate the pool code IDs was only possible post v24 upgrade,
 		// due to this the pools are being manually upgraded as part of v25
-		poolIds := []uint64{1564, 1567, 1568, 1569, 1570, 1572, 1579, 1616, 1617, 1635, 1654}
-		for _, poolId := range poolIds {
+		for _, poolId := range AstroportPoolIds {
 			pool, err := keepers.CosmwasmPoolKeeper.GetPool(ctx, poolId)
 			if err != nil {
 				// Skip non-existent pools. This way we don't need to create the pools on E2E tests

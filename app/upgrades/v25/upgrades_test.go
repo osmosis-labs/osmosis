@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	v25 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v25"
 	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
 	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
 )
@@ -41,8 +42,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 
 	// Create Astroport pools pre-upgrade
-	astroportCodeIds := []uint64{1564, 1567, 1568, 1569, 1570, 1572, 1579, 1616, 1617, 1635, 1654}
-	for _, poolId := range astroportCodeIds {
+	for _, poolId := range v25.AstroportPoolIds {
 		s.App.CosmwasmPoolKeeper.SetPool(s.Ctx, &model.CosmWasmPool{
 			ContractAddress: "foo",
 			PoolId:          poolId,
@@ -50,7 +50,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			InstantiateMsg:  []byte("bar"),
 		})
 	}
-	s.requirePoolsHaveCodeId(astroportCodeIds, 580)
+	s.requirePoolsHaveCodeId(v25.AstroportPoolIds[:], 580)
 
 	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
@@ -66,7 +66,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	//
 
 	// Test that the Astroport pools have been updated
-	s.requirePoolsHaveCodeId(astroportCodeIds, 666)
+	s.requirePoolsHaveCodeId(v25.AstroportPoolIds[:], 666)
 
 }
 

@@ -21,3 +21,5 @@ var Upgrade = upgrades.Upgrade{
 		Deleted: []string{},
 	},
 }
+
+var AstroportPoolIds = [...]uint64{1564, 1567, 1568, 1569, 1570, 1572, 1579, 1616, 1617, 1635, 1654}
