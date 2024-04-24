@@ -127,6 +127,18 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, types.ErrZeroNumEpochsPaidOver
 	}
 
+	// Check that the coins being sent to the gauge exist as a skip hot route
+	// This is used to determine the underlying value of the rewards per user at epoch,
+	// since we don't distribute tokens values under a certain threshold.
+	// If the denom doesn't exist in the skip hot route, we would never distribute rewards
+	// from this gauge.
+	for _, coin := range coins {
+		_, err := k.prk.GetPoolForDenomPairNoOrder(ctx, coin.Denom, "uosmo")
+		if err != nil {
+			return 0, fmt.Errorf("denom %s does not exist as a protorev hot route, therefore, the value of rewards at time of epoch distribution will not be able to be determined", coin.Denom)
+		}
+	}
+
 	// If the gauge has no lock, then we currently assume it is a concentrated pool
 	// and ensure the gauge "lock" duration is an authorized uptime.
 	isNoLockGauge := distrTo.LockQueryType == lockuptypes.NoLock
