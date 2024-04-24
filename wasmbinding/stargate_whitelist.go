@@ -31,6 +31,7 @@ import (
 	twapquerytypes "github.com/osmosis-labs/osmosis/v24/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/x/smart-account/types"
 )
 
 // stargateResponsePools keeps whitelist and its deterministic
@@ -138,6 +139,10 @@ func init() {
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+
+	// smartaccount
+	setWhitelistedQuery("/osmosis.smartaccount.v1beta1.Query/GetAuthenticator", &smartaccounttypes.GetAuthenticatorResponse{})
+	setWhitelistedQuery("/osmosis.smartaccount.v1beta1.Query/GetAuthenticators", &smartaccounttypes.GetAuthenticatorsResponse{})
 
 	// poolmanager
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/NumPools", &poolmanagerqueryproto.NumPoolsResponse{})
