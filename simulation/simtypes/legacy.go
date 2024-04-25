@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
-	"github.com/osmosis-labs/osmosis/v24/app/params"
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
@@ -75,7 +74,7 @@ func GenAndDeliverTx(
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	txConfig := params.MakeEncodingConfig().TxConfig
+	txConfig := appparams.MakeEncodingConfig().TxConfig
 	txBytes, err := txConfig.TxEncoder()(tx)
 	if err != nil {
 		return simulation.OperationMsg{}, nil, err
