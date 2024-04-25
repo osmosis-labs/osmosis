@@ -55,6 +55,8 @@ var (
 func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	s.SetupTest()
 
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
 	for _, coin := range defaultLiquidTokens {
 		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 	}
@@ -77,6 +79,8 @@ func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	s.SetupTest()
 
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
 	for _, coin := range defaultLiquidTokens {
 		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 	}
@@ -456,6 +460,8 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
 			for _, coin := range tc.coinsToAdd {
 				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 			}
@@ -629,6 +635,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
 			for _, coin := range defaultGaugeCreationCoins {
 				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 			}
@@ -724,6 +732,8 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
 			for _, coin := range defaultGaugeCreationCoins {
 				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 			}
