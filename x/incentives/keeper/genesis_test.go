@@ -231,6 +231,9 @@ func TestIncentivesInitGenesis(t *testing.T) {
 }
 
 func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
+	for _, coin := range coins {
+		app.ProtoRevKeeper.SetPoolForDenomPair(ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
 	// create a byDuration gauge
 	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrToByDuration, startTime, 1, 0)
 	require.NoError(t, err)

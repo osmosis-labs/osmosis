@@ -194,6 +194,12 @@ func (s *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.
 		Duration:      duration,
 	}
 
+	for _, coin := range coins {
+		if coin.Denom != appparams.BaseCoinUnit {
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+		}
+	}
+
 	// mints coins so supply exists on chain
 	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
 	s.FundAcc(addr, mintCoins)

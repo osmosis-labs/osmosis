@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -148,6 +149,10 @@ func (s *KeeperTestSuite) TestImportExportGenesis_ExternalNoLock() {
 
 	// Fund account to create gauge
 	s.FundAcc(s.TestAccs[0], defaultCoins.Add(defaultCoins...))
+
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
 
 	// Create external non-perpetual gauge
 	externalGaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, s.TestAccs[0], defaultCoins.Add(defaultCoins...), lockuptypes.QueryCondition{
