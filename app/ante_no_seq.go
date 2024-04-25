@@ -74,6 +74,11 @@ func NewAnteHandler(
 		ante.NewSigVerificationDecorator(accountKeeper, signModeHandler),
 		// ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		auctionante.NewAuctionDecorator(
+			blockSDKParams.auctionKeeper,
+			blockSDKParams.txConfig.TxEncoder(),
+			blockSDKParams.mevLane,
+		),
 	)
 
 	// authenticatorVerificationDecorator is the new authenticator flow that's embedded into the circuit breaker ante
@@ -83,6 +88,14 @@ func NewAnteHandler(
 		// Both the signature verification, fee deduction, and gas consumption functionality
 		// is embedded in the authenticator decorator
 		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
+		// ante.NewIncrementSequenceDecorator(accountKeeper),
+		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		// auction module antehandler
+		auctionante.NewAuctionDecorator(
+			blockSDKParams.auctionKeeper,
+			blockSDKParams.txConfig.TxEncoder(),
+			blockSDKParams.mevLane,
+		),
 	)
 
 	return sdk.ChainAnteDecorators(
@@ -97,29 +110,12 @@ func NewAnteHandler(
 		sendblockDecorator,
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
-<<<<<<< HEAD
-		ante.NewValidateMemoDecorator(ak),
-		ante.NewConsumeGasForTxSizeDecorator(ak),
-		deductFeeDecorator,
-		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewValidateSigCountDecorator(ak),
-		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		ante.NewSigVerificationDecorator(ak, signModeHandler),
-		// ante.NewIncrementSequenceDecorator(ak),
-		ibcante.NewRedundantRelayDecorator(channelKeeper),
-		// auction module antehandler
-		auctionante.NewAuctionDecorator(
-			blockSDKParams.auctionKeeper,
-			blockSDKParams.txConfig.TxEncoder(),
-			blockSDKParams.mevLane,
-=======
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
 		smartaccountante.NewCircuitBreakerDecorator(
 			smartAccountKeeper,
 			authenticatorVerificationDecorator,
 			classicSignatureVerificationDecorator,
->>>>>>> main
 		),
 	)
 }
