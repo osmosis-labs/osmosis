@@ -26,12 +26,12 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v24/x/poolmanager/client/queryproto"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v24/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/x/smart-account/types"
 )
 
 // stargateResponsePools keeps whitelist and its deterministic
