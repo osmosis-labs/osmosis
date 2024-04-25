@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v24/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
@@ -54,6 +55,10 @@ var (
 func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	s.SetupTest()
 
+	for _, coin := range defaultLiquidTokens {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	addrs := s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
@@ -71,6 +76,10 @@ func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 // TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
 func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	s.SetupTest()
+
+	for _, coin := range defaultLiquidTokens {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
 
 	addrNoSupply := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
 	addrs := s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
@@ -446,6 +455,11 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
+			for _, coin := range tc.coinsToAdd {
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+			}
+
 			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, defaultCoins)
 
 			s.FundAcc(tc.owner, tc.coinsToAdd)
@@ -615,6 +629,10 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			for _, coin := range defaultGaugeCreationCoins {
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+			}
+
 			s.PrepareBalancerPool()
 			s.PrepareConcentratedPool()
 
@@ -705,6 +723,10 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
+			for _, coin := range defaultGaugeCreationCoins {
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+			}
 
 			s.PrepareBalancerPool()
 			s.PrepareConcentratedPool()

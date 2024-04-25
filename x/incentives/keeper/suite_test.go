@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 
@@ -144,6 +145,13 @@ func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom st
 
 // CreateGauge creates a gauge struct given the required params.
 func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
+	// Create a pool with the expectedShareDenom and uosmo, which is used to determine if the gauge can be created / distributed.
+	for _, coin := range coins {
+		if coin.Denom != appparams.BaseCoinUnit {
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+		}
+	}
+
 	s.FundAcc(addr, coins)
 	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch, 0)
 	s.Require().NoError(err)
@@ -154,6 +162,13 @@ func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coi
 
 // AddToGauge adds coins to the specified gauge.
 func (s *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
+	// Create a pool with the expectedShareDenom and uosmo, which is used to determine if the gauge can be created / distributed.
+	for _, coin := range coins {
+		if coin.Denom != appparams.BaseCoinUnit {
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+		}
+	}
+
 	addr := sdk.AccAddress([]byte("addrx---------------"))
 	s.FundAcc(addr, coins)
 	err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, addr, coins, gaugeID)
@@ -178,6 +193,12 @@ func (s *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
 		Duration:      duration,
+	}
+
+	for _, coin := range coins {
+		if coin.Denom != appparams.BaseCoinUnit {
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+		}
 	}
 
 	// mints coins so supply exists on chain

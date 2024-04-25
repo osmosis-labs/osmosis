@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
@@ -1196,6 +1197,13 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 		halfOfExternalGaugeCoins = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo)), sdk.NewCoin("usdc", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo))) // distributed at each epoch for non-perp gauge with numEpoch = 2
 	)
 
+	for _, coin := range externalGaugeCoins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+	for _, coin := range internalGaugeCoins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	s.FundAcc(s.TestAccs[1], requiredBalances)
 	s.FundAcc(s.TestAccs[2], requiredBalances)
 	s.FundModuleAcc(incentivetypes.ModuleName, requiredBalances)
@@ -1346,6 +1354,10 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 }
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {
+	for _, coin := range externalGaugeCoins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	// Create 1 external no-lock gauge perpetual over 1 epochs MsgCreateGauge
 	clPoolExternalGaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, numEpochsPaidOver == 1, gaugeCreator, externalGaugeCoins,
 		lockuptypes.QueryCondition{

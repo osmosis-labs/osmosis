@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
@@ -477,9 +478,11 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 // If all denoms are valid, it returns nil.
 func (k Keeper) checkIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) error {
 	for _, coin := range coins {
-		_, err := k.prk.GetPoolForDenomPairNoOrder(ctx, coin.Denom, "uosmo")
-		if err != nil {
-			return fmt.Errorf("denom %s does not exist as a protorev hot route, therefore, the value of rewards at time of epoch distribution will not be able to be determined", coin.Denom)
+		if coin.Denom != appparams.BaseCoinUnit {
+			_, err := k.prk.GetPoolForDenomPairNoOrder(ctx, coin.Denom, appparams.BaseCoinUnit)
+			if err != nil {
+				return fmt.Errorf("denom %s does not exist as a protorev hot route, therefore, the value of rewards at time of epoch distribution will not be able to be determined", coin.Denom)
+			}
 		}
 	}
 	return nil

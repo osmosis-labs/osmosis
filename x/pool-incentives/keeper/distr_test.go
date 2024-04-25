@@ -5,6 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -94,6 +95,11 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.Setup()
+
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 			keeper := s.App.PoolIncentivesKeeper
 			s.FundModuleAcc(types.ModuleName, sdk.NewCoins(test.mintedCoins))
 			s.PrepareBalancerPool()
@@ -143,6 +149,11 @@ func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
 	)
 
 	s.Setup()
+
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 	poolInfo := s.PrepareAllSupportedPools()
 
 	poolIDs := []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID}
