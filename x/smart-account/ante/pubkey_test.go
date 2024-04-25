@@ -107,7 +107,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 	}, []uint64{})
 
 	// Create a SetPubKey AnteDecorator
-	spkd := ante.NewSetPubKeyDecorator(s.OsmosisApp.AccountKeeper)
+	spkd := ante.NewEmitPubKeyDecoratorEvents(s.OsmosisApp.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
 
 	// Run the AnteDecorator on the transaction
@@ -138,7 +138,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnteWithSenderNotSigner()
 	}, []uint64{})
 
 	// Create a SetPubKey AnteDecorator
-	spkd := ante.NewSetPubKeyDecorator(s.OsmosisApp.AccountKeeper)
+	spkd := ante.NewEmitPubKeyDecoratorEvents(s.OsmosisApp.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
 
 	// Run the AnteDecorator on the transaction
