@@ -44,14 +44,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module.
 * [#8106](https://github.com/osmosis-labs/osmosis/pull/8106) Enable ProtoRev distro on epoch
 * [#8053](https://github.com/osmosis-labs/osmosis/pull/8053) Reset validator signing info missed blocks counter
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet
+* [#8073](https://github.com/osmosis-labs/osmosis/pull/8073) Speedup CL spread factor calculations, but mildly changes rounding behavior in the final decimal place.
 * [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module
 * [#8125](https://github.com/osmosis-labs/osmosis/pull/8125) When using smart accounts, fees are deducted directly after the feePayer is authenticated. Regardless of the authentication of other signers
 * [#8136](https://github.com/osmosis-labs/osmosis/pull/8136) Don't allow gauge creation/addition with rewards that have no protorev route (i.e. no way to determine if rewards meet minimum epoch value distribution requirements)
+* [#8144](https://github.com/osmosis-labs/osmosis/pull/8144) IBC wasm clients can now make stargate queries and support abort.
 
 ### State Compatible
+
+## v24.0.3
+
+* [#21](https://github.com/osmosis-labs/cometbft/pull/21) Move websocket logs to Debug
+* [#22](https://github.com/osmosis-labs/cometbft/pull/22) Fix txSearch pagination performance issues
+* [#25](https://github.com/osmosis-labs/cometbft/pull/25) Optimize merkle tree hashing
 
 ## v24.0.2
 
