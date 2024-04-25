@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
@@ -560,7 +559,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
 		defaultPoolCoinOne = sdk.NewCoin(USDC, osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin(ETH, osmomath.NewInt(2))
-		nonPoolCool        = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(3))
+		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
 
 		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
 	)
@@ -786,7 +785,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 // - Ensure that the position accumulators are updated
 // - Ensures that the position 1 receives incentives  but not position 2
 func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
-	const incentiveDenom = appparams.BaseCoinUnit
+	const incentiveDenom = "uosmo"
 
 	var emissionRatePerSecDec = osmomath.OneDec()
 

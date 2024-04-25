@@ -25,7 +25,6 @@ import (
 	gammv2types "github.com/osmosis-labs/osmosis/v24/x/gamm/v2types"
 
 	"github.com/osmosis-labs/osmosis/v24/app"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
@@ -89,7 +88,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
-					QuoteAssetDenom: appparams.BaseCoinUnit,
+					QuoteAssetDenom: "uosmo",
 				}
 				bz, err := proto.Marshal(&queryrequest)
 				suite.Require().NoError(err)
@@ -118,7 +117,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
-					QuoteAssetDenom: appparams.BaseCoinUnit,
+					QuoteAssetDenom: "uosmo",
 				}
 				bz, err := proto.Marshal(&queryrequest)
 				suite.Require().NoError(err)

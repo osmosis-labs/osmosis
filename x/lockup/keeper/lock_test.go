@@ -8,7 +8,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v24/x/lockup/types"
@@ -819,7 +818,7 @@ func (s *KeeperTestSuite) TestHasLock() {
 			tokenLocked:     sdk.NewInt64Coin("stake", 10),
 			durationLocked:  time.Minute,
 			lockAddr:        addr1,
-			denomToQuery:    appparams.BaseCoinUnit,
+			denomToQuery:    "uosmo",
 			durationToQuery: time.Minute,
 			expectedHas:     false,
 		},
@@ -828,7 +827,7 @@ func (s *KeeperTestSuite) TestHasLock() {
 			tokenLocked:     sdk.NewInt64Coin("stake", 10),
 			durationLocked:  time.Minute,
 			lockAddr:        addr2,
-			denomToQuery:    appparams.BaseCoinUnit,
+			denomToQuery:    "uosmo",
 			durationToQuery: time.Minute,
 			expectedHas:     false,
 		},

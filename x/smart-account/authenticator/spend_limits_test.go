@@ -3,12 +3,10 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	"os"
 	"testing"
 	"time"
-
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -124,7 +122,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 			},
 			{
 				Weight: sdk.NewInt(100000),
-				Token:  sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000000)),
+				Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
 			},
 		},
 	)
@@ -143,7 +141,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 		},
 		TrackedDenoms: []TrackedDenom{
 			{
-				Denom: appparams.BaseCoinUnit,
+				Denom: "uosmo",
 				SwapRoutes: []SwapAmountInRoute{
 					{
 						PoolID:        fmt.Sprintf("%d", usdcOsmoPoolId),
@@ -199,7 +197,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 
 	// fund acc
 	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
-	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(200000000000))))
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000000000))))
 
 	// a hack for setting fee payer
 	selfSend := banktypes.MsgSend{
@@ -212,7 +210,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	swapMsg := poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            authAcc.String(),
 		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: UUSDC}},
-		TokenIn:           sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(3333333333)), // ~ 4,999,999,999 uusdc
+		TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(3333333333)), // ~ 4,999,999,999 uusdc
 		TokenOutMinAmount: sdk.OneInt(),
 	}
 
@@ -236,7 +234,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	// swap over the limit
 	swapMsg = poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            authAcc.String(),
-		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: appparams.BaseCoinUnit}},
+		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: "uosmo"}},
 		TokenIn:           sdk.NewCoin(UUSDC, sdk.NewInt(2)),
 		TokenOutMinAmount: sdk.OneInt(),
 	}

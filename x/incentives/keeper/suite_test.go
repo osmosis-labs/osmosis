@@ -166,6 +166,7 @@ func (s *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
 	for _, coin := range coins {
 		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 	}
+
 	addr := sdk.AccAddress([]byte("addrx---------------"))
 	s.FundAcc(addr, coins)
 	err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, addr, coins, gaugeID)

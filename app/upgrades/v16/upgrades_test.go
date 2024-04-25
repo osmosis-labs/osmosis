@@ -16,7 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	v16 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v16"
 	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
@@ -84,15 +83,15 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					s.PrepareBalancerPoolWithCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
+					s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
 				}
 
 				// Create DAI / OSMO pool
-				s.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)))
+				s.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
 			},
 			func() {
 				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-				stakingParams.BondDenom = appparams.BaseCoinUnit
+				stakingParams.BondDenom = "uosmo"
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 				oneDai := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, osmomath.NewInt(1000000000000000000)))
@@ -124,11 +123,11 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
 				// Note we use all the osmo, but a small amount of DAI is left over due to rounding when creating the first position.
-				s.Require().Equal(communityPoolBalancePre.AmountOf(appparams.BaseCoinUnit).Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf(appparams.BaseCoinUnit).String())
+				s.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
 				osmoassert.Equal(s.T(), multiplicativeTolerance, communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneDai[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom)))
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/DAI that was used to create the pool
-				s.Require().Equal(communityPoolBalancePost.AmountOf(appparams.BaseCoinUnit).String(), feePoolCommunityPoolPost.AmountOf(appparams.BaseCoinUnit).TruncateInt().String())
+				s.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())
 				s.Require().Equal(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom).String(), feePoolCommunityPoolPost.AmountOf(v16.DAIIBCDenom).TruncateInt().String())
 
 				// Get balancer pool's spot price.
@@ -228,12 +227,12 @@ func upgradeProtorevSetup(s *UpgradeTestSuite) error {
 	account := apptesting.CreateRandomAccounts(1)[0]
 	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, account)
 
-	devFee := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000))
+	devFee := sdk.NewCoin("uosmo", osmomath.NewInt(1000000))
 	if err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, devFee); err != nil {
 		return err
 	}
 
-	fundCoin := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000)))
+	fundCoin := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 
 	if err := s.App.AppKeepers.BankKeeper.MintCoins(s.Ctx, protorevtypes.ModuleName, fundCoin); err != nil {
 		return err
@@ -246,7 +245,7 @@ func upgradeProtorevSetup(s *UpgradeTestSuite) error {
 // 	// Ensure balance was transferred to the developer account
 // 	devAcc, err := s.App.ProtoRevKeeper.GetDeveloperAccount(s.Ctx)
 // 	s.Require().NoError(err)
-// 	s.Require().Equal(s.App.BankKeeper.GetBalance(s.Ctx, devAcc, appparams.BaseCoinUnit), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000)))
+// 	s.Require().Equal(s.App.BankKeeper.GetBalance(s.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 
 // 	// Ensure developer fees are empty
 // 	coins, err := s.App.ProtoRevKeeper.GetAllDeveloperFees(s.Ctx)

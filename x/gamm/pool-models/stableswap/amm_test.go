@@ -12,7 +12,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	sdkrand "github.com/osmosis-labs/osmosis/v24/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/internal/test_helpers"
@@ -728,67 +727,67 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 		// two-asset pools
 		"even pool": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
 		"uneven pool (2:1)": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(500_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
 		"uneven pool (1_000_000:1)": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
 		"uneven pool (1:1_000_000)": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
 		"even pool, uneven scaling factors": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000_000)),
 			),
 			scalingFactors: []uint64{1, 8},
 		},
 		"uneven pool, uneven scaling factors": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(500_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
 			),
 			scalingFactors: []uint64{1, 9},
 		},
@@ -796,72 +795,72 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 		// multi asset pools
 		"even multi-asset pool": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)),
 				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
 		"uneven multi-asset pool (2:1:2)": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(500_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
 				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
 		"uneven multi-asset pool (1_000_000:1:1_000_000)": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000)),
 				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
 		"uneven multi-asset pool (1:1_000_000:1_000_000)": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)),
 				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
 		"even multi-asset pool, uneven scaling factors": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)),
 				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{5, 3, 9},
 		},
 		"uneven multi-asset pool (2:1:2), uneven scaling factors": {
 			denomIn:        "ion",
-			denomOut:       appparams.BaseCoinUnit,
+			denomOut:       "uosmo",
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
 				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(500_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
 				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{100, 76, 33},

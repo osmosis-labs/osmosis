@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	incentivetypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
@@ -30,7 +29,7 @@ var (
 	defaultPoolId       = uint64(1)
 	defaultAmount       = osmomath.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-	uosmo               = appparams.BaseCoinUnit
+	uosmo               = "uosmo"
 
 	defaultDenoms = []string{denomA, denomB}
 )
@@ -52,7 +51,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	)
 
 	// Set base denom
-	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000)))
+	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("uosmo", osmomath.NewInt(10000)))
 
 	// Create Transmuter pool
 	transmuter := s.PrepareCosmWasmPool()

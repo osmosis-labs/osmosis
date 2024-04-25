@@ -6,14 +6,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 const (
 	foo   = "foo"
 	bar   = "bar"
 	baz   = "baz"
-	uosmo = appparams.BaseCoinUnit
+	uosmo = "uosmo"
 )
 
 var (

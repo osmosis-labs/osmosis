@@ -8,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
 	cwmodel "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
@@ -313,7 +312,7 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 
 			// Note: this is necessary for gauge creation in the after pool created hook.
 			// There is a check requiring positive supply existing on-chain.
-			s.MintCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.OneInt())))
+			s.MintCoins(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt())))
 
 			pool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, tc.msg)
 

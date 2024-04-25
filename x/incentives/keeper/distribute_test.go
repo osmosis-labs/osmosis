@@ -59,7 +59,7 @@ var (
 	emptyCoins          = sdk.Coins{}
 	defaultVolumeAmount = osmomath.NewInt(300)
 
-	defaultCoins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100_000_000)))
+	defaultCoins = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
 
 	baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -2711,7 +2711,7 @@ func (s *KeeperTestSuite) TestSkipSpamGaugeDistribute() {
 
 	tenCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 10)}
 	oneKCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
-	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000)}
+	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin("uosmo", 1000)}
 	tests := []struct {
 		name                    string
 		locks                   []*lockuptypes.PeriodLock

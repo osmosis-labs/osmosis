@@ -15,7 +15,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v24/app/keepers"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
@@ -150,7 +149,7 @@ func CreateUpgradeHandler(
 
 		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
-		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(5000000000)))
+		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)))
 		govParams.MinInitialDepositRatio = "0.250000000000000000"
 		err = keepers.GovKeeper.SetParams(ctx, govParams)
 		if err != nil {

@@ -15,7 +15,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
@@ -37,7 +36,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 
 	var (
 		expectedDenom0       = "stake"
-		expectedDenom1       = appparams.BaseCoinUnit
+		expectedDenom1       = "uosmo"
 		expectedTickspacing  = uint64(100)
 		expectedSpreadFactor = "0.001000000000000000"
 	)
@@ -136,7 +135,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		denom0                 = "uion"
-		denom1                 = appparams.BaseCoinUnit
+		denom1                 = "uosmo"
 		tickSpacing     uint64 = 100
 		spreadFactor           = "0.001" // 0.1%
 		spreadFactorDec        = osmomath.MustNewDecFromStr("0.001")
@@ -326,16 +325,16 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Determine forfeited dust amount
 	forfeitedDustAmt := spreadRewardsUncollectedAddress1Position1_Swap1.Sub(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateDec())
-	forfeitedDust := sdk.NewDecCoins(sdk.NewDecCoinFromDec(appparams.BaseCoinUnit, forfeitedDustAmt))
+	forfeitedDust := sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", forfeitedDustAmt))
 	forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalLiquidity)
 
 	// Add forfeited dust back to the global spread reward growth
-	spreadRewardGrowthGlobal.AddMut(forfeitedDustPerShare.AmountOf(appparams.BaseCoinUnit))
+	spreadRewardGrowthGlobal.AddMut(forfeitedDustPerShare.AmountOf("uosmo"))
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf(appparams.BaseCoinUnit).Add(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
-		addr1BalancesAfter.AmountOf(appparams.BaseCoinUnit).String(),
+		addr1BalancesBefore.AmountOf("uosmo").Add(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
+		addr1BalancesAfter.AmountOf("uosmo").String(),
 	)
 
 	// Swap 2
@@ -448,8 +447,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf(appparams.BaseCoinUnit).Add(spreadRewardsUncollectedAddress1Position1_Swap2.TruncateInt()),
-		addr1BalancesAfter.AmountOf(appparams.BaseCoinUnit),
+		addr1BalancesBefore.AmountOf("uosmo").Add(spreadRewardsUncollectedAddress1Position1_Swap2.TruncateInt()),
+		addr1BalancesAfter.AmountOf("uosmo"),
 	)
 
 	// Assert that address3 position2 earned rewards from first and second swaps
@@ -482,8 +481,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr3BalancesBefore.AmountOf(appparams.BaseCoinUnit).Add(totalUncollectedSpreadRewardsAddress3Position2.TruncateInt()),
-		addr3BalancesAfter.AmountOf(appparams.BaseCoinUnit),
+		addr3BalancesBefore.AmountOf("uosmo").Add(totalUncollectedSpreadRewardsAddress3Position2.TruncateInt()),
+		addr3BalancesAfter.AmountOf("uosmo"),
 	)
 
 	// Swap 3
@@ -682,7 +681,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	var (
 		denom0              = "uion"
-		denom1              = appparams.BaseCoinUnit
+		denom1              = "uosmo"
 		tickSpacing  uint64 = 100
 		spreadFactor        = "0.001" // 0.1%
 	)
@@ -778,7 +777,7 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 		s.Require().True(balancesAfter.AmountOf("uion").Equal(balancesBefore.AmountOf("uion")))
 	}
 	if assertUosmoBalanceIsConstant {
-		s.Require().True(balancesAfter.AmountOf(appparams.BaseCoinUnit).Equal(balancesBefore.AmountOf(appparams.BaseCoinUnit)))
+		s.Require().True(balancesAfter.AmountOf("uosmo").Equal(balancesBefore.AmountOf("uosmo")))
 	}
 }
 

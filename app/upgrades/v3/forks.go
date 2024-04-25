@@ -23,7 +23,7 @@ func RunForkLogic(ctx sdk.Context, keepers *keepers.AppKeepers) {
 func FixMinDepositDenom(ctx sdk.Context, gov *govkeeper.Keeper) {
 	// UNFORKINGNOTE: GetDepositParams no longer exists, keeping commented for historical purposes
 	// params := gov.GetDepositParams(ctx)
-	// params.MinDeposit = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(500000000)))
+	// params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(500000000)))
 	// gov.SetDepositParams(ctx, params)
 }
 

@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v24/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
@@ -16,7 +15,7 @@ var (
 
 	pool1_in = types.SwapAmountInRoute{PoolId: 1, TokenOutDenom: "bar"}
 	pool2_in = types.SwapAmountInRoute{PoolId: 2, TokenOutDenom: "baz"}
-	pool3_in = types.SwapAmountInRoute{PoolId: 3, TokenOutDenom: appparams.BaseCoinUnit}
+	pool3_in = types.SwapAmountInRoute{PoolId: 3, TokenOutDenom: "uosmo"}
 	pool4_in = types.SwapAmountInRoute{PoolId: 4, TokenOutDenom: "baz"}
 
 	pool1_out = types.SwapAmountOutRoute{PoolId: 1, TokenInDenom: "bar"}
@@ -136,7 +135,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 					TokenOutAmount: amount,
 				},
 			},
-			tokenOutDenom:     appparams.BaseCoinUnit,
+			tokenOutDenom:     "uosmo",
 			tokenoutMaxAmount: max_amount,
 
 			expectedSplitRouteSwapEvent: 1,

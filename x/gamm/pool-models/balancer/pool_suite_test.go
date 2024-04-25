@@ -14,7 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	v10 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v10"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
@@ -34,7 +33,7 @@ const (
 var (
 	oneTrillion          = osmomath.NewInt(1e12)
 	defaultOsmoPoolAsset = balancer.PoolAsset{
-		Token:  sdk.NewCoin(appparams.BaseCoinUnit, oneTrillion),
+		Token:  sdk.NewCoin("uosmo", oneTrillion),
 		Weight: osmomath.NewInt(100),
 	}
 	defaultAtomPoolAsset = balancer.PoolAsset{
@@ -84,7 +83,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		name:         "single tokensIn - equal weights with zero spread factor",
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets:   oneTrillionEvenPoolAssets,
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(2_499_999_968_750),
 	},
 	{
@@ -105,7 +104,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		name:         "single tokensIn - equal weights with 0.01 spread factor",
 		spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 		poolAssets:   oneTrillionEvenPoolAssets,
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(2_487_500_000_000),
 	},
 	{
@@ -126,7 +125,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		name:         "single tokensIn - equal weights with 0.99 spread factor",
 		spreadFactor: osmomath.MustNewDecFromStr("0.99"),
 		poolAssets:   oneTrillionEvenPoolAssets,
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(1_262_500_000_000),
 	},
 	{
@@ -153,7 +152,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: osmomath.NewInt(300),
 			},
 		},
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(321_875_000_000),
 	},
 	{
@@ -174,12 +173,12 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.ZeroDec(),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1e12),
+				Token:  sdk.NewInt64Coin("uosmo", 1e12),
 				Weight: osmomath.NewInt(500),
 			},
 			defaultAtomPoolAsset,
 		},
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(4_166_666_649_306),
 	},
 	{
@@ -200,12 +199,12 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1e12),
+				Token:  sdk.NewInt64Coin("uosmo", 1e12),
 				Weight: osmomath.NewInt(500),
 			},
 			defaultAtomPoolAsset,
 		},
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(4_159_722_200_000),
 	},
 	{
@@ -226,7 +225,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1e12),
+				Token:  sdk.NewInt64Coin("uosmo", 1e12),
 				Weight: osmomath.NewInt(200),
 			},
 			{
@@ -234,7 +233,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: osmomath.NewInt(1000),
 			},
 		},
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(833_333_315_972),
 	},
 	{
@@ -255,7 +254,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0.02"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1e12),
+				Token:  sdk.NewInt64Coin("uosmo", 1e12),
 				Weight: osmomath.NewInt(200),
 			},
 			{
@@ -263,7 +262,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: osmomath.NewInt(1000),
 			},
 		},
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 50_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: osmomath.NewInt(819_444_430_000),
 	},
 	{
@@ -284,7 +283,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 156_736),
+				Token:  sdk.NewInt64Coin("uosmo", 156_736),
 				Weight: osmomath.NewInt(200),
 			},
 			{
@@ -293,7 +292,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		// 156_736 * 3 / 4 = 117552
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, (156_736*3)/4)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
 		expectShares: osmomath.NewIntFromUint64(9_775_731_930_496_140_648),
 	},
 	{
@@ -314,7 +313,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0.02"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 156_736),
+				Token:  sdk.NewInt64Coin("uosmo", 156_736),
 				Weight: osmomath.NewInt(200),
 			},
 			{
@@ -323,7 +322,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		// 156_736 / 4 * 3 = 117552
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 156_736/4*3)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
 		expectShares: osmomath.NewIntFromUint64(9_644_655_900_000_000_000),
 	},
 	{
@@ -344,7 +343,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 500_000),
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -353,7 +352,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		// Increasing this by 1 would cause a panic due to pow iteration limit reached
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 499_990)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_990)),
 		expectShares: osmomath.NewIntFromUint64(6_504_012_121_638_943_579),
 	},
 	{
@@ -375,7 +374,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 500_000),
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -383,7 +382,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: osmomath.NewInt(1000),
 			},
 		},
-		tokensIn: sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 499_999)),
+		tokensIn: sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
 
 		// pow iteration limit reached
 		expectPanic: true,
@@ -398,7 +397,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 500_000),
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -406,7 +405,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: osmomath.NewInt(1000),
 			},
 		},
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 500_000)),
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 500_000)),
 		expectShares: osmomath.NewIntFromUint64(6_504_099_261_800_144_638),
 		expectPanic:  true,
 	},
@@ -425,7 +424,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1_000_000_000_000),
+				Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -434,7 +433,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+			sdk.NewInt64Coin("uosmo", 1),
 		),
 		expectShares: osmomath.NewInt(50_000_000),
 	},
@@ -445,7 +444,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000_000_000),
+				Token:  sdk.NewInt64Coin("uosmo", 10_000_000_000_000),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -454,7 +453,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+			sdk.NewInt64Coin("uosmo", 1),
 		),
 		expectShares: osmomath.NewInt(5_000_000),
 	},
@@ -466,7 +465,7 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 25_000),
 		),
 		// Raises liquidity perfectly by 25_000 / 1_000_000_000_000.
@@ -474,7 +473,7 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 		// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1e12) * 10**20 = 2500000000000.0 = 2.5 * 10**12
 		expectShares: osmomath.NewInt(2.5e12),
 		expectLiq: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 25_000),
 		),
 	},
@@ -483,12 +482,12 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0.001"),
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 25_000),
 		),
 		expectShares: osmomath.NewInt(2500000000000),
 		expectLiq: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 25_000),
 		),
 	},
@@ -500,7 +499,7 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+				Token:  sdk.NewInt64Coin("uosmo", 1),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -509,12 +508,12 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+			sdk.NewInt64Coin("uosmo", 1),
 			sdk.NewInt64Coin("uatom", 1),
 		),
 		expectShares: osmomath.NewInt(1e18).Mul(osmomath.NewInt(100)),
 		expectLiq: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+			sdk.NewInt64Coin("uosmo", 1),
 			sdk.NewInt64Coin("uatom", 1),
 		),
 	},
@@ -525,7 +524,7 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 1_000_000_000_000),
+				Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
 				Weight: osmomath.NewInt(100),
 			},
 			{
@@ -534,12 +533,12 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+			sdk.NewInt64Coin("uosmo", 1),
 			sdk.NewInt64Coin("uatom", 1),
 		),
 		expectShares: osmomath.NewInt(100_000_000),
 		expectLiq: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 1),
+			sdk.NewInt64Coin("uosmo", 1),
 			sdk.NewInt64Coin("uatom", 1),
 		),
 	},
@@ -568,7 +567,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.ZeroDec(),
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 50_000),
 		),
 
@@ -596,7 +595,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 50_000),
 		),
 		expectShares: osmomath.NewInt(2.5e12 + 1243750000000),
@@ -624,13 +623,13 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		spreadFactor: osmomath.MustNewDecFromStr("0.03"),
 		poolAssets: []balancer.PoolAsset{
 			{
-				Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 2_000_000_000_000),
+				Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000_000),
 				Weight: osmomath.NewInt(500),
 			},
 			defaultAtomPoolAsset,
 		},
 		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 50_000),
 		),
 		expectShares: osmomath.NewInt(1250000000000 + 609374990000),
@@ -664,7 +663,7 @@ func (s *KeeperTestSuite) ResetTest() {
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
 func (s *KeeperTestSuite) TestBalancerSpotPrice() {
-	baseDenom := appparams.BaseCoinUnit
+	baseDenom := "uosmo"
 	quoteDenom := "uion"
 
 	tests := []struct {
@@ -749,7 +748,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
 func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
-	baseDenom := appparams.BaseCoinUnit
+	baseDenom := "uosmo"
 	quoteDenom := "uion"
 	defaultFutureGovernor = ""
 
@@ -951,13 +950,13 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 			spreadFactor: osmomath.ZeroDec(),
 			poolAssets:   oneTrillionEvenPoolAssets,
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
 
 			expectShares: osmomath.NewInt(2.5e12),
 			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
 		},
@@ -967,13 +966,13 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 			spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			poolAssets:   oneTrillionEvenPoolAssets,
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
 
 			expectShares: osmomath.NewInt(2.5e12),
 			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
 		},
@@ -985,18 +984,18 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 			spreadFactor: osmomath.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewInt64Coin(appparams.BaseCoinUnit, 2_000_000_000_000),
+					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000_000),
 					Weight: osmomath.NewInt(500),
 				},
 				defaultAtomPoolAsset,
 			},
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
 			expectShares: osmomath.NewInt(1250000000000),
 			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin(appparams.BaseCoinUnit, 25_000),
+				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 12_500),
 			),
 		},

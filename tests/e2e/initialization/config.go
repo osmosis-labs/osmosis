@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
@@ -53,7 +52,7 @@ type NodeConfig struct {
 
 const (
 	// common
-	OsmoDenom           = appparams.BaseCoinUnit
+	OsmoDenom           = "uosmo"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
@@ -410,7 +409,7 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 	// setup fee pool, between "e2e_default_fee_token" and "uosmo"
-	uosmoFeeTokenPool := setupPool(1, appparams.BaseCoinUnit, E2EFeeToken)
+	uosmoFeeTokenPool := setupPool(1, "uosmo", E2EFeeToken)
 
 	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
 

@@ -16,8 +16,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 type UpgradeTestSuite struct {
@@ -52,7 +50,7 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				// mint coins to distribution module / feepool.communitypool
 
 				bal := int64(1000000000000)
-				coin := sdk.NewInt64Coin(appparams.BaseCoinUnit, bal)
+				coin := sdk.NewInt64Coin("uosmo", bal)
 				coins := sdk.NewCoins(coin)
 				err := s.app.BankKeeper.MintCoins(s.ctx, "mint", coins)
 				s.Require().NoError(err)
@@ -87,9 +85,9 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 					s.Require().NoError(err)
 					amount, err := strconv.ParseInt(strings.TrimSpace(payment[1]), 10, 64)
 					s.Require().NoError(err)
-					coin := sdk.NewInt64Coin(appparams.BaseCoinUnit, amount)
+					coin := sdk.NewInt64Coin("uosmo", amount)
 
-					accBal := s.app.BankKeeper.GetBalance(s.ctx, addr, appparams.BaseCoinUnit)
+					accBal := s.app.BankKeeper.GetBalance(s.ctx, addr, "uosmo")
 					s.Require().Equal(coin, accBal)
 
 					total += amount
@@ -102,18 +100,18 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 
 				// check that distribution module account balance has been reduced correctly
 				distAddr := s.app.AccountKeeper.GetModuleAddress("distribution")
-				distBal := s.app.BankKeeper.GetBalance(s.ctx, distAddr, appparams.BaseCoinUnit)
-				s.Require().Equal(distBal, sdk.NewInt64Coin(appparams.BaseCoinUnit, expectedBal))
+				distBal := s.app.BankKeeper.GetBalance(s.ctx, distAddr, "uosmo")
+				s.Require().Equal(distBal, sdk.NewInt64Coin("uosmo", expectedBal))
 
 				// check that feepool.communitypool has been reduced correctly
 				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
-				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
+				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly
 
 				// Kept as comments for recordkeeping. Since SetParams is now private, the changes being tested for can no longer be made:
 				//  	gammParams := s.app.GAMMKeeper.GetParams(suite.ctx)
-				//  	expectedCreationFee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.OneInt()))
+				//  	expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt()))
 				//  	s.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
 			},
 			true,

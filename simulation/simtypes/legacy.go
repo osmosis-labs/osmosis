@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 // TODO: Must delete
@@ -39,7 +39,7 @@ func GenAndDeliverTxWithRandFees(
 	}
 
 	// Only allow fees in "uosmo"
-	coins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, coins.AmountOf(appparams.BaseCoinUnit)))
+	coins = sdk.NewCoins(sdk.NewCoin("uosmo", coins.AmountOf("uosmo")))
 
 	fees, err = simulation.RandomFees(r, ctx, coins)
 	if err != nil {
@@ -74,7 +74,7 @@ func GenAndDeliverTx(
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	txConfig := appparams.MakeEncodingConfig().TxConfig
+	txConfig := params.MakeEncodingConfig().TxConfig
 	txBytes, err := txConfig.TxEncoder()(tx)
 	if err != nil {
 		return simulation.OperationMsg{}, nil, err

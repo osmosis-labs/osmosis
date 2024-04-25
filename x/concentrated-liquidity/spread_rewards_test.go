@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
 	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
@@ -427,8 +426,8 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 }
 
 func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
-	defaultGeeFrowthGlobal := sdk.NewDecCoins(sdk.NewDecCoin(appparams.BaseCoinUnit, osmomath.NewInt(10)))
-	defaultGeeFrowthOutside := sdk.NewDecCoins(sdk.NewDecCoin(appparams.BaseCoinUnit, osmomath.NewInt(3)))
+	defaultGeeFrowthGlobal := sdk.NewDecCoins(sdk.NewDecCoin("uosmo", osmomath.NewInt(10)))
+	defaultGeeFrowthOutside := sdk.NewDecCoins(sdk.NewDecCoin("uosmo", osmomath.NewInt(3)))
 
 	defaultSmallerTargetTick := int64(1)
 	defaultCurrentTick := int64(2)

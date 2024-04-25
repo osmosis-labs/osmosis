@@ -21,7 +21,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/app"
 	"github.com/osmosis-labs/osmosis/v24/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 type BaseAuthenticatorSuite struct {
@@ -101,7 +100,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 
 func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sdk.Msg, signers []cryptotypes.PrivKey, selectedAuthenticators []uint64) (sdk.Tx, error) {
 	txconfig := app.MakeEncodingConfig().TxConfig
-	feeCoins := sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 2500)}
+	feeCoins := sdk.Coins{sdk.NewInt64Coin("uosmo", 2500)}
 	var accNums []uint64
 	var accSeqs []uint64
 

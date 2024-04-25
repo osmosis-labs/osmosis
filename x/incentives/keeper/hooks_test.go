@@ -11,7 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
 )
@@ -21,7 +20,7 @@ var (
 	ETH   = apptesting.ETH
 	BAR   = apptesting.BAR
 	FOO   = apptesting.FOO
-	UOSMO = appparams.BaseCoinUnit
+	UOSMO = apptesting.UOSMO
 
 	defaultAmount = osmomath.NewInt(100_000_000_000)
 

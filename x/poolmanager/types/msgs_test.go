@@ -10,7 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
@@ -26,7 +25,7 @@ var (
 
 	validSwapExactAmountInRoutes = []types.SwapAmountInRoute{{
 		PoolId:        1,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	}, {
 		PoolId:        2,
 		TokenOutDenom: "uatom",
@@ -42,7 +41,7 @@ var (
 		TokenInDenom: "uatom",
 	}, {
 		PoolId:       2,
-		TokenInDenom: appparams.BaseCoinUnit,
+		TokenInDenom: "uosmo",
 	}}
 )
 
@@ -576,12 +575,12 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 			Sender: addr1,
 			DenomPairTakerFee: []types.DenomPairTakerFee{
 				{
-					Denom0:   appparams.BaseCoinUnit,
+					Denom0:   "uosmo",
 					Denom1:   "uatom",
 					TakerFee: osmomath.MustNewDecFromStr("0.003"),
 				},
 				{
-					Denom0:   appparams.BaseCoinUnit,
+					Denom0:   "uosmo",
 					Denom1:   "uion",
 					TakerFee: osmomath.MustNewDecFromStr("0.006"),
 				},

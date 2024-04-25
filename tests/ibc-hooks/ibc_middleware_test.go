@@ -3,14 +3,11 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
 	"time"
-
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
-
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 
 	"github.com/tidwall/gjson"
 
@@ -764,7 +761,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
-	amounts := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
@@ -808,7 +805,7 @@ func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, own
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
-	amounts := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)

@@ -87,8 +87,6 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-
 	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 
@@ -615,8 +613,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	govParams := app.GovKeeper.GetParams(ctx)
 	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
 	govParams.VotingPeriod = &newVotingPeriod
-	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 100000000))
-	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 150000000))
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 100000000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 150000000))
 
 	err = app.GovKeeper.SetParams(ctx, govParams)
 	if err != nil {
@@ -656,7 +654,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	defaultCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
 		sdk.NewInt64Coin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", 1000000000000), // USDC, for pool creation fee
-		sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000000000000),
+		sdk.NewInt64Coin("uosmo", 1000000000000),
 		sdk.NewInt64Coin("uion", 1000000000))
 
 	localOsmosisAccounts := []sdk.AccAddress{
@@ -688,7 +686,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	// Fund edgenet faucet
 	faucetCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
-		sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000000000000000),
+		sdk.NewInt64Coin("uosmo", 1000000000000000),
 		sdk.NewInt64Coin("uion", 1000000000000))
 	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
 	if err != nil {
@@ -701,7 +699,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	// Mars bank account
 	marsCoins := sdk.NewCoins(
-		sdk.NewInt64Coin(appparams.BaseCoinUnit, 10000000000000),
+		sdk.NewInt64Coin("uosmo", 10000000000000),
 		sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
 		sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
 		sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),

@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	mempool1559 "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/mempool-1559"
 	"github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
@@ -252,7 +251,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// if we are simulating, set the fees to 1 uosmo as they don't matter.
 	// set it as coming from the burn addr
 	if simulate && fees.IsZero() {
-		fees = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 1))
+		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
 		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
 		// were doing 1 extra get account call alas
 		burnAcct := dfd.ak.GetAccount(ctx, burnAcctAddr)

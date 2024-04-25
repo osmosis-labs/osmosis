@@ -269,7 +269,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		// test swap exact amount in for stable swap pool
-		chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[0]), appparams.BaseCoinUnit, config.StableswapWallet[0])
+		chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[0]), "uosmo", config.StableswapWallet[0])
 	}()
 
 	go func() {
@@ -290,7 +290,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		// test swap exact amount in for stable swap pool
-		chainBNode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[1]), appparams.BaseCoinUnit, config.StableswapWallet[1])
+		chainBNode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[1]), "uosmo", config.StableswapWallet[1])
 	}()
 
 	go func() {

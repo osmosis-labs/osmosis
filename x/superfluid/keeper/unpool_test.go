@@ -10,7 +10,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
@@ -33,7 +32,7 @@ var (
 	defaultPoolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
 	defaultAcctFunds  sdk.Coins            = sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
-		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 		sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 		sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 		sdk.NewCoin("baz", osmomath.NewInt(10000000)),

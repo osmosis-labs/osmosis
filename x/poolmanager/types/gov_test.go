@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
@@ -15,17 +14,17 @@ func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {
 	records := []types.DenomPairTakerFee{
 		{
 			Denom0:   "uion",
-			Denom1:   appparams.BaseCoinUnit,
+			Denom1:   "uosmo",
 			TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 		},
 		{
 			Denom0:   "stake",
-			Denom1:   appparams.BaseCoinUnit,
+			Denom1:   "uosmo",
 			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
 		},
 		{
 			Denom0:   "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-			Denom1:   appparams.BaseCoinUnit,
+			Denom1:   "uosmo",
 			TakerFee: osmomath.MustNewDecFromStr("0.0017"),
 		},
 	}
@@ -67,7 +66,7 @@ func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {
 func TestDenomPairTakerFeeProposal_ValidateBasic(t *testing.T) {
 	baseRecord := types.DenomPairTakerFee{
 		Denom0:   "uion",
-		Denom1:   appparams.BaseCoinUnit,
+		Denom1:   "uosmo",
 		TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 	}
 

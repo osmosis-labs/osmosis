@@ -15,7 +15,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
@@ -27,7 +26,7 @@ func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
 func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
 	t.Helper()
 	err := testutil.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
-		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 	))
 	require.NoError(t, err)
 }

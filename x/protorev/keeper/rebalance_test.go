@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
@@ -29,7 +28,7 @@ var routeTwoAssetSameWeight = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        24,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 }
 
@@ -47,7 +46,7 @@ var routeMultiAssetSameWeight = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        27,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 }
 
@@ -65,7 +64,7 @@ var routeMostProfitable = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        27,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 }
 
@@ -101,7 +100,7 @@ var routeNoArb = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        8,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 }
 
@@ -119,7 +118,7 @@ var routeStableSwap = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        30,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 }
 
@@ -175,7 +174,7 @@ var extendedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
 var clPoolRouteExtended = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        49,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        50,
@@ -187,7 +186,7 @@ var clPoolRouteExtended = poolmanagertypes.SwapAmountInRoutes{
 var clPoolRouteMulti = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        57,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        58,
@@ -199,7 +198,7 @@ var clPoolRouteMulti = poolmanagertypes.SwapAmountInRoutes{
 var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        49,
-		TokenOutDenom: appparams.BaseCoinUnit,
+		TokenOutDenom: "uosmo",
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        57,
@@ -442,7 +441,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			name: "Mainnet Arb Route",
 			param: param{
 				route:          routeTwoAssetSameWeight,
-				inputCoin:      sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10100000)),
+				inputCoin:      sdk.NewCoin("uosmo", osmomath.NewInt(10100000)),
 				expectedProfit: osmomath.NewInt(24852),
 			},
 			arbDenom:            types.OsmosisDenomination,
@@ -453,7 +452,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			name: "No arbitrage opportunity - expect error at multihopswap due to profitability invariant",
 			param: param{
 				route:          routeNoArb,
-				inputCoin:      sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000)),
+				inputCoin:      sdk.NewCoin("uosmo", osmomath.NewInt(1000000)),
 				expectedProfit: osmomath.NewInt(0),
 			},
 			arbDenom:   types.OsmosisDenomination,
@@ -463,7 +462,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			name: "0 input amount - expect error at multihopswap due to amount needing to be positive",
 			param: param{
 				route:          routeNoArb,
-				inputCoin:      sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(0)),
+				inputCoin:      sdk.NewCoin("uosmo", osmomath.NewInt(0)),
 				expectedProfit: osmomath.NewInt(0),
 			},
 			arbDenom:   types.OsmosisDenomination,
@@ -603,7 +602,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeTwoAssetSameWeight},
 				expectedMaxProfitAmount:    osmomath.NewInt(24848),
-				expectedMaxProfitInputCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", osmomath.NewInt(10000000)),
 				expectedOptimalRoute:       routeTwoAssetSameWeight,
 				arbDenom:                   types.OsmosisDenomination,
 			},
@@ -614,7 +613,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeMultiAssetSameWeight, routeTwoAssetSameWeight},
 				expectedMaxProfitAmount:    osmomath.NewInt(24848),
-				expectedMaxProfitInputCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", osmomath.NewInt(10000000)),
 				expectedOptimalRoute:       routeTwoAssetSameWeight,
 				arbDenom:                   types.OsmosisDenomination,
 			},
@@ -625,7 +624,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeMostProfitable, routeMultiAssetSameWeight, routeTwoAssetSameWeight},
 				expectedMaxProfitAmount:    osmomath.NewInt(67511675),
-				expectedMaxProfitInputCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(520000000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", osmomath.NewInt(520000000)),
 				expectedOptimalRoute:       routeMostProfitable,
 				arbDenom:                   types.OsmosisDenomination,
 			},
@@ -830,13 +829,13 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 
 	s.Run("Extended search on CL pools", func() {
 		// Create two massive CL pools with a massive arb
-		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", appparams.BaseCoinUnit, apptesting.DefaultTickSpacing, osmomath.ZeroDec())
-		fundCoins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(10_000_000_000_000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10_000_000_000_000)))
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", apptesting.DefaultTickSpacing, osmomath.ZeroDec())
+		fundCoins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", osmomath.NewInt(10_000_000_000_000)))
 		s.FundAcc(s.TestAccs[0], fundCoins)
 		s.CreateFullRangePosition(clPool, fundCoins)
 
-		clPool2 := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", appparams.BaseCoinUnit, apptesting.DefaultTickSpacing, osmomath.ZeroDec())
-		fundCoins = sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(20_000_000_000_000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10_000_000_000_000)))
+		clPool2 := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", apptesting.DefaultTickSpacing, osmomath.ZeroDec())
+		fundCoins = sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(20_000_000_000_000)), sdk.NewCoin("uosmo", osmomath.NewInt(10_000_000_000_000)))
 		s.FundAcc(s.TestAccs[0], fundCoins)
 		s.CreateFullRangePosition(clPool2, fundCoins)
 
@@ -844,7 +843,7 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 			Route: poolmanagertypes.SwapAmountInRoutes{
 				poolmanagertypes.SwapAmountInRoute{
 					PoolId:        clPool.GetId(),
-					TokenOutDenom: appparams.BaseCoinUnit,
+					TokenOutDenom: "uosmo",
 				},
 				poolmanagertypes.SwapAmountInRoute{
 					PoolId:        clPool2.GetId(),
@@ -869,7 +868,7 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 	s.Run("Reduced search on CL pools", func() {
 		stablePool := s.createStableswapPool(
 			sdk.NewCoins(
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(25_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(25_000_000_000)),
 				sdk.NewCoin("eth", osmomath.NewInt(20_000_000_000)),
 			),
 			stableswap.PoolParams{
@@ -880,8 +879,8 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 		)
 
 		// Create two massive CL pools with a massive arb
-		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", appparams.BaseCoinUnit, apptesting.DefaultTickSpacing, osmomath.ZeroDec())
-		fundCoins := sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(10_000_000_000_000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10_000_000_000_000)))
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "uosmo", apptesting.DefaultTickSpacing, osmomath.ZeroDec())
+		fundCoins := sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", osmomath.NewInt(10_000_000_000_000)))
 		s.FundAcc(s.TestAccs[0], fundCoins)
 		s.CreateFullRangePosition(clPool, fundCoins)
 
@@ -893,7 +892,7 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 				},
 				poolmanagertypes.SwapAmountInRoute{
 					PoolId:        clPool.GetId(),
-					TokenOutDenom: appparams.BaseCoinUnit,
+					TokenOutDenom: "uosmo",
 				},
 			},
 			StepSize: osmomath.NewInt(1_000_000),
@@ -902,7 +901,7 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
 			s.Ctx,
 			route,
-			appparams.BaseCoinUnit,
+			"uosmo",
 			osmomath.OneInt(),
 			types.MaxInputAmount,
 		)

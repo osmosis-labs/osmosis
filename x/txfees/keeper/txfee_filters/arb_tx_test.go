@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/txfee_filters"
@@ -32,7 +31,7 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 			Routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1221,
-					TokenOutDenom: appparams.BaseCoinUnit,
+					TokenOutDenom: "uosmo",
 				},
 				{
 					PoolId:        3,

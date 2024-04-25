@@ -1,12 +1,9 @@
 package types
 
-import (
-	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-)
+import "github.com/osmosis-labs/osmosis/osmomath"
 
 // OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
-var OsmosisDenomination string = appparams.BaseCoinUnit
+var OsmosisDenomination string = "uosmo"
 
 // ----------------- Module Execution Time Constants ----------------- //
 

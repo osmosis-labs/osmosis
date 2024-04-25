@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
@@ -245,7 +244,7 @@ func (s *KeeperTestSuite) TestJoinPool_Events() {
 				sdk.NewCoin("foo", osmomath.NewInt(tokenInMaxAmount)),
 				sdk.NewCoin("bar", osmomath.NewInt(tokenInMaxAmount)),
 				sdk.NewCoin("baz", osmomath.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
 			expectedMessageEvents:      2, // 1 gamm + 1 event emitted by other keeper methods.
@@ -339,7 +338,7 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 					sdk.NewCoin("foo", osmomath.NewInt(int64Max)),
 					sdk.NewCoin("bar", osmomath.NewInt(int64Max)),
 					sdk.NewCoin("baz", osmomath.NewInt(int64Max)),
-					sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(int64Max)),
+					sdk.NewCoin("uosmo", osmomath.NewInt(int64Max)),
 				),
 			})
 			s.Require().NoError(err)

@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
 )
@@ -203,16 +202,16 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	}{
 		{
 			name:       "osmo denom only",
-			arbProfits: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000))),
+			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000))),
 		},
 		{
 			name: "osmo denom and another base denom",
-			arbProfits: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)),
+			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)),
 				sdk.NewCoin("juno", osmomath.NewInt(100000000))),
 		},
 		{
 			name: "osmo denom, another base denom, and a non base denom",
-			arbProfits: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)),
+			arbProfits: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)),
 				sdk.NewCoin("juno", osmomath.NewInt(100000000)),
 				sdk.NewCoin("eth", osmomath.NewInt(100000000))),
 		},
