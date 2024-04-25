@@ -17,25 +17,25 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type MessageFilterAuthenticatorTest struct {
+type MessageFilterTest struct {
 	BaseAuthenticatorSuite
 
-	MessageFilterAuthenticator authenticator.MessageFilterAuthenticator
-	EncodingConfig             params.EncodingConfig
+	MessageFilter  authenticator.MessageFilter
+	EncodingConfig params.EncodingConfig
 }
 
-func TestMessageFilterAuthenticatorTest(t *testing.T) {
-	suite.Run(t, new(MessageFilterAuthenticatorTest))
+func TestMessageFilterTest(t *testing.T) {
+	suite.Run(t, new(MessageFilterTest))
 }
 
-func (s *MessageFilterAuthenticatorTest) SetupTest() {
+func (s *MessageFilterTest) SetupTest() {
 	s.SetupKeys()
 	s.EncodingConfig = app.MakeEncodingConfig()
-	s.MessageFilterAuthenticator = authenticator.NewMessageFilterAuthenticator(s.EncodingConfig)
+	s.MessageFilter = authenticator.NewMessageFilter(s.EncodingConfig)
 }
 
-// TestBankSend tests the MessageFilterAuthenticator with multiple bank send messages
-func (s *MessageFilterAuthenticatorTest) TestBankSend() {
+// TestBankSend tests the MessageFilter with multiple bank send messages
+func (s *MessageFilterTest) TestBankSend() {
 	fromAddr := s.TestAccAddress[0].String()
 	tests := []struct {
 		name           string // name
@@ -155,14 +155,14 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.MessageFilterAuthenticator.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.pattern), "1")
+			err := s.MessageFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.pattern), "1")
 			if tt.passvalidation {
 				s.Require().NoError(err)
 			} else {
 				s.Require().Error(err)
 				return
 			}
-			filter, err := s.MessageFilterAuthenticator.Initialize([]byte(tt.pattern))
+			filter, err := s.MessageFilter.Initialize([]byte(tt.pattern))
 			s.Require().NoError(err)
 
 			ak := s.OsmosisApp.AccountKeeper
@@ -182,8 +182,8 @@ func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 	}
 }
 
-// TestPoolManagerSwapExactAmountIn tests the MessageFilterAuthenticator with multiple pool manager swap messages
-func (s *MessageFilterAuthenticatorTest) TestPoolManagerSwapExactAmountIn() {
+// TestPoolManagerSwapExactAmountIn tests the MessageFilter with multiple pool manager swap messages
+func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 	fromAddr := s.TestAccAddress[0].String()
 	tests := []struct {
 		name    string
@@ -265,7 +265,7 @@ func (s *MessageFilterAuthenticatorTest) TestPoolManagerSwapExactAmountIn() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			filter, err := s.MessageFilterAuthenticator.Initialize([]byte(tt.pattern))
+			filter, err := s.MessageFilter.Initialize([]byte(tt.pattern))
 			s.Require().NoError(err)
 
 			ak := s.OsmosisApp.AccountKeeper

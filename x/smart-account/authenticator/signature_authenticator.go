@@ -14,47 +14,47 @@ import (
 )
 
 // Compile time type assertion for the SignatureData using the
-// SignatureVerificationAuthenticator struct
-var _ Authenticator = &SignatureVerificationAuthenticator{}
+// SignatureVerification struct
+var _ Authenticator = &SignatureVerification{}
 
 const (
-	// SignatureVerificationAuthenticatorType represents a type of authenticator specifically designed for
+	// SignatureVerificationType represents a type of authenticator specifically designed for
 	// secp256k1 signature verification.
-	SignatureVerificationAuthenticatorType = "SignatureVerificationAuthenticator"
+	SignatureVerificationType = "SignatureVerification"
 )
 
 // signature authenticator
-type SignatureVerificationAuthenticator struct {
+type SignatureVerification struct {
 	ak     authante.AccountKeeper
 	PubKey cryptotypes.PubKey
 }
 
-func (sva SignatureVerificationAuthenticator) Type() string {
-	return SignatureVerificationAuthenticatorType
+func (sva SignatureVerification) Type() string {
+	return SignatureVerificationType
 }
 
-func (sva SignatureVerificationAuthenticator) StaticGas() uint64 {
+func (sva SignatureVerification) StaticGas() uint64 {
 	// using 0 gas here. The gas is consumed based on the pubkey type in Authenticate()
 	return 0
 }
 
-// NewSignatureVerificationAuthenticator creates a new SignatureVerificationAuthenticator
-func NewSignatureVerificationAuthenticator(ak authante.AccountKeeper) SignatureVerificationAuthenticator {
-	return SignatureVerificationAuthenticator{ak: ak}
+// NewSignatureVerification creates a new SignatureVerification
+func NewSignatureVerification(ak authante.AccountKeeper) SignatureVerification {
+	return SignatureVerification{ak: ak}
 }
 
 // Initialize sets up the public key to the data supplied from the account-authenticator configuration
-func (sva SignatureVerificationAuthenticator) Initialize(data []byte) (Authenticator, error) {
-	if len(data) != secp256k1.PubKeySize {
+func (sva SignatureVerification) Initialize(config []byte) (Authenticator, error) {
+	if len(config) != secp256k1.PubKeySize {
 		sva.PubKey = nil
 	}
-	sva.PubKey = &secp256k1.PubKey{Key: data}
+	sva.PubKey = &secp256k1.PubKey{Key: config}
 	return sva, nil
 }
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (sva SignatureVerification) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
@@ -79,23 +79,23 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, requ
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (sva SignatureVerification) Track(ctx sdk.Context, request AuthenticationRequest) error {
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (sva SignatureVerification) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (sva SignatureVerification) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	// We allow users to pass no data or a valid public key for signature verification.
 	// Users can pass no data if the public key is already contained in the auth store.
-	if len(data) != secp256k1.PubKeySize {
-		return fmt.Errorf("invalid secp256k1 public key size, expected %d, got %d", secp256k1.PubKeySize, len(data))
+	if len(config) != secp256k1.PubKeySize {
+		return fmt.Errorf("invalid secp256k1 public key size, expected %d, got %d", secp256k1.PubKeySize, len(config))
 	}
 	return nil
 }
 
-func (sva SignatureVerificationAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (sva SignatureVerification) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }

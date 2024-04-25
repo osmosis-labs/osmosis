@@ -28,7 +28,7 @@ type BaseAuthenticatorSuite struct {
 	OsmosisApp                   *app.OsmosisApp
 	Ctx                          sdk.Context
 	EncodingConfig               params.EncodingConfig
-	SigVerificationAuthenticator authenticator.SignatureVerificationAuthenticator
+	SigVerificationAuthenticator authenticator.SignatureVerification
 	TestKeys                     []string
 	TestAccAddress               []sdk.AccAddress
 	TestPrivKeys                 []*secp256k1.PrivKey
