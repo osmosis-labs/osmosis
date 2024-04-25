@@ -49,7 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
 * [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module.
 * [#8125](https://github.com/osmosis-labs/osmosis/pull/8125) When using smart accounts, fees are deducted directly after the feePayer is authenticated. Regardless of the authentication of other signers.
-
+* [#8144](https://github.com/osmosis-labs/osmosis/pull/8144) IBC wasm clients can now make stargate queries and support abort.
+  
 ### State Compatible
 
 ## v24.0.3
