@@ -481,7 +481,7 @@ func (k Keeper) checkIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) 
 		if coin.Denom != appparams.BaseCoinUnit {
 			_, err := k.prk.GetPoolForDenomPairNoOrder(ctx, coin.Denom, appparams.BaseCoinUnit)
 			if err != nil {
-				return fmt.Errorf("denom %s does not exist as a protorev hot route, therefore, the value of rewards at time of epoch distribution will not be able to be determined", coin.Denom)
+				return types.NoRouteForDenomError{Denom: coin.Denom}
 			}
 		}
 	}

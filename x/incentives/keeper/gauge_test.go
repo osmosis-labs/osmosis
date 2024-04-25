@@ -410,7 +410,8 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 		gaugeId            uint64
 		minimumGasConsumed uint64
 
-		expectErr bool
+		skipSettingRoute bool
+		expectErr        bool
 	}{
 		{
 			name:  "valid case: valid gauge",
@@ -454,6 +455,19 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 
 			expectErr: true,
 		},
+		{
+			name:  "invalid case: valid gauge, but errors due to no protorev route",
+			owner: s.TestAccs[0],
+			coinsToAdd: sdk.NewCoins(
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
+			),
+			gaugeId:            1,
+			minimumGasConsumed: uint64(2 * types.BaseGasFeeForAddRewardToGauge),
+
+			skipSettingRoute: true,
+			expectErr:        true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -462,8 +476,10 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 
 			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
 			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
-			for _, coin := range tc.coinsToAdd {
-				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+			if !tc.skipSettingRoute {
+				for _, coin := range tc.coinsToAdd {
+					s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+				}
 			}
 
 			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, defaultCoins)
@@ -520,6 +536,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 		expectedGaugeId  uint64
 		expectedDenomSet string
+		skipSettingRoute bool
 		expectErr        bool
 	}{
 		{
@@ -535,6 +552,21 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			expectedGaugeId:  defaultExpectedGaugeId,
 			expectedDenomSet: types.NoLockExternalGaugeDenom(concentratedPoolId),
 			expectErr:        false,
+		},
+		{
+			name: "create valid no lock gauge with CL pool, but errors due to no protorev route",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom:    "",
+				Duration: time.Nanosecond,
+			},
+			poolId: concentratedPoolId,
+
+			expectedGaugeId:  defaultExpectedGaugeId,
+			expectedDenomSet: types.NoLockExternalGaugeDenom(concentratedPoolId),
+			skipSettingRoute: true,
+			expectErr:        true,
 		},
 		{
 			name: "create valid no lock gauge with CL pool (denom set to no lock internal prefix)",
@@ -637,8 +669,10 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
 			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
-			for _, coin := range defaultGaugeCreationCoins {
-				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+			if !tc.skipSettingRoute {
+				for _, coin := range defaultGaugeCreationCoins {
+					s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+				}
 			}
 
 			s.PrepareBalancerPool()
@@ -693,6 +727,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 
 		expectedGaugeId  uint64
 		expectedDenomSet string
+		skipSettingRoute bool
 		expectErr        error
 	}{
 		{
@@ -725,6 +760,16 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 
 			expectErr: types.ErrZeroNumEpochsPaidOver,
 		},
+		{
+			name:              "create valid non-perpetual group gauge, but errors due to no protorev route",
+			distrTo:           incentiveskeeper.ByGroupQueryCondition,
+			poolId:            zeroPoolId,
+			isPerpetual:       false,
+			numEpochsPaidOver: types.PerpetualNumEpochsPaidOver + 1,
+
+			skipSettingRoute: true,
+			expectErr:        types.NoRouteForDenomError{Denom: "atom"},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -734,8 +779,10 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 
 			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
 			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
-			for _, coin := range defaultGaugeCreationCoins {
-				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+			if !tc.skipSettingRoute {
+				for _, coin := range defaultGaugeCreationCoins {
+					s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+				}
 			}
 
 			s.PrepareBalancerPool()
@@ -865,4 +912,46 @@ func (s *KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID 
 	}, slice)
 	// No gauge matched ID.
 	s.Require().Empty(gaugeMatch)
+}
+
+func (s *KeeperTestSuite) TestCheckIfDenomsAreDistributable() {
+	s.SetupTest()
+
+	coinWithRouteA := sdk.NewCoin("denom1", sdk.NewInt(100))
+	coinWithRouteB := sdk.NewCoin("denom2", sdk.NewInt(100))
+	coinWithoutRouteC := sdk.NewCoin("denom3", sdk.NewInt(100))
+
+	for _, coin := range []sdk.Coin{coinWithRouteA, coinWithRouteB} {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
+	testCases := []struct {
+		name        string
+		coins       sdk.Coins
+		expectedErr error
+	}{
+		{
+			name:  "valid case: all denoms are distributable",
+			coins: sdk.NewCoins(coinWithRouteA, coinWithRouteB),
+		},
+		{
+			name:        "invalid case: one denom is not distributable",
+			coins:       sdk.NewCoins(coinWithRouteA, coinWithoutRouteC),
+			expectedErr: types.NoRouteForDenomError{Denom: coinWithoutRouteC.Denom},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			// System under test
+			err := s.App.IncentivesKeeper.CheckIfDenomsAreDistributable(s.Ctx, tc.coins)
+
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
 }
