@@ -21,7 +21,7 @@ var (
 	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
 		Params: types.Params{
-			MintedDenom: "uosmo",
+			MintedDenom: appparams.BaseCoinUnit,
 		},
 		LockableDurations: []time.Duration{
 			time.Second,

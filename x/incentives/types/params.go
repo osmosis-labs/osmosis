@@ -11,6 +11,8 @@ import (
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 // Incentives parameters key store.
@@ -22,7 +24,7 @@ var (
 	KeyMinValueForDistr     = []byte("MinValueForDistr")
 
 	// 100 OSMO
-	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
+	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(100_000_000)))
 )
 
 // ParamKeyTable returns the key table for the incentive module's parameters.

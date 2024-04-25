@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
@@ -912,7 +913,7 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
-	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
+	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, appparams.BaseCoinUnit, STAKE, WBTC)
 	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
 }
 

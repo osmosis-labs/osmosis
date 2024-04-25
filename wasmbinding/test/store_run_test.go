@@ -17,6 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v24/app"
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
@@ -107,7 +108,7 @@ func TestInstantiateContract(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	funds := sdk.NewInt64Coin("uosmo", 123456)
+	funds := sdk.NewInt64Coin(appparams.BaseCoinUnit, 123456)
 	_, _, err = contractKeeper.Instantiate(ctx, codeID, instantiator, instantiator, initMsgBz, "demo contract", sdk.Coins{funds})
 	require.NoError(t, err)
 }

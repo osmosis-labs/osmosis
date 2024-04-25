@@ -42,7 +42,7 @@ var (
 	defaultTime = time.Unix(1, 0).UTC()
 
 	defaultGaugeCreationCoins = sdk.NewCoins(
-		sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000)),
 		sdk.NewCoin("atom", osmomath.NewInt(99999)),
 	)
 
@@ -417,7 +417,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "valid case: valid gauge",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000)),
 				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 			),
 			gaugeId:            1,
@@ -429,7 +429,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "valid case: valid gauge with >4 denoms",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000)),
 				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 				sdk.NewCoin("mars", osmomath.NewInt(88888)),
 				sdk.NewCoin("akash", osmomath.NewInt(77777)),
@@ -447,7 +447,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "invalid case: gauge Id is not valid",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000)),
 				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 			),
 			gaugeId:            0,
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this is invalid for NoLock gauges
-				Denom:    "uosmo",
+				Denom:    appparams.BaseCoinUnit,
 				Duration: time.Nanosecond,
 			},
 			poolId: concentratedPoolId,
