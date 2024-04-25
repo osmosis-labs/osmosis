@@ -235,7 +235,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				},
 				2,
 				2,
-				true,
+				false,
 				false,
 			},
 		},
