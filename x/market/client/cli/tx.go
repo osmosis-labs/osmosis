@@ -30,11 +30,11 @@ func NewSwapCmd() (*osmocli.TxCliDesc, *types.MsgSwap) {
 		Long: strings.TrimSpace(`
    Swap the offer-coin to the ask-denom currency at the oracle's effective exchange rate.
 
-   $ osmosisd market swap osmo1fr2x4cdvka7yfs8q9gqh0gzmh4hkmktpqwqj63 1000stake uosmo
+   $ symphonyd market swap symphony1fr2x4cdvka7yfs8q9gqh0gzmh4hkmktpqwqj63 1000stake note
 
    The to-address can be specified. A default to-address is trader.
 
-   $ osmosisd market swap "osmo1..." "1000stake" "note"
+   $ symphonyd market swap "symphony1..." "1000stake" "note"
    `),
 		ParseAndBuildMsg: NewSwapMsg,
 	}, &types.MsgSwap{}
