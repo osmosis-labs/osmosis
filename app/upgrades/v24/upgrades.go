@@ -135,7 +135,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 			continue
 		}
 
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolID); err != nil {
+		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, poolID); err != nil {
 			return err
 		}
 	}

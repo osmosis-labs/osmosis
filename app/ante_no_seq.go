@@ -23,9 +23,10 @@ import (
 	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
 
+	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
+
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
-	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 
 	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 )
@@ -89,7 +90,6 @@ func NewAnteHandler(
 		// is embedded in the authenticator decorator
 		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
 		// ante.NewIncrementSequenceDecorator(accountKeeper),
-		ibcante.NewRedundantRelayDecorator(channelKeeper),
 		// auction module antehandler
 		auctionante.NewAuctionDecorator(
 			blockSDKParams.auctionKeeper,
