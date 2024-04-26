@@ -2,23 +2,20 @@ package v25_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	"time"
-
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-
+	v25 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v25"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
 )
 
@@ -51,13 +48,27 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
+	// check auction params
+	params, err := s.App.AuctionKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+
+	// check auction params
+	s.Require().Equal(params.MaxBundleSize, v25.AuctionParams.MaxBundleSize)
+	s.Require().Equal(params.ReserveFee.Denom, v25.AuctionParams.ReserveFee.Denom)
+	s.Require().Equal(params.ReserveFee.Amount.Int64(), v25.AuctionParams.ReserveFee.Amount.Int64())
+	s.Require().Equal(params.MinBidIncrement.Denom, v25.AuctionParams.MinBidIncrement.Denom)
+	s.Require().Equal(params.MinBidIncrement.Amount.Int64(), v25.AuctionParams.MinBidIncrement.Amount.Int64())
+	s.Require().Equal(params.EscrowAccountAddress, v25.AuctionParams.EscrowAccountAddress)
+	s.Require().Equal(params.FrontRunningProtection, v25.AuctionParams.FrontRunningProtection)
+	s.Require().Equal(params.ProposerFee, v25.AuctionParams.ProposerFee)
+
 	s.ExecuteSpreadRewardsMigrationTest(oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards)
 	s.executeMissedBlocksCounterTest(preMigrationSigningInfo)
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
 	s.Ctx = s.Ctx.WithBlockHeight(v25UpgradeHeight - 1)
-	plan := upgradetypes.Plan{Name: "v25", Height: v25UpgradeHeight}
+	plan := upgradetypes.Plan{Name: v25.Upgrade.UpgradeName, Height: v25UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
 	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)

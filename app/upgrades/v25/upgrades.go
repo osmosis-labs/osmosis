@@ -67,6 +67,11 @@ func CreateUpgradeHandler(
 			return nil, errors.New("unsupported chain ID")
 		}
 
+		// update block-sdk params
+		if err := keepers.AuctionKeeper.SetParams(ctx, AuctionParams); err != nil {
+			return nil, err
+		}
+
 		// Now that all deprecated historical TWAPs have been pruned via v24, we can delete is isPruning state entry as well
 		keepers.TwapKeeper.DeleteDeprecatedHistoricalTWAPsIsPruning(ctx)
 

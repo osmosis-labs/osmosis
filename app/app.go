@@ -10,6 +10,8 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/skip-mev/block-sdk/block"
+	"github.com/skip-mev/block-sdk/block/base"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -117,6 +119,9 @@ import (
 	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v24/x/mint"
+
+	blocksdkabci "github.com/skip-mev/block-sdk/abci"
+	"github.com/skip-mev/block-sdk/abci/checktx"
 )
 
 const appName = "OsmosisApp"
@@ -177,6 +182,8 @@ type OsmosisApp struct {
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
+
+	checkTxHandler checktx.CheckTx
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -393,6 +400,20 @@ func NewOsmosisApp(
 
 	app.sm.RegisterStoreDecoders()
 
+	// initialize lanes + mempool
+	mevLane, defaultLane := CreateLanes(app, txConfig)
+
+	// create the mempool
+	lanedMempool, err := block.NewLanedMempool(
+		app.Logger(),
+		[]block.Lane{mevLane, defaultLane},
+	)
+	if err != nil {
+		panic(err)
+	}
+	// set the mempool
+	app.SetMempool(lanedMempool)
+
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())
@@ -410,7 +431,56 @@ func NewOsmosisApp(
 		ante.DefaultSigVerificationGasConsumer,
 		encodingConfig.TxConfig.SignModeHandler(),
 		app.IBCKeeper,
+		BlockSDKAnteHandlerParams{
+			mevLane:       mevLane,
+			auctionKeeper: *app.AppKeepers.AuctionKeeper,
+			txConfig:      txConfig,
+		},
 	)
+
+	// update ante-handlers on lanes
+	opt := []base.LaneOption{
+		base.WithAnteHandler(anteHandler),
+	}
+	mevLane.WithOptions(opt...)
+	defaultLane.WithOptions(opt...)
+
+	// ABCI handlers
+	// prepare proposal
+	proposalHandler := blocksdkabci.NewProposalHandler(
+		app.Logger(),
+		txConfig.TxDecoder(),
+		txConfig.TxEncoder(),
+		lanedMempool,
+	)
+
+	// we use the block-sdk's PrepareProposal logic to build blocks
+	app.SetPrepareProposal(proposalHandler.PrepareProposalHandler())
+
+	// we use a no-op ProcessProposal, this way, we accept all proposals in avoidance
+	// of liveness failures due to Prepare / Process inconsistency. In other words,
+	// this ProcessProposal always returns ACCEPT.
+	app.SetProcessProposal(baseapp.NoOpProcessProposal())
+
+	// check-tx
+	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
+		app,
+		txConfig.TxDecoder(),
+		mevLane,
+		anteHandler,
+		app.BaseApp.CheckTx,
+		app.ChainID(),
+	)
+
+	// wrap checkTxHandler with mempool parity handler
+	parityCheckTx := checktx.NewMempoolParityCheckTx(
+		app.Logger(),
+		lanedMempool,
+		txConfig.TxDecoder(),
+		mevCheckTxHandler.CheckTx(),
+	)
+
+	app.SetCheckTx(parityCheckTx.CheckTx())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -730,6 +800,19 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	}
 
 	return app
+}
+
+// CheckTx will check the transaction with the provided checkTxHandler. We override the default
+// handler so that we can verify bid transactions before they are inserted into the mempool.
+// With the BlockSDK CheckTx, we can verify the bid transaction and all of the bundled transactions
+// before inserting the bid transaction into the mempool.
+func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	return app.checkTxHandler(req)
+}
+
+// SetCheckTx sets the checkTxHandler for the app.
+func (app *OsmosisApp) SetCheckTx(handler checktx.CheckTx) {
+	app.checkTxHandler = handler
 }
 
 // MakeCodecs returns the application codec and a legacy Amino codec.
