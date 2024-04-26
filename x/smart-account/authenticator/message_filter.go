@@ -13,50 +13,50 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
-var _ Authenticator = &MessageFilterAuthenticator{}
+var _ Authenticator = &MessageFilter{}
 
-// MessageFilterAuthenticator filters incoming messages based on a predefined JSON pattern.
+// MessageFilter filters incoming messages based on a predefined JSON pattern.
 // It allows for complex pattern matching to support advanced authentication flows.
-type MessageFilterAuthenticator struct {
+type MessageFilter struct {
 	encCfg  appparams.EncodingConfig
 	pattern []byte
 }
 
-// NewMessageFilterAuthenticator creates a new MessageFilterAuthenticator with the provided EncodingConfig.
-func NewMessageFilterAuthenticator(encCfg appparams.EncodingConfig) MessageFilterAuthenticator {
-	return MessageFilterAuthenticator{
+// NewMessageFilter creates a new MessageFilter with the provided EncodingConfig.
+func NewMessageFilter(encCfg appparams.EncodingConfig) MessageFilter {
+	return MessageFilter{
 		encCfg: encCfg,
 	}
 }
 
 // Type returns the type of the authenticator.
-func (m MessageFilterAuthenticator) Type() string {
-	return "MessageFilterAuthenticator"
+func (m MessageFilter) Type() string {
+	return "MessageFilter"
 }
 
 // StaticGas returns the static gas amount for the authenticator. Currently, it's set to zero.
-func (m MessageFilterAuthenticator) StaticGas() uint64 {
+func (m MessageFilter) StaticGas() uint64 {
 	return 0
 }
 
 // Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
-func (m MessageFilterAuthenticator) Initialize(data []byte) (Authenticator, error) {
+func (m MessageFilter) Initialize(config []byte) (Authenticator, error) {
 	var jsonData json.RawMessage
-	err := json.Unmarshal(data, &jsonData)
+	err := json.Unmarshal(config, &jsonData)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "invalid json representation of message")
 	}
-	m.pattern = data
+	m.pattern = config
 	return m, nil
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m MessageFilterAuthenticator) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) Track(ctx sdk.Context, request AuthenticationRequest) error {
 	return nil
 }
 
 // Authenticate checks if the provided message conforms to the set JSON pattern. It returns an AuthenticationResult based on the evaluation.
-func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// Get the concrete message from the interface registry
 	protoMsg, err := m.encCfg.InterfaceRegistry.Resolve(request.Msg.TypeURL)
 	if err != nil {
@@ -90,18 +90,18 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, request Authen
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	return nil
 }
 
 // OnAuthenticatorAdded performs additional checks when an authenticator is added. Specifically, it ensures numbers in JSON are encoded as strings.
-func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MessageFilter) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	var jsonData json.RawMessage
-	err := json.Unmarshal(data, &jsonData)
+	err := json.Unmarshal(config, &jsonData)
 	if err != nil {
 		return errorsmod.Wrap(err, "invalid json representation of message")
 	}
-	hasFloats, err := containsFloats(data)
+	hasFloats, err := containsFloats(config)
 	if err != nil {
 		return errorsmod.Wrap(err, "invalid json representation of message") // This should never happen
 	}
@@ -112,7 +112,7 @@ func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, accoun
 }
 
 // OnAuthenticatorRemoved is a no-op in this implementation but can be used when an authenticator is removed.
-func (m MessageFilterAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MessageFilter) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 

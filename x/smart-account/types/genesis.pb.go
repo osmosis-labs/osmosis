@@ -30,8 +30,7 @@ type AuthenticatorData struct {
 	// address is an account address, one address can have many authenticators
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// authenticators are the account's authenticators, these can be multiple
-	// types including SignatureVerificationAuthenticator, AllOfAuthenticators and
-	// CosmWasmAuthenticators.
+	// types including SignatureVerification, AllOfs, CosmWasmAuthenticators, etc
 	Authenticators []AccountAuthenticator `protobuf:"bytes,2,rep,name=authenticators,proto3" json:"authenticators"`
 }
 

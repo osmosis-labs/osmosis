@@ -154,7 +154,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -163,7 +163,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	id, err = s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -212,7 +212,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	sigId, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -285,7 +285,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	sig1Id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -294,7 +294,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	sig2Id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)

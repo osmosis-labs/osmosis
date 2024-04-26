@@ -10,8 +10,8 @@ import (
 )
 
 type SubAuthenticatorInitData struct {
-	AuthenticatorType string `json:"authenticator_type"`
-	Data              []byte `json:"data"`
+	Type   string `json:"type"`
+	Config []byte `json:"config"`
 }
 
 func subTrack(
@@ -55,9 +55,9 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 	baseId := authenticatorId
 	subAuthenticatorCount := 0
 	for id, initData := range initDatas {
-		authenticatorCode := am.GetAuthenticatorByType(initData.AuthenticatorType)
+		authenticatorCode := am.GetAuthenticatorByType(initData.Type)
 		subId := compositeId(baseId, id)
-		err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Data, subId)
+		err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Config, subId)
 		if err != nil {
 			return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorAdded` failed (sub-authenticator id = %s)", subId)
 		}
@@ -81,9 +81,9 @@ func onSubAuthenticatorsRemoved(ctx sdk.Context, account sdk.AccAddress, data []
 
 	baseId := authenticatorId
 	for id, initData := range initDatas {
-		authenticatorCode := am.GetAuthenticatorByType(initData.AuthenticatorType)
+		authenticatorCode := am.GetAuthenticatorByType(initData.Type)
 		subId := compositeId(baseId, id)
-		err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Data, subId)
+		err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Config, subId)
 		if err != nil {
 			return errorsmod.Wrapf(err, "sub-authenticator `OnAuthenticatorRemoved` failed (sub-authenticator id = %s)", subId)
 		}

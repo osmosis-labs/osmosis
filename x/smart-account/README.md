@@ -77,14 +77,14 @@ This is where the association of specific authenticators with accounts is stored
 ![Account Authenticator Configuration](/x/smart-account/images/keeper.jpg)
 
 One way of seeing this data is as the instantiation information necessary to use the authenticator for a specific 
-account. For example, a `SignatureVerificationAuthenticator` contains the code necessary to verify a signature, but
+account. For example, a `SignatureVerification` contains the code necessary to verify a signature, but
 it needs to know which public key to use when verifying it. An account can configure the 
-`SignatureVerificationAuthenticator` to be one of their authenticators and would need to provide the public key it wants 
+`SignatureVerification` to be one of their authenticators and would need to provide the public key it wants 
 to use for verification in the configuration data.
 
 
 To make an authenticator work for a specific account, you just need to feed it the right information. For example, 
-the `SignatureVerificationAuthenticator` needs to know which public key to check when verifying a signature. 
+the `SignatureVerification` needs to know which public key to check when verifying a signature. 
 So, if you're setting this up for your account, you have to configure it with the public key you want as part of the 
 account-authenticator link.
 
@@ -104,7 +104,7 @@ Here is a look at the Go code defining the interface:
 // Authenticator is an interface that encapsulates all authentication functionalities essential for
 // verifying transactions, paying transaction fees, and managing gas consumption during verification.
 type Authenticator interface {
-    // Type returns the specific type of the authenticator, such as SignatureVerificationAuthenticator.
+    // Type returns the specific type of the authenticator, such as SignatureVerification.
     // This type is used for registering and identifying the authenticator within the AuthenticatorManager.
     Type() string
 
@@ -114,7 +114,7 @@ type Authenticator interface {
 
     // Initialize prepares the authenticator with necessary data from storage, specific to an account-authenticator pair.
     // This method is used for setting up the authenticator with data like a PublicKey for signature verification.
-    Initialize(data []byte) (Authenticator, error)
+    Initialize(config []byte) (Authenticator, error)
 
     // Authenticate confirms the validity of a message using the provided authentication data.
     // NOTE: Any state changes made by this function will be discarded.
@@ -132,11 +132,11 @@ type Authenticator interface {
 
     // OnAuthenticatorAdded handles the addition of an authenticator to an account.
     // It checks the data format and compatibility, to maintain account security and authenticator integrity.
-    OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
+    OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error
 
     // OnAuthenticatorRemoved manages the removal of an authenticator from an account.
     // This function is used for updating global data or preventing removal when necessary to maintain system stability.
-    OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
+    OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error
 }
 ```
 
@@ -144,7 +144,7 @@ type Authenticator interface {
 
 #### `Type`
 
-Returns the type of the authenticator (e.g., `SignatureVerificationAuthenticator`, `CosmWasmAuthenticator`).
+Returns the type of the authenticator (e.g., `SignatureVerification`, `CosmWasmAuthenticator`).
 Each type must be registered within the `AuthenticatorManager`.
 
 #### `StaticGas`
@@ -153,8 +153,8 @@ Provides the fixed gas amount that is consumed with each invocation of this auth
 
 #### `Initialize`
 
-Initializes the authenticator when retrieved from storage. It takes stored data (e.g., PublicKey for signature verification) as
-an argument to set up the authenticator.
+Initializes the authenticator when retrieved from storage. It takes the stored config (e.g., PublicKey for signature 
+verification) as an argument to set up the authenticator.
 
 #### `Authenticate`
 
@@ -182,8 +182,8 @@ To determine which authenticators will be used for each account, this module's k
 between an account and a list of authenticators. A user can add or remove authenticators from their account using the
 `MsgAddAuthenticator` and `MsgRemoveAuthenticator` messages.
 
-Some authenticators may require additional data specific to the user being authenticated. To handle this, the user
-can store data for each of their authenticators.
+Some authenticators may require additional config specific to the user being authenticated. To handle this, the user
+can store config data for each of their authenticators.
 
 ### Messages
 
@@ -194,7 +194,7 @@ Adds an authenticator to the user's account. The authenticator must be registere
 Example:
 
 ```go
-AddAuthenticator(account, "SignatureVerificationAuthenticator", pubKeyBytes)
+AddAuthenticator(account, "SignatureVerification", pubKeyBytes)
 ```
 
 #### `MsgRemoveAuthenticator`
@@ -230,7 +230,7 @@ RemoveAuthenticator(account, authenticatorGlobalId)
 
 ## Available Authenticator Types
 
-### Signature Verification Authenticator
+### SignatureVerification Authenticator
 
 The signature verification authenticator is the default authenticator for all accounts. It verifies that the signer of a message is the same as the account associated with the message.
 
@@ -485,7 +485,7 @@ examples of how to do that:
 A hot key can be configured so that it is only allowed to execute swap messages, and fail if the transaction leaves the
 user with a lower balance than a certain threshold. This can be done by using the following authenticator:
 
-`AllOf(SignatureVerificationAuthenticator(usersPubKey), AnyOf(MessageFilter(SwapMsg1), MessageFilter(SwapMsg2)), CosmwasmAuthenticator(spendLimitContract, params))`
+`AllOf(SignatureVerification(usersPubKey), AnyOf(MessageFilter(SwapMsg1), MessageFilter(SwapMsg2)), CosmwasmAuthenticator(spendLimitContract, params))`
 
 ## Multisig
 
@@ -500,7 +500,7 @@ An off chain cosigner can be configured to be required for all messages on an ac
 can analyze and simulate the transactions for security and provide their signature iff the transaction is safe.
 This could be achieved by using the following authenticator:
 
-`AllOf(SignatureVerificationAuthenticator(cosignerPubKey), AnyOf(...)` where the rest of the user's authenticators are
+`AllOf(SignatureVerification(cosignerPubKey), AnyOf(...)` where the rest of the user's authenticators are
 under the `AnyOf`.
 
 For a more complex cosigner, the user could use a `CosmwasmAuthenticator` that calls a contract that implements the

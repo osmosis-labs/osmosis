@@ -54,7 +54,7 @@ func (t TestingAuthenticator) StaticGas() uint64 {
 	return uint64(t.GasConsumption)
 }
 
-func (t TestingAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (t TestingAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
 	return t, nil
 }
 
@@ -78,14 +78,14 @@ func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request authenti
 	}
 }
 
-func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	if t.BlockAddition {
 		return fmt.Errorf("authenticator could not be added")
 	}
 	return nil
 }
 
-func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	if t.BlockRemoval {
 		return fmt.Errorf("authenticator could not be removed")
 	}

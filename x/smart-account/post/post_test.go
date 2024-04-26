@@ -106,7 +106,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	id, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[0],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[0].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)
@@ -115,7 +115,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	id, err = s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
 		s.Ctx,
 		s.TestAccAddress[1],
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.TestPrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err)

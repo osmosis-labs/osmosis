@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerification{}.Type()))
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
 		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
+		Type:   authenticator.SignatureVerification{}.Type(),
 		Data:   priv.PubKey().Bytes(),
 	}
 
@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerification{}.Type()))
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
 		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
+		Type:   authenticator.SignatureVerification{}.Type(),
 		Data:   priv.PubKey().Bytes(),
 	}
 
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 	// Create a test message
 	addMsg := &types.MsgAddAuthenticator{
 		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
+		Type:   authenticator.SignatureVerification{}.Type(),
 		Data:   priv.PubKey().Bytes(),
 	}
 	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), addMsg)
