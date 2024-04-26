@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Compatible
 
 * [#8142](https://github.com/osmosis-labs/osmosis/pull/8142) Add query for getting single authenticator and add stargate whitelist for the query.
+* [#8148](https://github.com/osmosis-labs/osmosis/pull/8148) Remove the deserialization time for GetDefaultTakerFee()
 
 ## v24.0.3
 
