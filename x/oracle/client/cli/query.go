@@ -193,7 +193,7 @@ func GetCmdQueryMissCounter() *cobra.Command {
 		Long: strings.TrimSpace(`
 Query the # of vote periods missed in this oracle slash window.
 
-$ symphonyd query oracle miss terravaloper...
+$ symphonyd query oracle miss symphonyvaloper...
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -237,7 +237,7 @@ $ symphonyd query oracle aggregate-prevotes
 
 Or, can filter with voter address
 
-$ symphonyd query oracle aggregate-prevotes terravaloper...
+$ symphonyd query oracle aggregate-prevotes symphonyvaloper...
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
