@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 cosmwasm-schema = "1.3.1"
-cosmwasm-std = {version = "1.4"}
+cosmwasm-std = {version = "1.5"}
 cw-storage-plus = "1.1.0"
 osmosis-authenticators = "0.22.0-alpha.3"
 schemars = "0.8.12"

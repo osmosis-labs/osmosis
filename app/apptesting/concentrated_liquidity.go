@@ -72,8 +72,9 @@ var (
 		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 		return osmomath.BigDecFromDec(curSqrtPrice)
 	}()
+	PerUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
 
-	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(50)))
+	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoinFromDec("foo", osmomath.NewDec(50).MulTruncate(PerUnitLiqScalingFactor)))
 
 	DefaultCoinAmount = osmomath.NewInt(1000000000000000000)
 

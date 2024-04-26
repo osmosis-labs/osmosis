@@ -45,8 +45,8 @@ type CosmwasmAuthenticatorInitData struct {
 	Params   []byte `json:"params"`
 }
 
-func (cwa CosmwasmAuthenticator) Initialize(data []byte) (Authenticator, error) {
-	contractAddr, params, err := parseInitData(data)
+func (cwa CosmwasmAuthenticator) Initialize(config []byte) (Authenticator, error) {
+	contractAddr, params, err := parseInitData(config)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to parse initialization data")
 	}
@@ -140,8 +140,8 @@ func (cwa CosmwasmAuthenticator) ConfirmExecution(ctx sdk.Context, request Authe
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	contractAddr, params, err := parseInitData(data)
+func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
+	contractAddr, params, err := parseInitData(config)
 	if err != nil {
 		return err
 	}
@@ -163,8 +163,8 @@ func (cwa CosmwasmAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account s
 	return nil
 }
 
-func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	contractAddr, params, err := parseInitData(data)
+func (cwa CosmwasmAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
+	contractAddr, params, err := parseInitData(config)
 	if err != nil {
 		return err
 	}

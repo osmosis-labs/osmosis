@@ -9,6 +9,7 @@ import (
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -19,9 +20,23 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+
+	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
+
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+
+	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 )
+
+// BlockSDKAnteHandlerParams are the parameters necessary to configure the block-sdk antehandlers
+type BlockSDKAnteHandlerParams struct {
+	mevLane       auctionante.MEVLane
+	auctionKeeper auctionkeeper.Keeper
+	txConfig      client.TxConfig
+}
 
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
@@ -32,19 +47,57 @@ func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasmtypes.WasmConfig,
 	txCounterStoreKey storetypes.StoreKey,
-	ak ante.AccountKeeper,
+	accountKeeper ante.AccountKeeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper *ibckeeper.Keeper,
+	blockSDKParams BlockSDKAnteHandlerParams,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
 	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
 	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
-	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, ak, bankKeeper, nil)
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, accountKeeper, bankKeeper, nil)
+
+	// classicSignatureVerificationDecorator is the old flow to enable a circuit breaker
+	classicSignatureVerificationDecorator := sdk.ChainAnteDecorators(
+		deductFeeDecorator,
+		// We use the old pubkey decorator here to ensure that accounts work as expected,
+		// in SetPubkeyDecorator we set a pubkey in the account store, for authenticators
+		// we avoid this code path completely.
+		ante.NewSetPubKeyDecorator(accountKeeper),
+		ante.NewValidateSigCountDecorator(accountKeeper),
+		ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
+		ante.NewSigVerificationDecorator(accountKeeper, signModeHandler),
+		// ante.NewIncrementSequenceDecorator(accountKeeper),
+		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		auctionante.NewAuctionDecorator(
+			blockSDKParams.auctionKeeper,
+			blockSDKParams.txConfig.TxEncoder(),
+			blockSDKParams.mevLane,
+		),
+	)
+
+	// authenticatorVerificationDecorator is the new authenticator flow that's embedded into the circuit breaker ante
+	authenticatorVerificationDecorator := sdk.ChainAnteDecorators(
+		smartaccountante.NewEmitPubKeyDecoratorEvents(accountKeeper),
+		ante.NewValidateSigCountDecorator(accountKeeper), // we can probably remove this as multisigs are not supported here
+		// Both the signature verification, fee deduction, and gas consumption functionality
+		// is embedded in the authenticator decorator
+		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
+		// ante.NewIncrementSequenceDecorator(accountKeeper),
+		// auction module antehandler
+		auctionante.NewAuctionDecorator(
+			blockSDKParams.auctionKeeper,
+			blockSDKParams.txConfig.TxEncoder(),
+			blockSDKParams.mevLane,
+		),
+	)
+
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
@@ -57,14 +110,12 @@ func NewAnteHandler(
 		sendblockDecorator,
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
-		ante.NewValidateMemoDecorator(ak),
-		ante.NewConsumeGasForTxSizeDecorator(ak),
-		deductFeeDecorator,
-		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewValidateSigCountDecorator(ak),
-		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		ante.NewSigVerificationDecorator(ak, signModeHandler),
-		// ante.NewIncrementSequenceDecorator(ak),
-		ibcante.NewRedundantRelayDecorator(channelKeeper),
+		ante.NewValidateMemoDecorator(accountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
+		smartaccountante.NewCircuitBreakerDecorator(
+			smartAccountKeeper,
+			authenticatorVerificationDecorator,
+			classicSignatureVerificationDecorator,
+		),
 	)
 }

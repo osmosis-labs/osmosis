@@ -15,7 +15,7 @@ type MockAuthenticator struct {
 	authType string
 }
 
-func (m MockAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MockAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 
@@ -23,7 +23,7 @@ func (m MockAuthenticator) Track(ctx sdk.Context, request authenticator.Authenti
 	return nil
 }
 
-func (m MockAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (m MockAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
 	return m, nil
 }
 
@@ -39,7 +39,7 @@ func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticat
 	return nil
 }
 
-func (m MockAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MockAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 
@@ -97,11 +97,11 @@ type MockAuthenticatorFail struct {
 	authType string
 }
 
-func (m MockAuthenticatorFail) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MockAuthenticatorFail) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 
-func (m MockAuthenticatorFail) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MockAuthenticatorFail) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 
@@ -109,7 +109,7 @@ func (m MockAuthenticatorFail) Track(ctx sdk.Context, request authenticator.Auth
 	return nil
 }
 
-func (m MockAuthenticatorFail) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (m MockAuthenticatorFail) Initialize(config []byte) (authenticator.Authenticator, error) {
 	return m, nil
 }
 

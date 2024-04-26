@@ -1156,7 +1156,7 @@ func (k Keeper) SetIncentivePoolIDMigrationThreshold(ctx sdk.Context, poolIDThre
 	store.Set(types.KeyIncentiveAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
 }
 
-// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold.
+// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold for incentive accumulators.
 func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 

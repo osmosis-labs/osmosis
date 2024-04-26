@@ -57,28 +57,22 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 }
 
 // AddAuthenticatorWithId adds an authenticator to an account, this function is used in genesis import
-func (k Keeper) AddAuthenticatorWithId(
-	ctx sdk.Context,
-	account sdk.AccAddress,
-	authenticatorType string,
-	data []byte,
-	id uint64,
-) error {
+func (k Keeper) AddAuthenticatorWithId(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, config []byte, id uint64) error {
 	impl := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorType)
 	if impl == nil {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
 	cacheCtx, _ := ctx.CacheContext()
-	err := impl.OnAuthenticatorAdded(cacheCtx, account, data, strconv.FormatUint(id, 10))
+	err := impl.OnAuthenticatorAdded(cacheCtx, account, config, strconv.FormatUint(id, 10))
 	if err != nil {
 		return err
 	}
 	osmoutils.MustSet(ctx.KVStore(k.storeKey),
 		types.KeyAccountId(account, id),
 		&types.AccountAuthenticator{
-			Id:   id,
-			Type: authenticatorType,
-			Data: data,
+			Id:     id,
+			Type:   authenticatorType,
+			Config: config,
 		})
 	return nil
 }

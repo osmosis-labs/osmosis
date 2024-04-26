@@ -67,7 +67,7 @@ func (k Keeper) unmarshalAccountAuthenticator(bz []byte) (*types.AccountAuthenti
 }
 
 // GetAuthenticatorDataForAccount gets all authenticators AccAddressFromBech32 with an account
-// from the store, the data is  prefixed by 2|<accAddr|
+// from the store, the data is prefixed by 2|<accAddr|
 func (k Keeper) GetAuthenticatorDataForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
@@ -134,7 +134,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	// Ensure that initialization of each authenticator works as expected
 	// NOTE: Always return a concrete authenticator not a pointer, do not modify in place
 	// NOTE: The authenticator manager returns a struct that is reused
-	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Data)
+	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Config)
 	if err != nil || initializedAuthenticator == nil {
 		return authenticator.InitializedAuthenticator{},
 			errorsmod.Wrapf(err,
@@ -175,8 +175,8 @@ func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) 
 }
 
 // AddAuthenticator adds an authenticator to an account, this function is used to add multiple
-// authenticators such as SignatureVerificationAuthenticators and AllOfAuthenticators
-func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) (uint64, error) {
+// authenticators such as SignatureVerifications and AllOfs
+func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, config []byte) (uint64, error) {
 	impl := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorType)
 	if impl == nil {
 		return 0, fmt.Errorf("authenticator type %s is not registered", authenticatorType)
@@ -186,7 +186,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	id := k.GetNextAuthenticatorId(ctx)
 
 	// Each authenticator has a custom OnAuthenticatorAdded function
-	err := impl.OnAuthenticatorAdded(ctx, account, data, strconv.FormatUint(id, 10))
+	err := impl.OnAuthenticatorAdded(ctx, account, config, strconv.FormatUint(id, 10))
 	if err != nil {
 		return 0, errorsmod.Wrapf(err, "`OnAuthenticatorAdded` failed on authenticator type %s", authenticatorType)
 	}
@@ -196,9 +196,9 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	osmoutils.MustSet(ctx.KVStore(k.storeKey),
 		types.KeyAccountId(account, id),
 		&types.AccountAuthenticator{
-			Id:   id,
-			Type: authenticatorType,
-			Data: data,
+			Id:     id,
+			Type:   authenticatorType,
+			Config: config,
 		})
 	return id, nil
 }
@@ -222,7 +222,7 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	}
 
 	// Authenticators can prevent removal. This should be used sparingly
-	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data, strconv.FormatUint(authenticatorId, 10))
+	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Config, strconv.FormatUint(authenticatorId, 10))
 	if err != nil {
 		return errorsmod.Wrapf(err, "`OnAuthenticatorRemoved` failed on authenticator type %s", existing.Type)
 	}

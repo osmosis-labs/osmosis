@@ -33,7 +33,7 @@ func (m MaxAmountAuthenticator) Type() string {
 	return "MaxAmountAuthenticator"
 }
 
-func (m MaxAmountAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (m MaxAmountAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
 	return m, nil
 }
 
@@ -71,11 +71,11 @@ func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, request authen
 	return nil
 }
 
-func (m MaxAmountAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MaxAmountAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 
-func (m MaxAmountAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (m MaxAmountAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 

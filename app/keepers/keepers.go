@@ -114,6 +114,9 @@ import (
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
+	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -184,6 +187,9 @@ type AppKeepers struct {
 	HooksICS4Wrapper          ibchooks.ICS4Middleware
 	PacketForwardKeeper       *packetforwardkeeper.Keeper
 
+	// BlockSDK
+	AuctionKeeper *auctionkeeper.Keeper
+
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
 	tkeys   map[string]*storetypes.TransientStoreKey
@@ -226,12 +232,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
 	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
-		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper),
-		authenticator.NewMessageFilterAuthenticator(encodingConfig),
-		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewPartitionedAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewPartitionedAllOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewSignatureVerification(appKeepers.AccountKeeper),
+		authenticator.NewMessageFilter(encodingConfig),
+		authenticator.NewAllOf(appKeepers.AuthenticatorManager),
+		authenticator.NewAnyOf(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAnyOf(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAllOf(appKeepers.AuthenticatorManager),
 	})
 	govModuleAddr := appKeepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
@@ -518,6 +524,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
+		maccPerms,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
@@ -531,6 +538,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.LockupKeeper,
 	)
+
+	// initialize the auction keeper
+	auctionKeeper := auctionkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[auctiontypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.StakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	appKeepers.AuctionKeeper = &auctionKeeper
 
 	appKeepers.ValidatorSetPreferenceKeeper = &validatorSetPreferenceKeeper
 
@@ -783,6 +802,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 	paramsKeeper.Subspace(smartaccounttypes.ModuleName).WithKeyTable(smartaccounttypes.ParamKeyTable())
 	paramsKeeper.Subspace(txfeestypes.ModuleName)
+	paramsKeeper.Subspace(auctiontypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -905,6 +925,7 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
+		auctiontypes.StoreKey,
 		smartaccounttypes.StoreKey,
 	}
 }
