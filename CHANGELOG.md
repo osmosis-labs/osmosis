@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8142](https://github.com/osmosis-labs/osmosis/pull/8142) Add query for getting single authenticator and add stargate whitelist for the query.
+
 ## v24.0.3
 
 * [#21](https://github.com/osmosis-labs/cometbft/pull/21) Move websocket logs to Debug
