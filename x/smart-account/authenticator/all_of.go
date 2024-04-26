@@ -8,38 +8,38 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type AllOfAuthenticator struct {
+type AllOf struct {
 	SubAuthenticators   []Authenticator
 	am                  *AuthenticatorManager
 	signatureAssignment SignatureAssignment
 }
 
-var _ Authenticator = &AllOfAuthenticator{}
+var _ Authenticator = &AllOf{}
 
-func NewAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
-	return AllOfAuthenticator{
+func NewAllOf(am *AuthenticatorManager) AllOf {
+	return AllOf{
 		am:                  am,
 		SubAuthenticators:   []Authenticator{},
 		signatureAssignment: Single,
 	}
 }
 
-func NewPartitionedAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
-	return AllOfAuthenticator{
+func NewPartitionedAllOf(am *AuthenticatorManager) AllOf {
+	return AllOf{
 		am:                  am,
 		SubAuthenticators:   []Authenticator{},
 		signatureAssignment: Partitioned,
 	}
 }
 
-func (aoa AllOfAuthenticator) Type() string {
+func (aoa AllOf) Type() string {
 	if aoa.signatureAssignment == Single {
-		return "AllOfAuthenticator"
+		return "AllOf"
 	}
-	return "PartitionedAllOfAuthenticator"
+	return "PartitionedAllOf"
 }
 
-func (aoa AllOfAuthenticator) StaticGas() uint64 {
+func (aoa AllOf) StaticGas() uint64 {
 	var totalGas uint64
 	for _, auth := range aoa.SubAuthenticators {
 		totalGas += auth.StaticGas()
@@ -47,9 +47,9 @@ func (aoa AllOfAuthenticator) StaticGas() uint64 {
 	return totalGas
 }
 
-func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
+func (aoa AllOf) Initialize(config []byte) (Authenticator, error) {
 	var initDatas []SubAuthenticatorInitData
-	if err := json.Unmarshal(data, &initDatas); err != nil {
+	if err := json.Unmarshal(config, &initDatas); err != nil {
 		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
 
@@ -58,10 +58,10 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	}
 
 	for _, initData := range initDatas {
-		authenticatorCode := aoa.am.GetAuthenticatorByType(initData.AuthenticatorType)
-		instance, err := authenticatorCode.Initialize(initData.Data)
+		authenticatorCode := aoa.am.GetAuthenticatorByType(initData.Type)
+		instance, err := authenticatorCode.Initialize(initData.Config)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.AuthenticatorType)
+			return nil, errorsmod.Wrapf(err, "failed to initialize sub-authenticator (type = %s)", initData.Type)
 		}
 		aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
 	}
@@ -74,7 +74,7 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	return aoa, nil
 }
 
-func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AllOf) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	if len(aoa.SubAuthenticators) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
@@ -104,11 +104,11 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, request Authenticati
 	return nil
 }
 
-func (aoa AllOfAuthenticator) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AllOf) Track(ctx sdk.Context, request AuthenticationRequest) error {
 	return subTrack(ctx, request, aoa.SubAuthenticators)
 }
 
-func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AllOf) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
 	var signatures [][]byte
 	var err error
 	if aoa.signatureAssignment == Partitioned {
@@ -135,10 +135,10 @@ func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, request Authenti
 	return nil
 }
 
-func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	return onSubAuthenticatorsAdded(ctx, account, data, authenticatorId, aoa.am)
+func (aoa AllOf) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
+	return onSubAuthenticatorsAdded(ctx, account, config, authenticatorId, aoa.am)
 }
 
-func (aoa AllOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	return onSubAuthenticatorsRemoved(ctx, account, data, authenticatorId, aoa.am)
+func (aoa AllOf) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
+	return onSubAuthenticatorsRemoved(ctx, account, config, authenticatorId, aoa.am)
 }

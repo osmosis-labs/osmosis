@@ -9,6 +9,7 @@ import (
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v24/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
@@ -53,6 +54,11 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
 			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})

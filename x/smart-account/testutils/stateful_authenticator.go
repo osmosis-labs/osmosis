@@ -30,7 +30,7 @@ func (s StatefulAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (s StatefulAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (s StatefulAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
 	return s, nil
 }
 
@@ -72,10 +72,10 @@ func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, request authent
 	return nil
 }
 
-func (s StatefulAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (s StatefulAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
 
-func (s StatefulAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
+func (s StatefulAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	return nil
 }
