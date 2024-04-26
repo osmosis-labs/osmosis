@@ -71,6 +71,7 @@ func NewAnteHandler(
 		// Both the signature verification, fee deduction, and gas consumption functionality
 		// is embedded in the authenticator decorator
 		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
+		ante.NewIncrementSequenceDecorator(accountKeeper),
 	)
 
 	return sdk.ChainAnteDecorators(

@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Register the SigVerificationAuthenticator
 	s.am.InitializeAuthenticators([]authenticator.Authenticator{
-		authenticator.SignatureVerificationAuthenticator{},
+		authenticator.SignatureVerification{},
 		testutils.TestingAuthenticator{
 			Approve:        testutils.Always,
 			GasConsumption: 10,
@@ -50,25 +50,25 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	id, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 	)
-	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
+	s.Require().NoError(err, "Should successfully add a SignatureVerification")
 	s.Require().Equal(id, uint64(1), "Adding authenticator returning incorrect id")
 
 	id, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"MessageFilterAuthenticator",
+		"MessageFilter",
 		[]byte(`{"@type":"/cosmos.bank.v1beta1.MsgSend"}`),
 	)
-	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
+	s.Require().NoError(err, "Should successfully add a MessageFilter")
 	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		[]byte("BrokenBytes"),
 	)
 	s.Require().Error(err, "Should have failed as OnAuthenticatorAdded fails")
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"MessageFilterAuthenticator",
+		"MessageFilter",
 		[]byte(`{"@type":"/cosmos.bank.v1beta1.MsgSend"`),
 	)
 	s.Require().Error(err, "Authenticator not registered so should fail")
@@ -95,18 +95,18 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 	_, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 	)
-	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
+	s.Require().NoError(err, "Should successfully add a SignatureVerification")
 
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 	)
-	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
+	s.Require().NoError(err, "Should successfully add a MessageFilter")
 
 	authenticators, err := s.App.SmartAccountKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
 	s.Require().NoError(err)
@@ -131,10 +131,10 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	_, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 	)
-	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
+	s.Require().NoError(err, "Should successfully add a SignatureVerification")
 
 	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
 	s.Require().Equal(authenticatorId, uint64(2), "Get authenticator id returned incorrect id")
@@ -142,10 +142,10 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 	)
-	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
+	s.Require().NoError(err, "Should successfully add a MessageFilter")
 
 	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
 	s.Require().Equal(authenticatorId, uint64(3), "Get authenticator id returned incorrect id")
@@ -163,44 +163,44 @@ func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
 	_, err := s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 	)
-	s.Require().NoError(err, "Should successfully add a SignatureVerificationAuthenticator")
+	s.Require().NoError(err, "Should successfully add a SignatureVerification")
 
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"MessageFilterAuthenticator",
+		"MessageFilter",
 		[]byte(`{"@type":"/cosmos.bank.v1beta1.MsgSend"}`),
 	)
-	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
+	s.Require().NoError(err, "Should successfully add a MessageFilter")
 
 	// Test getting a selected authenticator from the store
 	selectedAuthenticator, err := s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
 	s.Require().NoError(err)
-	s.Require().Equal(selectedAuthenticator.Authenticator.Type(), "MessageFilterAuthenticator", "Getting authenticators returning incorrect data")
+	s.Require().Equal(selectedAuthenticator.Authenticator.Type(), "MessageFilter", "Getting authenticators returning incorrect data")
 
 	selectedAuthenticator, err = s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 1)
 	s.Require().NoError(err)
-	s.Require().Equal(selectedAuthenticator.Authenticator.Type(), "SignatureVerificationAuthenticator", "Getting authenticators returning incorrect data")
+	s.Require().Equal(selectedAuthenticator.Authenticator.Type(), "SignatureVerification", "Getting authenticators returning incorrect data")
 	s.Require().Equal(selectedAuthenticator.Id, uint64(1), "Incorrect ID returned from store")
 
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
 		accAddress,
-		"MessageFilterAuthenticator",
+		"MessageFilter",
 		[]byte(`{"@type":"/cosmos.bank.v1beta1.MsgSend"}`),
 	)
-	s.Require().NoError(err, "Should successfully add a MessageFilterAuthenticator")
+	s.Require().NoError(err, "Should successfully add a MessageFilter")
 
 	// Remove a registered authenticator from the authenticator manager
-	s.App.AuthenticatorManager.UnregisterAuthenticator(authenticator.MessageFilterAuthenticator{})
+	s.App.AuthenticatorManager.UnregisterAuthenticator(authenticator.MessageFilter{})
 
 	// Try to get an authenticator that has been removed from the store
 	selectedAuthenticator, err = s.App.SmartAccountKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, 2)
 	s.Require().Error(err)
-	s.Require().ErrorContains(err, "authenticator id 2 failed to initialize, authenticator type MessageFilterAuthenticator not registered in manager: internal logic error")
+	s.Require().ErrorContains(err, "authenticator id 2 failed to initialize, authenticator type MessageFilter not registered in manager: internal logic error")
 
 	// Reset the authenticator manager to see how GetInitializedAuthenticatorForAccount behaves
 	s.App.AuthenticatorManager.ResetAuthenticators()

@@ -203,11 +203,111 @@ func (m *GetAuthenticatorsResponse) GetAccountAuthenticators() []*AccountAuthent
 	return nil
 }
 
+// MsgGetAuthenticatorRequest defines the Msg/GetAuthenticator request type.
+type GetAuthenticatorRequest struct {
+	Account         string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	AuthenticatorId uint64 `protobuf:"varint,2,opt,name=authenticator_id,json=authenticatorId,proto3" json:"authenticator_id,omitempty"`
+}
+
+func (m *GetAuthenticatorRequest) Reset()         { *m = GetAuthenticatorRequest{} }
+func (m *GetAuthenticatorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAuthenticatorRequest) ProtoMessage()    {}
+func (*GetAuthenticatorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_aab2e1fc442f3cc3, []int{4}
+}
+func (m *GetAuthenticatorRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAuthenticatorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAuthenticatorRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAuthenticatorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuthenticatorRequest.Merge(m, src)
+}
+func (m *GetAuthenticatorRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAuthenticatorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuthenticatorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAuthenticatorRequest proto.InternalMessageInfo
+
+func (m *GetAuthenticatorRequest) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *GetAuthenticatorRequest) GetAuthenticatorId() uint64 {
+	if m != nil {
+		return m.AuthenticatorId
+	}
+	return 0
+}
+
+// MsgGetAuthenticatorResponse defines the Msg/GetAuthenticator response type.
+type GetAuthenticatorResponse struct {
+	AccountAuthenticator *AccountAuthenticator `protobuf:"bytes,1,opt,name=account_authenticator,json=accountAuthenticator,proto3" json:"account_authenticator,omitempty"`
+}
+
+func (m *GetAuthenticatorResponse) Reset()         { *m = GetAuthenticatorResponse{} }
+func (m *GetAuthenticatorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetAuthenticatorResponse) ProtoMessage()    {}
+func (*GetAuthenticatorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_aab2e1fc442f3cc3, []int{5}
+}
+func (m *GetAuthenticatorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAuthenticatorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAuthenticatorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAuthenticatorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuthenticatorResponse.Merge(m, src)
+}
+func (m *GetAuthenticatorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAuthenticatorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuthenticatorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAuthenticatorResponse proto.InternalMessageInfo
+
+func (m *GetAuthenticatorResponse) GetAccountAuthenticator() *AccountAuthenticator {
+	if m != nil {
+		return m.AccountAuthenticator
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "osmosis.smartaccount.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "osmosis.smartaccount.v1beta1.QueryParamsResponse")
 	proto.RegisterType((*GetAuthenticatorsRequest)(nil), "osmosis.smartaccount.v1beta1.GetAuthenticatorsRequest")
 	proto.RegisterType((*GetAuthenticatorsResponse)(nil), "osmosis.smartaccount.v1beta1.GetAuthenticatorsResponse")
+	proto.RegisterType((*GetAuthenticatorRequest)(nil), "osmosis.smartaccount.v1beta1.GetAuthenticatorRequest")
+	proto.RegisterType((*GetAuthenticatorResponse)(nil), "osmosis.smartaccount.v1beta1.GetAuthenticatorResponse")
 }
 
 func init() {
@@ -215,34 +315,40 @@ func init() {
 }
 
 var fileDescriptor_aab2e1fc442f3cc3 = []byte{
-	// 430 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xb1, 0xae, 0xd3, 0x30,
-	0x14, 0x86, 0xe3, 0x0b, 0x14, 0xe1, 0x3b, 0x61, 0x2e, 0x28, 0x44, 0x55, 0xa8, 0xa2, 0x0e, 0x05,
-	0xa9, 0x71, 0x1b, 0xaa, 0x22, 0xc6, 0x76, 0x61, 0x85, 0x30, 0xc1, 0x82, 0x9c, 0x60, 0xa5, 0x91,
-	0x9a, 0x38, 0x8d, 0x9d, 0x8a, 0x0a, 0xb1, 0x30, 0x30, 0x23, 0xf5, 0x75, 0x78, 0x80, 0x8e, 0x95,
-	0x58, 0x18, 0x10, 0x42, 0x2d, 0x0f, 0x82, 0x6a, 0x3b, 0x15, 0x51, 0x43, 0x74, 0xbb, 0xc5, 0x27,
-	0xff, 0x7f, 0xbe, 0xdf, 0xe7, 0x18, 0xf6, 0x18, 0x4f, 0x18, 0x8f, 0x39, 0xe6, 0x09, 0xc9, 0x05,
-	0x09, 0x43, 0x56, 0xa4, 0x02, 0x2f, 0x87, 0x01, 0x15, 0x64, 0x88, 0x17, 0x05, 0xcd, 0x57, 0x6e,
-	0x96, 0x33, 0xc1, 0x50, 0x5b, 0x2b, 0xdd, 0x7f, 0x95, 0xae, 0x56, 0x5a, 0x57, 0x11, 0x8b, 0x98,
-	0x14, 0xe2, 0xc3, 0x97, 0xf2, 0x58, 0xed, 0x88, 0xb1, 0x68, 0x4e, 0x31, 0xc9, 0x62, 0x4c, 0xd2,
-	0x94, 0x09, 0x22, 0x62, 0x96, 0x72, 0xfd, 0xf7, 0x49, 0x28, 0x5b, 0xe2, 0x80, 0x70, 0xaa, 0x50,
-	0x47, 0x70, 0x46, 0xa2, 0x38, 0x95, 0x62, 0xad, 0x7d, 0xdc, 0x98, 0x33, 0x23, 0x39, 0x49, 0xf8,
-	0xb5, 0xa4, 0x09, 0x7b, 0x4f, 0xe7, 0x5a, 0xea, 0x5c, 0x41, 0xf4, 0xea, 0xc0, 0x7d, 0x29, 0xfd,
-	0x3e, 0x5d, 0x14, 0x94, 0x0b, 0xe7, 0x0d, 0xbc, 0x57, 0xa9, 0xf2, 0x8c, 0xa5, 0x9c, 0xa2, 0x29,
-	0x6c, 0x29, 0x8e, 0x09, 0x3a, 0xa0, 0x77, 0xe9, 0x75, 0xdd, 0xa6, 0x89, 0xb8, 0xca, 0x3d, 0xbd,
-	0xb9, 0xf9, 0xf5, 0xc8, 0xf0, 0xb5, 0xd3, 0x19, 0x41, 0xf3, 0x05, 0x15, 0x93, 0x42, 0xcc, 0x68,
-	0x2a, 0xe2, 0x90, 0x08, 0x96, 0x97, 0x58, 0x64, 0xc2, 0xdb, 0xba, 0x87, 0x04, 0xdc, 0xf1, 0xcb,
-	0xa3, 0xf3, 0x05, 0xc0, 0x87, 0x35, 0x36, 0x9d, 0x2b, 0x86, 0x0f, 0xb4, 0xf0, 0x1d, 0xa9, 0x28,
-	0x4c, 0xd0, 0xb9, 0xd1, 0xbb, 0xf4, 0xbc, 0xe6, 0x9c, 0x13, 0x75, 0xae, 0x34, 0xf7, 0xef, 0x93,
-	0x9a, 0x2a, 0xf7, 0x7e, 0x5e, 0xc0, 0x5b, 0x72, 0x34, 0x68, 0x0d, 0x60, 0x4b, 0xdd, 0x10, 0x0d,
-	0x9a, 0xfb, 0x9f, 0x0e, 0xd8, 0x1a, 0x9e, 0xe1, 0x50, 0x97, 0x74, 0xba, 0x9f, 0xbf, 0xff, 0x59,
-	0x5f, 0xd8, 0xa8, 0x8d, 0x6b, 0xb7, 0xab, 0xc6, 0x8b, 0xbe, 0x01, 0x78, 0xf7, 0x64, 0x50, 0x68,
-	0xdc, 0x8c, 0xfb, 0xdf, 0x42, 0xac, 0x67, 0x67, 0xfb, 0x74, 0xd8, 0xb1, 0x0c, 0x3b, 0x40, 0x6e,
-	0x7d, 0xd8, 0xea, 0x96, 0xf0, 0x47, 0x5d, 0xff, 0x34, 0x7d, 0xbd, 0xd9, 0xd9, 0x60, 0xbb, 0xb3,
-	0xc1, 0xef, 0x9d, 0x0d, 0xbe, 0xee, 0x6d, 0x63, 0xbb, 0xb7, 0x8d, 0x1f, 0x7b, 0xdb, 0x78, 0xfb,
-	0x3c, 0x8a, 0xc5, 0xac, 0x08, 0xdc, 0x90, 0x25, 0x65, 0xcf, 0xfe, 0x9c, 0x04, 0xfc, 0x08, 0x58,
-	0x7a, 0x23, 0xfc, 0x41, 0x61, 0xfa, 0x25, 0x47, 0xac, 0x32, 0xca, 0x83, 0x96, 0x7c, 0xea, 0x4f,
-	0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xb2, 0x19, 0xec, 0x28, 0xea, 0x03, 0x00, 0x00,
+	// 519 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0xae, 0x47, 0x29, 0xc2, 0x3b, 0x30, 0x4c, 0x07, 0xa1, 0xaa, 0x42, 0x15, 0xed, 0xd0, 0x21,
+	0x2d, 0x5e, 0xc3, 0x18, 0xe2, 0xc6, 0x7a, 0x01, 0x6e, 0x10, 0x4e, 0x70, 0x60, 0x72, 0x52, 0x2b,
+	0xb3, 0xd4, 0xc4, 0x59, 0xec, 0x4c, 0x4c, 0xd3, 0x2e, 0x20, 0x71, 0x46, 0xda, 0xbf, 0xe0, 0x37,
+	0xf0, 0x03, 0x26, 0x71, 0x99, 0xc4, 0x85, 0x13, 0x42, 0x2d, 0x3f, 0x04, 0xcd, 0x76, 0x0b, 0x69,
+	0x43, 0x58, 0x77, 0xab, 0x5f, 0xbf, 0xef, 0x7d, 0xdf, 0xf7, 0xde, 0x53, 0x60, 0x97, 0x8b, 0x98,
+	0x0b, 0x26, 0xb0, 0x88, 0x49, 0x26, 0x49, 0x18, 0xf2, 0x3c, 0x91, 0xf8, 0xa0, 0x17, 0x50, 0x49,
+	0x7a, 0x78, 0x3f, 0xa7, 0xd9, 0xa1, 0x9b, 0x66, 0x5c, 0x72, 0xd4, 0x36, 0x48, 0xf7, 0x6f, 0xa4,
+	0x6b, 0x90, 0xad, 0x66, 0xc4, 0x23, 0xae, 0x80, 0xf8, 0xfc, 0x97, 0xe6, 0xb4, 0xda, 0x11, 0xe7,
+	0xd1, 0x90, 0x62, 0x92, 0x32, 0x4c, 0x92, 0x84, 0x4b, 0x22, 0x19, 0x4f, 0x84, 0xf9, 0xf7, 0x7e,
+	0xa8, 0x5a, 0xe2, 0x80, 0x08, 0xaa, 0xa5, 0xa6, 0xc2, 0x29, 0x89, 0x58, 0xa2, 0xc0, 0x06, 0xbb,
+	0x5e, 0xe9, 0x33, 0x25, 0x19, 0x89, 0xc5, 0x85, 0xa0, 0x31, 0x1f, 0xd0, 0xa1, 0x81, 0x3a, 0x4d,
+	0x88, 0x5e, 0x9e, 0xeb, 0xbe, 0x50, 0x7c, 0x9f, 0xee, 0xe7, 0x54, 0x48, 0xe7, 0x35, 0xbc, 0x55,
+	0xa8, 0x8a, 0x94, 0x27, 0x82, 0xa2, 0x3e, 0x6c, 0x68, 0x1d, 0x0b, 0x74, 0x40, 0x77, 0xd9, 0x5b,
+	0x73, 0xab, 0x26, 0xe2, 0x6a, 0x76, 0xbf, 0x7e, 0xfa, 0xe3, 0x5e, 0xcd, 0x37, 0x4c, 0x67, 0x0b,
+	0x5a, 0x4f, 0xa9, 0xdc, 0xc9, 0xe5, 0x1e, 0x4d, 0x24, 0x0b, 0x89, 0xe4, 0xd9, 0x44, 0x16, 0x59,
+	0xf0, 0x9a, 0xe9, 0xa1, 0x04, 0xae, 0xfb, 0x93, 0xa7, 0xf3, 0x11, 0xc0, 0xbb, 0x25, 0x34, 0xe3,
+	0x8b, 0xc1, 0xdb, 0x06, 0xb8, 0x4b, 0x0a, 0x08, 0x0b, 0x74, 0xae, 0x74, 0x97, 0x3d, 0xaf, 0xda,
+	0xe7, 0x8e, 0x7e, 0x17, 0x9a, 0xfb, 0xab, 0xa4, 0xa4, 0x2a, 0x9c, 0xb7, 0xf0, 0xce, 0xac, 0x8f,
+	0xff, 0xba, 0x47, 0xeb, 0x70, 0xa5, 0xe0, 0x6b, 0x97, 0x0d, 0xac, 0xa5, 0x0e, 0xe8, 0xd6, 0xfd,
+	0x1b, 0x85, 0xfa, 0xf3, 0x81, 0xf3, 0x01, 0xcc, 0xcf, 0x67, 0x9a, 0x33, 0x82, 0xab, 0xa5, 0x39,
+	0xcd, 0x3a, 0x2e, 0x13, 0xb3, 0x59, 0x16, 0xd3, 0xfb, 0x5c, 0x87, 0x57, 0xd5, 0x01, 0xa0, 0x13,
+	0x00, 0x1b, 0x7a, 0x8f, 0x68, 0xb3, 0xba, 0xfd, 0xfc, 0x19, 0xb5, 0x7a, 0x0b, 0x30, 0x74, 0x44,
+	0x67, 0xed, 0xfd, 0xb7, 0x5f, 0x27, 0x4b, 0x36, 0x6a, 0xe3, 0xd2, 0x1b, 0xd6, 0x47, 0x84, 0xbe,
+	0x02, 0xb8, 0x32, 0x3b, 0x25, 0xf4, 0xb0, 0x5a, 0xed, 0x1f, 0x6b, 0x6b, 0x6d, 0x2f, 0x4a, 0x33,
+	0x4e, 0x9f, 0x29, 0xa7, 0x7d, 0xf4, 0xa4, 0xdc, 0x69, 0x61, 0x41, 0xf8, 0xc8, 0x94, 0x8f, 0xf1,
+	0xd1, 0xec, 0x25, 0x1c, 0xa3, 0x2f, 0x00, 0xde, 0x9c, 0x3b, 0x6e, 0xb4, 0xa0, 0xaf, 0xe9, 0xd0,
+	0x1f, 0x2d, 0xcc, 0x33, 0x81, 0xb6, 0x55, 0xa0, 0x4d, 0xe4, 0x5e, 0x20, 0x90, 0xf8, 0x93, 0xa8,
+	0xff, 0xea, 0x74, 0x64, 0x83, 0xb3, 0x91, 0x0d, 0x7e, 0x8e, 0x6c, 0xf0, 0x69, 0x6c, 0xd7, 0xce,
+	0xc6, 0x76, 0xed, 0xfb, 0xd8, 0xae, 0xbd, 0x79, 0x1c, 0x31, 0xb9, 0x97, 0x07, 0x6e, 0xc8, 0xe3,
+	0x49, 0xcf, 0x8d, 0x21, 0x09, 0xc4, 0x54, 0xe0, 0xc0, 0xdb, 0xc2, 0xef, 0xb4, 0xcc, 0xc6, 0x44,
+	0x47, 0x1e, 0xa6, 0x54, 0x04, 0x0d, 0xf5, 0x79, 0x7a, 0xf0, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x9a,
+	0x94, 0x72, 0xfa, 0x9e, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -259,6 +365,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	GetAuthenticator(ctx context.Context, in *GetAuthenticatorRequest, opts ...grpc.CallOption) (*GetAuthenticatorResponse, error)
 	GetAuthenticators(ctx context.Context, in *GetAuthenticatorsRequest, opts ...grpc.CallOption) (*GetAuthenticatorsResponse, error)
 }
 
@@ -279,6 +386,15 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) GetAuthenticator(ctx context.Context, in *GetAuthenticatorRequest, opts ...grpc.CallOption) (*GetAuthenticatorResponse, error) {
+	out := new(GetAuthenticatorResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.smartaccount.v1beta1.Query/GetAuthenticator", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) GetAuthenticators(ctx context.Context, in *GetAuthenticatorsRequest, opts ...grpc.CallOption) (*GetAuthenticatorsResponse, error) {
 	out := new(GetAuthenticatorsResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.smartaccount.v1beta1.Query/GetAuthenticators", in, out, opts...)
@@ -292,6 +408,7 @@ func (c *queryClient) GetAuthenticators(ctx context.Context, in *GetAuthenticato
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	GetAuthenticator(context.Context, *GetAuthenticatorRequest) (*GetAuthenticatorResponse, error)
 	GetAuthenticators(context.Context, *GetAuthenticatorsRequest) (*GetAuthenticatorsResponse, error)
 }
 
@@ -301,6 +418,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) GetAuthenticator(ctx context.Context, req *GetAuthenticatorRequest) (*GetAuthenticatorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthenticator not implemented")
 }
 func (*UnimplementedQueryServer) GetAuthenticators(ctx context.Context, req *GetAuthenticatorsRequest) (*GetAuthenticatorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAuthenticators not implemented")
@@ -324,6 +444,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAuthenticator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthenticatorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAuthenticator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.smartaccount.v1beta1.Query/GetAuthenticator",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAuthenticator(ctx, req.(*GetAuthenticatorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -353,6 +491,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "GetAuthenticator",
+			Handler:    _Query_GetAuthenticator_Handler,
 		},
 		{
 			MethodName: "GetAuthenticators",
@@ -486,6 +628,76 @@ func (m *GetAuthenticatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *GetAuthenticatorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAuthenticatorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAuthenticatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AuthenticatorId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.AuthenticatorId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Account) > 0 {
+		i -= len(m.Account)
+		copy(dAtA[i:], m.Account)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Account)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAuthenticatorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAuthenticatorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAuthenticatorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AccountAuthenticator != nil {
+		{
+			size, err := m.AccountAuthenticator.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -541,6 +753,35 @@ func (m *GetAuthenticatorsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *GetAuthenticatorRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Account)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.AuthenticatorId != 0 {
+		n += 1 + sovQuery(uint64(m.AuthenticatorId))
+	}
+	return n
+}
+
+func (m *GetAuthenticatorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.AccountAuthenticator != nil {
+		l = m.AccountAuthenticator.Size()
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -826,6 +1067,193 @@ func (m *GetAuthenticatorsResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.AccountAuthenticators = append(m.AccountAuthenticators, &AccountAuthenticator{})
 			if err := m.AccountAuthenticators[len(m.AccountAuthenticators)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAuthenticatorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAuthenticatorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAuthenticatorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Account = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticatorId", wireType)
+			}
+			m.AuthenticatorId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AuthenticatorId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAuthenticatorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAuthenticatorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAuthenticatorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountAuthenticator", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AccountAuthenticator == nil {
+				m.AccountAuthenticator = &AccountAuthenticator{}
+			}
+			if err := m.AccountAuthenticator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

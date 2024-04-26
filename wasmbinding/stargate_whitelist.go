@@ -26,6 +26,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v24/x/poolmanager/client/queryproto"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v24/x/twap/client/queryproto"
@@ -138,6 +139,10 @@ func init() {
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+
+	// smartaccount
+	setWhitelistedQuery("/osmosis.smartaccount.v1beta1.Query/GetAuthenticator", &smartaccounttypes.GetAuthenticatorResponse{})
+	setWhitelistedQuery("/osmosis.smartaccount.v1beta1.Query/GetAuthenticators", &smartaccounttypes.GetAuthenticatorsResponse{})
 
 	// poolmanager
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/NumPools", &poolmanagerqueryproto.NumPoolsResponse{})

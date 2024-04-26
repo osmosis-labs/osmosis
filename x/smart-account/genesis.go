@@ -30,7 +30,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				ctx,
 				accAddr,
 				genState.AuthenticatorData[i].Authenticators[j].Type,
-				genState.AuthenticatorData[i].Authenticators[j].Data,
+				genState.AuthenticatorData[i].Authenticators[j].Config,
 				genState.AuthenticatorData[i].Authenticators[j].Id,
 			)
 			if err != nil {
