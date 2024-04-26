@@ -2,6 +2,7 @@ package math
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
@@ -25,30 +26,61 @@ func TicksToSqrtPrice(lowerTick, upperTick int64) (osmomath.BigDec, osmomath.Big
 	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
+var sqrtPriceCache = sync.Map{}
+
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
 // If tickIndex is zero, the function returns osmomath.OneDec().
 // It is the combination of calling TickToPrice followed by Sqrt.
 func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
-	priceBigDec, err := TickToPrice(tickIndex)
-	if err != nil {
-		return osmomath.BigDec{}, err
-	}
-
 	// N.B. at launch, we only supported price range
 	// of [tick(10^-12), tick(MaxSpotPrice)].
 	// To maintain backwards state-compatibility, we use the original
 	// math based on 18 precision decimal on the at the launch tick range.
 	if tickIndex >= types.MinInitializedTick {
-		// It is acceptable to truncate here as TickToPrice() function converts
-		// from osmomath.Dec to osmomath.BigDec before returning specifically for this range.
-		// As a result, there is no data loss.
-		price := priceBigDec.Dec()
-
-		sqrtPrice, err := osmomath.MonotonicSqrtMut(price)
+		additiveTicks, geometricExponentDelta, err := TickToAdditiveGeometricIndices(tickIndex)
 		if err != nil {
 			return osmomath.BigDec{}, err
 		}
-		return osmomath.BigDecFromDecMut(sqrtPrice), nil
+
+		// Notice that in in the case where tickIndex < 0 and geometricExponentDelta%2 == 0,
+		// We can compute the square root once for this additive tick,
+		// and then multiply it by 10^(-geometricExponentDelta/2), as that is the perfect square root.
+		// Ceil multiplication rounds it up, to obey the correct monotonic behavior.
+		// TODO: Extend this to all cases where the geometricExponentDelta is even,
+		// by computing max possible sqrt. That will notably add cost to the case where we
+		// initially populate caches though.
+		var sqrtResult osmomath.Dec
+		if tickIndex < 0 && geometricExponentDelta%2 == 0 {
+			sqrt, ok := sqrtPriceCache.Load(additiveTicks)
+			// TODO: Update Dec and make this int64
+			divisor := PowTenInternal(geometricExponentDelta / 2)
+			if ok {
+				sqrtResult, _ = sqrt.(osmomath.Dec)
+				sqrtResult = sqrtResult.MulRoundUp(divisor)
+			} else {
+				price := additiveGeometricIndicesToPrice(tickIndex, additiveTicks, 0)
+				additiveSqrtCache, err := osmomath.MonotonicSqrtMut(price)
+				if err != nil {
+					return osmomath.BigDec{}, err
+				}
+				sqrtPriceCache.Store(additiveTicks, additiveSqrtCache)
+				sqrtResult = additiveSqrtCache.MulRoundUp(divisor)
+			}
+		} else {
+			price := additiveGeometricIndicesToPrice(tickIndex, additiveTicks, geometricExponentDelta)
+
+			sqrtResult, err = osmomath.MonotonicSqrtMut(price)
+			if err != nil {
+				return osmomath.BigDec{}, err
+			}
+		}
+
+		return osmomath.BigDecFromDecMut(sqrtResult), nil
+	}
+
+	priceBigDec, err := TickToPrice(tickIndex)
+	if err != nil {
+		return osmomath.BigDec{}, err
 	}
 
 	// For the newly extended range of [tick(MinSpotPriceV2), MinInitializedTick), we use the new math
@@ -106,6 +138,25 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	return price, nil
+}
+
+func additiveGeometricIndicesToPrice(tickIndex int64, numAdditiveTicks int64, geometricExponentDelta int64) osmomath.Dec {
+	// Calculate the exponentAtCurrentTick from the starting exponentAtPriceOne and the geometricExponentDelta
+	exponentAtCurrentTick := types.ExponentAtPriceOne + geometricExponentDelta
+	var unscaledPrice int64 = 1_000_000
+	if tickIndex < 0 {
+		// We must decrement the exponentAtCurrentTick when entering the negative tick range in order to constantly step up in precision when going further down in ticks
+		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
+		exponentAtCurrentTick = exponentAtCurrentTick - 1
+		unscaledPrice *= 10
+	}
+	unscaledPrice += numAdditiveTicks
+	if exponentAtCurrentTick < -18 {
+		// TODO: Optimize this to avoid using BigDec
+		return powTenBigDec(exponentAtCurrentTick).MulInt64(unscaledPrice).Dec()
+	}
+	price := PowTenInternal(exponentAtCurrentTick).MulInt64(unscaledPrice)
+	return price
 }
 
 func TickToAdditiveGeometricIndices(tickIndex int64) (additiveTicks int64, geometricExponentDelta int64, err error) {
