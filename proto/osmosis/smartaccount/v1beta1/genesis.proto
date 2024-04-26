@@ -15,8 +15,7 @@ message AuthenticatorData {
   string address = 1;
 
   // authenticators are the account's authenticators, these can be multiple
-  // types including SignatureVerificationAuthenticator, AllOfAuthenticators and
-  // CosmWasmAuthenticators.
+  // types including SignatureVerification, AllOfs, CosmWasmAuthenticators, etc
   repeated AccountAuthenticator authenticators = 2
       [ (gogoproto.nullable) = false ];
 }

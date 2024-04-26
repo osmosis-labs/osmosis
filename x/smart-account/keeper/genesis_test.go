@@ -13,7 +13,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerification{}.Type()))
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	err := s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 		0,
 	)
@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	err = s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		priv.PubKey().Bytes(),
 		1,
 	)
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	err = s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		[]byte("BrokenBytes"),
 		2,
 	)
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {
 	err = s.App.SmartAccountKeeper.AddAuthenticatorWithId(
 		ctx,
 		accAddress,
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		[]byte("BrokenBytes"),
 		2,
 	)
@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerification{}.Type()))
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) TestKeeper_GetAllAuthenticatorDataGenesis() {
 		id, err := s.App.SmartAccountKeeper.AddAuthenticator(
 			ctx,
 			accAddress,
-			"SignatureVerificationAuthenticator",
+			"SignatureVerification",
 			priv.PubKey().Bytes(),
 		)
 		s.Require().NoError(err)

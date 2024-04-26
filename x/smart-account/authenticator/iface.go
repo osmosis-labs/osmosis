@@ -13,7 +13,7 @@ type InitializedAuthenticator struct {
 // Authenticator is an interface that encapsulates all authentication functionalities essential for
 // verifying transactions, paying transaction fees, and managing gas consumption during verification.
 type Authenticator interface {
-	// Type returns the specific type of the authenticator, such as SignatureVerificationAuthenticator.
+	// Type returns the specific type of the authenticator, such as SignatureVerification.
 	// This type is used for registering and identifying the authenticator within the AuthenticatorManager.
 	Type() string
 
@@ -23,7 +23,7 @@ type Authenticator interface {
 
 	// Initialize prepares the authenticator with necessary data from storage, specific to an account-authenticator pair.
 	// This method is used for setting up the authenticator with data like a PublicKey for signature verification.
-	Initialize(data []byte) (Authenticator, error)
+	Initialize(config []byte) (Authenticator, error)
 
 	// Authenticate confirms the validity of a message using the provided authentication data.
 	// NOTE: Any state changes made by this function will be discarded.
@@ -41,9 +41,9 @@ type Authenticator interface {
 
 	// OnAuthenticatorAdded handles the addition of an authenticator to an account.
 	// It checks the data format and compatibility, to maintain account security and authenticator integrity.
-	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
+	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error
 
 	// OnAuthenticatorRemoved manages the removal of an authenticator from an account.
 	// This function is used for updating global data or preventing removal when necessary to maintain system stability.
-	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error
+	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error
 }

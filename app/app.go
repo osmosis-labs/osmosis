@@ -255,7 +255,7 @@ func NewOsmosisApp(
 	ibcWasmConfig :=
 		ibcwasmtypes.WasmConfig{
 			DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
-			SupportedCapabilities: "iterator",
+			SupportedCapabilities: "iterator,stargate,abort",
 			ContractDebugMode:     false,
 		}
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)

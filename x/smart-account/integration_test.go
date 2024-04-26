@@ -80,7 +80,7 @@ func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount i
 	return s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
 }
 
-// TestKeyRotationStory tests the authenticator module by adding multiple SignatureVerificationAuthenticators
+// TestKeyRotationStory tests the authenticator module by adding multiple SignatureVerifications
 // to an account and sending transaction signed by those authenticators.
 func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
@@ -98,7 +98,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	sigVerAuthId, err := s.app.SmartAccountKeeper.AddAuthenticator(
 		s.chainA.GetContext(),
 		s.Account.GetAddress(),
-		"SignatureVerificationAuthenticator",
+		"SignatureVerification",
 		s.PrivKeys[1].PubKey().Bytes(),
 	)
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -141,7 +141,7 @@ func (s *AuthenticatorSuite) TestCircuitBreaker() {
 
 	// Add signature verification authenticator
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(
-		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[1].PubKey().Bytes())
+		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerification", s.PrivKeys[1].PubKey().Bytes())
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Submit a bank send tx using the second private key
@@ -157,7 +157,7 @@ func (s *AuthenticatorSuite) TestCircuitBreaker() {
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 }
 
-// TestMessageFilterStory tests that the MessageFilterAuthenticator works as expected
+// TestMessageFilterStory tests that the MessageFilter works as expected
 func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
 	sendMsg := &banktypes.MsgSend{
@@ -171,11 +171,11 @@ func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
 	// Change account's authenticator
-	msgFilter := authenticator.NewMessageFilterAuthenticator(s.EncodingConfig)
+	msgFilter := authenticator.NewMessageFilter(s.EncodingConfig)
 	s.app.AuthenticatorManager.RegisterAuthenticator(msgFilter)
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(
 		s.chainA.GetContext(), s.Account.GetAddress(),
-		"MessageFilterAuthenticator",
+		"MessageFilter",
 		[]byte(fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","amount": [{"denom": "%s", "amount": "50"}]}`, sdk.DefaultBondDenom)))
 	s.Require().NoError(err, "Failed to add authenticator")
 
@@ -193,7 +193,7 @@ func (s *AuthenticatorSuite) TestMessageFilterStory() {
 	s.Require().Error(err, "Message filter authenticator failed to block")
 }
 
-// TestKeyRotation tests an account with multiple SignatureVerificationAuthenticators
+// TestKeyRotation tests an account with multiple SignatureVerifications
 // it also checks if the account functions normally after removing authenticators
 func (s *AuthenticatorSuite) TestKeyRotation() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
@@ -205,7 +205,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 	// Add a signature verification authenticator
 	_, err := s.app.SmartAccountKeeper.AddAuthenticator(
-		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[0].PubKey().Bytes())
+		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerification", s.PrivKeys[0].PubKey().Bytes())
 	s.Require().NoError(err, "Failed to add authenticator for key %d", 0)
 
 	// Sanity check the original account with a successful message
@@ -222,11 +222,11 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 	// Add multiple keys
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(
-		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[1].PubKey().Bytes())
+		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerification", s.PrivKeys[1].PubKey().Bytes())
 	s.Require().NoError(err, "Failed to add authenticator for key %d", 0)
 
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(
-		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[2].PubKey().Bytes())
+		s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerification", s.PrivKeys[2].PubKey().Bytes())
 	s.Require().NoError(err, "Failed to add authenticator for key %d", 0)
 
 	// Use the authenticator flow and verify with an authenticator 1
@@ -389,16 +389,16 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAnyOf() {
 		Amount:      coins,
 	}
 
-	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
+	anyOf := authenticator.NewAnyOf(s.app.AuthenticatorManager)
 
 	// construct SubAuthenticatorInitData for each SigVerificationAuthenticator
 	initDataPrivKey1 := authenticator.SubAuthenticatorInitData{
-		AuthenticatorType: "SignatureVerificationAuthenticator",
-		Data:              s.PrivKeys[1].PubKey().Bytes(),
+		Type:   "SignatureVerification",
+		Config: s.PrivKeys[1].PubKey().Bytes(),
 	}
 	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
-		AuthenticatorType: "SignatureVerificationAuthenticator",
-		Data:              s.PrivKeys[2].PubKey().Bytes(),
+		Type:   "SignatureVerification",
+		Config: s.PrivKeys[2].PubKey().Bytes(),
 	}
 
 	// 3. Serialize SigVerificationAuthenticator SubAuthenticatorInitData
@@ -439,16 +439,16 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 		Amount:      coins,
 	}
 
-	allOf := authenticator.NewAllOfAuthenticator(s.app.AuthenticatorManager)
+	allOf := authenticator.NewAllOf(s.app.AuthenticatorManager)
 
 	initDataPrivKey1 := authenticator.SubAuthenticatorInitData{
-		AuthenticatorType: "SignatureVerificationAuthenticator",
-		Data:              s.PrivKeys[1].PubKey().Bytes(),
+		Type:   "SignatureVerification",
+		Config: s.PrivKeys[1].PubKey().Bytes(),
 	}
 
 	initMessageFilter := authenticator.SubAuthenticatorInitData{
-		AuthenticatorType: "MessageFilterAuthenticator",
-		Data: []byte(
+		Type: "MessageFilter",
+		Config: []byte(
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","amount": [{"denom": "%s", "amount": "50"}]}`,
 				sdk.DefaultBondDenom,
 			)),
@@ -492,8 +492,8 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	s.Require().NoError(err, "Failed to remove authenticator")
 
 	initDataPrivKey2 := authenticator.SubAuthenticatorInitData{
-		AuthenticatorType: "SignatureVerificationAuthenticator",
-		Data:              s.PrivKeys[2].PubKey().Bytes(),
+		Type:   "SignatureVerification",
+		Config: s.PrivKeys[2].PubKey().Bytes(),
 	}
 
 	// Create an AllOf authenticator with 2 signature verification authenticators
@@ -503,7 +503,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	})
 
 	// Set the authenticator to our account
-	partitionedAllOf := authenticator.NewPartitionedAllOfAuthenticator(s.app.AuthenticatorManager)
+	partitionedAllOf := authenticator.NewPartitionedAllOf(s.app.AuthenticatorManager)
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), partitionedAllOf.Type(), compositeData)
 	s.Require().NoError(err)
 

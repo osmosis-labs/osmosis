@@ -801,7 +801,7 @@ var (
 			SecondPositionUpperPrice: osmomath.NewDec(6250),
 			ExpectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			ExpectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1695807)),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.624166726347032857"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.624166726347032850"),
 			ExpectedTick:      31825900,
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("76.328178655208424124"),
 			NewLowerPrice:     osmomath.NewDec(5001),
@@ -1630,7 +1630,7 @@ var (
 			ExpectedSecondUpperTickSpreadRewardGrowth: secondPosition{TickIndex: 322500, ExpectedSpreadRewardGrowth: cl.EmptyCoins},
 			NewLowerPrice: osmomath.NewDec(5500),
 			NewUpperPrice: osmomath.NewDec(6250),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.007433904623597252"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.007433904623597258"),
 		},
 		"spread factor 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) (10% spread factor) | zfo": {
 			TokenOut:                 sdk.NewCoin(USDC, osmomath.NewInt(9321276930)),
@@ -1770,7 +1770,7 @@ var (
 			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("75.582372355128594342857800328292876450"),
 			NewLowerPrice:     osmomath.NewDec(5001),
 			NewUpperPrice:     osmomath.NewDec(6250),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.256404959888119530"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.256404959888119533"),
 		},
 		"spread factor 6: two sequential positions with a gap usdc (in) -> eth (out) (0.03% spread factor) | ofz": {
 			TokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
@@ -1828,7 +1828,7 @@ var (
 			ExpectedSecondUpperTickSpreadRewardGrowth: secondPosition{TickIndex: 322500, ExpectedSpreadRewardGrowth: cl.EmptyCoins},
 			NewLowerPrice: osmomath.NewDec(5501),
 			NewUpperPrice: osmomath.NewDec(6250),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.002226857353494143"),
+			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.002226857353494147"),
 		},
 		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% spread factor) | ofz": {
 			TokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),

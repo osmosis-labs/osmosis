@@ -15,9 +15,9 @@ message AccountAuthenticator {
   // and ensuring precise data retrieval from the storage layer.
   string type = 2;
 
-  // Data is a versatile field used in conjunction with the specific type of
+  // Config is a versatile field used in conjunction with the specific type of
   // account authenticator to facilitate complex authentication processes.
   // The interpretation of this field is overloaded, enabling multiple
   // authenticators to utilize it for their respective purposes.
-  bytes data = 3;
+  bytes config = 3;
 }

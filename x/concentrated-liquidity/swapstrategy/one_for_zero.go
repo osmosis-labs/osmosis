@@ -27,6 +27,8 @@ type oneForZeroStrategy struct {
 
 	// oneMinusSpreadFactor is 1 - spreadFactor
 	oneMinusSpreadFactor osmomath.Dec
+	// spfOverOneMinusSpf is spreadFactor / (1 - spreadFactor)
+	spfOverOneMinusSpf osmomath.Dec
 }
 
 var _ SwapStrategy = (*oneForZeroStrategy)(nil)
@@ -97,7 +99,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountInDecFinal, amountOneInRemaining, s.spreadFactor, s.getOneMinusSpreadFactor)
+	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountInDecFinal, amountOneInRemaining, s.spreadFactor, s.getSpfOverOneMinusSpf)
 
 	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext, amountInDecFinal, amountZeroOut.Dec(), spreadRewardChargeTotal
@@ -162,7 +164,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneInFinal, s.spreadFactor, s.getOneMinusSpreadFactor())
+	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneInFinal, s.getSpfOverOneMinusSpf())
 
 	// Cap the output amount to not exceed the remaining output amount.
 	// The reason why we must do this for in given out and NOT out given in is the following:
@@ -188,6 +190,13 @@ func (s oneForZeroStrategy) getOneMinusSpreadFactor() osmomath.Dec {
 		s.oneMinusSpreadFactor = oneDec.Sub(s.spreadFactor)
 	}
 	return s.oneMinusSpreadFactor
+}
+
+func (s oneForZeroStrategy) getSpfOverOneMinusSpf() osmomath.Dec {
+	if s.spfOverOneMinusSpf.IsNil() {
+		s.spfOverOneMinusSpf = s.spreadFactor.QuoRoundUp(s.getOneMinusSpreadFactor())
+	}
+	return s.spfOverOneMinusSpf
 }
 
 // InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.

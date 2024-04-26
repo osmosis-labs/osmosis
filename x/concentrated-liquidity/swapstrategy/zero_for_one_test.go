@@ -121,7 +121,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			amountZeroInConsumed: defaultAmountZero.Ceil(),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent)
 			expectedAmountOneOut:            defaultAmountOne,
-			expectedSpreadRewardChargeTotal: defaultAmountZero.Ceil().Quo(oneMinusDefaultSpreadFactor).Mul(defaultSpreadReward),
+			expectedSpreadRewardChargeTotal: defaultAmountZero.Ceil().Mul(defaultSpreadReward.Quo(oneMinusDefaultSpreadFactor)),
 		},
 		"4: 3% spread reward - do not reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,

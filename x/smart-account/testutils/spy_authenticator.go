@@ -76,9 +76,9 @@ func (s SpyAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (s SpyAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (s SpyAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
 	var spyData SpyAuthenticatorData
-	err := json.Unmarshal(data, &spyData)
+	err := json.Unmarshal(config, &spyData)
 	if err != nil {
 		return nil, err
 	}
@@ -125,8 +125,8 @@ func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticato
 	return nil
 }
 
-func (s SpyAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	spy, err := s.Initialize(data)
+func (s SpyAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
+	spy, err := s.Initialize(config)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (s SpyAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccA
 	spyAuth.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.OnAuthenticatorAdded = SpyAddRequest{
 			Account:         account,
-			Data:            data,
+			Data:            config,
 			AuthenticatorId: authenticatorId,
 		}
 		return calls
@@ -146,8 +146,8 @@ func (s SpyAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccA
 	return nil
 }
 
-func (s SpyAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte, authenticatorId string) error {
-	spy, err := s.Initialize(data)
+func (s SpyAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
+	spy, err := s.Initialize(config)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (s SpyAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.Ac
 	spyAuth.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
 		calls.OnAuthenticatorRemoved = SpyRemoveRequest{
 			Account:         account,
-			Data:            data,
+			Data:            config,
 			AuthenticatorId: authenticatorId,
 		}
 		return calls

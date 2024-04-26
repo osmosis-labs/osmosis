@@ -21,8 +21,8 @@ import (
 type AggregatedAuthenticatorsTest struct {
 	BaseAuthenticatorSuite
 
-	AnyOfAuth        authenticator.AnyOfAuthenticator
-	AllOfAuth        authenticator.AllOfAuthenticator
+	AnyOfAuth        authenticator.AnyOf
+	AllOfAuth        authenticator.AllOf
 	alwaysApprove    testutils.TestingAuthenticator
 	neverApprove     testutils.TestingAuthenticator
 	approveAndBlock  testutils.TestingAuthenticator
@@ -39,8 +39,8 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am := authenticator.NewAuthenticatorManager()
 
 	// Define authenticators
-	s.AnyOfAuth = authenticator.NewAnyOfAuthenticator(am)
-	s.AllOfAuth = authenticator.NewAllOfAuthenticator(am)
+	s.AnyOfAuth = authenticator.NewAnyOf(am)
+	s.AllOfAuth = authenticator.NewAllOf(am)
 	s.alwaysApprove = testutils.TestingAuthenticator{
 		Approve:        testutils.Always,
 		GasConsumption: 10,
@@ -74,7 +74,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am.RegisterAuthenticator(s.spyAuth)
 }
 
-func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
+func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	// Define data
 	testData := []byte{}
 
@@ -168,8 +168,8 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			initData := []authenticator.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
 				initData = append(initData, authenticator.SubAuthenticatorInitData{
-					AuthenticatorType: auth.Type(),
-					Data:              testData,
+					Type:   auth.Type(),
+					Config: testData,
 				})
 			}
 
@@ -198,7 +198,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 	}
 }
 
-func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
+func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 	// Define data
 	testData := []byte{}
 
@@ -291,8 +291,8 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			initData := []authenticator.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
 				initData = append(initData, authenticator.SubAuthenticatorInitData{
-					AuthenticatorType: auth.Type(),
-					Data:              testData,
+					Type:   auth.Type(),
+					Config: testData,
 				})
 			}
 
@@ -442,9 +442,9 @@ func (csa *CompositeSpyAuth) Type() string {
 	if len(csa.name) > 0 {
 		return testutils.SpyAuthenticator{}.Type()
 	} else if len(csa.anyOf) > 0 {
-		return authenticator.NewAnyOfAuthenticator(am).Type()
+		return authenticator.NewAnyOf(am).Type()
 	} else if len(csa.allOf) > 0 {
-		return authenticator.NewAllOfAuthenticator(am).Type()
+		return authenticator.NewAllOf(am).Type()
 	}
 
 	panic("unreachable")
@@ -480,8 +480,8 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 			}
 
 			initData = append(initData, authenticator.SubAuthenticatorInitData{
-				AuthenticatorType: subAuth.Type(),
-				Data:              data,
+				Type:   subAuth.Type(),
+				Config: data,
 			})
 		}
 
@@ -495,8 +495,8 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 			}
 
 			initData = append(initData, authenticator.SubAuthenticatorInitData{
-				AuthenticatorType: subAuth.Type(),
-				Data:              data,
+				Type:   subAuth.Type(),
+				Config: data,
 			})
 		}
 
@@ -797,8 +797,8 @@ func marshalAuth(ta testAuth, testData []byte) ([]byte, error) {
 			return nil, err
 		}
 		initData = append(initData, authenticator.SubAuthenticatorInitData{
-			AuthenticatorType: sub.authenticator.Type(),
-			Data:              subData,
+			Type:   sub.authenticator.Type(),
+			Config: subData,
 		})
 	}
 

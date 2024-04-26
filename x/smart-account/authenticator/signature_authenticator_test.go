@@ -22,7 +22,7 @@ import (
 type SigVerifyAuthenticationSuite struct {
 	BaseAuthenticatorSuite
 
-	SigVerificationAuthenticator authenticator.SignatureVerificationAuthenticator
+	SigVerificationAuthenticator authenticator.SignatureVerification
 }
 
 func TestSigVerifyAuthenticationSuite(t *testing.T) {
@@ -36,12 +36,12 @@ func (s *SigVerifyAuthenticationSuite) SetupTest() {
 	ak := s.OsmosisApp.AccountKeeper
 
 	// Create a new Secp256k1SignatureAuthenticator for testing
-	s.SigVerificationAuthenticator = authenticator.NewSignatureVerificationAuthenticator(
+	s.SigVerificationAuthenticator = authenticator.NewSignatureVerification(
 		ak,
 	)
 }
 
-type SignatureVerificationAuthenticatorTestData struct {
+type SignatureVerificationTestData struct {
 	Msgs                               []sdk.Msg
 	AccNums                            []uint64
 	AccSeqs                            []uint64
@@ -53,9 +53,9 @@ type SignatureVerificationAuthenticatorTestData struct {
 	ShouldSucceedSignatureVerification bool
 }
 
-type SignatureVerificationAuthenticatorTest struct {
+type SignatureVerificationTest struct {
 	Description string
-	TestData    SignatureVerificationAuthenticatorTestData
+	TestData    SignatureVerificationTestData
 }
 
 // TestSignatureAuthenticator test a non-smart account signature verification
@@ -86,10 +86,10 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 	//}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	tests := []SignatureVerificationAuthenticatorTest{
+	tests := []SignatureVerificationTest{
 		{
 			Description: "Test: successfully verified authenticator with one signer: base case: PASS",
-			TestData: SignatureVerificationAuthenticatorTestData{
+			TestData: SignatureVerificationTestData{
 				[]sdk.Msg{
 					testMsg1,
 				},
@@ -110,7 +110,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 		{
 			Description: "Test: successfully verified authenticator: multiple signers: PASS",
-			TestData: SignatureVerificationAuthenticatorTestData{
+			TestData: SignatureVerificationTestData{
 				[]sdk.Msg{
 					testMsg1,
 					testMsg2,
@@ -139,7 +139,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 			// This test case tests if there is two messages with the same signer
 			// with two successful signatures.
 			Description: "Test: verified authenticator with 2 messages signed correctly with the same address: PASS",
-			TestData: SignatureVerificationAuthenticatorTestData{
+			TestData: SignatureVerificationTestData{
 				[]sdk.Msg{
 					testMsg1,
 					testMsg2,
@@ -166,7 +166,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 			// This test case tests if there is two messages with the same signer
 			// with two successful signatures.
 			Description: "Test: verified authenticator with 2 messages but only first signed signed correctly: Fail",
-			TestData: SignatureVerificationAuthenticatorTestData{
+			TestData: SignatureVerificationTestData{
 				[]sdk.Msg{
 					testMsg1,
 					testMsg2,
@@ -193,7 +193,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 			// This test case tests if there is two messages with the same signer
 			// with two successful signatures.
 			Description: "Test: verified authenticator with 2 messages but only second signed signed correctly: Fail",
-			TestData: SignatureVerificationAuthenticatorTestData{
+			TestData: SignatureVerificationTestData{
 				[]sdk.Msg{
 					testMsg1,
 					testMsg2,
@@ -218,7 +218,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 		{
 			Description: "Test: unsuccessful signature authentication invalid signatures: FAIL",
-			TestData: SignatureVerificationAuthenticatorTestData{
+			TestData: SignatureVerificationTestData{
 				[]sdk.Msg{
 					testMsg1,
 					testMsg2,

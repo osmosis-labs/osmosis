@@ -91,7 +91,6 @@ func NewAnteHandler(
 		// is embedded in the authenticator decorator
 		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
-		ibcante.NewRedundantRelayDecorator(channelKeeper),
 		// auction module antehandler
 		auctionante.NewAuctionDecorator(
 			blockSDKParams.auctionKeeper,

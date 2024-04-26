@@ -232,12 +232,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
 	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
-		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper),
-		authenticator.NewMessageFilterAuthenticator(encodingConfig),
-		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewPartitionedAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewPartitionedAllOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewSignatureVerification(appKeepers.AccountKeeper),
+		authenticator.NewMessageFilter(encodingConfig),
+		authenticator.NewAllOf(appKeepers.AuthenticatorManager),
+		authenticator.NewAnyOf(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAnyOf(appKeepers.AuthenticatorManager),
+		authenticator.NewPartitionedAllOf(appKeepers.AuthenticatorManager),
 	})
 	govModuleAddr := appKeepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
