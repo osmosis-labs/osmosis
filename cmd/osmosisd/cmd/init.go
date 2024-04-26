@@ -119,7 +119,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.StateSync.TrustPeriod = 112 * time.Hour
 
 			// Consensus
-			config.Consensus.TimeoutCommit = 2 * time.Second
+			config.Consensus.TimeoutCommit = 1500 * time.Millisecond // 1.5s
 			// config.Consensus.PeerGossipSleepDuration = 10 * time.Millisecond
 
 			// Other
