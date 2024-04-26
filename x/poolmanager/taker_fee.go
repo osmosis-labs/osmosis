@@ -18,7 +18,10 @@ func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
 	defaultTakerFeeBz := k.paramSpace.GetRaw(ctx, types.KeyDefaultTakerFee)
 	if !bytes.Equal(defaultTakerFeeBz, k.defaultTakerFeeBz) {
 		var defaultTakerFeeValue sdk.Dec
-		json.Unmarshal(defaultTakerFeeBz, &defaultTakerFeeValue)
+		err := json.Unmarshal(defaultTakerFeeBz, &defaultTakerFeeValue)
+		if err != nil {
+			defaultTakerFeeValue = sdk.ZeroDec()
+		}
 		k.defaultTakerFeeVal = defaultTakerFeeValue
 	}
 	return k.defaultTakerFeeVal
