@@ -54,7 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+## v24.0.4
+
 * [#8142](https://github.com/osmosis-labs/osmosis/pull/8142) Add query for getting single authenticator and add stargate whitelist for the query.
+* [#8149](https://github.com/osmosis-labs/osmosis/pull/8149) Default timeoutCommit to 1.5s
 
 ## v24.0.3
 
