@@ -54,12 +54,12 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 		{
 			name: "regular case with multiple pool assets and a subset of newLiquidity to update",
 			newLiquidity: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1_000),
+				sdk.NewInt64Coin("note", 1_000),
 				sdk.NewInt64Coin("atom", 2_000),
 				sdk.NewInt64Coin("ion", 3_000)),
 			poolAssets: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+				"note": {
+					Token:  sdk.NewInt64Coin("note", uosmoValueOriginal),
 					Weight: osmomath.NewInt(weight),
 				},
 				"atom": {
@@ -77,8 +77,8 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 			name:         "new liquidity has no coins",
 			newLiquidity: sdk.NewCoins(),
 			poolAssets: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+				"note": {
+					Token:  sdk.NewInt64Coin("note", uosmoValueOriginal),
 					Weight: osmomath.NewInt(weight),
 				},
 				"atom": {
@@ -97,8 +97,8 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 			newLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("juno", 1_000)),
 			poolAssets: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+				"note": {
+					Token:  sdk.NewInt64Coin("note", uosmoValueOriginal),
 					Weight: osmomath.NewInt(weight),
 				},
 			},
@@ -202,7 +202,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			name:         "one token in - equal weights with zero spread factor",
 			spreadFactor: osmomath.MustNewDecFromStr("0"),
 			poolAssets:   oneTrillionEvenPoolAssets,
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("note", 50_000)),
 			expectShares: osmomath.NewInt(2_499_999_968_750),
 		},
 		{
@@ -222,7 +222,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			name:         "two tokens in - equal weights with zero spread factor",
 			spreadFactor: osmomath.MustNewDecFromStr("0"),
 			poolAssets:   oneTrillionEvenPoolAssets,
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("note", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
 			expectShares: osmomath.NewInt(2_499_999_968_750 * 2),
 		},
 		{
@@ -244,7 +244,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			name:         "one token in - equal weights with spread factor of 0.01",
 			spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			poolAssets:   oneTrillionEvenPoolAssets,
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("note", 50_000)),
 			expectShares: osmomath.NewInt(2_487_500_000_000),
 		},
 		{
@@ -266,7 +266,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			name:         "two tokens in - equal weights with spread factor of 0.01",
 			spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			poolAssets:   oneTrillionEvenPoolAssets,
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("note", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
 			expectShares: osmomath.NewInt(2_487_500_000_000 * 2),
 		},
 		{
@@ -310,7 +310,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			spreadFactor: osmomath.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000),
+					Token:  sdk.NewInt64Coin("note", 2_000_000_000),
 					Weight: osmomath.NewInt(500),
 				},
 				{
@@ -318,7 +318,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 					Weight: osmomath.NewInt(100),
 				},
 			},
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("note", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
 			expectShares: osmomath.NewInt(2_072_912_400_000_000 + 1_624_999_900_000),
 		},
 		{
@@ -333,7 +333,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			spreadFactor: osmomath.ZeroDec(),
 			poolAssets:   oneTrillionEvenPoolAssets,
 			// Second tokenIn does not exist.
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("note", 50_000), sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
 			expectShares: osmomath.ZeroInt(),
 			expErr:       fmt.Errorf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom),
 		},
@@ -401,13 +401,13 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 			name: "one pool asset",
 			poolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewInt64Coin("uosmo", 1e12),
+					Token:  sdk.NewInt64Coin("note", 1e12),
 					Weight: osmomath.NewInt(100),
 				},
 			},
 			expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", 1e12),
+				"note": {
+					Token:  sdk.NewInt64Coin("note", 1e12),
 					Weight: osmomath.NewInt(100),
 				},
 			},
@@ -416,7 +416,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 			name: "two pool assets",
 			poolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewInt64Coin("uosmo", 1e12),
+					Token:  sdk.NewInt64Coin("note", 1e12),
 					Weight: osmomath.NewInt(100),
 				},
 				{
@@ -425,8 +425,8 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 				},
 			},
 			expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", 1e12),
+				"note": {
+					Token:  sdk.NewInt64Coin("note", 1e12),
 					Weight: osmomath.NewInt(100),
 				},
 				"atom": {
@@ -439,15 +439,15 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 			name: "duplicate pool assets",
 			poolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewInt64Coin("uosmo", 1e12),
+					Token:  sdk.NewInt64Coin("note", 1e12),
 					Weight: osmomath.NewInt(100),
 				},
 				{
-					Token:  sdk.NewInt64Coin("uosmo", 123),
+					Token:  sdk.NewInt64Coin("note", 123),
 					Weight: osmomath.NewInt(400),
 				},
 			},
-			err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
+			err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "note"),
 		},
 	}
 
@@ -483,7 +483,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 	// For every test case in testcases, apply a spread factor in spreadFactorCases.
 	testcases := []testcase{
 		{
-			denomOut:         "uosmo",
+			denomOut:         "note",
 			initialPoolOut:   1_000_000_000_000,
 			initialWeightOut: 100,
 			initialCalcOut:   100,
@@ -493,7 +493,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 			initialWeightIn: 100,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         "note",
 			initialPoolOut:   1_000,
 			initialWeightOut: 100,
 			initialCalcOut:   100,
@@ -503,7 +503,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 			initialWeightIn: 100,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         "note",
 			initialPoolOut:   1_000,
 			initialWeightOut: 100,
 			initialCalcOut:   100,
@@ -513,7 +513,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 			initialWeightIn: 100,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         "note",
 			initialPoolOut:   1_000,
 			initialWeightOut: 200,
 			initialCalcOut:   100,
@@ -523,7 +523,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 			initialWeightIn: 50,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         "note",
 			initialPoolOut:   1_000_000,
 			initialWeightOut: 200,
 			initialCalcOut:   100000,

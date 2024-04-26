@@ -92,7 +92,7 @@ The minting module contains the following parameters:
 
 | Key                                        | Type         | Example                                |
 | ------------------------------------------ | ------------ | -------------------------------------- |
-| mint_denom                                 | string       | "uosmo"                                |
+| mint_denom                                 | string       | "note"                                |
 | genesis_epoch_provisions                   | string (dec) | "500000000"                            |
 | epoch_identifier                           | string       | "weekly"                               |
 | reduction_period_in_epochs                 | int64        | 156                                    |
@@ -170,7 +170,7 @@ An example of the output:
 
 ```json
 {
-  "mint_denom": "uosmo",
+  "mint_denom": "note",
   "genesis_epoch_provisions": "821917808219.178082191780821917",
   "epoch_identifier": "day",
   "reduction_period_in_epochs": "365",

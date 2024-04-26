@@ -76,9 +76,9 @@ def compute_sanity_check_and_export(data):
   total_paid = sum(rewards.values())
   community_paid = dict_osmo_rewards_by_gauge_id(data)["0"]
 
-  print("expected total: ", int(osmo_issued), "uosmo")
-  print("paid to LPers: ", int(total_paid), "uosmo")
-  print("paid to community pool: ", int(community_paid), "uosmo")
+  print("expected total: ", int(osmo_issued), "note")
+  print("paid to LPers: ", int(total_paid), "note")
+  print("paid to community pool: ", int(community_paid), "note")
   imbalance = int(osmo_issued - (total_paid + community_paid))
   print("imbalance: ", imbalance)
   assert(imbalance == 0)

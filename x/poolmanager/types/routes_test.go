@@ -12,7 +12,7 @@ const (
 	foo   = "foo"
 	bar   = "bar"
 	baz   = "baz"
-	uosmo = "uosmo"
+	uosmo = "note"
 )
 
 var (

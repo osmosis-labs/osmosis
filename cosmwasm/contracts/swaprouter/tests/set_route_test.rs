@@ -11,7 +11,7 @@ test_set_route!(
 
     sender = NonOwner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uion".to_string(),
         pool_route: vec![SwapAmountInRoute {
             pool_id: 1,
@@ -26,7 +26,7 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uion".to_string(),
         pool_route: vec![SwapAmountInRoute {
             pool_id: 1,
@@ -41,7 +41,7 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uion".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
@@ -64,12 +64,12 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uion".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
                 pool_id: 1, // uosmo/uion
-                token_out_denom: "uosmo".to_string(),
+                token_out_denom: "note".to_string(),
             },
         ],
     }
@@ -100,7 +100,7 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uatom".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
@@ -118,7 +118,7 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uatom".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
@@ -140,7 +140,7 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uatom".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
@@ -162,7 +162,7 @@ test_set_route!(
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uatom".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
@@ -243,7 +243,7 @@ fn test_set_route_failed_case(sender: Sender, msg: ExecuteMsg, expected_error: &
         Sender::Owner => owner,
         Sender::NonOwner => {
             let initial_balance = [
-                Coin::new(1_000_000_000_000, "uosmo"),
+                Coin::new(1_000_000_000_000, "note"),
                 Coin::new(1_000_000_000_000, "uion"),
                 Coin::new(1_000_000_000_000, "uatom"),
             ];

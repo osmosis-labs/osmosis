@@ -251,7 +251,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// if we are simulating, set the fees to 1 uosmo as they don't matter.
 	// set it as coming from the burn addr
 	if simulate && fees.IsZero() {
-		fees = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1))
+		fees = sdk.NewCoins(sdk.NewInt64Coin("note", 1))
 		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
 		// were doing 1 extra get account call alas
 		burnAcct := dfd.ak.GetAccount(ctx, burnAcctAddr)

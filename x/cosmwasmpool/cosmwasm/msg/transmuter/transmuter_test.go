@@ -29,7 +29,7 @@ var (
 	defaultPoolId       = uint64(1)
 	defaultAmount       = osmomath.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-	uosmo               = "uosmo"
+	uosmo               = "note"
 
 	defaultDenoms = []string{denomA, denomB}
 )

@@ -143,7 +143,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochOne": {
-					"uosmo": {Liquidity: osmomath.NewInt(2000000), PoolId: 47},
+					"note": {Liquidity: osmomath.NewInt(2000000), PoolId: 47},
 				},
 			},
 		},
@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
+					"note": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
 				},
 			},
 		},

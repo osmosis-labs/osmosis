@@ -360,7 +360,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 			s.Ctx = s.Ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 			gasLimit := uint64(500000)
-			txFee := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000)))
+			txFee := sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(10000)))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			signerData := authsigning.SignerData{
@@ -524,7 +524,7 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 					{
 						PoolId:        22,
 						TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-						TokenInDenom:  "uosmo",
+						TokenInDenom:  "note",
 					},
 				},
 			},

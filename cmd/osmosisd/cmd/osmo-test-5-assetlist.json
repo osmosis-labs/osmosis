@@ -5,7 +5,7 @@
         "description": "The native token of Osmosis",
         "denom_units": [
           {
-            "denom": "uosmo",
+            "denom": "note",
             "exponent": 0,
             "aliases": []
           },
@@ -15,7 +15,7 @@
             "aliases": []
           }
         ],
-        "base": "uosmo",
+        "base": "note",
         "name": "Osmosis",
         "display": "osmo",
         "symbol": "OSMO",

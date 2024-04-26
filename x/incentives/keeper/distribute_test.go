@@ -59,7 +59,7 @@ var (
 	emptyCoins          = sdk.Coins{}
 	defaultVolumeAmount = osmomath.NewInt(300)
 
-	defaultCoins = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
+	defaultCoins = sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000)))
 
 	baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 

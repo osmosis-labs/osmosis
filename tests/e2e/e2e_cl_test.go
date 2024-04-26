@@ -36,7 +36,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 
 	var (
 		expectedDenom0       = "stake"
-		expectedDenom1       = "uosmo"
+		expectedDenom1       = "note"
 		expectedTickspacing  = uint64(100)
 		expectedSpreadFactor = "0.001000000000000000"
 	)
@@ -135,7 +135,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		denom0                 = "uion"
-		denom1                 = "uosmo"
+		denom1                 = "note"
 		tickSpacing     uint64 = 100
 		spreadFactor           = "0.001" // 0.1%
 		spreadFactorDec        = osmomath.MustNewDecFromStr("0.001")
@@ -325,16 +325,16 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Determine forfeited dust amount
 	forfeitedDustAmt := spreadRewardsUncollectedAddress1Position1_Swap1.Sub(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateDec())
-	forfeitedDust := sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", forfeitedDustAmt))
+	forfeitedDust := sdk.NewDecCoins(sdk.NewDecCoinFromDec("note", forfeitedDustAmt))
 	forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalLiquidity)
 
 	// Add forfeited dust back to the global spread reward growth
-	spreadRewardGrowthGlobal.AddMut(forfeitedDustPerShare.AmountOf("uosmo"))
+	spreadRewardGrowthGlobal.AddMut(forfeitedDustPerShare.AmountOf("note"))
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uosmo").Add(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
-		addr1BalancesAfter.AmountOf("uosmo").String(),
+		addr1BalancesBefore.AmountOf("note").Add(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
+		addr1BalancesAfter.AmountOf("note").String(),
 	)
 
 	// Swap 2
@@ -447,8 +447,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uosmo").Add(spreadRewardsUncollectedAddress1Position1_Swap2.TruncateInt()),
-		addr1BalancesAfter.AmountOf("uosmo"),
+		addr1BalancesBefore.AmountOf("note").Add(spreadRewardsUncollectedAddress1Position1_Swap2.TruncateInt()),
+		addr1BalancesAfter.AmountOf("note"),
 	)
 
 	// Assert that address3 position2 earned rewards from first and second swaps
@@ -481,8 +481,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr3BalancesBefore.AmountOf("uosmo").Add(totalUncollectedSpreadRewardsAddress3Position2.TruncateInt()),
-		addr3BalancesAfter.AmountOf("uosmo"),
+		addr3BalancesBefore.AmountOf("note").Add(totalUncollectedSpreadRewardsAddress3Position2.TruncateInt()),
+		addr3BalancesAfter.AmountOf("note"),
 	)
 
 	// Swap 3
@@ -681,7 +681,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	var (
 		denom0              = "uion"
-		denom1              = "uosmo"
+		denom1              = "note"
 		tickSpacing  uint64 = 100
 		spreadFactor        = "0.001" // 0.1%
 	)
@@ -777,7 +777,7 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 		s.Require().True(balancesAfter.AmountOf("uion").Equal(balancesBefore.AmountOf("uion")))
 	}
 	if assertUosmoBalanceIsConstant {
-		s.Require().True(balancesAfter.AmountOf("uosmo").Equal(balancesBefore.AmountOf("uosmo")))
+		s.Require().True(balancesAfter.AmountOf("note").Equal(balancesBefore.AmountOf("note")))
 	}
 }
 

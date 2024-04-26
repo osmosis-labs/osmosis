@@ -128,7 +128,7 @@ FAUCET_ENDPOINT=http://localhost:8080
 
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"denom":"uosmo","address":"osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j"}' \
+  --data '{"denom":"note","address":"osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j"}' \
   http://localhost:8000/credit
 ```
 

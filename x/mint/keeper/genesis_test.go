@@ -13,7 +13,7 @@ import (
 var customGenesis = types.NewGenesisState(
 	types.NewMinter(osmomath.ZeroDec()),
 	types.NewParams(
-		"uosmo",                       // denom
+		"note",                        // denom
 		osmomath.NewDec(200),          // epoch provisions
 		"year",                        // epoch identifier
 		osmomath.NewDecWithPrec(5, 1), // reduction factor
@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 		},
 		"custom genesis": {
 			mintGenesis: customGenesis,
-			mintDenom:   "uosmo",
+			mintDenom:   "note",
 
 			expectedEpochProvisions:             osmomath.NewDec(200),
 			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),

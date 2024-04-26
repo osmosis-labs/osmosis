@@ -15,7 +15,7 @@ var (
 
 	pool1_in = types.SwapAmountInRoute{PoolId: 1, TokenOutDenom: "bar"}
 	pool2_in = types.SwapAmountInRoute{PoolId: 2, TokenOutDenom: "baz"}
-	pool3_in = types.SwapAmountInRoute{PoolId: 3, TokenOutDenom: "uosmo"}
+	pool3_in = types.SwapAmountInRoute{PoolId: 3, TokenOutDenom: "note"}
 	pool4_in = types.SwapAmountInRoute{PoolId: 4, TokenOutDenom: "baz"}
 
 	pool1_out = types.SwapAmountOutRoute{PoolId: 1, TokenInDenom: "bar"}
@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 					TokenOutAmount: amount,
 				},
 			},
-			tokenOutDenom:     "uosmo",
+			tokenOutDenom:     "note",
 			tokenoutMaxAmount: max_amount,
 
 			expectedSplitRouteSwapEvent: 1,

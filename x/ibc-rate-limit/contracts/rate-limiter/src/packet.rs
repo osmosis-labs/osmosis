@@ -227,10 +227,10 @@ pub mod tests {
         let packet = Packet::mock(
             format!("channel-17-local"),
             format!("channel-42-counterparty"),
-            format!("uosmo"),
+            format!("note"),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::Out), "uosmo");
+        assert_eq!(packet.local_denom(&FlowType::Out), "note");
     }
 
     #[test]
@@ -274,7 +274,7 @@ pub mod tests {
             format!("transfer/channel-42-counterparty/uosmo"),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
+        assert_eq!(packet.local_denom(&FlowType::In), "note");
     }
 
     // Let's assume we have two chains A and B (local and counterparty) connected in the following way:
@@ -320,10 +320,10 @@ pub mod tests {
         let packet = Packet::mock(
             format!("channel-0"),   // from: osmosis
             format!("channel-141"), // to: hub
-            format!("uosmo"),
+            format!("note"),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::Out), "uosmo");
+        assert_eq!(packet.local_denom(&FlowType::Out), "note");
 
         // osmo on the hub sent back to osmosis
         // send
@@ -342,7 +342,7 @@ pub mod tests {
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
+        assert_eq!(packet.local_denom(&FlowType::In), "note");
 
         // Now let's pretend we're the hub.
         // The following tests are from perspective of the the hub (i.e.: if this contract were deployed there)
@@ -351,7 +351,7 @@ pub mod tests {
         let packet = Packet::mock(
             format!("channel-0"),   // from: osmosis
             format!("channel-141"), // to: hub
-            format!("uosmo"),
+            format!("note"),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), WRAPPED_OSMO_ON_HUB_HASH);
@@ -363,7 +363,7 @@ pub mod tests {
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
+        assert_eq!(packet.local_denom(&FlowType::In), "note");
 
         // uatom sent to osmosis
         let packet = Packet::mock(

@@ -60,7 +60,7 @@ chainB tx wasm instantiate "$SWAPROUTER_CODE_ID" "$MSG" --from validator --admin
 export SWAPROUTER_ADDRESS=$(chainB query wasm list-contract-by-code "$SWAPROUTER_CODE_ID" -o json | jq -r '.contracts | [last][0]')
 
 # Configure the swaprouter
-MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"uosmo","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"uosmo"}]}}')
+MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"note","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"note"}]}}')
 chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y
 
 # Store the crosschainswap contract
@@ -74,7 +74,7 @@ export CROSSCHAIN_SWAPS_ADDRESS=$(chainB query wasm list-contract-by-code "$CROS
 balances=$(chainA query bank balances "$VALIDATOR" -o json | jq '.balances')
 
 # Send a crosschain swap
-MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"swap_amount":"100","output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
+MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"swap_amount":"100","output_denom":"note","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
 chainA tx ibc-transfer transfer transfer $CHANNEL_ID $CROSSCHAIN_SWAPS_ADDRESS 100uosmo \
     --from validator -y "${TX_FLAGS[@]}" \
     --memo "$MEMO"

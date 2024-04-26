@@ -21,7 +21,7 @@ func TestLockTokensCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgLockTokens{
 				Owner:    testAddresses[0].String(),
 				Duration: time.Hour * 24,
-				Coins:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 201)),
+				Coins:    sdk.NewCoins(sdk.NewInt64Coin("note", 201)),
 			},
 		},
 	}
@@ -57,7 +57,7 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgBeginUnlocking{
 				Owner: testAddresses[0].String(),
 				ID:    10,
-				Coins: sdk.NewCoins(sdk.NewInt64Coin("uosmo", 5)),
+				Coins: sdk.NewCoins(sdk.NewInt64Coin("note", 5)),
 			},
 		},
 	}
@@ -122,7 +122,7 @@ func TestCmdTotalLockedByDenom(t *testing.T) {
 		"basic test": {
 			Cmd: "uosmo --min-duration=1s",
 			ExpectedQuery: &types.LockedDenomRequest{
-				Denom:    "uosmo",
+				Denom:    "note",
 				Duration: time.Second,
 			},
 		},

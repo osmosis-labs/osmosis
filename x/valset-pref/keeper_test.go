@@ -467,7 +467,7 @@ func (s *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.Per
 	syntheticLocks, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, osmoToLock, twoWeekDuration)
 	s.Require().NoError(err)
 
-	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, syntheticLocks.ID, "uosmo", time.Minute, true)
+	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, syntheticLocks.ID, "note", time.Minute, true)
 	s.Require().NoError(err)
 
 	locks = append(locks, syntheticLocks)

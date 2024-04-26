@@ -311,7 +311,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
-		Short: "Start osmosis app",
+		Short: "Start symphony app",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// If not calling the set-env command, this is a no-op.
 			err := changeEnvPriorToSetup(cmd, &initClientCtx, args, homeDir)

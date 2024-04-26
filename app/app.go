@@ -30,6 +30,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+
 	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
@@ -78,7 +79,6 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
@@ -109,7 +109,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/mint"
 )
 
-const appName = "OsmosisApp"
+const appName = "SymphonyApp"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -178,7 +178,7 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".symphonyd")
 }
 
 // initReusablePackageInjections injects data available within osmosis into the reusable packages.
@@ -439,7 +439,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	bech32Addr, err := bech32.ConvertAndEncode("osmovaloper", bz)
+	bech32Addr, err := bech32.ConvertAndEncode("symphonyvaloper", bz)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
@@ -539,8 +539,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	govParams := app.GovKeeper.GetParams(ctx)
 	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
 	govParams.VotingPeriod = &newVotingPeriod
-	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 100000000))
-	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 150000000))
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("note", 100000000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("note", 150000000))
 
 	err = app.GovKeeper.SetParams(ctx, govParams)
 	if err != nil {
@@ -576,69 +576,69 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	// BANK
 	//
-
-	defaultCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
-		sdk.NewInt64Coin("uosmo", 1000000000000),
-		sdk.NewInt64Coin("uion", 1000000000))
-
-	localOsmosisAccounts := []sdk.AccAddress{
-		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
-		sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
-		sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
-		sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
-		sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
-		sdk.MustAccAddressFromBech32("osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
-		sdk.MustAccAddressFromBech32("osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
-		sdk.MustAccAddressFromBech32("osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
-		sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
-		sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
-		sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
-		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
-
-	// Fund localosmosis accounts
-	for _, account := range localOsmosisAccounts {
-		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
-		if err != nil {
-			tmos.Exit(err.Error())
-		}
-		err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account, defaultCoins)
-		if err != nil {
-			tmos.Exit(err.Error())
-		}
-	}
-
-	// Fund edgenet faucet
-	faucetCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
-		sdk.NewInt64Coin("uosmo", 1000000000000000),
-		sdk.NewInt64Coin("uion", 1000000000000))
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1rqgf207csps822qwmd3k2n6k6k4e99w502e79t"), faucetCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-
-	// Mars bank account
-	marsCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("uosmo", 10000000000000),
-		sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
-		sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
-		sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),
-		sdk.NewInt64Coin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", 700000000000),
-		sdk.NewInt64Coin("ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", 2000000000),
-		sdk.NewInt64Coin("ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", 3000000000000000000))
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, marsCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
+	//
+	//defaultCoins := sdk.NewCoins(
+	//	sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
+	//	sdk.NewInt64Coin("note", 1000000000000),
+	//	sdk.NewInt64Coin("uion", 1000000000))
+	//
+	//localOsmosisAccounts := []sdk.AccAddress{
+	//	sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+	//	sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
+	//	sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
+	//	sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
+	//	sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
+	//	sdk.MustAccAddressFromBech32("osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
+	//	sdk.MustAccAddressFromBech32("osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
+	//	sdk.MustAccAddressFromBech32("osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
+	//	sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
+	//	sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
+	//	sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
+	//	sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+	//
+	//// Fund localosmosis accounts
+	//for _, account := range localOsmosisAccounts {
+	//	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
+	//	if err != nil {
+	//		tmos.Exit(err.Error())
+	//	}
+	//	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account, defaultCoins)
+	//	if err != nil {
+	//		tmos.Exit(err.Error())
+	//	}
+	//}
+	//
+	//// Fund edgenet faucet
+	//faucetCoins := sdk.NewCoins(
+	//	sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
+	//	sdk.NewInt64Coin("note", 1000000000000000),
+	//	sdk.NewInt64Coin("uion", 1000000000000))
+	//err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
+	//err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("symphony1rqgf207csps822qwmd3k2n6k6k4e99w502e79t"), faucetCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
+	//
+	//// Mars bank account
+	//marsCoins := sdk.NewCoins(
+	//	sdk.NewInt64Coin("note", 10000000000000),
+	//	sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
+	//	sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
+	//	sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),
+	//	sdk.NewInt64Coin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", 700000000000),
+	//	sdk.NewInt64Coin("ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", 2000000000),
+	//	sdk.NewInt64Coin("ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", 3000000000000000000))
+	//err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, marsCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
+	//err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("symphony1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
 
 	// UPGRADE
 	//

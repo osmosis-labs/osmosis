@@ -2019,7 +2019,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		denom0           = pool.GetToken0()
 		denom1           = pool.GetToken1()
 		rewardsPerSecond = osmomath.NewDec(1000)
-		incentiveCoin    = sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000))
+		incentiveCoin    = sdk.NewCoin("note", osmomath.NewInt(1_000_000))
 	)
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(incentiveCoin))
@@ -2124,7 +2124,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 			// Additive tolerance of 1 for each position.
 			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
-			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("note", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 
@@ -2153,7 +2153,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 			// Additive tolerance of 1 for each position.
 			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
-			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("note", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 
@@ -2182,7 +2182,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 			// Additive tolerance of 1 for each position.
 			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
-			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("note", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 
@@ -2225,7 +2225,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 			// Additive tolerance of 1 for each position.
 			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
-			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("note", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 

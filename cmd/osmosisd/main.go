@@ -13,7 +13,7 @@ import (
 func main() {
 	params.SetAddressPrefixes()
 	rootCmd, _ := cmd.NewRootCmd()
-	if err := svrcmd.Execute(rootCmd, "OSMOSISD", osmosis.DefaultNodeHome); err != nil {
+	if err := svrcmd.Execute(rootCmd, "SYMPHONYD", osmosis.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}
 }

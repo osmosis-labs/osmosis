@@ -559,7 +559,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
 		defaultPoolCoinOne = sdk.NewCoin(USDC, osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin(ETH, osmomath.NewInt(2))
-		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
+		nonPoolCool        = sdk.NewCoin("note", osmomath.NewInt(3))
 
 		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
 	)
@@ -785,7 +785,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 // - Ensure that the position accumulators are updated
 // - Ensures that the position 1 receives incentives  but not position 2
 func (s *KeeperTestSuite) TestMigrateAccumulatorToScalingFactor() {
-	const incentiveDenom = "uosmo"
+	const incentiveDenom = "note"
 
 	var emissionRatePerSecDec = osmomath.OneDec()
 

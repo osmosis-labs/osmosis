@@ -26,7 +26,7 @@ func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
 func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
 	t.Helper()
 	err := testutil.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
-		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin("note", osmomath.NewInt(10000000000)),
 	))
 	require.NoError(t, err)
 }

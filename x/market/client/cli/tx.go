@@ -34,7 +34,7 @@ func NewSwapCmd() (*osmocli.TxCliDesc, *types.MsgSwap) {
 
    The to-address can be specified. A default to-address is trader.
 
-   $ osmosisd market swap "osmo1..." "1000stake" "uosmo"
+   $ osmosisd market swap "osmo1..." "1000stake" "note"
    `),
 		ParseAndBuildMsg: NewSwapMsg,
 	}, &types.MsgSwap{}

@@ -59,7 +59,7 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' "120s"
     dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' "180s"
     dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' "240s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "uosmo"
+    dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "note"
 
     # Update incentives module
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' "1s"
@@ -69,14 +69,14 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "hour"
 
     # Update mint module
-    dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
+    dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "note"
     dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "hour"
 
     # Update poolmanager module
-    dasel put string -f $GENESIS '.app_state.poolmanager.params.pool_creation_fee.[0].denom' "uosmo"
+    dasel put string -f $GENESIS '.app_state.poolmanager.params.pool_creation_fee.[0].denom' "note"
 
     # Update txfee basedenom
-    dasel put string -f $GENESIS '.app_state.txfees.basedenom' "uosmo"
+    dasel put string -f $GENESIS '.app_state.txfees.basedenom' "note"
 
     # Update wasm permission (Nobody or Everybody)
     dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"

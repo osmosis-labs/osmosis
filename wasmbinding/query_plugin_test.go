@@ -88,7 +88,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
-					QuoteAssetDenom: "uosmo",
+					QuoteAssetDenom: "note",
 				}
 				bz, err := proto.Marshal(&queryrequest)
 				suite.Require().NoError(err)
@@ -117,7 +117,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
-					QuoteAssetDenom: "uosmo",
+					QuoteAssetDenom: "note",
 				}
 				bz, err := proto.Marshal(&queryrequest)
 				suite.Require().NoError(err)

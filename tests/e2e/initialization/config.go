@@ -52,7 +52,7 @@ type NodeConfig struct {
 
 const (
 	// common
-	OsmoDenom           = "uosmo"
+	OsmoDenom           = "note"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
@@ -408,8 +408,8 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
-	// setup fee pool, between "e2e_default_fee_token" and "uosmo"
-	uosmoFeeTokenPool := setupPool(1, "uosmo", E2EFeeToken)
+	// setup fee pool, between "e2e_default_fee_token" and "note"
+	uosmoFeeTokenPool := setupPool(1, "note", E2EFeeToken)
 
 	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
 

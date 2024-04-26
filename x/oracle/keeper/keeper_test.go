@@ -13,15 +13,17 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 )
 
@@ -75,7 +77,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
 	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
-	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs)*10))))
 	s.App.BankKeeper.MintCoins(s.Ctx, FaucetAccountName, totalSupply)

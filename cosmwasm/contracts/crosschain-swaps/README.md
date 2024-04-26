@@ -186,7 +186,7 @@ memo like the one above but with the appropriate values for the token and receiv
     "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",
     "msg": {
       "osmosis_swap": {
-        "output_denom": "uosmo",  // Osmosis native token
+        "output_denom": "note",  // Osmosis native token
         "slippage": {
           "twap": {
             "slippage_percentage": "20",
@@ -205,7 +205,7 @@ memo like the one above but with the appropriate values for the token and receiv
 ```bash
 junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100738ujuno   \
 --from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
---memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"uosmo","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","on_failed_delivery":"do_nothing"}}}}'
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"note","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","on_failed_delivery":"do_nothing"}}}}'
 ```
 
 TODO: Add an example in TS
@@ -474,7 +474,7 @@ export SWAPROUTER_ADDRESS=$(chainB query wasm list-contract-by-code "$SWAPROUTER
 #### Add the pool to the swaprouter
 
 ```bash
-MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"uosmo","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"uosmo"}]}}')
+MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"note","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"note"}]}}')
 chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y --keyring-backend test "${TX_FLAGS[@]}"
 ```
 
@@ -531,7 +531,7 @@ This will send 100 uosmo from chainA to chainB, swap it for 100 uosmo on chainB,
 The command to do this is:
 
 ```bash
-MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
+MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"output_denom":"note","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
 chainA tx ibc-transfer transfer transfer $CHANNEL_ID $CROSSCHAIN_SWAPS_ADDRESS 100uosmo \
     --from validator -y "${TX_FLAGS[@]}" \
     --memo "$MEMO"
@@ -547,7 +547,7 @@ The "osmosis_swap" contains the following required fields: output_denom, slippag
 and on_failed_delivery fields. All denominations inside the memo are expressed in the denoms 
 on the chain doing the swap (chainB).
 
-* The output_denom field specifies the denomination of the coin being received in the swap, which is "uosmo".
+* The output_denom field specifies the denomination of the coin being received in the swap, which is "note".
 * The slippage field is used to specify the acceptable price slippage for the swap, here we use a 20% of the time-weighted-average price with a 10-second window.
 * The receiver field specifies the address of the recipient of the swap. 
 * The on_failed_delivery field specifies what should happen in case the swap cannot be executed, which is set to "do_nothing"

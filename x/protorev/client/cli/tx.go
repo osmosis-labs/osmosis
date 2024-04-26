@@ -45,14 +45,14 @@ func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 		Sample json file:
 		[
 			{
-				"token_in": "uosmo",
+				"token_in": "note",
 				"token_out": "ibc/123...",
 				"arb_routes" : [
 					{
 						"trades": [
 							{
 								"pool": 1,
-								"token_in": "uosmo",
+								"token_in": "note",
 								"token_out": "uatom"
 							},
 							{
@@ -63,7 +63,7 @@ func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 							{
 								"pool": 0,
 								"token_in": "ibc/123...",
-								"token_out": "uosmo"
+								"token_out": "note"
 							}
 						],
 						"step_size": 1000000
@@ -184,7 +184,7 @@ func CmdSetBaseDenoms() *osmocli.TxCliDesc {
 		[
 			{
 				"step_size" : 10000,
-				"denom" : "uosmo"
+				"denom" : "note"
 			},
 			{
 				"step_size" : 10000,

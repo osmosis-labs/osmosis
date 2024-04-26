@@ -86,7 +86,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 				},
 				{
 				"pool_id": 2,
-				"token_out_denom": "uosmo"
+				"token_out_denom": "note"
 				}
 			  ],
 			  "token_in_amount": 1000
@@ -99,7 +99,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 				},
 				{
 				"pool_id": 4,
-				"token_out_denom": "uosmo"
+				"token_out_denom": "note"
 				}
 			  ],
 			  "token_in_amount": 999
@@ -132,7 +132,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 					},
 					{
 					"pool_id": 2,
-					"token_in_denom": "uosmo"
+					"token_in_denom": "note"
 					}
 				],
 				"token_out_amount": 1000
@@ -145,7 +145,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 					},
 					{
 					"pool_id": 4,
-					"token_in_denom": "uosmo"
+					"token_in_denom": "note"
 					}
 				],
 				"token_out_amount": 999

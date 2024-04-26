@@ -5,10 +5,11 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
-	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -37,9 +38,9 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Set the bond denom to be uosmo to make volume tracking tests more readable.
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	skParams.BondDenom = "uosmo"
+	skParams.BondDenom = "note"
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
-	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
 	marketParams := s.App.MarketKeeper.GetParams(s.Ctx)
 	s.App.MarketKeeper.SetParams(s.Ctx, marketParams)
 

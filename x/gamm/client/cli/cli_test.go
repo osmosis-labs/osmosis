@@ -335,7 +335,7 @@ func TestGetCmdSpotPrice(t *testing.T) {
 			Cmd: "1 uosmo ibc/111",
 			ExpectedQuery: &types.QuerySpotPriceRequest{
 				PoolId:          1,
-				BaseAssetDenom:  "uosmo",
+				BaseAssetDenom:  "note",
 				QuoteAssetDenom: "ibc/111",
 			},
 		},

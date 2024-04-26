@@ -25,7 +25,7 @@ var (
 
 	defaultDaiAmount, _ = osmomath.NewIntFromString("73000000000000000000000")
 	defaultDenom0mount  = osmomath.NewInt(10000000000)
-	desiredDenom0       = "uosmo"
+	desiredDenom0       = "note"
 	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
 	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
 	usdcCoin            = sdk.NewCoin(USDCIBCDenom, defaultDaiAmount)
@@ -398,7 +398,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			overwriteBalancerDenom0: "uosmo",
+			overwriteBalancerDenom0: "note",
 			expectErr:               true,
 		},
 		{
@@ -409,7 +409,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			overwriteBalancerDenom1: "uosmo",
+			overwriteBalancerDenom1: "note",
 			expectErr:               true,
 		},
 		{

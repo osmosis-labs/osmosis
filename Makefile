@@ -18,8 +18,8 @@ help:
 	@echo "Usage:"
 	@echo "    make [command]"
 	@echo ""
-	@echo "  make build        	        Build osmosisd binary"
-	@echo "  make install        	    Install osmosisd binary"
+	@echo "  make build        	        Build symphonyd binary"
+	@echo "  make install        	    Install symphonyd binary"
 	@echo "  make deps                  Show available deps commands"
 	@echo "  make proto                 Show available proto commands"
 	@echo "  make release               Show available release commands"
@@ -98,8 +98,8 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=osmosis \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=symphony \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
@@ -178,7 +178,7 @@ redis-stop:
 
 sqs-start:
 	./scripts/debug_builder.sh
-	build/osmosisd start
+	build/symphonyd start
 
 sqs-load-test-ui:
 	docker compose -f ingest/sqs/locust/docker-compose.yml up --scale worker=4

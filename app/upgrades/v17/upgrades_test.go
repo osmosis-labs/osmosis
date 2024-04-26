@@ -143,42 +143,42 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID = poolID
 				}
 
-				existingPool := s.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
-				existingPool2 := s.PrepareConcentratedPoolWithCoins("akash", "uosmo")
-				existingBalancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
+				existingPool := s.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "note")
+				existingPool2 := s.PrepareConcentratedPoolWithCoins("akash", "note")
+				existingBalancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin("note", osmomath.NewInt(10000000000)))
 
 				// create few TWAP records for the pools
-				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(10),
+				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "note", osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10*10),
 					osmomath.OneDec().MulInt64(3),
 					osmomath.ZeroDec())
 
-				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(30),
+				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "note", osmomath.NewDec(30),
 					osmomath.OneDec().MulInt64(10*10+10),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
 
-				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(20),
+				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "note", osmomath.NewDec(20),
 					osmomath.OneDec().MulInt64(10*10+10*5),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.ZeroDec())
 
-				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", osmomath.NewDec(10),
+				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "note", osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10*10*10),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
 
-				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", osmomath.NewDec(20),
+				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "note", osmomath.NewDec(20),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.OneDec().MulInt64(2),
 					osmomath.ZeroDec())
 
-				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", osmomath.NewDec(10),
+				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "note", osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.ZeroDec())
 
-				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", osmomath.NewDec(50),
+				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "note", osmomath.NewDec(50),
 					osmomath.OneDec().MulInt64(10*5),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
@@ -198,7 +198,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				lastPoolIdMinusOne := lastPoolID - 1
 				lastPoolIdMinusTwo := lastPoolID - 2
 				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-				stakingParams.BondDenom = "uosmo"
+				stakingParams.BondDenom = "note"
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 				// Retrieve the community pool balance before the upgrade
@@ -392,7 +392,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				// Set the bond denom to uosmo
 				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-				stakingParams.BondDenom = "uosmo"
+				stakingParams.BondDenom = "note"
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 				// Retrieve the community pool balance before the upgrade

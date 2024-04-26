@@ -17,13 +17,13 @@ test_swap!(
     should succeed,
 
     msg = ExecuteMsg::Swap {
-        input_coin: Coin::new(1000, "uosmo"),
+        input_coin: Coin::new(1000, "note"),
         output_denom: "uion".to_string(),
         slippage: Slippage::MinOutputAmount(1u128.into()),
         route: None,
     },
     funds: [
-        Coin::new(1000, "uosmo")
+        Coin::new(1000, "note")
     ]
 );
 
@@ -32,13 +32,13 @@ test_swap!(
     "Insufficient Funds: execute wasm contract failed",
 
     msg = ExecuteMsg::Swap {
-        input_coin: Coin::new(1000, "uosmo"),
+        input_coin: Coin::new(1000, "note"),
         output_denom: "uion".to_string(),
         slippage: Slippage::MinOutputAmount(1u128.into()),
         route: None,
     },
     funds: [
-        Coin::new(10, "uosmo")
+        Coin::new(10, "note")
     ]
 );
 
@@ -47,7 +47,7 @@ test_swap!(
     "Insufficient Funds: execute wasm contract failed",
 
     msg = ExecuteMsg::Swap {
-        input_coin: Coin::new(1000, "uosmo"),
+        input_coin: Coin::new(1000, "note"),
         output_denom: "uion".to_string(),
         slippage: Slippage::MinOutputAmount(1u128.into()),
         route: None,
@@ -62,13 +62,13 @@ test_swap!(
     "dispatch: submessages: uion token is lesser than min amount: calculated amount is lesser than min amount",
 
     msg = ExecuteMsg::Swap {
-        input_coin: Coin::new(1000, "uosmo"),
+        input_coin: Coin::new(1000, "note"),
         output_denom: "uion".to_string(),
         slippage: Slippage::MinOutputAmount(1000000000000000000000000u128.into()),
         route: None,
     },
     funds: [
-        Coin::new(1000, "uosmo")
+        Coin::new(1000, "note")
     ]
 );
 
@@ -78,7 +78,7 @@ test_swap!(
 
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uion"),
-        output_denom: "uosmo".to_string(),
+        output_denom: "note".to_string(),
         slippage: Slippage::MinOutputAmount(1000000000000000000000000u128.into()),
         route: None,
     },
@@ -91,13 +91,13 @@ test_swap!(
     twap_based_swap
     should succeed,
     msg = ExecuteMsg::Swap {
-        input_coin: Coin::new(1000, "uosmo"),
+        input_coin: Coin::new(1000, "note"),
         output_denom: "uion".to_string(),
         slippage: Slippage::Twap{ window_seconds: Some(1), slippage_percentage: Decimal::from_str("5").unwrap() },
         route: None,
     },
     funds: [
-        Coin::new(10000, "uosmo")
+        Coin::new(10000, "note")
     ]
 );
 
@@ -155,7 +155,7 @@ fn setup_route_and_execute_swap(
     let wasm = Wasm::new(&app);
 
     let initial_balance = [
-        Coin::new(INITIAL_AMOUNT, "uosmo"),
+        Coin::new(INITIAL_AMOUNT, "note"),
         Coin::new(INITIAL_AMOUNT, "uion"),
         Coin::new(INITIAL_AMOUNT, "uatom"),
     ];
@@ -165,7 +165,7 @@ fn setup_route_and_execute_swap(
     // setup route
     // uosmo/uion = pool(2): uosmo/uatom -> pool(3): uatom/uion
     let set_route_msg = ExecuteMsg::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uion".to_string(),
         pool_route: vec![
             SwapAmountInRoute {

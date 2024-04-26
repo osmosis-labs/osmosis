@@ -4,7 +4,7 @@ import subprocess
 import re
 
 denom0 = "stake"
-denom1 = "uosmo"
+denom1 = "note"
 tick_spacing = "1000"
 spread_factor = "0.001"
 

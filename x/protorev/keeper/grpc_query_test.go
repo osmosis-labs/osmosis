@@ -363,7 +363,7 @@ func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 func (s *KeeperTestSuite) TestGetProtoRevPool() {
 	// Request without setting pool for the base denom and other denom should return an error
 	req := &types.QueryGetProtoRevPoolRequest{
-		BaseDenom:  "uosmo",
+		BaseDenom:  "note",
 		OtherDenom: "atom",
 	}
 	res, err := s.queryClient.GetProtoRevPool(sdk.WrapSDKContext(s.Ctx), req)

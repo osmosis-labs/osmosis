@@ -30,7 +30,7 @@ type UpgradeTestSuite struct {
 }
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-	sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+	sdk.NewCoin("note", osmomath.NewInt(10000000000)),
 	sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 	sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 	sdk.NewCoin("baz", osmomath.NewInt(10000000)),
@@ -171,14 +171,14 @@ func (s *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	s.SetupTest() // reset
 
-	expectedUosmodenom := "uosmo"
+	expectedUosmodenom := "note"
 	expectedUiondenom := "uion"
 
 	ctx := s.Ctx
 	bankKeeper := s.App.BankKeeper
 
 	// meta data should not be found pre-registration of meta data
-	_, found := s.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
+	_, found := s.App.BankKeeper.GetDenomMetaData(ctx, "note")
 	s.Require().False(found)
 
 	_, found = s.App.BankKeeper.GetDenomMetaData(ctx, "uion")
@@ -187,7 +187,7 @@ func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	// system under test.
 	v15.RegisterOsmoIonMetadata(ctx, bankKeeper)
 
-	uosmoMetadata, found := s.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
+	uosmoMetadata, found := s.App.BankKeeper.GetDenomMetaData(ctx, "note")
 	s.Require().True(found)
 
 	uionMetadata, found := s.App.BankKeeper.GetDenomMetaData(ctx, "uion")

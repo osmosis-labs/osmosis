@@ -56,7 +56,7 @@ type denomRoutingInfo struct {
 }
 
 const (
-	UOSMO          = "uosmo"
+	UOSMO          = "note"
 	uosmoPrecision = 6
 
 	noTokenPrecisionErrorFmtStr   = "error getting token precision %s"

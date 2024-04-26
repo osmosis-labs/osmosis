@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 			Routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1221,
-					TokenOutDenom: "uosmo",
+					TokenOutDenom: "note",
 				},
 				{
 					PoolId:        3,

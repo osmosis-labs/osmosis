@@ -258,7 +258,7 @@ func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 		"valid balancer pool": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			expectedDenoms:    []string{"bar", "baz", "foo", "uosmo"},
+			expectedDenoms:    []string{"bar", "baz", "foo", "note"},
 		},
 		"valid stableswap pool": {
 			preCreatePoolType: types.Stableswap,
@@ -3131,7 +3131,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
 		defaultPoolCoinOne = sdk.NewCoin("usdc", osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin("eth", osmomath.NewInt(2))
-		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
+		nonPoolCool        = sdk.NewCoin("note", osmomath.NewInt(3))
 
 		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
 	)

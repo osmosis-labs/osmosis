@@ -247,7 +247,7 @@ func (s *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 	s.App.GAMMKeeper.SetMigrationRecords(s.Ctx, migrationInfo)
 
 	// add new coins to the CL pool gauge so that it would be distributed after epoch ends then trigger panic
-	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000)))
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1000)))
 	gagueId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochInfo.Duration)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gagueId)

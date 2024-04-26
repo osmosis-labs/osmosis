@@ -224,7 +224,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	supportedBaseDenoms, err := chainANode.QueryProtoRevBaseDenoms()
 	s.Require().NoError(err)
 	s.Require().Len(supportedBaseDenoms, 1, "protorev module should only have uosmo as a supported base denom on init")
-	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo", "protorev module should only have uosmo as a supported base denom on init")
+	s.Require().Equal(supportedBaseDenoms[0].Denom, "note", "protorev module should only have uosmo as a supported base denom on init")
 
 	s.T().Logf("completed protorev module init checks")
 
@@ -299,7 +299,7 @@ func (s *IntegrationTestSuite) StableSwap() {
 
 	const (
 		denomA = "stake"
-		denomB = "uosmo"
+		denomB = "note"
 
 		minAmountOut = "1"
 	)
@@ -340,7 +340,7 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 
 	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
 
-	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
+	uosmoIn := fmt.Sprintf("1000000%s", "note")
 
 	swapWalletAddr := chainABNode.CreateWallet(migrationWallet, chainAB)
 
@@ -468,7 +468,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 	fmt.Println("param", param)
 
-	osmoSupply, err := chainANode.QuerySupplyOf("uosmo")
+	osmoSupply, err := chainANode.QuerySupplyOf("note")
 	s.Require().NoError(err)
 
 	f, err := osmoSupply.ToLegacyDec().Float64()
@@ -503,7 +503,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, receiver, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
-	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "note"}}`, initialization.ValidatorWalletName)
 	// reset the param to the original contract if it existed
 	if param != "" {
 		err = chainANode.ParamChangeProposal(
@@ -539,12 +539,12 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	transferAmount := int64(10)
 	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("Sending IBC transfer IBCWasmHooks")
-	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
+	coin := sdk.NewCoin("note", osmomath.NewInt(transferAmount))
 	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
 
 	// check the balance of the contract
-	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "note"))
 	ibcDenom := denomTrace.IBCDenom()
 	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
@@ -578,7 +578,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 			return false
 		}
 
-		// check if denom contains "uosmo"
+		// check if denom contains "note"
 		return amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
 	},
 
@@ -614,11 +614,11 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	forwardMemo, err := json.Marshal(memoData)
 	s.NoError(err)
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
-	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
+	coin := sdk.NewCoin("note", osmomath.NewInt(transferAmount))
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, "note", transferAmount)
 
 	// Getting the sender as set by PFM
 	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
@@ -701,7 +701,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 		denomA = "stake"
 		denomB = "uion"
-		denomC = "uosmo"
+		denomC = "note"
 
 		minAmountOut = "1"
 
@@ -883,7 +883,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	"metadata": "%s",
 	"deposit": "%s",
 	"expedited": true
-}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(5000000000)))
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("note", math.NewInt(5000000000)))
 
 	propNumber := chainABNode.SubmitNewV1ProposalType(validProp, sender)
 
@@ -928,7 +928,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 		poolFile   = "geometricPool.json"
 		walletName = "geometric-twap-wallet"
 
-		denomA = "uosmo" // 1_000_000 uosmo
+		denomA = "note"  // 1_000_000 uosmo
 		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
@@ -1036,7 +1036,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 			"params": {
 				"min_deposit": [
 					{
-					"denom": "uosmo",
+					"denom": "note",
 					"amount": "10000000"
 					}
 				],
@@ -1050,7 +1050,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 				"expedited_threshold": "0.667000000000000000",
 				"expedited_min_deposit": [
 				{
-					"denom": "uosmo",
+					"denom": "note",
 					"amount": "50000000"
 				}
 				],
@@ -1065,7 +1065,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 	"metadata": "%s",
 	"deposit": "%s",
 	"expedited": false
-}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("note", math.NewInt(10000000)))
 
 	proposalID := chainANode.SubmitNewV1ProposalType(validProp, sender)
 
@@ -1095,7 +1095,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 			"params": {
 				"min_deposit": [
 					{
-					"denom": "uosmo",
+					"denom": "note",
 					"amount": "10000000"
 					}
 				],
@@ -1109,7 +1109,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 				"expedited_threshold": "0.667000000000000000",
 				"expedited_min_deposit": [
 				{
-					"denom": "uosmo",
+					"denom": "note",
 					"amount": "50000000"
 				}
 				],
@@ -1124,7 +1124,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 	"metadata": "%s",
 	"deposit": "%s",
 	"expedited": false
-}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("note", math.NewInt(10000000)))
 
 	proposalID := chainBNode.SubmitNewV1ProposalType(validProp, sender)
 

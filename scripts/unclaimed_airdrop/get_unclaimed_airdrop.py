@@ -27,7 +27,7 @@ def get_liquid_osmo_balance(base_account):
     liquid_osmo = 0
     if len(base_account['balance']) != 0:
         for p in base_account['balance']:
-            if p['denom'] == "uosmo":
+            if p['denom'] == "note":
                 liquid_osmo = int(p['amount'])
     return liquid_osmo
 

@@ -26,7 +26,7 @@ fn crosschain_swap() {
     let wasm = Wasm::new(&app);
 
     let initial_balance = [
-        Coin::new(INITIAL_AMOUNT, "uosmo"),
+        Coin::new(INITIAL_AMOUNT, "note"),
         Coin::new(INITIAL_AMOUNT, "uion"),
         Coin::new(INITIAL_AMOUNT, "uatom"),
     ];
@@ -36,7 +36,7 @@ fn crosschain_swap() {
     // setup route
     // uosmo/uion = pool(2): uosmo/uatom -> pool(3): uatom/uion
     let set_route_msg = SwapRouterExecute::SetRoute {
-        input_denom: "uosmo".to_string(),
+        input_denom: "note".to_string(),
         output_denom: "uion".to_string(),
         pool_route: vec![
             SwapAmountInRoute {
@@ -69,7 +69,7 @@ fn crosschain_swap() {
         next_memo: None,
         route: None,
     };
-    let funds: &[Coin] = &[Coin::new(10000, "uosmo")];
+    let funds: &[Coin] = &[Coin::new(10000, "note")];
     println!("{}", serde_json_wasm::to_string(&msg).unwrap());
     let _res = wasm.execute(&crosschain_address, &msg, funds, &sender);
     //dbg!(&res);
