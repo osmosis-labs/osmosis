@@ -49,7 +49,7 @@ message GetAuthenticatorsResponse {
 // MsgGetAuthenticatorRequest defines the Msg/GetAuthenticator request type.
 message GetAuthenticatorRequest {
   string account = 1;
-  string authenticator_id = 2;
+  uint64 authenticator_id = 2;
 }
 
 // MsgGetAuthenticatorResponse defines the Msg/GetAuthenticator response type.
