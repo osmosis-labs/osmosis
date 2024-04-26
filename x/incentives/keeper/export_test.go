@@ -106,3 +106,7 @@ func (k Keeper) GetNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId 
 func (k Keeper) SkipSpamGaugeDistribute(ctx sdk.Context, locks []*lockuptypes.PeriodLock, gauge types.Gauge, totalDistrCoins sdk.Coins, remainCoins sdk.Coins) (bool, sdk.Coins, error) {
 	return k.skipSpamGaugeDistribute(ctx, locks, gauge, totalDistrCoins, remainCoins)
 }
+
+func (k Keeper) CheckIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) error {
+	return k.checkIfDenomsAreDistributable(ctx, coins)
+}
