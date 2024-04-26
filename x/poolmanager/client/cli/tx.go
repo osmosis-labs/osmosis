@@ -50,7 +50,7 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 	return &osmocli.TxCliDesc{
 		Use:     "swap-exact-amount-in",
 		Short:   "swap exact amount in",
-		Example: "osmosisd tx poolmanager swap-exact-amount-in 2000000uosmo 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
+		Example: "symphonyd tx poolmanager swap-exact-amount-in 2000000uosmo 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
 		},
@@ -63,7 +63,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 	return &osmocli.TxCliDesc{
 		Use:              "swap-exact-amount-out",
 		Short:            "swap exact amount out",
-		Example:          "osmosisd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
+		Example:          "symphonyd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
 		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
@@ -74,7 +74,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 	return &osmocli.TxCliDesc{
 		Use:   "split-route-swap-exact-amount-in",
 		Short: "split route swap exact amount in",
-		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
+		Example: `symphonyd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
 		{
 			"Route": [
@@ -120,7 +120,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 	return &osmocli.TxCliDesc{
 		Use:   "split-route-swap-exact-amount-out",
 		Short: "split route swap exact amount out",
-		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
+		Example: `symphonyd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
 		{
 			"route": [

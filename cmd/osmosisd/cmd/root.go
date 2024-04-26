@@ -310,7 +310,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	humanReadableDenomsInput, humanReadableDenomsOutput := GetHumanReadableDenomEnvVariables()
 
 	rootCmd := &cobra.Command{
-		Use:   "osmosisd",
+		Use:   "symphonyd",
 		Short: "Start symphony app",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// If not calling the set-env command, this is a no-op.

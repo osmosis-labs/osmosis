@@ -175,7 +175,7 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 	cmd := osmocli.TxCliDesc{
 		Use:              "adjust-scaling-factors --pool-id=[pool-id]  --scaling-factors=[scaling-factors]",
 		Short:            "adjust scaling factors",
-		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		Example:          "symphonyd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
 		NumArgs:          0,
 		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
 	}.BuildCommandCustomFn()
@@ -329,12 +329,12 @@ Sample proposal file:
 	"pool-id": 1,
 	"controller-address": "osmoYYY"
 }
->>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
+>>> symphonyd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --proposal proposal.json \
 		--deposit 1600000000uosmo \
 
 Sample proposal with flags
->>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
+>>> symphonyd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --title "Set Scaling Factor Controller Proposal" \
 		--summary "Change scaling factor controller address from osmoXXX to osmoYYY"
 		--deposit 1600000000uosmo
