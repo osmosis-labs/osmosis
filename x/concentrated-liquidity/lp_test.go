@@ -360,6 +360,10 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			s.validatePositionSpreadRewardAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
 
+			// Upscale accumulator values
+			tc.expectedSpreadRewardGrowthOutsideLower = tc.expectedSpreadRewardGrowthOutsideLower.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+			tc.expectedSpreadRewardGrowthOutsideUpper = tc.expectedSpreadRewardGrowthOutsideUpper.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+
 			// Check tick state
 			s.validateTickUpdates(tc.poolId, tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedSpreadRewardGrowthOutsideLower, tc.expectedSpreadRewardGrowthOutsideUpper)
 
