@@ -284,3 +284,32 @@ func IncreaseCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey
 	store.Set(key, bz)
 	return nil
 }
+
+var kvGasConfig = storetypes.KVGasConfig()
+
+// Get returns a value at key by mutating the result parameter. Returns true if the value was found and the
+// result mutated correctly. If the value is not in the store, returns false.
+// Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
+//
+// This function also returns three gas numbers:
+// Gas flat, gas for key read, gas for value read.
+// You must charge all 3 for the gas accounting to be correct in the current SDK version.
+func TrackGasUsedInGet(store store.KVStore, key []byte, result proto.Message) (found bool, gasFlat, gasKey, gasVal uint64, err error) {
+	gasFlat = kvGasConfig.ReadCostFlat
+	gasKey = uint64(len(key)) * kvGasConfig.ReadCostPerByte
+	b := store.Get(key)
+	gasVal = uint64(len(b)) * kvGasConfig.ReadCostPerByte
+	if b == nil {
+		return false, gasFlat, gasKey, gasVal, nil
+	}
+	if err := proto.Unmarshal(b, result); err != nil {
+		return true, gasFlat, gasKey, gasVal, err
+	}
+	return true, gasFlat, gasKey, gasVal, nil
+}
+
+func ChargeMockReadGas(ctx sdk.Context, gasFlat, gasKey, gasVal uint64) {
+	ctx.GasMeter().ConsumeGas(gasFlat, storetypes.GasReadCostFlatDesc)
+	ctx.GasMeter().ConsumeGas(gasKey, storetypes.GasReadPerByteDesc)
+	ctx.GasMeter().ConsumeGas(gasVal, storetypes.GasReadPerByteDesc)
+}
