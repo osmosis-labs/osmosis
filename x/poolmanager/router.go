@@ -27,7 +27,7 @@ var (
 	}
 )
 
-func (k Keeper) GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModule types.PoolModuleI, pool types.PoolI, err error) {
+func (k *Keeper) GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModule types.PoolModuleI, pool types.PoolI, err error) {
 	// Get the pool-specific module implementation to ensure that
 	// swaps are routed to the pool type corresponding to pool ID's pool.
 	swapModule, err = k.GetPoolModule(ctx, poolId)

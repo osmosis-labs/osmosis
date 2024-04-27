@@ -151,9 +151,16 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
+func (k *Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
+}
+
+type poolModuleCacheValue struct {
+	module   types.PoolModuleI
+	gasFlat  uint64
+	gasKey   uint64
+	gasValue uint64
 }
 
 // GetPoolModule returns the swap module for the given pool ID.
@@ -164,11 +171,17 @@ func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Pool
 // in poolmanager's keeper constructor.
 // TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
 // for the upgrade handler logic and tests.
-func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI, error) {
+func (k *Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI, error) {
+	poolModuleCandidate, ok := k.cachedPoolModules.Load(poolId)
+	if ok {
+		v, _ := poolModuleCandidate.(poolModuleCacheValue)
+		osmoutils.ChargeMockReadGas(ctx, v.gasFlat, v.gasKey, v.gasValue)
+		return v.module, nil
+	}
 	store := ctx.KVStore(k.storeKey)
 
 	moduleRoute := &types.ModuleRoute{}
-	found, err := osmoutils.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	found, gasFlat, gasKey, gasVal, err := osmoutils.TrackGasUsedInGet(store, types.FormatModuleRouteKey(poolId), moduleRoute)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +193,13 @@ func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI
 	if !routeExists {
 		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
 	}
+
+	k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
+		module:   swapModule,
+		gasFlat:  gasFlat,
+		gasKey:   gasKey,
+		gasValue: gasVal,
+	})
 
 	return swapModule, nil
 }

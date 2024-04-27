@@ -226,7 +226,7 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
 
-			s.CreatePoolFromType(tc.preCreatePoolType)
+			createdPoolId := s.CreatePoolFromType(tc.preCreatePoolType)
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 			swapModule, err := poolmanagerKeeper.GetPoolModule(s.Ctx, tc.poolId)
 
 			if tc.expectError != nil {
-				s.Require().Error(err)
+				s.Require().Error(err, "requested pool ID: %d, created pool ID: %d", tc.poolId, createdPoolId)
 				s.Require().ErrorIs(err, tc.expectError)
 				s.Require().Nil(swapModule)
 				return

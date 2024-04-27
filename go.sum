@@ -1484,6 +1484,7 @@ github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5 h1:fnt89Cw+55vbnIEGkpCmj0c
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240417064914-57cce9c39b17 h1:mDZYFryKB4te1Ve9sXTtK8dMs4TC3McEr2VHT//+iVM=
 github.com/osmosis-labs/osmosis/osmomath v0.0.11-0.20240417064914-57cce9c39b17/go.mod h1:AwEqu6o7D8zVME8vpeBWrDH4emKfDllZ+MJBs1x8DTA=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.11-0.20240417064914-57cce9c39b17 h1:OD7AurkdNbtiT3AFzSAK89Rq/7gumjdEWRLqTUuXaJY=
@@ -1492,6 +1493,16 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240417064914-57cce9c39b17 h1
 github.com/osmosis-labs/osmosis/x/epochs v0.0.7-0.20240417064914-57cce9c39b17/go.mod h1:mIYRJNIJ048mmp3mgKdqNCt6YDV1lQa18bDStBWhNrk=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240417064914-57cce9c39b17 h1:g3eD98dQ7kBDkZL333KQJUs/D6STKgF9fchxaY146rU=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.13-0.20240417064914-57cce9c39b17/go.mod h1:PObrZS5dpEcoj2Wcgjbw2QBwOm78tSqInstB0oIfSo0=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240423073233-246239a8f662 h1:P6deXtGtSXJgPtvo6f/1vAQgF38HUsrIT6Mq7LMGYrs=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240423073233-246239a8f662/go.mod h1:ubFhAjLis9cH6GPIhaCjf4JdXrn8HBBOxvOYMxPtgSM=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240423073233-246239a8f662 h1:evQCSCvgkEXpm3NanU54PK8OtUEPQHCV8EEIbRZ417k=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240423073233-246239a8f662/go.mod h1:1uK78efyukxFZf0JVzU4YSSY4EGO0rignHh/NC/C6l8=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240423073233-246239a8f662 h1:bG3Fll3ryw+yo+70u0oOUjxq1SZ2GgTRDgmivZEdPKE=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240423073233-246239a8f662/go.mod h1:3BTKszIZFP/3ut/sW0izJOZRNDXWINU5zfZGo+a8QhE=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240423073233-246239a8f662 h1:1GiW1IDHH6BfmBYdP5YGnS+TkO6ZKKVzSFccG9RH9gA=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240423073233-246239a8f662/go.mod h1:VBMzVCCaiVJokiQ+6+O6KAU9XaH656o6kCeHoVCiTL8=
+>>>>>>> 76d390b6 (Try out making a read cache for poolmanager pool modules (#8128))
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 h1:mvkk1A/jIe+lsFFpRNfyd9UfvhagATdpnjy8K7kANeo=
 github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04/go.mod h1:mYYf7pYb7sGJ9zYIOw2aYlIl5cgKT0K93rZx4LvDAuA=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
