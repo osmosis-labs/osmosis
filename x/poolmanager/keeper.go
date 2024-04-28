@@ -23,7 +23,6 @@ type Keeper struct {
 	bankKeeper           types.BankI
 	accountKeeper        types.AccountI
 	communityPoolKeeper  types.CommunityPoolI
-	stakingKeeper        types.StakingKeeper
 	protorevKeeper       types.ProtorevKeeper
 
 	// routes is a map to get the pool module by id.

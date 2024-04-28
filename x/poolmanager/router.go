@@ -764,7 +764,7 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins 
 // GetOsmoVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
 func (k Keeper) GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int {
 	totalVolume := k.GetTotalVolumeForPool(ctx, poolId)
-	return totalVolume.AmountOf(k.stakingKeeper.BondDenom(ctx))
+	return totalVolume.AmountOf(appparams.DefaultBondDenom)
 }
 
 // EstimateTradeBasedOnPriceImpactBalancerPool estimates a trade based on price impact for a balancer pool type.
