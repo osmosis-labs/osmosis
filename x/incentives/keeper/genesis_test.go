@@ -245,7 +245,7 @@ func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context,
 	// create a group which in turn creates a byGroup gauge
 	// we must set volume for each of the pools in the group
 	// so that the group gauge can be created.
-	bondDenom := app.StakingKeeper.GetParams(ctx).BondDenom
+	bondDenom := appparams.BaseCoinUnit
 	volumeCoins := sdk.NewCoins(sdk.NewInt64Coin(bondDenom, 100000000000))
 	groupPoolIDs := []uint64{1, 2}
 	for _, poolID := range groupPoolIDs {

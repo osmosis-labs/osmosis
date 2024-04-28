@@ -2434,7 +2434,7 @@ func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes 
 	// Update cumulative volumes for pools
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), updatedVolume)))
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, updatedVolume)))
 	}
 }
 

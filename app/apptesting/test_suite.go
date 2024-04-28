@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v24/app"
 
@@ -654,7 +656,7 @@ func GenerateTestAddrs() (string, string) {
 // sets up the volume for the pools in the group
 // mutates poolIDToVolumeMap
 func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom := appparams.BaseCoinUnit
 
 	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
 	for i := 0; i < len(poolIDs); i++ {
