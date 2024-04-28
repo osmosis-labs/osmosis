@@ -194,6 +194,7 @@ func (s *KeeperTestHelper) Reset() {
 		s.withCaching = true
 		s.Setup()
 	} else {
+		s.App.PoolManagerKeeper.ResetCaches()
 		s.setupGeneral()
 	}
 }
