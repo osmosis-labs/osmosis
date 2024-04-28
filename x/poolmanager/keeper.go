@@ -43,7 +43,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, protorevKeeper types.ProtorevKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -73,7 +73,6 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		communityPoolKeeper: communityPoolKeeper,
 		routes:              routesMap,
 		poolModules:         routesList,
-		stakingKeeper:       stakingKeeper,
 		protorevKeeper:      protorevKeeper,
 		cachedPoolModules:   cachedPoolModules,
 	}
@@ -193,11 +192,6 @@ func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 // SetPoolIncentivesKeeper sets pool incentives keeper
 func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeperI) {
 	k.poolIncentivesKeeper = poolIncentivesKeeper
-}
-
-// SetStakingKeeper sets staking keeper
-func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
-	k.stakingKeeper = stakingKeeper
 }
 
 // SetProtorevKeeper sets protorev keeper

@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
@@ -679,7 +680,7 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 // CONTRACT: pool with `poolId` exists
 func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	// If the denom is already denominated in uosmo, we can just use it directly
-	OSMO := k.stakingKeeper.BondDenom(ctx)
+	OSMO := appparams.DefaultBondDenom
 	if volumeGenerated.Denom == OSMO {
 		k.addVolume(ctx, poolId, volumeGenerated)
 		return
