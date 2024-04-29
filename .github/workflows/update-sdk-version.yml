@@ -44,7 +44,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "auto: update osmosis-labs/cosmos-sdk to $${{ github.event.inputs.version }}"
+          title: "auto: update osmosis-labs/cosmos-sdk to ${{ github.event.inputs.version }}"
           commit-message: "auto: update osmosis-labs/cosmos-sdk to $VERSION"
           body: |
             **Automated pull request**
@@ -55,4 +55,4 @@ jobs:
           delete-branch: true
           assignees: ${{ github.actor }}
           draft: true
-          labels: "T:auto,T:code-hygiene,V:state/compatible,no_backport,A:no-changelog"
+          labels: "T:auto,A:no-changelog"
