@@ -157,10 +157,28 @@ func (k *Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Poo
 }
 
 type poolModuleCacheValue struct {
+	pooltype types.PoolType
 	module   types.PoolModuleI
 	gasFlat  uint64
 	gasKey   uint64
 	gasValue uint64
+}
+
+func (k *Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (types.PoolType, error) {
+	poolModuleCandidate, cacheHit := k.cachedPoolModules.Load(poolId)
+	if !cacheHit {
+		_, err := k.GetPoolModule(ctx, poolId)
+		if err != nil {
+			return 0, err
+		}
+		poolModuleCandidate, _ = k.cachedPoolModules.Load(poolId)
+	}
+	v, _ := poolModuleCandidate.(poolModuleCacheValue)
+	if cacheHit {
+		osmoutils.ChargeMockReadGas(ctx, v.gasFlat, v.gasKey, v.gasValue)
+	}
+
+	return v.pooltype, nil
 }
 
 // GetPoolModule returns the swap module for the given pool ID.
@@ -195,6 +213,7 @@ func (k *Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModule
 	}
 
 	k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
+		pooltype: moduleRoute.PoolType,
 		module:   swapModule,
 		gasFlat:  gasFlat,
 		gasKey:   gasKey,
