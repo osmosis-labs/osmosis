@@ -59,6 +59,7 @@ type PoolManagerKeeper interface {
 		ctx sdk.Context,
 		poolId uint64,
 	) (poolmanagertypes.PoolI, error)
+	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
