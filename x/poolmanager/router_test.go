@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
 
-			s.CreatePoolFromType(tc.preCreatePoolType)
+			createdPoolId := s.CreatePoolFromType(tc.preCreatePoolType)
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 			swapModule, err := poolmanagerKeeper.GetPoolModule(s.Ctx, tc.poolId)
 
 			if tc.expectError != nil {
-				s.Require().Error(err)
+				s.Require().Error(err, "requested pool ID: %d, created pool ID: %d", tc.poolId, createdPoolId)
 				s.Require().ErrorIs(err, tc.expectError)
 				s.Require().Nil(swapModule)
 				return
@@ -248,6 +248,30 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 			s.Require().Equal(tc.expectedModule, reflect.TypeOf(swapModule))
 		})
 	}
+}
+
+// TestGetPoolTypeGas tests that the result for GetPoolType charges the
+// same gas whether its a cache hit or cache fail.
+func (s *KeeperTestSuite) TestGetPoolTypeGas() {
+	s.SetupTest()
+	poolmanagerKeeper := s.App.PoolManagerKeeper
+
+	createdPoolId := s.CreatePoolFromType(types.Balancer)
+
+	// cache miss
+	s.App.PoolManagerKeeper.ResetCaches()
+	startGas := s.Ctx.GasMeter().GasConsumed()
+	_, err := poolmanagerKeeper.GetPoolType(s.Ctx, createdPoolId)
+	s.Require().NoError(err)
+	endGas := s.Ctx.GasMeter().GasConsumed()
+	cacheMissGas := endGas - startGas
+
+	startGas = s.Ctx.GasMeter().GasConsumed()
+	_, err = poolmanagerKeeper.GetPoolType(s.Ctx, createdPoolId)
+	s.Require().NoError(err)
+	endGas = s.Ctx.GasMeter().GasConsumed()
+	cacheHitGas := endGas - startGas
+	s.Require().Equal(cacheMissGas, cacheHitGas)
 }
 
 func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {

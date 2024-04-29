@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -254,9 +255,34 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	spreadRewardsClaimed, forfeitedDust, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
+	spreadRewardsClaimedScaled, forfeitedDustScaled, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
+	}
+
+	spreadFactorScalingFactor, err := k.getSpreadFactorScalingFactorForPool(ctx, position.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	// We scale the spread factor per-unit of liquidity accumulator up to avoid truncation to zero.
+	// However, once we compute the total for the liquidity entitlement, we must scale it back down.
+	// We always truncate down in the pool's favor.
+	spreadRewardsClaimed := sdk.NewCoins()
+	forfeitedDust := sdk.DecCoins{}
+	if spreadFactorScalingFactor.Equal(oneDec) {
+		// If the scaling factor is 1, we don't need to scale down the spread rewards.
+		// We also use the forfeited dust calculated updateAccumAndClaimRewards since it is already scaled down.
+		spreadRewardsClaimed = spreadRewardsClaimedScaled
+		forfeitedDust = forfeitedDustScaled
+	} else {
+		// If the scaling factor is not 1, we scale down the spread rewards and throw away the dust.
+		for _, coin := range spreadRewardsClaimedScaled {
+			scaledCoinAmt := scaleDownSpreadRewardAmount(coin.Amount, spreadFactorScalingFactor)
+			if !scaledCoinAmt.IsZero() {
+				spreadRewardsClaimed = append(spreadRewardsClaimed, sdk.NewCoin(coin.Denom, scaledCoinAmt))
+			}
+		}
 	}
 
 	// add forfeited dust back to the global accumulator
@@ -273,8 +299,8 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
-			forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
-			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShare)
+			forfeitedDustPerShareScaled := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
+			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShareScaled)
 		}
 	}
 
@@ -316,4 +342,53 @@ func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorOb
 		return err
 	}
 	return nil
+}
+
+// scaleDownSpreadRewardAmount scales down the spread reward amount by the scaling factor.
+func scaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return incentiveAmount.ToLegacyDec().QuoTruncateMut(scalingFactor).TruncateInt()
+}
+
+// getSpreadFactorScalingFactorForPool returns the spread factor scaling factor for the given pool.
+// It returns perUnitLiqScalingFactor if the pool is migrated or if the pool ID is greater than the migration threshold.
+// It returns oneDecScalingFactor otherwise.
+func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	migrationThreshold, err := k.GetSpreadFactorPoolIDMigrationThreshold(ctx)
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+
+	// If the given pool ID is greater than the migration threshold, we return the perUnitLiqScalingFactor.
+	if poolID > migrationThreshold {
+		return perUnitLiqScalingFactor, nil
+	}
+
+	// If the given pool ID is one of the migrated spread factor accumulator pool IDs, we return the perUnitLiqScalingFactor.
+	_, isMigrated := types.MigratedSpreadFactorAccumulatorPoolIDsV25[poolID]
+	if isMigrated {
+		return perUnitLiqScalingFactor, nil
+	}
+
+	// Otherwise, we return the oneDecScalingFactor.
+	return oneDecScalingFactor, nil
+}
+
+// SetSpreadFactorPoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID for spread factor accumulators.
+func (k Keeper) SetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.KeySpreadRewardAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
+}
+
+// GetSpreadFactorPoolIDMigrationThreshold returns the pool ID migration threshold for spread factor accumulators.
+func (k Keeper) GetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.KeySpreadRewardAccumulatorMigrationThreshold)
+	if bz == nil {
+		return 0, fmt.Errorf("spread reward accumulator migration threshold not found")
+	}
+
+	threshold := sdk.BigEndianToUint64(bz)
+
+	return threshold, nil
 }

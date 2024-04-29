@@ -9,6 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
@@ -100,6 +101,25 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 			s.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestForceTransferMsg() {
+	// Create a denom
+	s.CreateDefaultDenom()
+
+	s.Run(fmt.Sprintf("test force transfer"), func() {
+		mintAmt := sdk.NewInt64Coin(s.defaultDenom, 10)
+
+		_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), mintAmt))
+
+		govModAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName)
+
+		err = s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], govModAcc.GetAddress(), sdk.NewCoins(mintAmt))
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.ForceTransfer(s.Ctx, types.NewMsgForceTransfer(s.TestAccs[0].String(), mintAmt, govModAcc.GetAddress().String(), s.TestAccs[1].String()))
+		s.Require().ErrorContains(err, "send from module acc not available")
+	})
 }
 
 // TestCreateDenomMsg tests TypeMsgCreateDenom message is emitted on a successful denom creation

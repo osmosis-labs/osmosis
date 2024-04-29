@@ -36,6 +36,8 @@ import (
 
 	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
 
+	"github.com/skip-mev/block-sdk/x/auction"
+
 	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
@@ -132,5 +134,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
+	auction.AppModuleBasic{},
 	smartaccount.AppModuleBasic{},
 }
