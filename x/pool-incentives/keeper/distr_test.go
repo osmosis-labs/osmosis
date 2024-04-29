@@ -43,13 +43,13 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 					Weight:  osmomath.NewInt(300),
 				},
 			},
-			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000)),
+			mintedCoins: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(15000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(2500))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(4999))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(7500))),
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(2500))),
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(4999))),
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(7500))),
 			},
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
+			expectedCommunityPool: sdk.NewDecCoin(appparams.BaseCoinUnit, osmomath.NewInt(0)),
 		},
 
 		// With minting 30000 stake to module, after AllocateAsset we get:
@@ -73,22 +73,22 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 					Weight:  osmomath.NewInt(200),
 				},
 			},
-			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(30000)),
+			mintedCoins: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(3000))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(6000))),
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(0))),
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(3000))),
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(6000))),
 			},
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, osmomath.NewInt(21000)),
+			expectedCommunityPool: sdk.NewDecCoin(appparams.BaseCoinUnit, osmomath.NewInt(21000)),
 		},
 		// With minting 30000 stake to module, after AllocateAsset we get:
 		// 	expectedCommunityPool = 30000 (Cause there are no gauges, all rewards are transferred to the community pool)
 		{
 			name:                   "community pool distribution when no distribution records are set",
 			testingDistrRecord:     []types.DistrRecord{},
-			mintedCoins:            sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(30000)),
+			mintedCoins:            sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{},
-			expectedCommunityPool:  sdk.NewDecCoin(sdk.DefaultBondDenom, osmomath.NewInt(30000)),
+			expectedCommunityPool:  sdk.NewDecCoin(appparams.BaseCoinUnit, osmomath.NewInt(30000)),
 		},
 	}
 

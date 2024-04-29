@@ -140,8 +140,8 @@ func (s *KeeperTestSuite) TestParams() {
 	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 	s.Require().NoError(err)
 
-	// Minted denom set as "stake" from the default genesis state
-	s.Require().Equal("stake", res.Params.MintedDenom)
+	// Minted denom set as "uosmo" from the default genesis state
+	s.Require().Equal("uosmo", res.Params.MintedDenom)
 }
 
 func (s *KeeperTestSuite) TestLockableDurations() {

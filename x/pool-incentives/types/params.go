@@ -10,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 )
 
 var KeyMintedDenom = []byte("MintedDenom")
@@ -26,7 +28,7 @@ func NewParams(mintedDenom string) Params {
 
 // DefaultParams is the default parameter configuration for the pool-incentives module.
 func DefaultParams() Params {
-	return NewParams(sdk.DefaultBondDenom)
+	return NewParams(appparams.BaseCoinUnit)
 }
 
 func (p Params) Validate() error {
