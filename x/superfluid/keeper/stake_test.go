@@ -268,7 +268,7 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				ID:       1,
 			},
 			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative},
-			expectedErr:          errorsmod.Wrap(types.ErrNonSuperfluidAsset, "asset is not properly configured for superfluid staking (no price pool id)"),
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
 		},
 	}
 
