@@ -10,7 +10,7 @@ on:
         description: 'Branch name in osmosis-labs/cosmos-sdk to fetch the latest commit from'
         required: true
         default: 'main' # Default branch
-        
+
 jobs:
   update-sdk-version-and-create-pr:
     runs-on: ubuntu-latest
@@ -27,7 +27,7 @@ jobs:
         run: |
           VERSION="${{ github.event.inputs.version }}"
           echo "Using version: $VERSION"
-          MODFILES="./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod"
+          MODFILES="./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod"
           for modfile in $MODFILES; do
             if [ -e "$modfile" ]; then
               sed -i "s|github.com/osmosis-labs/cosmos-sdk v[0-9a-zA-Z.\-]*|github.com/osmosis-labs/cosmos-sdk $VERSION|g" $modfile
