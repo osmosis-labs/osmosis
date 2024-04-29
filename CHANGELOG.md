@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8136](https://github.com/osmosis-labs/osmosis/pull/8136) Don't allow gauge creation/addition with rewards that have no protorev route (i.e. no way to determine if rewards meet minimum epoch value distribution requirements)
 * [#8144](https://github.com/osmosis-labs/osmosis/pull/8144) IBC wasm clients can now make stargate queries and support abort.
 * [#8147](https://github.com/osmosis-labs/osmosis/pull/8147) Process unbonding locks once per minute, rather than every single block.
+* [#8157](https://github.com/osmosis-labs/osmosis/pull/8157) Speedup protorev by not unmarshalling pools in cost-estimation phase.
+
 
 ### State Compatible
 

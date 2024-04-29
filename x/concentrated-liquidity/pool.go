@@ -215,8 +215,9 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 		return nil, err
 	}
 
-	token0Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken0())
-	token1Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken1())
+	addr := pool.GetAddress()
+	token0Bal := k.bankKeeper.GetBalance(ctx, addr, pool.GetToken0())
+	token1Bal := k.bankKeeper.GetBalance(ctx, addr, pool.GetToken1())
 
 	return sdk.NewCoins(token0Bal, token1Bal), nil
 }
