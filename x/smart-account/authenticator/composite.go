@@ -56,6 +56,9 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 	subAuthenticatorCount := 0
 	for id, initData := range initDatas {
 		authenticatorCode := am.GetAuthenticatorByType(initData.Type)
+		if authenticatorCode == nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sub-authenticator failed to be added in function `OnAuthenticatorAdded` as type is not registered in manager")
+		}
 		subId := compositeId(baseId, id)
 		err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Config, subId)
 		if err != nil {
@@ -82,6 +85,9 @@ func onSubAuthenticatorsRemoved(ctx sdk.Context, account sdk.AccAddress, data []
 	baseId := authenticatorId
 	for id, initData := range initDatas {
 		authenticatorCode := am.GetAuthenticatorByType(initData.Type)
+		if authenticatorCode == nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sub-authenticator failed to be removed in function `OnAuthenticatorRemoved` as type is not registered in manager")
+		}
 		subId := compositeId(baseId, id)
 		err := authenticatorCode.OnAuthenticatorRemoved(ctx, account, initData.Config, subId)
 		if err != nil {
