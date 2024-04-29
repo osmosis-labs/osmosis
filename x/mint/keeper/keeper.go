@@ -9,8 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

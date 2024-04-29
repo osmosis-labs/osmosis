@@ -8,7 +8,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 )
 
 type UpgradeTestSuite struct {

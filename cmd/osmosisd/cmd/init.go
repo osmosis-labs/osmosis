@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v25/app"
 )
 
 const (

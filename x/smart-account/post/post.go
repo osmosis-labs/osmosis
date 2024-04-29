@@ -12,10 +12,10 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccountante "github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 // AuthenticatorPostDecorator handles post-transaction tasks for smart accounts.
