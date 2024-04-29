@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -143,10 +143,20 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return k.updateConcentratedOsmoEquivalentMultiplier(cacheCtx, asset, newEpochNumber)
 		})
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-		// TODO: Consider deleting superfluid asset type native
-		k.Logger(ctx).Error("unsupported superfluid asset type")
-		return errors.New("SuperfluidAssetTypeNative is unsupported")
+		bondDenom := k.sk.BondDenom(ctx)
+		if asset.Denom == bondDenom {
+			// The bond denom should be locked a x/lockup and not superfluid
+			return errors.New("osmo should not be a superfluid asset. It can be stacked natively")
+		}
+		// get the twap price of the native asset in osmo
+		startTime := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).StartTime
+		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, asset.Denom, bondDenom, startTime)
+		if err != nil {
+			return sdkerrors.Wrap(err, "failed to get twap price")
+		}
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
 	}
+
 	return nil
 }
 

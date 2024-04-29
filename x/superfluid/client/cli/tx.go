@@ -212,7 +212,10 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.
 		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeConcentratedShare
 		} else {
-			return nil, fmt.Errorf("Invalid asset prefix: %s", asset)
+			if asset == "uosmo" {
+				return nil, fmt.Errorf("Invalid asset type: %s", asset)
+			}
+			assetType = types.SuperfluidAssetTypeNative
 		}
 
 		superfluidAssets = append(superfluidAssets, types.SuperfluidAsset{
