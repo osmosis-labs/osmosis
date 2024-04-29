@@ -54,5 +54,4 @@ jobs:
           branch-suffix: random
           delete-branch: true
           assignees: ${{ github.actor }}
-          draft: true
           labels: "T:auto,A:no-changelog"
