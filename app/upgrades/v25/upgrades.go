@@ -86,6 +86,9 @@ func CreateUpgradeHandler(
 
 		// Update consensus params in order to safely enable comet
 		consensusParams, err := keepers.ConsensusParamsKeeper.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
 		consensusParams.Evidence.MaxAgeNumBlocks = NewMaxAgeNumBlocks
 		consensusParams.Evidence.MaxAgeDuration = NewMaxAgeDuration
 		keepers.ConsensusParamsKeeper.Set(ctx, consensusParams)
