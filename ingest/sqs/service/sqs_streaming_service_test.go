@@ -5,9 +5,9 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 )
 
 var (

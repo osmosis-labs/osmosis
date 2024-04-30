@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -15,9 +15,9 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
