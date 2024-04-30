@@ -2,10 +2,11 @@ package v25
 
 import (
 	"errors"
+	"sort"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
