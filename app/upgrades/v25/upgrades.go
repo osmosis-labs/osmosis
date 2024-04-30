@@ -70,7 +70,7 @@ func CreateUpgradeHandler(
 			return nil, errors.New("unsupported chain ID")
 		}
 
-		// Ensure the auction module account is properly created to avoid snipping
+		// Ensure the auction module account is properly created to avoid sniping
 		err = osmoutils.CreateModuleAccount(ctx, keepers.AccountKeeper, authtypes.NewModuleAddress(auctiontypes.ModuleName))
 		if err != nil {
 			return nil, err
