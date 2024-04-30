@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
 
 func (s *KeeperTestSuite) TestBackRunEvent() {

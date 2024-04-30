@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v24/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
 
-	simapp "github.com/osmosis-labs/osmosis/v24/app"
-	mempool1559 "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/mempool-1559"
+	simapp "github.com/osmosis-labs/osmosis/v25/app"
+	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {
