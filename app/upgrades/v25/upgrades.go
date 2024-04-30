@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sort"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
@@ -72,7 +71,7 @@ func CreateUpgradeHandler(
 		}
 
 		// Ensure the auction module account is properly created to avoid sniping
-		err = osmoutils.CreateModuleAccount(ctx, keepers.AccountKeeper, authtypes.NewModuleAddress(auctiontypes.ModuleName))
+		err = osmoutils.CreateModuleAccountByName(ctx, keepers.AccountKeeper, auctiontypes.ModuleName)
 		if err != nil {
 			return nil, err
 		}
