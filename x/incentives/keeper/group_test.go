@@ -8,11 +8,11 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v24/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 type createGroupTestCase struct {

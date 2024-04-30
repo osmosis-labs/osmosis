@@ -3,9 +3,9 @@ package mocks
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var _ domain.Ingester = &SQSIngesterMock{}

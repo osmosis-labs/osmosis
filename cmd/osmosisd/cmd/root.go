@@ -18,9 +18,9 @@ import (
 	cometbftdb "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23" // should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v25/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
@@ -65,7 +65,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v24/app"
+	osmosis "github.com/osmosis-labs/osmosis/v25/app"
 )
 
 type AssetList struct {
