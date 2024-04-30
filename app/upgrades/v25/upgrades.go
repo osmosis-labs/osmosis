@@ -2,6 +2,9 @@ package v25
 
 import (
 	"errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,6 +70,11 @@ func CreateUpgradeHandler(
 			return nil, errors.New("unsupported chain ID")
 		}
 
+		// Ensure the auction module account is properly created to avoid snipping
+		err = osmoutils.CreateModuleAccount(ctx, keepers.AccountKeeper, authtypes.NewModuleAddress(auctiontypes.ModuleName))
+		if err != nil {
+			return nil, err
+		}
 		// update block-sdk params
 		if err := keepers.AuctionKeeper.SetParams(ctx, AuctionParams); err != nil {
 			return nil, err
