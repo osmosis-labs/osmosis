@@ -84,6 +84,12 @@ func CreateUpgradeHandler(
 		authenticatorParams.IsSmartAccountActive = false
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
 
+		// Update consensus params in order to safely enable comet
+		consensusParams, err := keepers.ConsensusParamsKeeper.Get(ctx)
+		consensusParams.Evidence.MaxAgeNumBlocks = NewMaxAgeNumBlocks
+		consensusParams.Evidence.MaxAgeDuration = NewMaxAgeDuration
+		keepers.ConsensusParamsKeeper.Set(ctx, consensusParams)
+
 		return migrations, nil
 	}
 }
