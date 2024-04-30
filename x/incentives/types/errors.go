@@ -4,7 +4,7 @@ import (
 	fmt "fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 )
 
 var (
@@ -102,4 +102,12 @@ type DuplicatePoolIDError struct {
 
 func (e DuplicatePoolIDError) Error() string {
 	return fmt.Sprintf("one or more pool IDs provided in the pool ID array contains a duplicate: %d", e.PoolIDs)
+}
+
+type NoRouteForDenomError struct {
+	Denom string
+}
+
+func (e NoRouteForDenomError) Error() string {
+	return fmt.Sprintf("denom %s does not exist as a protorev hot route, therefore, the value of rewards at time of epoch distribution will not be able to be determined", e.Denom)
 }

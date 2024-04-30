@@ -7,16 +7,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type (
 	Keeper struct {
-		storeKey storetypes.StoreKey
+		storeKey  storetypes.StoreKey
+		permAddrs map[string]authtypes.PermissionsForAddress
 
 		paramSpace paramtypes.Subspace
 
@@ -32,6 +35,7 @@ type (
 func NewKeeper(
 	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
+	maccPerms map[string][]string,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	communityPoolKeeper types.CommunityPoolKeeper,
@@ -40,9 +44,15 @@ func NewKeeper(
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
+	permAddrs := make(map[string]authtypes.PermissionsForAddress)
+	for name, perms := range maccPerms {
+		permAddrs[name] = authtypes.NewPermissionsForAddress(name, perms)
+	}
+
 	return Keeper{
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
+		permAddrs:  permAddrs,
 
 		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,

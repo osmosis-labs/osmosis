@@ -8,12 +8,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
@@ -213,6 +214,10 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
@@ -272,6 +277,11 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 
 			s.Run(tc.name, func() {
 				s.SetupTest()
+
+				// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+				// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 				// create one more account to set reward receiver as arbitrary account
 				thirdTestAcc := CreateRandomAccounts(1)
 				s.TestAccs = append(s.TestAccs, thirdTestAcc...)

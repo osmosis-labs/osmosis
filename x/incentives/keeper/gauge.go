@@ -16,9 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -125,6 +126,15 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
 	if numEpochsPaidOver == types.PerpetualNumEpochsPaidOver && !isPerpetual {
 		return 0, types.ErrZeroNumEpochsPaidOver
+	}
+
+	// Check that the coins being sent to the gauge exist as a skip hot route
+	// This is used to determine the underlying value of the rewards per user at epoch,
+	// since we don't distribute tokens values under a certain threshold.
+	// If the denom doesn't exist in the skip hot route, we would never distribute rewards
+	// from this gauge.
+	if err := k.checkIfDenomsAreDistributable(ctx, coins); err != nil {
+		return 0, err
 	}
 
 	// If the gauge has no lock, then we currently assume it is a concentrated pool
@@ -413,6 +423,10 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 // Notes: does not do token transfers since it is used internally for token transferring value within the
 // incentives module or by higher level functions that do transfer.
 func (k Keeper) addToGaugeRewards(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
+	if err := k.checkIfDenomsAreDistributable(ctx, coins); err != nil {
+		return err
+	}
+
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return err
@@ -454,6 +468,22 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 
 	if err := k.ck.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeDenom, fee)), address); err != nil {
 		return err
+	}
+	return nil
+}
+
+// checkIfDenomsAreDistributable checks if the denoms in the provided coins are registered in protorev.
+// It iterates over the coins and for each coin, it tries to get the pool for the denom pair with "uosmo".
+// If the pool does not exist, it returns an error indicating that the denom does not exist as a protorev hot route.
+// If all denoms are valid, it returns nil.
+func (k Keeper) checkIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) error {
+	for _, coin := range coins {
+		if coin.Denom != appparams.BaseCoinUnit {
+			_, err := k.prk.GetPoolForDenomPairNoOrder(ctx, coin.Denom, appparams.BaseCoinUnit)
+			if err != nil {
+				return types.NoRouteForDenomError{Denom: coin.Denom}
+			}
+		}
 	}
 	return nil
 }

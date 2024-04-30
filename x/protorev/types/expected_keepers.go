@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -59,6 +59,7 @@ type PoolManagerKeeper interface {
 		ctx sdk.Context,
 		poolId uint64,
 	) (poolmanagertypes.PoolI, error)
+	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)

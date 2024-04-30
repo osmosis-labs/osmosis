@@ -11,12 +11,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 const (

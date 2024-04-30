@@ -30,8 +30,8 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
-	downtimemodule "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/module"
-	downtimetypes "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/types"
+	downtimemodule "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/types"
 
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
@@ -64,43 +64,46 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	smartaccount "github.com/osmosis-labs/osmosis/v24/x/smart-account"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/skip-mev/block-sdk/x/auction"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v24/simulation/simtypes"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cwpoolmodule "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/module"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/ibcratelimitmodule"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v24/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v24/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	poolmanager "github.com/osmosis-labs/osmosis/v24/x/poolmanager/module"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
-	superfluid "github.com/osmosis-labs/osmosis/v24/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v24/x/twap/twapmodule"
-	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v24/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v24/x/valset-pref/valpref-module"
+	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
+	smartaccount "github.com/osmosis-labs/osmosis/v25/x/smart-account"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v25/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cwpoolmodule "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/module"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v25/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v25/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v25/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	superfluid "github.com/osmosis-labs/osmosis/v25/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v25/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v25/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v25/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -135,6 +138,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	cosmwasmpooltypes.ModuleName:             nil,
+	auctiontypes.ModuleName:                  nil,
 	smartaccounttypes.ModuleName:             nil,
 }
 
@@ -201,6 +205,7 @@ func appModules(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
+		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
 	}
 }
@@ -295,6 +300,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
+		auctiontypes.ModuleName,
 	}
 }
 

@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
 
 type RouteMetaData struct {
@@ -226,17 +226,12 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 	totalWeight := uint64(0)
 
 	for _, poolId := range route.PoolIds() {
-		pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+		poolType, err := k.poolmanagerKeeper.GetPoolType(ctx, poolId)
 		if err != nil {
 			return 0, err
 		}
 
-		// Ensure that all of the pools in the route exist and are active
-		if err := k.IsValidPool(ctx, pool); err != nil {
-			return 0, err
-		}
-
-		switch pool.GetType() {
+		switch poolType {
 		case poolmanagertypes.Balancer:
 			totalWeight += infoByPoolType.Balancer.Weight
 		case poolmanagertypes.Stableswap:
@@ -245,8 +240,13 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 			totalWeight += infoByPoolType.Concentrated.Weight
 		case poolmanagertypes.CosmWasm:
 			weight, ok := uint64(0), false
+			pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+			if err != nil {
+				return 0, err
+			}
+			poolAddrString := pool.GetAddress().String()
 			for _, weightMap := range infoByPoolType.Cosmwasm.WeightMaps {
-				if weightMap.ContractAddress == pool.GetAddress().String() {
+				if weightMap.ContractAddress == poolAddrString {
 					weight = weightMap.Weight
 					ok = true
 					break

@@ -19,8 +19,8 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
 type TxResponse struct {

@@ -9,9 +9,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -84,10 +85,13 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 	for _, tc := range tests {
 		s.SetupTest()
 
+		// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+		// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		ctx := s.Ctx
 		bankKeeper := s.App.BankKeeper
 		accountKeeper := s.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
@@ -99,7 +103,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 				"module",
 				"permission",
 			)
-			accountKeeper.SetModuleAccount(ctx, modAcc)
+			accountKeeper.SetModuleAccount(s.Ctx, modAcc)
 		}
 
 		s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
@@ -118,7 +122,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			NumEpochsPaidOver: 1,
 		}
 		// System under test.
-		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
+		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(s.Ctx), msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)
@@ -126,7 +130,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			s.Require().NoError(err)
 		}
 
-		balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
+		balanceAmount := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
 		if tc.expectErr {
 			s.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
@@ -311,14 +315,17 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 	for _, tc := range tests {
 		s.SetupTest()
 
+		// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+		// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		ctx := s.Ctx
 		bankKeeper := s.App.BankKeeper
 		accountKeeper := s.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
-		groupCreationFee := s.App.IncentivesKeeper.GetParams(ctx).GroupCreationFee
+		groupCreationFee := s.App.IncentivesKeeper.GetParams(s.Ctx).GroupCreationFee
 
 		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
@@ -341,13 +348,13 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 		s.overwriteVolumes(poolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
 
 		// System under test.
-		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(ctx), msg)
+		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(s.Ctx), msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)
 		} else {
 			s.Require().NoError(err)
-			balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
+			balanceAmount := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
 			accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds...)
 			finalAccountBalance := accountBalance

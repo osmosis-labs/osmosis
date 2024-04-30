@@ -12,12 +12,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v24/app"
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {
@@ -42,6 +42,7 @@ var (
 		NextIncentiveRecordId: 2,
 		NextPositionId:        3,
 		IncentivesAccumulatorPoolIdMigrationThreshold: 3,
+		SpreadFactorPoolIdMigrationThreshold:          4,
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -601,6 +602,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			incentiveMigrationThreshold, err := clKeeper.GetIncentivePoolIDMigrationThreshold(ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, incentiveMigrationThreshold)
+
+			// Validate spread factor migration threshold
+			spreadFactorMigrationThreshold, err := clKeeper.GetSpreadFactorPoolIDMigrationThreshold(ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.genesis.SpreadFactorPoolIdMigrationThreshold, spreadFactorMigrationThreshold)
 		})
 	}
 }
@@ -823,6 +829,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate incentive migration threshold
 			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, actualExported.IncentivesAccumulatorPoolIdMigrationThreshold)
+
+			// Validate spread factor migration threshold
+			s.Require().Equal(tc.genesis.SpreadFactorPoolIdMigrationThreshold, actualExported.SpreadFactorPoolIdMigrationThreshold)
 		})
 	}
 }

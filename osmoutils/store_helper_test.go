@@ -926,9 +926,15 @@ func (s *TestSuite) TestMustGet() {
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				for key, expectedValue := range tc.expectedGetKeyValues {
 					// System under test.
+					gasStart := s.ctx.GasMeter().GasConsumed()
 					osmoutils.MustGet(s.store, []byte(key), tc.actualResultProto)
+					gasEnd := s.ctx.GasMeter().GasConsumed()
 					// Assertions.
 					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
+
+					_, gasFlat, gasKey, gasValue, err := osmoutils.TrackGasUsedInGet(s.store, []byte(key), tc.actualResultProto)
+					s.Require().NoError(err)
+					s.Require().Equal(gasEnd-gasStart, gasFlat+gasKey+gasValue)
 				}
 			})
 		})

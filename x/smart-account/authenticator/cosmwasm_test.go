@@ -20,11 +20,11 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v24/app/params"
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/app/params"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 )
 
 type CosmwasmAuthenticatorTest struct {

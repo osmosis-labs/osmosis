@@ -11,8 +11,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
@@ -39,7 +39,7 @@ func (k Keeper) IncrementNumberOfTrades(ctx sdk.Context) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNumberOfTrades)
 
 	numberOfTrades, _ := k.GetNumberOfTrades(ctx)
-	numberOfTrades = numberOfTrades.Add(osmomath.OneInt())
+	numberOfTrades = numberOfTrades.Add(oneInt)
 
 	bz, err := numberOfTrades.Marshal()
 	if err != nil {
@@ -189,7 +189,7 @@ func (k Keeper) IncrementTradesByRoute(ctx sdk.Context, route []uint64) error {
 	key := types.GetKeyPrefixTradesByRoute(route)
 
 	trades, _ := k.GetTradesByRoute(ctx, route)
-	trades = trades.Add(osmomath.OneInt())
+	trades = trades.Add(oneInt)
 	bz, err := trades.Marshal()
 	if err != nil {
 		return err

@@ -14,9 +14,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	sdkmath "cosmossdk.io/math"
 )
@@ -29,6 +29,7 @@ var (
 // DistributionValueCache is a cache for when we calculate the minimum value
 // an underlying token must be to be distributed.
 type DistributionValueCache struct {
+	minDistrValue      sdk.Coin
 	denomToMinValueMap map[string]osmomath.Int
 }
 
@@ -624,7 +625,7 @@ func (k Keeper) distributeInternal(
 
 	// Retrieve the min value for distribution.
 	// If any distribution amount is valued less than what the param is set, it will be skipped.
-	minValueForDistr := k.GetParams(ctx).MinValueForDistribution
+	minValueForDistr := minDistrValueCache.minDistrValue
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 
@@ -926,6 +927,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	// While this isn't precise as it doesn't account for price impact, it is good enough for the sole
 	// purpose of determining if we should distribute the token or not.
 	minDistrValueCache := &DistributionValueCache{
+		minDistrValue:      k.GetParams(ctx).MinValueForDistribution,
 		denomToMinValueMap: make(map[string]osmomath.Int),
 	}
 

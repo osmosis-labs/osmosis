@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -144,6 +145,12 @@ func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom st
 
 // CreateGauge creates a gauge struct given the required params.
 func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range coins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	s.FundAcc(addr, coins)
 	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch, 0)
 	s.Require().NoError(err)
@@ -154,6 +161,12 @@ func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coi
 
 // AddToGauge adds coins to the specified gauge.
 func (s *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range coins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	addr := sdk.AccAddress([]byte("addrx---------------"))
 	s.FundAcc(addr, coins)
 	err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, addr, coins, gaugeID)
@@ -178,6 +191,12 @@ func (s *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
 		Duration:      duration,
+	}
+
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range coins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 	}
 
 	// mints coins so supply exists on chain

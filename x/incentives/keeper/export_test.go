@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 )
 
 var ByGroupQueryCondition = byGroupQueryCondition
@@ -105,4 +105,8 @@ func (k Keeper) GetNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId 
 
 func (k Keeper) SkipSpamGaugeDistribute(ctx sdk.Context, locks []*lockuptypes.PeriodLock, gauge types.Gauge, totalDistrCoins sdk.Coins, remainCoins sdk.Coins) (bool, sdk.Coins, error) {
 	return k.skipSpamGaugeDistribute(ctx, locks, gauge, totalDistrCoins, remainCoins)
+}
+
+func (k Keeper) CheckIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) error {
+	return k.checkIfDenomsAreDistributable(ctx, coins)
 }

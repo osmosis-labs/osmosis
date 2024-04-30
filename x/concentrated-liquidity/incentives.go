@@ -15,8 +15,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 // We choose 10^27 to allow sufficient buffer before the accumulator starts getting truncated again.
@@ -1156,7 +1156,7 @@ func (k Keeper) SetIncentivePoolIDMigrationThreshold(ctx sdk.Context, poolIDThre
 	store.Set(types.KeyIncentiveAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))
 }
 
-// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold.
+// GetIncentivePoolIDMigrationThreshold returns the pool ID migration threshold for incentive accumulators.
 func (k Keeper) GetIncentivePoolIDMigrationThreshold(ctx sdk.Context) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 

@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 const (
@@ -201,8 +201,8 @@ func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
-func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) osmomath.Dec {
-	return ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, spreadFactor osmomath.Dec) (osmomath.Dec, error) {
+	return ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, spreadFactor)
 }
 
 // Test helpers.
@@ -356,6 +356,10 @@ func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate 
 
 func ScaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
 	return scaleDownIncentiveAmount(incentiveAmount, scalingFactor)
+}
+
+func ScaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return scaleDownSpreadRewardAmount(incentiveAmount, scalingFactor)
 }
 
 func (k Keeper) RedepositForfeitedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {

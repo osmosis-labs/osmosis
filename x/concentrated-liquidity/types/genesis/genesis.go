@@ -1,7 +1,7 @@
 package genesis
 
 import (
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 // DefaultGenesis returns the default GenesisState for the concentrated-liquidity module.
@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 		NextIncentiveRecordId: 1,
 		// By default, the migration threshold is set to 0, which means all pools are migrated.
 		IncentivesAccumulatorPoolIdMigrationThreshold: 0,
+		SpreadFactorPoolIdMigrationThreshold:          0,
 	}
 }
 

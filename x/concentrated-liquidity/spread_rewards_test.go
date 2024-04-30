@@ -8,11 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 const (
@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 		expectedError                     bool
 	}
 
-	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))).MulDecTruncate(cl.PerUnitLiqScalingFactor)
 	defaultPoolId := uint64(1)
 	defaultInitialLiquidity := osmomath.OneDec()
 
@@ -403,6 +403,10 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 			if tc.poolSetup {
 				pool = s.PrepareConcentratedPool()
 
+				// Upscale accumulator values
+				tc.lowerTickSpreadRewardGrowthOutside = tc.lowerTickSpreadRewardGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+				tc.upperTickSpreadRewardGrowthOutside = tc.upperTickSpreadRewardGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+
 				s.initializeTick(s.Ctx, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickSpreadRewardGrowthOutside, emptyUptimeTrackers, false)
 				s.initializeTick(s.Ctx, tc.upperTick, defaultInitialLiquidity, tc.upperTickSpreadRewardGrowthOutside, emptyUptimeTrackers, true)
 				pool.SetCurrentTick(tc.currentTick)
@@ -534,6 +538,9 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 			s.AddToSpreadRewardAccumulator(pool.GetId(), initialGlobalSpreadRewardGrowth)
+
+			// Upscale accumulator values
+			tc.expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal = tc.expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal.MulDecTruncate(cl.PerUnitLiqScalingFactor)
 
 			clpool, err := s.Clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -786,6 +793,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectSpreadRewards() {
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
 
+			// Upscale accumulator values
+			tc.lowerTickSpreadRewardGrowthOutside = tc.lowerTickSpreadRewardGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+			tc.upperTickSpreadRewardGrowthOutside = tc.upperTickSpreadRewardGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+
 			s.FundAcc(validPool.GetSpreadRewardsAddress(), tc.expectedSpreadRewardsClaimed)
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -994,7 +1005,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(10))),
 		},
-		"dust reinvested: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
+		"dust: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
 			initialLiquidity: osmomath.NewDec(2),
 
 			lowerTickSpreadRewardGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, osmomath.NewInt(0))),
@@ -1010,10 +1021,8 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, osmomath.MustNewDecFromStr("6.7"))),
-			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
-			// This can be thought of as the difference between the non-truncated total amount of spread rewards and the truncated toal amount of spread rewards
-			// divided by the number of shares.
-			expectedReinvestedDustAmount: osmomath.MustNewDecFromStr("0.2"),
+			// we no longer reinvest dust, so we expect this to be thrown out
+			expectedReinvestedDustAmount: osmomath.ZeroDec(),
 		},
 		"swap occurs above the position, current tick > upper tick": {
 			initialLiquidity: osmomath.OneDec(),
@@ -1078,6 +1087,11 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
 
+			// Upscale accumulator value
+			tc.lowerTickSpreadRewardGrowthOutside = tc.lowerTickSpreadRewardGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+			tc.upperTickSpreadRewardGrowthOutside = tc.upperTickSpreadRewardGrowthOutside.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+			tc.expectedInitAccumValue = tc.expectedInitAccumValue.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+
 			// Set the position in store.
 			err := clKeeper.SetPosition(ctx, validPoolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.initialLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
 			s.Require().NoError(err)
@@ -1118,7 +1132,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 			s.Require().Equal(tc.expectedInitAccumValue, postPreparePosition.AccumValuePerShare)
 			s.Require().Equal(tc.initialLiquidity, postPreparePosition.NumShares)
 
-			expectedClaimedAmountDec := tc.expectedInitAccumValue.AmountOf(ETH).Mul(tc.initialLiquidity)
+			expectedClaimedAmountDec := tc.expectedInitAccumValue.AmountOf(ETH).QuoTruncate(cl.PerUnitLiqScalingFactor).Mul(tc.initialLiquidity)
 			expectedSpreadRewardClaimAmount := expectedClaimedAmountDec.TruncateInt()
 			s.Require().Equal(expectedSpreadRewardClaimAmount, actualSpreadRewardsClaimed.AmountOf(ETH))
 
@@ -1577,4 +1591,33 @@ func (s *KeeperTestSuite) collectSpreadRewardsAndCheckInvariance(ctx sdk.Context
 	totalSpreadRewardsCollected = spreadRewardsCollected.Add(coins...)
 	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedSpreadRewardDenoms)
 	return totalSpreadRewardsCollected
+}
+
+func (s *KeeperTestSuite) TestScaleDownSpreadRewardAmount() {
+	tests := []struct {
+		name            string
+		incentiveAmount osmomath.Int
+		scalingFactor   osmomath.Dec
+		expectedAmount  osmomath.Int
+	}{
+		{
+			name:            "PerUnitLiqScalingFactor with no remainder",
+			incentiveAmount: osmomath.MustNewDecFromStr("123456789").Mul(apptesting.PerUnitLiqScalingFactor).TruncateInt(),
+			scalingFactor:   apptesting.PerUnitLiqScalingFactor,
+			expectedAmount:  osmomath.NewInt(123456789),
+		},
+		{
+			name:            "PerUnitLiqScalingFactor with remainder",
+			incentiveAmount: osmomath.MustNewDecFromStr("123456789.123456789123456789").Mul(apptesting.PerUnitLiqScalingFactor).TruncateInt(),
+			scalingFactor:   apptesting.PerUnitLiqScalingFactor,
+			expectedAmount:  osmomath.NewInt(123456789),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			scaledAmount := cl.ScaleDownSpreadRewardAmount(test.incentiveAmount, test.scalingFactor)
+			s.Require().Equal(test.expectedAmount, scaledAmount, "scaledAmount does not match")
+		})
+	}
 }
