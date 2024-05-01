@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
 	clmodule "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
@@ -99,7 +100,7 @@ var (
 func accumRecordWithDefinedValues(accumRecord accum.Record, numShares osmomath.Dec, initAccumValue, unclaimedRewards osmomath.Int) accum.Record {
 	accumRecord.NumShares = numShares
 	accumRecord.AccumValuePerShare = sdk.NewDecCoins(sdk.NewDecCoin("uion", initAccumValue))
-	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin("uosmo", unclaimedRewards))
+	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin(appparams.BaseCoinUnit, unclaimedRewards))
 	return accumRecord
 }
 

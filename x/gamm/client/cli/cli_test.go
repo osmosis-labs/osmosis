@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)
@@ -335,7 +337,7 @@ func TestGetCmdSpotPrice(t *testing.T) {
 			Cmd: "1 uosmo ibc/111",
 			ExpectedQuery: &types.QuerySpotPriceRequest{
 				PoolId:          1,
-				BaseAssetDenom:  "uosmo",
+				BaseAssetDenom:  appparams.BaseCoinUnit,
 				QuoteAssetDenom: "ibc/111",
 			},
 		},

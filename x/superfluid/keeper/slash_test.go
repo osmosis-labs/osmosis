@@ -5,6 +5,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
@@ -238,7 +239,7 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
-			clPool, concentratedLockId, positionId := s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", apptesting.USDC)
+			clPool, concentratedLockId, positionId := s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(appparams.BaseCoinUnit, apptesting.USDC)
 			clPoolId := clPool.GetId()
 
 			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)

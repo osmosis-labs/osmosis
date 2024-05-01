@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
@@ -25,7 +26,7 @@ var (
 
 	defaultDaiAmount, _ = osmomath.NewIntFromString("73000000000000000000000")
 	defaultDenom0mount  = osmomath.NewInt(10000000000)
-	desiredDenom0       = "uosmo"
+	desiredDenom0       = appparams.BaseCoinUnit
 	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
 	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
 	usdcCoin            = sdk.NewCoin(USDCIBCDenom, defaultDaiAmount)
@@ -398,7 +399,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			overwriteBalancerDenom0: "uosmo",
+			overwriteBalancerDenom0: appparams.BaseCoinUnit,
 			expectErr:               true,
 		},
 		{
@@ -409,7 +410,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			overwriteBalancerDenom1: "uosmo",
+			overwriteBalancerDenom1: appparams.BaseCoinUnit,
 			expectErr:               true,
 		},
 		{
