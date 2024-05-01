@@ -29,7 +29,7 @@
         "dex",
         "staking",
         "osmosis-main",
-        "osmosis-price:ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58:314"
+        "osmosis-price:uion:1"
       ]
     },
     {
@@ -56,7 +56,7 @@
       "keywords": [
         "memecoin",
         "osmosis-main",
-        "osmosis-price:uosmo:1"
+        "osmosis-price:ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58:367"
       ]
     },
     {
@@ -99,7 +99,7 @@
       },
       "keywords": [
         "osmosis-main",
-        "osmosis-price:uosmo:308"
+        "osmosis-price:ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58:367"
       ]
     },
     {
@@ -510,7 +510,7 @@
       "description": "The native token of Chain4Energy",
       "denom_units": [
         {
-          "denom": "ibc/E3D323CB6F427C49E56F913C853A416F6B71BAA9B0164625AD0203266F92B3ED",
+          "denom": "ibc/539BC2B6E70117D220834D6DF8E27307655D1325C0CADF7E3AF90AB00D9F8D69",
           "exponent": 0,
           "aliases": [
             "uc4e"
@@ -522,7 +522,7 @@
         }
       ],
       "type_asset": "ics20",
-      "base": "ibc/E3D323CB6F427C49E56F913C853A416F6B71BAA9B0164625AD0203266F92B3ED",
+      "base": "ibc/539BC2B6E70117D220834D6DF8E27307655D1325C0CADF7E3AF90AB00D9F8D69",
       "name": "Chain4Energy Testnet",
       "display": "c4e",
       "symbol": "C4E",
@@ -532,11 +532,11 @@
           "counterparty": {
             "chain_name": "chain4energytestnet",
             "base_denom": "uc4e",
-            "channel_id": "channel-0"
+            "channel_id": "channel-5"
           },
           "chain": {
-            "channel_id": "channel-111",
-            "path": "transfer/channel-111/uc4e"
+            "channel_id": "channel-7735",
+            "path": "transfer/channel-7735/uc4e"
           }
         }
       ],
@@ -544,8 +544,7 @@
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/testnets/chain4energytestnet/images/c4e.png"
       },
       "keywords": [
-        "osmosis-main",
-        "osmosis-price:ibc/6F34E1BD664C36CE49ACC28E60D62559A5F96C4F9A6CCE4FC5A67B2852E24CFE:40"
+        "osmosis-main"
       ]
     },
     {
@@ -596,7 +595,7 @@
       "description": "The native staking token of the Xion network.",
       "denom_units": [
         {
-          "denom": "ibc/3642669AD14386D3E38F43F30CFCA859B3E8A05BF6BD6A23DEBD2115AD1325E9",
+          "denom": "ibc/5C274155106FEB0C093F76A12BB67222E479E1EBE043F319CE4463E54F7A357C",
           "exponent": 0,
           "aliases": [
             "microxion",
@@ -612,7 +611,7 @@
         }
       ],
       "type_asset": "ics20",
-      "base": "ibc/3642669AD14386D3E38F43F30CFCA859B3E8A05BF6BD6A23DEBD2115AD1325E9",
+      "base": "ibc/5C274155106FEB0C093F76A12BB67222E479E1EBE043F319CE4463E54F7A357C",
       "name": "Xion Testnet",
       "display": "XION",
       "symbol": "XION",
@@ -622,11 +621,11 @@
           "counterparty": {
             "chain_name": "xiontestnet",
             "base_denom": "uxion",
-            "channel_id": "channel-12"
+            "channel_id": "channel-490"
           },
           "chain": {
-            "channel_id": "channel-4410",
-            "path": "transfer/channel-4410/uxion"
+            "channel_id": "channel-6668",
+            "path": "transfer/channel-6668/uxion"
           }
         }
       ],
@@ -634,9 +633,7 @@
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/xion/images/burnt-round.png"
       },
       "keywords": [
-        "osmosis-main",
-        "osmosis-info",
-        "osmosis-price:ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58:333"
+        "osmosis-main"
       ]
     },
     {
