@@ -29,6 +29,7 @@ func (k Keeper) GetIsSmartAccountActive(ctx sdk.Context) bool {
 		var isSmartAccountActiveValue bool
 		err := json.Unmarshal(isSmartAccountActiveBz, &isSmartAccountActiveValue)
 		if err != nil {
+			k.Logger(ctx).Error("failed to unmarshal isSmartAccountActive", "error", err)
 			isSmartAccountActiveValue = false
 		}
 		k.isSmartAccountActiveVal = isSmartAccountActiveValue
