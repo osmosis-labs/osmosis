@@ -1,9 +1,13 @@
 package keeper
 
 import (
+	"bytes"
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 // GetParams get all parameters as types.Params
@@ -15,4 +19,17 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams set the params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+func (k Keeper) GetIsSmartAccountActive(ctx sdk.Context) bool {
+	isSmartAccountActiveBz := k.paramSpace.GetRaw(ctx, smartaccounttypes.KeyIsSmartAccountActive)
+	if !bytes.Equal(isSmartAccountActiveBz, k.isSmartAccountActiveBz) {
+		var isSmartAccountActiveValue bool
+		err := json.Unmarshal(isSmartAccountActiveBz, &isSmartAccountActiveValue)
+		if err != nil {
+			isSmartAccountActiveValue = false
+		}
+		k.isSmartAccountActiveVal = isSmartAccountActiveValue
+	}
+	return k.isSmartAccountActiveVal
 }
