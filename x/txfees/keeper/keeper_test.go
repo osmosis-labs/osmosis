@@ -12,6 +12,7 @@ import (
 	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
@@ -58,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		s.FundAcc(acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
-				sdk.NewCoin("uosmo", osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
+				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
 				sdk.NewCoin("uion", osmomath.NewInt(10000000)),
 				sdk.NewCoin("atom", osmomath.NewInt(10000000)),
 				sdk.NewCoin("ust", osmomath.NewInt(10000000)),
