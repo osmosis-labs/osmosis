@@ -33,6 +33,7 @@ func (k Keeper) GetIsSmartAccountActive(ctx sdk.Context) bool {
 			isSmartAccountActiveValue = false
 		}
 		k.isSmartAccountActiveVal = isSmartAccountActiveValue
+		k.isSmartAccountActiveBz = isSmartAccountActiveBz
 	}
 	return k.isSmartAccountActiveVal
 }
