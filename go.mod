@@ -2,7 +2,7 @@ module github.com/osmosis-labs/osmosis/v25
 
 go 1.21.4
 
-toolchain go1.22.0
+toolchain go1.21.6
 
 require (
 	cosmossdk.io/api v0.3.1
