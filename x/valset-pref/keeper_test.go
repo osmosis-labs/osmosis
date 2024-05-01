@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
 
-	valPref "github.com/osmosis-labs/osmosis/v24/x/valset-pref"
+	valPref "github.com/osmosis-labs/osmosis/v25/x/valset-pref"
 )
 
 type KeeperTestSuite struct {

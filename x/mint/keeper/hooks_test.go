@@ -8,9 +8,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	osmoapp "github.com/osmosis-labs/osmosis/v24/app"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

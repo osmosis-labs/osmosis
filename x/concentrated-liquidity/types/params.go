@@ -9,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 // Parameter store keys.

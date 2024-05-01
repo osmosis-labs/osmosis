@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/app"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -22,9 +22,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v24/app/params"
-	"github.com/osmosis-labs/osmosis/v24/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/tests/osmosisibctesting"
 )
 
 type AuthenticatorSuite struct {

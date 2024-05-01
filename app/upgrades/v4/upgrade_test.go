@@ -11,13 +11,13 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
-	v4 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v4"
+	"github.com/osmosis-labs/osmosis/v25/app"
+	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 type UpgradeTestSuite struct {

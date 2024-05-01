@@ -9,10 +9,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	mempool1559 "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v24/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
