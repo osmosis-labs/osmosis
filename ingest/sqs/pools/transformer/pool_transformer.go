@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -46,7 +47,7 @@ type denomRoutingInfo struct {
 }
 
 const (
-	UOSMO          = "uosmo"
+	UOSMO          = appparams.BaseCoinUnit
 	uosmoPrecision = 6
 
 	noTokenPrecisionErrorFmtStr   = "error getting token precision %s"
@@ -72,7 +73,7 @@ var (
 	oneOsmoInt           = osmomath.NewInt(oneOSMO)
 	oneOsmoBigDec        = osmomath.NewBigDec(oneOSMO)
 
-	oneOsmoCoin = sdk.NewCoin(UOSMO, oneOsmoInt)
+	oneOsmoCoin = sdk.NewCoin(appparams.BaseCoinUnit, oneOsmoInt)
 )
 
 // These are the routes that we use for pricing certain tokens against OSMO

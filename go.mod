@@ -31,7 +31,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240423073233-246239a8f662
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240430090100-86b41c48fe1b
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240430173456-105713b242f8
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240423073233-246239a8f662
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240423073233-246239a8f662
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea
@@ -386,16 +386,16 @@ replace (
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
-	// Using branch osmo-v24/v0.37.4
-	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v24-osmo-3
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-3
+	// Using branch osmo-v25/v0.37.4
+	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-1
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2384e2b96adf19abed82f7320da9ab314bcfba98
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac

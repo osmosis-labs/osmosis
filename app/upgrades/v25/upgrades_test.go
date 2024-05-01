@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -54,7 +57,13 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
-	// Check auction params
+	// check auction module account
+	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, auctiontypes.ModuleName)
+	s.Require().NotNil(acc)
+	s.Require().Equal(auctiontypes.ModuleName, acc.GetName())
+	s.Require().Equal(authtypes.NewModuleAddress(auctiontypes.ModuleName), acc.GetAddress())
+
+	// check auction params
 	params, err := s.App.AuctionKeeper.GetParams(s.Ctx)
 	s.Require().NoError(err)
 
