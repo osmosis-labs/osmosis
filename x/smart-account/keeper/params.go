@@ -20,6 +20,9 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
+// GetIsSmartAccountActive returns the value of the isSmartAccountActive parameter.
+// If the value has not been set, it will return false.
+// If there is an error unmarshalling the value, it will return false.
 func (k Keeper) GetIsSmartAccountActive(ctx sdk.Context) bool {
 	isSmartAccountActiveBz := k.paramSpace.GetRaw(ctx, types.KeyIsSmartAccountActive)
 	if !bytes.Equal(isSmartAccountActiveBz, k.isSmartAccountActiveBz) {
