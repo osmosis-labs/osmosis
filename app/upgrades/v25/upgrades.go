@@ -92,7 +92,7 @@ func CreateUpgradeHandler(
 		authenticatorParams.IsSmartAccountActive = false
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
 
-		// Update consensus params in order to safely enable comet
+		// Update consensus params in order to safely enable comet pruning
 		consensusParams, err := keepers.ConsensusParamsKeeper.Get(ctx)
 		if err != nil {
 			return nil, err
