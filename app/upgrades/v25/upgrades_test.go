@@ -1,10 +1,11 @@
 package v25_test
 
 import (
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 	"testing"
 	"time"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -44,6 +45,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards := s.PrepareSpreadRewardsMigrationTestEnv()
 	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
+	// Check consensus params before upgrade
+	consParamsPre, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
+	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
+
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
@@ -60,7 +67,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	params, err := s.App.AuctionKeeper.GetParams(s.Ctx)
 	s.Require().NoError(err)
 
-	// check auction params
+	// Check auction params
 	s.Require().Equal(params.MaxBundleSize, v25.AuctionParams.MaxBundleSize)
 	s.Require().Equal(params.ReserveFee.Denom, v25.AuctionParams.ReserveFee.Denom)
 	s.Require().Equal(params.ReserveFee.Amount.Int64(), v25.AuctionParams.ReserveFee.Amount.Int64())
@@ -69,6 +76,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(params.EscrowAccountAddress, v25.AuctionParams.EscrowAccountAddress)
 	s.Require().Equal(params.FrontRunningProtection, v25.AuctionParams.FrontRunningProtection)
 	s.Require().Equal(params.ProposerFee, v25.AuctionParams.ProposerFee)
+
+	// Check consensus params after upgrade
+	consParamsPost, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(consParamsPost.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
+	s.Require().Equal(consParamsPost.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
 
 	s.ExecuteSpreadRewardsMigrationTest(oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards)
 	s.executeMissedBlocksCounterTest(preMigrationSigningInfo)
