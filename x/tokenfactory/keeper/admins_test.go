@@ -6,7 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestAdminMsgs() {
@@ -133,7 +134,7 @@ func (s *KeeperTestSuite) TestMintDenom() {
 			desc: "error: try minting non-tokenfactory denom",
 			mintMsg: *types.NewMsgMintTo(
 				s.TestAccs[0].String(),
-				sdk.NewInt64Coin("uosmo", 10),
+				sdk.NewInt64Coin(appparams.BaseCoinUnit, 10),
 				s.TestAccs[1].String(),
 			),
 			expectPass: false,
@@ -230,7 +231,7 @@ func (s *KeeperTestSuite) TestBurnDenom() {
 			desc: "fail case - burn non-tokenfactory denom",
 			burnMsg: *types.NewMsgBurnFrom(
 				s.TestAccs[0].String(),
-				sdk.NewInt64Coin("uosmo", 10),
+				sdk.NewInt64Coin(appparams.BaseCoinUnit, 10),
 				moduleAdress.String(),
 			),
 			expectPass: false,
@@ -442,12 +443,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    s.defaultDenom,
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
@@ -463,12 +464,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    fmt.Sprintf("factory/%s/litecoin", s.TestAccs[0].String()),
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
@@ -480,7 +481,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 				Description: "yeehaw",
 				DenomUnits: []*banktypes.DenomUnit{
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 0,
 					},
 					{
@@ -488,7 +489,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 						Exponent: 6,
 					},
 				},
-				Base:    "uosmo",
+				Base:    appparams.BaseCoinUnit,
 				Display: "uosmoo",
 				Name:    "OSMO",
 				Symbol:  "OSMO",
@@ -505,12 +506,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    s.defaultDenom,
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
@@ -527,7 +528,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 					},
 				},
 				Base:    s.defaultDenom,
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),

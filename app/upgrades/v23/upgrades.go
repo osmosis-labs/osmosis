@@ -9,12 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v24/app/keepers"
-	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 const (
@@ -94,7 +94,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 
 	// Migrate concentrated pools
 	for _, poolId := range poolIDsToMigrate {
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolId); err != nil {
+		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, poolId); err != nil {
 			return err
 		}
 	}
@@ -113,7 +113,7 @@ func migrateAllTestnetPools(ctx sdk.Context, concentratedKeeper concentratedliqu
 
 	// Migrate each pool
 	for _, pool := range pools {
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
+		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
 			return err
 		}
 	}

@@ -3,10 +3,14 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
@@ -98,6 +102,25 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 			s.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestForceTransferMsg() {
+	// Create a denom
+	s.CreateDefaultDenom()
+
+	s.Run(fmt.Sprintf("test force transfer"), func() {
+		mintAmt := sdk.NewInt64Coin(s.defaultDenom, 10)
+
+		_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), mintAmt))
+
+		govModAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName)
+
+		err = s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], govModAcc.GetAddress(), sdk.NewCoins(mintAmt))
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.ForceTransfer(s.Ctx, types.NewMsgForceTransfer(s.TestAccs[0].String(), mintAmt, govModAcc.GetAddress().String(), s.TestAccs[1].String()))
+		s.Require().ErrorContains(err, "send from module acc not available")
+	})
 }
 
 // TestCreateDenomMsg tests TypeMsgCreateDenom message is emitted on a successful denom creation
@@ -217,12 +240,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    s.defaultDenom,
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
@@ -239,12 +262,12 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    fmt.Sprintf("factory/%s/litecoin", s.TestAccs[0].String()),
-				Display: "uosmo",
+				Display: appparams.BaseCoinUnit,
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),

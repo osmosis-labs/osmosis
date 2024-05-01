@@ -16,10 +16,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -119,11 +120,11 @@ func (s *KeeperTestSuite) TestGetProportions() {
 		},
 		{
 			name:       "54617981 * .131/.273osmomath.NewInt(.62",
-			mintedCoin: sdk.NewCoin("uosmo", osmomath.NewInt(54617981)),
+			mintedCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(54617981)),
 			ratio:      complexRatioDec, // .131/.273
 			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 			// Ref: https://github.com/osmosis-osmomath.NewInt(s/issues/1917
-			expectedCoin: sdk.NewCoin("uosmo", osmomath.NewInt(54617981).ToLegacyDec().Mul(complexRatioDec).TruncateInt()),
+			expectedCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(54617981).ToLegacyDec().Mul(complexRatioDec).TruncateInt()),
 		},
 		{
 			name:         "1 * 1 = 1",

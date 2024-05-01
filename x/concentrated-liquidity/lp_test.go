@@ -9,11 +9,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	types "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	clmodel "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
@@ -359,6 +359,10 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.validatePositionUpdate(s.Ctx, positionId, expectedLiquidityCreated)
 
 			s.validatePositionSpreadRewardAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
+
+			// Upscale accumulator values
+			tc.expectedSpreadRewardGrowthOutsideLower = tc.expectedSpreadRewardGrowthOutsideLower.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+			tc.expectedSpreadRewardGrowthOutsideUpper = tc.expectedSpreadRewardGrowthOutsideUpper.MulDecTruncate(cl.PerUnitLiqScalingFactor)
 
 			// Check tick state
 			s.validateTickUpdates(tc.poolId, tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedSpreadRewardGrowthOutsideLower, tc.expectedSpreadRewardGrowthOutsideUpper)

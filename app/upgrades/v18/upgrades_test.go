@@ -14,13 +14,14 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	v17 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	v17 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v17"
 
-	gammmigration "github.com/osmosis-labs/osmosis/v24/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
 
 type UpgradeTestSuite struct {
@@ -247,7 +248,7 @@ func (s *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 	s.App.GAMMKeeper.SetMigrationRecords(s.Ctx, migrationInfo)
 
 	// add new coins to the CL pool gauge so that it would be distributed after epoch ends then trigger panic
-	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000)))
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000)))
 	gagueId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochInfo.Duration)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gagueId)

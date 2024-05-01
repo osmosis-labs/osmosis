@@ -13,9 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/testutils"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 type AggregatedAuthenticatorsTest struct {

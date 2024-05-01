@@ -15,12 +15,13 @@ import (
 
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
-	"github.com/osmosis-labs/osmosis/v24/app"
-	"github.com/osmosis-labs/osmosis/v24/app/params"
+	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v25/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 type BaseAuthenticatorSuite struct {
@@ -100,7 +101,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 
 func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sdk.Msg, signers []cryptotypes.PrivKey, selectedAuthenticators []uint64) (sdk.Tx, error) {
 	txconfig := app.MakeEncodingConfig().TxConfig
-	feeCoins := sdk.Coins{sdk.NewInt64Coin("uosmo", 2500)}
+	feeCoins := sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 2500)}
 	var accNums []uint64
 	var accSeqs []uint64
 

@@ -4,7 +4,7 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolstransformer "github.com/osmosis-labs/osmosis/v24/ingest/sqs/pools/transformer"
+	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 )
 
 var (

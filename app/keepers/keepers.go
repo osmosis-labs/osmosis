@@ -42,17 +42,17 @@ import (
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-	downtimedetector "github.com/osmosis-labs/osmosis/v24/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v24/x/downtime-detector/types"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v24/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	downtimedetector "github.com/osmosis-labs/osmosis/v25/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -78,41 +78,44 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
-	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v24/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v24/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v24/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v24/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v24/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v24/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v24/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v24/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v24/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
-	valsetpref "github.com/osmosis-labs/osmosis/v24/x/valset-pref"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
+	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v25/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v25/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v25/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v25/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v25/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v25/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v25/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	valsetpref "github.com/osmosis-labs/osmosis/v25/x/valset-pref"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+
+	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -183,6 +186,9 @@ type AppKeepers struct {
 	Ics20WasmHooks            *ibchooks.WasmHooks
 	HooksICS4Wrapper          ibchooks.ICS4Middleware
 	PacketForwardKeeper       *packetforwardkeeper.Keeper
+
+	// BlockSDK
+	AuctionKeeper *auctionkeeper.Keeper
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -518,6 +524,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
+		maccPerms,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
@@ -531,6 +538,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.LockupKeeper,
 	)
+
+	// initialize the auction keeper
+	auctionKeeper := auctionkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[auctiontypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.StakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	appKeepers.AuctionKeeper = &auctionKeeper
 
 	appKeepers.ValidatorSetPreferenceKeeper = &validatorSetPreferenceKeeper
 
@@ -783,6 +802,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 	paramsKeeper.Subspace(smartaccounttypes.ModuleName).WithKeyTable(smartaccounttypes.ParamKeyTable())
 	paramsKeeper.Subspace(txfeestypes.ModuleName)
+	paramsKeeper.Subspace(auctiontypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -905,6 +925,7 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
+		auctiontypes.StoreKey,
 		smartaccounttypes.StoreKey,
 	}
 }

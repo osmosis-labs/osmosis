@@ -10,8 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	types "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types/genesis"
+	types "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types/genesis"
 )
 
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
@@ -105,6 +105,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.setTotalLiquidity(ctx, totalLiquidity)
 
 	k.SetIncentivePoolIDMigrationThreshold(ctx, genState.IncentivesAccumulatorPoolIdMigrationThreshold)
+	k.SetSpreadFactorPoolIDMigrationThreshold(ctx, genState.SpreadFactorPoolIdMigrationThreshold)
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
@@ -238,6 +239,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		panic(err)
 	}
 
+	// Get the spread factor pool ID migration threshold
+	spreadFactorPoolIdMigrationThreshold, err := k.GetSpreadFactorPoolIDMigrationThreshold(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &genesis.GenesisState{
 		Params:                k.GetParams(ctx),
 		PoolData:              poolData,
@@ -245,6 +252,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		NextPositionId:        k.GetNextPositionId(ctx),
 		NextIncentiveRecordId: k.GetNextIncentiveRecordId(ctx),
 		IncentivesAccumulatorPoolIdMigrationThreshold: incentivesAccumulatorPoolIDMigrationThreshold,
+		SpreadFactorPoolIdMigrationThreshold:          spreadFactorPoolIdMigrationThreshold,
 	}
 }
 

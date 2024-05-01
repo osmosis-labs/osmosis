@@ -10,18 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v24/app"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v24/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v25/app"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v25/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 )
 
 var (
 	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
 		Params: types.Params{
-			MintedDenom: "uosmo",
+			MintedDenom: appparams.BaseCoinUnit,
 		},
 		LockableDurations: []time.Duration{
 			time.Second,

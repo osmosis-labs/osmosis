@@ -8,13 +8,13 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
-	"github.com/osmosis-labs/osmosis/v24/app/keepers"
-	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
 const (
@@ -135,7 +135,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 			continue
 		}
 
-		if err := concentratedKeeper.MigrateAccumulatorToScalingFactor(ctx, poolID); err != nil {
+		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, poolID); err != nil {
 			return err
 		}
 	}

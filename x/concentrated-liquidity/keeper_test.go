@@ -13,16 +13,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
 
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 )
 
 var (
@@ -388,9 +388,12 @@ func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickInde
 // AddToSpreadRewardAccumulator adds the given fee to pool by updating
 // the internal per-pool accumulator that tracks fee growth per one unit of
 // liquidity.
+//
+// NOTE: This method takes the unscaled fee amount and scales it by the liquidity scaling factor.
 func (s *KeeperTestSuite) AddToSpreadRewardAccumulator(poolId uint64, feeUpdate sdk.DecCoin) {
 	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
+	feeUpdate.Amount = feeUpdate.Amount.MulTruncate((cl.PerUnitLiqScalingFactor))
 	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 }
 

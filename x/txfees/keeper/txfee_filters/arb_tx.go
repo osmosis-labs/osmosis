@@ -7,8 +7,8 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

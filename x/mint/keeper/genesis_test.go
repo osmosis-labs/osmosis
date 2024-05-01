@@ -6,14 +6,15 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/mint/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(
 	types.NewMinter(osmomath.ZeroDec()),
 	types.NewParams(
-		"uosmo",                       // denom
+		appparams.BaseCoinUnit,        // denom
 		osmomath.NewDec(200),          // epoch provisions
 		"year",                        // epoch identifier
 		osmomath.NewDecWithPrec(5, 1), // reduction factor
@@ -76,7 +77,7 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 		},
 		"custom genesis": {
 			mintGenesis: customGenesis,
-			mintDenom:   "uosmo",
+			mintDenom:   appparams.BaseCoinUnit,
 
 			expectedEpochProvisions:             osmomath.NewDec(200),
 			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),

@@ -84,3 +84,22 @@ func CreateModuleAccount(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress)
 	ak.SetAccount(ctx, acc)
 	return nil
 }
+
+// CreateModuleAccountByName creates a module account at the provided name
+func CreateModuleAccountByName(ctx sdk.Context, ak AccountKeeper, name string) error {
+	addr := authtypes.NewModuleAddress(name)
+	err := CanCreateModuleAccountAtAddr(ctx, ak, addr)
+	if err != nil {
+		return err
+	}
+
+	acc := ak.NewAccount(
+		ctx,
+		authtypes.NewModuleAccount(
+			authtypes.NewBaseAccountWithAddress(addr),
+			name,
+		),
+	)
+	ak.SetAccount(ctx, acc)
+	return nil
+}

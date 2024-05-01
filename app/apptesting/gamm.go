@@ -4,23 +4,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammkeeper "github.com/osmosis-labs/osmosis/v24/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	gammkeeper "github.com/osmosis-labs/osmosis/v25/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 const (
 	BAR   = "bar"
 	BAZ   = "baz"
 	FOO   = "foo"
-	UOSMO = "uosmo"
 	STAKE = "stake"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-	sdk.NewCoin(UOSMO, osmomath.NewInt(10000000000)),
+	sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(FOO, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(BAR, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(BAZ, osmomath.NewInt(10000000000)),
@@ -41,7 +41,7 @@ var DefaultPoolAssets = []balancer.PoolAsset{
 	},
 	{
 		Weight: osmomath.NewInt(400),
-		Token:  sdk.NewCoin(UOSMO, osmomath.NewInt(5000000)),
+		Token:  sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(5000000)),
 	},
 }
 
@@ -161,7 +161,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 // PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
 func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset, params balancer.PoolParams) uint64 {
 	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.NewCoins(sdk.NewCoin(UOSMO, osmomath.NewInt(10000000000)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)))
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}

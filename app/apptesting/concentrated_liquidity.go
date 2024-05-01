@@ -6,12 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	clmath "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
 )
 
 type ConcentratedKeeperTestHelper struct {
@@ -72,8 +73,9 @@ var (
 		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 		return osmomath.BigDecFromDec(curSqrtPrice)
 	}()
+	PerUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
 
-	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(50)))
+	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoinFromDec("foo", osmomath.NewDec(50).MulTruncate(PerUnitLiqScalingFactor)))
 
 	DefaultCoinAmount = osmomath.NewInt(1000000000000000000)
 
@@ -912,7 +914,7 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
-	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
+	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, appparams.BaseCoinUnit, STAKE, WBTC)
 	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
 }
 

@@ -14,7 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
 var _ baseapp.StreamingService = (*sqsStreamingService)(nil)

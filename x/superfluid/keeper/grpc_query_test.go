@@ -8,8 +8,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestGRPCParams() {
@@ -167,8 +168,8 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 		)))
-		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
-		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin(appparams.BaseCoinUnit, expectAmount0.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin(appparams.BaseCoinUnit, expectAmount1.RoundInt())))
 	}
 
 	// for each validator denom pair, make sure they have 1 delegations
@@ -280,7 +281,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 
 	// Set staking parameters (needed since stake is not a valid quote denom).
 	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	stakingParams.BondDenom = "uosmo"
+	stakingParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 	coins := sdk.NewCoins(sdk.NewCoin("token0", osmomath.NewInt(1000000000000)), sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), osmomath.NewInt(1000000000000)))
@@ -461,10 +462,10 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 		s.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
-			sdk.NewInt64Coin("uosmo", 18000000),
+			sdk.NewInt64Coin(appparams.BaseCoinUnit, 18000000),
 		)))
 
-		total_osmo_equivalent := sdk.NewCoin("uosmo", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
+		total_osmo_equivalent := sdk.NewCoin(appparams.BaseCoinUnit, expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
 
 		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
 	}

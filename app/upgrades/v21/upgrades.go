@@ -14,19 +14,20 @@ import (
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v24/app/keepers"
-	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v24/x/tokenfactory/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
 
 	// SDK v47 modules
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -149,7 +150,7 @@ func CreateUpgradeHandler(
 
 		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
-		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)))
+		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(5000000000)))
 		govParams.MinInitialDepositRatio = "0.250000000000000000"
 		err = keepers.GovKeeper.SetParams(ctx, govParams)
 		if err != nil {

@@ -13,10 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -361,7 +362,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 			s.Ctx = s.Ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 			gasLimit := uint64(500000)
-			txFee := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000)))
+			txFee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000)))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			signerData := authsigning.SignerData{
@@ -525,7 +526,7 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 					{
 						PoolId:        22,
 						TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-						TokenInDenom:  "uosmo",
+						TokenInDenom:  appparams.BaseCoinUnit,
 					},
 				},
 			},

@@ -1,10 +1,12 @@
 package poolmanager
 
 import (
+	"sync"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue
@@ -20,6 +22,7 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 // outside of the _test.go files.
 func (k *Keeper) SetPoolRoutesUnsafe(routes map[types.PoolType]types.PoolModuleI) {
 	k.routes = routes
+	k.cachedPoolModules = &sync.Map{}
 }
 
 // SetPoolModulesUnsafe sets the given modules to the poolmanager keeper.
@@ -27,6 +30,7 @@ func (k *Keeper) SetPoolRoutesUnsafe(routes map[types.PoolType]types.PoolModuleI
 // outside of the _test.go files.
 func (k *Keeper) SetPoolModulesUnsafe(poolModules []types.PoolModuleI) {
 	k.poolModules = poolModules
+	k.cachedPoolModules = &sync.Map{}
 }
 
 func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {

@@ -11,17 +11,18 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
-	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/initialization"
+	clmath "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
 
 // Note: do not use chain B in this test as it has taker fee set.
@@ -36,7 +37,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 
 	var (
 		expectedDenom0       = "stake"
-		expectedDenom1       = "uosmo"
+		expectedDenom1       = appparams.BaseCoinUnit
 		expectedTickspacing  = uint64(100)
 		expectedSpreadFactor = "0.001000000000000000"
 	)
@@ -135,7 +136,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		denom0                 = "uion"
-		denom1                 = "uosmo"
+		denom1                 = appparams.BaseCoinUnit
 		tickSpacing     uint64 = 100
 		spreadFactor           = "0.001" // 0.1%
 		spreadFactorDec        = osmomath.MustNewDecFromStr("0.001")
@@ -325,16 +326,16 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Determine forfeited dust amount
 	forfeitedDustAmt := spreadRewardsUncollectedAddress1Position1_Swap1.Sub(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateDec())
-	forfeitedDust := sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", forfeitedDustAmt))
+	forfeitedDust := sdk.NewDecCoins(sdk.NewDecCoinFromDec(appparams.BaseCoinUnit, forfeitedDustAmt))
 	forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalLiquidity)
 
 	// Add forfeited dust back to the global spread reward growth
-	spreadRewardGrowthGlobal.AddMut(forfeitedDustPerShare.AmountOf("uosmo"))
+	spreadRewardGrowthGlobal.AddMut(forfeitedDustPerShare.AmountOf(appparams.BaseCoinUnit))
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uosmo").Add(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
-		addr1BalancesAfter.AmountOf("uosmo").String(),
+		addr1BalancesBefore.AmountOf(appparams.BaseCoinUnit).Add(spreadRewardsUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
+		addr1BalancesAfter.AmountOf(appparams.BaseCoinUnit).String(),
 	)
 
 	// Swap 2
@@ -447,8 +448,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uosmo").Add(spreadRewardsUncollectedAddress1Position1_Swap2.TruncateInt()),
-		addr1BalancesAfter.AmountOf("uosmo"),
+		addr1BalancesBefore.AmountOf(appparams.BaseCoinUnit).Add(spreadRewardsUncollectedAddress1Position1_Swap2.TruncateInt()),
+		addr1BalancesAfter.AmountOf(appparams.BaseCoinUnit),
 	)
 
 	// Assert that address3 position2 earned rewards from first and second swaps
@@ -481,8 +482,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr3BalancesBefore.AmountOf("uosmo").Add(totalUncollectedSpreadRewardsAddress3Position2.TruncateInt()),
-		addr3BalancesAfter.AmountOf("uosmo"),
+		addr3BalancesBefore.AmountOf(appparams.BaseCoinUnit).Add(totalUncollectedSpreadRewardsAddress3Position2.TruncateInt()),
+		addr3BalancesAfter.AmountOf(appparams.BaseCoinUnit),
 	)
 
 	// Swap 3
@@ -681,7 +682,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	var (
 		denom0              = "uion"
-		denom1              = "uosmo"
+		denom1              = appparams.BaseCoinUnit
 		tickSpacing  uint64 = 100
 		spreadFactor        = "0.001" // 0.1%
 	)
@@ -777,7 +778,7 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 		s.Require().True(balancesAfter.AmountOf("uion").Equal(balancesBefore.AmountOf("uion")))
 	}
 	if assertUosmoBalanceIsConstant {
-		s.Require().True(balancesAfter.AmountOf("uosmo").Equal(balancesBefore.AmountOf("uosmo")))
+		s.Require().True(balancesAfter.AmountOf(appparams.BaseCoinUnit).Equal(balancesBefore.AmountOf(appparams.BaseCoinUnit)))
 	}
 }
 
