@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 // GetParams get all parameters as types.Params
@@ -22,7 +21,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 func (k Keeper) GetIsSmartAccountActive(ctx sdk.Context) bool {
-	isSmartAccountActiveBz := k.paramSpace.GetRaw(ctx, smartaccounttypes.KeyIsSmartAccountActive)
+	isSmartAccountActiveBz := k.paramSpace.GetRaw(ctx, types.KeyIsSmartAccountActive)
 	if !bytes.Equal(isSmartAccountActiveBz, k.isSmartAccountActiveBz) {
 		var isSmartAccountActiveValue bool
 		err := json.Unmarshal(isSmartAccountActiveBz, &isSmartAccountActiveValue)
