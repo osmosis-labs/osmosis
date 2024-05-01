@@ -29,7 +29,7 @@ func GetTxCmd() *cobra.Command {
 
 func NewMsgSetDenomMetadata() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSetDenomMetadata](&osmocli.TxCliDesc{
-		Use:   "set denom metadata",
+		Use:   "set-denom-metadata",
 		Short: "overwriting of the denom metadata in the bank module.",
 	})
 }
