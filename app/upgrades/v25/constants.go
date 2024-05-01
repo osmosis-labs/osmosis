@@ -1,6 +1,8 @@
 package v25
 
 import (
+	"time"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 
@@ -17,6 +19,9 @@ const (
 
 	// Noble USDC is used as the auction denom
 	AuctionUSDCDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
+	NewMaxAgeNumBlocks = int64(1_000_000)      // 1.5s blocks * 1_000_000 = 1.5M seconds > 2 weeks
+	NewMaxAgeDuration  = time.Second * 1209600 // 2 weeks
 )
 
 var Upgrade = upgrades.Upgrade{
