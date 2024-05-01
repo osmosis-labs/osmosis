@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v17 upgrade.
@@ -32,7 +33,7 @@ var Upgrade = upgrades.Upgrade{
 }
 
 const (
-	OSMO        = "uosmo"
+	OSMO        = appparams.BaseCoinUnit
 	TickSpacing = 100
 )
 

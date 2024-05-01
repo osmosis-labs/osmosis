@@ -8,6 +8,8 @@ import (
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) {
@@ -26,7 +28,7 @@ func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) 
 			panic(err)
 		}
 
-		coins := sdk.NewCoins(sdk.NewInt64Coin("uosmo", amount))
+		coins := sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, amount))
 		if err := bank.SendCoinsFromModuleToAccount(ctx, "distribution", addr, coins); err != nil {
 			panic(err)
 		}
@@ -35,6 +37,6 @@ func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) 
 
 	// deduct from the feePool tracker
 	feePool := distr.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", total)))
+	feePool.CommunityPool = feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, total)))
 	distr.SetFeePool(ctx, feePool)
 }

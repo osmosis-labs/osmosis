@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -31,7 +32,7 @@ var (
 	}
 	testAdminAddresses                                 = []string{"osmo106x8q2nv7xsg7qrec2zgdf3vvq0t3gn49zvaha", "osmo105l5r3rjtynn7lg362r2m9hkpfvmgmjtkglsn9"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
-	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
+	testAuthorizedQuoteDenoms                          = []string{appparams.BaseCoinUnit, "uion", "uatom"}
 
 	testPoolRoute = []types.ModuleRoute{
 		{
@@ -45,7 +46,7 @@ var (
 	}
 
 	testTakerFeesTracker = types.TakerFeesTracker{
-		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(1000))},
+		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))},
 		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", sdk.NewInt(1000))},
 		HeightAccountingStartsFrom: 100,
 	}
@@ -53,23 +54,23 @@ var (
 	testPoolVolumes = []*types.PoolVolume{
 		{
 			PoolId:     1,
-			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000))),
+			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000000))),
 		},
 		{
 			PoolId:     2,
-			PoolVolume: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(20000000))),
+			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(20000000))),
 		},
 	}
 
 	testDenomPairTakerFees = []types.DenomPairTakerFee{
 		{
 			Denom0:   "uion",
-			Denom1:   "uosmo",
+			Denom1:   appparams.BaseCoinUnit,
 			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
 		},
 		{
 			Denom0:   "uatom",
-			Denom1:   "uosmo",
+			Denom1:   appparams.BaseCoinUnit,
 			TakerFee: osmomath.MustNewDecFromStr("0.002"),
 		},
 	}
@@ -84,9 +85,9 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Set the bond denom to be uosmo to make volume tracking tests more readable.
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	skParams.BondDenom = "uosmo"
+	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
-	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, appparams.BaseCoinUnit)
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = "baz"
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)

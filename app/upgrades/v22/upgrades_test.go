@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,8 +35,8 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 
-	expectedTakerFeeForStakers := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(3000)), sdk.NewCoin("uatom", osmomath.NewInt(1000)), sdk.NewCoin("uosmo", osmomath.NewInt(2000))}
-	expectedTakerFeeForCommunityPool := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(2000)), sdk.NewCoin("uatom", osmomath.NewInt(3000)), sdk.NewCoin("uosmo", osmomath.NewInt(1000))}
+	expectedTakerFeeForStakers := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(3000)), sdk.NewCoin("uatom", osmomath.NewInt(1000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(2000))}
+	expectedTakerFeeForCommunityPool := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(2000)), sdk.NewCoin("uatom", osmomath.NewInt(3000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000))}
 	expectedTrackerStartHeight := int64(3)
 
 	// Set up old protorev tracker prior to upgrade

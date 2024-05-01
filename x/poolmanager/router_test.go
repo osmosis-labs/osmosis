@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -44,7 +45,7 @@ const (
 	FOO   = apptesting.FOO
 	BAR   = apptesting.BAR
 	BAZ   = apptesting.BAZ
-	UOSMO = apptesting.UOSMO
+	UOSMO = appparams.BaseCoinUnit
 
 	// Not an authorized quote denom
 	// ("abc" ensures its always first lexicographically which simplifies setup)
@@ -285,7 +286,7 @@ func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 		"valid balancer pool": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			expectedDenoms:    []string{"bar", "baz", "foo", "uosmo"},
+			expectedDenoms:    []string{"bar", "baz", "foo", appparams.BaseCoinUnit},
 		},
 		"valid stableswap pool": {
 			preCreatePoolType: types.Stableswap,
@@ -3148,7 +3149,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
 		defaultPoolCoinOne = sdk.NewCoin("usdc", osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin("eth", osmomath.NewInt(2))
-		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
+		nonPoolCool        = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(3))
 
 		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
 	)
