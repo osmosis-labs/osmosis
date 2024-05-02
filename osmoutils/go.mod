@@ -2,8 +2,6 @@ module github.com/osmosis-labs/osmosis/osmoutils
 
 go 1.21.4
 
-toolchain go1.22.0
-
 require (
 	cosmossdk.io/log v1.3.0
 	cosmossdk.io/math v1.3.0
