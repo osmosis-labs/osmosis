@@ -54,7 +54,7 @@ jobs:
           tags: osmosis:debug
           build-args: |
             BASE_IMG_TAG=debug
-            BUILD_TAGS="netgo,muslc,excludeIncrement"
+            BUILD_TAGS="netgo,muslc"
       - name: Test e2e and Upgrade
         run: make test-e2e-ci-scheduled
       - name: Dump docker logs on failure
