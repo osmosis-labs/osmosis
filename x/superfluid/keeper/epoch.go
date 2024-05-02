@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
@@ -145,16 +145,17 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		bondDenom := k.sk.BondDenom(ctx)
 		if asset.Denom == bondDenom {
-			// The bond denom should be locked a x/lockup and not superfluid
+			// The bond denom should be locked via x/lockup and not superfluid
 			return errors.New("osmo should not be a superfluid asset. It can be stacked natively")
 		}
 		// get the twap price of the native asset in osmo
 		startTime := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).StartTime
-		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, asset.Denom, bondDenom, startTime)
+		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, bondDenom, asset.Denom, startTime)
+		fmt.Println("price", price)
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")
 		}
-		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, osmomath.NewDec(1).Quo(price))
 	}
 
 	return nil

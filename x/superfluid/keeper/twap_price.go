@@ -34,7 +34,18 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, includeNative bool) (osmomath.Int, error) {
+	if !includeNative { // only get the asset from store when needed
+		// TODO: perf: we could check the denom for gamm/cl prefixes to avoid the store lookup
+		asset, err := k.GetSuperfluidAsset(ctx, denom)
+		if err != nil {
+			return osmomath.ZeroInt(), err
+		}
+		// if the asset is native, return 0; as no osmo tokens are part of that asset
+		if asset.AssetType == types.SuperfluidAssetTypeNative {
+			return osmomath.ZeroInt(), nil
+		}
+	}
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
 		return osmomath.ZeroInt(), nil
@@ -45,6 +56,8 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount os
 	if err != nil {
 		return osmomath.ZeroInt(), err
 	}
+
+	// TODO: here! change the risk adjusted value based on the type/denom
 	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt()), nil
 }
 

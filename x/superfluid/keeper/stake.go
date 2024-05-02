@@ -35,7 +35,7 @@ func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.Superflui
 	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
 	// (2) Multiply the T tokens, by the number of superfluid osmo per token, to get the total amount
 	// of osmo we expect.
-	refreshedAmount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+	refreshedAmount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation, true)
 	if err != nil {
 		return osmomath.Int{}, err
 	}
@@ -113,7 +113,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 
 	// mint OSMO token based on the most recent osmo equivalent multiplier
 	// of locked denom to denom module account
-	osmoAmt, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	osmoAmt, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom), true)
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
-	amount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
+	amount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount, true)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64) 
 	}
 
 	// undelegate this lock's delegation amount, and burn the minted osmo.
-	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
+	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount, true)
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, err
 	}
@@ -573,7 +573,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		}
 
 		// get osmo-equivalent token amount
-		amount, err := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount, false)
 		if err != nil {
 			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
 			continue
