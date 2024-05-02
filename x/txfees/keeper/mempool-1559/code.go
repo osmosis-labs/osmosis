@@ -135,7 +135,7 @@ func (e EipState) Clone() EipState {
 // deliverTxCode runs on every transaction in the feedecorator ante handler and sums the gas of each transaction
 func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 	if ctx.BlockHeight() != e.lastBlockHeight {
-		ctx.Logger().Error("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
+		ctx.Logger().Error(fmt.Sprintf("Something is off here? ctx.BlockHeight() (%d) != e.lastBlockHeight (%d)", ctx.BlockHeight(), e.lastBlockHeight))
 	}
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
 }
@@ -151,7 +151,10 @@ func (e *EipState) updateBaseFee(height int64) {
 	if height != e.lastBlockHeight {
 		fmt.Println("Something is off here? height != e.lastBlockHeight", height, e.lastBlockHeight)
 	}
-	e.lastBlockHeight = height
+
+	// N.B. we set the lastBlockHeight to height + 1 to avoid the case where block sdk submits a update proposal
+	// tx prior to the eip startBlock being called (which is a begin block call).
+	e.lastBlockHeight = height + 1
 
 	gasUsed := e.totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
