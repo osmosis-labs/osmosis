@@ -1277,8 +1277,18 @@ github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1 h1:HezZywIk7C9UbCMuqrpBgC0gQ
 github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1/go.mod h1:p8RohShfTfbvSzgb9zFnqvtCgyLTzqA8otk0I/YDbSg=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1 h1:l1Hk4DGxDoBe1YUb7IbwRz/CbzA3wfQZ+j+vz+ed5tM=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
+<<<<<<< HEAD
+<<<<<<< HEAD
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240423073233-246239a8f662 h1:P6deXtGtSXJgPtvo6f/1vAQgF38HUsrIT6Mq7LMGYrs=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240423073233-246239a8f662/go.mod h1:ubFhAjLis9cH6GPIhaCjf4JdXrn8HBBOxvOYMxPtgSM=
+=======
 github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240502024814-785ee58ac507 h1:LJMTBQBH4Xiz9YzWo9BbxKvQr6Yij0e0z9Mb4X9kQKw=
 github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240502024814-785ee58ac507/go.mod h1:iCRNyb2pkXwsr4UdbXJDX4lWkzeUNsIALzagBBTq4wU=
+>>>>>>> 27548cca (fix: e2e and remove toolchain (#8191))
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240502024814-785ee58ac507 h1:LJMTBQBH4Xiz9YzWo9BbxKvQr6Yij0e0z9Mb4X9kQKw=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240502024814-785ee58ac507/go.mod h1:iCRNyb2pkXwsr4UdbXJDX4lWkzeUNsIALzagBBTq4wU=
+>>>>>>> main
 github.com/osmosis-labs/osmosis/v25 v25.0.0-20240429183841-537ba1600888 h1:c+b4PKumqTYNDOOP+R53lnjxiocmYwjLgfBR6VfnGes=
 github.com/osmosis-labs/osmosis/v25 v25.0.0-20240429183841-537ba1600888/go.mod h1:TI3Qr4dqna7/afmPJUlueSg2iX5gI4YzHuye3y83S5E=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240502024814-785ee58ac507 h1:yrtrsYT6LwVHueT7Hbkoe58pxrVT8PPnm4QQqvhoAcE=
