@@ -1,7 +1,5 @@
 go 1.21.4
 
-toolchain go1.22.0
-
 use .
 
 use ./osmomath
