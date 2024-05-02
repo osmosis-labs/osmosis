@@ -15,17 +15,17 @@ var _ domain.Ingester = &sqsIngester{}
 type sqsIngester struct {
 	poolsTransformer domain.PoolsTransformer
 	keepers          domain.SQSIngestKeepers
-	sqsGRPCClient    domain.SQSGRPClient
+	sqsGRPCClients   []domain.SQSGRPClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClients []domain.SQSGRPClient) domain.Ingester {
 	return &sqsIngester{
 		poolsTransformer: poolsIngester,
 		keepers:          keepers,
-		sqsGRPCClient:    sqsGRPCClient,
+		sqsGRPCClients:   sqsGRPCClients,
 	}
 }
 
@@ -64,9 +64,11 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.P
 		return nil, err
 	}
 
-	err = i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
-	if err != nil {
-		return nil, err
+	for _, client := range i.sqsGRPCClients {
+		err = client.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return cosmWasmPools, nil
@@ -104,5 +106,13 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 		return err
 	}
 
-	return i.sqsGRPCClient.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+	for _, client := range i.sqsGRPCClients {
+		err = client.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }
