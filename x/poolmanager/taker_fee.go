@@ -22,6 +22,7 @@ func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
 		if err != nil {
 			defaultTakerFeeValue = sdk.ZeroDec()
 		}
+		k.defaultTakerFeeBz = defaultTakerFeeBz
 		k.defaultTakerFeeVal = defaultTakerFeeValue
 	}
 	return k.defaultTakerFeeVal
