@@ -114,5 +114,4 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 	}
 
 	return nil
-
 }
