@@ -175,11 +175,3 @@ pull_request_rules:
       backport:
         branches:
           - v24.x
-  - name: backport patches to v25.x branch
-    conditions:
-      - base=main
-      - label=A:backport/v25.x
-    actions:
-      backport:
-        branches:
-          - v25.x
