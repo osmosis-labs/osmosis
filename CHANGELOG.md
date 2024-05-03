@@ -44,9 +44,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
+* [#7935](https://github.com/osmosis-labs/osmosis/pull/7935) Add block sdk and top of block auction from skip-mev
+* [#7876](https://github.com/osmosis-labs/osmosis/pull/7876) Migrate subset of spread reward accumulators
+* [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module
+* [#8106](https://github.com/osmosis-labs/osmosis/pull/8106) Enable ProtoRev distro on epoch
+* [#8053](https://github.com/osmosis-labs/osmosis/pull/8053) Reset validator signing info missed blocks counter
+* [#8073](https://github.com/osmosis-labs/osmosis/pull/8073) Speedup CL spread factor calculations, but mildly changes rounding behavior in the final decimal place
+* [#8125](https://github.com/osmosis-labs/osmosis/pull/8125) When using smart accounts, fees are deducted directly after the feePayer is authenticated. Regardless of the authentication of other signers
+* [#8136](https://github.com/osmosis-labs/osmosis/pull/8136) Don't allow gauge creation/addition with rewards that have no protorev route (i.e. no way to determine if rewards meet minimum epoch value distribution requirements)
+* [#8144](https://github.com/osmosis-labs/osmosis/pull/8144) IBC wasm clients can now make stargate queries and support abort
+* [#8147](https://github.com/osmosis-labs/osmosis/pull/8147) Process unbonding locks once per minute, rather than every single block
+* [#8157](https://github.com/osmosis-labs/osmosis/pull/8157) Speedup protorev by not unmarshalling pools in cost-estimation phase
+* [#8177](https://github.com/osmosis-labs/osmosis/pull/8177) Change consensus params to match unbonding period
+* [#8189](https://github.com/osmosis-labs/osmosis/pull/8189) Perf: Use local cache for isSmartAccountActive param
 
 ### State Compatible
+
+* [#35](https://github.com/osmosis-labs/cometbft/pull/35) Handle last element in PickRandom
+* [#38](https://github.com/osmosis-labs/cometbft/pull/38) Remove expensive Logger debug call in PublishEventTx
+* [#39](https://github.com/osmosis-labs/cometbft/pull/39) Change finalizeCommit to use applyVerifiedBlock
+* [#40](https://github.com/osmosis-labs/cometbft/pull/40) Speedup NewDelimitedWriter
+* [#41](https://github.com/osmosis-labs/cometbft/pull/41) Remove unnecessary atomic read
+* [#42](https://github.com/osmosis-labs/cometbft/pull/42) Remove a minint call that was appearing in write packet delays
+* [#43](https://github.com/osmosis-labs/cometbft/pull/43) Speedup extended commit.BitArray()
+
+## Unreleased
+
+* [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 
 ## v24.0.4
 
