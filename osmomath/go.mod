@@ -7,7 +7,11 @@ toolchain go1.21.5
 require (
 	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-sdk v0.47.8
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.13-0.20240502181753-5ba797611f84
+=======
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
+>>>>>>> 55278a30 (chore: update to tagged submodules (#8218))
 	github.com/stretchr/testify v1.9.0
 	gopkg.in/yaml.v2 v2.4.0
 

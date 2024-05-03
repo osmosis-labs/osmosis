@@ -1235,14 +1235,21 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1 h1:HezZywIk7C9UbCMuqrpBgC0gQi9F1rPtBcf/XzrWXDY=
-github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1/go.mod h1:p8RohShfTfbvSzgb9zFnqvtCgyLTzqA8otk0I/YDbSg=
+github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-2 h1:sEYLujiwT2rMRQVtZbYhEEj8rRGPxszdoqTANqaP3YQ=
+github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-2/go.mod h1:p8RohShfTfbvSzgb9zFnqvtCgyLTzqA8otk0I/YDbSg=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1 h1:l1Hk4DGxDoBe1YUb7IbwRz/CbzA3wfQZ+j+vz+ed5tM=
 github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1/go.mod h1:eSRUVYwL3eG1jnh01CnBbHiqOM3xJO49p5rTOrSFX1k=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.13-0.20240502181753-5ba797611f84 h1:h7fA83QzN1vVibEi+WpLNDxHwsDhc+t2kkRcfQ8jSF8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.13-0.20240502181753-5ba797611f84/go.mod h1:eWYAcQOQLAfj2AVAXYzRJECpmSgGPXbXPsFFtI4SMhI=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.13-0.20240502181753-5ba797611f84 h1:/OXRU8pDbMFkIxfv8sBFbmW7TD+nmPn9J2FPrA1Btis=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.13-0.20240502181753-5ba797611f84/go.mod h1:UFD8ht+LfM/3ge8LqMt1uUqXcC7UabAkR5/jTanfdX0=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.13 h1:BqOlG9SxHn8D4RmCbeF4Cg4/2FUobFe+QNxflRTM4QA=
+github.com/osmosis-labs/osmosis/osmomath v0.0.13/go.mod h1:eEvmkFLKy1h+EKTr2rhFpmLu4solO3XG0jZt10VSCSI=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.13 h1:+9EGL5dSL6JH2AD1TiJ+zhkqcwhtg8hPzAPvcjSpQeU=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.13/go.mod h1:lMdKRtlQQk3hOdt/HHrcKnCm3LhxR7PP2/jHFktfiUI=
+>>>>>>> 55278a30 (chore: update to tagged submodules (#8218))
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=

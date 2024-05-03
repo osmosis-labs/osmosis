@@ -13,8 +13,13 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13-0.20240502181753-5ba797611f84
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.13-0.20240502181753-5ba797611f84
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.13
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
+>>>>>>> 55278a30 (chore: update to tagged submodules (#8218))
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
