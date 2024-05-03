@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -111,8 +112,6 @@ func (s *TestSuite) TestGammSuperfluid() {
 	// pool creator
 	lpKey := ed25519.GenPrivKey().PubKey()
 	lpAddr := sdk.AccAddress(lpKey.Address())
-	userKey := ed25519.GenPrivKey().PubKey()
-	userAddr := sdk.AccAddress(userKey.Address())
 
 	osmoPoolAmount := sdk.NewInt(1_000_000_000_000)
 	btcPoolAmount := sdk.NewInt(10_000_000_000)
@@ -121,8 +120,6 @@ func (s *TestSuite) TestGammSuperfluid() {
 	// mint necessary tokens
 	s.mintToAccount(btcPoolAmount, btcDenom, lpAddr)
 	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, lpAddr)
-	s.mintToAccount(sdk.NewInt(100_000_000), bondDenom, userAddr)
-	s.mintToAccount(sdk.NewInt(1_000_000), btcDenom, userAddr)
 
 	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
 
@@ -136,6 +133,8 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 	gammToken := fmt.Sprintf("gamm/pool/%d", nextPoolId)
 
+	totalGammTokens := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
+
 	// Add btcDenom as an allowed superfluid asset
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: gammToken, AssetType: types.SuperfluidAssetTypeLPShare})
 	s.Require().NoError(err)
@@ -146,9 +145,10 @@ func (s *TestSuite) TestGammSuperfluid() {
 
 	// superfluid stake gamm token
 	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
+	gammDelegationAmount := sdk.NewInt(1000000000000000000)
 	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
 		Sender:  lpAddr.String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(gammToken, sdk.NewInt(1000000000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(gammToken, gammDelegationAmount)),
 		ValAddr: validator.GetOperator().String(),
 	}
 	_, err = s.RunMsg(delegateMsg)
@@ -164,6 +164,11 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 	s.Require().Equal(lpAddr.String(), underlyingLock.Owner)
 	s.Require().Equal(gammToken, underlyingLock.Coins[0].Denom)
+
+	remainingGammTokens := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
+	fmt.Println("remainingGammTokens", remainingGammTokens)
+	fmt.Println("totalGammTokens", totalGammTokens)
+	s.Require().Equal(totalGammTokens.Amount.Sub(gammDelegationAmount), remainingGammTokens.Amount)
 
 	// Run epoch
 	s.EndBlock()
@@ -189,6 +194,56 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().True(found)
 	s.Require().Equal(govv1.StatusFailed, proposal.Status)
 	s.Require().Equal("5000000000", proposal.FinalTallyResult.YesCount)
+
+	//
+	// TEST: Unstake
+	//
+
+	// Check that the user can unstake and the delegation is removed
+	undelegateMsg := &types.MsgSuperfluidUndelegate{
+		Sender: lpAddr.String(),
+		LockId: underlyingLock.ID,
+	}
+	_, err = s.RunMsg(undelegateMsg)
+	s.Require().NoError(err)
+
+	// Check delegations
+	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
+	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
+	s.Require().NoError(err)
+	s.Require().Len(res.SuperfluidDelegationRecords, 0)
+
+	// Check undelegations
+	queryUndelegations := types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	undelegationResponse, err := querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
+	s.Require().NoError(err)
+	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 1)
+
+	// check balance before undelegation time passes
+	balance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
+	s.Require().Equal(remainingGammTokens.Amount, balance.Amount)
+	fmt.Println("balance", balance)
+
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
+	// move forward to block 29 because we only check matured locks every 30 blocks
+	for i := s.Ctx.BlockHeight(); i < 30; i++ {
+		s.EndBlock()
+		s.BeginNewBlock(i%30 == 0)
+	}
+	s.EndBlock()
+	s.BeginNewBlock(false)
+
+	// No more undelegations
+	undelegationResponse, err = querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
+	s.Require().NoError(err)
+	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 0)
+
+	// check balance after undelegation time passes
+	balance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
+	fmt.Println("balance", balance)
+	s.Require().Equal(totalGammTokens.Amount, balance.Amount)
+
 }
 
 func (s *TestSuite) TestNativeSuperfluid() {
@@ -239,6 +294,9 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	delegations := s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, userAddr)
 	s.Require().Equal(0, len(delegations))
 
+	balance := s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
+	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
+
 	// superfluid stake btcDenom
 	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
 	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
@@ -246,13 +304,21 @@ func (s *TestSuite) TestNativeSuperfluid() {
 		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, sdk.NewInt(500_000))),
 		ValAddr: validator.GetOperator().String(),
 	}
-	_, err = s.RunMsg(delegateMsg)
+	result, err := s.RunMsg(delegateMsg)
+	s.Require().NoError(err)
+	// Extract the lock id to use later when undelegating
+	attrs := s.ExtractAttributes(s.FindEvent(result.GetEvents(), "superfluid_delegate"))
+	lockId, err := strconv.ParseUint(attrs["lock_id"], 10, 64)
 	s.Require().NoError(err)
 
 	// Check delegations
 	delegations = s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, userAddr)
 	s.Require().Equal(1, len(delegations))
 	synthLock := delegations[0]
+
+	// check balance
+	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
+	s.Require().Equal(sdk.NewInt(500_000), balance.Amount)
 
 	underlyingLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, synthLock.UnderlyingLockId)
 	s.Require().NoError(err)
@@ -280,8 +346,13 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.BeginNewBlock(true)
 
 	// TODO: How do I check distribution happened properly?
+	// I think what's happening here is that they only happen on multiple of 50 blocks
 
-	// check user can't vote
+	//
+	// TEST: Voting. Users should not be allowed to vote when superfluid staking native assets
+	//
+
+	// Send vote message
 	voteMsg := &govtypes.MsgVote{
 		ProposalId: 1,
 		Voter:      userAddr.String(),
@@ -297,9 +368,41 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
 	s.Require().True(found)
-	s.Require().Equal(govv1.StatusRejected, proposal.Status) // TODO: Why is this one rejected and the other one failed?
+	s.Require().Equal(govv1.StatusRejected, proposal.Status)
 	s.Require().Equal("0", proposal.FinalTallyResult.YesCount)
 
-	// TODO: Unstake
+	//
+	// TEST: Unstake
+	//
 
+	// Check that the user can unstake and the delegation is removed
+	undelegateMsg := &types.MsgSuperfluidUndelegate{
+		Sender: userAddr.String(),
+		LockId: lockId,
+	}
+	_, err = s.RunMsg(undelegateMsg)
+	s.Require().NoError(err)
+
+	// Check delegations
+	res, err = querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
+	s.Require().NoError(err)
+	s.Require().Len(res.SuperfluidDelegationRecords, 0)
+
+	// Check undelegations
+	queryUndelegations := types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: userAddr.String()}
+	undelegationResponse, err := querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
+	s.Require().NoError(err)
+	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 1)
+
+	// check balance before undelegation time passes
+	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
+	s.Require().Equal(sdk.NewInt(500_000), balance.Amount)
+
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
+	s.EndBlock()
+	s.BeginNewBlock(true)
+
+	// check balance after undelegation time passes
+	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
+	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
 }

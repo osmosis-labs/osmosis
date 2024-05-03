@@ -151,7 +151,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		// get the twap price of the native asset in osmo
 		startTime := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).StartTime
 		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, bondDenom, asset.Denom, startTime)
-		fmt.Println("price", price)
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")
 		}
