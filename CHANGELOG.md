@@ -44,12 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-<<<<<<< HEAD
-* [#8030](https://github.com/osmosis-labs/osmosis/pull/8030) Delete legacy behavior where lockups could not unbond at very small block heights on a testnet.
-
-### State Compatible
-
-=======
 * [#7935](https://github.com/osmosis-labs/osmosis/pull/7935) Add block sdk and top of block auction from skip-mev
 * [#7876](https://github.com/osmosis-labs/osmosis/pull/7876) Migrate subset of spread reward accumulators
 * [#7005](https://github.com/osmosis-labs/osmosis/pull/7005) Adding deactivated smart account module
@@ -78,7 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 
->>>>>>> 68cba4f3 (perf: state compatible comet perf improvements (#8212))
 ## v24.0.4
 
 * [#8142](https://github.com/osmosis-labs/osmosis/pull/8142) Add query for getting single authenticator and add stargate whitelist for the query.
