@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8157](https://github.com/osmosis-labs/osmosis/pull/8157) Speedup protorev by not unmarshalling pools in cost-estimation phase
 * [#8177](https://github.com/osmosis-labs/osmosis/pull/8177) Change consensus params to match unbonding period
 * [#8189](https://github.com/osmosis-labs/osmosis/pull/8189) Perf: Use local cache for isSmartAccountActive param
+* [#8216](https://github.com/osmosis-labs/osmosis/pull/8216) Chore: Add circuit breaker controller to smart account params
 
 ### State Compatible
 

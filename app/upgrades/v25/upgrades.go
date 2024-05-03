@@ -88,8 +88,9 @@ func CreateUpgradeHandler(
 
 		// Set the authenticator params in the store
 		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
-		authenticatorParams.MaximumUnauthenticatedGas = 120_000
-		authenticatorParams.IsSmartAccountActive = false
+		authenticatorParams.MaximumUnauthenticatedGas = MaximumUnauthenticatedGas
+		authenticatorParams.IsSmartAccountActive = IsSmartAccountActive
+		authenticatorParams.CircuitBreakerControllers = append(authenticatorParams.CircuitBreakerControllers, CircuitBreakerController)
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
 
 		// Update consensus params in order to safely enable comet pruning
