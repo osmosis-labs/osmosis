@@ -22,7 +22,7 @@ import (
 func TestUpdateBaseFee(t *testing.T) {
 	// Create an instance of eipState
 	eip := &EipState{
-		lastBlockHeight:         0,
+		currentBlockHeight:      0,
 		totalGasWantedThisBlock: 0,
 		CurBaseFee:              DefaultBaseFee.Clone(),
 	}
