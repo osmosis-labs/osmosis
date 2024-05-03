@@ -93,7 +93,7 @@ const (
 // EipState tracks the current base fee and totalGasWantedThisBlock
 // this structure is never written to state
 type EipState struct {
-	lastBlockHeight         int64
+	currentBlockHeight      int64
 	totalGasWantedThisBlock int64
 	BackupFilePath          string
 	CurBaseFee              osmomath.Dec `json:"cur_base_fee"`
@@ -103,7 +103,7 @@ type EipState struct {
 // DeliverTx (fee decorator AnteHandler) functions, it's also using when determining
 // if a transaction has enough gas to successfully execute
 var CurEipState = EipState{
-	lastBlockHeight:         0,
+	currentBlockHeight:      0,
 	totalGasWantedThisBlock: 0,
 	BackupFilePath:          "",
 	CurBaseFee:              sdk.NewDec(0),
@@ -112,7 +112,7 @@ var CurEipState = EipState{
 // startBlock is executed at the start of each block and is responsible for resetting the state
 // of the CurBaseFee when the node reaches the reset interval
 func (e *EipState) startBlock(height int64, logger log.Logger) {
-	e.lastBlockHeight = height
+	e.currentBlockHeight = height
 	e.totalGasWantedThisBlock = 0
 
 	if e.CurBaseFee.Equal(sdk.NewDec(0)) {
@@ -134,8 +134,8 @@ func (e EipState) Clone() EipState {
 
 // deliverTxCode runs on every transaction in the feedecorator ante handler and sums the gas of each transaction
 func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
-	if ctx.BlockHeight() != e.lastBlockHeight {
-		ctx.Logger().Error("Something is off here? ctx.BlockHeight() != e.lastBlockHeight", ctx.BlockHeight(), e.lastBlockHeight)
+	if ctx.BlockHeight() != e.currentBlockHeight {
+		ctx.Logger().Error(fmt.Sprintf("Something is off here? ctx.BlockHeight() (%d) != e.currentBlockHeight (%d)", ctx.BlockHeight(), e.currentBlockHeight))
 	}
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
 }
@@ -148,10 +148,13 @@ func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 //
 // updateBaseFee runs at the end of every block
 func (e *EipState) updateBaseFee(height int64) {
-	if height != e.lastBlockHeight {
-		fmt.Println("Something is off here? height != e.lastBlockHeight", height, e.lastBlockHeight)
+	if height != e.currentBlockHeight {
+		fmt.Println("Something is off here? height != e.currentBlockHeight", height, e.currentBlockHeight)
 	}
-	e.lastBlockHeight = height
+
+	// N.B. we set the lastBlockHeight to height + 1 to avoid the case where block sdk submits a update proposal
+	// tx prior to the eip startBlock being called (which is a begin block call).
+	e.currentBlockHeight = height + 1
 
 	gasUsed := e.totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
