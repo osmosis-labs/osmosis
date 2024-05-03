@@ -58,8 +58,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8177](https://github.com/osmosis-labs/osmosis/pull/8177) Change consensus params to match unbonding period
 * [#8189](https://github.com/osmosis-labs/osmosis/pull/8189) Perf: Use local cache for isSmartAccountActive param
 
-
 ### State Compatible
+
+* [#35](https://github.com/osmosis-labs/cometbft/pull/35) Handle last element in PickRandom
+* [#38](https://github.com/osmosis-labs/cometbft/pull/38) Remove expensive Logger debug call in PublishEventTx
+* [#39](https://github.com/osmosis-labs/cometbft/pull/39) Change finalizeCommit to use applyVerifiedBlock
+* [#40](https://github.com/osmosis-labs/cometbft/pull/40) Speedup NewDelimitedWriter
+* [#41](https://github.com/osmosis-labs/cometbft/pull/41) Remove unnecessary atomic read
+* [#42](https://github.com/osmosis-labs/cometbft/pull/42) Remove a minint call that was appearing in write packet delays
+* [#43](https://github.com/osmosis-labs/cometbft/pull/43) Speedup extended commit.BitArray()
 
 ## Unreleased
 
