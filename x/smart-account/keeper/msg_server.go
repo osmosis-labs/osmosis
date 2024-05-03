@@ -32,6 +32,11 @@ func (m msgServer) AddAuthenticator(
 ) (*types.MsgAddAuthenticatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	isSmartAccountActive := m.GetIsSmartAccountActive(ctx)
+	if !isSmartAccountActive {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "smartaccount module is not active")
+	}
+
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "invalid sender address")
@@ -61,6 +66,11 @@ func (m msgServer) AddAuthenticator(
 // RemoveAuthenticator removes an authenticator from the store. The message specifies a sender address and an index.
 func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemoveAuthenticator) (*types.MsgRemoveAuthenticatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	isSmartAccountActive := m.GetIsSmartAccountActive(ctx)
+	if !isSmartAccountActive {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "smartaccount module is not active")
+	}
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
