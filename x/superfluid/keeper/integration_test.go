@@ -166,24 +166,29 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().Equal(gammToken, underlyingLock.Coins[0].Denom)
 
 	// Run epoch
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(2*time.Hour + time.Second))
 	s.EndBlock()
 	s.BeginNewBlock(true)
-	//s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{})
-	//s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 
 	// TODO: How do I check distribution happened properly?
 
 	// check user can vote
 	voteMsg := &govtypes.MsgVote{
 		ProposalId: 1,
-		Voter:      userAddr.String(),
-		Option:     1,
+		Voter:      lpAddr.String(),
+		Option:     govtypes.OptionYes,
 	}
 	_, err = s.RunMsg(voteMsg)
 	s.Require().NoError(err)
-	s.App.GovKeeper.Tally(s.Ctx, s.proposal)
-	// TODO: check tally
+
+	// Move time beyond voting end time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(96 * time.Hour))
+	s.EndBlock()
+	s.BeginNewBlock(true)
+
+	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
+	s.Require().True(found)
+	s.Require().Equal(govv1.StatusFailed, proposal.Status)
+	s.Require().Equal("5000000000", proposal.FinalTallyResult.YesCount)
 }
 
 func (s *TestSuite) TestNativeSuperfluid() {
@@ -213,7 +218,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
 
-	// create an bondDenom/btcDenom pool
+	// create an bondDenom/btcDenom pool. This is only used so that the native asset can have a price.
 	createPoolMsg := createPoolMsgGen(
 		lpAddr,
 		sdk.NewCoins(sdk.NewCoin(btcDenom, btcPoolAmount), sdk.NewCoin(bondDenom, osmoPoolAmount)),
@@ -221,11 +226,6 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	_, err := s.RunMsg(createPoolMsg)
 	s.Require().NoError(err)
-
-	// get twap
-	price, err := s.App.TwapKeeper.GetArithmeticTwapToNow(s.Ctx, 1, bondDenom, btcDenom, s.Ctx.BlockTime())
-	s.Require().NoError(err)
-	fmt.Println("price", price)
 
 	// Creating a native type without a pool should fail
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative})
@@ -276,11 +276,8 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// Get underlying lock
 
 	// Run epoch
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(2*time.Hour + time.Second))
 	s.EndBlock()
 	s.BeginNewBlock(true)
-	//s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{})
-	//s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 
 	// TODO: How do I check distribution happened properly?
 
@@ -292,8 +289,16 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	}
 	_, err = s.RunMsg(voteMsg)
 	s.Require().NoError(err)
-	s.App.GovKeeper.Tally(s.Ctx, s.proposal)
-	// TODO: Ensure this vote isn't counted
+
+	// Move time beyond voting end time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(96 * time.Hour))
+	s.EndBlock()
+	s.BeginNewBlock(true)
+
+	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
+	s.Require().True(found)
+	s.Require().Equal(govv1.StatusRejected, proposal.Status) // TODO: Why is this one rejected and the other one failed?
+	s.Require().Equal("0", proposal.FinalTallyResult.YesCount)
 
 	// TODO: Unstake
 
