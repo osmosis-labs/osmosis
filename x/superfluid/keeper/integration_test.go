@@ -170,11 +170,17 @@ func (s *TestSuite) TestGammSuperfluid() {
 	fmt.Println("totalGammTokens", totalGammTokens)
 	s.Require().Equal(totalGammTokens.Amount.Sub(gammDelegationAmount), remainingGammTokens.Amount)
 
-	// Run epoch
-	s.EndBlock()
-	s.BeginNewBlock(true)
+	// ensure there are some fees to distribute
+	rewards := sdk.NewCoin(bondDenom, sdk.NewInt(5_000_000))
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(rewards))
+	s.Require().NoError(err)
+	err = s.App.MintKeeper.DistributeMintedCoin(s.Ctx, rewards)
+	s.Require().NoError(err)
 
-	// TODO: How do I check distribution happened properly?
+	// move forward to block 50 because we only make distributions every 50 blocks
+	s.AdvanceNBlocksAndRunEpock(50)
+
+	// TODO: Still not sure how to check rewards.
 
 	// check user can vote
 	voteMsg := &govtypes.MsgVote{
@@ -190,6 +196,9 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.EndBlock()
 	s.BeginNewBlock(true)
 
+	coins, err := s.App.DistrKeeper.WithdrawDelegationRewards(s.Ctx, lpAddr, validator.GetOperator())
+	fmt.Println("coins", coins)
+
 	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
 	s.Require().True(found)
 	s.Require().Equal(govv1.StatusFailed, proposal.Status)
@@ -200,9 +209,10 @@ func (s *TestSuite) TestGammSuperfluid() {
 	//
 
 	// Check that the user can unstake and the delegation is removed
-	undelegateMsg := &types.MsgSuperfluidUndelegate{
+	undelegateMsg := &types.MsgSuperfluidUndelegateAndUnbondLock{
 		Sender: lpAddr.String(),
 		LockId: underlyingLock.ID,
+		Coin:   sdk.NewCoin(gammToken, gammDelegationAmount),
 	}
 	_, err = s.RunMsg(undelegateMsg)
 	s.Require().NoError(err)
@@ -223,16 +233,10 @@ func (s *TestSuite) TestGammSuperfluid() {
 	// check balance before undelegation time passes
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(remainingGammTokens.Amount, balance.Amount)
-	fmt.Println("balance", balance)
 
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
-	// move forward to block 29 because we only check matured locks every 30 blocks
-	for i := s.Ctx.BlockHeight(); i < 30; i++ {
-		s.EndBlock()
-		s.BeginNewBlock(i%30 == 0)
-	}
-	s.EndBlock()
-	s.BeginNewBlock(false)
+	// move forward to block 60 because we only check matured locks every 30 blocks
+	s.AdvanceNBlocksAndRunEpock(60)
 
 	// No more undelegations
 	undelegationResponse, err = querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
@@ -241,7 +245,6 @@ func (s *TestSuite) TestGammSuperfluid() {
 
 	// check balance after undelegation time passes
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
-	fmt.Println("balance", balance)
 	s.Require().Equal(totalGammTokens.Amount, balance.Amount)
 
 }
@@ -298,10 +301,11 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
 
 	// superfluid stake btcDenom
+	btcStakeAmount := sdk.NewInt(500_000)
 	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
 	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
 		Sender:  userAddr.String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, sdk.NewInt(500_000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
 		ValAddr: validator.GetOperator().String(),
 	}
 	result, err := s.RunMsg(delegateMsg)
@@ -315,10 +319,11 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	delegations = s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, userAddr)
 	s.Require().Equal(1, len(delegations))
 	synthLock := delegations[0]
+	s.Require().Equal(synthLock.UnderlyingLockId, lockId)
 
 	// check balance
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
-	s.Require().Equal(sdk.NewInt(500_000), balance.Amount)
+	s.Require().Equal(btcStakeAmount, balance.Amount)
 
 	underlyingLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, synthLock.UnderlyingLockId)
 	s.Require().NoError(err)
@@ -333,7 +338,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(userAddr.String(), res.SuperfluidDelegationRecords[0].DelegatorAddress)
 	s.Require().Equal(validator.GetOperator().String(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
 	s.Require().Equal(btcDenom, res.SuperfluidDelegationRecords[0].DelegationAmount.Denom)
-	s.Require().Equal(sdk.NewInt(500_000), res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
+	s.Require().Equal(btcStakeAmount, res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
 	s.Require().Equal("uosmo", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
 	s.Require().Equal(sdk.NewInt(0), res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
 	s.Require().Equal("uosmo", res.TotalEquivalentStakedAmount.Denom)
@@ -342,8 +347,8 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// Get underlying lock
 
 	// Run epoch
-	s.EndBlock()
-	s.BeginNewBlock(true)
+	// move forward to block 30 because we only check matured locks every 30 blocks
+	s.AdvanceNBlocksAndRunEpock(50)
 
 	// TODO: How do I check distribution happened properly?
 	// I think what's happening here is that they only happen on multiple of 50 blocks
@@ -376,9 +381,10 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	//
 
 	// Check that the user can unstake and the delegation is removed
-	undelegateMsg := &types.MsgSuperfluidUndelegate{
+	undelegateMsg := &types.MsgSuperfluidUndelegateAndUnbondLock{
 		Sender: userAddr.String(),
-		LockId: lockId,
+		LockId: underlyingLock.ID,
+		Coin:   sdk.NewCoin(btcDenom, btcStakeAmount),
 	}
 	_, err = s.RunMsg(undelegateMsg)
 	s.Require().NoError(err)
@@ -396,13 +402,23 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	// check balance before undelegation time passes
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
-	s.Require().Equal(sdk.NewInt(500_000), balance.Amount)
+	s.Require().Equal(btcStakeAmount, balance.Amount)
 
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
-	s.EndBlock()
-	s.BeginNewBlock(true)
+	// move forward to block 60 because we only check matured locks every 30 blocks
+	s.AdvanceNBlocksAndRunEpock(60)
 
 	// check balance after undelegation time passes
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
 	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
+}
+
+func (s *TestSuite) AdvanceNBlocksAndRunEpock(n int64) {
+	for i := s.Ctx.BlockHeight(); i < n; i++ {
+		s.EndBlock()
+		s.BeginNewBlock(i%n == 0)
+	}
+	s.EndBlock()
+	fmt.Printf("moved to block %d and ran epoch\n", s.Ctx.BlockHeight())
+	s.BeginNewBlock(false)
 }
