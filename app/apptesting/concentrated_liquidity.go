@@ -815,7 +815,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 	return clPool
 }
 
-// createConcentratedPoolsFromCoinsWithSpreadFactor creates CL pools from given sets of coins and respective swap fees.
+// CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor creates CL pools from given sets of coins and respective swap fees.
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
 func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms [][]string, spreadFactor []osmomath.Dec) {
 	for i, curPoolDenoms := range poolDenoms {
@@ -834,7 +834,7 @@ func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpread
 	}
 }
 
-// createConcentratedPoolsFromCoins creates CL pools from given sets of coins (with zero swap fees).
+// CreateConcentratedPoolsAndFullRangePosition creates CL pools from given sets of coins (with zero swap fees).
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
 func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePosition(poolDenoms [][]string) {
 	s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms, []osmomath.Dec{osmomath.ZeroDec()})

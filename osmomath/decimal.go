@@ -772,7 +772,7 @@ func BigDecFromDecSlice(ds []Dec) []BigDec {
 	return result
 }
 
-// BigDecFromDecSlice returns the []BigDec representation of an []Dec.
+// BigDecFromDecCoinSlice returns the []BigDec representation of an []Dec.
 // Values in any additional decimal places are truncated.
 func BigDecFromDecCoinSlice(ds []sdk.DecCoin) []BigDec {
 	result := make([]BigDec, len(ds))
