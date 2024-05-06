@@ -101,8 +101,11 @@ func (s *TestSuite) mintToAccount(amount osmomath.Int, denom string, acc sdk.Acc
 }
 
 func (s *TestSuite) TestGammSuperfluid() {
+	//
+	// Setup
+	//
+
 	s.SetupTest()
-	//addr1 := sdk.AccAddress(pk1.Address())
 
 	// denoms
 	btcDenom := "btc" // Asset to superfluid stake
@@ -139,6 +142,10 @@ func (s *TestSuite) TestGammSuperfluid() {
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: gammToken, AssetType: types.SuperfluidAssetTypeLPShare})
 	s.Require().NoError(err)
 
+	//
+	// TEST: Delegate gamm tokens
+	//
+
 	// No delegations
 	delegations := s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, lpAddr)
 	s.Require().Equal(0, len(delegations))
@@ -170,6 +177,10 @@ func (s *TestSuite) TestGammSuperfluid() {
 	fmt.Println("totalGammTokens", totalGammTokens)
 	s.Require().Equal(totalGammTokens.Amount.Sub(gammDelegationAmount), remainingGammTokens.Amount)
 
+	//
+	// TEST: Reward distribution
+	//
+
 	// ensure there are some fees to distribute
 	rewards := sdk.NewCoin(bondDenom, sdk.NewInt(5_000_000))
 	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(rewards))
@@ -181,6 +192,10 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.AdvanceNBlocksAndRunEpock(50)
 
 	// TODO: Still not sure how to check rewards.
+
+	//
+	// TEST: Voting. User can vote
+	//
 
 	// check user can vote
 	voteMsg := &govtypes.MsgVote{
@@ -250,8 +265,11 @@ func (s *TestSuite) TestGammSuperfluid() {
 }
 
 func (s *TestSuite) TestNativeSuperfluid() {
+	//
+	// TEST: Setup
+	//
+
 	s.SetupTest()
-	//addr1 := sdk.AccAddress(pk1.Address())
 
 	// denoms
 	btcDenom := "btc" // Asset to superfluid stake
@@ -292,6 +310,10 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// Add btcDenom as an allowed superfluid asset
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId})
 	s.Require().NoError(err)
+
+	//
+	// TEST: Delegation
+	//
 
 	// No delegations
 	delegations := s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, userAddr)
@@ -344,14 +366,15 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal("uosmo", res.TotalEquivalentStakedAmount.Denom)
 	s.Require().Equal(sdk.NewInt(0), res.TotalEquivalentStakedAmount.Amount)
 
-	// Get underlying lock
+	//
+	// TEST: Reward distribution
+	//
 
 	// Run epoch
 	// move forward to block 30 because we only check matured locks every 30 blocks
 	s.AdvanceNBlocksAndRunEpock(50)
 
 	// TODO: How do I check distribution happened properly?
-	// I think what's happening here is that they only happen on multiple of 50 blocks
 
 	//
 	// TEST: Voting. Users should not be allowed to vote when superfluid staking native assets
