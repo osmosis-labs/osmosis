@@ -1,14 +1,24 @@
 package sqs
 
 import (
+	"sync"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
 )
 
+const ingesterName = "sqs-ingester"
+
 var _ domain.Ingester = &sqsIngester{}
+
+func (i sqsIngester) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", i.GetName())
+}
 
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
@@ -16,6 +26,11 @@ type sqsIngester struct {
 	poolsTransformer domain.PoolsTransformer
 	keepers          domain.SQSIngestKeepers
 	sqsGRPCClients   []domain.SQSGRPClient
+	logger           log.Logger
+}
+
+func (i sqsIngester) GetName() string {
+	return ingesterName
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
@@ -31,8 +46,12 @@ func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCod
 
 // ProcessAllBlockData implements ingest.Ingester.
 func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
-	// Concentrated pools
+	// Initialize logger if it is nil
+	if i.logger == nil {
+		i.logger = i.Logger(ctx)
+	}
 
+	// Concentrated pools
 	concentratedPools, err := i.keepers.ConcentratedKeeper.GetPools(ctx)
 	if err != nil {
 		return nil, err
@@ -76,6 +95,11 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.P
 
 // ProcessChangedBlockData implements ingest.Ingester.
 func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools domain.BlockPools) error {
+	// Initialize logger if it is nil
+	if i.logger == nil {
+		i.logger = i.Logger(ctx)
+	}
+
 	concentratedPoolIDTickChange := changedPools.ConcentratedPoolIDTickChange
 
 	// Copy over the pools that were changed in the block
@@ -106,12 +130,19 @@ func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools doma
 		return err
 	}
 
+	// Loop to push data to each SQS instances in a separate thread
+	var wg sync.WaitGroup
 	for _, client := range i.sqsGRPCClients {
-		err = client.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
-		if err != nil {
-			return err
-		}
+		wg.Add(1)
+		go func(c domain.SQSGRPClient, wg *sync.WaitGroup) {
+			defer wg.Done()
+			err := c.PushData(ctx, uint64(ctx.BlockHeight()), pools, takerFeesMap)
+			if err != nil {
+				i.logger.Error("Failed to push data to SQS", "error", err.Error())
+			}
+		}(client, &wg)
 	}
+	wg.Wait()
 
 	return nil
 }
