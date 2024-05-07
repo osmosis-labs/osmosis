@@ -184,7 +184,7 @@ replace (
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240503134014-bd886bb4b03f
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	// github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// Local replaces commented for development
 	github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
