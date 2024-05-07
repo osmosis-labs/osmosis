@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	balancertypes "github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
@@ -142,6 +145,15 @@ func (s *TestSuite) TestGammSuperfluid() {
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: gammToken, AssetType: types.SuperfluidAssetTypeLPShare})
 	s.Require().NoError(err)
 
+	id, err := s.App.PoolIncentivesKeeper.GetInternalGaugeIDForPool(s.Ctx, nextPoolId)
+	s.Require().NoError(err)
+	s.mintToAccount(sdk.NewInt(1_000_000_000), appparams.BaseCoinUnit, lpAddr)
+	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, lpAddr, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1_000_000_000))), id)
+	s.Require().NoError(err)
+	gauges := s.App.PoolIncentivesKeeper.GetAllGauges(s.Ctx)
+	fmt.Println("gauges", gauges)
+	// TODO: update gagues min duration.
+
 	//
 	// TEST: Delegate gamm tokens
 	//
@@ -189,7 +201,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 
 	// move forward to block 50 because we only make distributions every 50 blocks
-	s.AdvanceNBlocksAndRunEpock(50)
+	s.AdvanceToBlockNAndRunEpoch(50)
 
 	// TODO: Still not sure how to check rewards.
 
@@ -245,13 +257,18 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 1)
 
+	querier2 := distrkeeper.NewQuerier(*s.App.DistrKeeper)
+	totalRewards, err := querier2.DelegationTotalRewards(s.Ctx, &distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: lpAddr.String()})
+	s.Require().NoError(err)
+	fmt.Println("rewards", totalRewards)
+
 	// check balance before undelegation time passes
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(remainingGammTokens.Amount, balance.Amount)
 
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
 	// move forward to block 60 because we only check matured locks every 30 blocks
-	s.AdvanceNBlocksAndRunEpock(60)
+	s.AdvanceToBlockNAndRunEpoch(60)
 
 	// No more undelegations
 	undelegationResponse, err = querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
@@ -261,6 +278,13 @@ func (s *TestSuite) TestGammSuperfluid() {
 	// check balance after undelegation time passes
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(totalGammTokens.Amount, balance.Amount)
+
+	balances := s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
+	fmt.Println(balances)
+	s.AdvanceToBlockNAndRunEpoch(100)
+	s.AdvanceToBlockNAndRunEpoch(120)
+	balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
+	fmt.Println(balances)
 
 }
 
@@ -310,6 +334,14 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// Add btcDenom as an allowed superfluid asset
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId})
 	s.Require().NoError(err)
+
+	id, err := s.App.PoolIncentivesKeeper.GetInternalGaugeIDForPool(s.Ctx, nextPoolId)
+	s.Require().NoError(err)
+	s.mintToAccount(sdk.NewInt(1_000_000_000), appparams.BaseCoinUnit, lpAddr)
+	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, lpAddr, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1_000_000_000))), id)
+	s.Require().NoError(err)
+	gauges := s.App.PoolIncentivesKeeper.GetAllGauges(s.Ctx)
+	fmt.Println("gauges", gauges)
 
 	//
 	// TEST: Delegation
@@ -372,7 +404,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	// Run epoch
 	// move forward to block 30 because we only check matured locks every 30 blocks
-	s.AdvanceNBlocksAndRunEpock(50)
+	s.AdvanceToBlockNAndRunEpoch(50)
 
 	// TODO: How do I check distribution happened properly?
 
@@ -429,14 +461,167 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
 	// move forward to block 60 because we only check matured locks every 30 blocks
-	s.AdvanceNBlocksAndRunEpock(60)
+	s.AdvanceToBlockNAndRunEpoch(60)
 
 	// check balance after undelegation time passes
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
 	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
+
+	balances := s.App.BankKeeper.GetAllBalances(s.Ctx, userAddr)
+	fmt.Println(balances)
 }
 
-func (s *TestSuite) AdvanceNBlocksAndRunEpock(n int64) {
+func (s *TestSuite) TestCLSuperfluid() {
+	//
+	// Setup
+	//
+
+	s.SetupTest()
+
+	// denoms
+	btcDenom := "eth" // Asset to superfluid stake. Using eth because it's an authorized denom
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+	// accounts
+	// pool creator
+	lpKey := ed25519.GenPrivKey().PubKey()
+	lpAddr := sdk.AccAddress(lpKey.Address())
+
+	osmoPoolAmount := sdk.NewInt(1_000_000_000_000)
+	btcPoolAmount := sdk.NewInt(10_000_000_000)
+	// default bond denom
+
+	// mint necessary tokens
+	s.mintToAccount(btcPoolAmount, btcDenom, lpAddr)
+	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, lpAddr)
+
+	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
+
+	// create an bondDenom/btcDenom pool and add full range liquidity
+	clPool := s.PrepareCustomConcentratedPool(lpAddr, bondDenom, btcDenom, uint64(1), osmomath.ZeroDec())
+	s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(bondDenom, osmoPoolAmount), sdk.NewCoin(btcDenom, btcPoolAmount)))
+
+	//
+	// TEST: Delegate gamm tokens
+	//
+
+	// No delegations
+	delegations := s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, lpAddr)
+	s.Require().Equal(0, len(delegations))
+
+	// Add the pool as an allowed superfluid asset
+	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare})
+	s.Require().NoError(err)
+
+	// superfluid stake cl position
+	osmoDelegateAmount := sdk.NewInt(1_000_000)
+	btcDelegateAmount := sdk.NewInt(100_000)
+	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
+	clDelegateMsg := &types.MsgCreateFullRangePositionAndSuperfluidDelegate{
+		Sender:  lpAddr.String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(bondDenom, osmoDelegateAmount), sdk.NewCoin(btcDenom, btcDelegateAmount)),
+		ValAddr: validator.GetOperator().String(),
+		PoolId:  nextPoolId,
+	}
+	_, err = s.RunMsg(clDelegateMsg)
+	s.Require().NoError(err)
+
+	// Check delegations
+	delegations = s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, lpAddr)
+	s.Require().Equal(1, len(delegations))
+	synthLock := delegations[0]
+
+	// Get underlying lock
+	underlyingLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, synthLock.UnderlyingLockId)
+	s.Require().NoError(err)
+	s.Require().Equal(lpAddr.String(), underlyingLock.Owner)
+
+	//
+	// TEST: Reward distribution
+	//
+
+	// ensure there are some fees to distribute
+	rewards := sdk.NewCoin(bondDenom, sdk.NewInt(5_000_000))
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(rewards))
+	s.Require().NoError(err)
+	err = s.App.MintKeeper.DistributeMintedCoin(s.Ctx, rewards)
+	s.Require().NoError(err)
+
+	// TODO: Still not sure how to check rewards.
+	balances := s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
+	fmt.Println("balances", balances)
+	s.AdvanceToBlockNAndRunEpoch(30)
+	s.AdvanceToBlockNAndRunEpoch(50)
+	balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
+	fmt.Println("balances", balances)
+
+	//
+	// TEST: Voting. User can vote
+	//
+
+	// check user can vote
+	voteMsg := &govtypes.MsgVote{
+		ProposalId: 1,
+		Voter:      lpAddr.String(),
+		Option:     govtypes.OptionYes,
+	}
+	_, err = s.RunMsg(voteMsg)
+	s.Require().NoError(err)
+
+	// Move time beyond voting end time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(96 * time.Hour))
+	s.EndBlock()
+	s.BeginNewBlock(true)
+
+	coins, err := s.App.DistrKeeper.WithdrawDelegationRewards(s.Ctx, lpAddr, validator.GetOperator())
+	fmt.Println("coins", coins)
+
+	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
+	s.Require().True(found)
+	s.Require().Equal(govv1.StatusRejected, proposal.Status)
+	s.Require().Equal("500000", proposal.FinalTallyResult.YesCount)
+
+	//
+	// TEST: Unstake
+	//
+
+	balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
+	fmt.Println("balances", balances)
+
+	// Check that the user can unstake and the delegation is removed
+	undelegateMsg := &types.MsgSuperfluidUndelegateAndUnbondLock{
+		Sender: lpAddr.String(),
+		LockId: underlyingLock.ID,
+		Coin:   sdk.NewCoin("cl/pool/1", underlyingLock.Coins[0].Amount),
+	}
+	_, err = s.RunMsg(undelegateMsg)
+	s.Require().NoError(err)
+
+	// Check delegations
+	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
+	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
+	s.Require().NoError(err)
+	s.Require().Len(res.SuperfluidDelegationRecords, 0)
+
+	// Check undelegations
+	queryUndelegations := types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	undelegationResponse, err := querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
+	s.Require().NoError(err)
+	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 1)
+
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
+	// move forward to block 60 because we only check matured locks every 30 blocks
+	s.AdvanceToBlockNAndRunEpoch(60)
+
+	// No more undelegations
+	undelegationResponse, err = querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
+	s.Require().NoError(err)
+	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 0)
+
+}
+
+func (s *TestSuite) AdvanceToBlockNAndRunEpoch(n int64) {
 	for i := s.Ctx.BlockHeight(); i < n; i++ {
 		s.EndBlock()
 		s.BeginNewBlock(i%n == 0)
