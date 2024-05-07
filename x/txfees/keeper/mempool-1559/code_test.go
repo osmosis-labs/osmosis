@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gotest.tools/assert"
 
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 )
 
@@ -60,8 +61,8 @@ func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec)
 	gasUsed := totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
 
-	baseFeeIncrement := sdk.NewDec(gasDiff).Quo(sdk.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
-	expectedBaseFeeMultiplier := sdk.NewDec(1).Add(baseFeeIncrement)
+	baseFeeIncrement := osmomath.NewDec(gasDiff).Quo(osmomath.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
+	expectedBaseFeeMultiplier := osmomath.NewDec(1).Add(baseFeeIncrement)
 	expectedBaseFee = eipStateCurBaseFee.MulMut(expectedBaseFeeMultiplier)
 
 	if expectedBaseFee.LT(MinBaseFee) {

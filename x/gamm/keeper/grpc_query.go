@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -84,7 +84,7 @@ func (q Querier) Pools(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	store := sdkstore.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	var anys []*codectypes.Any
@@ -175,7 +175,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 // PoolsWithFilter query allows to query pools with specific parameters
 func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	store := sdkstore.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 	minLiquidity, err := sdk.ParseCoinsNormalized(req.MinLiquidity)
 	if err != nil {

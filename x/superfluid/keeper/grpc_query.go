@@ -18,7 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
@@ -104,9 +104,9 @@ func (q Querier) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIn
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
-	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	store := sdkstore.KVStore(q.Keeper.storeKey)
 	accStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
-	iterator := sdk.KVStorePrefixIterator(accStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(accStore, nil)
 	defer iterator.Close()
 
 	accInfos := []types.SuperfluidIntermediaryAccountInfo{}

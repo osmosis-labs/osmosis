@@ -87,7 +87,7 @@ func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, er
 
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, prefix)
+	return storetypes.KVStorePrefixIterator(store, prefix)
 }
 
 func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.CFMMPoolI, err error) {

@@ -10,6 +10,8 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	sdkmath "cosmossdk.io/math"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -56,15 +58,15 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   osmomath.OneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			Commission:        stakingtypes.NewCommission(osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec()),
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), osmomath.OneDec()))
 
 		// add initial validator powers so consumer InitGenesis runs correctly
 		pub, _ := val.ToProto()

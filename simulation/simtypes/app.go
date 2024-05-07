@@ -10,7 +10,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )

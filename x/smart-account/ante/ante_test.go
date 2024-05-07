@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -87,7 +88,7 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 		deductFeeDecorator,
 	)
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 }
 
 // TestSignatureVerificationNoAuthenticatorInStore test a non-smart account signature verification
@@ -341,7 +342,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 			)
 
 			anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
-			res, err := anteHandler(s.Ctx.WithGasMeter(sdk.NewGasMeter(300000)), tx, false)
+			res, err := anteHandler(s.Ctx.WithGasMeter(storetypes.NewGasMeter(300000)), tx, false)
 
 			if tc.shouldPass {
 				s.Require().NoError(err, "Expected to pass but got error")

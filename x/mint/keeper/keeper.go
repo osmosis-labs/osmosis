@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"

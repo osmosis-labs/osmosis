@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/store"
 	cometbftdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/osmosis-labs/osmosis/v25/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v25/simulation/simtypes/simlogger"

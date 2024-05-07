@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 	var (
 		defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
-		defaultAmount   = sdk.NewInt(10000000)
+		defaultAmount   = osmomath.NewInt(10000000)
 	)
 
 	tests := map[string]struct {

@@ -8,12 +8,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 )
@@ -260,7 +262,7 @@ func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]ty
 // filterByPrefixAndDenom filters gauges based on a given key prefix and denom
 func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, denom string, pagination *query.PageRequest) (*query.PageResponse, []types.Gauge, error) {
 	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
+	store := store.KVStore(q.Keeper.storeKey)
 	valStore := prefix.NewStore(store, prefixType)
 
 	pageRes, err := query.FilteredPaginate(valStore, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
@@ -305,7 +307,7 @@ func (k Keeper) queryWeightSplitGroup(ctx sdk.Context, group types.Group) ([]typ
 		if updatedGroup.InternalGaugeInfo.TotalWeight.IsZero() {
 			gaugeVolumes[i] = types.GaugeWeight{
 				GaugeId:     gaugeRecord.GaugeId,
-				WeightRatio: sdk.ZeroDec(),
+				WeightRatio: osmomath.ZeroDec(),
 			}
 		} else {
 			gaugeVolumes[i] = types.GaugeWeight{

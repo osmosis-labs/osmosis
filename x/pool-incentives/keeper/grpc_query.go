@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -224,7 +224,7 @@ func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryEx
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	store := sdkstore.KVStore(q.Keeper.storeKey)
 	prefixStore := prefix.NewStore(store, []byte("pool-incentives/"))
 
 	iterator := prefixStore.Iterator(nil, nil)

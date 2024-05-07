@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/hashicorp/go-metrics"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 	prototypes "github.com/osmosis-labs/sqs/sqsdomain/proto/types"
 	"google.golang.org/grpc"

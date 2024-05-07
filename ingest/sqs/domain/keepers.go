@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -32,7 +34,7 @@ type CosmWasmPoolKeeper interface {
 
 // BankKeeper is an interface for getting bank balances.
 type BankKeeper interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 // ProtorevKeeper is an interface for getting the pool for a denom pair.

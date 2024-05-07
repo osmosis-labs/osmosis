@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,7 +43,7 @@ func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.D
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, key)
+	return storetypes.KVStorePrefixIterator(store, key)
 }
 
 // iteratorLongerDuration iterates over a domain of keys for longer than a specified duration.
@@ -67,7 +67,7 @@ func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration
 // iterator iterates over a domain of keys.
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, prefix)
+	return storetypes.KVStorePrefixIterator(store, prefix)
 }
 
 // LockIteratorAfterTime returns the iterator to get locked coins.

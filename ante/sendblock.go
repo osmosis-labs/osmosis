@@ -70,6 +70,7 @@ func (decorator *SendBlockDecorator) CheckIfBlocked(msgs []sdk.Msg) error {
 		return nil
 	}
 	for _, msg := range msgs {
+		// UNFORKING TODO v2: GetSigners is no longer available
 		signers := msg.GetSigners()
 		for _, signer := range signers {
 			if permittedTo, ok := decorator.Options.PermittedOnlySendTo[signer.String()]; ok {

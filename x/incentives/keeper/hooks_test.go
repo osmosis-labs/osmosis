@@ -439,8 +439,8 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 
 	// Create UOSMO / USDC pool
 	s.PrepareCustomBalancerPool([]balancer.PoolAsset{
-		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: sdk.OneInt()},
-		{Token: sdk.NewCoin(USDC, defaultAmount), Weight: sdk.OneInt()},
+		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: osmomath.OneInt()},
+		{Token: sdk.NewCoin(USDC, defaultAmount), Weight: osmomath.OneInt()},
 	}, balancer.PoolParams{
 		SwapFee: osmomath.ZeroDec(),
 		ExitFee: osmomath.ZeroDec(),
@@ -448,8 +448,8 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 
 	// Create UOSMO / BAR pool
 	s.PrepareCustomBalancerPool([]balancer.PoolAsset{
-		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: sdk.OneInt()},
-		{Token: sdk.NewCoin(BAR, defaultAmount), Weight: sdk.OneInt()},
+		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: osmomath.OneInt()},
+		{Token: sdk.NewCoin(BAR, defaultAmount), Weight: osmomath.OneInt()},
 	}, balancer.PoolParams{
 		SwapFee: osmomath.ZeroDec(),
 		ExitFee: osmomath.ZeroDec(),

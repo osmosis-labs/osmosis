@@ -16,7 +16,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	iavlstore "cosmossdk.io/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"

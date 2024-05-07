@@ -8,9 +8,9 @@ import (
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
 
+	"cosmossdk.io/store/prefix"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"

@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -72,7 +72,7 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
 	profits := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -147,7 +147,7 @@ func (k Keeper) GetAllRoutes(ctx sdk.Context) ([][]uint64, error) {
 	routes := make([][]uint64, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixTradesByRoute)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixTradesByRoute)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -223,7 +223,7 @@ func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []sdk.Coin
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := append(types.KeyPrefixProfitsByRoute, types.GetKeyPrefixProfitsByRoute(route, "")...)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

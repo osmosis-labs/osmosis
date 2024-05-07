@@ -564,7 +564,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 
 	for _, tc := range testCases {
 		originalCtx := s.Ctx
-		s.Ctx, _ = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000)).CacheContext()
+		s.Ctx, _ = s.Ctx.WithGasMeter(storetypes.NewGasMeter(2_000_000)).CacheContext()
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
@@ -727,7 +727,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 
 	for _, tc := range testCases {
 		originalCtx := s.Ctx
-		s.Ctx, _ = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000)).CacheContext()
+		s.Ctx, _ = s.Ctx.WithGasMeter(storetypes.NewGasMeter(2_000_000)).CacheContext()
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 

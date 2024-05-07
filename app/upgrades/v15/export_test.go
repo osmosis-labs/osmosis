@@ -4,7 +4,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
 
 	ibcratelimit "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit"
 

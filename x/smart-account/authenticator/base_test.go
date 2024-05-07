@@ -47,7 +47,7 @@ func (s *BaseAuthenticatorSuite) SetupKeys() {
 
 	ak := s.OsmosisApp.AccountKeeper
 	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 
 	// Set up test accounts
 	for _, key := range TestKeys {

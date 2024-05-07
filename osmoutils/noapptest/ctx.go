@@ -3,13 +3,13 @@ package noapptest
 import (
 	"time"
 
+	"cosmossdk.io/store"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cometbft/cometbft-db"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func CtxWithStoreKeys(keys []storetypes.StoreKey, header tmproto.Header, isCheckTx bool) sdk.Context {

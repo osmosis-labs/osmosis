@@ -3,9 +3,9 @@ package v7
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"

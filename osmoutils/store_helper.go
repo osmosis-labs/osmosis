@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/store/prefix"
 	db "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"cosmossdk.io/store"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -55,7 +55,7 @@ func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, p
 // - the parse function returns an error.
 // - internal database error
 func GatherValuesFromStorePrefixWithKeyParser[T any](storeObj store.KVStore, prefix []byte, parse func(key []byte, value []byte) (T, error)) ([]T, error) {
-	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
+	iterator := storetypes.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithKeyParser(iterator, parse, noStopFn)
 }
@@ -230,8 +230,8 @@ func DeleteAllKeysFromPrefix(store store.KVStore, prefixKey []byte) {
 func GetCoinArrayFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte) []sdk.Coin {
 	coinArray := make([]sdk.Coin, 0)
 
-	store := ctx.KVStore(storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, storePrefix)
+	store := store.KVStore(storeKey)
+	iterator := storetypes.KVStorePrefixIterator(store, storePrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -249,7 +249,7 @@ func GetCoinArrayFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, store
 // GetCoinByDenomFromPrefix returns the coin from the store that has the given prefix and denom.
 // If the denom is not found, a zero coin is returned.
 func GetCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte, denom string) (sdk.Coin, error) {
-	store := prefix.NewStore(ctx.KVStore(storeKey), storePrefix)
+	store := prefix.NewStore(store.KVStore(storeKey), storePrefix)
 	key := []byte(denom)
 
 	bz := store.Get(key)
@@ -267,7 +267,7 @@ func GetCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, sto
 
 // IncreaseCoinByDenomFromPrefix increases the coin from the store that has the given prefix and denom by the specified amount.
 func IncreaseCoinByDenomFromPrefix(ctx sdk.Context, storeKey storetypes.StoreKey, storePrefix []byte, denom string, increasedAmt osmomath.Int) error {
-	store := prefix.NewStore(ctx.KVStore(storeKey), storePrefix)
+	store := prefix.NewStore(store.KVStore(storeKey), storePrefix)
 	key := []byte(denom)
 
 	coin, err := GetCoinByDenomFromPrefix(ctx, storeKey, storePrefix, denom)

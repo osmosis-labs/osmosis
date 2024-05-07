@@ -917,9 +917,9 @@ func (s *KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID 
 func (s *KeeperTestSuite) TestCheckIfDenomsAreDistributable() {
 	s.SetupTest()
 
-	coinWithRouteA := sdk.NewCoin("denom1", sdk.NewInt(100))
-	coinWithRouteB := sdk.NewCoin("denom2", sdk.NewInt(100))
-	coinWithoutRouteC := sdk.NewCoin("denom3", sdk.NewInt(100))
+	coinWithRouteA := sdk.NewCoin("denom1", osmomath.NewInt(100))
+	coinWithRouteB := sdk.NewCoin("denom2", osmomath.NewInt(100))
+	coinWithoutRouteC := sdk.NewCoin("denom3", osmomath.NewInt(100))
 
 	for _, coin := range []sdk.Coin{coinWithRouteA, coinWithRouteB} {
 		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)

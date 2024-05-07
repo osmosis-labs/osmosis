@@ -31,7 +31,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		res, err := route(ctx, abci.RequestQuery{
+		res, err := route(ctx, &abci.RequestQuery{
 			Data: request.Data,
 			Path: request.Path,
 		})

@@ -2,18 +2,19 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"

@@ -81,7 +81,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 		// Add an empty handler here to enable a circuit breaker pattern
 		sdk.ChainPostDecorators(sdk.Terminator{}),
 	)
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 }
 
 // TestAutenticatorPostHandlerSuccess tests that the post handler can succeed with the default authenticator

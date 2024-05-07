@@ -97,7 +97,7 @@ func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error)
 	}
 
 	return stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(addr),
+		sdk.ValAddress(addr).String(),
 		valPubKey,
 		amount,
 		description,

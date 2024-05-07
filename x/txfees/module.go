@@ -25,6 +25,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/client/cli"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
@@ -197,7 +198,7 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 			return
 		}
 
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		return
 	}
@@ -215,7 +216,7 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 
 		// Sure, its possible that the thing that changes in consensus params was something other than the block gas limit,
 		// but just double setting it here is fine instead of doing more logic to see what actually changed.
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		cachedConsParamBytes = consParamsBytes
 	}

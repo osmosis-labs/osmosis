@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -129,7 +130,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 				// to check this, we try triggering bank hooks via token factory keeper
 				for _, coin := range sendTc.msg(denom).Amount {
 					_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(coin.Denom, coin.Amount.Int64())))
-					if coin.Denom == denom && coin.Amount.Equal(sdk.NewInt(100)) {
+					if coin.Denom == denom && coin.Amount.Equal(osmomath.NewInt(100)) {
 						s.Require().Error(err, "test: %v", sendTc.desc)
 					}
 				}

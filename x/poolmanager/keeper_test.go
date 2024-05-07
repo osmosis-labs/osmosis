@@ -46,19 +46,19 @@ var (
 	}
 
 	testTakerFeesTracker = types.TakerFeesTracker{
-		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))},
-		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", sdk.NewInt(1000))},
+		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000))},
+		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", osmomath.NewInt(1000))},
 		HeightAccountingStartsFrom: 100,
 	}
 
 	testPoolVolumes = []*types.PoolVolume{
 		{
 			PoolId:     1,
-			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000000))),
+			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000))),
 		},
 		{
 			PoolId:     2,
-			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(20000000))),
+			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(20000000))),
 		},
 	}
 

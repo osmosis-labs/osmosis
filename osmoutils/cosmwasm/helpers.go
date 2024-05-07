@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -132,7 +132,7 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 
 	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
 	gasLimit := min(ctx.GasMeter().Limit(), DefaultContractCallGasLimit)
-	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
+	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 	responseBz, err := contractKeeper.Sudo(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err

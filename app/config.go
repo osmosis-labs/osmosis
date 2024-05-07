@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

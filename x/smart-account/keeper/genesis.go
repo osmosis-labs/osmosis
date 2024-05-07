@@ -43,7 +43,7 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 	}
 
 	// Iterate over all entries in the store using a prefix iterator
-	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.KeyAccountAuthenticatorsPrefixId())
+	iterator := storetypes.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.KeyAccountAuthenticatorsPrefixId())
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

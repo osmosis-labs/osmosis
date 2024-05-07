@@ -24,7 +24,7 @@ var (
 	KeyMinValueForDistr     = []byte("MinValueForDistr")
 
 	// 100 OSMO
-	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(100_000_000)))
+	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100_000_000)))
 )
 
 // ParamKeyTable returns the key table for the incentive module's parameters.

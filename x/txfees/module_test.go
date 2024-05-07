@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
 
 	simapp "github.com/osmosis-labs/osmosis/v25/app"
@@ -69,7 +70,7 @@ func TestBeginBlock(t *testing.T) {
 	ctx = RunBeginBlock(ctx, app)
 
 	// Target gas should be updated to the value set in InitChain
-	defaultBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(sims.DefaultConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+	defaultBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(sims.DefaultConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Run begin block again, should not update target gas
@@ -87,7 +88,7 @@ func TestBeginBlock(t *testing.T) {
 
 	// Run begin block again, should update target gas
 	RunBeginBlock(ctx, app)
-	expectedNewBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newDefaultBlockMaxGas)).TruncateInt().Int64()
+	expectedNewBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newDefaultBlockMaxGas)).TruncateInt().Int64()
 	require.Equal(t, expectedNewBlockTargetGas, mempool1559.TargetGas)
 }
 

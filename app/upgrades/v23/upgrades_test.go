@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -63,7 +63,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
 
 	// Create incentive record for last pool
-	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000))
+	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000))
 	_, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 

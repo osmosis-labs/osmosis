@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.8
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
-	github.com/cosmos/ibc-go/v7 v7.4.0
+	github.com/cosmos/ibc-go/v8 v8.0.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13
 	github.com/osmosis-labs/osmosis/v25 v25.0.0-20240429183841-537ba1600888
 	github.com/spf13/cast v1.6.0
@@ -22,7 +22,7 @@ require (
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 )
 
-require github.com/skip-mev/block-sdk v1.4.2 // indirect
+require github.com/skip-mev/block-sdk/v2 v2.1.2 // indirect
 
 require (
 	cloud.google.com/go v0.112.0 // indirect
@@ -39,7 +39,7 @@ require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
-	github.com/armon/go-metrics v0.4.1 // indirect
+	github.com/hashicorp/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
@@ -68,8 +68,8 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3 // indirect
-	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 // indirect
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2 // indirect
+	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0 // indirect
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
@@ -217,18 +217,18 @@ require (
 replace (
 	// adds expedited proposal support and 1000MB cache default
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
+	github.com/CosmWasm/wasmd => github.com/CosmWasm/wasmd v0.50.0
 
 	// Using branch osmo/v0.37.4
 	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-2
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-2
+	// github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-2
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
-	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	// github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240503134014-bd886bb4b03f
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
@@ -241,9 +241,9 @@ replace (
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 
-// Local replaces commented for development
-// github.com/osmosis-labs/osmosis/osmomath => ../osmomath
-// github.com/osmosis-labs/osmosis/v24 => ./../
+	// Local replaces commented for development
+	github.com/osmosis-labs/osmosis/osmomath => ../osmomath
+	github.com/osmosis-labs/osmosis/v24 => ./../
 )
 
 exclude github.com/cometbft/cometbft v0.38.0

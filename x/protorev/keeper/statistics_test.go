@@ -200,24 +200,24 @@ func (s *KeeperTestSuite) TestGetSetCyclicArbProfitTrackerValue() {
 		secondCyclicArbValue sdk.Coins
 	}{
 		"happy path: replace single coin with increased single coin": {
-			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(200))),
 		},
 		"replace single coin with decreased single coin": {
-			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(50))),
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(50))),
 		},
 		"replace single coin with different denom": {
-			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(100))),
 		},
 		"replace single coin with multiple coins": {
-			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100)), sdk.NewCoin("usdc", osmomath.NewInt(200))),
 		},
 		"replace multiple coins with single coin": {
-			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
-			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
+			firstCyclicArbValue:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100)), sdk.NewCoin("usdc", osmomath.NewInt(200))),
+			secondCyclicArbValue: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(200))),
 		},
 	}
 

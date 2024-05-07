@@ -2,21 +2,20 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
-	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
+	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
+	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
@@ -24,11 +23,10 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	"github.com/cosmos/ibc-go/modules/capability"
 	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 
@@ -36,7 +34,7 @@ import (
 
 	smartaccount "github.com/osmosis-labs/osmosis/v25/x/smart-account"
 
-	"github.com/skip-mev/block-sdk/x/auction"
+	"github.com/skip-mev/block-sdk/v2/x/auction"
 
 	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client"
@@ -80,12 +78,14 @@ var AppModuleBasics = []module.AppModuleBasic{
 	gov.NewAppModuleBasic(
 		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			upgradeclient.LegacyProposalHandler,
-			upgradeclient.LegacyCancelProposalHandler,
+			// UNFORKING TODO v2: What to do with these
+			// upgradeclient.LegacyProposalHandler,
+			// upgradeclient.LegacyCancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
 			poolincentivesclient.ReplacePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
+			// UNFORKING TODO v2: What to do with these
+			// ibcclientclient.UpdateClientProposalHandler,
+			// ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,

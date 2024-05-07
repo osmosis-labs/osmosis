@@ -6,8 +6,9 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -47,7 +48,7 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request authentica
 	if err != nil {
 		return err
 	}
-	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
+	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(osmomath.NewInt(3_000)) {
 		return fmt.Errorf("total amount sent is greater than 3_000")
 	}
 	return nil
@@ -81,20 +82,20 @@ func (m MaxAmountAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account 
 
 // The following methods for MaxAmountAuthenticator are similar to the set and get value methods for StatefulAuthenticator but set and get an int
 func (m MaxAmountAuthenticator) SetAmount(ctx sdk.Context, amount osmomath.Int) {
-	kvStore := prefix.NewStore(ctx.KVStore(m.KvStoreKey), []byte(m.Type()))
+	kvStore := prefix.NewStore(store.KVStore(m.KvStoreKey), []byte(m.Type()))
 	maxAmountData := MaxAmountAuthenticatorData{Amount: amount}
 	newBz, _ := json.Marshal(maxAmountData)
 	kvStore.Set([]byte("amount"), newBz)
 }
 
 func (m MaxAmountAuthenticator) GetAmount(ctx sdk.Context) osmomath.Int {
-	kvStore := prefix.NewStore(ctx.KVStore(m.KvStoreKey), []byte(m.Type()))
+	kvStore := prefix.NewStore(store.KVStore(m.KvStoreKey), []byte(m.Type()))
 	bz := kvStore.Get([]byte("amount")) // global value. On the real thing we may want the account
 	var amountData MaxAmountAuthenticatorData
 	err := json.Unmarshal(bz, &amountData)
 	// if we can't unmarshal, we just assume it's 0
 	if err != nil {
-		return sdk.NewInt(0)
+		return osmomath.NewInt(0)
 	}
 	return amountData.Amount
 }

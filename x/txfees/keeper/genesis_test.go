@@ -24,8 +24,8 @@ var (
 
 func (s *KeeperTestSuite) TestInitGenesis() {
 	s.SetupTest(false)
-	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000000000000000)), sdk.NewCoin("uion", sdk.NewInt(1000000000000000000)))...)
-	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000000000000000)), sdk.NewCoin("wbtc", sdk.NewInt(1000000000000000000)))...)
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("uion", osmomath.NewInt(1000000000000000000)))...)
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("wbtc", osmomath.NewInt(1000000000000000000)))...)
 
 	s.App.TxFeesKeeper.InitGenesis(s.Ctx, types.GenesisState{
 		Basedenom: testBaseDenom,
@@ -46,8 +46,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 func (s *KeeperTestSuite) TestExportGenesis() {
 	s.SetupTest(false)
-	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000000000000000)), sdk.NewCoin("uion", sdk.NewInt(1000000000000000000)))...)
-	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000000000000000)), sdk.NewCoin("wbtc", sdk.NewInt(1000000000000000000)))...)
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("uion", osmomath.NewInt(1000000000000000000)))...)
+	s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("wbtc", osmomath.NewInt(1000000000000000000)))...)
 
 	s.App.TxFeesKeeper.InitGenesis(s.Ctx, types.GenesisState{
 		Basedenom: testBaseDenom,

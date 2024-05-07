@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/armon/go-metrics"
 	db "github.com/cometbft/cometbft-db"
+	"github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -759,7 +759,7 @@ func (k Keeper) distributeInternal(
 							return nil, err
 						}
 
-						minTokenRequiredForDistr, err := swapModule.CalcOutAmtGivenIn(ctx, pool, minValueForDistr, coin.Denom, sdk.ZeroDec())
+						minTokenRequiredForDistr, err := swapModule.CalcOutAmtGivenIn(ctx, pool, minValueForDistr, coin.Denom, osmomath.ZeroDec())
 						if err != nil {
 							return nil, err
 						}

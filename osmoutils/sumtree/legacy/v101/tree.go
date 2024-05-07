@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	stypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"

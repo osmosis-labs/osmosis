@@ -424,7 +424,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 			posthandlerProtoRev := sdk.ChainPostDecorators(protoRevDecorator)
 
 			// Added so we can check the gas consumed during the posthandler
-			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
+			s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 			halfGas := gasLimit / 2
 			s.Ctx.GasMeter().ConsumeGas(halfGas, "consume half gas")
 

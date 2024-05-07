@@ -4,12 +4,13 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"

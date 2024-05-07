@@ -117,7 +117,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	currentHeight = bs.Height()
 
 	fmt.Println("Pruning Block Store ...")
-	prunedBlocks, err := bs.PruneBlocks(currentHeight - fullHeight)
+	prunedBlocks, _, err := bs.PruneBlocks(currentHeight - fullHeight)
 	if err != nil {
 		return 0, 0, err
 	}

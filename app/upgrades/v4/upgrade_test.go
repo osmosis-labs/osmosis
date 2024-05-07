@@ -14,8 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app"
 	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
@@ -107,7 +107,7 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 
 				// check that feepool.communitypool has been reduced correctly
 				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
-				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
+				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(osmomath.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly
 

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,9 +11,12 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/skip-mev/block-sdk/block"
-	"github.com/skip-mev/block-sdk/block/base"
+	"github.com/skip-mev/block-sdk/v2/block"
+	"github.com/skip-mev/block-sdk/v2/block/base"
 
+	"cosmossdk.io/store"
+	"cosmossdk.io/x/evidence"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,10 +24,8 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -31,26 +33,28 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/ibc-go/modules/capability"
 	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -74,7 +78,6 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -122,8 +125,8 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v25/x/mint"
 
-	blocksdkabci "github.com/skip-mev/block-sdk/abci"
-	"github.com/skip-mev/block-sdk/abci/checktx"
+	blocksdkabci "github.com/skip-mev/block-sdk/v2/abci"
+	"github.com/skip-mev/block-sdk/v2/abci/checktx"
 )
 
 const appName = "OsmosisApp"
@@ -594,24 +597,24 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          false,
 		Status:          stakingtypes.Bonded,
-		Tokens:          sdk.NewInt(900000000000000),
-		DelegatorShares: sdk.MustNewDecFromStr("10000000"),
+		Tokens:          osmomath.NewInt(900000000000000),
+		DelegatorShares: osmomath.MustNewDecFromStr("10000000"),
 		Description: stakingtypes.Description{
 			Moniker: "Testnet Validator",
 		},
 		Commission: stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.MustNewDecFromStr("0.05"),
-				MaxRate:       sdk.MustNewDecFromStr("0.1"),
-				MaxChangeRate: sdk.MustNewDecFromStr("0.05"),
+				Rate:          osmomath.MustNewDecFromStr("0.05"),
+				MaxRate:       osmomath.MustNewDecFromStr("0.1"),
+				MaxChangeRate: osmomath.MustNewDecFromStr("0.05"),
 			},
 		},
-		MinSelfDelegation: sdk.OneInt(),
+		MinSelfDelegation: osmomath.OneInt(),
 	}
 
 	// Remove all validators from power store
 	stakingKey := app.GetKey(stakingtypes.ModuleName)
-	stakingStore := ctx.KVStore(stakingKey)
+	stakingStore := store.KVStore(stakingKey)
 	iterator := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
@@ -626,14 +629,14 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	iterator.Close()
 
 	// Remove all validators from validators store
-	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
+	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
 	// Remove all validators from unbonding queue
-	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
+	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
@@ -808,7 +811,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 // handler so that we can verify bid transactions before they are inserted into the mempool.
 // With the BlockSDK CheckTx, we can verify the bid transaction and all of the bundled transactions
 // before inserting the bid transaction into the mempool.
-func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+func (app *OsmosisApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
 	return app.checkTxHandler(req)
 }
 
@@ -831,13 +834,13 @@ func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *OsmosisApp) BeginBlock(context.Context) error {
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block.
-func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *OsmosisApp) EndBlock(context.Context) error {
 	return app.mm.EndBlock(ctx, req)
 }
 
@@ -890,7 +893,7 @@ func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
-	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -911,7 +914,7 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(
+	cmtservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
 		app.interfaceRegistry,
@@ -920,8 +923,8 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterNodeService registers the node gRPC Query service.
-func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // SimulationManager implements the SimulationApp interface

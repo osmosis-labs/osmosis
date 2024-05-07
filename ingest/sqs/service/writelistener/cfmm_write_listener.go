@@ -3,8 +3,8 @@ package writelistener
 import (
 	"bytes"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"

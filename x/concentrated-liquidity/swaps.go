@@ -429,7 +429,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		return SwapResult{}, PoolUpdates{}, err
 	}
 
-	var scalingFactor sdk.Dec
+	var scalingFactor osmomath.Dec
 	if updateAccumulators {
 		// We only need the scaling factor if we are updating the accumulators
 		scalingFactor, err = k.getSpreadFactorScalingFactorForPool(ctx, poolId)
@@ -578,7 +578,7 @@ func (k Keeper) computeInAmtGivenOut(
 		return SwapResult{}, PoolUpdates{}, err
 	}
 
-	var scalingFactor sdk.Dec
+	var scalingFactor osmomath.Dec
 	if updateAccumulators {
 		// We only need the scaling factor if we are updating the accumulators
 		scalingFactor, err = k.getSpreadFactorScalingFactorForPool(ctx, poolId)

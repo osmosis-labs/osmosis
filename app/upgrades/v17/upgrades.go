@@ -9,9 +9,9 @@ import (
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	errorsmod "cosmossdk.io/errors"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 

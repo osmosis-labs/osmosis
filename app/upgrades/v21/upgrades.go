@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
@@ -30,6 +30,7 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
 
 	// SDK v47 modules
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -40,7 +41,6 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func CreateUpgradeHandler(
@@ -150,7 +150,7 @@ func CreateUpgradeHandler(
 
 		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
-		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(5000000000)))
+		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(5000000000)))
 		govParams.MinInitialDepositRatio = "0.250000000000000000"
 		err = keepers.GovKeeper.SetParams(ctx, govParams)
 		if err != nil {

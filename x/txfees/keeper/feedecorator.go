@@ -122,7 +122,7 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
 	// So we ensure that the provided fees meet a minimum threshold for the validator
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
+		minBaseGasPrice = osmomath.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
 	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
 	// UNFORKINGTODO OQ: look into what we should use in place of ctx.IsGenesis() here
@@ -166,18 +166,18 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 	}
 	if txfee_filters.IsArbTxLoose(tx) {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 	// Initial tx only, no recheck
 	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
 	}
 	// RecheckTx only
 	if is1559enabled && ctx.IsReCheckTx() {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
 	}
 	return cfgMinGasPrice
 }

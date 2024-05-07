@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddr
 	_, validator := s.GetDelegationRewards(ctx, valAddrStr, delegator)
 
 	// allocate some rewards
-	tokens := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 10))
+	tokens := sdk.NewDecCoins(osmomath.NewInt64DecCoin(sdk.DefaultBondDenom, 10))
 	s.App.DistrKeeper.AllocateTokensToValidator(ctx, validator, tokens)
 
 	rewardsAfterAllocation, _ := s.GetDelegationRewards(ctx, valAddrStr, delegator)
@@ -201,7 +201,7 @@ func (s *KeeperTestSuite) TestGetDelegationPreference() {
 func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
 	s.SetupTest()
 
-	defaultDelegateAmt := sdk.NewInt(1000)
+	defaultDelegateAmt := osmomath.NewInt(1000)
 
 	tests := []struct {
 		name          string
@@ -236,11 +236,11 @@ func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: valAddrs[0],
-						Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+						Weight:         osmomath.NewDecWithPrec(5, 1), // 0.5
 					},
 					{
 						ValOperAddress: valAddrs[1],
-						Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+						Weight:         osmomath.NewDecWithPrec(5, 1), // 0.5
 					},
 				},
 			}
@@ -268,18 +268,18 @@ func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
 				validator1, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr1)
 				s.Require().True(found)
 
-				s.FundAcc(delegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegateAmt.Mul(sdk.NewInt(2)))))
-				_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, defaultDelegateAmt.Mul(sdk.NewInt(2)), stakingtypes.Unbonded, validator1, true)
+				s.FundAcc(delegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegateAmt.Mul(osmomath.NewInt(2)))))
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, defaultDelegateAmt.Mul(osmomath.NewInt(2)), stakingtypes.Unbonded, validator1, true)
 				s.Require().NoError(err)
 
 				expectedValsetPref = types.ValidatorSetPreferences{
 					Preferences: []types.ValidatorPreference{
 						{
 							ValOperAddress: validator0.OperatorAddress,
-							Weight:         sdk.MustNewDecFromStr("0.333333333333333333"),
+							Weight:         osmomath.MustNewDecFromStr("0.333333333333333333"),
 						},
 						{
-							Weight:         sdk.MustNewDecFromStr("0.666666666666666667"),
+							Weight:         osmomath.MustNewDecFromStr("0.666666666666666667"),
 							ValOperAddress: validator1.OperatorAddress,
 						},
 					},
@@ -322,8 +322,8 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 		"Multiple Delegations": {
 			delegationShares: []osmomath.Dec{osmomath.NewDec(100), osmomath.NewDec(200)},
 			expectedValPrefWeights: []osmomath.Dec{
-				sdk.MustNewDecFromStr("0.333333333333333333"),
-				sdk.MustNewDecFromStr("0.666666666666666667"),
+				osmomath.MustNewDecFromStr("0.333333333333333333"),
+				osmomath.MustNewDecFromStr("0.666666666666666667"),
 			},
 		},
 		"No Delegation": {

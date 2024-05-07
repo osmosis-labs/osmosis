@@ -272,7 +272,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 // that were indexed by time.
 func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
+	iter := storetypes.KVStorePrefixIterator(store, []byte("historical_time_index"))
 	defer iter.Close()
 
 	iterationCounter := uint16(0)

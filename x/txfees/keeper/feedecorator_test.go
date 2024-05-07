@@ -104,14 +104,14 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		{
 			name:         "min gas price not containing basedenom gets treated as min gas price 0",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
-			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1000000)),
+			minGasPrices: sdk.NewDecCoins(osmomath.NewInt64DecCoin(uion, 1000000)),
 			isCheckTx:    true,
 			expectPass:   true,
 		},
 		{
 			name:         "tx with gas wanted more than allowed should not pass",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 100000000)),
-			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			minGasPrices: sdk.NewDecCoins(osmomath.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.MaxGasWantedPerTx + 1,
 			isCheckTx:    true,
 			expectPass:   false,
@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		{
 			name:         "tx with high gas and not enough fee should no pass",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
-			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			minGasPrices: sdk.NewDecCoins(osmomath.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			expectPass:   false,
@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		{
 			name:         "tx with high gas and enough fee should pass",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 10*1000)),
-			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			minGasPrices: sdk.NewDecCoins(osmomath.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			expectPass:   true,
@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		{
 			name:         "simulate 0 fee passes",
 			txFee:        sdk.Coins{},
-			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			minGasPrices: sdk.NewDecCoins(osmomath.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			isSimulate:   true,

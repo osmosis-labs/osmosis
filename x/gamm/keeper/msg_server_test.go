@@ -89,7 +89,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			ctx := s.Ctx
 
 			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
-			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.01")
 			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			ctx := s.Ctx
 
 			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
-			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.01")
 			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()

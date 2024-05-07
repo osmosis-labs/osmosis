@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/bytes"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -119,13 +119,13 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 
 	// Check if we found a match
 	if len(matches) < 2 {
-		return 0, sdk.ZeroDec()
+		return 0, osmomath.ZeroDec()
 	}
 
 	// Convert the position_id from string to int
 	positionID, err := strconv.Atoi(matches[1])
 	if err != nil {
-		return 0, sdk.ZeroDec()
+		return 0, osmomath.ZeroDec()
 	}
 
 	// Extract the liquidity from the response
@@ -134,7 +134,7 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 
 	// Check if we found a match
 	if len(matches) < 2 {
-		return 0, sdk.ZeroDec()
+		return 0, osmomath.ZeroDec()
 	}
 
 	// Convert the liquidity from string to Dec
@@ -142,7 +142,7 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 
-	return uint64(positionID), sdk.MustNewDecFromStr(liquidityStr)
+	return uint64(positionID), osmomath.MustNewDecFromStr(liquidityStr)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {

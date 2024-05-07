@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"

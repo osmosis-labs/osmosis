@@ -3,8 +3,8 @@ package v9_test
 import (
 	"fmt"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const dummyUpgradeHeight = 5

@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,7 +29,7 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Tim
 // iterator returns an iterator over all gauges in the {prefix} space of state.
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, prefix)
+	return storetypes.KVStorePrefixIterator(store, prefix)
 }
 
 // UpcomingGaugesIteratorAfterTime returns the iterator to get all upcoming gauges that start distribution after a specific time.

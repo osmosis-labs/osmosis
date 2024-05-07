@@ -9,12 +9,12 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
+	"cosmossdk.io/store/prefix"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -43,7 +43,7 @@ func TestCosmwasmAuthenticatorTest(t *testing.T) {
 func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
 	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.AppCodec())

@@ -1701,7 +1701,9 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", osmomath.NewInt(1000000000000000000)))
 	zeroCoins := sdk.NewCoins()
 
-	defaultRemainingLockDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	defaultRemainingLockDuration := stakingParams.UnbondingTime
 
 	tests := []struct {
 		name                  string

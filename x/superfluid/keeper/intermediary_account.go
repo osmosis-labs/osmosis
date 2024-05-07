@@ -6,7 +6,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -17,7 +17,7 @@ func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIn
 
 	accounts := []types.SuperfluidIntermediaryAccount{}
 
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(prefixStore, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

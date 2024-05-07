@@ -21,7 +21,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // We need to setup a test suite with account keeper
@@ -47,7 +47,7 @@ func (suite *TestSuite) SetupTest() {
 	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
 	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
 		[]storetypes.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
-	suite.store = suite.ctx.KVStore(customStoreKey)
+	suite.store = suite.store.KVStore(customStoreKey)
 	// setup params (needed for auth)
 	encConfig := noapptest.MakeTestEncodingConfig(auth.AppModuleBasic{}, params.AppModuleBasic{})
 	paramsKeeper := paramskeeper.NewKeeper(encConfig.Codec, encConfig.Amino, paramsKey, paramsTKey)
@@ -640,7 +640,7 @@ func (s *TestSuite) TestGatherValuesFromIterator() {
 			}
 
 			if tc.prefix != "" {
-				iterator = sdk.KVStorePrefixIterator(s.store, []byte(tc.prefix))
+				iterator = storetypes.KVStorePrefixIterator(s.store, []byte(tc.prefix))
 			} else {
 				var startValue, endValue []byte
 				if tc.startValue != "" {

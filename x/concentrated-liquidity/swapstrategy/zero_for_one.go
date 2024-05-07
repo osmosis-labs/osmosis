@@ -3,15 +3,16 @@ package swapstrategy
 import (
 	"fmt"
 
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/prefix"
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // zeroForOneStrategy implements the swapStrategy interface.
@@ -214,7 +215,7 @@ func (s zeroForOneStrategy) getSpfOverOneMinusSpf() osmomath.Dec {
 // Panics if fails to parse tick index from bytes.
 // The caller is responsible for closing the iterator on success.
 func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndex int64) dbm.Iterator {
-	store := ctx.KVStore(s.storeKey)
+	store := store.KVStore(s.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 	startKey := types.TickIndexToBytes(currentTickIndex + 1)

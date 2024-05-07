@@ -155,20 +155,20 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 	}{
 		{
 			name:                  "exit at step 4: undelegating amount is under existing delegation amount",
-			delegateAmt:           []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt:         sdk.NewInt(50),
-			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(33), sdk.NewInt(17)},
+			delegateAmt:           []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(50)},
+			undelegateAmt:         osmomath.NewInt(50),
+			expectedUndelegateAmt: []osmomath.Int{osmomath.NewInt(33), osmomath.NewInt(17)},
 		},
 		{
 			name:          "error: attempt to undelegate more than delegated",
-			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt: sdk.NewInt(200),
-			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
+			delegateAmt:   []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(50)},
+			undelegateAmt: osmomath.NewInt(200),
+			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: osmomath.NewDec(150), UndelegationAmt: osmomath.NewInt(200)},
 		},
 		{
 			name:          "error: user does not have val-set preference set",
-			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt: sdk.NewInt(100),
+			delegateAmt:   []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(50)},
+			undelegateAmt: osmomath.NewInt(100),
 			noValset:      true,
 			expectedError: types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: s.TestAccs[0].String()},
 		},
@@ -184,11 +184,11 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 			valPreferences := []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(1, 1),
+					Weight:         osmomath.NewDecWithPrec(1, 1),
 				},
 				{
 					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(9, 1),
+					Weight:         osmomath.NewDecWithPrec(9, 1),
 				},
 			}
 
@@ -242,38 +242,38 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 	}{
 		{
 			name:                  "happy path: undelegate all, weights match the current delegations to valset",
-			delegateAmt:           []osmomath.Int{sdk.NewInt(10), sdk.NewInt(90)},
-			undelegateAmt:         sdk.NewInt(100),
-			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(10), sdk.NewInt(90)},
+			delegateAmt:           []osmomath.Int{osmomath.NewInt(10), osmomath.NewInt(90)},
+			undelegateAmt:         osmomath.NewInt(100),
+			expectedUndelegateAmt: []osmomath.Int{osmomath.NewInt(10), osmomath.NewInt(90)},
 		},
 		{
 			name:                  "happy path: undelegate some, weights match the current delegations to valset",
-			delegateAmt:           []osmomath.Int{sdk.NewInt(10), sdk.NewInt(90)},
-			undelegateAmt:         sdk.NewInt(50),
-			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(5), sdk.NewInt(45)},
+			delegateAmt:           []osmomath.Int{osmomath.NewInt(10), osmomath.NewInt(90)},
+			undelegateAmt:         osmomath.NewInt(50),
+			expectedUndelegateAmt: []osmomath.Int{osmomath.NewInt(5), osmomath.NewInt(45)},
 		},
 		{
 			name:                  "undelegate all, weights do not match the current delegations to valset",
-			delegateAmt:           []osmomath.Int{sdk.NewInt(90), sdk.NewInt(10)},
-			undelegateAmt:         sdk.NewInt(100),
-			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(90), sdk.NewInt(10)},
+			delegateAmt:           []osmomath.Int{osmomath.NewInt(90), osmomath.NewInt(10)},
+			undelegateAmt:         osmomath.NewInt(100),
+			expectedUndelegateAmt: []osmomath.Int{osmomath.NewInt(90), osmomath.NewInt(10)},
 		},
 		{
 			name:                  "undelegate some, weights do not match the current delegations to valset",
-			delegateAmt:           []osmomath.Int{sdk.NewInt(90), sdk.NewInt(10)},
-			undelegateAmt:         sdk.NewInt(50),
-			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(45), sdk.NewInt(5)},
+			delegateAmt:           []osmomath.Int{osmomath.NewInt(90), osmomath.NewInt(10)},
+			undelegateAmt:         osmomath.NewInt(50),
+			expectedUndelegateAmt: []osmomath.Int{osmomath.NewInt(45), osmomath.NewInt(5)},
 		},
 		{
 			name:          "error: attempt to undelegate more than delegated",
-			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt: sdk.NewInt(200),
-			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
+			delegateAmt:   []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(50)},
+			undelegateAmt: osmomath.NewInt(200),
+			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: osmomath.NewDec(150), UndelegationAmt: osmomath.NewInt(200)},
 		},
 		{
 			name:          "error: user does not have val-set preference set",
-			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt: sdk.NewInt(100),
+			delegateAmt:   []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(50)},
+			undelegateAmt: osmomath.NewInt(100),
 			noValset:      true,
 			expectedError: types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: s.TestAccs[0].String()},
 		},
@@ -289,11 +289,11 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 			valPreferences := []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(1, 1),
+					Weight:         osmomath.NewDecWithPrec(1, 1),
 				},
 				{
 					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(9, 1),
+					Weight:         osmomath.NewDecWithPrec(9, 1),
 				},
 			}
 
@@ -337,7 +337,7 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 }
 
 func (s *KeeperTestSuite) TestGetValsetRatios() {
-	defaultDelegationAmt := sdk.NewInt(100)
+	defaultDelegationAmt := osmomath.NewInt(100)
 	tests := []struct {
 		name              string
 		useSingleValPref  bool
@@ -349,27 +349,27 @@ func (s *KeeperTestSuite) TestGetValsetRatios() {
 		{
 			name:             "single validator, undelegate full amount",
 			useSingleValPref: true,
-			undelegateAmt:    sdk.NewInt(100),
+			undelegateAmt:    osmomath.NewInt(100),
 			expectedValRatios: []valPref.ValRatio{
 				{
-					Weight:        sdk.NewDec(1),
+					Weight:        osmomath.NewDec(1),
 					DelegatedAmt:  defaultDelegationAmt,
 					UndelegateAmt: defaultDelegationAmt,
-					VRatio:        sdk.NewDec(1),
+					VRatio:        osmomath.NewDec(1),
 				},
 			},
 		},
 		{
 			name:             "single validator, undelegate partial amount",
 			useSingleValPref: true,
-			undelegateAmt:    sdk.NewInt(50),
+			undelegateAmt:    osmomath.NewInt(50),
 			expectedValRatios: []valPref.ValRatio{
 				{
-					Weight:        sdk.NewDec(1),
+					Weight:        osmomath.NewDec(1),
 					DelegatedAmt:  defaultDelegationAmt,
-					UndelegateAmt: defaultDelegationAmt.Quo(sdk.NewInt(2)),
+					UndelegateAmt: defaultDelegationAmt.Quo(osmomath.NewInt(2)),
 					// 0.5 since we are undelegating half amount
-					VRatio: sdk.NewDecWithPrec(5, 1),
+					VRatio: osmomath.NewDecWithPrec(5, 1),
 				},
 			},
 		},
@@ -378,36 +378,36 @@ func (s *KeeperTestSuite) TestGetValsetRatios() {
 			undelegateAmt: defaultDelegationAmt,
 			expectedValRatios: []valPref.ValRatio{
 				{
-					Weight:        sdk.MustNewDecFromStr("0.333333333333333333"),
+					Weight:        osmomath.MustNewDecFromStr("0.333333333333333333"),
 					DelegatedAmt:  defaultDelegationAmt,
-					UndelegateAmt: sdk.NewInt(33),
-					VRatio:        sdk.MustNewDecFromStr("0.33"),
+					UndelegateAmt: osmomath.NewInt(33),
+					VRatio:        osmomath.MustNewDecFromStr("0.33"),
 				},
 				{
-					Weight:        sdk.MustNewDecFromStr("0.666666666666666667"),
+					Weight:        osmomath.MustNewDecFromStr("0.666666666666666667"),
 					DelegatedAmt:  defaultDelegationAmt,
-					UndelegateAmt: sdk.NewInt(66),
-					VRatio:        sdk.MustNewDecFromStr("0.66"),
+					UndelegateAmt: osmomath.NewInt(66),
+					VRatio:        osmomath.MustNewDecFromStr("0.66"),
 				},
 			},
 		},
 		{
 			name:          "multiple validator, undelegate partial amount",
-			undelegateAmt: defaultDelegationAmt.Quo(sdk.NewInt(2)),
+			undelegateAmt: defaultDelegationAmt.Quo(osmomath.NewInt(2)),
 			expectedValRatios: []valPref.ValRatio{
 				{
-					Weight:       sdk.MustNewDecFromStr("0.333333333333333333"),
+					Weight:       osmomath.MustNewDecFromStr("0.333333333333333333"),
 					DelegatedAmt: defaultDelegationAmt,
 					// 1/3 of undelegating amount(50)
-					UndelegateAmt: sdk.NewInt(16),
-					VRatio:        sdk.MustNewDecFromStr("0.16"),
+					UndelegateAmt: osmomath.NewInt(16),
+					VRatio:        osmomath.MustNewDecFromStr("0.16"),
 				},
 				{
-					Weight:       sdk.MustNewDecFromStr("0.666666666666666667"),
+					Weight:       osmomath.MustNewDecFromStr("0.666666666666666667"),
 					DelegatedAmt: defaultDelegationAmt,
 					// 2/3 of undelegating amount(50)
-					UndelegateAmt: sdk.NewInt(33),
-					VRatio:        sdk.MustNewDecFromStr("0.33"),
+					UndelegateAmt: osmomath.NewInt(33),
+					VRatio:        osmomath.MustNewDecFromStr("0.33"),
 				},
 			},
 		},
@@ -430,24 +430,24 @@ func (s *KeeperTestSuite) TestGetValsetRatios() {
 				valsetPrefs = []types.ValidatorPreference{
 					{
 						ValOperAddress: valAddrs[0],
-						Weight:         sdk.OneDec(),
+						Weight:         osmomath.OneDec(),
 					},
 				}
 			} else { // other cases, we assume we are using val set pref with multiple validators
 				valsetPrefs = []types.ValidatorPreference{
 					{
 						ValOperAddress: valAddrs[0],
-						Weight:         sdk.MustNewDecFromStr("0.333333333333333333"),
+						Weight:         osmomath.MustNewDecFromStr("0.333333333333333333"),
 					},
 					{
 						ValOperAddress: valAddrs[1],
-						Weight:         sdk.MustNewDecFromStr("0.666666666666666667"),
+						Weight:         osmomath.MustNewDecFromStr("0.666666666666666667"),
 					},
 				}
 			}
 
 			// set up delegation for each of the valset prefs
-			expectedTotalDelegatedAmt := sdk.ZeroDec()
+			expectedTotalDelegatedAmt := osmomath.ZeroDec()
 			if !test.notDelegated {
 				for i, valsetPref := range valsetPrefs {
 					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
@@ -559,18 +559,18 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+			Weight:         osmomath.NewDecWithPrec(5, 1), // 0.5
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+			Weight:         osmomath.NewDecWithPrec(5, 1), // 0.5
 		},
 	}
 
 	delegator := sdk.AccAddress([]byte("addr1---------------"))
-	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 10osmo using Valset now and 10 osmo using regular staking delegate
-	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 20osmo
-	expectedShares := []osmomath.Dec{sdk.NewDec(15_000_000), sdk.NewDec(500_000)}
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000))   // delegate 10osmo using Valset now and 10 osmo using regular staking delegate
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)) // undelegate 20osmo
+	expectedShares := []osmomath.Dec{osmomath.NewDec(15_000_000), osmomath.NewDec(500_000)}
 
 	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
 
@@ -594,7 +594,7 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	s.Require().True(found)
 
 	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
-	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, osmomath.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err)
 
 	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
@@ -621,25 +621,25 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.MustNewDecFromStr("0.05"),
+			Weight:         osmomath.MustNewDecFromStr("0.05"),
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.MustNewDecFromStr("0.05"),
+			Weight:         osmomath.MustNewDecFromStr("0.05"),
 		},
 		{
 			ValOperAddress: valAddrs[2],
-			Weight:         sdk.NewDecWithPrec(45, 2), // 0.45
+			Weight:         osmomath.NewDecWithPrec(45, 2), // 0.45
 		},
 		{
 			ValOperAddress: valAddrs[3],
-			Weight:         sdk.NewDecWithPrec(45, 2), // 0.45
+			Weight:         osmomath.NewDecWithPrec(45, 2), // 0.45
 		},
 	}
 
 	delegator := sdk.AccAddress([]byte("addr4---------------"))
-	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000))   // delegate 100osmo using Valset now and 10 osmo using regular staking delegate
-	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)) // undelegate 20osmo
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100_000_000))   // delegate 100osmo using Valset now and 10 osmo using regular staking delegate
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(200_000_000)) // undelegate 20osmo
 
 	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 300_000_000)}) // 100 osmo
 
@@ -669,10 +669,10 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
 	s.Require().True(found)
 
 	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
-	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(50_000_000), stakingtypes.Unbonded, validator, true)
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, osmomath.NewInt(50_000_000), stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err)
 
-	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(50_000_000), stakingtypes.Unbonded, validator2, true)
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, osmomath.NewInt(50_000_000), stakingtypes.Unbonded, validator2, true)
 	s.Require().NoError(err)
 
 	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)

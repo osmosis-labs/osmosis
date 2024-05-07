@@ -1,19 +1,19 @@
 package v15
 
 import (
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	"github.com/osmosis-labs/osmosis/v25/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit"

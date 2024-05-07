@@ -553,12 +553,12 @@ func TestEstimateTradeBasedOnPriceImpact(t *testing.T) {
 			ExpectedQuery: &queryproto.EstimateTradeBasedOnPriceImpactRequest{
 				FromCoin: sdk.Coin{
 					Denom:  "node0token",
-					Amount: sdk.NewInt(100),
+					Amount: osmomath.NewInt(100),
 				},
 				ToCoinDenom:    "stake",
 				PoolId:         1,
-				MaxPriceImpact: sdk.MustNewDecFromStr("0.01"), // equivalent to 0.01
-				ExternalPrice:  sdk.MustNewDecFromStr("0.02"), // equivalent to 0.02
+				MaxPriceImpact: osmomath.MustNewDecFromStr("0.01"), // equivalent to 0.01
+				ExternalPrice:  osmomath.MustNewDecFromStr("0.02"), // equivalent to 0.02
 			},
 		},
 	}

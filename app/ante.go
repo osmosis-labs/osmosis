@@ -3,8 +3,8 @@ package app
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -15,17 +15,17 @@ import (
 	osmoante "github.com/osmosis-labs/osmosis/v25/ante"
 	v9 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v9"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
 	smartaccountante "github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
 
-	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
+	auctionkeeper "github.com/skip-mev/block-sdk/v2/x/auction/keeper"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
-	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
+	auctionante "github.com/skip-mev/block-sdk/v2/x/auction/ante"
 )
 
 // BlockSDKAnteHandlerParams are the parameters necessary to configure the block-sdk antehandlers
