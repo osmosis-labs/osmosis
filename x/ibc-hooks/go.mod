@@ -233,3 +233,5 @@ replace (
 )
 
 //exclude github.com/cometbft/cometbft v0.38.0
+
+exclude github.com/gogo/protobuf v1.3.3

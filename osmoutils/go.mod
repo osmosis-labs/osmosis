@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
 	github.com/cosmos/ibc-go/v8 v8.0.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13
-	github.com/osmosis-labs/osmosis/v25 v25.0.0-20240507213213-fdab2ba231bf
+	github.com/osmosis-labs/osmosis/v25 v25.0.0-20240507214038-b986140713ac
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -249,3 +249,5 @@ replace (
 )
 
 exclude github.com/cometbft/cometbft v0.38.0
+
+exclude github.com/gogo/protobuf v1.3.3

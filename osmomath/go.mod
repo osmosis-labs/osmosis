@@ -116,3 +116,5 @@ replace (
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 )
+
+exclude github.com/gogo/protobuf v1.3.3
