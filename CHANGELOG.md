@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
+
+## v25.0.0
+
 ### State Breaking
 
 * [#7935](https://github.com/osmosis-labs/osmosis/pull/7935) Add block sdk and top of block auction from skip-mev
@@ -68,10 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#41](https://github.com/osmosis-labs/cometbft/pull/41) Remove unnecessary atomic read
 * [#42](https://github.com/osmosis-labs/cometbft/pull/42) Remove a minint call that was appearing in write packet delays
 * [#43](https://github.com/osmosis-labs/cometbft/pull/43) Speedup extended commit.BitArray()
-
-## Unreleased
-
-* [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 
 ## v24.0.4
 
