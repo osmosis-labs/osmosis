@@ -17,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	v17 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v17"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -143,42 +144,42 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID = poolID
 				}
 
-				existingPool := s.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
-				existingPool2 := s.PrepareConcentratedPoolWithCoins("akash", "uosmo")
-				existingBalancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
+				existingPool := s.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", appparams.BaseCoinUnit)
+				existingPool2 := s.PrepareConcentratedPoolWithCoins("akash", appparams.BaseCoinUnit)
+				existingBalancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)))
 
 				// create few TWAP records for the pools
-				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(10),
+				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", appparams.BaseCoinUnit, osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10*10),
 					osmomath.OneDec().MulInt64(3),
 					osmomath.ZeroDec())
 
-				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(30),
+				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", appparams.BaseCoinUnit, osmomath.NewDec(30),
 					osmomath.OneDec().MulInt64(10*10+10),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
 
-				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(20),
+				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", appparams.BaseCoinUnit, osmomath.NewDec(20),
 					osmomath.OneDec().MulInt64(10*10+10*5),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.ZeroDec())
 
-				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", osmomath.NewDec(10),
+				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", appparams.BaseCoinUnit, osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10*10*10),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
 
-				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", osmomath.NewDec(20),
+				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", appparams.BaseCoinUnit, osmomath.NewDec(20),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.OneDec().MulInt64(2),
 					osmomath.ZeroDec())
 
-				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", osmomath.NewDec(10),
+				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", appparams.BaseCoinUnit, osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.ZeroDec())
 
-				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", osmomath.NewDec(50),
+				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", appparams.BaseCoinUnit, osmomath.NewDec(50),
 					osmomath.OneDec().MulInt64(10*5),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
@@ -198,7 +199,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				lastPoolIdMinusOne := lastPoolID - 1
 				lastPoolIdMinusTwo := lastPoolID - 2
 				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-				stakingParams.BondDenom = "uosmo"
+				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 				// Retrieve the community pool balance before the upgrade
@@ -376,7 +377,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				// Set the bond denom to uosmo
 				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-				stakingParams.BondDenom = "uosmo"
+				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 				// Retrieve the community pool balance before the upgrade

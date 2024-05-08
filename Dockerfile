@@ -42,7 +42,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     GOWORK=off go build \
     -mod=readonly \
-    -tags ${BUILD_TAGS} \
+    -tags "netgo,ledger,muslc" \
     -ldflags \
     "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
     -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \

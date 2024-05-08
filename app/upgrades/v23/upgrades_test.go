@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
@@ -55,14 +56,14 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
 	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
 	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
-		{"uion", "uosmo"},
+		{"uion", appparams.BaseCoinUnit},
 		{apptesting.ETH, apptesting.USDC},
 	})
 
 	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
 
 	// Create incentive record for last pool
-	incentiveCoin := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000))
 	_, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 

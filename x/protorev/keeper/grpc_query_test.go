@@ -7,6 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
 
@@ -370,7 +371,7 @@ func (s *KeeperTestSuite) TestGetProtoRevPool() {
 	s.SetupPoolsTest()
 	// Request without setting pool for the base denom and other denom should return an error
 	req := &types.QueryGetProtoRevPoolRequest{
-		BaseDenom:  "uosmo",
+		BaseDenom:  appparams.BaseCoinUnit,
 		OtherDenom: "atom",
 	}
 	res, err := s.queryClient.GetProtoRevPool(sdk.WrapSDKContext(s.Ctx), req)
