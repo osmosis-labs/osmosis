@@ -7,8 +7,6 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
@@ -61,7 +59,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	allProtocolRevenue := s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)

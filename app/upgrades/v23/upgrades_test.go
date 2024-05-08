@@ -9,8 +9,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -94,7 +92,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	// Migrated pool: ensure that the claimable incentives are the same before and after migration

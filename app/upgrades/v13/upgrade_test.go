@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
@@ -40,8 +39,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 
 	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 	s.Require().NotPanics(func() {
-		beginBlockRequest := abci.RequestBeginBlock{}
-		s.App.BeginBlocker(s.Ctx, beginBlockRequest)
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
 	})
 }
 

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"cosmossdk.io/store/prefix"
-	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -78,7 +77,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// upgrade software
 	s.imitateUpgrade()
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
 
 	// after the accum values have been reset correctly after upgrade, we expect the accumulator store to be initialized with the correct value,

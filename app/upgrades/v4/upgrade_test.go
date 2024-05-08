@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
@@ -73,8 +72,8 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 
 				s.ctx = s.ctx.WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					s.app.BeginBlocker(s.ctx, beginBlockRequest)
+					_, err := s.app.BeginBlocker(s.ctx)
+					s.Require().NoError(err)
 				})
 			},
 			func() {

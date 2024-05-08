@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,7 +50,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// run an epoch
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	synthLockedPreV18 := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
 
@@ -59,7 +61,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// by doing this, we should be having incorrect state of superfluid staking accumulator
 	s.runv18Upgrade()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	// broken states (current status):
 	// synth lock accumulator is set to 0
@@ -75,7 +80,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// this fix should set superfluid accumulators to the correct values
 	s.runv19Upgrade()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	// synth lock accumulator should have been fixed after v19 upgrade,
 	// and went back to normal state(pre-v18)

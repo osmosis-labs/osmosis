@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/suite"
 
@@ -222,7 +221,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+					_, err := s.App.BeginBlocker(s.Ctx)
+					s.Require().NoError(err)
 				})
 
 				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(s.Ctx, lastPoolIdMinusTwo)
@@ -393,7 +393,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+					_, err := s.App.BeginBlocker(s.Ctx)
+					s.Require().NoError(err)
 				})
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
@@ -501,8 +502,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			},
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				dummyUpgrade(s)
-				s.Require().Panics(func() {
-					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+				s.Require().NotPanics(func() {
+					_, err := s.App.BeginBlocker(s.Ctx)
+					s.Require().NoError(err)
 				})
 			},
 		},

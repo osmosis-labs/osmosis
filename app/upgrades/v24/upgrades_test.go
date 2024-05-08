@@ -14,8 +14,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
@@ -193,7 +191,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	// TWAP Tests
@@ -205,7 +204,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Len(twapRecords, 2)
 
 	// Run the end blocker
-	s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.EndBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	// Since the prune limit was 1, 1 TWAP record indexed by time should be completely removed, leaving one more.
 	// twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)

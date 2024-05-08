@@ -9,8 +9,6 @@ import (
 
 	v21 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v21"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
@@ -36,7 +34,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.SetupWithCustomChainId(v21.TestingChainId)
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	// Pseudo collect cyclic arb profits
@@ -64,8 +63,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v21", Height: v21UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(v21UpgradeHeight)
 }

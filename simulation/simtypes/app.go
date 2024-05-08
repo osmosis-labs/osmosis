@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -32,8 +31,8 @@ type App interface {
 }
 
 type AccountKeeper interface {
-	GetAccount(ctx context.Context, addr sdk.AccAddress) authtypes.AccountI
-	GetAllAccounts(ctx context.Context) []authtypes.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetAllAccounts(ctx context.Context) []sdk.AccountI
 }
 
 type BankKeeper interface {

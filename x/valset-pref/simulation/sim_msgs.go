@@ -110,16 +110,24 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 			return nil, fmt.Errorf("validator address not formatted")
 		}
 
-		if sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
+		found, err := sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val)
+		if err != nil {
+			return nil, fmt.Errorf("error while checking redelegation")
+		}
+		if !found {
 			return nil, fmt.Errorf("receiving redelegation is not allowed for source validators")
 		}
 
-		if sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
+		found, err = sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val)
+		if err != nil {
+			return nil, fmt.Errorf("error while checking redelegation")
+		}
+		if !found {
 			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
 		}
 
 		// check if the user has delegated tokens to the valset
-		_, err := sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
+		_, err = sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
 		if err != nil {
 			return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
 		}
@@ -139,11 +147,19 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 			return nil, fmt.Errorf("validator address not formatted")
 		}
 
-		if sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
+		found, err := sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val)
+		if err != nil {
+			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
+		}
+		if !found {
 			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
 		}
 
-		if sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
+		found, err = sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val)
+		if err != nil {
+			return nil, fmt.Errorf("error while checking redelegation")
+		}
+		if !found {
 			return nil, fmt.Errorf("receiving redelegation is not allowed for target validators")
 		}
 	}

@@ -74,13 +74,13 @@ type BankKeeper interface {
 type StakingKeeper interface {
 	BondDenom(ctx context.Context) (string, error)
 	GetAllValidators(ctx context.Context) (validators []stakingtypes.Validator, err error)
-	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
+	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
 	ValidateUnbondAmount(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt osmomath.Int) (shares osmomath.Dec, err error)
 	Delegate(ctx context.Context, delAddr sdk.AccAddress, bondAmt osmomath.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares osmomath.Dec, err error)
 	InstantUndelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount osmomath.Dec) (sdk.Coins, error)
-	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
+	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, err error)
 	UnbondingTime(ctx context.Context) time.Duration
-	GetParams(ctx context.Context) stakingtypes.Params
+	GetParams(ctx context.Context) (stakingtypes.Params, error)
 
 	IterateBondedValidatorsByPower(ctx context.Context, fn func(int64, stakingtypes.ValidatorI) bool)
 	TotalBondedTokens(ctx context.Context) osmomath.Int

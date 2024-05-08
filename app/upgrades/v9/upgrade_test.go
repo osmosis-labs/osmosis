@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 const dummyUpgradeHeight = 5
@@ -35,8 +34,8 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 
 				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					s.App.BeginBlocker(s.Ctx, beginBlockRequest)
+					_, err := s.App.BeginBlocker(s.Ctx)
+					s.Require().NoError(err)
 				})
 			},
 			func() {
