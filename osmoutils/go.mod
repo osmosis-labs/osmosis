@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13
-	github.com/osmosis-labs/osmosis/v25 v25.0.0-20240429183841-537ba1600888
+	github.com/osmosis-labs/osmosis/v25 v25.0.0-rc0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -153,8 +153,13 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/onsi/gomega v1.31.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.9-0.20240502181753-5ba797611f84 // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15-0.20240502181753-5ba797611f84 // indirect
+=======
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.9 // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15 // indirect
+>>>>>>> 75847679 (chore: update sqsdomain to latest tag (#8237))
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
@@ -233,7 +238,7 @@ replace (
 
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
