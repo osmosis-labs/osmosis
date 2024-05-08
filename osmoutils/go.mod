@@ -153,13 +153,8 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/onsi/gomega v1.31.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-<<<<<<< HEAD
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.9-0.20240502181753-5ba797611f84 // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15-0.20240502181753-5ba797611f84 // indirect
-=======
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.9 // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15 // indirect
->>>>>>> 75847679 (chore: update sqsdomain to latest tag (#8237))
 	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
