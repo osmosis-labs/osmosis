@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	gocontext "context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -32,6 +33,17 @@ func TestTestSuite(t *testing.T) {
 
 func (s *TestSuite) SetupTest() {
 	s.KeeperTestSuite.SetupTest()
+
+	// set the bond denom to be osmo (because it's hardcoded in protorev)
+	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams.BondDenom = appparams.BaseCoinUnit
+	err := s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
+	s.Require().NoError(err)
+
+	// set incentives min value in osmo
+	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	incentivesParams.MinValueForDistribution.Denom = appparams.BaseCoinUnit
+	s.App.IncentivesKeeper.SetParams(s.Ctx, incentivesParams)
 
 	// make pool creation fees be paid in the bond denom. Also make them low.
 	poolmanagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
@@ -104,9 +116,9 @@ func (s *TestSuite) mintToAccount(amount osmomath.Int, denom string, acc sdk.Acc
 }
 
 func (s *TestSuite) TestGammSuperfluid() {
-	//
+	////////
 	// Setup
-	//
+	////////
 
 	s.SetupTest()
 
@@ -145,18 +157,18 @@ func (s *TestSuite) TestGammSuperfluid() {
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: gammToken, AssetType: types.SuperfluidAssetTypeLPShare})
 	s.Require().NoError(err)
 
-	id, err := s.App.PoolIncentivesKeeper.GetInternalGaugeIDForPool(s.Ctx, nextPoolId)
+	// Mint assets to the lockup module. This will ensure there are assets to distribute.
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
-	s.mintToAccount(sdk.NewInt(1_000_000_000), appparams.BaseCoinUnit, lpAddr)
-	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, lpAddr, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1_000_000_000))), id)
+	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
-	gauges := s.App.PoolIncentivesKeeper.GetAllGauges(s.Ctx)
-	fmt.Println("gauges", gauges)
-	// TODO: update gagues min duration.
 
-	//
+	// Keep track of the original balance of the bond denom to make sure rewards are distributed later on
+	originalBondDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, bondDenom).Amount
+
+	////////
 	// TEST: Delegate gamm tokens
-	//
+	////////
 
 	// No delegations
 	delegations := s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, lpAddr)
@@ -185,29 +197,45 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().Equal(gammToken, underlyingLock.Coins[0].Denom)
 
 	remainingGammTokens := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
-	fmt.Println("remainingGammTokens", remainingGammTokens)
-	fmt.Println("totalGammTokens", totalGammTokens)
 	s.Require().Equal(totalGammTokens.Amount.Sub(gammDelegationAmount), remainingGammTokens.Amount)
 
-	//
+	////////
 	// TEST: Reward distribution
-	//
+	////////
 
-	// ensure there are some fees to distribute
-	rewards := sdk.NewCoin(bondDenom, sdk.NewInt(5_000_000))
-	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(rewards))
-	s.Require().NoError(err)
-	err = s.App.MintKeeper.DistributeMintedCoin(s.Ctx, rewards)
+	// Check that the user has not received any rewards yet
+	bondDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, bondDenom)
+	s.Require().Equal(originalBondDenomBalance, bondDenomBalance.Amount)
+
+	// There are no rewards assigned to the validator yet
+	validatorRewards := new(distrtypes.QueryValidatorOutstandingRewardsResponse)
+	err = s.QueryHelper.Invoke(gocontext.Background(),
+		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
+		&distrtypes.QueryValidatorOutstandingRewardsRequest{
+			ValidatorAddress: validator.GetOperator().String(),
+		},
+		validatorRewards)
+	s.Require().Equal(0, len(validatorRewards.Rewards.Rewards))
 	s.Require().NoError(err)
 
-	// move forward to block 50 because we only make distributions every 50 blocks
+	// Move to block 50 because rewards are only distributed every 50 blocks. Rewards will be available after unstaking
 	s.AdvanceToBlockNAndRunEpoch(50)
 
-	// TODO: Still not sure how to check rewards.
+	// After a block that is not a multiple of 50, the rewards will be assigned to the validator
+	validatorRewards = new(distrtypes.QueryValidatorOutstandingRewardsResponse)
+	err = s.QueryHelper.Invoke(gocontext.Background(),
+		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
+		&distrtypes.QueryValidatorOutstandingRewardsRequest{
+			ValidatorAddress: validator.GetOperator().String(),
+		},
+		validatorRewards)
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(validatorRewards.Rewards.Rewards))
+	// After unstaking we will check that those rewards were properly distributed to the delegator
 
-	//
+	////////
 	// TEST: Voting. User can vote
-	//
+	////////
 
 	// check user can vote
 	voteMsg := &govtypes.MsgVote{
@@ -223,17 +251,14 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.EndBlock()
 	s.BeginNewBlock(true)
 
-	coins, err := s.App.DistrKeeper.WithdrawDelegationRewards(s.Ctx, lpAddr, validator.GetOperator())
-	fmt.Println("coins", coins)
-
 	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
 	s.Require().True(found)
 	s.Require().Equal(govv1.StatusFailed, proposal.Status)
 	s.Require().Equal("5000000000", proposal.FinalTallyResult.YesCount)
 
-	//
+	////////
 	// TEST: Unstake
-	//
+	////////
 
 	// Check that the user can unstake and the delegation is removed
 	undelegateMsg := &types.MsgSuperfluidUndelegateAndUnbondLock{
@@ -257,12 +282,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 1)
 
-	querier2 := distrkeeper.NewQuerier(*s.App.DistrKeeper)
-	totalRewards, err := querier2.DelegationTotalRewards(s.Ctx, &distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: lpAddr.String()})
-	s.Require().NoError(err)
-	fmt.Println("rewards", totalRewards)
-
-	// check balance before undelegation time passes
+	// check pool token balance before undelegation time passes. Should be the same as before
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(remainingGammTokens.Amount, balance.Amount)
 
@@ -275,17 +295,15 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 0)
 
-	// check balance after undelegation time passes
+	// check pool token balance after undelegation time passes. Should be back to original
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(totalGammTokens.Amount, balance.Amount)
 
-	balances := s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
-	fmt.Println(balances)
-	s.AdvanceToBlockNAndRunEpoch(100)
-	s.AdvanceToBlockNAndRunEpoch(120)
-	balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
-	fmt.Println(balances)
-
+	////////
+	// TEST:  Check delegation rewards were distributed
+	////////
+	bondDenomBalance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, bondDenom)
+	s.Require().True(bondDenomBalance.Amount.GT(originalBondDenomBalance))
 }
 
 func (s *TestSuite) TestNativeSuperfluid() {
@@ -337,8 +355,8 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	id, err := s.App.PoolIncentivesKeeper.GetInternalGaugeIDForPool(s.Ctx, nextPoolId)
 	s.Require().NoError(err)
-	s.mintToAccount(sdk.NewInt(1_000_000_000), appparams.BaseCoinUnit, lpAddr)
-	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, lpAddr, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1_000_000_000))), id)
+	s.mintToAccount(sdk.NewInt(1_000_000_000), bondDenom, lpAddr)
+	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, lpAddr, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))), id)
 	s.Require().NoError(err)
 	gauges := s.App.PoolIncentivesKeeper.GetAllGauges(s.Ctx)
 	fmt.Println("gauges", gauges)
