@@ -23,20 +23,24 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 }
 
 // Returns amount * (1 - k.RiskFactor(asset))
-// Fow now, the risk factor is a global constant.
-// It will move towards per pool functions.
-func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount osmomath.Int) osmomath.Int {
-	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Sub(amount.ToLegacyDec().Mul(minRiskFactor).RoundInt())
+func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount osmomath.Int, denom string) osmomath.Int {
+	riskFactor := k.CalculateRiskFactor(ctx, denom)
+	return amount.Sub(amount.ToLegacyDec().Mul(riskFactor).RoundInt())
 }
 
-// y = x - (x * minRisk)
-// y = x (1 - minRisk)
-// y / (1 - minRisk) = x
+// CalculateRiskFactor Fow now, the risk factor is a global constant.
+// It will move towards per pool functions.
+func (k Keeper) CalculateRiskFactor(ctx sdk.Context, denom string) osmomath.Dec {
+	return k.GetParams(ctx).MinimumRiskFactor
+}
 
-func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount osmomath.Dec) osmomath.Dec {
-	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Quo(osmomath.OneDec().Sub(minRiskFactor))
+// y = x - (x * riskFactor)
+// y = x (1 - riskFactor)
+// y / (1 - riskFactor) = x
+
+func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount osmomath.Dec, denom string) osmomath.Dec {
+	riskFactor := k.CalculateRiskFactor(ctx, denom)
+	return amount.Quo(osmomath.OneDec().Sub(riskFactor))
 }
 
 func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) error {
