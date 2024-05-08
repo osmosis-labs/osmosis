@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8144](https://github.com/osmosis-labs/osmosis/pull/8144) IBC wasm clients can now make stargate queries and support abort.
 * [#8147](https://github.com/osmosis-labs/osmosis/pull/8147) Process unbonding locks once per minute, rather than every single block.
 * [#8157](https://github.com/osmosis-labs/osmosis/pull/8157) Speedup protorev by not unmarshalling pools in cost-estimation phase.
-
+* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking.
 
 ### State Compatible
 
