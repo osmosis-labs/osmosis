@@ -320,7 +320,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// accounts
 	// pool creator
 	lpKey := ed25519.GenPrivKey().PubKey()
-	lpAddr := sdk.AccAddress(lpKey.Address())
+	poolAddr := sdk.AccAddress(lpKey.Address())
 	userKey := ed25519.GenPrivKey().PubKey()
 	userAddr := sdk.AccAddress(userKey.Address())
 
@@ -329,16 +329,17 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// default bond denom
 
 	// mint necessary tokens
-	s.mintToAccount(btcPoolAmount, btcDenom, lpAddr)
-	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, lpAddr)
+	s.mintToAccount(btcPoolAmount, btcDenom, poolAddr)
+	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, poolAddr)
 	s.mintToAccount(sdk.NewInt(100_000_000), bondDenom, userAddr)
-	s.mintToAccount(sdk.NewInt(1_000_000), btcDenom, userAddr)
+	totalBTCAmount := sdk.NewInt(1_000_000)
+	s.mintToAccount(totalBTCAmount, btcDenom, userAddr)
 
 	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
 
 	// create an bondDenom/btcDenom pool. This is only used so that the native asset can have a price.
 	createPoolMsg := createPoolMsgGen(
-		lpAddr,
+		poolAddr,
 		sdk.NewCoins(sdk.NewCoin(btcDenom, btcPoolAmount), sdk.NewCoin(bondDenom, osmoPoolAmount)),
 	)
 
@@ -353,13 +354,14 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId})
 	s.Require().NoError(err)
 
-	id, err := s.App.PoolIncentivesKeeper.GetInternalGaugeIDForPool(s.Ctx, nextPoolId)
+	// Mint assets to the lockup module. This will ensure there are assets to distribute.
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
-	s.mintToAccount(sdk.NewInt(1_000_000_000), bondDenom, lpAddr)
-	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, lpAddr, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))), id)
+	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
-	gauges := s.App.PoolIncentivesKeeper.GetAllGauges(s.Ctx)
-	fmt.Println("gauges", gauges)
+
+	// Keep track of the original balance of the bond denom to make sure rewards are distributed later on
+	originalBondDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, userAddr, bondDenom).Amount
 
 	//
 	// TEST: Delegation
@@ -370,7 +372,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(0, len(delegations))
 
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
-	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
+	s.Require().Equal(totalBTCAmount, balance.Amount)
 
 	// superfluid stake btcDenom
 	btcStakeAmount := sdk.NewInt(500_000)
@@ -420,11 +422,35 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// TEST: Reward distribution
 	//
 
-	// Run epoch
-	// move forward to block 30 because we only check matured locks every 30 blocks
+	// Check that the user has not received any rewards yet
+	bondDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, userAddr, bondDenom)
+	s.Require().Equal(originalBondDenomBalance, bondDenomBalance.Amount)
+
+	// There are no rewards assigned to the validator yet
+	validatorRewards := new(distrtypes.QueryValidatorOutstandingRewardsResponse)
+	err = s.QueryHelper.Invoke(gocontext.Background(),
+		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
+		&distrtypes.QueryValidatorOutstandingRewardsRequest{
+			ValidatorAddress: validator.GetOperator().String(),
+		},
+		validatorRewards)
+	s.Require().Equal(0, len(validatorRewards.Rewards.Rewards))
+	s.Require().NoError(err)
+
+	// Move to block 50 because rewards are only distributed every 50 blocks. Rewards will be available after unstaking
 	s.AdvanceToBlockNAndRunEpoch(50)
 
-	// TODO: How do I check distribution happened properly?
+	// After a block that is not a multiple of 50, the rewards will be assigned to the validator
+	validatorRewards = new(distrtypes.QueryValidatorOutstandingRewardsResponse)
+	err = s.QueryHelper.Invoke(gocontext.Background(),
+		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
+		&distrtypes.QueryValidatorOutstandingRewardsRequest{
+			ValidatorAddress: validator.GetOperator().String(),
+		},
+		validatorRewards)
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(validatorRewards.Rewards.Rewards))
+	// After unstaking we will check that those rewards were properly distributed to the delegator
 
 	//
 	// TEST: Voting. Users should not be allowed to vote when superfluid staking native assets
@@ -449,9 +475,9 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(govv1.StatusRejected, proposal.Status)
 	s.Require().Equal("0", proposal.FinalTallyResult.YesCount)
 
-	//
+	////////
 	// TEST: Unstake
-	//
+	////////
 
 	// Check that the user can unstake and the delegation is removed
 	undelegateMsg := &types.MsgSuperfluidUndelegateAndUnbondLock{
@@ -481,162 +507,20 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// move forward to block 60 because we only check matured locks every 30 blocks
 	s.AdvanceToBlockNAndRunEpoch(60)
 
-	// check balance after undelegation time passes
-	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
-	s.Require().Equal(sdk.NewInt(1_000_000), balance.Amount)
-
-	balances := s.App.BankKeeper.GetAllBalances(s.Ctx, userAddr)
-	fmt.Println(balances)
-}
-
-func (s *TestSuite) TestCLSuperfluid() {
-	//
-	// Setup
-	//
-
-	s.SetupTest()
-
-	// denoms
-	btcDenom := "eth" // Asset to superfluid stake. Using eth because it's an authorized denom
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
-
-	// accounts
-	// pool creator
-	lpKey := ed25519.GenPrivKey().PubKey()
-	lpAddr := sdk.AccAddress(lpKey.Address())
-
-	osmoPoolAmount := sdk.NewInt(1_000_000_000_000)
-	btcPoolAmount := sdk.NewInt(10_000_000_000)
-	// default bond denom
-
-	// mint necessary tokens
-	s.mintToAccount(btcPoolAmount, btcDenom, lpAddr)
-	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, lpAddr)
-
-	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
-
-	// create an bondDenom/btcDenom pool and add full range liquidity
-	clPool := s.PrepareCustomConcentratedPool(lpAddr, bondDenom, btcDenom, uint64(1), osmomath.ZeroDec())
-	s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(bondDenom, osmoPoolAmount), sdk.NewCoin(btcDenom, btcPoolAmount)))
-
-	//
-	// TEST: Delegate gamm tokens
-	//
-
-	// No delegations
-	delegations := s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, lpAddr)
-	s.Require().Equal(0, len(delegations))
-
-	// Add the pool as an allowed superfluid asset
-	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare})
-	s.Require().NoError(err)
-
-	// superfluid stake cl position
-	osmoDelegateAmount := sdk.NewInt(1_000_000)
-	btcDelegateAmount := sdk.NewInt(100_000)
-	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
-	clDelegateMsg := &types.MsgCreateFullRangePositionAndSuperfluidDelegate{
-		Sender:  lpAddr.String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(bondDenom, osmoDelegateAmount), sdk.NewCoin(btcDenom, btcDelegateAmount)),
-		ValAddr: validator.GetOperator().String(),
-		PoolId:  nextPoolId,
-	}
-	_, err = s.RunMsg(clDelegateMsg)
-	s.Require().NoError(err)
-
-	// Check delegations
-	delegations = s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, lpAddr)
-	s.Require().Equal(1, len(delegations))
-	synthLock := delegations[0]
-
-	// Get underlying lock
-	underlyingLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, synthLock.UnderlyingLockId)
-	s.Require().NoError(err)
-	s.Require().Equal(lpAddr.String(), underlyingLock.Owner)
-
-	//
-	// TEST: Reward distribution
-	//
-
-	// ensure there are some fees to distribute
-	rewards := sdk.NewCoin(bondDenom, sdk.NewInt(5_000_000))
-	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(rewards))
-	s.Require().NoError(err)
-	err = s.App.MintKeeper.DistributeMintedCoin(s.Ctx, rewards)
-	s.Require().NoError(err)
-
-	// TODO: Still not sure how to check rewards.
-	balances := s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
-	fmt.Println("balances", balances)
-	s.AdvanceToBlockNAndRunEpoch(30)
-	s.AdvanceToBlockNAndRunEpoch(50)
-	balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
-	fmt.Println("balances", balances)
-
-	//
-	// TEST: Voting. User can vote
-	//
-
-	// check user can vote
-	voteMsg := &govtypes.MsgVote{
-		ProposalId: 1,
-		Voter:      lpAddr.String(),
-		Option:     govtypes.OptionYes,
-	}
-	_, err = s.RunMsg(voteMsg)
-	s.Require().NoError(err)
-
-	// Move time beyond voting end time
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(96 * time.Hour))
-	s.EndBlock()
-	s.BeginNewBlock(true)
-
-	coins, err := s.App.DistrKeeper.WithdrawDelegationRewards(s.Ctx, lpAddr, validator.GetOperator())
-	fmt.Println("coins", coins)
-
-	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
-	s.Require().True(found)
-	s.Require().Equal(govv1.StatusRejected, proposal.Status)
-	s.Require().Equal("500000", proposal.FinalTallyResult.YesCount)
-
-	//
-	// TEST: Unstake
-	//
-
-	balances = s.App.BankKeeper.GetAllBalances(s.Ctx, lpAddr)
-	fmt.Println("balances", balances)
-
-	// Check that the user can unstake and the delegation is removed
-	undelegateMsg := &types.MsgSuperfluidUndelegateAndUnbondLock{
-		Sender: lpAddr.String(),
-		LockId: underlyingLock.ID,
-		Coin:   sdk.NewCoin("cl/pool/1", underlyingLock.Coins[0].Amount),
-	}
-	_, err = s.RunMsg(undelegateMsg)
-	s.Require().NoError(err)
-
-	// Check delegations
-	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
-	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
-	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
-	s.Require().NoError(err)
-	s.Require().Len(res.SuperfluidDelegationRecords, 0)
-
-	// Check undelegations
-	queryUndelegations := types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
-	undelegationResponse, err := querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
-	s.Require().NoError(err)
-	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 1)
-
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
-	// move forward to block 60 because we only check matured locks every 30 blocks
-	s.AdvanceToBlockNAndRunEpoch(60)
-
 	// No more undelegations
 	undelegationResponse, err = querier.SuperfluidUndelegationsByDelegator(s.Ctx, &queryUndelegations)
 	s.Require().NoError(err)
 	s.Require().Len(undelegationResponse.SuperfluidDelegationRecords, 0)
 
+	// check the btc balance after undelegation time passes. Funds should be restored
+	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
+	s.Require().Equal(totalBTCAmount, balance.Amount)
+
+	////////
+	// TEST:  Check delegation rewards were distributed
+	////////
+	bondDenomBalance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, bondDenom)
+	s.Require().True(bondDenomBalance.Amount.GT(originalBondDenomBalance))
 }
 
 func (s *TestSuite) AdvanceToBlockNAndRunEpoch(n int64) {
