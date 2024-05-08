@@ -13,8 +13,8 @@ import (
 // BaseAppParamManager defines an interrace that BaseApp is expected to fulfill
 // that allows upgrade handlers to modify BaseApp parameters.
 type BaseAppParamManager interface {
-	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
-	StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams)
+	GetConsensusParams(ctx sdk.Context) tmproto.ConsensusParams
+	StoreConsensusParams(ctx sdk.Context, cp tmproto.ConsensusParams) error
 }
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

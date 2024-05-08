@@ -42,7 +42,7 @@ func dummyBeforeEpochStartEvent(epochIdentifier string, epochNumber int64) sdk.E
 	)
 }
 
-var dummyErr = errorsmod.Register("9", 9, "dummyError")
+var dummyErr = errorsmod.New("9", 9, "dummyError")
 
 // dummyEpochHook is a struct satisfying the epoch hook interface,
 // that maintains a counter for how many times its been successfully called,

@@ -116,8 +116,8 @@ func (s *UpgradeTestSuite) imitateUpgrade() {
 	plan := upgradetypes.Plan{Name: "v18", Height: dummyUpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }

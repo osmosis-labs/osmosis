@@ -72,7 +72,7 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 		accSeqs[0],
 	)
 
-	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
+	err = testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, txFee)
 	s.Require().NoError(err)
 
 	tx := s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)

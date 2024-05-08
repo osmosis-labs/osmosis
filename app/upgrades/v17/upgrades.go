@@ -1,6 +1,7 @@
 package v17
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -49,7 +50,8 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		var assetPairs []AssetPair
 
 		// Run migrations before applying any other state changes.

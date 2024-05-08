@@ -47,8 +47,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v16", Height: dummyUpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
@@ -91,7 +91,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				s.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)))
 			},
 			func() {
-				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+				stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+				s.Require().NoError(err)
 				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
@@ -100,7 +101,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Send one dai to the community pool (this is true in current mainnet)
 				s.FundAcc(s.TestAccs[0], oneDai)
 
-				err := s.App.DistrKeeper.FundCommunityPool(s.Ctx, oneDai, s.TestAccs[0])
+				err = s.App.DistrKeeper.FundCommunityPool(s.Ctx, oneDai, s.TestAccs[0])
 				s.Require().NoError(err)
 
 				// Determine approx how much OSMO will be used from community pool when 1 DAI used.

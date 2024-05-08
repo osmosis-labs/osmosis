@@ -52,8 +52,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v17", Height: dummyUpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
@@ -198,7 +198,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				lastPoolIdMinusOne := lastPoolID - 1
 				lastPoolIdMinusTwo := lastPoolID - 2
-				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+				stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
 				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
@@ -376,7 +376,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			},
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				// Set the bond denom to uosmo
-				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+				stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+				s.Require().NoError(err)
 				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 

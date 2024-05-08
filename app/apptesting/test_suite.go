@@ -39,6 +39,8 @@ import (
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
+	storemetrics "cosmossdk.io/store/metrics"
+
 	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
@@ -102,7 +104,10 @@ func (s *KeeperTestHelper) Setup() {
 	s.setupGeneral()
 
 	// Manually set validator signing info, otherwise we panic
-	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	vals, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, val := range vals {
 		consAddr, _ := val.GetConsAddr()
 		signingInfo := slashingtypes.NewValidatorSigningInfo(
@@ -126,7 +131,10 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 	s.setupGeneralCustomChainId(chainId)
 
 	// Manually set validator signing info, otherwise we panic
-	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	vals, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, val := range vals {
 		consAddr, _ := val.GetConsAddr()
 		signingInfo := slashingtypes.NewValidatorSigningInfo(
@@ -211,7 +219,7 @@ func (s *KeeperTestHelper) setupGeneral() {
 }
 
 func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: chainId, Time: defaultTestStartTime})
+	s.Ctx = s.App.BaseApp.NewContextLegacy(false, tmtypes.Header{Height: 1, ChainID: chainId, Time: defaultTestStartTime})
 	if s.withCaching {
 		s.Ctx, _ = s.Ctx.CacheContext()
 	}
@@ -230,7 +238,7 @@ func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(true)
-	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+	s.Ctx = s.App.BaseApp.NewContextLegacy(true, tmtypes.Header{})
 	// TODO: not sure
 	s.hasUsedAbci = true
 }
@@ -271,7 +279,7 @@ func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.C
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 
-	ms := rootmulti.NewStore(db, logger)
+	ms := rootmulti.NewStore(db, logger, storemetrics.NewNoOpMetrics())
 
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms
 }
@@ -290,13 +298,13 @@ func (s *KeeperTestHelper) Commit() {
 
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	err := testutil.FundAccount(s.Ctx, s.App.BankKeeper, acc, amounts)
 	s.Require().NoError(err)
 }
 
 // FundModuleAcc funds target modules with specified amount.
 func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
-	err := testutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	err := testutil.FundModuleAccount(s.Ctx, s.App.BankKeeper, moduleName, amounts)
 	s.Require().NoError(err)
 }
 
@@ -309,7 +317,8 @@ func (s *KeeperTestHelper) MintCoins(coins sdk.Coins) {
 func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
-	bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	bondDenom := stakingParams.BondDenom
 	bondAmt := sdk.DefaultPowerReduction
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: bondAmt, Denom: bondDenom})
 
@@ -317,15 +326,15 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
-	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
+	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr.String(), valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
 	res, err := stakingMsgSvr.CreateValidator(sdk.WrapSDKContext(s.Ctx), valCreateMsg)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
 
-	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-	s.Require().True(found)
+	val, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().NoError(err)
 
 	val = val.UpdateStatus(bondStatus)
 	s.App.StakingKeeper.SetValidator(s.Ctx, val)
@@ -359,16 +368,17 @@ func (s *KeeperTestHelper) SetupMultipleValidators(numValidator int) []string {
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
 
-	validators := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	validators, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	s.Require().NoError(err)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
 		s.Require().NoError(err)
-		valAddr = valAddrFancy.Bytes()
+		valAddr = valAddrFancy
 	} else {
 		valAddrFancy := s.SetupValidator(stakingtypes.Bonded)
 		validator, _ := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrFancy)
 		valAddr2, _ := validator.GetConsAddr()
-		valAddr = valAddr2.Bytes()
+		valAddr = valAddr2
 	}
 
 	s.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
@@ -376,13 +386,13 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 
 // BeginNewBlockWithProposer begins a new block with a proposer.
 func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
-	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
-	s.Assert().True(found)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
+	s.Assert().NoError(err)
 
 	valConsAddr, err := validator.GetConsAddr()
 	s.Require().NoError(err)
 
-	valAddr := valConsAddr.Bytes()
+	valAddr := valConsAddr
 
 	epochIdentifier := s.App.SuperfluidKeeper.GetEpochIdentifier(s.Ctx)
 	epoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier)
@@ -429,12 +439,12 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
 func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt osmomath.Int) {
-	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-	s.Require().True(found)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().NoError(err)
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
-	err := testutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
+	err = testutil.FundModuleAccount(s.Ctx, s.App.BankKeeper, distrtypes.ModuleName, coins)
 	s.Require().NoError(err)
 
 	// allocate rewards to validator
@@ -445,7 +455,8 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
 func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []osmomath.Dec) []gammtypes.CFMMPoolI {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
@@ -654,7 +665,8 @@ func GenerateTestAddrs() (string, string) {
 // sets up the volume for the pools in the group
 // mutates poolIDToVolumeMap
 func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
 	for i := 0; i < len(poolIDs); i++ {

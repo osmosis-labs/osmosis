@@ -102,8 +102,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: v25.Upgrade.UpgradeName, Height: v25UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(v25UpgradeHeight)
 }
@@ -206,8 +206,8 @@ func (s *UpgradeTestSuite) prepareMissedBlocksCounterTest() slashingtypes.Valida
 }
 
 func (s *UpgradeTestSuite) executeMissedBlocksCounterTest(preMigrationSigningInfo slashingtypes.ValidatorSigningInfo) {
-	postMigrationSigningInfo, found := s.App.SlashingKeeper.GetValidatorSigningInfo(s.Ctx, consAddr)
-	s.Require().True(found)
+	postMigrationSigningInfo, err := s.App.SlashingKeeper.GetValidatorSigningInfo(s.Ctx, consAddr)
+	s.Require().NoError(err)
 
 	// Check that the missed blocks counter was set to the correct value
 	s.Require().Equal(int64(10), postMigrationSigningInfo.MissedBlocksCounter)

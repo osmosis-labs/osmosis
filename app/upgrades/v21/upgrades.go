@@ -1,6 +1,8 @@
 package v21
 
 import (
+	"context"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -13,6 +15,7 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -49,7 +52,8 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		// I spent a very long time trying to figure out how to test this in a non hacky way.
 		// TL;DR, on mainnet, we run a fork of v0.43, so we should be starting at version 2.
 		// Without this change, since we unfork to the primary repo, we start at version 5, which

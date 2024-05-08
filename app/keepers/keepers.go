@@ -11,6 +11,8 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -213,19 +215,21 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Add 'normal' keepers
 	accountKeeper := authkeeper.NewAccountKeeper(
 		appCodec,
-		appKeepers.keys[authtypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		AccountAddressPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.AccountKeeper = &accountKeeper
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		appCodec,
-		appKeepers.keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[banktypes.StoreKey]),
 		appKeepers.AccountKeeper,
 		blockedAddress,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		bApp.Logger(),
 	)
 	appKeepers.BankKeeper = &bankKeeper
 
@@ -251,7 +255,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.SmartAccountKeeper = &smartAccountKeeper
 
 	authzKeeper := authzkeeper.NewKeeper(
-		appKeepers.keys[authzkeeper.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[authzkeeper.StoreKey]),
 		appCodec,
 		bApp.MsgServiceRouter(),
 		appKeepers.AccountKeeper,
@@ -260,15 +264,17 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[stakingtypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[stakingtypes.StoreKey]),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 	appKeepers.StakingKeeper = stakingKeeper
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec, appKeepers.keys[distrtypes.StoreKey],
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[distrtypes.StoreKey]),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
@@ -284,7 +290,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
 		legacyAmino,
-		appKeepers.keys[slashingtypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[slashingtypes.StoreKey]),
 		appKeepers.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -298,6 +304,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		appKeepers.UpgradeKeeper,
 		appKeepers.ScopedIBCKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Configure the hooks keeper
@@ -312,7 +319,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// We are using a separate VM here
 	ibcWasmClientKeeper := ibcwasmkeeper.NewKeeperWithConfig(
 		appCodec,
-		appKeepers.keys[ibcwasmtypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[ibcwasmtypes.StoreKey]),
 		appKeepers.IBCKeeper.ClientKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		ibcWasmConfig,
@@ -328,10 +335,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(icahosttypes.SubModuleName),
 		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.ScopedICAHostKeeper,
 		bApp.MsgServiceRouter(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
@@ -340,9 +348,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(icacontrollertypes.SubModuleName),
 		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedICAControllerKeeper,
 		bApp.MsgServiceRouter(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.ICAControllerKeeper = &icaControllerKeeper
 
@@ -360,7 +369,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[icqtypes.StoreKey],
 		appKeepers.IBCKeeper.ChannelKeeper, // may be replaced with middleware
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedICQKeeper,
 		bApp.GRPCQueryRouter(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -384,9 +393,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	appKeepers.EvidenceKeeper = evidencekeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[evidencetypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[evidencetypes.StoreKey]),
 		appKeepers.StakingKeeper,
 		appKeepers.SlashingKeeper,
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr),
+		runtime.ProvideCometInfoService(),
 	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
@@ -567,14 +578,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	wasmKeeper := wasmkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[wasmtypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[wasmtypes.StoreKey]),
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		*appKeepers.StakingKeeper,
 		distrkeeper.NewQuerier(*appKeepers.DistrKeeper),
 		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedWasmKeeper,
 		appKeepers.TransferKeeper,
 		bApp.MsgServiceRouter(),
@@ -630,8 +641,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Set the maximum metadata length for government-related configurations to 10,200, deviating from the default value of 256.
 	govConfig.MaxMetadataLen = 10200
 	govKeeper := govkeeper.NewKeeper(
-		appCodec, appKeepers.keys[govtypes.StoreKey],
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.SuperfluidKeeper, bApp.MsgServiceRouter(),
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[govtypes.StoreKey]),
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.SuperfluidKeeper, appKeepers.DistrKeeper, bApp.MsgServiceRouter(),
 		govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	appKeepers.GovKeeper = govKeeper
 	appKeepers.GovKeeper.SetLegacyRouter(govRouter)
@@ -683,10 +694,11 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		// The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
 		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ScopedTransferKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.TransferKeeper = &transferKeeper
 	appKeepers.RawIcs20TransferAppModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
@@ -759,7 +771,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 
 	upgradeKeeper := upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		appKeepers.keys[upgradetypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[upgradetypes.StoreKey]),
 		appCodec,
 		homePath,
 		bApp,

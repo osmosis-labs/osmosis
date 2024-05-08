@@ -29,7 +29,7 @@ type UpgradeTestSuite struct {
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.app = app.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -68,8 +68,8 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				plan := upgradetypes.Plan{Name: "v4", Height: dummyUpgradeHeight}
 				err := s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, plan)
 				s.Require().NoError(err)
-				_, exists := s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
-				s.Require().True(exists)
+				_, err = s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
+				s.Require().NoError(err)
 
 				s.ctx = s.ctx.WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
@@ -107,7 +107,7 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 
 				// check that feepool.communitypool has been reduced correctly
 				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
-				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(osmomath.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
+				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly
 

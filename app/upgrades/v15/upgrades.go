@@ -1,6 +1,8 @@
 package v15
 
 import (
+	"context"
+
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -36,7 +38,8 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		poolmanagerParams := keepers.PoolManagerKeeper.GetParams(ctx)
 		poolmanagerParams.PoolCreationFee = keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee
 
@@ -129,7 +132,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 		panic(err)
 	}
 	balancesAfter := bankKeeper.GetAllBalances(ctx, stableswapPool.GetAddress())
-	if !balancesBefore.IsEqual(balancesAfter) {
+	if !balancesBefore.Equal(balancesAfter) {
 		panic("balances before and after migration are not equal")
 	}
 }

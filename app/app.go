@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 	"github.com/skip-mev/block-sdk/v2/block"
 	"github.com/skip-mev/block-sdk/v2/block/base"
 
-	"cosmossdk.io/store"
 	"cosmossdk.io/x/evidence"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -614,15 +612,21 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	// Remove all validators from power store
 	stakingKey := app.GetKey(stakingtypes.ModuleName)
-	stakingStore := store.KVStore(stakingKey)
-	iterator := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	stakingStore := ctx.KVStore(stakingKey)
+	iterator, err := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
 	// Remove all valdiators from last validators store
-	iterator = app.StakingKeeper.LastValidatorsIterator(ctx)
+	iterator, err = app.StakingKeeper.LastValidatorsIterator(ctx)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
@@ -649,8 +653,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		tmos.Exit(err.Error())
 	}
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
-	app.StakingKeeper.SetLastValidatorPower(ctx, newVal.GetOperator(), 0)
-	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, newVal.GetOperator()); err != nil {
+	app.StakingKeeper.SetLastValidatorPower(ctx, sdk.ValAddress(newVal.GetOperator()), 0)
+	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, sdk.ValAddress(newVal.GetOperator())); err != nil {
 		panic(err)
 	}
 
@@ -658,10 +662,10 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	//
 
 	// Initialize records for this validator across all distribution stores
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, newVal.GetOperator(), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorCurrentRewards(ctx, newVal.GetOperator(), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, newVal.GetOperator(), distrtypes.InitialValidatorAccumulatedCommission())
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, newVal.GetOperator(), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, sdk.ValAddress(newVal.GetOperator()), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorCurrentRewards(ctx, sdk.ValAddress(newVal.GetOperator()), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, sdk.ValAddress(newVal.GetOperator()), distrtypes.InitialValidatorAccumulatedCommission())
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, sdk.ValAddress(newVal.GetOperator()), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 
 	// SLASHING
 	//
@@ -834,18 +838,18 @@ func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *OsmosisApp) BeginBlock(context.Context) error {
+func (app *OsmosisApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
-	return app.mm.BeginBlock(ctx, req)
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block.
-func (app *OsmosisApp) EndBlock(context.Context) error {
-	return app.mm.EndBlock(ctx, req)
+func (app *OsmosisApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
 }
 
 // InitChainer application update at chain initialization.
-func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *OsmosisApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

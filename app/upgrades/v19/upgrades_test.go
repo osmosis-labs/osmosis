@@ -105,7 +105,8 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	})
 	s.Require().NoError(err)
 
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	// set lockable duration so that we don't have errors upon creating gauge
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
@@ -133,8 +134,8 @@ func (s *UpgradeTestSuite) runv18Upgrade() {
 	plan := upgradetypes.Plan{Name: "v18", Height: v18UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight)
 }
@@ -144,8 +145,8 @@ func (s *UpgradeTestSuite) runv19Upgrade() {
 	plan := upgradetypes.Plan{Name: "v19", Height: v19UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight)
 }

@@ -1,6 +1,8 @@
 package v5
 
 import (
+	"context"
+
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	// bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 
@@ -21,7 +23,8 @@ func CreateUpgradeHandler(
 	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		// Set IBC updates from {inside SDK} to v1
 		//
 		// See: https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
@@ -56,8 +59,12 @@ func CreateUpgradeHandler(
 		// Override txfees genesis here
 		ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
 		feeTokens := InitialWhitelistedFeetokens(ctx, keepers.GAMMKeeper)
+		stakingParams, err := keepers.StakingKeeper.GetParams(ctx)
+		if err != nil {
+			return nil, err
+		}
 		keepers.TxFeesKeeper.InitGenesis(ctx, txfeestypes.GenesisState{
-			Basedenom: keepers.StakingKeeper.BondDenom(ctx),
+			Basedenom: stakingParams.BondDenom,
 			Feetokens: feeTokens,
 		})
 
