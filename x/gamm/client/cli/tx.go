@@ -368,6 +368,7 @@ Sample proposal with flags
 	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().Uint64(FlagPoolId, 0, "stableswap pool-id")
 	cmd.Flags().String(FlagScalingFactorControllerAddress, "", "target scaling factor controller address")
+	cmd.Flags().String(govcli.FlagProposal, "", "proposal file path") //nolint:staticcheck
 
 	return cmd
 }
