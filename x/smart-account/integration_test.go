@@ -693,9 +693,9 @@ func (s *AuthenticatorSuite) TestFeeDeduction() {
 			fee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000)
 			expectedBalance := initialBalance.Sub(fee)
 			if tc.selectedAuthenticators[0] == payerYes {
-				s.Require().True(expectedBalance.IsEqual(finalBalance), "Fee should be deducted")
+				s.Require().True(expectedBalance.Equal(finalBalance), "Fee should be deducted")
 			} else {
-				s.Require().True(initialBalance.IsEqual(finalBalance), "Fee should not be deducted")
+				s.Require().True(initialBalance.Equal(finalBalance), "Fee should not be deducted")
 			}
 		})
 	}

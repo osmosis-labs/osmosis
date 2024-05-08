@@ -95,7 +95,7 @@ type kvPair struct {
 	value []byte
 }
 
-func pair(iter sdk.Iterator) kvPair {
+func pair(iter storetypes.Iterator) kvPair {
 	res := kvPair{iter.Key(), iter.Value()}
 	iter.Next()
 	return res

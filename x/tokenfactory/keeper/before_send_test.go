@@ -225,7 +225,7 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 				// send should happen regardless of trackBeforeSend results
 				distributionModuleAddress := s.App.AccountKeeper.GetModuleAddress("distribution")
 				distributionModuleBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, distributionModuleAddress)
-				s.Require().True(distributionModuleBalances.IsEqual(tokenToSend))
+				s.Require().True(distributionModuleBalances.Equal(tokenToSend))
 			}
 
 		})

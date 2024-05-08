@@ -52,7 +52,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
 
 	// Access the AccountKeeper from the Osmosis app
 	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
 	for _, key := range TestKeys {

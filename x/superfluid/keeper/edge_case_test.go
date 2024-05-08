@@ -45,7 +45,8 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			locks := []lockuptypes.PeriodLock{}
-			slashFactor := s.App.SlashingKeeper.SlashFractionDoubleSign(s.Ctx)
+			slashFactor, err := s.App.SlashingKeeper.SlashFractionDoubleSign(s.Ctx)
+			s.Require().NoError(err)
 
 			// setup superfluid delegations
 			for _, del := range tc.superDelegations {
@@ -59,8 +60,8 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 
 			// slash validator
 			for _, valIndex := range tc.jailedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().Error(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)
@@ -74,8 +75,8 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 					Power:            power,
 					ConsensusAddress: consAddr.String(),
 				})
-				val, found := s.App.StakingKeeper.GetValidatorByConsAddr(s.Ctx, consAddr)
-				s.Require().True(found)
+				val, err := s.App.StakingKeeper.GetValidatorByConsAddr(s.Ctx, consAddr)
+				s.Require().Error(err)
 				s.Require().Equal(val.Jailed, true)
 			}
 

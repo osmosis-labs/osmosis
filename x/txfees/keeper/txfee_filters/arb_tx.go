@@ -7,6 +7,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
@@ -17,7 +18,7 @@ import (
 type Swap struct {
 	Routes            []poolmanagertypes.SwapAmountInRoute `json:"routes"`
 	TokenOutMinAmount sdk.Coin                             `json:"token_out_min_amount"`
-	FeePercentage     sdk.Dec                              `json:"fee_percentage"`
+	FeePercentage     osmomath.Dec                         `json:"fee_percentage"`
 	FeeCollector      string                               `json:"fee_collector"`
 	TokenIn           string                               `json:"token_in,omitempty"`
 }

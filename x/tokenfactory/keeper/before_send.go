@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 )
 
 func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress string) error {

@@ -18,6 +18,8 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -358,7 +360,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.Ctx = s.Ctx.WithIsCheckTx(false)
-			s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+			s.Ctx = s.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 			s.Ctx = s.Ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 			gasLimit := uint64(500000)
@@ -372,6 +374,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 			}
 
 			sigV2, _ := clienttx.SignWithPrivKey(
+				s.Ctx,
 				1,
 				signerData,
 				txBuilder,
@@ -380,7 +383,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				accSeqs[0],
 			)
 
-			err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
+			err := testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, txFee)
 			s.Require().NoError(err)
 
 			var tx authsigning.Tx
@@ -446,7 +449,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				// Check that the gas limit is the same before and after the posthandler
 				s.Require().Equal(gasLimitBefore, gasLimitAfter)
 
-				s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+				s.Ctx = s.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 				// Check that the number of trades is correct
 				numOfTrades, _ := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
@@ -711,7 +714,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	s.SetupPoolsTest()
 
 	// Set up the app to the correct state to run the test
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 40)
 	s.Require().NoError(err)
 
@@ -719,7 +722,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
 	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
-	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
+	err = testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
 	s.Require().NoError(err)
 
 	// Build the tx
@@ -731,6 +734,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	}
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	sigV2, _ := clienttx.SignWithPrivKey(
+		s.Ctx,
 		1,
 		signerData,
 		txBuilder,

@@ -453,7 +453,10 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.I
 	}
 
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		bondDenom := k.sk.BondDenom(cacheCtx)
+		bondDenom, err := k.sk.BondDenom(cacheCtx)
+		if err != nil {
+			return err
+		}
 		coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
 		err = k.bk.MintCoins(cacheCtx, types.ModuleName, coins)
 		if err != nil {
@@ -512,7 +515,10 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		if err != nil {
 			return err
 		}
-		bondDenom := k.sk.BondDenom(cacheCtx)
+		bondDenom, err := k.sk.BondDenom(cacheCtx)
+		if err != nil {
+			return err
+		}
 		k.bk.AddSupplyOffset(cacheCtx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 
 		return err
@@ -740,7 +746,10 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake osmomath.Int, originalSuperfluidValAddr string,
 ) (totalAmtCoverted osmomath.Int, err error) {
 	var nonOsmoCoins sdk.Coins
-	bondDenom := k.sk.BondDenom(ctx)
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
 
 	// from the exit coins, separate non-bond denom and bond denom.
 	for _, exitCoin := range exitCoins {
@@ -791,7 +800,10 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 // - If valAddr not provided and valset delegation is not possible, refer back to original lock's superfluid validator if it was a superfluid lock
 // - Else: error
 func (k Keeper) delegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake osmomath.Int) error {
-	bondDenom := k.sk.BondDenom(ctx)
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
 
 	// if given valAddr is empty, we use delegation preference given from valset-pref module or reference from superfluid staking
 	if valAddr == "" {

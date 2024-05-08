@@ -3,7 +3,7 @@ package mempool1559
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gotest.tools/assert"
@@ -57,7 +57,7 @@ func TestUpdateBaseFee(t *testing.T) {
 }
 
 // calculateBaseFee is the same as in is defined on the eip1559 code
-func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec) (expectedBaseFee sdk.Dec) {
+func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee osmomath.Dec) (expectedBaseFee osmomath.Dec) {
 	gasUsed := totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
 

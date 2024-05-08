@@ -79,8 +79,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 
 			// slash validator
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)

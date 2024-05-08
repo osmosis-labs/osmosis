@@ -102,8 +102,8 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			for _, acc := range intermediaryAccs {
 				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 				s.Require().NoError(err)
-				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
-				s.Require().True(found)
+				delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
+				s.Require().NoError(err)
 				s.Require().Equal(osmomath.NewDec(7500000), delegation.Shares)
 			}
 
@@ -314,8 +314,8 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 			// slash unbonding lockups for all intermediary accounts
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)

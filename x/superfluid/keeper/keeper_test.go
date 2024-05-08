@@ -83,7 +83,8 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPool() {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
 	poolId := s.createGammPool([]string{bondDenom, "foo"})
 	s.Require().Equal(poolId, uint64(1))
 }
@@ -204,20 +205,22 @@ func (s *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs [
 		s.Require().NoError(err)
 
 		// check delegation from intermediary account to validator
-		delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
-		s.Require().True(found)
+		delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
+		s.Require().NoError(err)
 		s.Require().True(delegation.Shares.GTE(osmomath.NewDec(10000000)))
 
 		// check delegated tokens
-		validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-		s.Require().True(found)
+		validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+		s.Require().NoError(err)
 		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
 		s.Require().True(delegatedTokens.GTE(osmomath.NewInt(10000000)))
 	}
 }
 
 func (s *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	// create lockup of LP token
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}

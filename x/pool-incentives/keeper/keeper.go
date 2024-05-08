@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/hashicorp/go-metrics"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"

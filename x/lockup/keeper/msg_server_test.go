@@ -317,7 +317,7 @@ func (s *KeeperTestSuite) TestMsgEditLockup() {
 	for _, test := range tests {
 		s.SetupTest()
 
-		err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, test.param.lockOwner, test.param.coinsToLock)
+		err := testutil.FundAccount(s.Ctx, s.App.BankKeeper, test.param.lockOwner, test.param.coinsToLock)
 		s.Require().NoError(err)
 
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
@@ -431,7 +431,9 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 		coinsToLock := sdk.Coins{sdk.NewCoin(poolDenom, defaultLockAmount)}
 		s.FundAcc(addr1, coinsToLock)
 
-		unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+		stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+		s.Require().NoError(err)
+		unbondingDuration := stakingParams.UnbondingTime
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(addr1, unbondingDuration, coinsToLock))
 		s.Require().NoError(err)
 

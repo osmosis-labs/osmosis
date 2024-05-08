@@ -1,6 +1,8 @@
 package simtypes
 
 import (
+	"context"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,17 +32,17 @@ type App interface {
 }
 
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	// GetAllAccounts(ctx sdk.Context) []authtypes.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) authtypes.AccountI
+	GetAllAccounts(ctx context.Context) []authtypes.AccountI
 }
 
 type BankKeeper interface {
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// TODO: Revisit
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 }
 
 type PoolManagerKeeper interface {

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,8 +44,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func Setup() (sdk.Context, *epochskeeper.Keeper) {
-	epochsStoreKey := sdk.NewKVStoreKey(types.StoreKey)
-	ctx := testutil.DefaultContext(epochsStoreKey, sdk.NewTransientStoreKey("transient_test"))
+	epochsStoreKey := storetypes.NewKVStoreKey(types.StoreKey)
+	ctx := testutil.DefaultContext(epochsStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	epochsKeeper := epochskeeper.NewKeeper(epochsStoreKey)
 	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
 	ctx.WithBlockHeight(1).WithChainID("osmosis-1").WithBlockTime(time.Now().UTC())

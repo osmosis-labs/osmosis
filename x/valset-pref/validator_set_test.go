@@ -178,7 +178,8 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 			s.SetupTest()
 			valAddrs := s.SetupMultipleValidators(3)
 			defaultDelegator := s.TestAccs[0]
-			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+			bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+			s.Require().NoError(err)
 
 			// set val-set pref
 			valPreferences := []types.ValidatorPreference{
@@ -200,8 +201,8 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 				for i, valsetPref := range valPreferences {
 					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
 					s.Require().NoError(err)
-					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-					s.Require().True(found)
+					validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+					s.Require().NoError(err)
 
 					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, test.delegateAmt[i])))
 					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, test.delegateAmt[i], stakingtypes.Unbonded, validator, true)
@@ -210,7 +211,7 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 			}
 
 			// System Under Test
-			err := s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
+			err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
@@ -223,8 +224,8 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 				valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
 				s.Require().NoError(err)
 
-				delegation, found := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
-				s.Require().True(found)
+				delegation, err := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
+				s.Require().NoError(err)
 				s.Require().Equal(delegation.Entries[0].Balance, test.expectedUndelegateAmt[i])
 			}
 		})
@@ -283,7 +284,8 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 			s.SetupTest()
 			valAddrs := s.SetupMultipleValidators(3)
 			defaultDelegator := s.TestAccs[0]
-			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+			bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+			s.Require().NoError(err)
 
 			// set val-set pref
 			valPreferences := []types.ValidatorPreference{
@@ -305,8 +307,8 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 				for i, valsetPref := range valPreferences {
 					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
 					s.Require().NoError(err)
-					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-					s.Require().True(found)
+					validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+					s.Require().NoError(err)
 
 					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, test.delegateAmt[i])))
 					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, test.delegateAmt[i], stakingtypes.Unbonded, validator, true)
@@ -315,7 +317,7 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 			}
 
 			// System Under Test
-			err := s.App.ValidatorSetPreferenceKeeper.UndelegateFromRebalancedValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
+			err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromRebalancedValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
@@ -328,8 +330,8 @@ func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
 				valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
 				s.Require().NoError(err)
 
-				delegation, found := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
-				s.Require().True(found)
+				delegation, err := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
+				s.Require().NoError(err)
 				s.Require().Equal(delegation.Entries[0].Balance, test.expectedUndelegateAmt[i])
 			}
 		})
@@ -452,9 +454,10 @@ func (s *KeeperTestSuite) TestGetValsetRatios() {
 				for i, valsetPref := range valsetPrefs {
 					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
 					s.Require().NoError(err)
-					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-					s.Require().True(found)
-					bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+					validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+					s.Require().NoError(err)
+					bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+					s.Require().NoError(err)
 
 					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegationAmt)))
 					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, defaultDelegationAmt, stakingtypes.Unbonded, validator, true)
@@ -478,8 +481,8 @@ func (s *KeeperTestSuite) TestGetValsetRatios() {
 			for valAddr, val := range validators {
 				valAddr, err := sdk.ValAddressFromBech32(valAddr)
 				s.Require().NoError(err)
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+				s.Require().NoError(err)
 				validator.Equal(&val)
 			}
 
@@ -590,8 +593,8 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	valAddr, err := sdk.ValAddressFromBech32(valAddrs[0])
 	s.Require().NoError(err)
 
-	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-	s.Require().True(found)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().NoError(err)
 
 	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
 	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, osmomath.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
@@ -605,8 +608,8 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 		s.Require().NoError(err)
 
 		// guarantees that the delegator exists because we check it in UnDelegateToValidatorSet
-		del, found := s.App.StakingKeeper.GetDelegation(s.Ctx, delegator, valAddr)
-		if found {
+		del, err := s.App.StakingKeeper.GetDelegation(s.Ctx, delegator, valAddr)
+		if err == nil {
 			s.Require().Equal(expectedShares[i], del.GetShares())
 		}
 	}
@@ -659,14 +662,14 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
 	valAddr, err := sdk.ValAddressFromBech32(valAddrs[0])
 	s.Require().NoError(err)
 
-	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-	s.Require().True(found)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().NoError(err)
 
 	valAddr2, err := sdk.ValAddressFromBech32(valAddrs[1])
 	s.Require().NoError(err)
 
-	validator2, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr2)
-	s.Require().True(found)
+	validator2, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr2)
+	s.Require().NoError(err)
 
 	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
 	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, osmomath.NewInt(50_000_000), stakingtypes.Unbonded, validator, true)

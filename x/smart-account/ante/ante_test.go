@@ -62,7 +62,7 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
 
 	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
 	for _, key := range TestKeys {
@@ -136,7 +136,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	// Ensure the feepayer has funds
 	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	feePayer := s.TestPrivKeys[0].PubKey().Address()
-	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, feePayer.Bytes(), fees)
+	err := testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, feePayer.Bytes(), fees)
 	s.Require().NoError(err)
 
 	// Create a test messages for signing
@@ -197,9 +197,9 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 
 	// Ensure the feepayers have funds
 	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
-	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
+	err := testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
 	s.Require().NoError(err)
-	err = testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[1].PubKey().Address().Bytes(), fees)
+	err = testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, s.TestPrivKeys[1].PubKey().Address().Bytes(), fees)
 	s.Require().NoError(err)
 
 	// This message will have several authenticators for s.TestPrivKeys[0] and one for s.TestPrivKeys[1] at the end
@@ -324,9 +324,9 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 
 	// Ensure the feepayer has funds
 	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2_500_000)}
-	err = testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
+	err = testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
 	s.Require().NoError(err)
-	err = testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, s.TestPrivKeys[1].PubKey().Address().Bytes(), fees)
+	err = testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, s.TestPrivKeys[1].PubKey().Address().Bytes(), fees)
 	s.Require().NoError(err)
 
 	for _, tc := range testCases {

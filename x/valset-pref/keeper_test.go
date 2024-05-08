@@ -59,15 +59,17 @@ func (s *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr strin
 	valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
 	s.Require().NoError(err)
 
-	validator, found := s.App.StakingKeeper.GetValidator(ctx, valAddr)
-	s.Require().True(found)
+	validator, err := s.App.StakingKeeper.GetValidator(ctx, valAddr)
+	s.Require().NoError(err)
 
-	endingPeriod := s.App.DistrKeeper.IncrementValidatorPeriod(ctx, validator)
+	endingPeriod, err := s.App.DistrKeeper.IncrementValidatorPeriod(ctx, validator)
+	s.Require().NoError(err)
 
-	delegation, found := s.App.StakingKeeper.GetDelegation(ctx, delegator, valAddr)
-	s.Require().True(found)
+	delegation, err := s.App.StakingKeeper.GetDelegation(ctx, delegator, valAddr)
+	s.Require().NoError(err)
 
-	rewards := s.App.DistrKeeper.CalculateDelegationRewards(ctx, validator, delegation, endingPeriod)
+	rewards, err := s.App.DistrKeeper.CalculateDelegationRewards(ctx, validator, delegation, endingPeriod)
+	s.Require().NoError(err)
 
 	return rewards, validator
 }
@@ -95,7 +97,7 @@ func (s *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddr
 	_, validator := s.GetDelegationRewards(ctx, valAddrStr, delegator)
 
 	// allocate some rewards
-	tokens := sdk.NewDecCoins(osmomath.NewInt64DecCoin(sdk.DefaultBondDenom, 10))
+	tokens := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 10))
 	s.App.DistrKeeper.AllocateTokensToValidator(ctx, validator, tokens)
 
 	rewardsAfterAllocation, _ := s.GetDelegationRewards(ctx, valAddrStr, delegator)
@@ -111,8 +113,8 @@ func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs [
 			return fmt.Errorf("validator address not formatted")
 		}
 
-		validator, found := s.App.StakingKeeper.GetValidator(ctx, valAddr)
-		if !found {
+		validator, err := s.App.StakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
 			return fmt.Errorf("validator not found %s", validator)
 		}
 
@@ -255,9 +257,10 @@ func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
 			if test.setDelegation {
 				valAddr0, err := sdk.ValAddressFromBech32(valAddrs[0])
 				s.Require().NoError(err)
-				validator0, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr0)
-				s.Require().True(found)
-				bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+				validator0, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr0)
+				s.Require().NoError(err)
+				bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+				s.Require().NoError(err)
 
 				s.FundAcc(delegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegateAmt)))
 				_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, defaultDelegateAmt, stakingtypes.Unbonded, validator0, true)
@@ -265,8 +268,8 @@ func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
 
 				valAddr1, err := sdk.ValAddressFromBech32(valAddrs[1])
 				s.Require().NoError(err)
-				validator1, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr1)
-				s.Require().True(found)
+				validator1, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr1)
+				s.Require().NoError(err)
 
 				s.FundAcc(delegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegateAmt.Mul(osmomath.NewInt(2)))))
 				_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, defaultDelegateAmt.Mul(osmomath.NewInt(2)), stakingtypes.Unbonded, validator1, true)
@@ -339,7 +342,8 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 		s.Run(name, func() {
 			s.Setup()
 			defaultDelegator := s.TestAccs[0]
-			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+			bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+			s.Require().NoError(err)
 
 			// --- Setup ---
 
@@ -351,8 +355,8 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 				// Get validator to delegate to
 				valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
 				s.Require().NoError(err)
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+				s.Require().NoError(err)
 
 				// Fund delegator and execute delegation
 				s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, delegationShare.RoundInt())))
@@ -360,8 +364,8 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 				s.Require().NoError(err)
 
 				// Build list of delegations to pass into SUT
-				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, defaultDelegator, valAddr)
-				s.Require().True(found)
+				delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, defaultDelegator, valAddr)
+				s.Require().NoError(err)
 				delegations = append(delegations, delegation)
 
 				// Build expected validator preferences

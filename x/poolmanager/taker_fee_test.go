@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 				takerFeeTaken = tokenInAfterTakerFee.Sub(tc.tokenIn)
 			}
 			takerFeeModuleAccBal := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName))
-			s.Require().True(sdk.NewCoins(takerFeeTaken).IsEqual(takerFeeModuleAccBal))
+			s.Require().True(sdk.NewCoins(takerFeeTaken).Equal(takerFeeModuleAccBal))
 		})
 	}
 }

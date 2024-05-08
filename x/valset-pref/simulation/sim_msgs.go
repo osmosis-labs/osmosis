@@ -69,14 +69,14 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 		return nil, fmt.Errorf("validator address not formatted")
 	}
 
-	validator, found := sim.SDKStakingKeeper().GetValidator(ctx, val)
-	if !found {
+	validator, err := sim.SDKStakingKeeper().GetValidator(ctx, val)
+	if err != nil {
 		return nil, fmt.Errorf("Validator not found")
 	}
 
 	// check if the user has delegated tokens to the valset
-	del, found := sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
-	if !found {
+	del, err := sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
+	if err != nil {
 		return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
 	}
 
@@ -119,8 +119,8 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 		}
 
 		// check if the user has delegated tokens to the valset
-		_, found := sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
-		if !found {
+		_, err := sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
+		if err != nil {
 			return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
 		}
 	}
@@ -157,7 +157,10 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Validator {
 	rand := sim.GetRand()
 
-	validators := sim.SDKStakingKeeper().GetAllValidators(ctx)
+	validators, err := sim.SDKStakingKeeper().GetAllValidators(ctx)
+	if err != nil {
+		return nil
+	}
 	if len(validators) == 0 {
 		return nil
 	}

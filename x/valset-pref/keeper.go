@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 

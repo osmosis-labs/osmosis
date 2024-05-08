@@ -4,9 +4,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -24,10 +25,8 @@ type CfmmCommonTestSuite struct {
 }
 
 func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
-	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
-
-	ms := rootmulti.NewStore(db, logger)
+	ms := rootmulti.NewStore(dbm.NewMemDB(), logger, metrics.NewNoOpMetrics())
 
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }

@@ -6,6 +6,7 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -85,7 +86,7 @@ func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, er
 	return pool, nil
 }
 
-func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
+func (k Keeper) iterator(ctx sdk.Context, prefix []byte) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return storetypes.KVStorePrefixIterator(store, prefix)
 }

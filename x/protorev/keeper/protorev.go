@@ -11,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

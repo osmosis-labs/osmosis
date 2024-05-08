@@ -3,7 +3,6 @@ package swapstrategy
 import (
 	"fmt"
 
-	"cosmossdk.io/store"
 	"cosmossdk.io/store/prefix"
 	dbm "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -215,7 +214,7 @@ func (s zeroForOneStrategy) getSpfOverOneMinusSpf() osmomath.Dec {
 // Panics if fails to parse tick index from bytes.
 // The caller is responsible for closing the iterator on success.
 func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndex int64) dbm.Iterator {
-	store := store.KVStore(s.storeKey)
+	store := ctx.KVStore(s.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 	startKey := types.TickIndexToBytes(currentTickIndex + 1)

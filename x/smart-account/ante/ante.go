@@ -15,6 +15,8 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
@@ -80,7 +82,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	defer func() {
 		if r := recover(); r != nil {
 			switch r.(type) {
-			case sdk.ErrorOutOfGas:
+			case storetypes.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"FeePayer must be authenticated first because gas consumption has exceeded the free gas limit for authentication process. The gas limit has been reduced to %d. Gas consumed: %d",
 					authenticatorParams.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
@@ -184,7 +186,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				}
 
 				// Write the cache multi store to persist the fee deduction
-				cacheMultiStore, ok := ctx.MultiStore().(sdk.CacheMultiStore)
+				cacheMultiStore, ok := ctx.MultiStore().(storetypes.CacheMultiStore)
 				if !ok {
 					// This should never happen
 					return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrPanic, "expected CacheMultiStore")

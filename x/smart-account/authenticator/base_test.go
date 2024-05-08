@@ -19,6 +19,8 @@ import (
 
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -46,7 +48,7 @@ func (s *BaseAuthenticatorSuite) SetupKeys() {
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 
 	// Set up test accounts
@@ -148,6 +150,6 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sd
 
 // FundAcc funds target address with specified amount.
 func (s *BaseAuthenticatorSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, acc, amounts)
+	err := testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, acc, amounts)
 	s.Require().NoError(err)
 }

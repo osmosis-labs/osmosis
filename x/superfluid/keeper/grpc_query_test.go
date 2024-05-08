@@ -164,12 +164,12 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 
 		s.Require().NoError(err)
 		s.Require().Len(res.SuperfluidDelegationRecords, 2)
-		s.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		s.Require().True(res.TotalDelegatedCoins.Equal(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 		)))
-		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin(appparams.BaseCoinUnit, expectAmount0.RoundInt())))
-		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin(appparams.BaseCoinUnit, expectAmount1.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Equal(sdk.NewCoin(appparams.BaseCoinUnit, expectAmount0.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.Equal(sdk.NewCoin(appparams.BaseCoinUnit, expectAmount1.RoundInt())))
 	}
 
 	// for each validator denom pair, make sure they have 1 delegations
@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding
 	})
 
 	s.Require().NoError(err)
-	s.Require().True(amountRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+	s.Require().True(amountRes.TotalDelegatedCoins.Equal(sdk.NewCoins(
 		sdk.NewInt64Coin(denoms[0], 1000000),
 	)))
 
@@ -280,11 +280,12 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
 	// Set staking parameters (needed since stake is not a valid quote denom).
-	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	stakingParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
-	coins := sdk.NewCoins(sdk.NewCoin("token0", osmomath.NewInt(1000000000000)), sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), osmomath.NewInt(1000000000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("token0", osmomath.NewInt(1000000000000)), sdk.NewCoin(stakingParams.BondDenom, osmomath.NewInt(1000000000000)))
 
 	// Prepare 2 concentrated pools.
 	clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(coins[0].Denom, coins[1].Denom)
@@ -296,7 +297,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	denom2 := cltypes.GetConcentratedLockupDenomFromPoolId(2)
 
 	// Add both pools as superfluid assets.
-	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
 		Denom:     denom,
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	})
@@ -308,7 +309,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	})
 	s.Require().NoError(err)
 
-	duration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	duration := stakingParams.UnbondingTime
 
 	// Create 4 positions in pool 1 that are superfluid delegated.
 	expectedBondedPositionIds := []uint64{}
@@ -430,10 +431,10 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	delegatorAddresses, _, _ := s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// setup normal delegations
-	bond0to0 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[0], osmomath.NewDec(9000000))
-	bond0to1 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[1], osmomath.NewDec(9000000))
-	bond1to0 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[0], osmomath.NewDec(9000000))
-	bond1to1 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[1], osmomath.NewDec(9000000))
+	bond0to0 := stakingtypes.NewDelegation(delegatorAddresses[0].String(), valAddrs[0].String(), osmomath.NewDec(9000000))
+	bond0to1 := stakingtypes.NewDelegation(delegatorAddresses[0].String(), valAddrs[1].String(), osmomath.NewDec(9000000))
+	bond1to0 := stakingtypes.NewDelegation(delegatorAddresses[1].String(), valAddrs[0].String(), osmomath.NewDec(9000000))
+	bond1to1 := stakingtypes.NewDelegation(delegatorAddresses[1].String(), valAddrs[1].String(), osmomath.NewDec(9000000))
 
 	s.App.StakingKeeper.SetDelegation(s.Ctx, bond0to0)
 	s.App.StakingKeeper.SetDelegation(s.Ctx, bond0to1)
@@ -459,7 +460,7 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 		s.Require().NoError(err)
 		s.Require().Len(res.SuperfluidDelegationRecords, 2)
 		s.Require().Len(res.DelegationResponse, 2)
-		s.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		s.Require().True(res.TotalDelegatedCoins.Equal(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 			sdk.NewInt64Coin(appparams.BaseCoinUnit, 18000000),
@@ -467,6 +468,6 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 
 		total_osmo_equivalent := sdk.NewCoin(appparams.BaseCoinUnit, expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
 
-		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
+		s.Require().True(res.TotalEquivalentStakedAmount.Equal(total_osmo_equivalent))
 	}
 }

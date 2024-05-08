@@ -84,7 +84,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
 	// Set the bond denom to be uosmo to make volume tracking tests more readable.
-	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	skParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, appparams.BaseCoinUnit)

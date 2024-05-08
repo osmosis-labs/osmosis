@@ -10,6 +10,7 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
@@ -197,8 +198,8 @@ func isSuperset(a, b interface{}) error {
 	case string:
 		if bv, ok := b.(string); ok {
 			// Attempt to treat strings as numbers if they look like numbers
-			if decA, err := sdk.NewDecFromStr(av); err == nil {
-				if decB, err := sdk.NewDecFromStr(bv); err == nil {
+			if decA, err := osmomath.NewDecFromStr(av); err == nil {
+				if decB, err := osmomath.NewDecFromStr(bv); err == nil {
 					if !decA.Equal(decB) {
 						return fmt.Errorf("numbers do not match: %s != %s", decA, decB)
 					}

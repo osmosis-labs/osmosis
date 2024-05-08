@@ -26,6 +26,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -56,7 +57,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
 
 	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
 	for _, key := range TestKeys {

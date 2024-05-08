@@ -9,6 +9,8 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"

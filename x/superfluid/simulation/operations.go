@@ -209,7 +209,10 @@ func RandomAccountLock(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, add
 }
 
 func RandomValidator(ctx sdk.Context, r *rand.Rand, sk types.StakingKeeper) *stakingtypes.Validator {
-	validators := sk.GetAllValidators(ctx)
+	validators, err := sk.GetAllValidators(ctx)
+	if err != nil {
+		return nil
+	}
 	if len(validators) == 0 {
 		return nil
 	}

@@ -3796,7 +3796,8 @@ func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant 
 
 	// Set UOSMO as bond denom
 
-	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	stakingParams.BondDenom = UOSMO
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 

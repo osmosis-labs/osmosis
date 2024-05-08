@@ -20,6 +20,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
@@ -42,7 +44,7 @@ func TestCosmwasmAuthenticatorTest(t *testing.T) {
 
 func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 

@@ -42,9 +42,10 @@ func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool
 		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
 		require.Equal(t, msg.Route(), types.RouterKey)
 		require.Equal(t, msg.Type(), expType)
-		signers := msg.GetSigners()
-		require.Equal(t, len(signers), 1)
-		require.Equal(t, signers[0].String(), addr1)
+		// UNFORKING TODO v2: GetSigners is not implemented anymore
+		// signers := msg.GetSigners()
+		// require.Equal(t, len(signers), 1)
+		// require.Equal(t, signers[0].String(), addr1)
 	} else {
 		require.Error(t, msg.ValidateBasic(), "test: %v", name)
 	}

@@ -433,7 +433,8 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 // Validate that the distribution is correct.
 func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 	// Setup UOSMO as bond denom
-	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	stakingParams.BondDenom = UOSMO
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
@@ -473,7 +474,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 	s.increaseVolumeBySwap(fooBARPoolID, barCoinIn, defaultAmount, FOO)
 
 	// Create a perpetual group.
-	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{ethUSDCPoolID, fooBARPoolID})
+	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{ethUSDCPoolID, fooBARPoolID})
 	s.Require().NoError(err)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier

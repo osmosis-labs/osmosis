@@ -9,6 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 // GetAllAuthenticatorData is used in genesis export to export all the authenticator for all accounts

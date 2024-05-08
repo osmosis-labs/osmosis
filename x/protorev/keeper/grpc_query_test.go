@@ -436,7 +436,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 
 	// Charge txfee of 1000 uion
 	txFeeCharged := sdk.NewCoins(sdk.NewCoin(ion, osmomath.NewInt(1000)))
-	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(osmomath.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
+	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
 
 	// Pseudo collect cyclic arb profits
 	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin(atom, osmomath.NewInt(3000)))
@@ -464,7 +464,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	s.Require().NoError(err)
 
 	// Charge txfee of 1000 uion
-	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(osmomath.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
+	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
 
 	// Pseudo collect cyclic arb profits
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)

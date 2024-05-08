@@ -5,7 +5,7 @@ package simlogger
 import (
 	"strings"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 )
 
 type simLogger struct {

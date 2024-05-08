@@ -3,8 +3,8 @@ package noapptest
 import (
 	"time"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

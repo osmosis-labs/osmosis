@@ -16,6 +16,7 @@ type extMsg interface {
 	sdk.Msg
 	Route() string
 	Type() string
+	ValidateBasic() error
 }
 
 var (

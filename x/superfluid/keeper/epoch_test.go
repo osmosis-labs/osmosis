@@ -73,7 +73,8 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			superfluidKeeper := s.App.SuperfluidKeeper
 
 			// Switch the default staking denom to something else if the test case requires it
-			stakeDenom := s.App.StakingKeeper.BondDenom(ctx)
+			stakeDenom, err := s.App.StakingKeeper.BondDenom(ctx)
+			s.Require().NoError(err)
 			if tc.removeStakingAsset {
 				stakeDenom = "bar"
 			}
@@ -93,7 +94,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			}
 
 			// System under test
-			err := superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
+			err = superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
@@ -212,7 +213,9 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-			unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+			stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+			s.Require().NoError(err)
+			unbondingDuration := stakingParams.UnbondingTime
 
 			// allocate rewards to designated validators
 			for _, valIndex := range tc.rewardedVals {
@@ -332,7 +335,8 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 					s.Require().Equal(gauge.IsPerpetual, true)
 					s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
 
-					bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+					bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+					s.Require().NoError(err)
 
 					moduleAddress := s.App.AccountKeeper.GetModuleAddress(incentivestypes.ModuleName)
 					moduleBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddress, bondDenom)

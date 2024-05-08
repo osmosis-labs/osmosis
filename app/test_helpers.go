@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
+	"cosmossdk.io/log"
 	cometbftdb "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 

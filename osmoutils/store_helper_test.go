@@ -40,11 +40,11 @@ type TestSuite struct {
 func (suite *TestSuite) SetupTest() {
 	// For the test suite, we manually wire a custom store "customStoreKey"
 	// Auth module (for module_account_test.go) which requires params module as well.
-	customStoreKey := sdk.NewKVStoreKey("osmoutil_store_test")
-	suite.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
+	customStoreKey := storetypes.NewKVStoreKey("osmoutil_store_test")
+	suite.authStoreKey = storetypes.NewKVStoreKey(authtypes.StoreKey)
 	// setup ctx + stores
-	paramsKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
+	paramsKey := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	paramsTKey := storetypes.NewKVStoreKey(paramstypes.TStoreKey)
 	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
 		[]storetypes.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
 	suite.store = suite.store.KVStore(customStoreKey)
@@ -633,7 +633,7 @@ func (s *TestSuite) TestGatherValuesFromIterator() {
 	for name, tc := range testcases {
 		s.Run(name, func() {
 			s.SetupTest()
-			var iterator sdk.Iterator
+			var iterator storetypes.Iterator
 
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))

@@ -84,7 +84,7 @@ func (q Querier) Pools(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkstore.KVStore(q.Keeper.storeKey)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	var anys []*codectypes.Any
@@ -175,7 +175,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 // PoolsWithFilter query allows to query pools with specific parameters
 func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkstore.KVStore(q.Keeper.storeKey)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 	minLiquidity, err := sdk.ParseCoinsNormalized(req.MinLiquidity)
 	if err != nil {

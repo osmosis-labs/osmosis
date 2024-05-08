@@ -21,7 +21,7 @@ import (
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 	genesisState := osmosisapp.GenesisStateWithValSet(app)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -30,7 +30,7 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 	}
 
 	app.InitChain(
-		abcitypes.RequestInitChain{
+		&abcitypes.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -45,7 +45,7 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 
 func TestBeginBlock(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "osmosis-1", Height: 1})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{ChainID: "osmosis-1", Height: 1})
 
 	genesisState := osmosisapp.GenesisStateWithValSet(app)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -54,7 +54,7 @@ func TestBeginBlock(t *testing.T) {
 	}
 
 	app.InitChain(
-		abcitypes.RequestInitChain{
+		&abcitypes.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -98,6 +98,6 @@ func RunBeginBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
 	app.Commit()
 	newHeader := tmproto.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	app.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
-	ctx = app.GetBaseApp().NewContext(false, newHeader)
+	ctx = app.GetBaseApp().NewContext(false)
 	return ctx
 }

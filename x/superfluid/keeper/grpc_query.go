@@ -21,6 +21,8 @@ import (
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
@@ -104,7 +106,7 @@ func (q Querier) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIn
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
-	store := sdkstore.KVStore(q.Keeper.storeKey)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	accStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
 	iterator := storetypes.KVStorePrefixIterator(accStore, nil)
 	defer iterator.Close()
@@ -615,8 +617,8 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		res.DelegationResponse = append(res.DelegationResponse,
 			stakingtypes.DelegationResponse{
 				Delegation: stakingtypes.Delegation{
-					DelegatorAddress: del.GetDelegatorAddr().String(),
-					ValidatorAddress: del.GetValidatorAddr().String(),
+					DelegatorAddress: del.GetDelegatorAddr(),
+					ValidatorAddress: del.GetValidatorAddr(),
 					Shares:           del.GetShares(),
 				},
 				Balance: lockedCoins,

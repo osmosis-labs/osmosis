@@ -530,7 +530,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		// expected
 		expectErr                              bool
 		expectedDistributions                  sdk.Coins
-		expectedRemainingAmountIncentiveRecord []sdk.Dec
+		expectedRemainingAmountIncentiveRecord []osmomath.Dec
 	}
 
 	defaultTest := test{
@@ -573,7 +573,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		tempDistributions := make(sdk.Coins, len(tc.expectedDistributions))
 		copy(tempDistributions, tc.expectedDistributions)
 
-		tempRemainingAmountIncentiveRecord := make([]sdk.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
+		tempRemainingAmountIncentiveRecord := make([]osmomath.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
 		copy(tempRemainingAmountIncentiveRecord, tc.expectedRemainingAmountIncentiveRecord)
 
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
@@ -2434,7 +2434,9 @@ func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes 
 	// Update cumulative volumes for pools
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), updatedVolume)))
+		bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+		s.Require().NoError(err)
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(bondDenom, updatedVolume)))
 	}
 }
 

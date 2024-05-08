@@ -31,6 +31,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/post"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 type SpendLimitAuthenticatorTest struct {
@@ -86,7 +88,7 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.SetupKeys()
 
 	s.OsmosisApp = app.Setup(false)
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
 	s.Ctx = s.Ctx.WithBlockTime(time.Now())
 	s.EncodingConfig = app.MakeEncodingConfig()

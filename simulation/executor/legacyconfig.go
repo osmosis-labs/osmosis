@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	cometbftdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/osmosis-labs/osmosis/v25/simulation/executor/internal/stats"

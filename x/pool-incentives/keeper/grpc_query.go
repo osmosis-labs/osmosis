@@ -224,7 +224,7 @@ func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryEx
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkstore.KVStore(q.Keeper.storeKey)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	prefixStore := prefix.NewStore(store, []byte("pool-incentives/"))
 
 	iterator := prefixStore.Iterator(nil, nil)

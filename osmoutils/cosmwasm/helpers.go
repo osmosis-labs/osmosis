@@ -1,6 +1,7 @@
 package cosmwasm
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -30,7 +31,7 @@ type ContractKeeper interface {
 // WasmKeeper defines the interface needed to be fulfilled for
 // the WasmKeeper.
 type WasmKeeper interface {
-	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
+	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 	QueryGasLimit() storetypes.Gas
 }
 
