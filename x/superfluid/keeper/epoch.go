@@ -1,9 +1,11 @@
 package keeper
 
 import (
-	sdkerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
+
+	sdkerrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/osmomath"

@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"strings"
+
 	"github.com/cosmos/gogoproto/proto"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"strings"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
