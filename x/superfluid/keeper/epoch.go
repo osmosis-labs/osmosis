@@ -146,7 +146,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		bondDenom := k.sk.BondDenom(ctx)
 		if asset.Denom == bondDenom {
 			// The bond denom should be locked via x/lockup and not superfluid
-			return errors.New("osmo should not be a superfluid asset. It can be stacked natively")
+			return errors.New("osmo should not be a superfluid asset. It can be staked natively")
 		}
 		// get the twap price of the native asset in osmo
 		startTime := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).StartTime
