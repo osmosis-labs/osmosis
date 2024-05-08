@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"strings"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
@@ -34,18 +36,21 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, includeNative bool) (osmomath.Int, error) {
-	if !includeNative { // only get the asset from store when needed
-		// TODO: perf: we could check the denom for gamm/cl prefixes to avoid the store lookup
-		asset, err := k.GetSuperfluidAsset(ctx, denom)
-		if err != nil {
-			return osmomath.ZeroInt(), err
-		}
-		// if the asset is native, return 0; as no osmo tokens are part of that asset
-		if asset.AssetType == types.SuperfluidAssetTypeNative {
-			return osmomath.ZeroInt(), nil
-		}
+func isNative(denom string) bool {
+	if strings.HasPrefix(denom, cltypes.ConcentratedLiquidityTokenPrefix) {
+		return false
 	}
+	if strings.HasPrefix(denom, gammtypes.GAMMTokenPrefix) {
+		return false
+	}
+	return true
+}
+
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, includeNative bool) (osmomath.Int, error) {
+	if !includeNative && isNative(denom) {
+		return osmomath.ZeroInt(), nil
+	}
+
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
 		return osmomath.ZeroInt(), nil
