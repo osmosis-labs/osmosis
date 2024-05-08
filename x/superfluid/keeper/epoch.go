@@ -61,7 +61,10 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 }
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []types.SuperfluidIntermediaryAccount) {
-	bondDenom := k.sk.BondDenom(ctx)
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, acc := range accs {
 		addr := acc.GetAccAddress()
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
@@ -125,7 +128,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		// get OSMO amount
-		bondDenom := k.sk.BondDenom(ctx)
+		bondDenom, err := k.sk.BondDenom(ctx)
+		if err != nil {
+			return err
+		}
 		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
 			err := fmt.Errorf("pool %d has zero OSMO amount", poolId)
@@ -164,7 +170,10 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 
 	// get underlying assets from all liquidity in a full range position
 	// note: this is not the same as the total liquidity in the pool, as this includes positions not in the full range
-	bondDenom := k.sk.BondDenom(ctx)
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
 	fullRangeLiquidity, err := k.clk.GetFullRangeLiquidityInPool(ctx, poolId)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())

@@ -81,7 +81,10 @@ func TestBeginBlock(t *testing.T) {
 	newDefaultBlockMaxGas := int64(300_000_000)
 	newConsensusParams := *sims.DefaultConsensusParams
 	newConsensusParams.Block.MaxGas = newDefaultBlockMaxGas
-	app.ConsensusParamsKeeper.Set(ctx, &newConsensusParams)
+	err = app.ConsensusParamsKeeper.ParamsStore.Set(ctx, newConsensusParams)
+	if err != nil {
+		panic(err)
+	}
 
 	// Ensure that the consensus params have not been updated yet
 	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)

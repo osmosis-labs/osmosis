@@ -46,7 +46,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
 	// Check consensus params before upgrade
-	consParamsPre, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	consParamsPre, err := s.App.ConsensusParamsKeeper.ParamsStore.Get(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
 	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
@@ -88,7 +88,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(smartAccountParams.CircuitBreakerControllers[0], v25.CircuitBreakerController)
 
 	// Check consensus params after upgrade
-	consParamsPost, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	consParamsPost, err := s.App.ConsensusParamsKeeper.ParamsStore.Get(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(consParamsPost.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
 	s.Require().Equal(consParamsPost.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)

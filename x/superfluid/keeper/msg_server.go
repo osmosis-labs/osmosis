@@ -108,10 +108,14 @@ func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context,
 // `SuperfluidDelegate` from the superfluid module msg server.
 func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgLockAndSuperfluidDelegate) (*types.MsgLockAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	stakingParams, err := server.keeper.sk.GetParams(ctx)
+	if err != nil {
+		return &types.MsgLockAndSuperfluidDelegateResponse{}, err
+	}
 
 	lockupMsg := lockuptypes.MsgLockTokens{
 		Owner:    msg.Sender,
-		Duration: server.keeper.sk.GetParams(ctx).UnbondingTime,
+		Duration: stakingParams.UnbondingTime,
 		Coins:    msg.Coins,
 	}
 
@@ -167,12 +171,16 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 
 func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgCreateFullRangePositionAndSuperfluidDelegate) (*types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	stakingParams, err := server.keeper.sk.GetParams(ctx)
+	if err != nil {
+		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
+	}
 
 	address, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
-	positionData, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	positionData, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, stakingParams.UnbondingTime)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}

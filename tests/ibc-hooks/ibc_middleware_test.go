@@ -708,7 +708,8 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []osmomath.Dec) []gammtypes.CFMMPoolI {
 	chain := suite.GetChain(chainName)
 	acc1 := chain.SenderAccount.GetAddress()
-	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	bondDenom, err := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	suite.Require().NoError(err)
 
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
@@ -1405,7 +1406,8 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChain(chainName Chain, denom1, denom
 
 func (suite *HooksTestSuite) CreateIBCNativePoolOnChain(chainName Chain, denom string) uint64 {
 	chain := suite.GetChain(chainName)
-	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	bondDenom, err := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	suite.Require().NoError(err)
 
 	multiplier := osmomath.NewDec(20)
 

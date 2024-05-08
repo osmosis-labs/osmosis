@@ -38,7 +38,8 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	startTime := s.Ctx.BlockHeader().Time
 
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
@@ -52,7 +53,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	incentiveKeeperParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	incentiveKeeperParams.DistrEpochIdentifier = superfluidEpochIdentifer
 	s.App.IncentivesKeeper.SetParams(s.Ctx, incentiveKeeperParams)
-	err := s.App.EpochsKeeper.AddEpochInfo(s.Ctx, epochtypes.EpochInfo{
+	err = s.App.EpochsKeeper.AddEpochInfo(s.Ctx, epochtypes.EpochInfo{
 		Identifier:              superfluidEpochIdentifer,
 		StartTime:               startTime,
 		Duration:                time.Hour,
@@ -74,11 +75,12 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.App.MintKeeper.SetParams(s.Ctx, mintParams)
 	s.App.MintKeeper.SetMinter(s.Ctx, minttypes.NewMinter(osmomath.NewDec(1_000_000)))
 
-	distributionParams := s.App.DistrKeeper.GetParams(s.Ctx)
+	distributionParams, err := s.App.DistrKeeper.Params.Get(s.Ctx)
+	s.Require().NoError(err)
 	distributionParams.BaseProposerReward = osmomath.ZeroDec()
 	distributionParams.BonusProposerReward = osmomath.ZeroDec()
 	distributionParams.CommunityTax = osmomath.ZeroDec()
-	s.App.DistrKeeper.SetParams(s.Ctx, distributionParams)
+	s.App.DistrKeeper.Params.Set(s.Ctx, distributionParams)
 	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("stake", osmomath.NewInt(1)))
 }
 

@@ -83,11 +83,11 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
-	require.NoError(chain.T, err)
+	require.NoError(chain.TB, err)
 	params, err := types.NewParams(addrStr)
-	require.NoError(chain.T, err)
+	require.NoError(chain.TB, err)
 	osmosisApp := chain.GetOsmosisApp()
 	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
-	require.True(chain.T, ok)
+	require.True(chain.TB, ok)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
 }

@@ -3,6 +3,7 @@ package v21
 import (
 	"context"
 
+	wasmv2 "github.com/CosmWasm/wasmd/x/wasm/migrations/v2"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -104,7 +105,7 @@ func CreateUpgradeHandler(
 
 			// wasm
 			case wasmtypes.ModuleName:
-				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = wasmv2.ParamKeyTable() //nolint:staticcheck
 
 			// osmosis modules
 			case protorevtypes.ModuleName:
@@ -153,10 +154,13 @@ func CreateUpgradeHandler(
 		}
 
 		// Set expedited proposal param:
-		govParams := keepers.GovKeeper.GetParams(ctx)
+		govParams, err := keepers.GovKeeper.Params.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
 		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(5000000000)))
 		govParams.MinInitialDepositRatio = "0.250000000000000000"
-		err = keepers.GovKeeper.SetParams(ctx, govParams)
+		err = keepers.GovKeeper.Params.Set(ctx, govParams)
 		if err != nil {
 			return nil, err
 		}

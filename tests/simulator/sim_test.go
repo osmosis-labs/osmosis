@@ -44,7 +44,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	tb.Helper()
 	// TODO: Get SDK simulator fixed to have min fees possible
 	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
-	config, db, logger, cleanup, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, logger, cleanup, err := osmosim.SetupSimulation(tb, "goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}

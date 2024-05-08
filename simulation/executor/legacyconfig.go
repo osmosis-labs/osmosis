@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"testing"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -116,7 +117,7 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
 // nolint: revive
-func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, logger log.Logger, cleanup func(), err error) {
+func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil
 	}
@@ -125,7 +126,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, lo
 	config.InitializationConfig.ChainID = SimAppChainID
 
 	if FlagVerboseValue {
-		logger = log.TestingLogger()
+		logger = log.NewTestLogger(tb)
 	} else {
 		logger = log.NewNopLogger()
 	}

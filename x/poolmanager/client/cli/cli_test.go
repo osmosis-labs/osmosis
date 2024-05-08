@@ -270,7 +270,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		osmoutils.DefaultFeeString(s.cfg),
 	)

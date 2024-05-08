@@ -3,8 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -1032,7 +1030,7 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 			for _, intermediaryAcc := range intermediaryAccs {
 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(unbondingDuration + time.Second))
-				s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{Height: s.Ctx.BlockHeight()})
+				s.App.EndBlocker(s.Ctx)
 
 				unbonded := s.App.BankKeeper.GetBalance(s.Ctx, intermediaryAcc.GetAccAddress(), sdk.DefaultBondDenom)
 				s.Require().True(unbonded.IsZero())

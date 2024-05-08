@@ -521,7 +521,7 @@ func NewOsmosisApp(
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 
-		if err := ibcwasmkeeper.InitializePinnedCodes(ctx, appCodec); err != nil {
+		if err := ibcwasmkeeper.InitializePinnedCodes(ctx); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
@@ -689,13 +689,16 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	newExpeditedVotingPeriod := time.Minute
 	newVotingPeriod := time.Minute * 2
 
-	govParams := app.GovKeeper.GetParams(ctx)
+	govParams, err := app.GovKeeper.Params.Get(ctx)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
 	govParams.VotingPeriod = &newVotingPeriod
 	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 100000000))
 	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 150000000))
 
-	err = app.GovKeeper.SetParams(ctx, govParams)
+	err = app.GovKeeper.Params.Set(ctx, govParams)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}

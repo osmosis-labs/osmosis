@@ -43,19 +43,19 @@ func WeightedOperations(
 		// weightMsgSuperfluidRedelegate int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidDelegate, &weightMsgSuperfluidDelegate, nil,
+	appParams.GetOrGenerate(OpWeightMsgSuperfluidDelegate, &weightMsgSuperfluidDelegate, nil,
 		func(_ *rand.Rand) {
 			weightMsgSuperfluidDelegate = DefaultWeightMsgSuperfluidDelegate
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidUndelegate, &weightMsgSuperfluidUndelegate, nil,
+	appParams.GetOrGenerate(OpWeightMsgSuperfluidUndelegate, &weightMsgSuperfluidUndelegate, nil,
 		func(_ *rand.Rand) {
 			weightMsgSuperfluidUndelegate = DefaultWeightMsgSuperfluidUndelegate
 		},
 	)
 
-	// appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidRedelegate, &weightMsgSuperfluidRedelegate, nil,
+	// appParams.GetOrGenerate(OpWeightMsgSuperfluidRedelegate, &weightMsgSuperfluidRedelegate, nil,
 	// 	func(_ *rand.Rand) {
 	// 		weightMsgSuperfluidRedelegate = DefaultWeightMsgSuperfluidRedelegate
 	// 	},

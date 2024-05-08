@@ -40,13 +40,13 @@ func WeightedOperations(
 		weightMsgAddToGauge  int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
+	appParams.GetOrGenerate(OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
 		func(_ *rand.Rand) {
 			weightMsgCreateGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddToGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},

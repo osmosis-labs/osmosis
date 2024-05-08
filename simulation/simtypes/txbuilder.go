@@ -65,7 +65,7 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 		return simulation.OperationMsg{}, nil, nil, err
 	}
 
-	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
+	opMsg := simulation.NewOperationMsg(msg, true, "")
 	opMsg.Route = msgName
 	opMsg.Name = msgName
 
