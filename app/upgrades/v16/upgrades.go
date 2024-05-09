@@ -165,7 +165,10 @@ func CreateUpgradeHandler(
 		// Because we are doing a direct send from the community pool, we need to manually change the fee pool to reflect the change.
 
 		// Remove coins we used from the community pool to make the CL position
-		feePool := keepers.DistrKeeper.GetFeePool(ctx)
+		feePool, err := keepers.DistrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
 		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, positionData.Amount0), sdk.NewCoin(DAIIBCDenom, positionData.Amount1))
 		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoDaiCoinsUsed...))
 		if negative {
@@ -174,7 +177,10 @@ func CreateUpgradeHandler(
 
 		// Update and set the new fee pool
 		feePool.CommunityPool = newPool
-		keepers.DistrKeeper.SetFeePool(ctx, feePool)
+		err = keepers.DistrKeeper.FeePool.Set(ctx, feePool)
+		if err != nil {
+			return nil, err
+		}
 
 		// Add the cl pool's full range denom as an authorized superfluid asset.
 		superfluidAsset := superfluidtypes.SuperfluidAsset{

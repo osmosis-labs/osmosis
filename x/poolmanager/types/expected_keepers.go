@@ -107,7 +107,7 @@ type MultihopRoute interface {
 }
 
 type StakingKeeper interface {
-	BondDenom(ctx sdk.Context) string
+	BondDenom(ctx context.Context) (string, error)
 }
 
 type ProtorevKeeper interface {

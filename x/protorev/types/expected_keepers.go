@@ -90,5 +90,5 @@ type ConcentratedLiquidityKeeper interface {
 // DistributionKeeper defines the distribution contract that must be fulfilled when
 // creating a x/protorev keeper.
 type DistributionKeeper interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

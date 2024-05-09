@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"

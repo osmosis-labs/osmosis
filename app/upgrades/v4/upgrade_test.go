@@ -57,9 +57,15 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				s.Require().NoError(err)
 				err = s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, "mint", "distribution", coins)
 				s.Require().NoError(err)
-				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+				feePool, err := s.app.DistrKeeper.FeePool.Get(s.ctx)
+				if err != nil {
+					panic(err)
+				}
 				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
-				s.app.DistrKeeper.SetFeePool(s.ctx, feePool)
+				err = s.app.DistrKeeper.FeePool.Set(s.ctx, feePool)
+				if err != nil {
+					panic(err)
+				}
 			},
 			func() {
 				// run upgrade
@@ -105,7 +111,10 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				s.Require().Equal(distBal, sdk.NewInt64Coin(appparams.BaseCoinUnit, expectedBal))
 
 				// check that feepool.communitypool has been reduced correctly
-				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+				feePool, err := s.app.DistrKeeper.FeePool.Get(s.ctx)
+				if err != nil {
+					panic(err)
+				}
 				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly

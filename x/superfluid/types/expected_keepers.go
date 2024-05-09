@@ -89,7 +89,7 @@ type StakingKeeper interface {
 
 // CommunityPoolKeeper expected distribution keeper.
 type CommunityPoolKeeper interface {
-	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
+	WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }
 
 // IncentivesKeeper expected incentives keeper.

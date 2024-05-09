@@ -121,7 +121,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-				feePoolCommunityPoolPost := s.App.DistrKeeper.GetFeePool(s.Ctx).CommunityPool
+				feePool, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
+				s.Require().NoError(err)
+				feePoolCommunityPoolPost := feePool.CommunityPool
 
 				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
 				// Note we use all the osmo, but a small amount of DAI is left over due to rounding when creating the first position.

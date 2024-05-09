@@ -258,7 +258,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-				feePoolCommunityPoolPost := s.App.DistrKeeper.GetFeePool(s.Ctx).CommunityPool
+				feePool, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
+				s.Require().NoError(err)
+				feePoolCommunityPoolPost := feePool.CommunityPool
 
 				assetPairs, err := v17.InitializeAssetPairs(s.Ctx, keepers)
 				s.Require().NoError(err)
@@ -399,7 +401,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-				feePoolCommunityPoolPost := s.App.DistrKeeper.GetFeePool(s.Ctx).CommunityPool
+				feePool, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
+				s.Require().NoError(err)
+				feePoolCommunityPoolPost := feePool.CommunityPool
 
 				indexOffset := int(0)
 				assetListIndex := int(0)

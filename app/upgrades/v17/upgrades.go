@@ -128,7 +128,10 @@ func CreateUpgradeHandler(
 		// Because we had done direct sends from the community pool, we need to manually change the fee pool to reflect the change in balance.
 
 		// Remove coins we used from the community pool to make the CL positions
-		feePool := keepers.DistrKeeper.GetFeePool(ctx)
+		feePool, err := keepers.DistrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
 		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fullRangeCoinsUsed...))
 		if negative {
 			return nil, fmt.Errorf("community pool cannot be negative: %s", newPool)
@@ -136,7 +139,10 @@ func CreateUpgradeHandler(
 
 		// Update and set the new fee pool
 		feePool.CommunityPool = newPool
-		keepers.DistrKeeper.SetFeePool(ctx, feePool)
+		err = keepers.DistrKeeper.FeePool.Set(ctx, feePool)
+		if err != nil {
+			return nil, err
+		}
 
 		// Set ibc-hooks params
 		keepers.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())

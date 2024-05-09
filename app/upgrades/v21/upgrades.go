@@ -146,7 +146,7 @@ func CreateUpgradeHandler(
 
 		// Migrate Tendermint consensus parameters from x/params module to a deprecated x/consensus module.
 		// The old params module is required to still be imported in your app.go in order to handle this migration.
-		baseapp.MigrateParams(ctx, baseAppLegacySS, keepers.ConsensusParamsKeeper)
+		baseapp.MigrateParams(ctx, baseAppLegacySS, keepers.ConsensusParamsKeeper.ParamsStore)
 
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {

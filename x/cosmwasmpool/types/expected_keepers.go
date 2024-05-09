@@ -20,7 +20,7 @@ type AccountKeeper interface {
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/cosmwasmpool keeper.
 type BankKeeper interface {
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // PoolManagerKeeper defines the interface needed to be fulfilled for
