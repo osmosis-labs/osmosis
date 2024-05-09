@@ -21,9 +21,17 @@ func GetTxCmd() *cobra.Command {
 		// NewForceTransferCmd(),
 		NewChangeAdminCmd(),
 		NewSetBeforeSendHookCmd(),
+		NewMsgSetDenomMetadata(),
 	)
 
 	return cmd
+}
+
+func NewMsgSetDenomMetadata() *cobra.Command {
+	return osmocli.BuildTxCli[*types.MsgSetDenomMetadata](&osmocli.TxCliDesc{
+		Use:   "set-denom-metadata",
+		Short: "overwriting of the denom metadata in the bank module.",
+	})
 }
 
 func NewCreateDenomCmd() *cobra.Command {
