@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/cosmos/gogoproto v1.4.12
-	github.com/cosmos/iavl v1.1.2
+	github.com/cosmos/iavl v1.1.3
 	github.com/cosmos/ibc-go/v8 v8.0.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13
 	github.com/osmosis-labs/osmosis/v25 v25.0.0-20240507214038-b986140713ac
@@ -225,20 +225,22 @@ require (
 )
 
 replace (
+	// Needs to be replaced due to iavlFastNodeModuleWhitelist feature
+	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728
 	// adds expedited proposal support and 1000MB cache default
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/CosmWasm/wasmd v0.50.0
 
 	// Using branch osmo/v0.37.4
 	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-2
-	// github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-2
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.0.0-20240510005818-6ce422c6f3d3
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	// github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240509020503-5b032581d579
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510043124-7dee208c8b1d
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
