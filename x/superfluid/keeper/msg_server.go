@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"strconv"
 	"time"
 
@@ -252,4 +254,37 @@ func (server msgServer) UnbondConvertAndStake(goCtx context.Context, msg *types.
 	}
 
 	return &types.MsgUnbondConvertAndStakeResponse{TotalAmtStaked: totalAmtConverted}, nil
+}
+
+func (server msgServer) SetDenomRiskFactor(goCtx context.Context, msg *types.MsgSetDenomRiskFactor) (*types.MsgSetDenomRiskFactorResponse, error) {
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, types.ErrUnauthorizedGov
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	riskFactor, err := osmomath.NewDecFromStr(msg.RiskFactor)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.SetDenomRiskFactor(ctx, msg.Denom, riskFactor)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetDenomRiskFactorResponse{}, nil
+}
+
+func (server msgServer) UnsetDenomRiskFactor(goCtx context.Context, msg *types.MsgUnsetDenomRiskFactor) (*types.MsgUnsetDenomRiskFactorResponse, error) {
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, types.ErrUnauthorizedGov
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	server.keeper.DeleteDenomRiskFactor(ctx, msg.Denom)
+
+	return &types.MsgUnsetDenomRiskFactorResponse{}, nil
 }

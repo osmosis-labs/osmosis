@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
@@ -44,9 +43,6 @@ func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 }
 
 func (s *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
-	s.SetupTest()
-
-	// make this into a table test
 	type riskFactorTest struct {
 		name            string
 		riskFactorDenom string
@@ -72,15 +68,13 @@ func (s *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			s.SetupTest()
+
 			if tt.riskFactor != "" {
 				s.App.SuperfluidKeeper.SetDenomRiskFactor(s.Ctx, tt.riskFactorDenom, osmomath.MustNewDecFromStr(tt.riskFactor))
 			}
 			adjustedValue := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmomath.NewInt(tt.initialAmt), tt.queryDenom)
-			fmt.Println(tt.name, adjustedValue)
 			s.Require().Equal(osmomath.NewInt(tt.expected), adjustedValue)
-
-			// clean up. Unclear why this doesn't happen automatically
-			s.App.SuperfluidKeeper.DeleteDenomRiskFactor(s.Ctx, tt.riskFactorDenom)
 		})
 	}
 }

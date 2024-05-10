@@ -59,7 +59,7 @@ func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAss
 	})
 }
 
-func (k Keeper) SetDenomRiskFactor(ctx sdk.Context, denom string, riskFactor osmomath.Dec) {
+func (k Keeper) SetDenomRiskFactor(ctx sdk.Context, denom string, riskFactor osmomath.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixDenomRiskFactor)
 	riskFactorRecord := types.DenomRiskFactor{
@@ -67,9 +67,10 @@ func (k Keeper) SetDenomRiskFactor(ctx sdk.Context, denom string, riskFactor osm
 	}
 	bz, err := proto.Marshal(&riskFactorRecord)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	prefixStore.Set([]byte(denom), bz)
+	return nil
 }
 
 func (k Keeper) DeleteDenomRiskFactor(ctx sdk.Context, denom string) {

@@ -436,3 +436,49 @@ func (msg MsgUnbondConvertAndStake) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{sender}
 }
+
+var _ sdk.Msg = &MsgSetDenomRiskFactor{}
+
+func (msg *MsgSetDenomRiskFactor) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("invalid sender address (%s)", err)
+	}
+	if len(msg.Denom) == 0 {
+		return fmt.Errorf("denom cannot be empty")
+	}
+	_, err = osmomath.NewDecFromStr(msg.RiskFactor)
+	if err != nil {
+		return fmt.Errorf("invalid risk factor (%s)", err)
+	}
+	return nil
+}
+
+func (msg *MsgSetDenomRiskFactor) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnsetDenomRiskFactor{}
+
+func (msg *MsgUnsetDenomRiskFactor) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("invalid sender address (%s)", err)
+	}
+	if len(msg.Denom) == 0 {
+		return fmt.Errorf("denom cannot be empty")
+	}
+	return nil
+}
+
+func (msg *MsgUnsetDenomRiskFactor) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
