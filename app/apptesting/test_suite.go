@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/rootmulti"
@@ -406,8 +407,8 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	s.Ctx = newCtx
 	lastCommitInfo := abci.CommitInfo{
 		Votes: []abci.VoteInfo{{
-			Validator:       abci.Validator{Address: valAddr, Power: 1000},
-			SignedLastBlock: true,
+			Validator:   abci.Validator{Address: valAddr, Power: 1000},
+			BlockIdFlag: tmtypes.BlockIDFlag(comet.BlockIDFlagCommit),
 		}},
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}

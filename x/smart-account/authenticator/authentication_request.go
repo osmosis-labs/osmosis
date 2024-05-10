@@ -200,7 +200,7 @@ func GenerateAuthenticationRequest(
 	signerData := getSignerData(ctx, ak, account)
 
 	// Get the sign bytes for the transaction
-	signBytes, err := sigModeHandler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+	signBytes, err := sigModeHandler.GetSignBytes(ctx, signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}

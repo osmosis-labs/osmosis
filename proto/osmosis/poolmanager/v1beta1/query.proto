@@ -317,7 +317,7 @@ message TradingPairTakerFeeRequest {
 
 message TradingPairTakerFeeResponse {
   string taker_fee = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -342,7 +342,7 @@ message EstimateTradeBasedOnPriceImpactRequest {
   // max_price_impact is the maximum percentage that the user is willing
   // to affect the price of the liquidity pool.
   string max_price_impact = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 
@@ -350,7 +350,7 @@ message EstimateTradeBasedOnPriceImpactRequest {
   // It adjusts the MaxPriceImpact as the SpotPrice of a pool can be changed at
   // any time.
   string external_price = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
@@ -271,6 +273,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		val.Address,
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)),
+		addresscodec.NewBech32Codec("osmo"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		osmoutils.DefaultFeeString(s.cfg),

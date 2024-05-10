@@ -328,7 +328,7 @@ func NewOsmosisApp(
 		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
 
 		// Register the SQS streaming service with the app.
-		app.SetStreamingService(sqsStreamingService)
+		app.SetStreamingManager(sqsStreamingService)
 	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
@@ -428,7 +428,7 @@ func NewOsmosisApp(
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
-		app.GetKey(wasmtypes.StoreKey),
+		runtime.NewKVStoreService(app.GetKey(wasmtypes.StoreKey)),
 		app.AccountKeeper,
 		app.SmartAccountKeeper,
 		app.BankKeeper,
@@ -475,7 +475,6 @@ func NewOsmosisApp(
 		mevLane,
 		anteHandler,
 		app.BaseApp.CheckTx,
-		app.ChainID(),
 	)
 
 	// wrap checkTxHandler with mempool parity handler

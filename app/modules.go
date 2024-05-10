@@ -33,6 +33,8 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
 	"cosmossdk.io/x/evidence"
@@ -154,7 +156,7 @@ func appModules(
 		genutil.NewAppModule(
 			app.AccountKeeper,
 			app.StakingKeeper,
-			app.BaseApp.DeliverTx,
+			app.BaseApp,
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
@@ -163,11 +165,12 @@ func appModules(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		gov.NewAppModule(appCodec, app.GovKeeper, *app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		downtimemodule.NewAppModule(*app.DowntimeKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-		upgrade.NewAppModule(app.UpgradeKeeper),
+		// UNFORKING v2 TODO: Is hard code osmo right here?
+		upgrade.NewAppModule(app.UpgradeKeeper, addresscodec.NewBech32Codec("osmo")),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),

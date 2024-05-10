@@ -35,7 +35,7 @@ func GenAndDeliverTxWithRandFees(
 
 	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg...)
 	if hasNeg {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, err
+		return simulation.NoOpMsg(moduleName, sdk.MsgTypeURL(msg), "message doesn't leave room for fees"), nil, err
 	}
 
 	// Only allow fees in "uosmo"
@@ -43,7 +43,7 @@ func GenAndDeliverTxWithRandFees(
 
 	fees, err = simulation.RandomFees(r, ctx, coins)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate fees"), nil, err
+		return simulation.NoOpMsg(moduleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(app, txGen, msg, fees, ctx, simAccount, ak, moduleName)
 }
@@ -72,7 +72,7 @@ func GenAndDeliverTx(
 		simAccount.PrivKey,
 	)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
+		return simulation.NoOpMsg(moduleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	txConfig := appparams.MakeEncodingConfig().TxConfig

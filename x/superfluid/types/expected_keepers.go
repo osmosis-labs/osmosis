@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	addresscodec "cosmossdk.io/core/address"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -79,12 +81,13 @@ type StakingKeeper interface {
 	Delegate(ctx context.Context, delAddr sdk.AccAddress, bondAmt osmomath.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares osmomath.Dec, err error)
 	InstantUndelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount osmomath.Dec) (sdk.Coins, error)
 	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, err error)
-	UnbondingTime(ctx context.Context) time.Duration
+	UnbondingTime(ctx context.Context) (time.Duration, error)
 	GetParams(ctx context.Context) (stakingtypes.Params, error)
 
 	IterateBondedValidatorsByPower(ctx context.Context, fn func(int64, stakingtypes.ValidatorI) bool) error
 	TotalBondedTokens(ctx context.Context) (osmomath.Int, error)
-	IterateDelegations(ctx context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool)
+	IterateDelegations(ctx context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error
+	ValidatorAddressCodec() addresscodec.Codec
 }
 
 // CommunityPoolKeeper expected distribution keeper.

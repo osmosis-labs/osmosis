@@ -64,6 +64,7 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 
 	gasLimit := gasRequested
 	sigV2, _ := clienttx.SignWithPrivKey(
+		s.Ctx,
 		1,
 		signerData,
 		txBuilder,

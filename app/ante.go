@@ -15,7 +15,7 @@ import (
 	osmoante "github.com/osmosis-labs/osmosis/v25/ante"
 	v9 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v9"
 
-	storetypes "cosmossdk.io/store/types"
+	corestoretypes "cosmossdk.io/core/store"
 
 	smartaccountante "github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
@@ -43,7 +43,7 @@ type BlockSDKAnteHandlerParams struct {
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasmtypes.WasmConfig,
-	txCounterStoreKey storetypes.StoreKey,
+	txCounterStoreKey corestoretypes.KVStoreService,
 	accountKeeper ante.AccountKeeper,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	bankKeeper txfeestypes.BankKeeper,

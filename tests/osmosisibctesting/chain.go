@@ -233,6 +233,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
 // from ibctesting
 func SignAndDeliverWithAuthenticator(
+	ctx sdk.Context,
 	txCfg client.TxConfig,
 	app *baseapp.BaseApp,
 	header tmproto.Header,
@@ -244,6 +245,7 @@ func SignAndDeliverWithAuthenticator(
 	selectedAuthenticators []uint64,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	tx, err := SignAuthenticatorMsg(
+		ctx,
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000)},
@@ -267,6 +269,7 @@ func SignAndDeliverWithAuthenticator(
 
 // GenTx generates a signed mock transaction.
 func SignAuthenticatorMsg(
+	ctx sdk.Context,
 	gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
@@ -281,7 +284,10 @@ func SignAuthenticatorMsg(
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -311,7 +317,7 @@ func SignAuthenticatorMsg(
 		txBuilder.SetNonCriticalExtensionOptions(value)
 	}
 
-	err := txBuilder.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -331,14 +337,8 @@ func SignAuthenticatorMsg(
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(
-			signMode,
-			signerData,
-			txBuilder.GetTx(),
-		)
-		if err != nil {
-			return nil, err
-		}
+		signBytes, err := authsigning.GetSignBytesAdapter(
+			ctx, gen.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 		sig, err := p.Sign(signBytes)
 		if err != nil {
 			return nil, err
@@ -418,6 +418,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 }
 
 func SignAndDeliverWithAuthenticatorAndCompoundSigs(
+	ctx sdk.Context,
 	txCfg client.TxConfig,
 	app *baseapp.BaseApp,
 	header tmproto.Header,
@@ -430,6 +431,7 @@ func SignAndDeliverWithAuthenticatorAndCompoundSigs(
 ) (sdk.GasInfo, *sdk.Result, error) {
 	// Now passing `signers` to the function
 	tx, err := SignAuthenticatorMsgWithCompoundSigs(
+		ctx,
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000)},
@@ -453,6 +455,7 @@ func SignAndDeliverWithAuthenticatorAndCompoundSigs(
 
 // SignAuthenticatorMsgWithCompoundSigs generates a transaction signed with compound signatures.
 func SignAuthenticatorMsgWithCompoundSigs(
+	ctx sdk.Context,
 	gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
@@ -468,7 +471,10 @@ func SignAuthenticatorMsgWithCompoundSigs(
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -498,7 +504,7 @@ func SignAuthenticatorMsgWithCompoundSigs(
 		txBuilder.SetNonCriticalExtensionOptions(value)
 	}
 
-	err := txBuilder.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -518,7 +524,7 @@ func SignAuthenticatorMsgWithCompoundSigs(
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+		signBytes, err := authsigning.GetSignBytesAdapter(ctx, gen.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 		if err != nil {
 			return nil, err
 		}

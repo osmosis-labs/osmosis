@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	addresscodec "cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -538,6 +539,11 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 // Eugen’s point: Only rewards message needs to be updated. Rest of messages are fine
 // Queries need to be updated
 // We can do this at the very end though, since it just relates to queries.
+
+// IterateBondedValidatorsByPower implements govtypes.StakingKeeper
+func (k Keeper) ValidatorAddressCodec() addresscodec.Codec {
+	return k.sk.ValidatorAddressCodec()
+}
 
 // IterateBondedValidatorsByPower implements govtypes.StakingKeeper
 func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(int64, stakingtypes.ValidatorI) bool) error {

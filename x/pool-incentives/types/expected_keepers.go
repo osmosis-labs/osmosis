@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
 	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
@@ -50,7 +49,6 @@ type IncentivesKeeper interface {
 
 // DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
 type DistrKeeper interface {
-	SetFeePool(ctx context.Context, feePool distrtypes.FeePool)
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 

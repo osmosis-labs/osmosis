@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/store"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,14 +53,14 @@ func (s StatefulAuthenticator) Track(ctx sdk.Context, request authenticator.Auth
 }
 
 func (s StatefulAuthenticator) SetValue(ctx sdk.Context, value int) {
-	kvStore := prefix.NewStore(store.KVStore(s.KvStoreKey), []byte(s.Type()))
+	kvStore := prefix.NewStore(ctx.KVStore(s.KvStoreKey), []byte(s.Type()))
 	statefulData := StatefulAuthenticatorData{Value: value}
 	newBz, _ := json.Marshal(statefulData)
 	kvStore.Set([]byte("value"), newBz)
 }
 
 func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
-	kvStore := prefix.NewStore(store.KVStore(s.KvStoreKey), []byte(s.Type()))
+	kvStore := prefix.NewStore(ctx.KVStore(s.KvStoreKey), []byte(s.Type()))
 	bz := kvStore.Get([]byte("value")) // global value. On the real thing we may want the account
 	var statefulData StatefulAuthenticatorData
 	_ = json.Unmarshal(bz, &statefulData) // if we can't unmarshal, we just assume it's 0

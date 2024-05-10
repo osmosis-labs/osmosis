@@ -1308,8 +1308,8 @@ github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4a
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
 github.com/osmosis-labs/cometbft v0.0.0-20240510005818-6ce422c6f3d3 h1:20XJTsLdqOinrmeVyNCYVL3rfRf0yIQsJ+vvQNzWD2w=
 github.com/osmosis-labs/cometbft v0.0.0-20240510005818-6ce422c6f3d3/go.mod h1:HIyf811dFMI73IE0F7RrnY/Fr+d1+HuJAgtkEpQjCMY=
-github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510043124-7dee208c8b1d h1:eSW4dwtsdY2gqDYKbqY3UxaNESU0OJuVVXH//WfwN5Y=
-github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510043124-7dee208c8b1d/go.mod h1:0cuDcJXs1CQ38F8cPNN56uktyI7nZ60lKxKnJJaGSz4=
+github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458 h1:T0qIFj5DL7SAflrH9DlLSuWwp2xAJWQH+8n3rub9HUc=
+github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458/go.mod h1:0cuDcJXs1CQ38F8cPNN56uktyI7nZ60lKxKnJJaGSz4=
 github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728 h1:AMz4HWC+WA/MwBQdsb11yIF9ForIvSLYYVy/jyhJ3/I=
 github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728/go.mod h1:gjE3DZe4t/+VeIk6CmrouyqiuDbZ7QOVDDq3nLqBTpg=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=

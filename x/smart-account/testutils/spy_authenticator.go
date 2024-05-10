@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -202,9 +201,9 @@ func (s SpyAuthenticator) ResetLatestCalls(ctx sdk.Context) {
 }
 
 func (s SpyAuthenticator) store(ctx sdk.Context) storetypes.KVStore {
-	return prefix.NewStore(store.KVStore(s.KvStoreKey), []byte(s.Type()))
+	return prefix.NewStore(ctx.KVStore(s.KvStoreKey), []byte(s.Type()))
 }
 
 func (s SpyAuthenticator) storeByName(ctx sdk.Context) storetypes.KVStore {
-	return prefix.NewStore(store.KVStore(s.KvStoreKey), []byte(s.Name))
+	return prefix.NewStore(ctx.KVStore(s.KvStoreKey), []byte(s.Name))
 }
