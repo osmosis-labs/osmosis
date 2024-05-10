@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 	"encoding/json"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"strconv"
 	"time"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
