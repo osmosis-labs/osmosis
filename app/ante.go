@@ -1,6 +1,3 @@
-//go:build !excludeIncrement
-// +build !excludeIncrement
-
 package app
 
 import (

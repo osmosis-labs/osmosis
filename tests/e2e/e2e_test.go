@@ -27,6 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v25/tests/e2e/initialization"
@@ -224,7 +225,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	supportedBaseDenoms, err := chainANode.QueryProtoRevBaseDenoms()
 	s.Require().NoError(err)
 	s.Require().Len(supportedBaseDenoms, 1, "protorev module should only have uosmo as a supported base denom on init")
-	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo", "protorev module should only have uosmo as a supported base denom on init")
+	s.Require().Equal(supportedBaseDenoms[0].Denom, appparams.BaseCoinUnit, "protorev module should only have uosmo as a supported base denom on init")
 
 	s.T().Logf("completed protorev module init checks")
 
@@ -299,7 +300,7 @@ func (s *IntegrationTestSuite) StableSwap() {
 
 	const (
 		denomA = "stake"
-		denomB = "uosmo"
+		denomB = appparams.BaseCoinUnit
 
 		minAmountOut = "1"
 	)
@@ -340,7 +341,7 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 
 	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
 
-	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
+	uosmoIn := fmt.Sprintf("1000000%s", appparams.BaseCoinUnit)
 
 	swapWalletAddr := chainABNode.CreateWallet(migrationWallet, chainAB)
 
@@ -468,7 +469,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 	fmt.Println("param", param)
 
-	osmoSupply, err := chainANode.QuerySupplyOf("uosmo")
+	osmoSupply, err := chainANode.QuerySupplyOf(appparams.BaseCoinUnit)
 	s.Require().NoError(err)
 
 	f, err := osmoSupply.ToLegacyDec().Float64()
@@ -539,12 +540,12 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	transferAmount := int64(10)
 	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("Sending IBC transfer IBCWasmHooks")
-	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
+	coin := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(transferAmount))
 	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
 
 	// check the balance of the contract
-	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", appparams.BaseCoinUnit))
 	ibcDenom := denomTrace.IBCDenom()
 	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
@@ -614,11 +615,11 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	forwardMemo, err := json.Marshal(memoData)
 	s.NoError(err)
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
-	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
+	coin := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(transferAmount))
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, appparams.BaseCoinUnit, transferAmount)
 
 	// Getting the sender as set by PFM
 	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
@@ -701,7 +702,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 		denomA = "stake"
 		denomB = "uion"
-		denomC = "uosmo"
+		denomC = appparams.BaseCoinUnit
 
 		minAmountOut = "1"
 
@@ -883,7 +884,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	"metadata": "%s",
 	"deposit": "%s",
 	"expedited": true
-}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(5000000000)))
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(appparams.BaseCoinUnit, math.NewInt(5000000000)))
 
 	propNumber := chainABNode.SubmitNewV1ProposalType(validProp, sender)
 
@@ -928,8 +929,8 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 		poolFile   = "geometricPool.json"
 		walletName = "geometric-twap-wallet"
 
-		denomA = "uosmo" // 1_000_000 uosmo
-		denomB = "stake" // 2_000_000 stake
+		denomA = appparams.BaseCoinUnit // 1_000_000 uosmo
+		denomB = "stake"                // 2_000_000 stake
 
 		minAmountOut = "1"
 	)
@@ -1065,7 +1066,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 	"metadata": "%s",
 	"deposit": "%s",
 	"expedited": false
-}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(appparams.BaseCoinUnit, math.NewInt(10000000)))
 
 	proposalID := chainANode.SubmitNewV1ProposalType(validProp, sender)
 
@@ -1124,7 +1125,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 	"metadata": "%s",
 	"deposit": "%s",
 	"expedited": false
-}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("uosmo", math.NewInt(10000000)))
+}`, govModuleAccount, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(appparams.BaseCoinUnit, math.NewInt(10000000)))
 
 	proposalID := chainBNode.SubmitNewV1ProposalType(validProp, sender)
 

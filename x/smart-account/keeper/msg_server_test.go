@@ -183,3 +183,30 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	params.IsSmartAccountActive = initialParams.IsSmartAccountActive
 	s.Require().Equal(params, initialParams)
 }
+
+func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
+	msgServer := keeper.NewMsgServerImpl(*s.App.SmartAccountKeeper)
+	ctx := s.Ctx
+
+	s.App.SmartAccountKeeper.SetParams(s.Ctx, types.Params{IsSmartAccountActive: false})
+
+	// Create a test message
+	msg := &types.MsgAddAuthenticator{
+		Sender: "",
+		Type:   authenticator.SignatureVerification{}.Type(),
+		Data:   []byte(""),
+	}
+
+	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
+
+	removeMsg := &types.MsgRemoveAuthenticator{
+		Sender: "",
+		Id:     1,
+	}
+
+	_, err = msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
+}
