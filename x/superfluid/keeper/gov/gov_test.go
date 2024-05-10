@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 }
 
 func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
-	nativeAssetNoPrice := types.SuperfluidAsset{
+	bondAsset := types.SuperfluidAsset{
 		Denom:     "stake",
 		AssetType: types.SuperfluidAssetTypeNative,
 	}
@@ -49,6 +49,10 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		Denom:       "btc",
 		AssetType:   types.SuperfluidAssetTypeNative,
 		PricePoolId: 1,
+	}
+	nativeAssetNoPrice := types.SuperfluidAsset{
+		Denom:     "btc",
+		AssetType: types.SuperfluidAssetTypeNative,
 	}
 	gammAsset := types.SuperfluidAsset{
 		Denom:     "gamm/pool/1",
@@ -162,7 +166,7 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				// The reason we do this is because native denom should be an asset within the pool,
 				// while we do not want native asset to be in gov proposals.
 				govDenoms := []string{}
-				poolDenoms := []string{nativeAssetNoPrice.Denom}
+				poolDenoms := []string{bondAsset.Denom}
 
 				for _, asset := range action.assets {
 					poolDenoms = append(poolDenoms, asset.Denom)
