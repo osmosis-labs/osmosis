@@ -300,7 +300,7 @@ func initGenFiles(
 	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
 
-	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &types.GenesisDoc{}, genesisParams, chainID)
+	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &genutiltypes.AppGenesis{}, genesisParams, chainID)
 	if err != nil {
 		return err
 	}
@@ -344,12 +344,12 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		_, genDoc, err := genutiltypes.GenesisStateFromGenFile(nodeConfig.GenesisFile())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator, genutiltypes.DefaultMessageValidator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, genDoc, genBalIterator, genutiltypes.DefaultMessageValidator, clientCtx.TxConfig.SigningContext().ValidatorAddressCodec())
 		if err != nil {
 			return err
 		}

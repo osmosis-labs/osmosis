@@ -38,6 +38,7 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -54,9 +55,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
@@ -683,11 +684,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	debugCmd.AddCommand(ConvertBech32Cmd())
 	debugCmd.AddCommand(DebugProtoMarshalledBytes())
 
-	gentxModule, ok := osmosis.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
-	if !ok {
-		panic(fmt.Errorf("expected %s module to be an instance of type %T", genutiltypes.ModuleName, genutil.AppModuleBasic{}))
-	}
-
 	valOperAddressCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
@@ -713,7 +709,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
-	server.AddTestnetCreatorCommand(rootCmd, osmosis.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
+	server.AddTestnetCreatorCommand(rootCmd, newTestnetApp, addModuleInitFlags)
 
 	for i, cmd := range rootCmd.Commands() {
 		if cmd.Name() == "start" {
@@ -752,10 +748,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(osmosis.DefaultNodeHome),
+		keys.Commands(),
 	)
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
@@ -765,6 +761,23 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
+}
+
+func CmdModuleNameToAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-name-to-address [module-name]",
+		Short: "module name to address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			address := authtypes.NewModuleAddress(args[0])
+			return clientCtx.PrintString(address.String())
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // queryCommand adds transaction and account querying commands.
@@ -779,11 +792,11 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		CmdModuleNameToAddress(),
 	)
 
 	osmosis.ModuleBasics.AddQueryCommands(cmd)
@@ -821,7 +834,7 @@ func txCommand() *cobra.Command {
 
 // newApp initializes and returns a new Osmosis app.
 func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -838,7 +851,7 @@ func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts ser
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := cosmosdb.NewGoLevelDB("metadata", snapshotDir)
+	snapshotDB, err := cosmosdb.NewGoLevelDB("metadata", snapshotDir, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -890,7 +903,7 @@ func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts ser
 
 	// If this is an in place testnet, set any new stores that may exist
 	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
-		version := store.NewCommitMultiStore(db).LatestVersion() + 1
+		version := store.NewCommitMultiStore(db, log.NewNopLogger(), nil).LatestVersion() + 1
 		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
 	}
 

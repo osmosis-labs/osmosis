@@ -159,7 +159,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
-	db, err := cosmosdb.NewGoLevelDB("osmosis_leveldb_testing", dir)
+	db, err := cosmosdb.NewGoLevelDB("osmosis_leveldb_testing", dir, nil)
 	if err != nil {
 		panic(err)
 	}

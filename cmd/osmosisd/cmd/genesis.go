@@ -108,7 +108,7 @@ Example:
 	return cmd
 }
 
-func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
+func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *genutiltypes.AppGenesis, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *genutiltypes.AppGenesis, error) {
 	depCdc := clientCtx.Codec
 	cdc := depCdc
 
@@ -116,7 +116,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	genDoc.ChainID = chainID
 	genDoc.GenesisTime = genesisParams.GenesisTime
 
-	genDoc.ConsensusParams = genesisParams.ConsensusParams
+	genDoc.Consensus.Params = genesisParams.ConsensusParams
 
 	// ---
 	// staking module genesis
