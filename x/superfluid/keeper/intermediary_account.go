@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
@@ -12,7 +14,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
+func (k Keeper) GetAllIntermediaryAccounts(context context.Context) []types.SuperfluidIntermediaryAccount {
+	ctx := sdk.UnwrapSDKContext(context)
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
 

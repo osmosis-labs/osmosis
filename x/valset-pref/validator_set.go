@@ -180,7 +180,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 				return err
 			}
 
-			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
+			_, _, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
 			if err != nil {
 				return err
 			}
@@ -197,7 +197,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 	// Step 6
 	for len(valSetRatio) > 0 && valSetRatio[0].VRatio.GT(targetRatio) {
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valSetRatio[0].ValAddr, valSetRatio[0].DelegatedAmt.ToLegacyDec()) // this has to be shares amount
+		_, _, err = k.stakingKeeper.Undelegate(ctx, delegator, valSetRatio[0].ValAddr, valSetRatio[0].DelegatedAmt.ToLegacyDec()) // this has to be shares amount
 		if err != nil {
 			return err
 		}
@@ -218,7 +218,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 			return err
 		}
 
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
+		_, _, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
 		if err != nil {
 			return err
 		}
@@ -308,7 +308,7 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 			return err
 		}
 
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
+		_, _, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
 		if err != nil {
 			return err
 		}

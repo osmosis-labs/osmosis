@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	storetypes "cosmossdk.io/store/types"
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 )
 
 func CtxWithStoreKeys(keys []storetypes.StoreKey, header tmproto.Header, isCheckTx bool) sdk.Context {

@@ -679,7 +679,10 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 // CONTRACT: pool with `poolId` exists
 func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	// If the denom is already denominated in uosmo, we can just use it directly
-	OSMO := k.stakingKeeper.BondDenom(ctx)
+	OSMO, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	if volumeGenerated.Denom == OSMO {
 		k.addVolume(ctx, poolId, volumeGenerated)
 		return
@@ -763,7 +766,11 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins 
 // GetOsmoVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
 func (k Keeper) GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int {
 	totalVolume := k.GetTotalVolumeForPool(ctx, poolId)
-	return totalVolume.AmountOf(k.stakingKeeper.BondDenom(ctx))
+	OSMO, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return totalVolume.AmountOf(OSMO)
 }
 
 // EstimateTradeBasedOnPriceImpactBalancerPool estimates a trade based on price impact for a balancer pool type.

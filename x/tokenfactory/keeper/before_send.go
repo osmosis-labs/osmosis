@@ -93,13 +93,14 @@ func (h Hooks) BlockBeforeSend(ctx context.Context, from, to sdk.AccAddress, amo
 // If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
 // Note that we gas meter trackBeforeSend to prevent infinite contract calls.
 // CONTRACT: this should not be called in beginBlock or endBlock since out of gas will cause this method to panic.
-func (k Keeper) callBeforeSendListener(ctx context.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
+func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errorsmod.Wrapf(types.ErrBeforeSendHookOutOfGas, "%v", r)
 		}
 	}()
 
+	ctx := sdk.UnwrapSDKContext(context)
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
 		if cosmwasmAddress != "" {

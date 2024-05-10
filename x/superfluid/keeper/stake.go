@@ -46,7 +46,8 @@ func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.Superflui
 // RefreshIntermediaryDelegationAmounts refreshes the amount of delegation for all intermediary accounts.
 // This method includes minting new osmo if the refreshed delegation amount has increased, and
 // instantly undelegating and burning if the refreshed delegation has decreased.
-func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context, accs []types.SuperfluidIntermediaryAccount) {
+func (k Keeper) RefreshIntermediaryDelegationAmounts(context context.Context, accs []types.SuperfluidIntermediaryAccount) {
+	ctx := sdk.UnwrapSDKContext(context)
 	// iterate over all intermedairy accounts - every (denom, validator) pair
 	for _, acc := range accs {
 		mAddr := acc.GetAccAddress()

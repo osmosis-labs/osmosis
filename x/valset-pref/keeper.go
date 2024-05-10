@@ -53,7 +53,10 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
-		existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		existingDelegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		if err != nil {
+			return types.ValidatorSetPreferences{}, err
+		}
 		if len(existingDelegations) == 0 {
 			return types.ValidatorSetPreferences{}, types.ErrNoDelegation
 		}
@@ -82,7 +85,10 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 	}
 
 	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
-	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+	existingDelegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, err
+	}
 
 	// No existing delegations for a delegator when valSet does not exist
 	if !exists && len(existingDelegations) == 0 {
