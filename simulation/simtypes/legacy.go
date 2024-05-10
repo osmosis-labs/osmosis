@@ -61,6 +61,7 @@ func GenAndDeliverTx(
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
 	tx, err := genTx(
+		ctx,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,

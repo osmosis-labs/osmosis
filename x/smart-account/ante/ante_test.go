@@ -111,7 +111,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -171,7 +171,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 	s.Require().NoError(err)
 	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -232,7 +232,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	s.Require().NoError(err)
 	s.Require().Equal(excessGasId, uint64(2), "Adding authenticator returning incorrect id")
 
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
@@ -254,7 +254,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	}
 
 	// Authenticate the fee payer and check gas limit is raised
-	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ = GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg2,
 		testMsg1,
 	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -332,7 +332,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+			tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 				testMsg1,
 			}, feeCoins, 300000, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{
 				tc.senderKey,
@@ -366,6 +366,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 
 // GenTx generates a signed mock transaction.
 func GenTx(
+	ctx sdk.Context,
 	gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
@@ -380,7 +381,10 @@ func GenTx(
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -410,7 +414,7 @@ func GenTx(
 		txBuilder.SetNonCriticalExtensionOptions(value)
 	}
 
-	err := txBuilder.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -429,10 +433,12 @@ func GenTx(
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+		signBytes, err := authsigning.GetSignBytesAdapter(
+			ctx, gen.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 		if err != nil {
 			panic(err)
 		}
+
 		sig, err := p.Sign(signBytes)
 		if err != nil {
 			panic(err)

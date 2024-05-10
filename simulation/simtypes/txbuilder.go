@@ -42,6 +42,7 @@ func (sim *SimCtx) defaultTxBuilder(
 	gas := getGas(msg)
 
 	tx, err := genTx(
+		ctx,
 		txConfig,
 		[]sdk.Msg{msg},
 		fees,
@@ -75,10 +76,13 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 // GenTx generates a signed mock transaction.
 // TODO: Surely there's proper API's in the SDK for this?
 // (This was copied from SDK simapp, and deleted the egregiously non-deterministic memo handling)
-func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+func genTx(ctx sdk.Context, gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 	memo := "sample_memo"
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsign.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -93,7 +97,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	}
 
 	txBuilder := gen.NewTxBuilder()
-	err := txBuilder.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +116,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		sig, err := tx.SignWithPrivKey(signMode, signerData, txBuilder, p, gen, accSeqs[i])
+		sig, err := tx.SignWithPrivKey(ctx, signMode, signerData, txBuilder, p, gen, accSeqs[i])
 		if err != nil {
 			panic(err)
 		}

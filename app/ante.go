@@ -6,11 +6,11 @@ import (
 	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	osmoante "github.com/osmosis-labs/osmosis/v25/ante"
 	v9 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v9"
@@ -50,7 +50,7 @@ func NewAnteHandler(
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
-	signModeHandler signing.SignModeHandler,
+	signModeHandler *txsigning.HandlerMap,
 	channelKeeper *ibckeeper.Keeper,
 	blockSDKParams BlockSDKAnteHandlerParams,
 ) sdk.AnteHandler {

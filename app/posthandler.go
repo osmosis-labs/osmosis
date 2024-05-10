@@ -1,9 +1,9 @@
 package app
 
 import (
+	txsigning "cosmossdk.io/x/tx/signing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
 	smartaccountpost "github.com/osmosis-labs/osmosis/v25/x/smart-account/post"
@@ -15,7 +15,7 @@ func NewPostHandler(
 	protoRevKeeper *protorevkeeper.Keeper,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
-	sigModeHandler authsigning.SignModeHandler,
+	sigModeHandler *txsigning.HandlerMap,
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),

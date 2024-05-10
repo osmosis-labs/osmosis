@@ -112,7 +112,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Generate a test transaction
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -155,7 +155,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	s.Require().NoError(err)
 
 	// Generate a test transaction with a selected authenticator
-	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ = GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{

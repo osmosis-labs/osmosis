@@ -5,12 +5,12 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	smartaccountante "github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
@@ -22,7 +22,7 @@ import (
 type AuthenticatorPostDecorator struct {
 	smartAccountKeeper *smartaccountkeeper.Keeper
 	accountKeeper      *authkeeper.AccountKeeper
-	sigModeHandler     authsigning.SignModeHandler
+	sigModeHandler     *txsigning.HandlerMap
 	next               sdk.PostHandler
 }
 
@@ -30,7 +30,7 @@ type AuthenticatorPostDecorator struct {
 func NewAuthenticatorPostDecorator(
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
-	sigModeHandler authsigning.SignModeHandler,
+	sigModeHandler *txsigning.HandlerMap,
 	next sdk.PostHandler,
 ) AuthenticatorPostDecorator {
 	return AuthenticatorPostDecorator{

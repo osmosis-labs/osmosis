@@ -95,7 +95,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Generate a test transaction
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -129,7 +129,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnteWithSenderNotSigner()
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Generate a test transaction
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[3],

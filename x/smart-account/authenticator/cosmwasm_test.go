@@ -293,6 +293,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	s.Require().NoError(err, "Initialize should succeed")
 
 	tx, _ := GenTx(
+		s.Ctx,
 		encodingConfig.TxConfig,
 		msgs,
 		feeCoins,
@@ -421,6 +422,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	s.Require().NoError(err, "Should succeed")
 
 	tx, _ := GenTx(
+		s.Ctx,
 		encodingConfig.TxConfig,
 		msgs,
 		feeCoins,

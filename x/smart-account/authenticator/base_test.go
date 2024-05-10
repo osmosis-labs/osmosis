@@ -84,6 +84,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 	}
 
 	tx, err := GenTx(
+		s.Ctx,
 		txconfig,
 		msgs,
 		feeCoins,
@@ -116,6 +117,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sd
 	}
 
 	baseTxBuilder, err := MakeTxBuilder(
+		s.Ctx,
 		txconfig,
 		msgs,
 		feeCoins,

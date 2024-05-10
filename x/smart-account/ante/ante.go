@@ -13,9 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
@@ -27,7 +27,7 @@ import (
 type AuthenticatorDecorator struct {
 	smartAccountKeeper *smartaccountkeeper.Keeper
 	accountKeeper      authante.AccountKeeper
-	sigModeHandler     authsigning.SignModeHandler
+	sigModeHandler     *txsigning.HandlerMap
 	deductFeeDecorator txfeeskeeper.DeductFeeDecorator
 }
 
@@ -35,7 +35,7 @@ type AuthenticatorDecorator struct {
 func NewAuthenticatorDecorator(
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
-	sigModeHandler authsigning.SignModeHandler,
+	sigModeHandler *txsigning.HandlerMap,
 	deductFeeDecorator txfeeskeeper.DeductFeeDecorator,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{

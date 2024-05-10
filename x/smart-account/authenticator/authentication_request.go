@@ -3,6 +3,8 @@ package authenticator
 import (
 	"fmt"
 
+	txsigning "cosmossdk.io/x/tx/signing"
+
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -168,7 +170,7 @@ func extractSignatures(txSigners []sdk.AccAddress, txSignatures []signing.Signat
 func GenerateAuthenticationRequest(
 	ctx sdk.Context,
 	ak authante.AccountKeeper,
-	sigModeHandler authsigning.SignModeHandler,
+	sigModeHandler *txsigning.HandlerMap,
 	account sdk.AccAddress,
 	feePayer sdk.AccAddress,
 	feeGranter sdk.AccAddress,
