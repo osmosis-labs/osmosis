@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	cometbftdb "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	cosmosdb "github.com/cosmos/cosmos-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -122,7 +122,7 @@ func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 }
 
 func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *OsmosisApp {
-	db := cometbftdb.NewMemDB()
+	db := cosmosdb.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
 	if !isCheckTx {
 		if len(defaultGenesisStatebytes) == 0 {
@@ -159,7 +159,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
-	db, err := cometbftdb.NewGoLevelDB("osmosis_leveldb_testing", dir)
+	db, err := cosmosdb.NewGoLevelDB("osmosis_leveldb_testing", dir)
 	if err != nil {
 		panic(err)
 	}

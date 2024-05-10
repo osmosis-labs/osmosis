@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"

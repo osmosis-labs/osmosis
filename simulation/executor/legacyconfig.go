@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
-	cometbftdb "github.com/cometbft/cometbft-db"
+	cosmosdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/osmosis-labs/osmosis/v25/simulation/executor/internal/stats"
@@ -117,7 +117,7 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
 // nolint: revive
-func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, logger log.Logger, cleanup func(), err error) {
+func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db cosmosdb.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil
 	}
@@ -137,7 +137,7 @@ func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db co
 		return Config{}, nil, nil, func() {}, err
 	}
 
-	db, err = cometbftdb.NewGoLevelDB(dbName, dir)
+	db, err = cosmosdb.NewGoLevelDB(dbName, dir)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}
@@ -151,7 +151,7 @@ func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db co
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db cometbftdb.DB) {
+func PrintStats(db cosmosdb.DB) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])

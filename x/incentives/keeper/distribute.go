@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
 	"github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"

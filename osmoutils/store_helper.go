@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	storetypes "cosmossdk.io/store/types"

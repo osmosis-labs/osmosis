@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/iavl"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	iavlstore "cosmossdk.io/store/iavl"
 	storetypes "cosmossdk.io/store/types"

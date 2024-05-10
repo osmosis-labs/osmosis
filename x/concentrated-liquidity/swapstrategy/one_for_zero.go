@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"

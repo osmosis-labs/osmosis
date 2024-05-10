@@ -3,7 +3,7 @@ package keeper
 import (
 	"time"
 
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
 
 	"github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 

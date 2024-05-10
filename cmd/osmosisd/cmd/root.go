@@ -15,7 +15,7 @@ import (
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 
-	cometbftdb "github.com/cometbft/cometbft-db"
+	cosmosdb "github.com/cosmos/cosmos-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
@@ -820,7 +820,7 @@ func txCommand() *cobra.Command {
 }
 
 // newApp initializes and returns a new Osmosis app.
-func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
@@ -838,7 +838,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := cometbftdb.NewGoLevelDB("metadata", snapshotDir)
+	snapshotDB, err := cosmosdb.NewGoLevelDB("metadata", snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -906,7 +906,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
-func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newTestnetApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	// Create an app and type cast to an OsmosisApp
 	app := newApp(logger, db, traceStore, appOpts)
 	osmosisApp, ok := app.(*osmosis.OsmosisApp)
@@ -937,7 +937,7 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
 func createOsmosisAppAndExport(
-	logger log.Logger, db cometbftdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
+	logger log.Logger, db cosmosdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
