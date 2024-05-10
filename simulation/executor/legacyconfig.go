@@ -137,7 +137,7 @@ func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db co
 		return Config{}, nil, nil, func() {}, err
 	}
 
-	db, err = cosmosdb.NewGoLevelDB(dbName, dir)
+	db, err = cosmosdb.NewGoLevelDB(dbName, dir, nil)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}

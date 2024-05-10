@@ -13,7 +13,6 @@ import (
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	tmtypes "github.com/cometbft/cometbft/types"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -26,6 +25,7 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
@@ -235,13 +235,13 @@ func (n *internalNode) getNodeKey() *p2p.NodeKey {
 	return &n.nodeKey
 }
 
-func (n *internalNode) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+func (n *internalNode) getGenesisDoc() (*genutiltypes.AppGenesis, error) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 	config.SetRoot(n.configDir())
 
 	genFile := config.GenesisFile()
-	doc := &tmtypes.GenesisDoc{}
+	doc := &genutiltypes.AppGenesis{}
 
 	if _, err := os.Stat(genFile); err != nil {
 		if !os.IsNotExist(err) {
@@ -250,9 +250,9 @@ func (n *internalNode) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	} else {
 		var err error
 
-		doc, err = tmtypes.GenesisDocFromFile(genFile)
+		_, doc, err = genutiltypes.GenesisStateFromGenFile(genFile)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read genesis doc from file: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal genesis state: %w", err)
 		}
 	}
 
@@ -281,7 +281,7 @@ func (n *internalNode) init() error {
 	}
 
 	genDoc.ChainID = n.chain.chainMeta.Id
-	genDoc.Validators = nil
+	genDoc.Consensus.Validators = nil
 	genDoc.AppState = appState
 
 	if err = genutil.ExportGenesisFile(genDoc, config.GenesisFile()); err != nil {
