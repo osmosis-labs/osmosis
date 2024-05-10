@@ -22,7 +22,7 @@ const (
 )
 
 const (
-	BlocksPerMinute = uint64(10)
+	BlocksPerMinute = uint64(15)
 	BlocksPerHour   = BlocksPerMinute * 60
 	BlocksPerDay    = BlocksPerHour * 24
 	BlocksPerWeek   = BlocksPerDay * 7
