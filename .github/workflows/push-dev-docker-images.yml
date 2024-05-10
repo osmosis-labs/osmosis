@@ -27,6 +27,7 @@ env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
   OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
   OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
+  OSMOSIS_DEV_IMAGE_COSMOVISOR_REPOSITORY: osmolabs/osmosis-dev-cosmovisor
 
 jobs:
   push-docker-images:
@@ -92,6 +93,22 @@ jobs:
             E2E_SCRIPT_NAME=chain
           tags: |
             ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+
+      -
+        name: Build and Push Cosmovisor Docker Images
+        uses: docker/build-push-action@v5
+        with:
+          file: Dockerfile.cosmovisor
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${{ env.OSMOSIS_VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.OSMOSIS_DEV_IMAGE_COSMOVISOR_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
 
   push-docker-images-arm:
     runs-on: buildjet-2vcpu-ubuntu-2204-arm
