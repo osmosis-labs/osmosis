@@ -100,3 +100,14 @@ message ConcentratedPoolUserPositionRecord {
   cosmos.base.v1beta1.Coin equivalent_staked_amount = 6
       [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin" ];
 }
+
+// The DenomRiskFactor stores the risk factor of a superfluid asset
+message DenomRiskFactor {
+  // superfluid asset denom, can be LP token or native token
+  string denom = 1;
+  string risk_factor = 2 [
+    (gogoproto.moretags) = "yaml:\"risk_factor\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
