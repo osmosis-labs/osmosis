@@ -67,7 +67,7 @@ func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr,
 	suite.Require().NoError(err)
 
 	events := ctx.EventManager().Events()
-	packet, err := ibctesting.ParsePacketFromEvents(events)
+	packet, err := ibctesting.ParsePacketFromEvents(events.ToABCIEvents())
 	suite.Require().NoError(err)
 	result, ack := suite.RelayPacket(packet, CW20toA)
 	suite.Require().Contains(string(ack), "result")
@@ -147,7 +147,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	suite.Require().Contains(string(ack), "result")
 
 	// Relay the packet created by the XCS contract back to the receiver
-	packet, err := ibctesting.ParsePacketFromEvents(result.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(result.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoB)
 
@@ -167,7 +167,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	transferMsg := NewMsgTransfer(sdk.NewCoin(stakeAB, osmomath.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), suite.pathAB.EndpointB.ChannelID, xcsMsg)
 	_, recvResult, _, _ := suite.FullSend(transferMsg, BtoA)
 
-	packet, err = ibctesting.ParsePacketFromEvents(recvResult.GetEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(recvResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoCW20)
 

@@ -164,7 +164,7 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	sendResult, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
@@ -190,7 +190,7 @@ func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string
 		return nil, "", err
 	}
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
 	if err != nil {
 		return nil, "", err
 	}
@@ -509,15 +509,15 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Execute the acknowledgement from chain B in chain A
 
 	// extract the sent packet
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 
 	// recv in chain b
-	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+	newRes, err := suite.path.EndpointB.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
 
 	// get the ack from the chain b's response
-	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	ack, err := ibctesting.ParseAckFromEvents(newRes.GetEvents())
 	suite.Require().NoError(err)
 
 	// manually relay it to chain a
