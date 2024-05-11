@@ -52,7 +52,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 	// Try to emit an ack for a packet that already has been acked. This should fail
 
 	// we extract the packet that has been acked here to test later that our contract can't emit an ack for it
-	alreadyAckedPacket, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	alreadyAckedPacket, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 
 	_, err = suite.forceContractToEmitAckForPacket(osmosisApp, suite.chainA.GetContext(), contractAddr, alreadyAckedPacket, true)
@@ -79,11 +79,11 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 		sendResult, err = suite.chainB.SendMsgsNoCheck(transferMsg)
 		suite.Require().NoError(err)
 
-		packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+		packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
 		suite.Require().NoError(err)
 
 		receiveResult = suite.RelayPacketNoAck(packet, BtoA)
-		newAck, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
+		newAck, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents().ToABCIEvents())
 		suite.Require().Error(err) // No ack!
 		suite.Require().Nil(newAck)
 
@@ -103,7 +103,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 		_, err = suite.forceContractToEmitAckForPacket(osmosisApp, ctx, contractAddr, packet, tc.success)
 		totalExpectedAcks++
 		suite.Require().NoError(err)
-		writtenAck, err := ibctesting.ParseAckFromEvents(ctx.EventManager().Events())
+		writtenAck, err := ibctesting.ParseAckFromEvents(ctx.EventManager().Events().ToABCIEvents())
 		suite.Require().NoError(err)
 
 		allAcks = osmosisApp.IBCKeeper.ChannelKeeper.GetAllPacketAcks(suite.chainA.GetContext())

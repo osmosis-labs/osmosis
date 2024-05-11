@@ -628,7 +628,7 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 	sendResult, err := sender.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 
 	receiveResult, ack := suite.RelayPacket(packet, direction)
@@ -676,7 +676,7 @@ func (suite *HooksTestSuite) TestTimeouts() {
 	sendResult, err := suite.chainA.SendMsgsNoCheck(transferMsg)
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 
 	// Move chainB forward one block
@@ -1070,7 +1070,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 		suite.Require().NoError(err)
 
 		for i, direction := range tc.relayChain {
-			packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+			packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 			suite.Require().NoError(err)
 			if i != len(tc.relayChain)-1 { // Only check the ack on the last hop
 				res = suite.RelayPacketNoAck(packet, direction)
@@ -1166,7 +1166,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCTest() {
 	suite.Require().NotNil(receiveResult)
 
 	// "Relay the packet" by executing the receive on chain B
-	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoB)
 
@@ -1216,7 +1216,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	suite.Require().NotNil(receiveResult)
 
 	// "Relay the packet" by executing the receive on chain B
-	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	receiveResult, ack2 := suite.RelayPacket(packet, AtoB)
 	index := slices.IndexFunc(receiveResult.Events, func(e abcitypes.Event) bool { return e.Type == "ibccallbackerror-ibc-acknowledgement-error" })
@@ -1248,7 +1248,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	suite.Require().NotNil(receiveResult)
 
 	// "Relay the packet" by executing the receive on chain B
-	packet, err = ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(receiveResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	_, ack2 = suite.RelayPacket(packet, AtoB)
 	fmt.Println(string(ack2))
@@ -1525,12 +1525,12 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	suite.Require().NotNil(receiveResult)
 
 	// "Relay the packet" by executing the receive on chain B
-	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	relayResult, _ := suite.RelayPacket(packet, AtoB)
 
 	// Now that chain B has processed it, it should be sending a message to chain A. Relay the response
-	packet2, err := ibctesting.ParsePacketFromEvents(relayResult.GetEvents())
+	packet2, err := ibctesting.ParsePacketFromEvents(relayResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet2, BtoA)
 
@@ -1599,22 +1599,22 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 
 	// Now that chain A has processed it, it should be sending a new packet to chain C with the proper forward memo
 	// First to B
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	res = suite.RelayPacketNoAck(packet, AtoB)
 
 	// B forwards to C
-	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	res = suite.RelayPacketNoAck(packet, BtoC)
 
 	// C forwards to A
-	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	res = suite.RelayPacketNoAck(packet, CtoA)
 
 	// Now the swwap can actually execute on A via the callback and generate a new packet with the swapped token to B
-	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	_ = suite.RelayPacketNoAck(packet, AtoB)
 
@@ -1881,7 +1881,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 			var ack []byte
 			for i, direction := range tc.relayChain {
-				packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+				packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 				suite.Require().NoError(err)
 				if tc.requireAck[i] {
 					res, ack = suite.RelayPacket(packet, direction)
@@ -1915,7 +1915,7 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 		suite.Require().NoError(err)
 		res = suite.RelayPacketNoAck(packet, direction)
 		if i != len(packetPath)-1 {
-			packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+			packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 			suite.Require().NoError(err)
 		}
 
@@ -1927,7 +1927,7 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 		err = senderEndpoint.UpdateClient()
 		suite.Require().NoError(err)
 	}
-	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 
 	for i := range packetPath {
@@ -2005,7 +2005,7 @@ func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
 	suite.SendAndAckPacketThroughPath([]Direction{AtoB, BtoC, CtoA}, packet)
 
 	recoverableQuery := fmt.Sprintf(`{"recoverable": {"addr": "%s"}}`, sender.address)
@@ -2056,7 +2056,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	suite.Require().NoError(err)
 
 	// "Relay the packet" by executing the receive on chain A
-	packet, err := ibctesting.ParsePacketFromEvents(ctxB.EventManager().Events())
+	packet, err := ibctesting.ParsePacketFromEvents(ctxB.EventManager().Events().ToABCIEvents())
 	suite.Require().NoError(err)
 	receiveResult, _ := suite.RelayPacket(packet, BtoA)
 
@@ -2066,7 +2066,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 
 	// The chain A should execute the cross chain swaps and add a new packet
 	// "Relay the packet" by executing the receive on chain B
-	packet, err = ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(receiveResult.GetEvents().ToABCIEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoB)
 

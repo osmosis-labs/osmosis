@@ -1,6 +1,7 @@
 package initialization
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/x/tx/signing"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/p2p"
@@ -378,8 +381,15 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(uint64(200000 * len(msgs)))
 
+	// UNFORKING v2 TODO: This probably is wrong (the type cast), but I can't tell until after it compiles.
+	adaptableTx, ok := txBuilder.GetTx().(authsigning.V2AdaptableTx)
+	if !ok {
+		return nil, fmt.Errorf("expected tx to be V2AdaptableTx, got %T", adaptableTx)
+	}
+	txData := adaptableTx.GetSigningTxData()
+
 	// TODO: Find a better way to sign this tx with less code.
-	signerData := authsigning.SignerData{
+	signerData := signing.SignerData{
 		ChainID:       n.chain.chainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
@@ -412,9 +422,11 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	}
 
 	bytesToSign, err := util.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
-		txsigning.SignMode_SIGN_MODE_DIRECT,
+		// UNFORKING v2 TODO: Empty context should be fine due to sign mode direct and not textual.
+		context.Background(),
+		signingv1beta1.SignMode_SIGN_MODE_DIRECT,
 		signerData,
-		txBuilder.GetTx(),
+		txData,
 	)
 	if err != nil {
 		return nil, err

@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -276,7 +277,7 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 }
 
 // CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
-func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.CommitMultiStore) {
+func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, storetypes.CommitMultiStore) {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 
@@ -292,7 +293,7 @@ func (s *KeeperTestHelper) Commit() {
 	s.App.Commit()
 	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
-	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
+	s.Ctx = s.App.GetBaseApp().NewContextLegacy(false, newHeader)
 
 	s.hasUsedAbci = true
 }
@@ -415,7 +416,7 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
-	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
+	s.Ctx = s.App.NewContextLegacy(false, reqBeginBlock.Header)
 	s.hasUsedAbci = true
 }
 
