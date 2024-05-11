@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -83,7 +84,7 @@ func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []s
 }
 
 // getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
-func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
+func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) txsigning.SignerData {
 	// Retrieve and build the signer data struct
 	baseAccount := ak.GetAccount(ctx, account)
 	genesis := ctx.BlockHeight() == 0
@@ -97,7 +98,7 @@ func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAd
 		sequence = baseAccount.GetSequence()
 	}
 
-	return authsigning.SignerData{
+	return txsigning.SignerData{
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      sequence,
@@ -106,7 +107,7 @@ func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAd
 
 // extractExplicitTxData makes the transaction data concrete for the authentication request. This is necessary to
 // pass the parsed data to the cosmwasm authenticator.
-func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (ExplicitTxData, error) {
+func extractExplicitTxData(tx sdk.Tx, signerData txsigning.SignerData) (ExplicitTxData, error) {
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
 		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
@@ -206,7 +207,7 @@ func GenerateAuthenticationRequest(
 	signerData := getSignerData(ctx, ak, account)
 
 	// Get the sign bytes for the transaction
-	signBytes, err := sigModeHandler.GetSignBytes(ctx, signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+	signBytes, err := sigModeHandler.GetSignBytes(ctx, signingv1beta1.SignMode_SIGN_MODE_DIRECT, signerData, tx)
 	if err != nil {
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
