@@ -9,6 +9,8 @@ import (
 
 	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
 
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
@@ -39,9 +41,11 @@ func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool
 		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
 		require.Equal(t, msg.Route(), types.RouterKey)
 		require.Equal(t, msg.Type(), expType)
-		signers := msg.GetSigners()
+		encCfg := moduletestutil.MakeTestEncodingConfig()
+		signers, _, err := encCfg.Codec.GetMsgV1Signers(msg)
+		require.NoError(t, err)
 		require.Equal(t, len(signers), 1)
-		require.Equal(t, signers[0].String(), addr1)
+		require.Equal(t, sdk.AccAddress(signers[0]).String(), addr1)
 	} else {
 		require.Error(t, msg.ValidateBasic(), "test: %v", name)
 	}

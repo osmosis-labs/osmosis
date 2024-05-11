@@ -80,15 +80,20 @@ func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msg
 	accountSequences := make([]uint64, len(msgs))
 	seenSequence := make(map[string]uint64)
 	for i, msg := range msgs {
-		signer := msg.GetSigners()[0]
-		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
+		signers, _, err := chain.Codec.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		signer := signers[0]
+		signerAcc := sdk.AccAddress(signer)
+		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signerAcc)
 		accountNumbers[i] = account.GetAccountNumber()
-		if sequence, ok := seenSequence[signer.String()]; ok {
+		if sequence, ok := seenSequence[signerAcc.String()]; ok {
 			accountSequences[i] = sequence + 1
 		} else {
 			accountSequences[i] = account.GetSequence()
 		}
-		seenSequence[signer.String()] = accountSequences[i]
+		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
 	_, r, err := SignAndDeliver(
@@ -110,7 +115,11 @@ func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msg
 
 	// increment sequences for successful transaction execution
 	for _, msg := range msgs {
-		signer := msg.GetSigners()[0]
+		signers, _, err := chain.Codec.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		signer := signers[0]
 		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
 		err = account.SetSequence(account.GetSequence() + 1)
 		if err != nil {
@@ -185,18 +194,24 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 	accountSequences := make([]uint64, len(msgs))
 	seenSequence := make(map[string]uint64)
 	for i, msg := range msgs {
-		signer := msg.GetSigners()[0]
-		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
+		signersFromMsg, _, err := chain.Codec.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		signer := signersFromMsg[0]
+		signerAcc := sdk.AccAddress(signer)
+		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signerAcc)
 		accountNumbers[i] = account.GetAccountNumber()
-		if sequence, ok := seenSequence[signer.String()]; ok {
+		if sequence, ok := seenSequence[signerAcc.String()]; ok {
 			accountSequences[i] = sequence + 1
 		} else {
 			accountSequences[i] = account.GetSequence()
 		}
-		seenSequence[signer.String()] = accountSequences[i]
+		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
 	_, r, err := SignAndDeliverWithAuthenticator(
+		chain.GetContext(),
 		chain.TxConfig,
 		chain.App.GetBaseApp(),
 		chain.GetContext().BlockHeader(),
@@ -217,7 +232,11 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 
 	// increment sequences for successful transaction execution
 	for _, msg := range msgs {
-		signer := msg.GetSigners()[0]
+		signers, _, err := chain.Codec.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		signer := signers[0]
 		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
 		err = account.SetSequence(account.GetSequence() + 1)
 		if err != nil {
@@ -372,18 +391,24 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 	accountSequences := make([]uint64, len(msgs))
 	seenSequence := make(map[string]uint64)
 	for i, msg := range msgs {
-		signer := msg.GetSigners()[0]
-		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
+		signers, _, err := chain.Codec.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		signer := signers[0]
+		signerAcc := sdk.AccAddress(signer)
+		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signerAcc)
 		accountNumbers[i] = account.GetAccountNumber()
-		if sequence, ok := seenSequence[signer.String()]; ok {
+		if sequence, ok := seenSequence[signerAcc.String()]; ok {
 			accountSequences[i] = sequence + 1
 		} else {
 			accountSequences[i] = account.GetSequence()
 		}
-		seenSequence[signer.String()] = accountSequences[i]
+		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
 	_, r, err := SignAndDeliverWithAuthenticatorAndCompoundSigs(
+		chain.GetContext(),
 		chain.TxConfig,
 		chain.App.GetBaseApp(),
 		chain.GetContext().BlockHeader(),
@@ -404,7 +429,11 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 
 	// increment sequences for successful transaction execution
 	for _, msg := range msgs {
-		signer := msg.GetSigners()[0]
+		signers, _, err := chain.Codec.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		signer := signers[0]
 		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
 		err = account.SetSequence(account.GetSequence() + 1)
 		if err != nil {
