@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,16 +25,19 @@ type AuthenticatorPostDecorator struct {
 	accountKeeper      *authkeeper.AccountKeeper
 	sigModeHandler     *txsigning.HandlerMap
 	next               sdk.PostHandler
+	cdc                codec.Codec
 }
 
 // NewAuthenticatorPostDecorator creates a new AuthenticatorPostDecorator with necessary dependencies.
 func NewAuthenticatorPostDecorator(
+	cdc codec.Codec,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 	sigModeHandler *txsigning.HandlerMap,
 	next sdk.PostHandler,
 ) AuthenticatorPostDecorator {
 	return AuthenticatorPostDecorator{
+		cdc:                cdc,
 		smartAccountKeeper: smartAccountKeeper,
 		accountKeeper:      accountKeeper,
 		sigModeHandler:     sigModeHandler,
@@ -75,7 +79,11 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 	for msgIndex, msg := range tx.GetMsgs() {
 		// When using a smart account we enforce one signer per transaction in the AnteHandler,
 		// if the AnteHandler is updated to account for more signers the changes need to be reflected here.
-		account := msg.GetSigners()[0]
+		signers, _, err := ad.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return sdk.Context{}, err
+		}
+		account := signers[0]
 
 		selectedAuthenticatorId := int(selectedAuthenticatorsFromExtension[msgIndex])
 		selectedAuthenticator, err := ad.smartAccountKeeper.GetInitializedAuthenticatorForAccount(
@@ -92,6 +100,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
 		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
+			ad.cdc,
 			ad.accountKeeper,
 			ad.sigModeHandler,
 			account,

@@ -8,6 +8,7 @@ import (
 
 	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -53,11 +54,12 @@ func NewAnteHandler(
 	signModeHandler *txsigning.HandlerMap,
 	channelKeeper *ibckeeper.Keeper,
 	blockSDKParams BlockSDKAnteHandlerParams,
+	appCodec codec.Codec,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
 	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
-	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
+	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions, appCodec)
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, accountKeeper, bankKeeper, nil)
 
 	// classicSignatureVerificationDecorator is the old flow to enable a circuit breaker
@@ -86,7 +88,7 @@ func NewAnteHandler(
 		ante.NewValidateSigCountDecorator(accountKeeper), // we can probably remove this as multisigs are not supported here
 		// Both the signature verification, fee deduction, and gas consumption functionality
 		// is embedded in the authenticator decorator
-		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
+		smartaccountante.NewAuthenticatorDecorator(appCodec, smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		// auction module antehandler
 		auctionante.NewAuctionDecorator(

@@ -29,7 +29,11 @@ func (sim *SimCtx) defaultTxBuilder(
 	msg sdk.Msg,
 	msgName string, // TODO fix
 ) (sdk.Tx, error) {
-	account, found := sim.FindAccount(msg.GetSigners()[0])
+	accounts, _, err := sim.AppCodec().GetMsgV1Signers(msg)
+	if err != nil {
+		return nil, err
+	}
+	account, found := sim.FindAccount(sdk.AccAddress(accounts[0]))
 	if !found {
 		return nil, errors.New("unable to generate mock tx: sim acct not found")
 	}

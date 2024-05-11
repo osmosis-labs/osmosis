@@ -13,6 +13,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -169,6 +170,7 @@ func extractSignatures(txSigners []sdk.AccAddress, txSignatures []signing.Signat
 // GenerateAuthenticationRequest creates an AuthenticationRequest for the transaction.
 func GenerateAuthenticationRequest(
 	ctx sdk.Context,
+	cdc codec.Codec,
 	ak authante.AccountKeeper,
 	sigModeHandler *txsigning.HandlerMap,
 	account sdk.AccAddress,
@@ -182,7 +184,11 @@ func GenerateAuthenticationRequest(
 	replayProtection ReplayProtection,
 ) (AuthenticationRequest, error) {
 	// Only supporting one signer per message. This will be enforced in sdk v0.50
-	signer := msg.GetSigners()[0]
+	signers, _, err := cdc.GetMsgV1Signers(msg)
+	if err != nil {
+		return AuthenticationRequest{}, err
+	}
+	signer := sdk.AccAddress(signers[0])
 	if !signer.Equals(account) {
 		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid signer")
 	}
