@@ -176,7 +176,7 @@ replace (
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1
-	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.11
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
