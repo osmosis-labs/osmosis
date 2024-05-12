@@ -72,7 +72,15 @@ func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []s
 	}
 
 	// Retrieve messages from the transaction.
-	signers = sigTx.GetSigners()
+	// UNFORKING v2 TODO: I dont know if ranging over the address bytes and assigning to AccAddress is correct
+	signerBytes, err := sigTx.GetSigners()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, signer := range signerBytes {
+		signers = append(signers, sdk.AccAddress(signer))
+	}
 
 	// check that signer length and signature length are the same
 	if len(signatures) != len(signers) {
