@@ -13,7 +13,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
@@ -87,12 +86,7 @@ func (k Keeper) GetFeeTokensStore(ctx sdk.Context) storetypes.KVStore {
 	return prefix.NewStore(store, types.FeeTokensStorePrefix)
 }
 
-// GetParamsNoUnmarshal returns the current consensus parameters from the consensus params store as raw bytes.
+// GetConsParams returns the current consensus parameters from the consensus params store.
 func (k Keeper) GetConsParams(ctx sdk.Context) (*consensustypes.QueryParamsResponse, error) {
 	return k.consensusKeeper.Params(ctx, &consensustypes.QueryParamsRequest{})
-}
-
-// UnmarshalParamBytes unmarshals the consensus params bytes to the consensus params type.
-func (k Keeper) UnmarshalParamBytes(ctx sdk.Context, bz []byte) (*tmproto.ConsensusParams, error) {
-	return k.consensusKeeper.UnmarshalParamBytes(ctx, bz)
 }
