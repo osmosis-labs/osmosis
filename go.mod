@@ -4,12 +4,11 @@ go 1.22.3
 
 require (
 	cosmossdk.io/api v0.7.4
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.0
-	cosmossdk.io/tools/rosetta v0.2.1
 	cosmossdk.io/x/evidence v0.1.1
 	cosmossdk.io/x/tx v0.13.3
 	cosmossdk.io/x/upgrade v0.1.1
@@ -27,6 +26,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
 	github.com/cosmos/ibc-go/v8 v8.0.0
+	github.com/cosmos/rosetta v0.50.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.1
@@ -100,7 +100,6 @@ require (
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
@@ -111,7 +110,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.7.4 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
-	github.com/hashicorp/go-plugin v1.5.2 // indirect
+	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
@@ -119,7 +118,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/linxGnu/grocksdb v1.8.14 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -153,7 +151,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
-	github.com/99designs/keyring v1.2.1 // indirect
+	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
@@ -165,7 +163,7 @@ require (
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
-	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
@@ -177,7 +175,7 @@ require (
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-kit/kit v0.12.0 // indirect
+	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
@@ -226,7 +224,7 @@ require (
 	github.com/prometheus/common v0.52.2 // indirect
 	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rs/cors v1.9.0 // indirect
+	github.com/rs/cors v1.10.1 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -251,10 +249,13 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.20.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
+	nhooyr.io/websocket v1.8.10 // indirect
 )
 
 replace (
+	// TODO(https://github.com/cosmos/rosetta/issues/76): Rosetta requires cosmossdk.io/core v0.12.0 erroneously but
+	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
+	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Needs to be replaced due to iavlFastNodeModuleWhitelist feature
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728
 	// adds expedited proposal support and 1000MB cache default
@@ -272,7 +273,7 @@ replace (
 	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458
-	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+	// github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 
@@ -291,7 +292,7 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
-	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	golang.org/x/exp => golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )
 
 // exclusion so we use v1.0.0

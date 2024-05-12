@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strings"
 
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 
 	cosmosdb "github.com/cosmos/cosmos-db"
