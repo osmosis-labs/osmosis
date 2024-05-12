@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -107,6 +106,29 @@ func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAd
 	}
 
 	return txsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      sequence,
+	}
+}
+
+// getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
+// UNFORKING v2 TODO: Maybe we can just type cast txsigning.SignerData to authsigning.SignerData instead of using whole new method.
+func getSignerDataOld(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
+	// Retrieve and build the signer data struct
+	baseAccount := ak.GetAccount(ctx, account)
+	genesis := ctx.BlockHeight() == 0
+	chainID := ctx.ChainID()
+	var accNum uint64
+	if !genesis {
+		accNum = baseAccount.GetAccountNumber()
+	}
+	var sequence uint64
+	if baseAccount != nil {
+		sequence = baseAccount.GetSequence()
+	}
+
+	return authsigning.SignerData{
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      sequence,
@@ -212,10 +234,13 @@ func GenerateAuthenticationRequest(
 	}
 
 	// Get the signer data for the account. This is needed in the SignDoc
+	// UNFORKING v2 TODO: Use a single method and maybe type case as needed
 	signerData := getSignerData(ctx, ak, account)
+	signerDataOld := getSignerDataOld(ctx, ak, account)
 
 	// Get the sign bytes for the transaction
-	signBytes, err := sigModeHandler.GetSignBytes(ctx, signingv1beta1.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+	// UNFORKING v2 TODO: I don't know if using the adapter here is correct, we just dont have access to the TxData but have the sdk.Tx
+	signBytes, err := authsigning.GetSignBytesAdapter(ctx, sigModeHandler, signing.SignMode_SIGN_MODE_DIRECT, signerDataOld, tx)
 	if err != nil {
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
