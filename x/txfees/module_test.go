@@ -67,14 +67,14 @@ func TestBeginBlock(t *testing.T) {
 	require.Equal(t, hardCodedGasTarget, mempool1559.TargetGas)
 
 	// Run begin block
-	ctx = RunBeginBlock(ctx, app)
+	ctx = RunFinalizeBlock(ctx, app)
 
 	// Target gas should be updated to the value set in InitChain
 	defaultBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(sims.DefaultConsensusParams.Block.MaxGas)).TruncateInt().Int64()
 	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Run begin block again, should not update target gas
-	ctx = RunBeginBlock(ctx, app)
+	ctx = RunFinalizeBlock(ctx, app)
 	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Update the consensus params
@@ -90,17 +90,19 @@ func TestBeginBlock(t *testing.T) {
 	require.Equal(t, defaultBlockTargetGas, mempool1559.TargetGas)
 
 	// Run begin block again, should update target gas
-	RunBeginBlock(ctx, app)
+	RunFinalizeBlock(ctx, app)
 	expectedNewBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newDefaultBlockMaxGas)).TruncateInt().Int64()
 	require.Equal(t, expectedNewBlockTargetGas, mempool1559.TargetGas)
 }
 
-func RunBeginBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
+func RunFinalizeBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
 	oldHeight := ctx.BlockHeight()
 	oldHeader := ctx.BlockHeader()
 	app.Commit()
-	newHeader := tmproto.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
-	app.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: oldHeight + 1, Time: oldHeader.Time.Add(time.Second)})
+	if err != nil {
+		panic(err)
+	}
 	ctx = app.GetBaseApp().NewContext(false)
 	return ctx
 }

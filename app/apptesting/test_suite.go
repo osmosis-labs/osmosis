@@ -293,7 +293,7 @@ func (s *KeeperTestHelper) Commit() {
 	oldHeader := s.Ctx.BlockHeader()
 	s.App.Commit()
 	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
-	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+	s.App.BeginBlocker(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContextLegacy(false, newHeader)
 
 	s.hasUsedAbci = true

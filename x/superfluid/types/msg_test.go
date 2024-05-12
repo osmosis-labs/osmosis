@@ -142,7 +142,9 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
+			msgWithValBasic, ok := tc.msg.(sdk.HasValidateBasic)
+			require.True(t, ok)
+			err := msgWithValBasic.ValidateBasic()
 			if tc.expectedError {
 				require.Error(t, err)
 			} else {

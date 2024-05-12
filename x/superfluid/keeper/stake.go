@@ -21,10 +21,14 @@ import (
 
 // GetTotalSyntheticAssetsLocked returns the total amount of the given denom locked.
 func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) osmomath.Int {
+	unbondingTime, err := k.sk.UnbondingTime(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
-		Duration:      k.sk.UnbondingTime(ctx),
+		Duration:      unbondingTime,
 	})
 }
 
