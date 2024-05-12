@@ -16,6 +16,7 @@ type AccountKeeper interface {
 
 	SetModuleAccount(context.Context, sdk.ModuleAccountI)
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
+	NewAccount(ctx context.Context, acc sdk.AccountI) sdk.AccountI
 }
 
 // BankKeeper defines the contract needed to be fulfilled for banking and supply

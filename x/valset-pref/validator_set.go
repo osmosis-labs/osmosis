@@ -551,7 +551,7 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 
 	validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
 	if err != nil {
-		return nil, stakingtypes.Validator{}, fmt.Errorf("validator not found %s", validator)
+		return nil, stakingtypes.Validator{}, fmt.Errorf("validator not found %s", validator.String())
 	}
 
 	return valAddr, validator, nil

@@ -7,12 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -89,6 +87,7 @@ var (
 	SecondaryAmount      = osmomath.NewInt(100000000)
 	baseTestAccts        = []sdk.AccAddress{}
 	defaultTestStartTime = time.Now().UTC()
+	testDescription      = stakingtypes.NewDescription("test_moniker", "test_identity", "test_website", "test_security_contact", "test_details")
 )
 
 func init() {
@@ -293,7 +292,10 @@ func (s *KeeperTestHelper) Commit() {
 	oldHeader := s.Ctx.BlockHeader()
 	s.App.Commit()
 	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
-	s.App.BeginBlocker(abci.RequestBeginBlock{Header: newHeader})
+	// UNFORKING v2 TODO: Need to better understand how we want to run BeginBlock
+	// s.App.BeginBlocker(abci.RequestBeginBlock{Header: newHeader})
+	_, err := s.App.BeginBlocker(s.Ctx)
+	s.Require().NoError(err)
 	s.Ctx = s.App.GetBaseApp().NewContextLegacy(false, newHeader)
 
 	s.hasUsedAbci = true
@@ -329,7 +331,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
-	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr.String(), valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
+	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr.String(), valPub, stakingCoin, testDescription, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
 	res, err := stakingMsgSvr.CreateValidator(sdk.WrapSDKContext(s.Ctx), valCreateMsg)
@@ -389,13 +391,14 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 
 // BeginNewBlockWithProposer begins a new block with a proposer.
 func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
-	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
-	s.Assert().NoError(err)
+	// UNFORKING v2 TODO: Need to better understand how we want to run BeginBlock with proposer, how do we force proposer here
+	// validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
+	// s.Assert().NoError(err)
 
-	valConsAddr, err := validator.GetConsAddr()
-	s.Require().NoError(err)
+	// valConsAddr, err := validator.GetConsAddr()
+	// s.Require().NoError(err)
 
-	valAddr := valConsAddr
+	// valAddr := valConsAddr
 
 	epochIdentifier := s.App.SuperfluidKeeper.GetEpochIdentifier(s.Ctx)
 	epoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier)
@@ -407,24 +410,31 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
 	s.Ctx = newCtx
-	lastCommitInfo := abci.CommitInfo{
-		Votes: []abci.VoteInfo{{
-			Validator:   abci.Validator{Address: valAddr, Power: 1000},
-			BlockIdFlag: tmtypes.BlockIDFlag(comet.BlockIDFlagCommit),
-		}},
-	}
-	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
+	// lastCommitInfo := abci.CommitInfo{
+	// 	Votes: []abci.VoteInfo{{
+	// 		Validator:   abci.Validator{Address: valAddr, Power: 1000},
+	// 		BlockIdFlag: tmtypes.BlockIDFlag(comet.BlockIDFlagCommit),
+	// 	}},
+	// }
+	// reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
-	fmt.Println("beginning block ", s.Ctx.BlockHeight())
-	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
-	s.Ctx = s.App.NewContextLegacy(false, reqBeginBlock.Header)
+	// fmt.Println("beginning block ", s.Ctx.BlockHeight())
+	// s.App.BeginBlocker(s.Ctx, reqBeginBlock)
+	_, err := s.App.BeginBlocker(s.Ctx)
+	s.Require().NoError(err)
+
+	s.Ctx = s.App.NewContextLegacy(false, header)
 	s.hasUsedAbci = true
 }
 
 // EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
-	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
-	s.App.EndBlocker(s.Ctx, reqEndBlock)
+	// UNFORKING v2 TODO: Need to better understand how we want to run EndBlock
+	// reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
+	// s.App.EndBlocker(s.Ctx, reqEndBlock)
+	// s.hasUsedAbci = true
+	_, err := s.App.EndBlocker(s.Ctx)
+	s.Require().NoError(err)
 	s.hasUsedAbci = true
 }
 
