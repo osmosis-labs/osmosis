@@ -7,6 +7,8 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -94,6 +96,6 @@ type DistributionKeeper interface {
 }
 
 type ConsensusKeeper interface {
-	GetParamsNoUnmarshal(ctx sdk.Context) []byte
+	Params(ctx context.Context, _ *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
 	UnmarshalParamBytes(ctx sdk.Context, bz []byte) (*tmproto.ConsensusParams, error)
 }

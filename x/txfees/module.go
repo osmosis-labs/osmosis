@@ -10,7 +10,6 @@ only specify their tx fee parameters for a single "base" asset.
 package txfees
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -25,6 +24,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/client/cli"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
@@ -33,9 +34,9 @@ import (
 )
 
 var (
-	_                    module.AppModule      = AppModule{}
-	_                    module.AppModuleBasic = AppModuleBasic{}
-	cachedConsParamBytes []byte
+	_                module.AppModule      = AppModule{}
+	_                module.AppModuleBasic = AppModuleBasic{}
+	cachedConsParams cmtproto.ConsensusParams
 )
 
 const ModuleName = types.ModuleName
@@ -182,48 +183,41 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // If they have, we unmarshal the current consensus params, update the target gas, and cache the value.
 // This is done to improve performance by not having to fetch and unmarshal the consensus params on every block.
 // TODO: Move this to EIP-1559 code
+// UNFORKING v2 TODO: Do we still want to use cache here? I guess it removes the need to do arithmetic operations on every block.
 func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 	// Check if the block gas limit has changed.
 	// If it has, update the target gas for eip1559.
-	consParamsBytes := am.keeper.GetParamsNoUnmarshal(ctx)
+	consParams, err := am.keeper.GetConsParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	// If cachedConsParamBytes is nil, set equal to consParamsBytes and set the target gas.
-	if cachedConsParamBytes == nil {
-		cachedConsParamBytes = consParamsBytes
-		newConsensusParams, err := am.keeper.UnmarshalParamBytes(ctx, consParamsBytes)
-		if err != nil {
-			panic(err)
-		}
+	// If cachedConsParams is empty, set equal to consParams and set the target gas.
+	if cachedConsParams.Equal(cmtproto.ConsensusParams{}) {
+		cachedConsParams = *consParams.Params
 
-		// Check if newConsensusParams.Block is nil to prevent panic
-		if newConsensusParams.Block == nil || newConsensusParams.Block.MaxGas == 0 {
+		// Check if cachedConsParams.Block is nil to prevent panic
+		if cachedConsParams.Block == nil || cachedConsParams.Block.MaxGas == 0 {
 			return
 		}
 
-		if newConsensusParams.Block.MaxGas == -1 {
+		if cachedConsParams.Block.MaxGas == -1 {
 			return
 		}
 
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(cachedConsParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		return
 	}
 
-	// If the consensus params have changed, unmarshal and update the target gas.
-	if !bytes.Equal(consParamsBytes, cachedConsParamBytes) {
-		newConsensusParams, err := am.keeper.UnmarshalParamBytes(ctx, consParamsBytes)
-		if err != nil {
-			panic(err)
-		}
-
-		if newConsensusParams.Block.MaxGas == -1 {
+	// If the consensus params have changed, check if it was maxBytes that changed. If so, update the target gas.
+	if consParams.Params.Block.MaxBytes != cachedConsParams.Block.MaxBytes {
+		if consParams.Params.Block.MaxGas == -1 {
 			return
 		}
 
-		// Sure, its possible that the thing that changes in consensus params was something other than the block gas limit,
-		// but just double setting it here is fine instead of doing more logic to see what actually changed.
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(consParams.Params.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
-		cachedConsParamBytes = consParamsBytes
+		cachedConsParams = *consParams.Params
 	}
 }

@@ -9,7 +9,6 @@ import (
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
@@ -19,7 +18,7 @@ func GenAndDeliverTxWithRandFees(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
-	msg legacytx.LegacyMsg,
+	msg sdk.Msg,
 	coinsSpentInMsg sdk.Coins,
 	ctx sdk.Context,
 	simAccount simulation.Account,
@@ -52,7 +51,7 @@ func GenAndDeliverTxWithRandFees(
 func GenAndDeliverTx(
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
-	msg legacytx.LegacyMsg,
+	msg sdk.Msg,
 	fees sdk.Coins,
 	ctx sdk.Context,
 	simAccount simulation.Account,
