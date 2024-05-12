@@ -100,6 +100,7 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*s.OsmosisApp.TxFeesKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.BankKeeper, nil)
 	s.AuthenticatorAnteDecorator = ante.NewAuthenticatorDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
@@ -107,6 +108,7 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	)
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),

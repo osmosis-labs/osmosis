@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +24,7 @@ func TestSendBlockDecorator(t *testing.T) {
 	permittedOnlySendTo := map[string]string{
 		sdk.AccAddress("malicious-sender____").String(): sdk.AccAddress("recovery-address").String(),
 	}
-	decorator := NewSendBlockDecorator(SendBlockOptions{permittedOnlySendTo})
+	decorator := NewSendBlockDecorator(SendBlockOptions{permittedOnlySendTo}, moduletestutil.MakeTestEncodingConfig().Codec)
 
 	for _, testCase := range testCases {
 		err := decorator.CheckIfBlocked(

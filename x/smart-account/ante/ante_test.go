@@ -84,6 +84,7 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*s.OsmosisApp.TxFeesKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.BankKeeper, nil)
 
 	s.AuthenticatorDecorator = ante.NewAuthenticatorDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),

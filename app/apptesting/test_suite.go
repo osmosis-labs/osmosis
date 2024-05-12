@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -42,6 +41,8 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	storemetrics "cosmossdk.io/store/metrics"
+
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
@@ -631,8 +632,8 @@ func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
 
 	// mutates mockMsg
 	testSerDeser := func(msg proto.Message, mockMsg proto.Message) {
-		msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(msg)))
-		err := authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, mockMsg)
+		msgGrantBytes := json.RawMessage(sdk.MustSortJSON(moduletestutil.MakeTestEncodingConfig().Codec.MustMarshalJSON(msg)))
+		err := moduletestutil.MakeTestEncodingConfig().Codec.UnmarshalJSON(msgGrantBytes, mockMsg)
 		require.NoError(t, err)
 	}
 

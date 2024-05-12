@@ -2,6 +2,7 @@ package app
 
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
@@ -12,6 +13,7 @@ import (
 )
 
 func NewPostHandler(
+	cdc codec.Codec,
 	protoRevKeeper *protorevkeeper.Keeper,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
@@ -20,6 +22,7 @@ func NewPostHandler(
 	return sdk.ChainPostDecorators(
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
 		smartaccountpost.NewAuthenticatorPostDecorator(
+			cdc,
 			smartAccountKeeper,
 			accountKeeper,
 			sigModeHandler,

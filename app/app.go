@@ -442,6 +442,7 @@ func NewOsmosisApp(
 			auctionKeeper: *app.AppKeepers.AuctionKeeper,
 			txConfig:      txConfig,
 		},
+		appCodec,
 	)
 
 	// update ante-handlers on lanes
@@ -491,7 +492,7 @@ func NewOsmosisApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
-	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper, app.SmartAccountKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
+	app.SetPostHandler(NewPostHandler(appCodec, app.ProtoRevKeeper, app.SmartAccountKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.

@@ -76,6 +76,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 	}
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),

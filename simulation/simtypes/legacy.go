@@ -83,5 +83,5 @@ func GenAndDeliverTx(
 
 	app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
-	return simulation.NewOperationMsg(msg, true, "", nil), nil, nil
+	return simulation.NewOperationMsg(msg, true, ""), nil, nil
 }

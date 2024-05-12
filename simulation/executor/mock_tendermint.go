@@ -9,6 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	comet "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -218,12 +219,17 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 			panic(err)
 		}
 
+		singedFlag := comet.BlockIDFlagCommit
+		if !signed {
+			singedFlag = comet.BlockIDFlagNil
+		}
+
 		voteInfos[i] = abci.VoteInfo{
 			Validator: abci.Validator{
 				Address: pubkey.Address(),
 				Power:   mVal.val.Power,
 			},
-			SignedLastBlock: signed,
+			BlockIdFlag: singedFlag,
 		}
 	}
 
