@@ -38,16 +38,8 @@ import (
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -290,46 +282,47 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
-	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+	// UNFORKING v2 TODO: Figure out streaming service
+	// sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
-	// Initialize the SQS ingester if it is enabled.
-	if sqsConfig.IsEnabled {
-		sqsKeepers := domain.SQSIngestKeepers{
-			GammKeeper:         app.GAMMKeeper,
-			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
-			BankKeeper:         app.BankKeeper,
-			ProtorevKeeper:     app.ProtoRevKeeper,
-			PoolManagerKeeper:  app.PoolManagerKeeper,
-			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
-		}
+	// // Initialize the SQS ingester if it is enabled.
+	// if sqsConfig.IsEnabled {
+	// 	sqsKeepers := domain.SQSIngestKeepers{
+	// 		GammKeeper:         app.GAMMKeeper,
+	// 		CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+	// 		BankKeeper:         app.BankKeeper,
+	// 		ProtorevKeeper:     app.ProtoRevKeeper,
+	// 		PoolManagerKeeper:  app.PoolManagerKeeper,
+	// 		ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
+	// 	}
 
-		// Initialize the SQS ingester.
-		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
-		if err != nil {
-			panic(err)
-		}
+	// 	// Initialize the SQS ingester.
+	// 	sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
 
-		// Create pool tracker that tracks pool updates
-		// made by the write listenetrs.
-		poolTracker := service.NewPoolTracker()
+	// 	// Create pool tracker that tracks pool updates
+	// 	// made by the write listenetrs.
+	// 	poolTracker := service.NewPoolTracker()
 
-		// Create write listeners for the SQS service.
-		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+	// 	// Create write listeners for the SQS service.
+	// 	writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
 
-		// Note: address can be moved to config in the future if needed.
-		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-		if !ok {
-			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-		}
-		nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
+	// 	// Note: address can be moved to config in the future if needed.
+	// 	rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+	// 	if !ok {
+	// 		panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+	// 	}
+	// 	nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
 
-		// Create the SQS streaming service by setting up the write listeners,
-		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
+	// 	// Create the SQS streaming service by setting up the write listeners,
+	// 	// the SQS ingester, and the pool tracker.
+	// 	sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
 
-		// Register the SQS streaming service with the app.
-		app.SetStreamingManager(sqsStreamingService)
-	}
+	// 	// Register the SQS streaming service with the app.
+	// 	app.SetStreamingManager(sqsStreamingService)
+	// }
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
@@ -532,24 +525,25 @@ func NewOsmosisApp(
 	return app
 }
 
-// getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
-func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
-	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+// UNFORKING v2 TODO: Figure out streaming service
+// // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
+// func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
+// 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
-	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
-		writelistener.NewConcentrated(blockPoolUpdateTracker),
-	}
-	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
-		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
-	}
-	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
-		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
-	}
-	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
-		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
-	}
-	return writeListeners
-}
+// 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
+// 		writelistener.NewConcentrated(blockPoolUpdateTracker),
+// 	}
+// 	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
+// 		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
+// 	}
+// 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
+// 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+// 	}
+// 	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
+// 		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
+// 	}
+// 	return writeListeners
+// }
 
 // we cache the reflectionService to save us time within tests.
 var cachedReflectionService *runtimeservices.ReflectionService = nil
