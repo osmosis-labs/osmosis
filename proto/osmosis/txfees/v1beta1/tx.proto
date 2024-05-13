@@ -4,6 +4,7 @@ package osmosis.txfees.v1beta1;
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "osmosis/txfees/v1beta1/feetoken.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/txfees/types";
 
@@ -14,6 +15,7 @@ service Msg {
 // ===================== MsgSetFeeTokens
 message MsgSetFeeTokens {
   option (amino.name) = "osmosis/set-fee-tokens";
+  option (cosmos.msg.v1.signer) = "sender";
 
   repeated FeeToken fee_tokens = 1 [
     (gogoproto.moretags) = "yaml:\"fee_tokens\"",

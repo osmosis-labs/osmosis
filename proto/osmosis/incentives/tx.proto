@@ -7,6 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/incentives/types";
 
@@ -19,6 +20,7 @@ service Msg {
 // MsgCreateGauge creates a gague to distribute rewards to users
 message MsgCreateGauge {
   option (amino.name) = "osmosis/incentives/create-gauge";
+  option (cosmos.msg.v1.signer) = "owner";
 
   // is_perpetual shows if it's a perpetual or non-perpetual gauge
   // Non-perpetual gauges distribute their tokens equally per epoch while the
@@ -61,6 +63,7 @@ message MsgCreateGaugeResponse {}
 // MsgAddToGauge adds coins to a previously created gauge
 message MsgAddToGauge {
   option (amino.name) = "osmosis/incentives/add-to-gauge";
+  option (cosmos.msg.v1.signer) = "owner";
 
   // owner is the gauge owner's address
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
@@ -77,6 +80,7 @@ message MsgAddToGaugeResponse {}
 // MsgCreateGroup creates a group to distribute rewards to a group of pools
 message MsgCreateGroup {
   option (amino.name) = "osmosis/incentives/create-group";
+  option (cosmos.msg.v1.signer) = "owner";
 
   // coins are the provided coins that the group will distribute
   repeated cosmos.base.v1beta1.Coin coins = 1 [
