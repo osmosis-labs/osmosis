@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app"
