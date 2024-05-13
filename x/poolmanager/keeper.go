@@ -34,6 +34,9 @@ type Keeper struct {
 	poolModules []types.PoolModuleI
 
 	paramSpace paramtypes.Subspace
+
+	defaultTakerFeeBz  []byte
+	defaultTakerFeeVal sdk.Dec
 }
 
 func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
