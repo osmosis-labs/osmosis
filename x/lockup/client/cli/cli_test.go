@@ -8,7 +8,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)
@@ -21,7 +22,7 @@ func TestLockTokensCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgLockTokens{
 				Owner:    testAddresses[0].String(),
 				Duration: time.Hour * 24,
-				Coins:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 201)),
+				Coins:    sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 201)),
 			},
 		},
 	}
@@ -57,7 +58,7 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgBeginUnlocking{
 				Owner: testAddresses[0].String(),
 				ID:    10,
-				Coins: sdk.NewCoins(sdk.NewInt64Coin("uosmo", 5)),
+				Coins: sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 5)),
 			},
 		},
 	}
@@ -122,7 +123,7 @@ func TestCmdTotalLockedByDenom(t *testing.T) {
 		"basic test": {
 			Cmd: "uosmo --min-duration=1s",
 			ExpectedQuery: &types.LockedDenomRequest{
-				Denom:    "uosmo",
+				Denom:    appparams.BaseCoinUnit,
 				Duration: time.Second,
 			},
 		},

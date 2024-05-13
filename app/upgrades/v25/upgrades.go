@@ -4,6 +4,9 @@ import (
 	"errors"
 	"sort"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -11,11 +14,11 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
-	"github.com/osmosis-labs/osmosis/v24/app/keepers"
-	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 const (
@@ -67,6 +70,11 @@ func CreateUpgradeHandler(
 			return nil, errors.New("unsupported chain ID")
 		}
 
+		// Ensure the auction module account is properly created to avoid sniping
+		err = osmoutils.CreateModuleAccountByName(ctx, keepers.AccountKeeper, auctiontypes.ModuleName)
+		if err != nil {
+			return nil, err
+		}
 		// update block-sdk params
 		if err := keepers.AuctionKeeper.SetParams(ctx, AuctionParams); err != nil {
 			return nil, err
@@ -80,9 +88,19 @@ func CreateUpgradeHandler(
 
 		// Set the authenticator params in the store
 		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
-		authenticatorParams.MaximumUnauthenticatedGas = 120_000
-		authenticatorParams.IsSmartAccountActive = false
+		authenticatorParams.MaximumUnauthenticatedGas = MaximumUnauthenticatedGas
+		authenticatorParams.IsSmartAccountActive = IsSmartAccountActive
+		authenticatorParams.CircuitBreakerControllers = append(authenticatorParams.CircuitBreakerControllers, CircuitBreakerController)
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
+
+		// Update consensus params in order to safely enable comet pruning
+		consensusParams, err := keepers.ConsensusParamsKeeper.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
+		consensusParams.Evidence.MaxAgeNumBlocks = NewMaxAgeNumBlocks
+		consensusParams.Evidence.MaxAgeDuration = NewMaxAgeDuration
+		keepers.ConsensusParamsKeeper.Set(ctx, consensusParams)
 
 		return migrations, nil
 	}

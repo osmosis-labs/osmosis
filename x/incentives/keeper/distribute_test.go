@@ -10,13 +10,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -59,7 +59,7 @@ var (
 	emptyCoins          = sdk.Coins{}
 	defaultVolumeAmount = osmomath.NewInt(300)
 
-	defaultCoins = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
+	defaultCoins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100_000_000)))
 
 	baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -2711,7 +2711,7 @@ func (s *KeeperTestSuite) TestSkipSpamGaugeDistribute() {
 
 	tenCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 10)}
 	oneKCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
-	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin("uosmo", 1000)}
+	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000)}
 	tests := []struct {
 		name                    string
 		locks                   []*lockuptypes.PeriodLock

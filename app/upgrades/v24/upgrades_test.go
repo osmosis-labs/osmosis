@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -18,15 +18,16 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 
-	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
-	twap "github.com/osmosis-labs/osmosis/v24/x/twap"
-	"github.com/osmosis-labs/osmosis/v24/x/twap/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	v24 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v24"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v25/x/twap"
+	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
 )
 
 const (
@@ -123,14 +124,14 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	concentratedPoolIDs = append(concentratedPoolIDs, secondLastPoolID)
 	concentratedPoolIDs = append(concentratedPoolIDs, lastPoolID)
 	s.CreateConcentratedPoolsAndFullRangePosition([][]string{
-		{"uion", "uosmo"},
+		{"uion", appparams.BaseCoinUnit},
 		{apptesting.ETH, apptesting.USDC},
 	})
 
 	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
 
 	// Create incentive record for last pool
-	incentiveCoin := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000))
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 

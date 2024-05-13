@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v24/app"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 )
 
 var (
@@ -98,7 +98,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	// create an address and fund with coins
 	addr := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 20000), sdk.NewInt64Coin("uosmo", 10000000000)}
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 20000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 10000000000)}
 	err := testutil.FundAccount(app.BankKeeper, ctx, addr, coins)
 	require.NoError(t, err)
 
@@ -111,7 +111,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	msgCreatePool := model.MsgCreateConcentratedPool{
 		Sender:       addr.String(),
 		Denom0:       "uion",
-		Denom1:       "uosmo",
+		Denom1:       appparams.BaseCoinUnit,
 		TickSpacing:  100,
 		SpreadFactor: osmomath.MustNewDecFromStr("0.0005"),
 	}

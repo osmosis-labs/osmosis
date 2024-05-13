@@ -12,20 +12,21 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v24/tests/mocks"
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cwpool "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool"
-	cwmodel "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/model"
-	gamm "github.com/osmosis-labs/osmosis/v24/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/tests/mocks"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cwpool "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool"
+	cwmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
+	gamm "github.com/osmosis-labs/osmosis/v25/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
 type poolSetup struct {
@@ -44,7 +45,7 @@ const (
 	FOO   = apptesting.FOO
 	BAR   = apptesting.BAR
 	BAZ   = apptesting.BAZ
-	UOSMO = apptesting.UOSMO
+	UOSMO = appparams.BaseCoinUnit
 
 	// Not an authorized quote denom
 	// ("abc" ensures its always first lexicographically which simplifies setup)
@@ -249,6 +250,30 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 	}
 }
 
+// TestGetPoolTypeGas tests that the result for GetPoolType charges the
+// same gas whether its a cache hit or cache fail.
+func (s *KeeperTestSuite) TestGetPoolTypeGas() {
+	s.SetupTest()
+	poolmanagerKeeper := s.App.PoolManagerKeeper
+
+	createdPoolId := s.CreatePoolFromType(types.Balancer)
+
+	// cache miss
+	s.App.PoolManagerKeeper.ResetCaches()
+	startGas := s.Ctx.GasMeter().GasConsumed()
+	_, err := poolmanagerKeeper.GetPoolType(s.Ctx, createdPoolId)
+	s.Require().NoError(err)
+	endGas := s.Ctx.GasMeter().GasConsumed()
+	cacheMissGas := endGas - startGas
+
+	startGas = s.Ctx.GasMeter().GasConsumed()
+	_, err = poolmanagerKeeper.GetPoolType(s.Ctx, createdPoolId)
+	s.Require().NoError(err)
+	endGas = s.Ctx.GasMeter().GasConsumed()
+	cacheHitGas := endGas - startGas
+	s.Require().Equal(cacheMissGas, cacheHitGas)
+}
+
 func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	tests := map[string]struct {
 		poolId            uint64
@@ -261,7 +286,7 @@ func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 		"valid balancer pool": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			expectedDenoms:    []string{"bar", "baz", "foo", "uosmo"},
+			expectedDenoms:    []string{"bar", "baz", "foo", appparams.BaseCoinUnit},
 		},
 		"valid stableswap pool": {
 			preCreatePoolType: types.Stableswap,
@@ -3124,7 +3149,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
 		defaultPoolCoinOne = sdk.NewCoin("usdc", osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin("eth", osmomath.NewInt(2))
-		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
+		nonPoolCool        = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(3))
 
 		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
 	)

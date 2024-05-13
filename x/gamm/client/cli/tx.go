@@ -14,11 +14,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v24/x/gamm/types/migration"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -368,6 +368,7 @@ Sample proposal with flags
 	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().Uint64(FlagPoolId, 0, "stableswap pool-id")
 	cmd.Flags().String(FlagScalingFactorControllerAddress, "", "target scaling factor controller address")
+	cmd.Flags().String(govcli.FlagProposal, "", "proposal file path") //nolint:staticcheck
 
 	return cmd
 }

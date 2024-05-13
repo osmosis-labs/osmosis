@@ -10,9 +10,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/client/cli"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/client/cli"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

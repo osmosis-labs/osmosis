@@ -6,9 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v24/x/gamm/types/migration"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
 )
 
 var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
@@ -73,7 +74,7 @@ func (s *KeeperTestSuite) TestGammInitGenesis() {
 
 	liquidity, err := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
 	s.Require().NoError(err)
-	expectedLiquidity := sdk.NewCoins(sdk.NewInt64Coin("bar", 15000000), sdk.NewInt64Coin("baz", 15000000), sdk.NewInt64Coin("foo", 15000000), sdk.NewInt64Coin("uosmo", 15000000))
+	expectedLiquidity := sdk.NewCoins(sdk.NewInt64Coin("bar", 15000000), sdk.NewInt64Coin("baz", 15000000), sdk.NewInt64Coin("foo", 15000000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 15000000))
 	s.Require().Equal(expectedLiquidity.String(), liquidity.String())
 
 	postInitGenMigrationRecords, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
@@ -87,7 +88,7 @@ func (s *KeeperTestSuite) TestGammExportGenesis() {
 
 	acc1 := s.TestAccs[0]
 	err := testutil.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
-		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))
@@ -132,7 +133,7 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
 
 	acc1 := s.TestAccs[0]
 	err := testutil.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
-		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))

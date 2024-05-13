@@ -36,16 +36,16 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/domain"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v24/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service/writelistener"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -89,36 +89,38 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
-	"github.com/osmosis-labs/osmosis/v24/app/keepers"
-	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v21"
-	v22 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v22"
-	v23 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v23"
-	v24 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v24"
-	v25 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v25"
-	v3 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v24/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v24/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
+	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23"
+	v24 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v24"
+	v25 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v25"
+	v3 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v25/x/mint"
 
 	blocksdkabci "github.com/skip-mev/block-sdk/abci"
 	"github.com/skip-mev/block-sdk/abci/checktx"
@@ -683,8 +685,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	govParams := app.GovKeeper.GetParams(ctx)
 	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
 	govParams.VotingPeriod = &newVotingPeriod
-	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 100000000))
-	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 150000000))
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 100000000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 150000000))
 
 	err = app.GovKeeper.SetParams(ctx, govParams)
 	if err != nil {
@@ -724,7 +726,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	defaultCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
 		sdk.NewInt64Coin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", 1000000000000), // USDC, for pool creation fee
-		sdk.NewInt64Coin("uosmo", 1000000000000),
+		sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000000000000),
 		sdk.NewInt64Coin("uion", 1000000000))
 
 	localOsmosisAccounts := []sdk.AccAddress{
@@ -756,7 +758,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	// Fund edgenet faucet
 	faucetCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
-		sdk.NewInt64Coin("uosmo", 1000000000000000),
+		sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000000000000000),
 		sdk.NewInt64Coin("uion", 1000000000000))
 	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
 	if err != nil {
@@ -769,7 +771,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	// Mars bank account
 	marsCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("uosmo", 10000000000000),
+		sdk.NewInt64Coin(appparams.BaseCoinUnit, 10000000000000),
 		sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
 		sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
 		sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),

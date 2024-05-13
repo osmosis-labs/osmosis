@@ -18,8 +18,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -27,10 +27,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 type Keeper struct {
-	storeKey               storetypes.StoreKey
-	cdc                    codec.BinaryCodec
-	paramSpace             paramtypes.Subspace
-	CircuitBreakerGovernor sdk.AccAddress
+	storeKey                storetypes.StoreKey
+	cdc                     codec.BinaryCodec
+	paramSpace              paramtypes.Subspace
+	CircuitBreakerGovernor  sdk.AccAddress
+	isSmartAccountActiveBz  []byte
+	isSmartAccountActiveVal bool
 
 	AuthenticatorManager *authenticator.AuthenticatorManager
 }

@@ -8,13 +8,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
@@ -142,13 +142,13 @@ type distributionTestCase struct {
 var (
 	// distributed coin when there is one account receiving from one gauge
 	// since val tokens is 11000000 and reward is 20000, we get 18181stake
-	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 18181))
+	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 18181))
 	// distributed coins when there is two account receiving from one gauge
 	// since val tokens is 2100000 and reward is 20000, we get 9523stake
-	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9523))
+	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 9523))
 	// distributed coins when there is one account receiving from two gauge
 	// two lock distribution * 2
-	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19046))
+	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 19046))
 	distributionTestCases           = []distributionTestCase{
 		{
 			"happy path with single validator and delegator",

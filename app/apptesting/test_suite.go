@@ -34,17 +34,17 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app"
+	"github.com/osmosis-labs/osmosis/v25/app"
 
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v24/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {

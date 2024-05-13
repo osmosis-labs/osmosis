@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,9 +17,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	v25 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v25"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	v25 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v25"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
 const (
@@ -42,17 +45,29 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards := s.PrepareSpreadRewardsMigrationTestEnv()
 	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
+	// Check consensus params before upgrade
+	consParamsPre, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
+	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
+
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
 		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 	})
 
+	// check auction module account
+	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, auctiontypes.ModuleName)
+	s.Require().NotNil(acc)
+	s.Require().Equal(auctiontypes.ModuleName, acc.GetName())
+	s.Require().Equal(authtypes.NewModuleAddress(auctiontypes.ModuleName), acc.GetAddress())
+
 	// check auction params
 	params, err := s.App.AuctionKeeper.GetParams(s.Ctx)
 	s.Require().NoError(err)
 
-	// check auction params
+	// Check auction params
 	s.Require().Equal(params.MaxBundleSize, v25.AuctionParams.MaxBundleSize)
 	s.Require().Equal(params.ReserveFee.Denom, v25.AuctionParams.ReserveFee.Denom)
 	s.Require().Equal(params.ReserveFee.Amount.Int64(), v25.AuctionParams.ReserveFee.Amount.Int64())
@@ -61,6 +76,21 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(params.EscrowAccountAddress, v25.AuctionParams.EscrowAccountAddress)
 	s.Require().Equal(params.FrontRunningProtection, v25.AuctionParams.FrontRunningProtection)
 	s.Require().Equal(params.ProposerFee, v25.AuctionParams.ProposerFee)
+
+	// Get smartaccount params
+	smartAccountParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+
+	// Check smartaccount params
+	s.Require().Equal(smartAccountParams.IsSmartAccountActive, v25.IsSmartAccountActive)
+	s.Require().Equal(smartAccountParams.MaximumUnauthenticatedGas, v25.MaximumUnauthenticatedGas)
+	s.Require().Equal(smartAccountParams.CircuitBreakerControllers[0], v25.CircuitBreakerController)
+
+	// Check consensus params after upgrade
+	consParamsPost, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(consParamsPost.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
+	s.Require().Equal(consParamsPost.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
 
 	s.ExecuteSpreadRewardsMigrationTest(oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards)
 	s.executeMissedBlocksCounterTest(preMigrationSigningInfo)

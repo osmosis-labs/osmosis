@@ -5,8 +5,8 @@ import (
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 // CircuitBreakerDecorator routes transactions through appropriate ante handlers based on
@@ -54,9 +54,9 @@ func IsCircuitBreakActive(
 	tx sdk.Tx,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 ) (bool, smartaccounttypes.AuthenticatorTxOptions) {
-	authenticatorParams := smartAccountKeeper.GetParams(ctx)
+	isSmartAccountActive := smartAccountKeeper.GetIsSmartAccountActive(ctx)
 	// If the smart accounts are not active, the circuit breaker activates (i.e. return true).
-	if !authenticatorParams.IsSmartAccountActive {
+	if !isSmartAccountActive {
 		return true, nil
 	}
 

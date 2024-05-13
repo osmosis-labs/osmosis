@@ -3,11 +3,14 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
 	"time"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
+
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	"github.com/tidwall/gjson"
 
@@ -19,12 +22,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -35,9 +38,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/osmosis-labs/osmosis/v24/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v25/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v24/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v25/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -761,7 +764,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
-	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	amounts := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
@@ -805,7 +808,7 @@ func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, own
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
-	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	amounts := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)

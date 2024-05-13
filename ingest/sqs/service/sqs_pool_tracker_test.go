@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v24/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 )
 
 type SQSServiceTestSuite struct {

@@ -13,10 +13,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var (

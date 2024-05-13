@@ -6,7 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 func TestFormatDenomTradePairKey(t *testing.T) {
@@ -16,13 +17,13 @@ func TestFormatDenomTradePairKey(t *testing.T) {
 		expectedKey string
 	}{
 		"happy path": {
-			denom0:      "uosmo",
+			denom0:      appparams.BaseCoinUnit,
 			denom1:      "uion",
 			expectedKey: "\x04|uion|uosmo",
 		},
 		"reversed denoms get reordered": {
 			denom0:      "uion",
-			denom1:      "uosmo",
+			denom1:      appparams.BaseCoinUnit,
 			expectedKey: "\x04|uion|uosmo",
 		},
 	}

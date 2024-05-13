@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v24/app/params"
-	"github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var (
@@ -25,7 +26,7 @@ var (
 
 	validSwapExactAmountInRoutes = []types.SwapAmountInRoute{{
 		PoolId:        1,
-		TokenOutDenom: "uosmo",
+		TokenOutDenom: appparams.BaseCoinUnit,
 	}, {
 		PoolId:        2,
 		TokenOutDenom: "uatom",
@@ -41,7 +42,7 @@ var (
 		TokenInDenom: "uatom",
 	}, {
 		PoolId:       2,
-		TokenInDenom: "uosmo",
+		TokenInDenom: appparams.BaseCoinUnit,
 	}}
 )
 
@@ -575,12 +576,12 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 			Sender: addr1,
 			DenomPairTakerFee: []types.DenomPairTakerFee{
 				{
-					Denom0:   "uosmo",
+					Denom0:   appparams.BaseCoinUnit,
 					Denom1:   "uatom",
 					TakerFee: osmomath.MustNewDecFromStr("0.003"),
 				},
 				{
-					Denom0:   "uosmo",
+					Denom0:   appparams.BaseCoinUnit,
 					Denom1:   "uion",
 					TakerFee: osmomath.MustNewDecFromStr("0.006"),
 				},

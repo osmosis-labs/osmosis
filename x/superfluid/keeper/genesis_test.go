@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v24/app"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	simapp "github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
 
 var now = time.Now().UTC()

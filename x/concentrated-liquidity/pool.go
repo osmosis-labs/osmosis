@@ -14,10 +14,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -215,8 +215,9 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 		return nil, err
 	}
 
-	token0Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken0())
-	token1Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken1())
+	addr := pool.GetAddress()
+	token0Bal := k.bankKeeper.GetBalance(ctx, addr, pool.GetToken0())
+	token1Bal := k.bankKeeper.GetBalance(ctx, addr, pool.GetToken1())
 
 	return sdk.NewCoins(token0Bal, token1Bal), nil
 }

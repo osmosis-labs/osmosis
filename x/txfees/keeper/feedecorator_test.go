@@ -7,7 +7,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
 func (s *KeeperTestSuite) TestFeeDecorator() {
@@ -148,7 +149,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		s.SetupTest(false)
 		s.Run(tc.name, func() {
 			// See DeductFeeDecorator AnteHandler for how this is used
-			s.FundAcc(sdk.MustAccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"), sdk.NewCoins(sdk.NewInt64Coin("uosmo", 1)))
+			s.FundAcc(sdk.MustAccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"), sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 1)))
 
 			err := s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, tc.minGasPrices, tc.gasRequested, tc.isCheckTx, tc.isSimulate, tc.txFee)
 			if tc.expectPass {

@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
@@ -182,4 +182,31 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	// other params should remain the same
 	params.IsSmartAccountActive = initialParams.IsSmartAccountActive
 	s.Require().Equal(params, initialParams)
+}
+
+func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
+	msgServer := keeper.NewMsgServerImpl(*s.App.SmartAccountKeeper)
+	ctx := s.Ctx
+
+	s.App.SmartAccountKeeper.SetParams(s.Ctx, types.Params{IsSmartAccountActive: false})
+
+	// Create a test message
+	msg := &types.MsgAddAuthenticator{
+		Sender: "",
+		Type:   authenticator.SignatureVerification{}.Type(),
+		Data:   []byte(""),
+	}
+
+	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
+
+	removeMsg := &types.MsgRemoveAuthenticator{
+		Sender: "",
+		Id:     1,
+	}
+
+	_, err = msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
 }

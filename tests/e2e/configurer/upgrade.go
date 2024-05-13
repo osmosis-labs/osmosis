@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -269,7 +269,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		// test swap exact amount in for stable swap pool
-		chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[0]), "uosmo", config.StableswapWallet[0])
+		chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[0]), appparams.BaseCoinUnit, config.StableswapWallet[0])
 	}()
 
 	go func() {
@@ -290,7 +290,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		// test swap exact amount in for stable swap pool
-		chainBNode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[1]), "uosmo", config.StableswapWallet[1])
+		chainBNode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[1]), appparams.BaseCoinUnit, config.StableswapWallet[1])
 	}()
 
 	go func() {

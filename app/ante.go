@@ -1,6 +1,3 @@
-//go:build !excludeIncrement
-// +build !excludeIncrement
-
 package app
 
 import (
@@ -15,18 +12,18 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	osmoante "github.com/osmosis-labs/osmosis/v24/ante"
-	v9 "github.com/osmosis-labs/osmosis/v24/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v25/ante"
+	v9 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v9"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	smartaccountante "github.com/osmosis-labs/osmosis/v24/x/smart-account/ante"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v24/x/smart-account/keeper"
+	smartaccountante "github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
 
 	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v24/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
 	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
 )

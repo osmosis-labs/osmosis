@@ -1,14 +1,16 @@
 package v25
 
 import (
+	"time"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
 
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v24/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v25 upgrade.
@@ -17,6 +19,19 @@ const (
 
 	// Noble USDC is used as the auction denom
 	AuctionUSDCDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
+	NewMaxAgeNumBlocks = int64(1_000_000)      // 1.5s blocks * 1_000_000 = 1.5M seconds > 2 weeks
+	NewMaxAgeDuration  = time.Second * 1209600 // 2 weeks
+
+	// MaximumUnauthenticatedGas for smart account transactions to verify the fee payer
+	MaximumUnauthenticatedGas = uint64(120_000)
+
+	// IsSmartAccountActive is used for the smart account circuit breaker, smartaccounts are deactivated for v25
+	IsSmartAccountActive = false
+
+	// CircuitBreakerController is a DAODAO address, used only to deactivate the smart account module
+	// https://daodao.zone/dao/osmo1wn58hxkv0869ua7qmz3gvek3sz773l89a778fjqvenl6anwuhgnq6ks7kl/home
+	CircuitBreakerController = "osmo1wn58hxkv0869ua7qmz3gvek3sz773l89a778fjqvenl6anwuhgnq6ks7kl"
 )
 
 var Upgrade = upgrades.Upgrade{

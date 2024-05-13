@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/osmoutils
 
-go 1.21
+go 1.21.4
 
 require (
 	cosmossdk.io/log v1.3.0
@@ -13,14 +13,16 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7
 	github.com/cosmos/ibc-go/v7 v7.4.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240423073233-246239a8f662
-	github.com/osmosis-labs/osmosis/v24 v24.0.0-rc0
+	github.com/osmosis-labs/osmosis/osmomath v0.0.13
+	github.com/osmosis-labs/osmosis/v25 v25.0.0-rc0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 )
+
+require github.com/skip-mev/block-sdk v1.4.2 // indirect
 
 require (
 	cloud.google.com/go v0.112.0 // indirect
@@ -80,7 +82,6 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
@@ -119,7 +120,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-getter v1.7.1 // indirect
+	github.com/hashicorp/go-getter v1.7.4 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -133,7 +134,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -149,15 +149,13 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
-	github.com/onsi/gomega v1.28.1 // indirect
+	github.com/onsi/gomega v1.31.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240423073233-246239a8f662 // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240423073233-246239a8f662 // indirect
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240404053421-41aab009fb04 // indirect
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.9 // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15 // indirect
+	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -168,7 +166,6 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rakyll/statik v0.1.7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/redis/go-redis/v9 v9.5.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.9.0 // indirect
 	github.com/rs/zerolog v1.31.0 // indirect
@@ -222,20 +219,21 @@ replace (
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
-	// Using branch osmo-v24/v0.37.4
-	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v24-osmo-3
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v24-osmo-3
+	// Using branch osmo/v0.37.4
+	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-2
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-2
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2384e2b96adf19abed82f7320da9ab314bcfba98
-	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v24-osmo-5
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
+	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.5-v25-osmo-1
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

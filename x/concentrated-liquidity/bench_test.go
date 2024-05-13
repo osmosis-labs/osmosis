@@ -11,13 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	gammmigration "github.com/osmosis-labs/osmosis/v24/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
 )
 
 type BenchTestSuite struct {
@@ -82,7 +83,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			testutil.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
 				sdk.NewCoin(denom0, maxAmountOfEachToken),
 				sdk.NewCoin(denom1, maxAmountOfEachToken),
-				sdk.NewCoin("uosmo", maxAmountOfEachToken),
+				sdk.NewCoin(appparams.BaseCoinUnit, maxAmountOfEachToken),
 			))
 		}
 

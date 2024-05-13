@@ -8,10 +8,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
-	valsettypes "github.com/osmosis-labs/osmosis/v24/x/valset-pref/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	valsettypes "github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -82,7 +82,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context, accs []typ
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
-				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
+				ctx.Logger().Error("Error in mintOsmoTokensAndDelegate, state update reverted", err)
 			}
 		} else if currentAmount.GT(refreshedAmount) {
 			// In this case, we want to change the IA's delegated balance to be refreshed Amount

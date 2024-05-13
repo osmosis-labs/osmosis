@@ -7,12 +7,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v24/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -193,12 +194,12 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			name: "invalid lock - not superfluid asset",
 			lock: &lockuptypes.PeriodLock{
 				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100))),
+				Coins:    sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100))),
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
 			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
-			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "uosmo"),
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", appparams.BaseCoinUnit),
 		},
 		{
 			name: "invalid lock - unbonding lockup not supported",
@@ -1104,7 +1105,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			}
 
 			// only test with test related denoms
-			balanceBeforeConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "uosmo"})
+			balanceBeforeConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", appparams.BaseCoinUnit})
 
 			// system under test
 			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lockId, sender.String(), valAddr.String(), minAmountToStake, sharesToConvert)
@@ -1119,7 +1120,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Bank check
-			balanceAfterConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "uosmo"})
+			balanceAfterConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", appparams.BaseCoinUnit})
 			s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
 
 			// if unlocked, no need to check locks since there is no lock existing

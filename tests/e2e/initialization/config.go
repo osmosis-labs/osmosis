@@ -20,20 +20,21 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v24/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v24/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v24/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v24/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v24/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v24/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v24/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v24/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v24/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v24/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v25/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -52,7 +53,7 @@ type NodeConfig struct {
 
 const (
 	// common
-	OsmoDenom           = "uosmo"
+	OsmoDenom           = appparams.BaseCoinUnit
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
@@ -409,7 +410,7 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 	// setup fee pool, between "e2e_default_fee_token" and "uosmo"
-	uosmoFeeTokenPool := setupPool(1, "uosmo", E2EFeeToken)
+	uosmoFeeTokenPool := setupPool(1, appparams.BaseCoinUnit, E2EFeeToken)
 
 	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
 

@@ -9,10 +9,10 @@ import (
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v24/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v24/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v24/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
 			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 11_000_000
 			// thus we expect 909_900 stake as rewards
-			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}},
+			[]sdk.Coins{{sdk.NewCoin(STAKE, osmomath.NewInt(909090))}},
 		},
 		{
 			"happy path with two validator and delegator each",
@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
 			// last period cumulative reward ratio being 0
 			// Thus as rewards, we expect 999986stake, calculated using the following equation: (0.117647) * 7_500_000
-			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}, {sdk.NewCoin("stake", osmomath.NewInt(882352))}},
+			[]sdk.Coins{{sdk.NewCoin(STAKE, osmomath.NewInt(909090))}, {sdk.NewCoin(STAKE, osmomath.NewInt(882352))}},
 		},
 	}
 
