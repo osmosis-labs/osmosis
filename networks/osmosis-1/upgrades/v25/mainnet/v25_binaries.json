@@ -1,0 +1,6 @@
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v25.0.0/osmosisd-25.0.0-linux-amd64?checksum=sha256:842e23399e7e074a500f79b70edcd8131679b577aed7fe0dfd5803104f6245b7",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v25.0.0/osmosisd-25.0.0-linux-arm64?checksum=sha256:fa8bbddc5f2d0af80c29f6a5499f7adb27b221f20338fecdde2df803807a6508"
+  }
+}

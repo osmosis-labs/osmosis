@@ -77,6 +77,15 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(params.FrontRunningProtection, v25.AuctionParams.FrontRunningProtection)
 	s.Require().Equal(params.ProposerFee, v25.AuctionParams.ProposerFee)
 
+	// Get smartaccount params
+	smartAccountParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+
+	// Check smartaccount params
+	s.Require().Equal(smartAccountParams.IsSmartAccountActive, v25.IsSmartAccountActive)
+	s.Require().Equal(smartAccountParams.MaximumUnauthenticatedGas, v25.MaximumUnauthenticatedGas)
+	s.Require().Equal(smartAccountParams.CircuitBreakerControllers[0], v25.CircuitBreakerController)
+
 	// Check consensus params after upgrade
 	consParamsPost, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
 	s.Require().NoError(err)

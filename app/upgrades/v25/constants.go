@@ -22,6 +22,16 @@ const (
 
 	NewMaxAgeNumBlocks = int64(1_000_000)      // 1.5s blocks * 1_000_000 = 1.5M seconds > 2 weeks
 	NewMaxAgeDuration  = time.Second * 1209600 // 2 weeks
+
+	// MaximumUnauthenticatedGas for smart account transactions to verify the fee payer
+	MaximumUnauthenticatedGas = uint64(120_000)
+
+	// IsSmartAccountActive is used for the smart account circuit breaker, smartaccounts are deactivated for v25
+	IsSmartAccountActive = false
+
+	// CircuitBreakerController is a DAODAO address, used only to deactivate the smart account module
+	// https://daodao.zone/dao/osmo1wn58hxkv0869ua7qmz3gvek3sz773l89a778fjqvenl6anwuhgnq6ks7kl/home
+	CircuitBreakerController = "osmo1wn58hxkv0869ua7qmz3gvek3sz773l89a778fjqvenl6anwuhgnq6ks7kl"
 )
 
 var Upgrade = upgrades.Upgrade{
