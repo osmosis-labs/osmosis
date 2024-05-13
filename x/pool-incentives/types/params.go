@@ -11,7 +11,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v24/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 var KeyMintedDenom = []byte("MintedDenom")
