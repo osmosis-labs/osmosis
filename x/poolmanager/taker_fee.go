@@ -14,7 +14,7 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
-func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
+func (k *Keeper) GetDefaultTakerFee(ctx sdk.Context) sdk.Dec {
 	defaultTakerFeeBz := k.paramSpace.GetRaw(ctx, types.KeyDefaultTakerFee)
 	if !bytes.Equal(defaultTakerFeeBz, k.defaultTakerFeeBz) {
 		var defaultTakerFeeValue sdk.Dec
