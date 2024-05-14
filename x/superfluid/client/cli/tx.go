@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"strconv"
 	"strings"
 
@@ -211,10 +212,9 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.
 			assetType = types.SuperfluidAssetTypeLPShare
 		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeConcentratedShare
+		} else if asset == appparams.BaseCoinUnit {
+			return nil, fmt.Errorf("ignvalid asset type: %s", asset)
 		} else {
-			if asset == "uosmo" {
-				return nil, fmt.Errorf("Invalid asset type: %s", asset)
-			}
 			assetType = types.SuperfluidAssetTypeNative
 		}
 
