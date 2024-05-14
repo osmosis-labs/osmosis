@@ -99,7 +99,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
 		if tc.isModuleAccount {
-			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
+			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, s.App.AccountKeeper.NextAccountNumber(s.Ctx), 0),
 				"module",
 				"permission",
 			)
@@ -217,7 +217,7 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
 		if tc.isModuleAccount {
-			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
+			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, s.App.AccountKeeper.NextAccountNumber(s.Ctx), 0),
 				"module",
 				"permission",
 			)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	poolincentivetypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
@@ -121,7 +122,7 @@ var (
 				numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 				poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
-				expectErr:           fmt.Errorf("spendable balance  is smaller than %s: insufficient funds", defaultCoins),
+				expectErr:           fmt.Errorf("spendable balance 0%s is smaller than %s: insufficient funds", appparams.BaseCoinUnit, defaultCoins),
 			},
 			{
 				name:                "error: owner does not have enough funds to pay creation fee",
@@ -130,7 +131,7 @@ var (
 				numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 				poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
-				expectErr:           fmt.Errorf("spendable balance  is smaller than %s: insufficient funds", customGroupCreationFee),
+				expectErr:           fmt.Errorf("spendable balance 0%s is smaller than %s: insufficient funds", feeDenom, customGroupCreationFee),
 			},
 			{
 				name:             "error: duplicate pool IDs",
