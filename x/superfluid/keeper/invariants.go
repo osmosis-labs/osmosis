@@ -63,7 +63,7 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
 					"\tonly single coin lockup is eligible for superfluid staking"), true
 			}
-			amount, err := keeper.GetSuperfluidOSMOTokens(ctx, lock.Coins[0].Denom, lock.Coins[0].Amount, true)
+			amount, err := keeper.GetSuperfluidOSMOTokensWithNative(ctx, lock.Coins[0].Denom, lock.Coins[0].Amount)
 			if err != nil {
 				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
 					"\tunderlying LP share no longer elidible for superfluid staking"), true
