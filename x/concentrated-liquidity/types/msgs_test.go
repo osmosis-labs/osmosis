@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
 
+	clmod "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
@@ -367,7 +368,7 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.clMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.clMsg, clmod.AppModuleBasic{})
 		})
 	}
 }
