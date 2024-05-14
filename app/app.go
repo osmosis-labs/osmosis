@@ -650,8 +650,12 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		tmos.Exit(err.Error())
 	}
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
-	app.StakingKeeper.SetLastValidatorPower(ctx, sdk.ValAddress(newVal.GetOperator()), 0)
-	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, sdk.ValAddress(newVal.GetOperator())); err != nil {
+	valAddr, err := sdk.ValAddressFromBech32(newVal.GetOperator())
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	app.StakingKeeper.SetLastValidatorPower(ctx, valAddr, 0)
+	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr); err != nil {
 		panic(err)
 	}
 
@@ -659,10 +663,14 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	//
 
 	// Initialize records for this validator across all distribution stores
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, sdk.ValAddress(newVal.GetOperator()), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorCurrentRewards(ctx, sdk.ValAddress(newVal.GetOperator()), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, sdk.ValAddress(newVal.GetOperator()), distrtypes.InitialValidatorAccumulatedCommission())
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, sdk.ValAddress(newVal.GetOperator()), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	valAddr, err = sdk.ValAddressFromBech32(newVal.GetOperator())
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, distrtypes.InitialValidatorAccumulatedCommission())
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 
 	// SLASHING
 	//

@@ -119,7 +119,11 @@ func (k Keeper) formatToValPrefArr(ctx sdk.Context, delegations []stakingtypes.D
 	tokenDelegations := make(map[stakingtypes.Delegation]osmomath.Dec)
 	for _, existingDelegation := range delegations {
 		// Fetch validator corresponding to current delegation
-		validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(existingDelegation.ValidatorAddress))
+		valAddr, err := sdk.ValAddressFromBech32(existingDelegation.ValidatorAddress)
+		if err != nil {
+			return []types.ValidatorPreference{}, err
+		}
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			return []types.ValidatorPreference{}, types.ValidatorNotFoundError{ValidatorAddr: existingDelegation.ValidatorAddress}
 		}

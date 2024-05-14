@@ -751,7 +751,10 @@ func (s *KeeperTestSuite) TestUnDelegateFromRebalancedValidatorSet() {
 					vals = []sdk.ValAddress{extraValidator}
 				}
 				for _, val := range preferences {
-					vals = append(vals, sdk.ValAddress(val.ValOperAddress))
+					// TODO: This val is never used in the test, I dont understand the purpose
+					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+					s.Require().NoError(err)
+					vals = append(vals, valAddr)
 				}
 
 				var unbondingDelsAmt []osmomath.Dec
