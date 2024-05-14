@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -34,8 +35,10 @@ import (
 )
 
 var (
-	_                module.AppModule      = AppModule{}
-	_                module.AppModuleBasic = AppModuleBasic{}
+	_                module.AppModule          = AppModule{}
+	_                module.AppModuleBasic     = AppModuleBasic{}
+	_                appmodule.HasEndBlocker   = AppModule{}
+	_                appmodule.HasBeginBlocker = AppModule{}
 	cachedConsParams cmtproto.ConsensusParams
 )
 
@@ -160,19 +163,22 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
-func (am AppModule) BeginBlock(ctx sdk.Context) {
+func (am AppModule) BeginBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
 	mempool1559.BeginBlockCode(ctx)
 
 	// Check if the block gas limit has changed.
 	// If it has, update the target gas for eip1559.
 	am.CheckAndSetTargetGas(ctx)
+	return nil
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the txfees module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
 	mempool1559.EndBlockCode(ctx)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -210,8 +216,8 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 		return
 	}
 
-	// If the consensus params have changed, check if it was maxBytes that changed. If so, update the target gas.
-	if consParams.Params.Block.MaxBytes != cachedConsParams.Block.MaxBytes {
+	// If the consensus params have changed, check if it was maxGas that changed. If so, update the target gas.
+	if consParams.Params.Block.MaxGas != cachedConsParams.Block.MaxGas {
 		if consParams.Params.Block.MaxGas == -1 {
 			return
 		}

@@ -79,6 +79,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				// ensure we are at a block height that is a multiple of the distribution block height
 				blockHeight := distribution.BlockMultipleToDistributeRewards * int64(i+1)
 				s.Ctx = s.Ctx.WithBlockHeight(blockHeight - 1)
+				// UNFORKING v2 TODO: Figure out how to get block with proposer working
 				s.BeginNewBlockWithProposer(true, valAddr)
 			}
 
@@ -281,8 +282,8 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			superUnbondingLockIds: []uint64{1, 2},
 			slashedValIndexes:     []int64{0},
-			expSlashedLockIds:     []uint64{1},
-			expUnslashedLockIds:   []uint64{2},
+			expSlashedLockIds:     []uint64{}, // UNFORKING v2 TODO: We no longer slash unbonded validators
+			expUnslashedLockIds:   []uint64{1, 2},
 		},
 	}
 

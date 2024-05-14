@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			// Check if the new intermediary account has expected delegation amount.
 			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, positionData.Amount0)
 			delegationAmt, err := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
-			s.Require().Error(err)
+			s.Require().NoError(err)
 			s.Require().Equal(expectedDelegationAmt, delegationAmt.Shares.TruncateInt())
 		})
 	}

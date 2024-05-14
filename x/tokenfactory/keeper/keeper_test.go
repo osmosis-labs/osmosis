@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.contractKeeper = wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 	s.msgServer = keeper.NewMsgServerImpl(*s.App.TokenFactoryKeeper)
-	s.bankMsgServer = bankkeeper.NewMsgServerImpl(s.App.BankKeeper)
+	s.bankMsgServer = bankkeeper.NewMsgServerImpl(*s.App.BankKeeper)
 }
 
 func (s *KeeperTestSuite) CreateDefaultDenom() {

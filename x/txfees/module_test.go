@@ -3,8 +3,8 @@ package txfees_test
 import (
 	"encoding/json"
 	"testing"
-	"time"
 
+	coreheader "cosmossdk.io/core/header"
 	abci "github.com/cometbft/cometbft/abci/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -96,13 +96,21 @@ func TestBeginBlock(t *testing.T) {
 }
 
 func RunFinalizeBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
-	oldHeight := ctx.BlockHeight()
-	oldHeader := ctx.BlockHeader()
-	app.Commit()
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: oldHeight + 1, Time: oldHeader.Time.Add(time.Second)})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
 	if err != nil {
 		panic(err)
 	}
-	ctx = app.GetBaseApp().NewContext(false)
+	_, err = app.Commit()
+	if err != nil {
+		panic(err)
+	}
+	header := ctx.BlockHeader()
+	header.Time = ctx.BlockTime()
+	header.Height++
+
+	ctx = app.GetBaseApp().NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 	return ctx
 }

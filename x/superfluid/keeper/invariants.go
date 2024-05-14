@@ -42,7 +42,7 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 					"\tvalidator does not exists for specified validator address on intermediary account"), true
 			}
 			delegation, err := keeper.sk.GetDelegation(ctx, acc.GetAccAddress(), valAddr)
-			if err != nil {
+			if err == nil {
 				tokens := validator.TokensFromShares(delegation.Shares)
 				totalSuperfluidDelegationTokens = totalSuperfluidDelegationTokens.Add(tokens)
 			}
