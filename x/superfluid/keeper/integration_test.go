@@ -123,7 +123,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.SetupTest()
 
 	// denoms
-	btcDenom := "btc" // Asset to superfluid stake
+	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	// accounts
@@ -314,7 +314,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.SetupTest()
 
 	// denoms
-	btcDenom := "btc" // Asset to superfluid stake
+	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	// accounts
