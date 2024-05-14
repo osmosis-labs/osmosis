@@ -60,11 +60,12 @@ func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M
 		return
 	}
 	require.NoError(t, err, "error in desc.ParseAndBuildMsg")
-	// UNFORKING v2 TODO: Ensure this is fine
-	// if tc.OnlyCheckValidateBasic {
-	// 	require.NoError(t, msg.ValidateBasic())
-	// 	return
-	// }
+	if tc.OnlyCheckValidateBasic {
+		msgWithValBasic, ok := msg.(sdk.HasValidateBasic)
+		require.True(t, ok)
+		require.NoError(t, msgWithValBasic.ValidateBasic())
+		return
+	}
 
 	require.Equal(t, tc.ExpectedMsg, msg)
 }
