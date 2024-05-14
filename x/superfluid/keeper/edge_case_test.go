@@ -1,8 +1,11 @@
 package keeper_test
 
 import (
+	"context"
+	"fmt"
 	"time"
 
+	"cosmossdk.io/x/evidence/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -61,7 +64,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 			// slash validator
 			for _, valIndex := range tc.jailedValIndexes {
 				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().Error(err)
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)
@@ -69,14 +72,14 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
 
 				// Note: this calls BeforeValidatorSlashed hook
-				s.App.EvidenceKeeper.HandleEquivocationEvidence(s.Ctx, &evidencetypes.Equivocation{
+				s.handleEquivocationEvidence(s.Ctx, &evidencetypes.Equivocation{
 					Height:           80,
 					Time:             time.Time{},
 					Power:            power,
-					ConsensusAddress: consAddr.String(),
+					ConsensusAddress: sdk.ConsAddress(consAddr).String(),
 				})
 				val, err := s.App.StakingKeeper.GetValidatorByConsAddr(s.Ctx, consAddr)
-				s.Require().Error(err)
+				s.Require().NoError(err)
 				s.Require().Equal(val.Jailed, true)
 			}
 
@@ -142,4 +145,86 @@ func (s *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	consAddr := evidence.GetConsensusAddress(s.App.StakingKeeper.ConsensusAddressCodec())
+
+	validator, err := s.App.StakingKeeper.ValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+	if validator == nil || validator.IsUnbonded() {
+		return nil
+	}
+
+	if len(validator.GetOperator()) != 0 {
+		if _, err := s.App.SlashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
+			return nil
+		}
+	}
+
+	// calculate the age of the evidence
+	infractionHeight := evidence.GetHeight()
+	infractionTime := evidence.GetTime()
+	ageDuration := sdkCtx.BlockHeader().Time.Sub(infractionTime)
+	ageBlocks := sdkCtx.BlockHeader().Height - infractionHeight
+
+	// Reject evidence if the double-sign is too old. Evidence is considered stale
+	// if the difference in time and number of blocks is greater than the allowed
+	// parameters defined.
+	cp := sdkCtx.ConsensusParams()
+	if cp.Evidence != nil {
+		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
+			return nil
+		}
+	}
+
+	if ok := s.App.SlashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
+		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
+	}
+
+	// ignore if the validator is already tombstoned
+	if s.App.SlashingKeeper.IsTombstoned(ctx, consAddr) {
+		return nil
+	}
+
+	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
+
+	slashFractionDoubleSign, err := s.App.SlashingKeeper.SlashFractionDoubleSign(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = s.App.SlashingKeeper.SlashWithInfractionReason(
+		ctx,
+		consAddr,
+		slashFractionDoubleSign,
+		evidence.GetValidatorPower(), distributionHeight,
+		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Jail the validator if not already jailed. This will begin unbonding the
+	// validator if not already unbonding (tombstoned).
+	if !validator.IsJailed() {
+		err = s.App.SlashingKeeper.Jail(ctx, consAddr)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = s.App.SlashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
+	if err != nil {
+		return err
+	}
+
+	err = s.App.SlashingKeeper.Tombstone(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+	return s.App.EvidenceKeeper.Evidences.Set(ctx, evidence.Hash(), evidence)
 }

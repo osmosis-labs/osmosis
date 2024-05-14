@@ -100,7 +100,9 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	// create a new account. We use base accounts, as this is what's done for cosmwasm smart contract accounts.
 	// and in the off-chance someone manages to find a bug that forces the account's creation.
 	if !k.ak.HasAccount(ctx, intermediaryAcct.GetAccAddress()) {
-		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
+		// UNFORKING v2 TODO: I think we need to set NextAccountNumber instead of using zero, but im not positive
+		// k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
+		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, k.ak.NextAccountNumber(ctx), 0))
 	}
 
 	return intermediaryAcct, nil
