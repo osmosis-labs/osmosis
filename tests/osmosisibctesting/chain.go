@@ -74,19 +74,7 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*abci.ExecTxResult, er
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
-	resp, err := SignAndDeliver(
-		chain.TB,
-		chain.TxConfig,
-		chain.App.GetBaseApp(),
-		msgs,
-		chain.ChainID,
-		[]uint64{chain.SenderAccount.GetAccountNumber()},
-		[]uint64{chain.SenderAccount.GetSequence()},
-		true,
-		chain.CurrentHeader.GetTime(),
-		chain.NextVals.Hash(),
-		chain.SenderPrivKey,
-	)
+	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, []uint64{chain.SenderAccount.GetAccountNumber()}, []uint64{chain.SenderAccount.GetSequence()}, chain.CurrentHeader.GetTime(), chain.NextVals.Hash(), chain.SenderPrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -139,19 +127,7 @@ func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msg
 		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
-	resp, err := SignAndDeliver(
-		chain.TB,
-		chain.TxConfig,
-		chain.App.GetBaseApp(),
-		msgs,
-		chain.ChainID,
-		accountNumbers,
-		accountSequences,
-		true,
-		chain.CurrentHeader.GetTime(),
-		chain.NextVals.Hash(),
-		privKeys...,
-	)
+	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, accountNumbers, accountSequences, chain.CurrentHeader.GetTime(), chain.NextVals.Hash(), privKeys...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,8 +169,15 @@ func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msg
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
 // from ibctesting
 func SignAndDeliver(
-	tb testing.TB, txCfg client.TxConfig, app *baseapp.BaseApp, msgs []sdk.Msg,
-	chainID string, accNums, accSeqs []uint64, expPass bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
+	tb testing.TB,
+	txCfg client.TxConfig,
+	app *baseapp.BaseApp,
+	msgs []sdk.Msg,
+	chainID string,
+	accNums, accSeqs []uint64,
+	blockTime time.Time,
+	nextValHash []byte,
+	priv ...cryptotypes.PrivKey,
 ) (*abci.ResponseFinalizeBlock, error) {
 	tb.Helper()
 	tx, err := simtestutil.GenSignedMockTx(
@@ -252,7 +235,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 	signers, signatures []cryptotypes.PrivKey,
 	selectedAuthenticators []uint64,
 	msgs ...sdk.Msg,
-) (*sdk.Result, error) {
+) (*abci.ExecTxResult, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
@@ -277,7 +260,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
-	_, r, err := SignAndDeliverWithAuthenticator(
+	resp, err := SignAndDeliverWithAuthenticator(
 		chain.GetContext(),
 		chain.TxConfig,
 		chain.App.GetBaseApp(),
@@ -286,6 +269,8 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 		chain.ChainID,
 		accountNumbers,
 		accountSequences,
+		chain.GetContext().BlockTime(),
+		chain.App.LastCommitID().Hash,
 		signers,
 		signatures,
 		selectedAuthenticators,
@@ -294,8 +279,14 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 		return nil, err
 	}
 
-	// SignAndDeliver calls app.Commit()
-	chain.NextBlock()
+	chain.commitBlock(resp)
+
+	require.Len(chain.TB, resp.TxResults, 1)
+	txResult := resp.TxResults[0]
+
+	if txResult.Code != 0 {
+		return txResult, fmt.Errorf("%s/%d: %q", txResult.Codespace, txResult.Code, txResult.Log)
+	}
 
 	// increment sequences for successful transaction execution
 	for _, msg := range msgs {
@@ -313,7 +304,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticator(
 
 	chain.Coordinator.IncrementTime()
 
-	return r, nil
+	return txResult, nil
 }
 
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
@@ -327,9 +318,11 @@ func SignAndDeliverWithAuthenticator(
 	chainID string,
 	accNums,
 	accSeqs []uint64,
+	blockTime time.Time,
+	nextValHash []byte,
 	signers, signatures []cryptotypes.PrivKey,
 	selectedAuthenticators []uint64,
-) (sdk.GasInfo, *sdk.Result, error) {
+) (*abci.ResponseFinalizeBlock, error) {
 	tx, err := SignAuthenticatorMsg(
 		ctx,
 		txCfg,
@@ -344,13 +337,20 @@ func SignAndDeliverWithAuthenticator(
 		selectedAuthenticators,
 	)
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return nil, err
 	}
 
-	// Simulate a sending a transaction
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	txBytes, err := txCfg.TxEncoder()(tx)
+	if err != nil {
+		return nil, err
+	}
 
-	return gInfo, res, err
+	return app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Time:               blockTime,
+		NextValidatorsHash: nextValHash,
+		Txs:                [][]byte{txBytes},
+	})
 }
 
 // GenTx generates a signed mock transaction.
@@ -449,7 +449,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 	signatures [][]cryptotypes.PrivKey, // Adjusted for compound signatures
 	selectedAuthenticators []uint64,
 	msgs ...sdk.Msg,
-) (*sdk.Result, error) {
+) (*abci.ExecTxResult, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
@@ -474,7 +474,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
-	_, r, err := SignAndDeliverWithAuthenticatorAndCompoundSigs(
+	resp, err := SignAndDeliverWithAuthenticatorAndCompoundSigs(
 		chain.GetContext(),
 		chain.TxConfig,
 		chain.App.GetBaseApp(),
@@ -483,6 +483,8 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 		chain.ChainID,
 		accountNumbers,
 		accountSequences,
+		chain.GetContext().BlockTime(),
+		chain.App.LastCommitID().Hash,
 		signers,
 		signatures,
 		selectedAuthenticators,
@@ -491,8 +493,14 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 		return nil, err
 	}
 
-	// SignAndDeliver calls app.Commit()
-	chain.NextBlock()
+	chain.commitBlock(resp)
+
+	require.Len(chain.TB, resp.TxResults, 1)
+	txResult := resp.TxResults[0]
+
+	if txResult.Code != 0 {
+		return txResult, fmt.Errorf("%s/%d: %q", txResult.Codespace, txResult.Code, txResult.Log)
+	}
 
 	// increment sequences for successful transaction execution
 	for _, msg := range msgs {
@@ -510,7 +518,7 @@ func (chain *TestChain) SendMsgsFromPrivKeysWithAuthenticatorAndCompoundSigs(
 
 	chain.Coordinator.IncrementTime()
 
-	return r, nil
+	return txResult, nil
 }
 
 func SignAndDeliverWithAuthenticatorAndCompoundSigs(
@@ -521,10 +529,12 @@ func SignAndDeliverWithAuthenticatorAndCompoundSigs(
 	msgs []sdk.Msg,
 	chainID string,
 	accNums, accSeqs []uint64,
+	blockTime time.Time,
+	nextValHash []byte,
 	signers []cryptotypes.PrivKey,
 	signatures [][]cryptotypes.PrivKey, // Adjusted for compound signatures
 	selectedAuthenticators []uint64,
-) (sdk.GasInfo, *sdk.Result, error) {
+) (*abci.ResponseFinalizeBlock, error) {
 	// Now passing `signers` to the function
 	tx, err := SignAuthenticatorMsgWithCompoundSigs(
 		ctx,
@@ -540,13 +550,20 @@ func SignAndDeliverWithAuthenticatorAndCompoundSigs(
 		selectedAuthenticators,
 	)
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return nil, err
 	}
 
-	// Simulate sending the transaction
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	txBytes, err := txCfg.TxEncoder()(tx)
+	if err != nil {
+		return nil, err
+	}
 
-	return gInfo, res, err
+	return app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Time:               blockTime,
+		NextValidatorsHash: nextValHash,
+		Txs:                [][]byte{txBytes},
+	})
 }
 
 // SignAuthenticatorMsgWithCompoundSigs generates a transaction signed with compound signatures.

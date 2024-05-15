@@ -3,6 +3,8 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	txfeetypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
@@ -50,6 +52,8 @@ func TestAuthenticatorSuite(t *testing.T) {
 }
 
 func (s *AuthenticatorSuite) SetupTest() {
+	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
+
 	// Use the osmosis custom function for creating an osmosis app
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 
