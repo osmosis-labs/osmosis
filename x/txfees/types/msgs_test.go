@@ -3,13 +3,15 @@ package types_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdcutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/stretchr/testify/require"
 
 	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
-
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
@@ -41,7 +43,16 @@ func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool
 		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
 		require.Equal(t, msg.Route(), types.RouterKey)
 		require.Equal(t, msg.Type(), expType)
-		encCfg := moduletestutil.MakeTestEncodingConfig()
+		aminoCodec := codec.NewLegacyAmino()
+		interfaceRegistry := cdcutil.CodecOptions{AccAddressPrefix: "osmo", ValAddressPrefix: "osmovaloper"}.NewInterfaceRegistry()
+		codec := codec.NewProtoCodec(interfaceRegistry)
+
+		encCfg := testutil.TestEncodingConfig{
+			InterfaceRegistry: interfaceRegistry,
+			Codec:             codec,
+			TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+			Amino:             aminoCodec,
+		}
 		signers, _, err := encCfg.Codec.GetMsgV1Signers(msg)
 		require.NoError(t, err)
 		require.Equal(t, len(signers), 1)
