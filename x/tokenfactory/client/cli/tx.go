@@ -37,7 +37,7 @@ func NewMsgSetDenomMetadata() *cobra.Command {
 func NewCreateDenomCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgCreateDenom](&osmocli.TxCliDesc{
 		Use:   "create-denom",
-		Short: "create a new denom from an account. (Costs osmo though!)",
+		Short: "create a new denom from an account. (osmo to create tokens is charged through gas consumption)",
 	})
 }
 
