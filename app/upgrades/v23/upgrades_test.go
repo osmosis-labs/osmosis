@@ -6,7 +6,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -21,6 +25,7 @@ const (
 )
 
 type UpgradeTestSuite struct {
+	preModule appmodule.HasPreBlocker
 	apptesting.KeeperTestHelper
 }
 
@@ -28,8 +33,13 @@ func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
+func (s *UpgradeTestSuite) PreBlockerSetup() {
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
+}
+
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.PreBlockerSetup()
 
 	// Set the migration pool ID threshold to far away to simulate pre-migration state.
 	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, 1000)
@@ -92,7 +102,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
+		_, err := s.preModule.PreBlock(s.Ctx)
 		s.Require().NoError(err)
 	})
 
@@ -118,5 +128,5 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v23UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v23UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v23UpgradeHeight)
 }

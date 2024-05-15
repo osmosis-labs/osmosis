@@ -9,12 +9,17 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
@@ -32,6 +37,7 @@ var (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -40,6 +46,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	// Setup spread factor migration test environment
 	oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards := s.PrepareSpreadRewardsMigrationTestEnv()
@@ -54,7 +61,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
+		_, err := s.preModule.PreBlock(s.Ctx)
 		s.Require().NoError(err)
 	})
 
@@ -105,7 +112,7 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v25UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v25UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v25UpgradeHeight)
 }
 
 func (s *UpgradeTestSuite) PrepareSpreadRewardsMigrationTestEnv() (map[uint64]struct{}, uint64, sdk.Coins, sdk.Coins) {

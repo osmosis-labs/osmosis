@@ -2,9 +2,13 @@ package v22_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -15,6 +19,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -24,6 +30,7 @@ const (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -32,6 +39,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	expectedTakerFeeForStakers := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(3000)), sdk.NewCoin("uatom", osmomath.NewInt(1000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(2000))}
 	expectedTakerFeeForCommunityPool := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(2000)), sdk.NewCoin("uatom", osmomath.NewInt(3000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000))}
@@ -59,7 +67,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
+		_, err := s.preModule.PreBlock(s.Ctx)
 		s.Require().NoError(err)
 	})
 
@@ -80,5 +88,5 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v22UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v22UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v22UpgradeHeight)
 }

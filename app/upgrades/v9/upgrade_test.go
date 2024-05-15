@@ -2,7 +2,9 @@ package v9_test
 
 import (
 	"fmt"
+	"time"
 
+	"cosmossdk.io/core/header"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
@@ -32,9 +34,9 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 				s.Require().NoError(err)
 
-				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: dummyUpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
-					_, err := s.App.BeginBlocker(s.Ctx)
+					_, err := s.preModule.PreBlock(s.Ctx)
 					s.Require().NoError(err)
 				})
 			},

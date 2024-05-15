@@ -13,7 +13,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app"
 	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -22,13 +26,15 @@ import (
 type UpgradeTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *app.OsmosisApp
+	ctx       sdk.Context
+	app       *app.OsmosisApp
+	preModule appmodule.HasPreBlocker
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.app = app.Setup(false)
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.preModule = upgrade.NewAppModule(s.app.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -76,9 +82,9 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				_, err = s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
 				s.Require().NoError(err)
 
-				s.ctx = s.ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: dummyUpgradeHeight, Time: s.ctx.BlockTime().Add(time.Second)}).WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
-					_, err := s.app.BeginBlocker(s.ctx)
+					_, err := s.preModule.PreBlock(s.ctx)
 					s.Require().NoError(err)
 				})
 			},

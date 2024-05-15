@@ -11,12 +11,17 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	v24 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v24"
@@ -36,6 +41,7 @@ const (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -44,6 +50,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	// TWAP Setup
 	//
@@ -191,7 +198,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
+		_, err := s.preModule.PreBlock(s.Ctx)
 		s.Require().NoError(err)
 	})
 
@@ -287,5 +294,5 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v24UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v24UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v24UpgradeHeight)
 }

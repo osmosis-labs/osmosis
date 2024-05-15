@@ -8,9 +8,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/suite"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -26,10 +31,12 @@ import (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 
 type ByLinkedClassicPool []v17.AssetPair
@@ -54,7 +61,7 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: dummyUpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(dummyUpgradeHeight)
 }
 
 func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord { //nolint:unparam // asset1 always receives "usomo"
@@ -221,7 +228,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					_, err := s.App.BeginBlocker(s.Ctx)
+					_, err := s.preModule.PreBlock(s.Ctx)
 					s.Require().NoError(err)
 				})
 
@@ -395,7 +402,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					_, err := s.App.BeginBlocker(s.Ctx)
+					_, err := s.preModule.PreBlock(s.Ctx)
 					s.Require().NoError(err)
 				})
 
@@ -507,7 +514,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					_, err := s.App.BeginBlocker(s.Ctx)
+					_, err := s.preModule.PreBlock(s.Ctx)
 					s.Require().NoError(err)
 				})
 			},

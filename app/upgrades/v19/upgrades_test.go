@@ -9,12 +9,17 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
@@ -30,10 +35,12 @@ var (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -42,7 +49,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	initialTokenBonded := sdk.DefaultPowerReduction
-	s.Setup()
+	s.SetupTest()
 
 	// prepare superfluid delegation
 	superfluidVal, lockDenom := s.setupSuperfluidDelegation()
@@ -62,7 +69,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.runv18Upgrade()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
 	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
+		_, err = s.App.BeginBlocker(s.Ctx)
 		s.Require().NoError(err)
 	})
 
@@ -81,7 +90,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.runv19Upgrade()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
 	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
+		_, err = s.App.BeginBlocker(s.Ctx)
 		s.Require().NoError(err)
 	})
 
@@ -145,7 +156,7 @@ func (s *UpgradeTestSuite) runv18Upgrade() {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v18UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v18UpgradeHeight)
 }
 
 func (s *UpgradeTestSuite) runv19Upgrade() {
@@ -156,7 +167,7 @@ func (s *UpgradeTestSuite) runv19Upgrade() {
 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
 	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v19UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v19UpgradeHeight)
 }
 
 func stakingSyntheticDenom(denom, valAddr string) string {
