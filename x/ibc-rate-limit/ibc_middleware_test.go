@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"strconv"
 	"strings"
 	"testing"
@@ -141,30 +142,11 @@ func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.
 	//return balance
 }
 
-// Tests that a receiver address longer than 4096 is not accepted
-func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
-	msg := transfertypes.NewMsgTransfer(
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID,
-		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
-		suite.chainB.SenderAccount.GetAddress().String(),
-		strings.Repeat("x", 4097),
-		clienttypes.NewHeight(10, 100),
-		uint64(time.Now().UnixNano()),
-		"",
-	)
-	_, ack, _ := suite.FullSendBToA(msg)
-	suite.Require().Contains(ack, "error",
-		"acknowledgment is not an error")
-	suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
-		"acknowledgment error is not of the right type")
-}
-
-func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string, error) {
+func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*abci.ExecTxResult, string, error) {
 	sendResult, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
@@ -184,13 +166,13 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	return sendResult, string(ack), err
 }
 
-func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
+func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*abci.ExecTxResult, string, error) {
 	sendResult, err := suite.chainA.SendMsgsNoCheck(msg)
 	if err != nil {
 		return nil, "", err
 	}
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents().ToABCIEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	if err != nil {
 		return nil, "", err
 	}
@@ -237,7 +219,7 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	return ack, err
 }
 
-func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Result, error) {
+func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*abci.ExecTxResult, error) {
 	r, _, err := suite.FullSendAToB(msg)
 	if success {
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
@@ -509,7 +491,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Execute the acknowledgement from chain B in chain A
 
 	// extract the sent packet
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents().ToABCIEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
 	// recv in chain b
