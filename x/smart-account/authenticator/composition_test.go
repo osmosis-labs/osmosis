@@ -15,8 +15,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
@@ -189,7 +187,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, moduletestutil.MakeTestEncodingConfig().Codec, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -408,7 +406,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, moduletestutil.MakeTestEncodingConfig().Codec, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			err = initializedTop.Authenticate(s.Ctx, request)
