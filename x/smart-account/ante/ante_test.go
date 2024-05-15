@@ -62,7 +62,6 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 
 	s.OsmosisApp = app.Setup(false)
 
-	ak := s.OsmosisApp.AccountKeeper
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
@@ -74,8 +73,7 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 		s.TestPrivKeys = append(s.TestPrivKeys, priv)
 
 		accAddress := sdk.AccAddress(priv.PubKey().Address())
-		account := authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
-		ak.SetAccount(s.Ctx, account)
+		authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
 
 		// add the test accounts to array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)

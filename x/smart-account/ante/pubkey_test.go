@@ -50,8 +50,6 @@ func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
 	// Initialize the Osmosis application
 	s.OsmosisApp = app.Setup(false)
 
-	// Access the AccountKeeper from the Osmosis app
-	ak := s.OsmosisApp.AccountKeeper
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
@@ -66,10 +64,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
 		accAddress := sdk.AccAddress(priv.PubKey().Address())
 
 		// Create a new BaseAccount for the test account
-		account := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
-
-		// Set the test account in the AccountKeeper
-		ak.SetAccount(s.Ctx, account)
+		authtypes.NewBaseAccount(accAddress, nil, 0, 0)
 
 		// Add the test accounts' addresses to an array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
