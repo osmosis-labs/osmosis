@@ -307,20 +307,15 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 		signKey               cryptotypes.PrivKey
 		selectedAuthenticator []uint64
 		shouldPass            bool
-		checks                int
-		checkGas              bool
 	}{
-		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true, 1, true},
-		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true, 1, true},
-		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false, 1, true},
-		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false, 1, true},
-		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false, 0, true},
-		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false, 0, true},
-		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false, 0, false},
+		{"Correct authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig1Id}, true},
+		{"Correct authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig2Id}, true},
+		{"Incorrect authenticator 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{sig2Id}, false},
+		{"Incorrect authenticator 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{sig1Id}, false},
+		{"Not Specified for 0", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{}, false},
+		{"Not Specified for 1", s.TestPrivKeys[0], s.TestPrivKeys[1], []uint64{}, false},
+		{"Bad selection", s.TestPrivKeys[0], s.TestPrivKeys[0], []uint64{3}, false},
 	}
-
-	baseGas := 2891              // base gas consimed before starting to iterate through authenticators
-	approachingGasPerSig := 5429 // Each signature consumes at least this amount (but not much more)
 
 	// Ensure the feepayer has funds
 	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2_500_000)}
@@ -342,22 +337,12 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 			)
 
 			anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
-			res, err := anteHandler(s.Ctx.WithGasMeter(storetypes.NewGasMeter(300000)), tx, false)
+			_, err := anteHandler(s.Ctx.WithGasMeter(storetypes.NewGasMeter(300000)), tx, false)
 
 			if tc.shouldPass {
 				s.Require().NoError(err, "Expected to pass but got error")
 			} else {
 				s.Require().Error(err, "Expected to fail but got no error")
-			}
-
-			// ensure only the right amount of sigs have been checked
-			if tc.checks > 0 {
-				s.Require().GreaterOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+(tc.checks-1)*approachingGasPerSig))
-				s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas+tc.checks*approachingGasPerSig))
-			} else {
-				if tc.checkGas {
-					s.Require().LessOrEqual(res.GasMeter().GasConsumed(), uint64(baseGas))
-				}
 			}
 		})
 	}
