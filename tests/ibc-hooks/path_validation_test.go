@@ -61,7 +61,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
 	suite.Require().False(forwarding.Bool())
 
-	packet1, err := ibctesting.ParsePacketFromEvents(result.GetEvents().ToABCIEvents())
+	packet1, err := ibctesting.ParsePacketFromEvents(result.GetEvents())
 	suite.Require().NoError(err)
 	receiveResult, _ := suite.RelayPacket(packet1, reverseDirection)
 
@@ -73,7 +73,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	err = receiver.UpdateClient()
 	suite.Require().NoError(err)
 
-	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents().ToABCIEvents())
+	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
 
 	err = sender.AcknowledgePacket(packet0, ack)

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +34,7 @@ func (suite *HooksTestSuite) SetupCW20(chainName Chain) (sdk.AccAddress, sdk.Acc
 }
 
 // Function to easily transfer the created cw20 tokens to chainA
-func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr, cw20ics20Addr, receiver sdk.AccAddress, amount, memo string) (*sdk.Result, []byte) {
+func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr, cw20ics20Addr, receiver sdk.AccAddress, amount, memo string) (*abci.ExecTxResult, []byte) {
 	chainB := suite.GetChain(ChainB)
 
 	osmosisApp := chainB.GetOsmosisApp()
@@ -147,7 +148,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	suite.Require().Contains(string(ack), "result")
 
 	// Relay the packet created by the XCS contract back to the receiver
-	packet, err := ibctesting.ParsePacketFromEvents(result.GetEvents().ToABCIEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(result.GetEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoB)
 
@@ -167,7 +168,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	transferMsg := NewMsgTransfer(sdk.NewCoin(stakeAB, osmomath.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), suite.pathAB.EndpointB.ChannelID, xcsMsg)
 	_, recvResult, _, _ := suite.FullSend(transferMsg, BtoA)
 
-	packet, err = ibctesting.ParsePacketFromEvents(recvResult.GetEvents().ToABCIEvents())
+	packet, err = ibctesting.ParsePacketFromEvents(recvResult.GetEvents())
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoCW20)
 
