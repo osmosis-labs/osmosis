@@ -76,7 +76,12 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 	ak := s.OsmosisApp.AccountKeeper
 
 	for _, signer := range signers {
-		account := ak.GetAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address()))
+		var account sdk.AccountI
+		if ak.HasAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address())) {
+			account = ak.GetAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address()))
+		} else {
+			account = authtypes.NewBaseAccount(sdk.AccAddress(signer.PubKey().Address()), signer.PubKey(), ak.NextAccountNumber(s.Ctx), 0)
+		}
 		accNums = append(accNums, account.GetAccountNumber())
 		accSeqs = append(accSeqs, account.GetSequence())
 	}

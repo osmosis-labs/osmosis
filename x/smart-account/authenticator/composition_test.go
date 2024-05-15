@@ -313,7 +313,8 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, moduletestutil.MakeTestEncodingConfig().Codec, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+			cdc := s.OsmosisApp.AppCodec()
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, cdc, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
