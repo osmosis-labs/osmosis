@@ -79,7 +79,6 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				// ensure we are at a block height that is a multiple of the distribution block height
 				blockHeight := distribution.BlockMultipleToDistributeRewards * int64(i+1)
 				s.Ctx = s.Ctx.WithBlockHeight(blockHeight - 1)
-				// UNFORKING v2 TODO: Figure out how to get block with proposer working
 				s.BeginNewBlockWithProposer(true, valAddr)
 			}
 

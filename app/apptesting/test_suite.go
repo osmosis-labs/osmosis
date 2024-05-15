@@ -7,11 +7,14 @@ import (
 	"testing"
 	"time"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -291,17 +294,37 @@ func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, store
 
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) Commit() {
-	oldHeight := s.Ctx.BlockHeight()
-	oldHeader := s.Ctx.BlockHeader()
-	s.App.Commit()
-	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
-	// UNFORKING v2 TODO: Need to better understand how we want to run BeginBlock
-	// s.App.BeginBlocker(abci.RequestBeginBlock{Header: newHeader})
-	_, err := s.App.BeginBlocker(s.Ctx)
-	s.Require().NoError(err)
-	s.Ctx = s.App.GetBaseApp().NewContextLegacy(false, newHeader)
+	// UNFORKING v2 TODO: Make sure that the new way of calling commit is correct, I believe it is.
+	// oldHeight := s.Ctx.BlockHeight()
+	// oldHeader := s.Ctx.BlockHeader()
+	// s.App.Commit()
+	// newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
+	// // UNFORKING v2 TODO: Need to better understand how we want to run BeginBlock
+	// // s.App.BeginBlocker(abci.RequestBeginBlock{Header: newHeader})
+	// _, err := s.App.BeginBlocker(s.Ctx)
+	// s.Require().NoError(err)
+	// s.Ctx = s.App.GetBaseApp().NewContextLegacy(false, newHeader)
 
-	s.hasUsedAbci = true
+	// s.hasUsedAbci = true
+	_, err := s.App.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.Ctx.BlockHeight(), Time: s.Ctx.BlockTime()})
+	if err != nil {
+		panic(err)
+	}
+	_, err = s.App.Commit()
+	if err != nil {
+		panic(err)
+	}
+
+	newBlockTime := s.Ctx.BlockTime().Add(time.Second)
+
+	header := s.Ctx.BlockHeader()
+	header.Time = newBlockTime
+	header.Height++
+
+	s.Ctx = s.App.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 }
 
 // FundAcc funds target address with specified amount.
@@ -395,13 +418,13 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 // BeginNewBlockWithProposer begins a new block with a proposer.
 func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
 	// UNFORKING v2 TODO: Need to better understand how we want to run BeginBlock with proposer, how do we force proposer here
-	// validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
-	// s.Assert().NoError(err)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
+	s.Assert().NoError(err)
 
-	// valConsAddr, err := validator.GetConsAddr()
-	// s.Require().NoError(err)
+	valConsAddr, err := validator.GetConsAddr()
+	s.Require().NoError(err)
 
-	// valAddr := valConsAddr
+	valAddr := valConsAddr
 
 	epochIdentifier := s.App.SuperfluidKeeper.GetEpochIdentifier(s.Ctx)
 	epoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier)
@@ -411,19 +434,16 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	}
 
 	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
-	newCtx := s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
-	s.Ctx = newCtx
-	// lastCommitInfo := abci.CommitInfo{
-	// 	Votes: []abci.VoteInfo{{
-	// 		Validator:   abci.Validator{Address: valAddr, Power: 1000},
-	// 		BlockIdFlag: tmtypes.BlockIDFlag(comet.BlockIDFlagCommit),
-	// 	}},
-	// }
-	// reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
+	s.Ctx = s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
+	voteInfos := []abci.VoteInfo{{
+		Validator:   abci.Validator{Address: valAddr, Power: 1000},
+		BlockIdFlag: cmtproto.BlockIDFlagCommit,
+	}}
+	s.Ctx = s.Ctx.WithVoteInfos(voteInfos)
 
-	// fmt.Println("beginning block ", s.Ctx.BlockHeight())
-	// s.App.BeginBlocker(s.Ctx, reqBeginBlock)
-	_, err := s.App.BeginBlocker(s.Ctx)
+	fmt.Println("beginning block ", s.Ctx.BlockHeight())
+
+	_, err = s.App.BeginBlocker(s.Ctx)
 	s.Require().NoError(err)
 
 	s.Ctx = s.App.NewContextLegacy(false, header)
@@ -596,7 +616,11 @@ func (s *KeeperTestHelper) BuildTx(
 // StateNotAltered validates that app state is not altered. Fails if it is.
 func (s *KeeperTestHelper) StateNotAltered() {
 	oldState := s.App.ExportState(s.Ctx)
-	s.App.Commit()
+	// UNFORKING v2 TODO: I used the commit method directly on the CMS, otherwise we need to call the full
+	// commit flow, which specifically changes the block header height and time, and makes this much. Need
+	// to verify this still checks what we want to check.
+	// s.Commit()
+	s.App.CommitMultiStore().Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
 	s.hasUsedAbci = true
