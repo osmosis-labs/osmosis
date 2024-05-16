@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		for _, result := range res.Assets {
 			// check osmo equivalent is correct
 			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, osmomath.NewInt(delegation_amount), false)
+			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(ctx, denom, osmomath.NewInt(delegation_amount))
 			s.Require().NoError(err)
 
 			s.Require().Equal(actual_response_osmo, needed_response_osmo)

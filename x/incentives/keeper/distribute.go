@@ -936,7 +936,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache, &scratchSlice)
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
 		var err error
-		// TODO: handle non-osmo locks differently
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo, minDistrValueCache)

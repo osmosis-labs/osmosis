@@ -123,7 +123,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.SetupTest()
 
 	// denoms
-	btcDenom := "btc" // Asset to superfluid stake
+	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	// accounts
@@ -314,7 +314,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.SetupTest()
 
 	// denoms
-	btcDenom := "btc" // Asset to superfluid stake
+	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	// accounts
@@ -349,6 +349,12 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// Creating a native type without a pool should fail
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative})
 	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "failed to get twap price")
+
+	// Creating a native type with a non-existing pool should fail
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId + 10})
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "failed to get twap price")
 
 	// Add btcDenom as an allowed superfluid asset
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId})
