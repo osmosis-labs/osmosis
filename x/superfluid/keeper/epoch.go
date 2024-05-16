@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	sdkerrors "cosmossdk.io/errors"
