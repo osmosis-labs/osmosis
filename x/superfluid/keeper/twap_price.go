@@ -48,11 +48,11 @@ func isNonNative(denom string) bool {
 	return false
 }
 
-func (k Keeper) GetSuperfluidOSMOTokensWithNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
 	return k.getSuperfluidOSMOTokens(ctx, denom, amount, true)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokensWithoutNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+func (k Keeper) GetSuperfluidOSMOTokensExcludeNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
 	return k.getSuperfluidOSMOTokens(ctx, denom, amount, false)
 }
 
