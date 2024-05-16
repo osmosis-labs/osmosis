@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"strconv"
 	"strings"
+
+	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
