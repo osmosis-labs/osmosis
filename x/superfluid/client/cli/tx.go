@@ -214,7 +214,7 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.
 		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeConcentratedShare
 		} else if asset == appparams.BaseCoinUnit {
-			return nil, fmt.Errorf("ignvalid asset type: %s", asset)
+			return nil, fmt.Errorf("invalid asset type: %s", asset)
 		} else {
 			assetType = types.SuperfluidAssetTypeNative
 		}
