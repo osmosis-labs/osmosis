@@ -128,7 +128,8 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		// get OSMO amount
-		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(appparams.BaseCoinUnit)
+		bondDenom := k.sk.GetParams(ctx).BondDenom
+		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
 			err := fmt.Errorf("pool %d has zero OSMO amount", poolId)
 			// Pool has unexpectedly removed Osmo from its assets.
