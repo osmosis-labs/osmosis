@@ -1,12 +1,10 @@
 module github.com/osmosis-labs/osmosis/osmomath
 
-go 1.21.4
-
-toolchain go1.21.5
+go 1.22.3
 
 require (
 	cosmossdk.io/math v1.3.0
-	github.com/cosmos/cosmos-sdk v0.50.1
+	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240507214523-9fcbd6b1f09b
 	github.com/stretchr/testify v1.9.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -56,7 +54,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
