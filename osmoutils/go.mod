@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/cosmos/iavl v1.1.3
 	github.com/cosmos/ibc-go/v8 v8.2.1
-	github.com/osmosis-labs/osmosis/osmomath v0.0.13
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517163457-199ce5f23a8d
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -193,14 +193,14 @@ replace (
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm => github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092650-57fcdb9a9a9d
 
 	// Local replaces commented for development
-	github.com/osmosis-labs/osmosis/osmomath => ../osmomath
+	// github.com/osmosis-labs/osmosis/osmomath => ../osmomath
 	// github.com/osmosis-labs/osmosis/v25 => ../
-	github.com/osmosis-labs/osmosis/x/epochs => ../x/epochs
-	github.com/osmosis-labs/osmosis/x/ibc-hooks => ../x/ibc-hooks
+	// github.com/osmosis-labs/osmosis/x/epochs => ../x/epochs
+	// github.com/osmosis-labs/osmosis/x/ibc-hooks => ../x/ibc-hooks
 
 	// github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	// github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.1
+	// github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
