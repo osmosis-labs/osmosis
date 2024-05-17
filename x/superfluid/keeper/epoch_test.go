@@ -19,7 +19,12 @@ import (
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	// set bond denom to appparams.BaseCoinUnit
+	//params := s.App.StakingKeeper.GetParams(s.Ctx)
+	//params.BondDenom = appparams.BaseCoinUnit
+	//err := s.App.StakingKeeper.SetParams(s.Ctx, params)
+	//s.Require().NoError(err)
+	//bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	testCases := []struct {
 		name                  string
@@ -68,7 +73,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		},
 		{
 			name:               "update native token Osmo equivalent successfully",
-			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
+			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: appparams.BaseCoinUnit}}},
 			expectedMultiplier: osmomath.MustNewDecFromStr("2.0"),
 		},
 		{
@@ -81,6 +86,11 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
+			params := s.App.StakingKeeper.GetParams(s.Ctx)
+			params.BondDenom = appparams.BaseCoinUnit
+			err := s.App.StakingKeeper.SetParams(s.Ctx, params)
+			s.Require().NoError(err)
 
 			ctx := s.Ctx
 			superfluidKeeper := s.App.SuperfluidKeeper
@@ -106,7 +116,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			}
 
 			// System under test
-			err := superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
+			err = superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
