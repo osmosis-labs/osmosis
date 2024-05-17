@@ -691,5 +691,4 @@ func (s *KeeperTestSuite) TestUnsetDenomRiskFactors() {
 
 	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
 	s.Require().False(found)
-
 }

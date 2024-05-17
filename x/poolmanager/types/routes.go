@@ -167,3 +167,7 @@ func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) erro
 
 	return nil
 }
+
+func (route *SwapAmountInRoute) Equal(routeB *SwapAmountInRoute) bool {
+	return route.PoolId == routeB.PoolId && route.TokenOutDenom == routeB.TokenOutDenom
+}

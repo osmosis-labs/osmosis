@@ -1,6 +1,9 @@
 package twap
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"errors"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -140,4 +143,41 @@ func (k Keeper) getTwapToNow(
 // as of the beginning of the block this is called on.
 func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
+}
+
+// GetMultiPoolArithmeticTwapToNow returns the price of two assets through multiple pools.
+// The price is calculated by taking the arithmetic TWAP of the two assets in each pool and multiplying
+// them together.
+// Only pools with two assets are considered.
+// For each pool n, its base asset will be the quote asset of pool n-1. The first pool's base asset is specified
+// in baseAssetDenom and the last pool's quote asset is specified in quoteAssetDenom.
+func (k Keeper) GetMultiPoolArithmeticTwapToNow(
+	ctx sdk.Context,
+	route []*poolmanagertypes.SwapAmountInRoute,
+	baseAssetDenom string,
+	quoteAssetDenom string,
+	startTime time.Time,
+) (osmomath.Dec, error) {
+	if len(route) == 0 {
+		return osmomath.Dec{}, errors.New("route cannot be empty")
+	}
+	if route[len(route)-1].TokenOutDenom != quoteAssetDenom {
+		return osmomath.Dec{}, errors.New("last pool's quote asset must match the quote asset provided")
+	}
+
+	price := osmomath.NewDecFromInt(osmomath.OneInt())
+	baseAsset := baseAssetDenom
+	quoteAsset := route[0].TokenOutDenom
+	for _, pool := range route {
+		twap, err := k.GetArithmeticTwapToNow(ctx, pool.PoolId, baseAsset, quoteAsset, startTime)
+		if err != nil {
+			return osmomath.Dec{}, errorsmod.Wrapf(err, "failed to get arithmetic twap for pool %d", pool.PoolId)
+		}
+		price = price.Mul(twap)
+		// Update the assets to the next pool's base and quote assets
+		baseAsset = quoteAsset
+		quoteAsset = pool.TokenOutDenom
+	}
+
+	return price, nil
 }

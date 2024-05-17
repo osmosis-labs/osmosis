@@ -8,8 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
@@ -152,11 +150,11 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 		// get the twap price of the native asset in osmo
 		startTime := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).StartTime // TODO: do 5 mins instead of 1 epoch
-		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, bondDenom, asset.Denom, startTime)
+		price, err := k.twapk.GetMultiPoolArithmeticTwapToNow(ctx, asset.PriceRoute, asset.Denom, bondDenom, startTime)
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")
 		}
-		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, osmomath.NewDec(1).Quo(price))
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
 	}
 
 	return nil

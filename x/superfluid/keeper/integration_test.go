@@ -13,6 +13,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	balancertypes "github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
@@ -352,12 +353,12 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Contains(err.Error(), "failed to get twap price")
 
 	// Creating a native type with a non-existing pool should fail
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId + 10})
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId + 10, TokenOutDenom: bondDenom}}})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "failed to get twap price")
 
 	// Add btcDenom as an allowed superfluid asset
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId})
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}})
 	s.Require().NoError(err)
 
 	// Mint assets to the lockup module. This will ensure there are assets to distribute.

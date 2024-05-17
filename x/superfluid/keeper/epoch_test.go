@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +19,8 @@ import (
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
 	testCases := []struct {
 		name                  string
 		asset                 types.SuperfluidAsset
@@ -65,7 +68,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		},
 		{
 			name:               "update native token Osmo equivalent successfully",
-			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
+			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
 			expectedMultiplier: osmomath.MustNewDecFromStr("2.0"),
 		},
 		{
