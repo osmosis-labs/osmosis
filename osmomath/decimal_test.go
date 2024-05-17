@@ -12,7 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 type decimalTestSuite struct {
@@ -1543,7 +1542,7 @@ func (s *decimalTestSuite) TestPower() {
 		s.Run(name, func() {
 			osmomath.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				actualResult := tc.base.Power(tc.exponent)
-				osmoassert.Equal(s.T(), tc.errTolerance, tc.expectedResult, actualResult)
+				osmomath.Equal(s.T(), tc.errTolerance, tc.expectedResult, actualResult)
 			})
 		})
 	}
