@@ -599,7 +599,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 	}
 }
 
-func (s *KeeperTestSuite) TestSetAndUnsetDenomRiskFactors() {
+func (s *KeeperTestSuite) TestSetDenomRiskFactors() {
 	s.SetupTest()
 
 	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
@@ -645,9 +645,51 @@ func (s *KeeperTestSuite) TestSetAndUnsetDenomRiskFactors() {
 			}
 		})
 	}
+}
 
-	// Unset risk factor
-	//_, err = msgServer.UnsetDenomRiskFactor(c, types.NewMsgUnsetDenomRiskFactor(locks[0].Owner, "btc"))
-	//s.Require().NoError(err)
-	//s.AssertEventEmitted(s.Ctx, types.TypeEvtUnsetDenomRiskFactor, 1)
+func (s *KeeperTestSuite) TestUnsetDenomRiskFactors() {
+	s.SetupTest()
+	denom := "anything"
+
+	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+	c := sdk.WrapSDKContext(s.Ctx)
+	govAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName).GetAddress().String()
+
+	//
+	_, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().False(found)
+
+	// Set the risk factor
+	_, err := msgServer.SetDenomRiskFactor(c, &types.MsgSetDenomRiskFactor{
+		Sender:     govAddr,
+		Denom:      denom,
+		RiskFactor: "0.5",
+	})
+	s.Require().NoError(err)
+
+	riskFactor, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().True(found)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), riskFactor)
+
+	// Unset fails if the sender is not the governance module
+	_, err = msgServer.UnsetDenomRiskFactor(c, &types.MsgUnsetDenomRiskFactor{
+		Sender: "osmo1herasn5ewvv9acpujdmqxz698y849aq9ucsccl",
+		Denom:  denom,
+	})
+	s.Require().Error(err)
+
+	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().True(found)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), riskFactor)
+
+	// Unset the risk factor
+	_, err = msgServer.UnsetDenomRiskFactor(c, &types.MsgUnsetDenomRiskFactor{
+		Sender: govAddr,
+		Denom:  denom,
+	})
+	s.Require().NoError(err)
+
+	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().False(found)
+
 }
