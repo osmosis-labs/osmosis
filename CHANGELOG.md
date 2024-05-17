@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
+* [#8253](https://github.com/osmosis-labs/osmosis/pull/8253) Update gogoproto to v1.4.11 and golang.org/x/exp to 
+* [#8148](https://github.com/osmosis-labs/osmosis/pull/8148) Remove the deserialization time for GetDefaultTakerFee()
+
+## v25.0.0
+
 ### State Breaking
 
 * [#7935](https://github.com/osmosis-labs/osmosis/pull/7935) Add block sdk and top of block auction from skip-mev
@@ -69,10 +75,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#42](https://github.com/osmosis-labs/cometbft/pull/42) Remove a minint call that was appearing in write packet delays
 * [#43](https://github.com/osmosis-labs/cometbft/pull/43) Speedup extended commit.BitArray()
 * [#8226](https://github.com/osmosis-labs/osmosis/pull/8226) Overwrite timeoutPropose from 3s to 2s
-
-## Unreleased
-
-* [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 
 ## v24.0.4
 

@@ -15,12 +15,12 @@ require (
 	github.com/cosmos/iavl v1.1.3
 	github.com/cosmos/ibc-go/v8 v8.2.1
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13
-	github.com/osmosis-labs/osmosis/v25 v25.0.0-20240507214038-b986140713ac
+	github.com/osmosis-labs/osmosis/v25 v25.0.0-rc0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 )
 
 require github.com/skip-mev/block-sdk/v2 v2.1.2 // indirect
@@ -155,14 +155,14 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/onsi/gomega v1.31.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240507214523-9fcbd6b1f09b // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240507214523-9fcbd6b1f09b // indirect
-	github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea // indirect
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.9 // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15 // indirect
+	github.com/osmosis-labs/sqs/sqsdomain v0.18.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.0 // indirect
+	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.52.2 // indirect
 	github.com/prometheus/procfs v0.13.0 // indirect
@@ -192,13 +192,13 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/term v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/api v0.162.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
@@ -230,7 +230,7 @@ replace (
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	// github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
-	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f2daf3830119a963fc60fd9795314a5ff2c2c78
+	// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/4b9533e710b2b1e37aae86ad0fc29ec2ce009c07
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458
 	// github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
@@ -241,15 +241,16 @@ replace (
 
 	// Local replaces commented for development
 	github.com/osmosis-labs/osmosis/osmomath => ../osmomath
-	github.com/osmosis-labs/osmosis/v25 => ./../
+	github.com/osmosis-labs/osmosis/v25 => ../
+	github.com/osmosis-labs/osmosis/x/epochs => ../x/epochs
+	github.com/osmosis-labs/osmosis/x/ibc-hooks => ../x/ibc-hooks
+
+	// github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	// github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.0.0-20240429202838-7d69de2c9bea
+	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.1
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-
-	// newer versions of exp treat sorting differently, which is incompatible with the current version of cosmos-sdk
-	golang.org/x/exp => golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )
 
 exclude github.com/cometbft/cometbft v0.38.0

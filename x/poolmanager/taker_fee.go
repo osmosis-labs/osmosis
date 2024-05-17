@@ -1,6 +1,8 @@
 package poolmanager
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,10 +16,18 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 )
 
-func (k Keeper) GetDefaultTakerFee(ctx sdk.Context) osmomath.Dec {
-	var defaultTakerFee osmomath.Dec
-	k.paramSpace.Get(ctx, types.KeyDefaultTakerFee, &defaultTakerFee)
-	return defaultTakerFee
+func (k *Keeper) GetDefaultTakerFee(ctx sdk.Context) osmomath.Dec {
+	defaultTakerFeeBz := k.paramSpace.GetRaw(ctx, types.KeyDefaultTakerFee)
+	if !bytes.Equal(defaultTakerFeeBz, k.defaultTakerFeeBz) {
+		var defaultTakerFeeValue osmomath.Dec
+		err := json.Unmarshal(defaultTakerFeeBz, &defaultTakerFeeValue)
+		if err != nil {
+			defaultTakerFeeValue = osmomath.ZeroDec()
+		}
+		k.defaultTakerFeeBz = defaultTakerFeeBz
+		k.defaultTakerFeeVal = defaultTakerFeeValue
+	}
+	return k.defaultTakerFeeVal
 }
 
 // SetDenomPairTakerFee sets the taker fee for the given trading pair.

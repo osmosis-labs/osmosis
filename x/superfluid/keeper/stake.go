@@ -89,7 +89,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(context context.Context, ac
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
-				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
+				ctx.Logger().Error("Error in mintOsmoTokensAndDelegate, state update reverted", err)
 			}
 		} else if currentAmount.GT(refreshedAmount) {
 			// In this case, we want to change the IA's delegated balance to be refreshed Amount
