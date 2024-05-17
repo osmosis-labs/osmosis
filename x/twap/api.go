@@ -1,10 +1,12 @@
 package twap
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

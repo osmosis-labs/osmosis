@@ -2,8 +2,9 @@ package types
 
 import (
 	context "context"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"time"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
