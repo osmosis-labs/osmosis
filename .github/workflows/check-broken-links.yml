@@ -27,7 +27,7 @@ jobs:
         id: lychee
         uses: lycheeverse/lychee-action@v1.10.0
         with:
-          args: --exclude-loopback --verbose --no-progress './**/*.md' './**/*.html'
+          args: --exclude-loopback --verbose --no-progress --max-concurrency 1 './**/*.md' './**/*.html'
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
