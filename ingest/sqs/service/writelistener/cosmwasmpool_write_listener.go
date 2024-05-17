@@ -1,84 +1,83 @@
 package writelistener
 
-// UNFORKING v2 TODO: Figure out streaming service
-// import (
-// 	"bytes"
+import (
+	"bytes"
 
-// 	storetypes "cosmossdk.io/store/types"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-// 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-// 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
-// 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
-// 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-// )
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+)
 
-// var _ storetypes.WriteListener = (*cosmwasmPoolWriteListener)(nil)
+var _ domain.WriteListener = (*cosmwasmPoolWriteListener)(nil)
 
-// type cosmwasmPoolWriteListener struct {
-// 	poolTracker domain.BlockPoolUpdateTracker
-// }
+type cosmwasmPoolWriteListener struct {
+	poolTracker domain.BlockPoolUpdateTracker
+}
 
-// func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
-// 	return &cosmwasmPoolWriteListener{
-// 		poolTracker: poolTracker,
-// 	}
-// }
+func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) *cosmwasmPoolWriteListener {
+	return &cosmwasmPoolWriteListener{
+		poolTracker: poolTracker,
+	}
+}
 
-// // OnWrite implements types.WriteListener
-// //
-// // NOTE: This only detects cwPools that have been created or migrated. It does not detect changes in balances (i.e. swaps / position creation / withdraws)
-// func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
-// 	// Track the cwPool that was just created/migrated
-// 	if len(key) > 0 && bytes.Equal(cosmwasmpooltypes.PoolsKey, key[:1]) {
-// 		var pool cosmwasmpoolmodel.CosmWasmPool
-// 		if err := pool.Unmarshal(value); err != nil {
-// 			return err
-// 		}
+// OnWrite implements types.WriteListener
+//
+// NOTE: This only detects cwPools that have been created or migrated. It does not detect changes in balances (i.e. swaps / position creation / withdraws)
+func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
+	// Track the cwPool that was just created/migrated
+	if len(key) > 0 && bytes.Equal(cosmwasmpooltypes.PoolsKey, key[:1]) {
+		var pool cosmwasmpoolmodel.CosmWasmPool
+		if err := pool.Unmarshal(value); err != nil {
+			return err
+		}
 
-// 		s.poolTracker.TrackCosmWasm(&pool)
+		s.poolTracker.TrackCosmWasm(&pool)
 
-// 		// Create/modify the cwPool address to pool mapping
-// 		// This is used to check if a balance change is for a cwPool address, and if so, we can retrieve the pool from this mapping
-// 		var poolI poolmanagertypes.PoolI = &pool
-// 		s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(poolI)
-// 	}
-// 	return nil
-// }
+		// Create/modify the cwPool address to pool mapping
+		// This is used to check if a balance change is for a cwPool address, and if so, we can retrieve the pool from this mapping
+		var poolI poolmanagertypes.PoolI = &pool
+		s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(poolI)
+	}
+	return nil
+}
 
-// type cosmwasmPoolBalanceWriteListener struct {
-// 	poolTracker domain.BlockPoolUpdateTracker
-// }
+type cosmwasmPoolBalanceWriteListener struct {
+	poolTracker domain.BlockPoolUpdateTracker
+}
 
-// func NewCosmwasmPoolBalance(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
-// 	return &cosmwasmPoolBalanceWriteListener{
-// 		poolTracker: poolTracker,
-// 	}
-// }
+func NewCosmwasmPoolBalance(poolTracker domain.BlockPoolUpdateTracker) *cosmwasmPoolBalanceWriteListener {
+	return &cosmwasmPoolBalanceWriteListener{
+		poolTracker: poolTracker,
+	}
+}
 
-// // OnWrite implements types.WriteListener
-// // Tracks balance changes for cwPools (i.e. swaps / position creation / withdraws)
-// func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
-// 	// Check if the key is a balance change for any address
-// 	if len(key) > 0 && key[0] == banktypes.BalancesPrefix[0] {
-// 		// The key is a balance change. Check if the address in question is a cwPool address
+// OnWrite implements types.WriteListener
+// Tracks balance changes for cwPools (i.e. swaps / position creation / withdraws)
+func (s *cosmwasmPoolBalanceWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
+	// Check if the key is a balance change for any address
+	if len(key) > 0 && key[0] == banktypes.BalancesPrefix[0] {
+		// The key is a balance change. Check if the address in question is a cwPool address
 
-// 		// We expect the key to be of the form:
-// 		// <prefix> (length 1)
-// 		// <address_length> (length 1)
-// 		// <address> (length address_length)
-// 		addressLength := key[1]
-// 		addressBytes := key[1+1 : 1+addressLength+1]
-// 		address := sdk.AccAddress(addressBytes)
-// 		addressStr := address.String()
+		// We expect the key to be of the form:
+		// <prefix> (length 1)
+		// <address_length> (length 1)
+		// <address> (length address_length)
+		addressLength := key[1]
+		addressBytes := key[1+1 : 1+addressLength+1]
+		address := sdk.AccAddress(addressBytes)
+		addressStr := address.String()
 
-// 		cwPoolMap := s.poolTracker.GetCosmWasmPoolsAddressToIDMap()
-// 		if pool, ok := cwPoolMap[addressStr]; ok {
-// 			// The address is a cwPool address. Add the cwPool to the cwPool tracker
-// 			s.poolTracker.TrackCosmWasm(pool)
-// 		}
-// 	}
-// 	return nil
-// }
+		cwPoolMap := s.poolTracker.GetCosmWasmPoolsAddressToIDMap()
+		if pool, ok := cwPoolMap[addressStr]; ok {
+			// The address is a cwPool address. Add the cwPool to the cwPool tracker
+			s.poolTracker.TrackCosmWasm(pool)
+		}
+	}
+	return nil
+}

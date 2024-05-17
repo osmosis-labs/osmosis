@@ -7,6 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -20,6 +22,10 @@ type SQSIngestKeepers struct {
 	ProtorevKeeper     ProtorevKeeper
 	PoolManagerKeeper  PoolManagerKeeper
 	ConcentratedKeeper ConcentratedKeeper
+}
+
+type WriteListener interface {
+	OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error
 }
 
 // PoolKeeper is an interface for getting pools from a keeper.

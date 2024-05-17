@@ -12,12 +12,19 @@ import (
 	"regexp"
 	"strings"
 
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 
 	cosmosdb "github.com/cosmos/cosmos-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
@@ -444,6 +451,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig)
 
+	if err := autoCliOpts(initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
+
 	return rootCmd, encodingConfig
 }
 
@@ -799,7 +810,8 @@ func queryCommand() *cobra.Command {
 		CmdModuleNameToAddress(),
 	)
 
-	osmosis.ModuleBasics.AddQueryCommands(cmd)
+	// UNFORKING v2 TODO: Confirm that autoCLI does what we need it to do
+	// osmosis.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -826,7 +838,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	osmosis.ModuleBasics.AddTxCommands(cmd)
+	// UNFORKING v2 TODO: Confirm that autoCLI does what we need it to do
+	// osmosis.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -1166,4 +1179,33 @@ func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []Section
 	}
 
 	return nil
+}
+
+func autoCliOpts(initClientCtx client.Context) autocli.AppOptions {
+	app := osmosisapp.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosisapp.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosisapp.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.ModuleManager().Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	cliKR, err := keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
+	if err != nil {
+		panic(err)
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager().Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+		Keyring:               cliKR,
+		ClientCtx:             initClientCtx,
+	}
 }

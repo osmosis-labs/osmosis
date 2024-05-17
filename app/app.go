@@ -37,6 +37,14 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	storetypes "cosmossdk.io/store/types"
@@ -105,6 +113,7 @@ import (
 	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23"
 	v24 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v24"
 	v25 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v25"
+	v26 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v26"
 	v3 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v5"
@@ -154,7 +163,7 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade, v26.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 
 	// rpcAddressConfigName is the name of the config key that holds the RPC address.
@@ -282,47 +291,51 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
-	// UNFORKING v2 TODO: Figure out streaming service
-	// sqsConfig := sqs.NewConfigFromOptions(appOpts)
+	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
-	// // Initialize the SQS ingester if it is enabled.
-	// if sqsConfig.IsEnabled {
-	// 	sqsKeepers := domain.SQSIngestKeepers{
-	// 		GammKeeper:         app.GAMMKeeper,
-	// 		CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
-	// 		BankKeeper:         app.BankKeeper,
-	// 		ProtorevKeeper:     app.ProtoRevKeeper,
-	// 		PoolManagerKeeper:  app.PoolManagerKeeper,
-	// 		ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
-	// 	}
+	// Initialize the SQS ingester if it is enabled.
+	if sqsConfig.IsEnabled {
+		sqsKeepers := domain.SQSIngestKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
+		}
 
-	// 	// Initialize the SQS ingester.
-	// 	sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+		// Initialize the SQS ingester.
+		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
+		if err != nil {
+			panic(err)
+		}
 
-	// 	// Create pool tracker that tracks pool updates
-	// 	// made by the write listenetrs.
-	// 	poolTracker := service.NewPoolTracker()
+		// Create pool tracker that tracks pool updates
+		// made by the write listenetrs.
+		poolTracker := service.NewPoolTracker()
 
-	// 	// Create write listeners for the SQS service.
-	// 	writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+		// Create write listeners for the SQS service.
+		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker)
 
-	// 	// Note: address can be moved to config in the future if needed.
-	// 	rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-	// 	if !ok {
-	// 		panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-	// 	}
-	// 	nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
 
-	// 	// Create the SQS streaming service by setting up the write listeners,
-	// 	// the SQS ingester, and the pool tracker.
-	// 	sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
+		// Create the SQS streaming service by setting up the write listeners,
+		// the SQS ingester, and the pool tracker.
+		sqsStreamingService := service.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
 
-	// 	// Register the SQS streaming service with the app.
-	// 	app.SetStreamingManager(sqsStreamingService)
-	// }
+		// Register the SQS streaming service with the app.
+		app.SetStreamingManager(
+			storetypes.StreamingManager{
+				ABCIListeners: []storetypes.ABCIListener{sqsStreamingService},
+				StopNodeOnErr: true,
+			},
+		)
+	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
@@ -525,25 +538,31 @@ func NewOsmosisApp(
 	return app
 }
 
-// UNFORKING v2 TODO: Figure out streaming service
-// // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
-// func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
-// 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+// getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
+	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
+	storeKeyMap := make(map[string]storetypes.StoreKey)
 
-// 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
-// 		writelistener.NewConcentrated(blockPoolUpdateTracker),
-// 	}
-// 	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
-// 		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
-// 	}
-// 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
-// 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
-// 	}
-// 	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
-// 		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
-// 	}
-// 	return writeListeners
-// }
+	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []domain.WriteListener{
+		writelistener.NewConcentrated(blockPoolUpdateTracker),
+	}
+	writeListeners[app.GetKey(gammtypes.StoreKey)] = []domain.WriteListener{
+		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
+	}
+	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []domain.WriteListener{
+		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+	}
+	writeListeners[app.GetKey(banktypes.StoreKey)] = []domain.WriteListener{
+		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
+	}
+
+	storeKeyMap[concentratedtypes.ModuleName] = app.GetKey(concentratedtypes.ModuleName)
+	storeKeyMap[gammtypes.StoreKey] = app.GetKey(gammtypes.StoreKey)
+	storeKeyMap[cosmwasmpooltypes.StoreKey] = app.GetKey(cosmwasmpooltypes.StoreKey)
+	storeKeyMap[banktypes.StoreKey] = app.GetKey(banktypes.StoreKey)
+
+	return writeListeners, storeKeyMap
+}
 
 // we cache the reflectionService to save us time within tests.
 var cachedReflectionService *runtimeservices.ReflectionService = nil
