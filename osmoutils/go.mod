@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/cosmos/iavl v1.1.3
 	github.com/cosmos/ibc-go/v8 v8.2.1
-	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517163457-199ce5f23a8d
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517164659-346d610d3627
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -191,6 +191,7 @@ replace (
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm => github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092650-57fcdb9a9a9d
+	github.com/osmosis-labs/osmosis/osmomath => github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517164659-346d610d3627
 
 	// Local replaces commented for development
 	// github.com/osmosis-labs/osmosis/osmomath => ../osmomath

@@ -13,7 +13,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517164659-346d610d3627
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
@@ -180,8 +180,9 @@ replace (
 	// github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
 	// github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	// Local replaces commented for development
-	github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
+	// // Local replaces commented for development
+	// github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
+	github.com/osmosis-labs/osmosis/osmomath => github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517164659-346d610d3627
 )
 
 //exclude github.com/cometbft/cometbft v0.38.0

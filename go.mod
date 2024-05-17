@@ -37,11 +37,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.13
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-00010101000000-000000000000
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-00010101000000-000000000000
-	github.com/osmosis-labs/sqs/sqsdomain v0.18.3
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517164659-346d610d3627
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517164659-346d610d3627
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.2
@@ -279,11 +276,13 @@ replace (
 
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm => github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092650-57fcdb9a9a9d
 
-	// Local replaces commented for development
-	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
-	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
+	// // Local replaces commented for development
+	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+	// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+	// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+	// github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
+	github.com/osmosis-labs/osmosis/osmomath => github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517164659-346d610d3627
+	github.com/osmosis-labs/osmosis/osmoutils => github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517164659-346d610d3627
 
 	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.1
 
