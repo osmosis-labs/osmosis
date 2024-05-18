@@ -17,7 +17,8 @@ ARG BUILD_TAGS
 RUN apk add --no-cache \
     ca-certificates \
     build-base \
-    linux-headers
+    linux-headers \
+    binutils-gold
 
 # Download go dependencies
 WORKDIR /osmosis
