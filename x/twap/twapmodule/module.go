@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -25,9 +24,13 @@ import (
 )
 
 var (
-	_ module.AppModule        = AppModule{}
 	_ module.AppModuleBasic   = AppModuleBasic{}
-	_ appmodule.HasEndBlocker = AppModule{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 type AppModuleBasic struct{}
@@ -100,13 +103,12 @@ func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // InitGenesis performs genesis initialization for the twap module.
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) {
 	var genesisState types.GenesisState
 
 	cdc.MustUnmarshalJSON(gs, &genesisState)
 
 	am.k.InitGenesis(ctx, &genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the twap.
