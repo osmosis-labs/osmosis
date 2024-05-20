@@ -227,7 +227,6 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	ack, err := types.UnmarshalIBCAck(bz)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
-
 	}
 	var newAck channeltypes.Acknowledgement
 	var packet channeltypes.Packet

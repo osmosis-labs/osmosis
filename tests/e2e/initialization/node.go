@@ -284,7 +284,7 @@ func (n *internalNode) init() error {
 	}
 
 	genDoc.ChainID = n.chain.chainMeta.Id
-	// UNFORKING v2 TODO: This used to be genDoc.Consensus.Validators = nil, but got the error that Consensus cant be nil.
+	// UNFORKING v2 TODO: This used to be genDoc.Consensus.Validators = nil, but got the error that Consensus can't be nil.
 	// Unsure if this is the correct fix.
 	genDoc.Consensus = &genutiltypes.ConsensusGenesis{}
 	genDoc.AppState = appState

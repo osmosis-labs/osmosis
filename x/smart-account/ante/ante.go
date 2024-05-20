@@ -3,9 +3,10 @@ package ante
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"strconv"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 

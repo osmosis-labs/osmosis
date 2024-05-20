@@ -3,11 +3,12 @@ package osmosisibctesting
 import (
 	"encoding/json"
 	"fmt"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"testing"
 	"time"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/require"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec/types"
