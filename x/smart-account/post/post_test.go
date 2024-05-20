@@ -79,7 +79,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 		// Add an empty handler here to enable a circuit breaker pattern
-		sdk.ChainPostDecorators(sdk.Terminator{}),
+		sdk.ChainPostDecorators(sdk.Terminator{}), //nolint
 	)
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 }

@@ -8,7 +8,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -59,15 +58,9 @@ func (m MessageFilter) Track(ctx sdk.Context, request AuthenticationRequest) err
 // Authenticate checks if the provided message conforms to the set JSON pattern. It returns an AuthenticationResult based on the evaluation.
 func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// Get the concrete message from the interface registry
-	protoMsg, err := m.encCfg.InterfaceRegistry.Resolve(request.Msg.TypeURL)
+	protoResponseType, err := m.encCfg.InterfaceRegistry.Resolve(request.Msg.TypeURL)
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to resolve message type")
-	}
-
-	// Attach the codec proto marshaller
-	protoResponseType, ok := protoMsg.(proto.Message)
-	if !ok {
-		return errorsmod.Wrapf(err, "failed to resolve message type")
 	}
 
 	// Unmarshal to bytes to the concrete proto message
