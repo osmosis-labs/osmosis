@@ -151,7 +151,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
-// UNFORKING TODO v2: Return error for all these
 func (am AppModule) BeginBlock(context context.Context) error {
 	ctx := sdk.UnwrapSDKContext(context)
 	am.keeper.BeginBlocker(ctx)

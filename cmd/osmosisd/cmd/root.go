@@ -909,7 +909,6 @@ func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts ser
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-		// UNFORKING TODO v2: Implement fast node module whitelist
 		baseapp.SetIAVLFastNodeModuleWhitelist(fastNodeModuleWhitelist),
 		baseapp.SetChainID(chainID),
 	}

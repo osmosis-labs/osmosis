@@ -81,12 +81,12 @@ var AppModuleBasics = module.NewBasicManager(
 	gov.NewAppModuleBasic(
 		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			// UNFORKING TODO v2: What to do with these
+			// UNFORKING v2 TODO: What to do with these
 			// upgradeclient.LegacyProposalHandler,
 			// upgradeclient.LegacyCancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
 			poolincentivesclient.ReplacePoolIncentivesHandler,
-			// UNFORKING TODO v2: What to do with these
+			// UNFORKING v2 TODO: What to do with these
 			// ibcclientclient.UpdateClientProposalHandler,
 			// ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,

@@ -400,12 +400,12 @@ func NewOsmosisApp(
 			"gov": gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{
 					paramsclient.ProposalHandler,
-					// UNFORKING TODO v2: What to do with these
+					// UNFORKING v2 TODO: Verify it is okay to remove these
 					// upgradeclient.LegacyProposalHandler,
 					// upgradeclient.LegacyCancelProposalHandler,
 					poolincentivesclient.UpdatePoolIncentivesHandler,
 					poolincentivesclient.ReplacePoolIncentivesHandler,
-					// UNFORKING TODO v2: What to do with these
+					// UNFORKING v2 TODO: Verify it is okay to remove these
 					// ibcclientclient.UpdateClientProposalHandler,
 					// ibcclientclient.UpgradeProposalHandler,
 					superfluidclient.SetSuperfluidAssetsProposalHandler,
