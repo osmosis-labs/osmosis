@@ -149,7 +149,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	enablePermissionlessCl := func() {
 		// Get the permisionless pool creation parameter.
-		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
 		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
 			// Change the parameter to enable permisionless pool creation.
 			err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB, true)
@@ -157,7 +157,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		}
 
 		// Confirm that the parameter has been changed.
-		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
 		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
 			s.T().Fatal("concentrated liquidity pool creation is not enabled")
 		}

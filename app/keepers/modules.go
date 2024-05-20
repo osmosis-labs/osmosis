@@ -1,5 +1,6 @@
 package keepers
 
+// UNFORKING v2 TODO: Im pretty sure we get rid of this now in favor of NewBasicManagerFromManager
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
@@ -66,7 +67,7 @@ import (
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
-var AppModuleBasics = []module.AppModuleBasic{
+var AppModuleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 	bank.AppModuleBasic{},
@@ -136,4 +137,4 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tendermint.AppModuleBasic{},
 	auction.AppModuleBasic{},
 	smartaccount.AppModuleBasic{},
-}
+)

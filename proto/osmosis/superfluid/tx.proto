@@ -62,6 +62,7 @@ service Msg {
 
 message MsgSuperfluidDelegate {
   option (amino.name) = "osmosis/superfluid-delegate";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
@@ -71,6 +72,7 @@ message MsgSuperfluidDelegateResponse {}
 
 message MsgSuperfluidUndelegate {
   option (amino.name) = "osmosis/superfluid-undelegate";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
@@ -79,6 +81,7 @@ message MsgSuperfluidUndelegateResponse {}
 
 message MsgSuperfluidUnbondLock {
   option (amino.name) = "osmosis/superfluid-unbond-lock";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
@@ -86,6 +89,9 @@ message MsgSuperfluidUnbondLock {
 message MsgSuperfluidUnbondLockResponse {}
 
 message MsgSuperfluidUndelegateAndUnbondLock {
+  option (amino.name) = "osmosis/superfluid-undelegate-unbond-lock";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
   // Amount of unlocking coin.

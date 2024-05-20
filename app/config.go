@@ -16,6 +16,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	keepers "github.com/osmosis-labs/osmosis/v25/app/keepers"
 )
 
 // DefaultConfig returns a default configuration suitable for nearly all
@@ -30,7 +32,7 @@ func DefaultConfig() network.Config {
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor("osmosis-code-test"),
-		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		GenesisState:      keepers.AppModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "osmosis-code-test",
 		NumValidators:     1,

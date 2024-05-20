@@ -12,14 +12,14 @@ import (
 	"regexp"
 	"strings"
 
-	"cosmossdk.io/client/v2/autocli"
-	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	cosmosdb "github.com/cosmos/cosmos-db"
 
@@ -339,6 +339,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
+	tempApp := osmosisapp.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosisapp.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosisapp.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
 	SetCustomEnvVariablesFromClientToml(initClientCtx)
@@ -449,9 +451,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	genAutoCompleteCmd(rootCmd)
 
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, encodingConfig, tempApp)
 
-	if err := autoCliOpts(initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
+	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
@@ -687,7 +689,7 @@ grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCal
 }
 
 // initRootCmd initializes root commands when creating a new root command for simd.
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, tempApp *osmosis.OsmosisApp) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -697,24 +699,24 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	valOperAddressCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
 	rootCmd.AddCommand(
-		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
+		// genutilcli.InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		forceprune(),
-		InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
+		InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, genutiltypes.DefaultMessageValidator, valOperAddressCodec),
 		ExportDeriveBalancesCmd(),
 		StakedToCSVCmd(),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
-		genutilcli.GenTxCmd(osmosis.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, valOperAddressCodec),
-		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
-		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
+		genutilcli.GenTxCmd(tempApp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, valOperAddressCodec),
+		genutilcli.ValidateGenesisCmd(tempApp.ModuleBasics),
+		PrepareGenesisCmd(osmosis.DefaultNodeHome, tempApp.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(tempApp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debugCmd,
 		ConfigCmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
 		PrintAllEnvironmentCmd(),
-		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
+		UpdateAssetListCmd(osmosis.DefaultNodeHome, tempApp.ModuleBasics),
 		snapshot.Cmd(newApp),
 		pruning.Cmd(newApp, osmosis.DefaultNodeHome),
 	)
@@ -760,8 +762,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		queryCommand(),
-		txCommand(),
+		queryCommand(tempApp.ModuleBasics),
+		txCommand(tempApp.ModuleBasics),
 		keys.Commands(),
 	)
 	// add rosetta
@@ -792,7 +794,7 @@ func CmdModuleNameToAddress() *cobra.Command {
 }
 
 // queryCommand adds transaction and account querying commands.
-func queryCommand() *cobra.Command {
+func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -810,15 +812,15 @@ func queryCommand() *cobra.Command {
 		CmdModuleNameToAddress(),
 	)
 
-	// UNFORKING v2 TODO: Confirm that autoCLI does what we need it to do
-	// osmosis.ModuleBasics.AddQueryCommands(cmd)
+	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but was having issues with AddTxCommands counterpart. See line for comment.
+	moduleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
 // txCommand adds transaction signing, encoding / decoding, and broadcasting commands.
-func txCommand() *cobra.Command {
+func txCommand(moduleBasics module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -838,8 +840,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	// UNFORKING v2 TODO: Confirm that autoCLI does what we need it to do
-	// osmosis.ModuleBasics.AddTxCommands(cmd)
+	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but if we do, then the legacy proposal sub commands will not be available.
+	moduleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -1181,11 +1183,9 @@ func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []Section
 	return nil
 }
 
-func autoCliOpts(initClientCtx client.Context) autocli.AppOptions {
-	app := osmosisapp.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosisapp.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosisapp.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
-
+func autoCliOpts(initClientCtx client.Context, tempApp *osmosis.OsmosisApp) autocli.AppOptions {
 	modules := make(map[string]appmodule.AppModule, 0)
-	for _, m := range app.ModuleManager().Modules {
+	for _, m := range tempApp.ModuleManager().Modules {
 		if moduleWithName, ok := m.(module.HasName); ok {
 			moduleName := moduleWithName.Name()
 			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
@@ -1194,18 +1194,12 @@ func autoCliOpts(initClientCtx client.Context) autocli.AppOptions {
 		}
 	}
 
-	cliKR, err := keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
-	if err != nil {
-		panic(err)
-	}
-
 	return autocli.AppOptions{
 		Modules:               modules,
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager().Modules),
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(tempApp.ModuleManager().Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-		Keyring:               cliKR,
 		ClientCtx:             initClientCtx,
 	}
 }

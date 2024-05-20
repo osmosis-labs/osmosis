@@ -29,6 +29,7 @@ service Msg {
 
 message MsgLockTokens {
   option (amino.name) = "osmosis/lockup/lock-tokens";
+  option (cosmos.msg.v1.signer) = "owner";
 
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [

@@ -126,6 +126,18 @@ import (
 
 	blocksdkabci "github.com/skip-mev/block-sdk/v2/abci"
 	"github.com/skip-mev/block-sdk/v2/abci/checktx"
+
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+
+	clclient "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/client"
+	gammclient "github.com/osmosis-labs/osmosis/v25/x/gamm/client"
+	incentivesclient "github.com/osmosis-labs/osmosis/v25/x/incentives/client"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client"
+	superfluidclient "github.com/osmosis-labs/osmosis/v25/x/superfluid/client"
+	txfeesclient "github.com/osmosis-labs/osmosis/v25/x/txfees/client"
 )
 
 const appName = "OsmosisApp"
@@ -133,11 +145,6 @@ const appName = "OsmosisApp"
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
 	maccPerms = moduleAccountPermissions
@@ -183,6 +190,7 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
+	ModuleBasics module.BasicManager
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
@@ -368,6 +376,8 @@ func NewOsmosisApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
+	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName)
+
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers(app.mm.ModuleNames())...)
 
@@ -383,6 +393,39 @@ func NewOsmosisApp(
 	if err != nil {
 		panic(err)
 	}
+
+	app.ModuleBasics = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			"gov": gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+					// UNFORKING TODO v2: What to do with these
+					// upgradeclient.LegacyProposalHandler,
+					// upgradeclient.LegacyCancelProposalHandler,
+					poolincentivesclient.UpdatePoolIncentivesHandler,
+					poolincentivesclient.ReplacePoolIncentivesHandler,
+					// UNFORKING TODO v2: What to do with these
+					// ibcclientclient.UpdateClientProposalHandler,
+					// ibcclientclient.UpgradeProposalHandler,
+					superfluidclient.SetSuperfluidAssetsProposalHandler,
+					superfluidclient.RemoveSuperfluidAssetsProposalHandler,
+					superfluidclient.UpdateUnpoolWhitelistProposalHandler,
+					gammclient.ReplaceMigrationRecordsProposalHandler,
+					gammclient.UpdateMigrationRecordsProposalHandler,
+					gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
+					gammclient.SetScalingFactorControllerProposalHandler,
+					clclient.CreateConcentratedLiquidityPoolProposalHandler,
+					clclient.TickSpacingDecreaseProposalHandler,
+					cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+					cwpoolclient.MigratePoolContractsProposalHandler,
+					txfeesclient.SubmitUpdateFeeTokenProposalHandler,
+					poolmanagerclient.DenomPairTakerFeeProposalHandler,
+					incentivesclient.HandleCreateGroupsProposal,
+				},
+			),
+		},
+	)
 
 	app.setupUpgradeHandlers()
 
@@ -496,10 +539,13 @@ func NewOsmosisApp(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
 	app.SetPostHandler(NewPostHandler(appCodec, app.ProtoRevKeeper, app.SmartAccountKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
 	app.SetEndBlocker(app.EndBlocker)
+	app.SetPrecommiter(app.Precommitter)
+	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
 	// Register snapshot extensions to enable state-sync for wasm.
 	if manager := app.SnapshotManager(); manager != nil {
@@ -864,6 +910,19 @@ func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 // Name returns the name of the App.
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
+// PreBlocker application updates before each begin block.
+func (app *OsmosisApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	// Set gas meter to the free gas meter.
+	// This is because there is currently non-deterministic gas usage in the
+	// pre-blocker, e.g. due to hydration of in-memory data structures.
+	//
+	// Note that we don't need to reset the gas meter after the pre-blocker
+	// because Go is pass by value.
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	mm := app.ModuleManager()
+	return mm.PreBlock(ctx)
+}
+
 // BeginBlocker application updates every begin block.
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
@@ -873,6 +932,21 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return app.mm.EndBlock(ctx)
+}
+
+// Precommitter application updates before the commital of a block after all transactions have been delivered.
+func (app *OsmosisApp) Precommitter(ctx sdk.Context) {
+	mm := app.ModuleManager()
+	if err := mm.Precommit(ctx); err != nil {
+		panic(err)
+	}
+}
+
+func (app *OsmosisApp) PrepareCheckStater(ctx sdk.Context) {
+	mm := app.ModuleManager()
+	if err := mm.PrepareCheckState(ctx); err != nil {
+		panic(err)
+	}
 }
 
 // InitChainer application update at chain initialization.
@@ -927,7 +1001,10 @@ func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	module.NewBasicManagerFromManager(app.mm, nil).RegisterGRPCGatewayRoutes(
+		clientCtx,
+		apiSvr.GRPCGatewayRouter,
+	)
 
 	// Register node gRPC service for grpc-gateway.
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)

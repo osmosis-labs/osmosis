@@ -36,6 +36,10 @@ import (
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
 
+type ParamsResponse struct {
+	Param params `json:"param"`
+}
+
 // The value is returned as a string, so we have to unmarshal twice
 type params struct {
 	Key      string `json:"key"`
@@ -186,19 +190,30 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
 // specify the QueryParamResponse type (which may not exist for all params).
-func (n *NodeConfig) QueryParams(subspace, key string) string {
+func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 
-	result := &params{}
-	err = json.Unmarshal(out.Bytes(), &result)
+	fmt.Println(out.String())
+
+	var value string
+	if prev26 {
+		result := &params{}
+		err = json.Unmarshal(out.Bytes(), &result)
+		value = result.Value
+	} else {
+		result := &ParamsResponse{}
+		err = json.Unmarshal(out.Bytes(), &result)
+		value = result.Param.Value
+	}
 	require.NoError(n.t, err)
-	return result.Value
+	return value
 }
 
-func (n *NodeConfig) QueryGovModuleAccount() string {
+// TODO: Post v26, can be removed
+func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
@@ -209,10 +224,22 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 	for _, acc := range result["accounts"] {
 		account, ok := acc.(map[string]interface{})
 		require.True(n.t, ok)
-		if account["name"] == "gov" {
-			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+		if prev26 {
+			if account["name"] == "gov" {
+				baseAccount, ok := account["base_account"].(map[string]interface{})
+				require.True(n.t, ok)
+				moduleAccount, ok := baseAccount["address"].(string)
+				require.True(n.t, ok)
+				return moduleAccount
+			}
+		} else {
+			value, ok := account["value"].(map[string]interface{})
 			require.True(n.t, ok)
-			return moduleAccount
+			if value["name"] == "gov" {
+				moduleAccount, ok := value["address"].(string)
+				require.True(n.t, ok)
+				return moduleAccount
+			}
 		}
 	}
 	require.True(n.t, false, "gov module account not found")
@@ -586,7 +613,7 @@ type resultStatus struct {
 
 func (n *NodeConfig) Status() (resultStatus, error) {
 	cmd := []string{"osmosisd", "status"}
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	if err != nil {
 		return resultStatus{}, err
 	}
@@ -594,7 +621,7 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 	cfg := app.MakeEncodingConfig()
 	legacyAmino := cfg.Amino
 	var result resultStatus
-	err = legacyAmino.UnmarshalJSON(errBuf.Bytes(), &result)
+	err = legacyAmino.UnmarshalJSON(outBuf.Bytes(), &result)
 	fmt.Println("result", result)
 
 	if err != nil {
@@ -741,7 +768,7 @@ func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount osmomath.
 }
 
 // TODO remove chain from this as input
-func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config, isLegacy bool) (string, error) {
+func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config, isLegacy, prev26 bool) (string, error) {
 	srcNode, err := chain.GetNodeAtIndex(1)
 	require.NoError(n.t, err)
 
@@ -784,7 +811,7 @@ func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config, is
 	require.Eventually(
 		n.t,
 		func() bool {
-			val := srcNode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			val := srcNode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress), prev26)
 			return strings.Contains(val, contract)
 		},
 		1*time.Minute,
