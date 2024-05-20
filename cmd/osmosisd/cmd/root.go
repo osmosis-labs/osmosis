@@ -23,6 +23,8 @@ import (
 
 	cosmosdb "github.com/cosmos/cosmos-db"
 
+	confixcmd "cosmossdk.io/tools/confix/cmd"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
@@ -711,7 +713,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(tempApp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debugCmd,
-		ConfigCmd(),
+		confixcmd.ConfigCommand(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
 		PrintAllEnvironmentCmd(),

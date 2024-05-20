@@ -45,6 +45,7 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// UNFORKING v2 TODO: I think there is just one new gov param that is not registered, which is why this is needed. Need to figure out what it is rather than re-setting all params.
 		// Set all gov params explicitly. E2E had issues when this was not done, so setting this here to ensure no issues on mainnet.
 		var newGovParams govv1.Params
 		if ctx.ChainID() == mainnetChainID || ctx.ChainID() == edgenetChainID {
