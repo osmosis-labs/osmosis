@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.SplitRouteSwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSplitRouteSwapExactAmountIn{
+			response, err := msgServer.SplitRouteSwapExactAmountIn(ctx, &types.MsgSplitRouteSwapExactAmountIn{
 				Sender:            s.TestAccs[0].String(),
 				Routes:            tc.routes,
 				TokenInDenom:      tc.tokenInDenom,
@@ -187,7 +187,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.SplitRouteSwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSplitRouteSwapExactAmountOut{
+			response, err := msgServer.SplitRouteSwapExactAmountOut(ctx, &types.MsgSplitRouteSwapExactAmountOut{
 				Sender:           s.TestAccs[0].String(),
 				Routes:           tc.routes,
 				TokenOutDenom:    tc.tokenOutDenom,

@@ -146,7 +146,7 @@ func(s *KeeperTestSuite) TestCreateDenom() {
             queryClient := suite.queryClient
 
             // Create a denom
-            res, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+            res, err := msgServer.CreateDenom(ctx, types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
 
             if !tc.expectError {
                 suite.Require().NoError(err)

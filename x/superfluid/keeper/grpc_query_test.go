@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	for _, denom := range denoms {
-		res, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
+		res, err := querier.TotalDelegationByValidatorForDenom(ctx, &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
 
 		s.Require().NoError(err)
 		s.Require().Equal(len(valAddrs), len(res.Assets))
