@@ -376,6 +376,9 @@ func NewOsmosisApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
+	// UNFORKING v2 TODO: https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#set-preblocker
+	// The upgrading doc says we need to add upgrade types to pre blocker (done here), but also says we
+	// need to remove it from begin blocker. If we need to actually remove it, we need to change the SetOrderBeginBlockers logic.
 	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName)
 
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
@@ -394,6 +397,8 @@ func NewOsmosisApp(
 		panic(err)
 	}
 
+	// UNFORKING v2 TODO: Verify that the NewBasicManagerFromManager call is correct.
+	// Notice I have to override the gov ModuleBasic with all the custom proposal handers, otherwise we lose them in the CLI.
 	app.ModuleBasics = module.NewBasicManagerFromManager(
 		app.mm,
 		map[string]module.AppModuleBasic{

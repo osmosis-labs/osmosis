@@ -23,7 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// UNFORKING v2 TODO: I added these to every module, need to go back and make sure they all apply to every module
+// UNFORKING v2 TODO: I added these to every module, verify they all apply to every module
 var (
 	_ module.AppModuleBasic   = AppModuleBasic{}
 	_ module.HasGenesisBasics = AppModuleBasic{}

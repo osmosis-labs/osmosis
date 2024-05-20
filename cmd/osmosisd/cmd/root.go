@@ -451,6 +451,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig, tempApp)
 
+	// UNFORKING v2 TODO: I don't think we have an option but to implement this. With out, the sdk queries do not show up in the CLI.
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
