@@ -1753,6 +1753,7 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.9/go.mod h1:jROhCibKGjWW1IyPaCFUIE
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15 h1:bUBZwiMibgQWQQSqyMPqj0p54hpsDwbkCpNROWdWYJk=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15/go.mod h1:c72yyA6FvQNgOm/NxQuDXQfRpYy2JCJpf1o+G4kFuyM=
 github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240518180933-518a93302cf3 h1:HC55ux6f2cxRgjqPOEflQAuhXVLXPznxR06PWlcKOhg=
+github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240518180933-518a93302cf3/go.mod h1:zIr5aJJuPrh/O4C/6ehpdrl1VT6Hs0yjAVP6f/vFJuc=
 github.com/osmosis-labs/wasmd v0.45.0-osmo h1:NIp7pvJV5HuBN1HwPgEmXKQM2TjVIVdJErIHnB9IMO8=
 github.com/osmosis-labs/wasmd v0.45.0-osmo/go.mod h1:J6eRvwii5T1WxhetZkBg1kOJS3GTn1Bw2OLyZBb8EVU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
