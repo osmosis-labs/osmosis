@@ -85,7 +85,7 @@ docs:
 	@echo
 	@echo "=========== Generate Message ============"
 	@echo
-	@make proto-download-deps
+# @make proto-download-deps
 	./scripts/generate-docs.sh
 
 	statik -src=client/docs/static -dest=client/docs -f -m
