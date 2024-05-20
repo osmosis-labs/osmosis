@@ -64,7 +64,7 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdom
 		// Using the built-in GRPC retry back-off logic is likely to halt the serial system.
 		// As a result, we opt in for simply continuing to attempting to process the next block
 		// and retrying the connection and ingest
-		g.grpcConn, err = grpc.Dial(g.grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(g.grpcMaxCallSizeBytes)), grpc.WithDisableRetry(), grpc.WithDisableRetry())
+		g.grpcConn, err = grpc.NewClient(g.grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(g.grpcMaxCallSizeBytes)), grpc.WithDisableRetry(), grpc.WithDisableRetry())
 		if err != nil {
 			shouldResetConnection = true
 			return err
