@@ -134,7 +134,7 @@ func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *Osmosis
 			}
 		}
 
-		app.InitChain(
+		_, err := app.InitChain(
 			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
@@ -142,6 +142,9 @@ func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *Osmosis
 				ChainId:         chainId,
 			},
 		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return app
@@ -171,7 +174,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 			panic(err)
 		}
 
-		app.InitChain(
+		_, err = app.InitChain(
 			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
@@ -179,6 +182,9 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 				ChainId:         "osmosis-1",
 			},
 		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	cleanupFn = func() {

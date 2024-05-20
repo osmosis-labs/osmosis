@@ -118,6 +118,7 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // Returns error on an invalid db instantiation or temp dir creation.
 // nolint: revive
 func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db cosmosdb.DB, logger log.Logger, cleanup func(), err error) {
+	tb.Helper()
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil
 	}

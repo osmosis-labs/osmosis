@@ -82,7 +82,10 @@ func (simState *simState) SimulateAllBlocks(
 			break
 		}
 
-		simCtx.BaseApp().Commit()
+		_, err := simCtx.BaseApp().Commit()
+		if err != nil {
+			return stopEarly, err
+		}
 	}
 
 	if !stopEarly {

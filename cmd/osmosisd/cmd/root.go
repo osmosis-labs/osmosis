@@ -24,7 +24,6 @@ import (
 	cosmosdb "github.com/cosmos/cosmos-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
@@ -61,7 +60,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -334,12 +332,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
-		WithAccountRetriever(types.AccountRetriever{}).
+		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
-	tempApp := osmosisapp.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosisapp.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosisapp.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosis.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms

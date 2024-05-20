@@ -15,7 +15,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -125,7 +124,10 @@ func (s *KeeperTestHelper) Setup() {
 			false,
 			0,
 		)
-		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+		err := s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -152,7 +154,10 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 			false,
 			0,
 		)
-		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+		err := s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -227,7 +232,7 @@ func (s *KeeperTestHelper) setupGeneral() {
 }
 
 func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {
-	s.Ctx = s.App.BaseApp.NewContextLegacy(false, tmtypes.Header{Height: 1, ChainID: chainId, Time: defaultTestStartTime})
+	s.Ctx = s.App.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1, ChainID: chainId, Time: defaultTestStartTime})
 	if s.withCaching {
 		s.Ctx, _ = s.Ctx.CacheContext()
 	}
@@ -246,7 +251,7 @@ func (s *KeeperTestHelper) setupGeneralCustomChainId(chainId string) {
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(true)
-	s.Ctx = s.App.BaseApp.NewContextLegacy(true, tmtypes.Header{})
+	s.Ctx = s.App.BaseApp.NewContextLegacy(true, cmtproto.Header{})
 	// TODO: not sure
 	s.hasUsedAbci = true
 }
@@ -289,7 +294,7 @@ func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, store
 
 	ms := rootmulti.NewStore(db, logger, storemetrics.NewNoOpMetrics())
 
-	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms
+	return sdk.NewContext(ms, cmtproto.Header{}, false, logger), ms
 }
 
 // CreateTestContext creates a test context.
@@ -298,7 +303,7 @@ func (s *KeeperTestHelper) Commit() {
 	// oldHeight := s.Ctx.BlockHeight()
 	// oldHeader := s.Ctx.BlockHeader()
 	// s.App.Commit()
-	// newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
+	// newHeader := cmtproto.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	// // UNFORKING v2 TODO: Need to better understand how we want to run BeginBlock
 	// // s.App.BeginBlocker(abci.RequestBeginBlock{Header: newHeader})
 	// _, err := s.App.BeginBlocker(s.Ctx)
@@ -349,6 +354,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	bondDenom := stakingParams.BondDenom
 	bondAmt := sdk.DefaultPowerReduction
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: bondAmt, Denom: bondDenom})
@@ -368,7 +374,8 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	s.Require().NoError(err)
 
 	val = val.UpdateStatus(bondStatus)
-	s.App.StakingKeeper.SetValidator(s.Ctx, val)
+	err = s.App.StakingKeeper.SetValidator(s.Ctx, val)
+	s.Require().NoError(err)
 
 	consAddr, err := val.GetConsAddr()
 	s.Suite.Require().NoError(err)
@@ -380,7 +387,8 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 		false,
 		0,
 	)
-	s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+	err = s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
+	s.Require().NoError(err)
 
 	return valAddr
 }
@@ -433,7 +441,7 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 		newBlockTime = s.Ctx.BlockTime().Add(epoch.Duration).Add(time.Second)
 	}
 
-	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
+	header := cmtproto.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	s.Ctx = s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
 	voteInfos := []abci.VoteInfo{{
 		Validator:   abci.Validator{Address: valAddr, Power: 1000},
@@ -486,7 +494,8 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 	// allocate rewards to validator
 	s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
 	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: osmomath.NewDec(20000)}}
-	s.App.DistrKeeper.AllocateTokensToValidator(s.Ctx, validator, decTokens)
+	err = s.App.DistrKeeper.AllocateTokensToValidator(s.Ctx, validator, decTokens)
+	s.Require().NoError(err)
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.

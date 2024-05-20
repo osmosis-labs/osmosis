@@ -606,7 +606,7 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	}
 
 	// this is for getting normal staking
-	q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
+	err = q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
 		valAddr, err := sdk.ValAddressFromBech32(del.GetValidatorAddr())
 		if err != nil {
 			return true
@@ -634,6 +634,9 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 
 		return false
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &res, nil
 }

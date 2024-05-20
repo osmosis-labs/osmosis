@@ -103,7 +103,10 @@ func CreateUpgradeHandler(
 		}
 		consensusParams.Evidence.MaxAgeNumBlocks = NewMaxAgeNumBlocks
 		consensusParams.Evidence.MaxAgeDuration = NewMaxAgeDuration
-		keepers.ConsensusParamsKeeper.ParamsStore.Set(ctx, consensusParams)
+		err = keepers.ConsensusParamsKeeper.ParamsStore.Set(ctx, consensusParams)
+		if err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}
@@ -157,7 +160,7 @@ func migrateAllTestnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper conc
 // This corrects a mistake that was overlooked in v24, where we cleared all missedBlocks but did not reset the counter.
 func resetMissedBlocksCounter(ctx sdk.Context, slashingKeeper *slashing.Keeper) {
 	// Iterate over all validators signing info
-	slashingKeeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err := slashingKeeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 		missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, address)
 		if err != nil {
 			panic(err)
@@ -165,8 +168,14 @@ func resetMissedBlocksCounter(ctx sdk.Context, slashingKeeper *slashing.Keeper) 
 
 		// Reset missed blocks counter
 		info.MissedBlocksCounter = int64(len(missedBlocks))
-		slashingKeeper.SetValidatorSigningInfo(ctx, address, info)
+		err = slashingKeeper.SetValidatorSigningInfo(ctx, address, info)
+		if err != nil {
+			panic(err)
+		}
 
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 }

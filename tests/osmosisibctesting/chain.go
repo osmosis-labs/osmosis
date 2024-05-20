@@ -21,7 +21,6 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -314,7 +313,7 @@ func SignAndDeliverWithAuthenticator(
 	ctx sdk.Context,
 	txCfg client.TxConfig,
 	app *baseapp.BaseApp,
-	header tmproto.Header,
+	header cmtproto.Header,
 	msgs []sdk.Msg,
 	chainID string,
 	accNums,
@@ -426,6 +425,9 @@ func SignAuthenticatorMsg(
 		}
 		signBytes, err := authsigning.GetSignBytesAdapter(
 			ctx, gen.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
+		if err != nil {
+			return nil, err
+		}
 		sig, err := p.Sign(signBytes)
 		if err != nil {
 			return nil, err
@@ -526,7 +528,7 @@ func SignAndDeliverWithAuthenticatorAndCompoundSigs(
 	ctx sdk.Context,
 	txCfg client.TxConfig,
 	app *baseapp.BaseApp,
-	header tmproto.Header,
+	header cmtproto.Header,
 	msgs []sdk.Msg,
 	chainID string,
 	accNums, accSeqs []uint64,

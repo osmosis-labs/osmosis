@@ -15,7 +15,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 
-	"github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -54,7 +53,7 @@ which would keep blockchain and state data of last 188000 blocks (approximately 
 			}
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			conf := config.DefaultConfig()
+			conf := cmtcfg.DefaultConfig()
 			dbPath := clientCtx.HomeDir + "/" + conf.DBPath
 
 			cmdr := exec.Command("osmosisd", "status")
@@ -119,15 +118,15 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	startHeight = bs.Base()
 	currentHeight = bs.Height()
 
-	config := config.DefaultConfig()
+	defaultConfig := cmtcfg.DefaultConfig()
 
-	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: config})
+	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: defaultConfig})
 	if err != nil {
 		return 0, 0, err
 	}
 
 	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
-		DiscardABCIResponses: config.Storage.DiscardABCIResponses,
+		DiscardABCIResponses: defaultConfig.Storage.DiscardABCIResponses,
 	})
 
 	// Can use blank string for genesis file since state will not be empty if we are pruning, and therefore is not used.

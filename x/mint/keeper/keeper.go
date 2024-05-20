@@ -307,7 +307,11 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-	maccI := (k.accountKeeper.NewAccount(ctx, moduleAcc)).(sdk.ModuleAccountI) // this sets the account number
+	maccI, ok := (k.accountKeeper.NewAccount(ctx, moduleAcc)).(sdk.ModuleAccountI) // this sets the account number
+	if !ok {
+		return fmt.Errorf("account of type %T doesn't implement sdk.ModuleAccountI", moduleAcc)
+	}
+
 	k.accountKeeper.SetModuleAccount(ctx, maccI)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))

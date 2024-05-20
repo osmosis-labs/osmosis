@@ -709,17 +709,26 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	iterator.Close()
 
 	// Add our validator to power and last validators store
-	app.StakingKeeper.SetValidator(ctx, newVal)
+	err = app.StakingKeeper.SetValidator(ctx, newVal)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
+	err = app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	valAddr, err := sdk.ValAddressFromBech32(newVal.GetOperator())
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	app.StakingKeeper.SetLastValidatorPower(ctx, valAddr, 0)
+	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddr, 0)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr); err != nil {
 		panic(err)
 	}
@@ -732,10 +741,22 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, distrtypes.InitialValidatorAccumulatedCommission())
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	err = app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, distrtypes.InitialValidatorAccumulatedCommission())
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 
 	// SLASHING
 	//
@@ -747,7 +768,10 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		StartHeight: app.LastBlockHeight() - 1,
 		Tombstoned:  false,
 	}
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+	err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 
 	//
 	// Optional Changes:
@@ -956,7 +980,10 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) 
 		panic(err)
 	}
 
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	if err != nil {
+		panic(err)
+	}
 
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
