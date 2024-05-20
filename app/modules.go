@@ -169,8 +169,7 @@ func appModules(
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		downtimemodule.NewAppModule(*app.DowntimeKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-		// UNFORKING v2 TODO: Is hard code osmo right here?
-		upgrade.NewAppModule(app.UpgradeKeeper, addresscodec.NewBech32Codec("osmo")),
+		upgrade.NewAppModule(app.UpgradeKeeper, addresscodec.NewBech32Codec(appparams.Bech32PrefixAccAddr)),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, *app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),

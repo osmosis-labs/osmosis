@@ -18,7 +18,8 @@ func MakeEncodingConfig() params.EncodingConfig {
 	encodingConfig := params.MakeEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	keepers.AppModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	// UNFORKING v2 TODO: Verify that we no longer need to register legacy amino codec
+	// keepers.AppModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	keepers.AppModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }

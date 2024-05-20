@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]int64{},
-			[]int64{}, // UNFORKING v2 TODO: We no longer can slash unbonded validators
+			[]int64{}, // UNFORKING v2 TODO: We no longer can slash unbonded validators, verify that this is correct
 		},
 	}
 

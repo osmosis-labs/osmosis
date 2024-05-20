@@ -234,7 +234,7 @@ func GenerateAuthenticationRequest(
 	}
 
 	// Get the signer data for the account. This is needed in the SignDoc
-	// UNFORKING v2 TODO: Use a single method and maybe type case as needed
+	// UNFORKING v2 TODO: Use a single method and maybe type case as needed, instead of using a whole new getSignerDataOld method
 	signerData := getSignerData(ctx, ak, account)
 	signerDataOld := getSignerDataOld(ctx, ak, account)
 

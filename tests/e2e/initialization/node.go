@@ -285,7 +285,7 @@ func (n *internalNode) init() error {
 
 	genDoc.ChainID = n.chain.chainMeta.Id
 	// UNFORKING v2 TODO: This used to be genDoc.Consensus.Validators = nil, but got the error that Consensus can't be nil.
-	// Unsure if this is the correct fix.
+	// Verify that this is the correct fix.
 	genDoc.Consensus = &genutiltypes.ConsensusGenesis{}
 	genDoc.AppState = appState
 
@@ -383,7 +383,7 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(uint64(200000 * len(msgs)))
 
-	// UNFORKING v2 TODO: This probably is wrong (the type cast), but I can't tell until after it compiles.
+	// UNFORKING v2 TODO: Verify that the type casting to V2AdaptableTx is correct.
 	adaptableTx, ok := txBuilder.GetTx().(authsigning.V2AdaptableTx)
 	if !ok {
 		return nil, fmt.Errorf("expected tx to be V2AdaptableTx, got %T", adaptableTx)
@@ -424,7 +424,8 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	}
 
 	bytesToSign, err := util.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
-		// UNFORKING v2 TODO: Empty context should be fine due to sign mode direct and not textual.
+		// UNFORKING v2 TODO: Verify that empty context is fine due to sign mode direct and not textual.
+		// Should we be expecting to eventually support textual mode?
 		context.Background(),
 		signingv1beta1.SignMode_SIGN_MODE_DIRECT,
 		signerData,

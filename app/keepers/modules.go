@@ -1,6 +1,8 @@
 package keepers
 
-// UNFORKING v2 TODO: Im pretty sure we get rid of this now in favor of NewBasicManagerFromManager
+// UNFORKING v2 TODO: Eventually should get rid of this in favor of NewBasicManagerFromManager
+// Right now is strictly used for default genesis creation and registering codecs prior to app init
+// Unclear to me how to use NewBasicManagerFromManager for this purpose though prior to app init
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
