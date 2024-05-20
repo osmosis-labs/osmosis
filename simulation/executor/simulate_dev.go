@@ -103,7 +103,25 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 		return true, nil
 	}
 
-	requestBeginBlock := simState.beginBlock(simCtx)
+	// Run the BeginBlock handler
+	simState.logWriter.AddEntry(BeginBlockEntry(simState.header.Height))
+
+	finalizeBlockReq := RandomRequestFinalizeBlock(
+		simCtx.GetRand(),
+		simState.simParams,
+		simState.curValidators,
+		simState.pastTimes,
+		simState.pastVoteInfos,
+		simState.eventStats.Tally,
+		simState.header.Height,
+		simState.header.Time,
+		simState.curValidators.randomProposer(simCtx.GetRand()).Bytes(),
+	)
+
+	responseFinalizeBlock, err := simCtx.BaseApp().FinalizeBlock(finalizeBlockReq)
+	if err != nil {
+		return true, err
+	}
 	ctx := simCtx.BaseApp().NewContextLegacy(false, simState.header).WithBlockTime(simState.header.Time)
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
@@ -121,34 +139,17 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 		return true, err
 	}
 
-	responseEndBlock := simState.endBlock(simCtx)
-
-	err = simState.prepareNextSimState(simCtx, requestBeginBlock, responseEndBlock)
+	err = simState.prepareNextSimState(simCtx, finalizeBlockReq, responseFinalizeBlock)
 	if err != nil {
 		return true, err
 	}
 	return false, nil
 }
 
-func (simState *simState) beginBlock(simCtx *simtypes.SimCtx) abci.RequestBeginBlock {
-	// Generate a random RequestBeginBlock with the current validator set
-	requestBeginBlock := RandomRequestBeginBlock(simCtx.GetRand(), simState.simParams, simState.curValidators, simState.pastTimes, simState.pastVoteInfos, simState.eventStats.Tally, simState.header)
-	// Run the BeginBlock handler
-	simState.logWriter.AddEntry(BeginBlockEntry(simState.header.Height))
-	simCtx.BaseApp().BeginBlock(requestBeginBlock)
-	return requestBeginBlock
-}
-
-func (simState *simState) endBlock(simCtx *simtypes.SimCtx) abci.ResponseEndBlock {
-	res := simCtx.BaseApp().EndBlock(abci.RequestEndBlock{})
-	simState.logWriter.AddEntry(EndBlockEntry(simState.header.Height))
-	return res
-}
-
-func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.RequestBeginBlock, res abci.ResponseEndBlock) error {
+func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req *abci.RequestFinalizeBlock, res *abci.ResponseFinalizeBlock) error {
 	// Log the current block's header time for future lookup
 	simState.pastTimes = append(simState.pastTimes, simState.header.Time)
-	simState.pastVoteInfos = append(simState.pastVoteInfos, req.LastCommitInfo.Votes)
+	simState.pastVoteInfos = append(simState.pastVoteInfos, req.DecidedLastCommit.Votes)
 
 	// increase header height by one
 	simState.header.Height++
