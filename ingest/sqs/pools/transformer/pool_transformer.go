@@ -390,7 +390,6 @@ func (pi *poolTransformer) computeUOSMOPoolLiquidityCap(ctx sdk.Context, balance
 			if uosmoBaseAssetSpotPrice.IsZero() {
 				poolLiquidityCapErrorStr = "failed to calculate spot price due to it becoming zero from truncations " + balance.Denom
 				continue
-
 			}
 		}
 
