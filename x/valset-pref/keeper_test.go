@@ -174,7 +174,7 @@ func (s *KeeperTestSuite) TestGetDelegationPreference() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
 

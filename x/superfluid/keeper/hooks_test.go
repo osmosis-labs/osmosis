@@ -364,7 +364,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 
 	for index, lock := range locks {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], osmomath.NewInt(100)))
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 		s.FundAcc(sender, coinsToLock)

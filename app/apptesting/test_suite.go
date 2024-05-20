@@ -366,7 +366,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr.String(), valPub, stakingCoin, testDescription, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
-	res, err := stakingMsgSvr.CreateValidator(sdk.WrapSDKContext(s.Ctx), valCreateMsg)
+	res, err := stakingMsgSvr.CreateValidator(s.Ctx, valCreateMsg)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
 
@@ -587,7 +587,7 @@ func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, dura
 	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
 	s.FundAcc(addr, coins)
 
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	msgResponse, err := msgServer.LockTokens(s.Ctx, lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	s.Require().NoError(err)
 
 	return msgResponse.ID
@@ -596,7 +596,7 @@ func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, dura
 // LockTokensNoFund locks tokens and returns a lockID.
 func (s *KeeperTestHelper) LockTokensNoFund(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
 	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	msgResponse, err := msgServer.LockTokens(s.Ctx, lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	s.Require().NoError(err)
 	return msgResponse.ID
 }

@@ -53,13 +53,13 @@ func (s *KeeperTestSuite) TestMsgLockTokens() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 		if test.expectPass {
 			// creation of lock via LockTokens
 			msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-			_, _ = msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			_, _ = msgServer.LockTokens(s.Ctx, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 			// Check Locks
 			locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestMsgLockTokens() {
 			// add more tokens to lock via LockTokens
 			s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-			_, err = msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
+			_, err = msgServer.LockTokens(s.Ctx, types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
 			s.Require().NoError(err)
 
 			// check locks after adding tokens to lock
@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) TestMsgBeginUnlocking() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-		goCtx := sdk.WrapSDKContext(s.Ctx)
+		goCtx := s.Ctx
 		resp, err := msgServer.LockTokens(goCtx, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -321,7 +321,7 @@ func (s *KeeperTestSuite) TestMsgEditLockup() {
 		s.Require().NoError(err)
 
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -425,7 +425,7 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 
 		// lock tokens
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 
 		poolDenom := gammtypes.GetPoolShareDenom(poolId)
 		coinsToLock := sdk.Coins{sdk.NewCoin(poolDenom, defaultLockAmount)}
@@ -513,7 +513,7 @@ func (s *KeeperTestSuite) TestSetRewardReceiverAddress() {
 		s.Require().Equal(lock.RewardReceiverAddress, "")
 
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 
 		owner := s.TestAccs[0]
 		if !test.param.isOwner {

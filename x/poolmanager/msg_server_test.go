@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
-			response, err := msgServer.SetDenomPairTakerFee(sdk.WrapSDKContext(s.Ctx), &types.MsgSetDenomPairTakerFee{
+			response, err := msgServer.SetDenomPairTakerFee(s.Ctx, &types.MsgSetDenomPairTakerFee{
 				Sender:            tc.denomPairTakerFeeMessage.Sender,
 				DenomPairTakerFee: tc.denomPairTakerFeeMessage.DenomPairTakerFee,
 			})

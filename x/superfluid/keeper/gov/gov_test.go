@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			s.SetupTest()
 
 			// initial check
-			resp, err := s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+			resp, err := s.querier.AllAssets(s.Ctx, &types.AllAssetsRequest{})
 			s.Require().NoError(err)
 			s.Require().Len(resp.Assets, 0)
 
@@ -169,13 +169,13 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets individually
 				for _, asset := range action.expectedAssets {
-					res, err := s.querier.AssetType(sdk.WrapSDKContext(s.Ctx), &types.AssetTypeRequest{Denom: asset.Denom})
+					res, err := s.querier.AssetType(s.Ctx, &types.AssetTypeRequest{Denom: asset.Denom})
 					s.Require().NoError(err)
 					s.Require().Equal(res.AssetType, asset.AssetType, "tcname %s, action num %d", tc.name, i)
 				}
 
 				// check assets
-				resp, err = s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+				resp, err = s.querier.AllAssets(s.Ctx, &types.AllAssetsRequest{})
 				s.Require().NoError(err)
 				s.Require().Equal(resp.Assets, action.expectedAssets)
 			}

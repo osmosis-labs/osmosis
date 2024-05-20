@@ -9,7 +9,6 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -54,7 +53,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		testSetup              func()
 		path                   string
 		requestData            func() []byte
-		responseProtoStruct    codec.ProtoMarshaler
+		responseProtoStruct    proto.Message
 		expectedQuerierError   bool
 		expectedUnMarshalError bool
 		resendRequest          bool
@@ -300,9 +299,9 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	testCases := []struct {
 		name                  string
 		queryPath             string
-		protoResponseStruct   codec.ProtoMarshaler
+		protoResponseStruct   proto.Message
 		originalResponse      string
-		expectedProtoResponse codec.ProtoMarshaler
+		expectedProtoResponse proto.Message
 		expectedError         bool
 	}{
 		{

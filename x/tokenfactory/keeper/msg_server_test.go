@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 	// Create a denom.
 	s.CreateDefaultDenom()
 	// mint 10 default token for testAcc[0]
-	_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	_, err := s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
 	s.Require().NoError(err)
 
 	for _, tc := range []struct {
@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestForceTransferMsg() {
 	s.Run(fmt.Sprintf("test force transfer"), func() {
 		mintAmt := sdk.NewInt64Coin(s.defaultDenom, 10)
 
-		_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), mintAmt))
+		_, err := s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), mintAmt))
 
 		govModAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName)
 

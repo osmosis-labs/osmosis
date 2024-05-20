@@ -649,7 +649,7 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
 	// valset test setup
 	// SetValidatorSetPreference sets a new list of val-set
 	msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-	c := sdk.WrapSDKContext(s.Ctx)
+	c := s.Ctx
 
 	// SetValidatorSetPreference sets a new list of val-set
 	_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(delegator, valPreferences))

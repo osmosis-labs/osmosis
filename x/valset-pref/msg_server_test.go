@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestSetValidatorSetPreference() {
 		s.Run(test.name, func() {
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			if test.setExistingDelegations {
 				amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
@@ -243,7 +243,7 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 		s.Run(test.name, func() {
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			s.FundAcc(test.delegator, amountToFund)
 
@@ -472,7 +472,7 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 // 			// setup message server
 // 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-// 			c := sdk.WrapSDKContext(s.Ctx)
+// 			c := s.Ctx
 
 // 			if test.setValSet {
 // 				// SetValidatorSetPreference sets a new list of val-set
@@ -703,7 +703,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromRebalancedValidatorSet() {
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			if test.setValSet {
 				// SetValidatorSetPreference sets a new list of val-set
@@ -885,7 +885,7 @@ func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
 		s.Run(test.name, func() {
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			// fund the account that is trying to delegate
 			s.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
@@ -962,7 +962,7 @@ func (s *KeeperTestSuite) TestWithdrawDelegationRewards() {
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			ctx := s.Ctx
 			// setup test for only valset delegation
@@ -1080,7 +1080,7 @@ func (s *KeeperTestSuite) TestDelegateBondedTokens() {
 		s.Run(test.name, func() {
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			// creates a validator preference list to delegate to
 			preferences := s.PrepareDelegateToValidatorSet()

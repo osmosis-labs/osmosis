@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	preCreateBalance := bankKeeper.GetBalance(s.Ctx, s.TestAccs[0], denomCreationFee[0].Denom)
 
 	// Creating a denom should work
-	res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	res, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 	s.Require().NoError(err)
 	s.Require().NotEmpty(res.GetNewTokenDenom())
 
@@ -50,11 +50,11 @@ func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	s.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee[0]))
 
 	// Make sure that a second version of the same denom can't be recreated
-	_, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	_, err = s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 	s.Require().Error(err)
 
 	// Creating a second denom should work
-	res, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "litecoin"))
+	res, err = s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "litecoin"))
 	s.Require().NoError(err)
 	s.Require().NotEmpty(res.GetNewTokenDenom())
 
@@ -66,12 +66,12 @@ func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	s.Require().Len(queryRes2.Denoms, 2)
 
 	// Make sure that a second account can create a denom with the same subdenom
-	res, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[1].String(), "bitcoin"))
+	res, err = s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[1].String(), "bitcoin"))
 	s.Require().NoError(err)
 	s.Require().NotEmpty(res.GetNewTokenDenom())
 
 	// Make sure that an address with a "/" in it can't create denoms
-	_, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
+	_, err = s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
 	s.Require().Error(err)
 }
 
@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 			desc:             "subdenom and creator pair already exists",
 			denomCreationFee: defaultDenomCreationFee,
 			setup: func() {
-				_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+				_, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 				s.Require().NoError(err)
 			},
 			subdenom: "bitcoin",
@@ -154,7 +154,7 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 
 			// note balance, create a tokenfactory denom, then note balance again
 			preCreateBalance := bankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
-			res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
+			res, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
 			postCreateBalance := bankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			if tc.valid {
 				s.Require().NoError(err)
@@ -241,7 +241,7 @@ func (s *KeeperTestSuite) TestGasConsume() {
 			gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
 
 			// create a denom
-			_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "larry"))
+			_, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "larry"))
 			s.Require().NoError(err)
 
 			// amount of gas consumed after the denom creation

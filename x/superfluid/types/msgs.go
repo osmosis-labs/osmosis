@@ -109,9 +109,6 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 // 	}
 // 	return nil
 // }
-// func (m MsgSuperfluidRedelegate) GetSignBytes() []byte {
-// 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-// }
 // func (m MsgSuperfluidRedelegate) GetSigners() []sdk.AccAddress {
 // 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 // 	return []sdk.AccAddress{sender}

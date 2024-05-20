@@ -89,7 +89,7 @@ func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error)
 	// get the initial validator min self delegation
 	minSelfDelegation, _ := osmomath.NewIntFromString("1")
 
-	valPubKey, err := cryptocodec.FromTmPubKeyInterface(n.consensusKey.PubKey)
+	valPubKey, err := cryptocodec.FromCmtPubKeyInterface(n.consensusKey.PubKey)
 	if err != nil {
 		return nil, err
 	}

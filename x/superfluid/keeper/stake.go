@@ -565,10 +565,13 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 	ctx := sdk.UnwrapSDKContext(context)
 	// call the callback with the non-superfluid delegations
 	var index int64
-	k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
+	err := k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
 		index = i
 		return fn(i, delegation)
 	})
+	if err != nil {
+		return err
+	}
 
 	synthlocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delegator)
 	for i, lock := range synthlocks {

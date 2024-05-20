@@ -7,8 +7,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -65,7 +65,7 @@ func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationReque
 	}
 
 	// Attach the codec proto marshaller
-	protoResponseType, ok := protoMsg.(codec.ProtoMarshaler)
+	protoResponseType, ok := protoMsg.(proto.Message)
 	if !ok {
 		return errorsmod.Wrapf(err, "failed to resolve message type")
 	}

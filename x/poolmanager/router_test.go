@@ -431,7 +431,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 				s.FundAcc(s.TestAccs[0], coins)
 
 				clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
-				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(s.Ctx), &cltypes.MsgCreatePosition{
+				_, err := clMsgServer.CreatePosition(s.Ctx, &cltypes.MsgCreatePosition{
 					PoolId:          1,
 					Sender:          s.TestAccs[0].String(),
 					LowerTick:       int64(30545000),
@@ -2199,7 +2199,7 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 				s.FundAcc(s.TestAccs[0], tc.setClTokens)
 
 				clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
-				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(s.Ctx), &cltypes.MsgCreatePosition{
+				_, err := clMsgServer.CreatePosition(s.Ctx, &cltypes.MsgCreatePosition{
 					PoolId:          1,
 					Sender:          s.TestAccs[0].String(),
 					LowerTick:       int64(30545000),

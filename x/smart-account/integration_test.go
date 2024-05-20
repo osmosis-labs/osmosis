@@ -3,13 +3,12 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	txfeetypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
 
@@ -41,7 +40,7 @@ type AuthenticatorSuite struct {
 	EncodingConfig params.EncodingConfig
 
 	PrivKeys []cryptotypes.PrivKey
-	Account  authtypes.AccountI
+	Account  sdk.AccountI
 }
 
 type cpks = [][]cryptotypes.PrivKey
@@ -75,7 +74,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 	s.Account = s.CreateAccount(s.PrivKeys[0], 500_000)
 }
 
-func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) authtypes.AccountI {
+func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) sdk.AccountI {
 	accountAddr := sdk.AccAddress(privKey.PubKey().Address())
 	// fund the account
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(amount)))

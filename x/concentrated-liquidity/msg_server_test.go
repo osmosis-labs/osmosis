@@ -198,7 +198,7 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 				Amount1:    DefaultCoin1.Amount,
 			}
 
-			response, err := msgServer.AddToPosition(sdk.WrapSDKContext(s.Ctx), msg)
+			response, err := msgServer.AddToPosition(s.Ctx, msg)
 
 			if tc.expectedError == nil {
 				s.NoError(err)
@@ -316,7 +316,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
 			// System under test.
-			response, err := msgServer.CollectSpreadRewards(sdk.WrapSDKContext(s.Ctx), msg)
+			response, err := msgServer.CollectSpreadRewards(s.Ctx, msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
@@ -531,7 +531,7 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 			// 	PositionIds: tc.positionIdsToFungify,
 			// }
 
-			// response, err := msgServer.FungifyChargedPositions(sdk.WrapSDKContext(s.Ctx), msg)
+			// response, err := msgServer.FungifyChargedPositions(s.Ctx, msg)
 
 			// if tc.expectedError == nil {
 			// 	s.Require().NoError(err)
@@ -667,7 +667,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			}
 
 			// System under test
-			response, err := msgServer.TransferPositions(sdk.WrapSDKContext(s.Ctx), msg)
+			response, err := msgServer.TransferPositions(s.Ctx, msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
