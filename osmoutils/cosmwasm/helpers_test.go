@@ -1,6 +1,6 @@
 package cosmwasm_test
 
-// UNFORKING v2 TODO: Utilize simutils or something, creating a circular dep with osmosis app import just for these two tests is not worth it.
+// TESTS MOVED DIRECTLY TO x/cosmwasmpool/pool_module_test.go to prevent circular imports (specifically on osmosis app for the test suite)
 // import (
 // 	"fmt"
 // 	"os"
