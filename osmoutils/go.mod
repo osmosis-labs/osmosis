@@ -155,7 +155,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.9 // indirect
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15 // indirect
-	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240518180933-518a93302cf3 // indirect
+	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240520013702-4d9577325728 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
