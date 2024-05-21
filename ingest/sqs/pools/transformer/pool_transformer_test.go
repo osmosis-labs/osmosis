@@ -125,6 +125,8 @@ func (s *PoolTransformerTestSuite) TestConvertPool_NonEmptyPriceInfoMap() {
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{
 		// Make the spot price 4 OSMO = 1 USDC
+		// This is for testing that the price is picked up from
+		// this map, if present, rather than pool.
 		USDC: osmomath.NewBigDec(4),
 	}
 
