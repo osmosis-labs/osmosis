@@ -128,6 +128,11 @@ var (
 			Key:     "max-gas-wanted-per-tx",
 			Value:   "60000000",
 		},
+		{
+			Section: "wasm",
+			Key:     "memory_cache_size",
+			Value:   1000,
+		},
 	}
 
 	recommendedConfigTomlValues = []SectionKeyValue{

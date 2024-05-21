@@ -109,11 +109,6 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
-// github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-
-// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.47.5, current branch: osmo/v0.47.5. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/4b9533e710b2b1e37aae86ad0fc29ec2ce009c07
+// Our cosmos-sdk branch is: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.50.x, current branch: osmo/v0.50.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1a5662f2a4586735a64388386eaf23a62dfddad9
 // https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
 replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458
-
-exclude github.com/gogo/protobuf v1.3.3
