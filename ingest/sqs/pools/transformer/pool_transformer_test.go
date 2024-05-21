@@ -52,11 +52,11 @@ func TestPoolTransformerTestSuite(t *testing.T) {
 	suite.Run(t, new(PoolTransformerTestSuite))
 }
 
-// This test validates that converting a pool that has to get TVL from another
-// pool with empty denom to routing info map works as expected.
+// This test validates that converting a pool that has to get pool liquidity capitalization from another
+// pool with empty price info map works as expected.
 // Additionally, it also validates that the input denomPairToTakerFeeMap is mutated correctly
 // with the taker fee retrieved from the pool manager params.
-func (s *PoolTransformerTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMap_TakerFee() {
+func (s *PoolTransformerTestSuite) TestConvertPool_EmptyPriceInfoMap_TakerFee() {
 	s.Setup()
 
 	s.setDefaultPoolManagerTakerFee()
@@ -87,13 +87,13 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMap_Ta
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, stableCoinPoolID)
 	s.Require().NoError(err)
 
-	denomToRoutingInfoMap := map[string]osmomath.BigDec{}
+	priceInfoMap := map[string]osmomath.BigDec{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 	s.Require().NoError(err)
 
 	// 0.5 defaultAmount OSMO for each token that equals 1 osmo and 2 for each denom
@@ -108,9 +108,9 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMap_Ta
 	s.Require().Equal(expectedDenomPairToTakerFeeMap, denomPairToTakerFeeMap)
 }
 
-// This test validates that converting a pool that has to get TVL from another
+// This test validates that converting a pool that has to pool liquidity capitalization from another
 // pool with non-empty denom to routing info map works as expected.
-func (s *PoolTransformerTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap() {
+func (s *PoolTransformerTestSuite) TestConvertPool_NonEmptyPriceInfoMap() {
 	s.Setup()
 
 	// Create OSMO / USDT pool and set the protorev route
@@ -164,7 +164,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInO
 
 	defaultQuoteUOSMOPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
-	denomToRoutingInfoMap := map[string]osmomath.BigDec{}
+	priceInfoMap := map[string]osmomath.BigDec{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
 
 	// Fetch the pool from state.
@@ -174,7 +174,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInO
 	poolIngester := s.initializePoolIngester(defaultQuoteUOSMOPoolID)
 
 	// System under test
-	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+	actualPool, err := poolIngester.ConvertPool(s.Ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 
 	// 0.5 OSMO per USDT amount + half amount OSMO itself
 	expectedPoolLiquidityCap := halfDefaultAmount.Add(halfDefaultAmount)

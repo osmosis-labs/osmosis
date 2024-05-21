@@ -114,8 +114,8 @@ func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID 
 
 // processPoolState processes the pool state. an
 func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
-	// Create a map from denom to routable pool ID.
-	denomToRoutablePoolIDMap := make(map[string]osmomath.BigDec)
+	// Create a map from denom to its price.
+	priceInfoMap := make(map[string]osmomath.BigDec)
 
 	denomPairToTakerFeeMap := make(map[sqsdomain.DenomPair]osmomath.Dec, 0)
 
@@ -129,7 +129,7 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 	// Parse CFMM pool to the standard SQS types.
 	for _, pool := range cfmmPools {
 		// Parse CFMM pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
+		pool, err := pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 		if err != nil {
 			// Silently skip pools on error to avoid breaking ingest of all other pools.
 			continue
@@ -140,7 +140,7 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 
 	for _, pool := range concentratedPools {
 		// Parse concentrated pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
+		pool, err := pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 		if err != nil {
 			// Silently skip pools on error to avoid breaking ingest of all other pools.
 			continue
@@ -151,7 +151,7 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap)
+		pool, err := pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 		if err != nil {
 			// Silently skip pools on error to avoid breaking ingest of all other pools.
 			continue

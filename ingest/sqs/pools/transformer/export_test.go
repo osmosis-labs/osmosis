@@ -25,8 +25,8 @@ type (
 	PoolTransformer = poolTransformer
 )
 
-func (pi *poolTransformer) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]osmomath.BigDec, denomPairToTakerFeeMap sqsdomain.TakerFeeMap) (sqsdomain.PoolI, error) {
-	return pi.convertPool(ctx, pool, denomToRoutingInfoMap, denomPairToTakerFeeMap)
+func (pi *poolTransformer) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, priceInfoMap map[string]osmomath.BigDec, denomPairToTakerFeeMap sqsdomain.TakerFeeMap) (sqsdomain.PoolI, error) {
+	return pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 }
 
 func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper domain.PoolManagerKeeper) error {
