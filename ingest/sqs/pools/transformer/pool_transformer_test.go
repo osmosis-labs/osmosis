@@ -481,6 +481,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	sqsKeepers := domain.SQSIngestKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
+		WasmKeeper:         s.App.WasmKeeper,
 		BankKeeper:         s.App.BankKeeper,
 		ProtorevKeeper:     s.App.ProtoRevKeeper,
 		PoolManagerKeeper:  s.App.PoolManagerKeeper,
@@ -520,7 +521,6 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	}
 
 	allPools, takerFeesMap, err := poolTransformer.Transform(s.Ctx, blockPools)
-	s.Require().NoError(err)
 	s.Require().NoError(err)
 
 	s.Require().Len(allPools, 2+2+1)

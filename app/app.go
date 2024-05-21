@@ -296,6 +296,7 @@ func NewOsmosisApp(
 		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			WasmKeeper:         app.WasmKeeper,
 			BankKeeper:         app.BankKeeper,
 			ProtorevKeeper:     app.ProtoRevKeeper,
 			PoolManagerKeeper:  app.PoolManagerKeeper,

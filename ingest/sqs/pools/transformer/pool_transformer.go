@@ -1,6 +1,7 @@
 package poolstransformer
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -32,6 +33,7 @@ type poolTransformer struct {
 	gammKeeper         domain.PoolKeeper
 	concentratedKeeper domain.ConcentratedKeeper
 	cosmWasmKeeper     domain.CosmWasmPoolKeeper
+	wasmKeeper         domain.WasmKeeper
 	bankKeeper         domain.BankKeeper
 	protorevKeeper     domain.ProtorevKeeper
 	poolManagerKeeper  domain.PoolManagerKeeper
@@ -110,6 +112,7 @@ func NewPoolTransformer(assetListGetter domain.AssetListGetter, keepers domain.S
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
 		cosmWasmKeeper:     keepers.CosmWasmPoolKeeper,
+		wasmKeeper:         keepers.WasmKeeper,
 		bankKeeper:         keepers.BankKeeper,
 		protorevKeeper:     keepers.ProtorevKeeper,
 		poolManagerKeeper:  keepers.PoolManagerKeeper,
@@ -204,6 +207,7 @@ func (pi *poolTransformer) convertPool(
 	}()
 
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+	var cwPoolModel *sqsdomain.CWPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
@@ -211,6 +215,43 @@ func (pi *poolTransformer) convertPool(
 		}
 
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
+
+		// This must never happen, but if it does, and there is no checks, the query will fail silently
+		// so we panic here to make sure we catch this error
+		if pi.wasmKeeper == nil {
+			panic("wasmKeeper is nil")
+		}
+
+		bz := pi.wasmKeeper.QueryRaw(ctx, cwPool.GetAddress(), []byte("contractinfo"))
+		if bz == nil || len(bz) == 0 {
+			// only log since cw pool contracts are not required to conform cw2
+			ctx.Logger().Info(
+				"contract_info not found for CosmWasm pool",
+				"pool_id", pool.GetId(),
+				"contract_address", pool.GetAddress(),
+			)
+		} else {
+			var contractInfo *sqsdomain.ContractInfo
+			cwPoolModel = &sqsdomain.CWPoolModel{}
+
+			if err := json.Unmarshal(bz, &contractInfo); err != nil {
+				// only log since cw pool contracts are not required to conform cw2
+				ctx.Logger().Info(
+					"CosmWasm pool does not conform cw2",
+					"pool_id", pool.GetId(),
+					"contract_address", pool.GetAddress(),
+					"contract_info", string(bz),
+				)
+			} else {
+				cwPoolModel.ContractInfo = *contractInfo
+
+				// special transformation based on different cw pool
+				err = pi.updateTrasmuterAlloyedInfo(ctx, pool, cwPool, cwPoolModel)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	osmoPoolTVL := osmomath.ZeroInt()
@@ -399,6 +440,60 @@ func (pi *poolTransformer) convertPool(
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
 		},
-		TickModel: tickModel,
+		TickModel:   tickModel,
+		CWPoolModel: cwPoolModel,
 	}, nil
+}
+
+func (pi *poolTransformer) updateTrasmuterAlloyedInfo(
+	ctx sdk.Context,
+	pool poolmanagertypes.PoolI,
+	cwPool cosmwasmpooltypes.CosmWasmExtension,
+	cwPoolModel *sqsdomain.CWPoolModel,
+) error {
+	if cwPoolModel.IsAlloyTransmuter() {
+		bz, err := pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"list_asset_configs":{}}`))
+		if err != nil {
+			return fmt.Errorf(
+				"error querying list_asset_configs for pool (%d) contrat_address (%s): %w",
+				pool.GetId(), pool.GetAddress(), err,
+			)
+		}
+		var assetConfigsResponse struct {
+			AssetConfigs []sqsdomain.TransmuterAssetConfig `json:"asset_configs"`
+		}
+
+		if err := json.Unmarshal(bz, &assetConfigsResponse); err != nil {
+			return fmt.Errorf(
+				"error unmarshalling asset_configs for pool (%d) contrat_address (%s): %w",
+				pool.GetId(), pool.GetAddress(), err,
+			)
+		}
+
+		bz, err = pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"get_share_denom":{}}`))
+		if err != nil {
+			return fmt.Errorf(
+				"error querying get_share_denom for pool (%d) contrat_address (%s): %w",
+				pool.GetId(), pool.GetAddress(), err,
+			)
+		}
+
+		var getShareDenomResponse struct {
+			ShareDenom string `json:"share_denom"`
+		}
+
+		if err := json.Unmarshal(bz, &getShareDenomResponse); err != nil {
+			return fmt.Errorf(
+				"error unmarshalling share_denom for pool (%d) contrat_address (%s): %w",
+				pool.GetId(), pool.GetAddress(), err,
+			)
+		}
+
+		cwPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
+			AlloyedDenom: getShareDenomResponse.ShareDenom,
+			AssetConfigs: assetConfigsResponse.AssetConfigs,
+		}
+	}
+
+	return nil
 }
