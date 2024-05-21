@@ -321,7 +321,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
 		s.Require().NoError(err)
 
-		err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
+		_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
 		s.Require().NoError(err)
 
 		expectedBondedPositionIds = append(expectedBondedPositionIds, positionData.ID)
@@ -344,7 +344,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
 		s.Require().NoError(err)
 
-		err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
+		_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
 		s.Require().NoError(err)
 
 		_, err = s.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(s.Ctx, lockId, lock.Owner, lock.Coins[0].Amount)

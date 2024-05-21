@@ -22,5 +22,7 @@ func (s *KeeperTestHelper) SuperfluidDelegateToVal(sender sdk.AccAddress, poolId
 	})
 	s.Require().NoError(err)
 
-	return s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, sender.String(), lockId, valAddr)
+	_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, sender.String(), lockId, valAddr)
+
+	return err
 }

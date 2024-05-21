@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -80,7 +81,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context, accs []typ
 
 		if refreshedAmount.GT(currentAmount) {
 			adjustment := refreshedAmount.Sub(currentAmount)
-			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
+			_, err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
 				ctx.Logger().Error("Error in mintOsmoTokensAndDelegate, state update reverted", err)
 			}
@@ -121,7 +122,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 		return nil
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
+	_, err = k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
 	if err != nil {
 		return err
 	}
@@ -202,10 +203,10 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 // and the intermediary account, as an intermediary account does not serve for delegations from a single delegator.
 // The actual amount of delegation is not equal to the equivalent amount of osmo the lock has. That is,
 // the actual amount of delegation is amount * osmo equivalent multiplier * (1 - k.RiskFactor(asset)).
-func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
+func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) (delegatedAmt math.Int, newShares math.LegacyDec, err error) {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return math.Int{}, math.LegacyDec{}, err
 	}
 
 	// This guarantees the lockID does not already have a superfluid stake position
@@ -213,7 +214,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// Thus when we stake this lock, it will be the only superfluid position for this lockID.
 	err = k.validateLockForSFDelegate(ctx, lock, sender)
 	if err != nil {
-		return err
+		return math.Int{}, math.LegacyDec{}, err
 	}
 	lockedCoin := lock.Coins[0]
 
@@ -222,7 +223,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// If an intermediary account doesn't exist, then create it + a perpetual gauge.
 	acc, err := k.GetOrCreateIntermediaryAccount(ctx, lockedCoin.Denom, valAddr)
 	if err != nil {
-		return err
+		return math.Int{}, math.LegacyDec{}, err
 	}
 	// create connection record between lock id and intermediary account
 	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
@@ -230,20 +231,22 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// Register a synthetic lockup for superfluid staking
 	err = k.createSyntheticLockup(ctx, lockID, acc, bondedStatus)
 	if err != nil {
-		return err
+		return math.Int{}, math.LegacyDec{}, err
 	}
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
 	amount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
 	if err != nil {
-		return err
+		return math.Int{}, math.LegacyDec{}, err
 	}
 	if amount.IsZero() {
-		return types.ErrOsmoEquivalentZeroNotAllowed
+		return math.Int{}, math.LegacyDec{}, types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	newShares, err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+
+	return amount, newShares, err
 }
 
 // undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
@@ -384,7 +387,7 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 	}
 
 	// re-delegate remainder
-	err = k.SuperfluidDelegate(ctx, sender, lockID, intermediaryAcc.ValAddr)
+	_, _, err = k.SuperfluidDelegate(ctx, sender, lockID, intermediaryAcc.ValAddr)
 	if err != nil {
 		return 0, err
 	}
@@ -446,10 +449,10 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 }
 
 // mintOsmoTokensAndDelegate mints osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account.
-func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) error {
+func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) (newShares math.LegacyDec, err error) {
 	validator, err := k.validateValAddrForDelegate(ctx, intermediaryAccount.ValAddr)
 	if err != nil {
-		return err
+		return math.LegacyDec{}, err
 	}
 
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
@@ -468,12 +471,12 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.I
 		// make delegation from module account to the validator
 		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
 		// For now, we don't worry since worst case it errors, in which case we revert mint.
-		_, err = k.sk.Delegate(cacheCtx,
+		newShares, err = k.sk.Delegate(cacheCtx,
 			intermediaryAccount.GetAccAddress(),
 			osmoAmount, stakingtypes.Unbonded, validator, true)
 		return err
 	})
-	return err
+	return newShares, err
 }
 
 // forceUndelegateAndBurnOsmoTokens force undelegates osmoAmount worth of delegation shares

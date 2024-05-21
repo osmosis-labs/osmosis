@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -115,14 +117,18 @@ func (suite *SuperfluidEventsTestSuite) TestEmitRemoveSuperfluidAsset() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 	testcases := map[string]struct {
-		ctx     sdk.Context
-		lockID  uint64
-		valAddr string
+		ctx          sdk.Context
+		lockID       uint64
+		valAddr      string
+		newShares    math.LegacyDec
+		delegatedAmt math.Int
 	}{
 		"basic valid": {
-			ctx:     suite.CreateTestContext(),
-			lockID:  1,
-			valAddr: sdk.AccAddress([]byte(addressString)).String(),
+			ctx:          suite.CreateTestContext(),
+			lockID:       1,
+			valAddr:      sdk.AccAddress([]byte(addressString)).String(),
+			newShares:    math.LegacyMustNewDecFromStr("5.0"),
+			delegatedAmt: math.NewInt(10),
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -137,12 +143,18 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
 					sdk.NewAttribute(types.AttributeValidator, tc.valAddr),
 				),
+				sdk.NewEvent(
+					stakingtypes.EventTypeDelegate,
+					sdk.NewAttribute(stakingtypes.AttributeKeyValidator, tc.valAddr),
+					sdk.NewAttribute(sdk.AttributeKeyAmount, tc.delegatedAmt.String()),
+					sdk.NewAttribute(stakingtypes.AttributeKeyNewShares, tc.newShares.String()),
+				),
 			}
 
 			hasNoEventManager := tc.ctx.EventManager() == nil
 
 			// System under test.
-			events.EmitSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.valAddr)
+			events.EmitSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.valAddr, tc.newShares, tc.delegatedAmt)
 
 			// Assertions
 			if hasNoEventManager {

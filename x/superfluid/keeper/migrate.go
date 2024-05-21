@@ -116,7 +116,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
-	err = k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
+	_, _, err = k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}

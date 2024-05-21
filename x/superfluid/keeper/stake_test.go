@@ -149,7 +149,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			// try delegating twice with same lockup
 			for _, lock := range locks {
-				err := s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
+				_, _, err := s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
 				s.Require().Error(err)
 			}
 		})
@@ -1649,7 +1649,7 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 	// Superfluid delegate the balancer lock if the test case requires it.
 	// Note the intermediary account that was created.
 	if superfluidDelegated {
-		err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), originalGammLockId, valAddr.String())
+		_, _, err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), originalGammLockId, valAddr.String())
 		s.Require().NoError(err)
 		intermediaryAccConnection := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
 		balancerIntermediaryAcc = superfluidKeeper.GetIntermediaryAccount(ctx, intermediaryAccConnection)

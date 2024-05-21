@@ -3,7 +3,9 @@ package events
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
@@ -44,13 +46,14 @@ func newRemoveSuperfluidAssetEvent(denom string) sdk.Event {
 	)
 }
 
-func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string) {
+func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string, newShares math.LegacyDec, delegatedAmt math.Int) {
 	if ctx.EventManager() == nil {
 		return
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		newSuperfluidDelegateEvent(lockId, valAddress),
+		newDelegationEvent(valAddress, newShares, delegatedAmt),
 	})
 }
 
@@ -59,6 +62,15 @@ func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
 		types.TypeEvtSuperfluidDelegate,
 		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
 		sdk.NewAttribute(types.AttributeValidator, valAddress),
+	)
+}
+
+func newDelegationEvent(valAddress string, newShares math.LegacyDec, delegatedAmt math.Int) sdk.Event {
+	return sdk.NewEvent(
+		stakingtypes.EventTypeDelegate,
+		sdk.NewAttribute(stakingtypes.AttributeKeyValidator, valAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, delegatedAmt.String()),
+		sdk.NewAttribute(stakingtypes.AttributeKeyNewShares, newShares.String()),
 	)
 }
 

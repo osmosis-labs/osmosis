@@ -153,7 +153,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 			// settings prior to testing for superfluid delegated cases
 			intermediaryAcc := types.SuperfluidIntermediaryAccount{}
 			if tc.superfluidDelegated {
-				err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), lockID, valAddr.String())
+				_, _, err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), lockID, valAddr.String())
 				s.Require().NoError(err)
 				intermediaryAccConnection := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 				intermediaryAcc = superfluidKeeper.GetIntermediaryAccount(ctx, intermediaryAccConnection)

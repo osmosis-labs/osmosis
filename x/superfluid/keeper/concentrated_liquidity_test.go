@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	// Superfluid delegate the cl lock if the test case requires it.
 	// Note the intermediary account that was created.
 	if superfluidDelegated {
-		err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), lockId, valAddr.String())
+		_, _, err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), lockId, valAddr.String())
 		s.Require().NoError(err)
 	}
 
