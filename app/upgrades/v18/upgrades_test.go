@@ -228,8 +228,6 @@ func (s *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 
 	// add pool 3 denom (AKT) ti authorized quote denom param.
 	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	authorizedQuoteDenom := append(clParams.AuthorizedQuoteDenoms, v17.AKTIBCDenom)
-	clParams.AuthorizedQuoteDenoms = authorizedQuoteDenom
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
 
 	// prepare CL pool with the same denom as pool 3, which is the pool we are testing with
