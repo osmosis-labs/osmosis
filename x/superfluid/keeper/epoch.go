@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
-
-	sdkerrors "cosmossdk.io/errors"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -151,7 +151,9 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return errors.New("osmo should not be a superfluid asset. It can be staked natively")
 		}
 		// get the twap price of the native asset in osmo
-		startTime := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).StartTime // TODO: do 5 mins instead of 1 epoch
+
+		// Twap price is calculated from the last 5 minutes
+		startTime := ctx.BlockTime().Add(-5 * time.Minute) // TODO: make this configurable
 		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, bondDenom, asset.Denom, startTime)
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")

@@ -105,6 +105,8 @@ message ConcentratedPoolUserPositionRecord {
 message DenomRiskFactor {
   // superfluid asset denom, can be LP token or native token
   string denom = 1;
+  // risk_factor is to be cut on OSMO equivalent value of the denom tokens
+  // for superfluid staking. It defaults to params.minimum_risk_factor
   string risk_factor = 2 [
     (gogoproto.moretags) = "yaml:\"risk_factor\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",

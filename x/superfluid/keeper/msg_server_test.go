@@ -655,7 +655,6 @@ func (s *KeeperTestSuite) TestUnsetDenomRiskFactors() {
 	c := sdk.WrapSDKContext(s.Ctx)
 	govAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName).GetAddress().String()
 
-	//
 	_, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
 	s.Require().False(found)
 

@@ -293,7 +293,11 @@ message MsgSetDenomRiskFactor {
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-  string risk_factor = 3 [ (gogoproto.moretags) = "yaml:\"risk_factor\"" ];
+  string risk_factor = 3 [
+    (gogoproto.moretags) = "yaml:\"risk_factor\""
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }
 message MsgSetDenomRiskFactorResponse {}
 
