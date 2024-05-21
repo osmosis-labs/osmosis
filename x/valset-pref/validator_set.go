@@ -293,7 +293,7 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 			// in the event some rounding issue increases our calculated undelegation amount.
 			delegation, err := k.stakingKeeper.GetDelegation(ctx, delegator, val.ValAddr)
 			if err != nil {
-				return fmt.Errorf("No delegation found for delegator %s to validator %s\n", delegator, val.ValAddr)
+				return err
 			}
 			delegationToVal := delegation.Shares.TruncateInt()
 			calculatedUndelegationAmt := undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
@@ -335,7 +335,7 @@ func (k Keeper) getValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
 
 		delegation, err := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if err != nil {
-			return nil, map[string]stakingtypes.Validator{}, osmomath.ZeroDec(), fmt.Errorf("No delegation found for delegator %s to validator %s\n", delegator, valAddr)
+			return nil, map[string]stakingtypes.Validator{}, osmomath.ZeroDec(), err
 		}
 
 		undelegateSharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
@@ -388,7 +388,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		// check if the user has delegated tokens to the valset
 		delegation, err := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if err != nil {
-			return fmt.Errorf("No delegation found")
+			return err
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)

@@ -77,7 +77,7 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 	// check if the user has delegated tokens to the valset
 	del, err := sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
 	if err != nil {
-		return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
+		return nil, err
 	}
 
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
@@ -129,7 +129,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 		// check if the user has delegated tokens to the valset
 		_, err = sim.SDKStakingKeeper().GetDelegation(ctx, delAddr, val)
 		if err != nil {
-			return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
+			return nil, err
 		}
 	}
 

@@ -71,11 +71,10 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(context context.Context, ac
 		currentAmount := osmomath.NewInt(0)
 		delegation, err := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if err != nil {
-			// continue if current delegation is 0, in case its really a dust delegation
+			// continue if current delegation return an error, in case its really a dust delegation
 			// that becomes worth something after refresh.
 			// TODO: We have a correct explanation for this in some github issue, lets amend this correctly.
-			k.Logger(ctx).Debug(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
-				" It may have been previously bonded, but now unbonded.", mAddr.String(), acc.ValAddr))
+			k.Logger(ctx).Debug(err.Error())
 		} else {
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
 		}

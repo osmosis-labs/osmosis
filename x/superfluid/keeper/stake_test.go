@@ -447,7 +447,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 				s.Require().NoError(err)
 				delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
 				if expDelegation.IsZero() {
-					s.Require().Error(err, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+					s.Require().Error(err, "expected error, found delegation w/ %d shares", delegation.Shares)
 				} else {
 					s.Require().NoError(err)
 					s.Require().Equal(expDelegation, delegation.Shares)
@@ -611,7 +611,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 				s.Require().NoError(err)
 				delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
 				if expDelegation.IsZero() {
-					s.Require().Error(err, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+					s.Require().Error(err, "expected error, found delegation w/ %d shares", delegation.Shares)
 				} else {
 					s.Require().NoError(err)
 					s.Require().Equal(expDelegation, delegation.Shares)
@@ -1931,8 +1931,8 @@ func (s *KeeperTestSuite) getExpectedBondDenomPoolAmtAfterConvert(sender sdk.Acc
 // 				s.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
 
 // 				// check delegation from intermediary account to validator
-// 				_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, expAcc.GetAccAddress(), valAddrs[srd.newValIndex])
-// 				s.Require().True(found)
+// 				_, err := s.App.StakingKeeper.GetDelegation(s.Ctx, expAcc.GetAccAddress(), valAddrs[srd.newValIndex])
+// 				s.Require().NoError(err)
 // 			}
 
 // 			// try redelegating twice

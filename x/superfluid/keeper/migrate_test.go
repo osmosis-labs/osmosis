@@ -195,7 +195,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 					// The delegation from the balancer intermediary account holder should not exist.
 					delegation, error := stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
-					s.Require().Error(error, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+					s.Require().Error(error, "expected error, found delegation w/ %d shares", delegation.Shares)
 
 					// Check that the original gamm lockup is deleted.
 					_, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
@@ -212,7 +212,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 					// The delegation from the balancer intermediary account holder should still exist.
 					delegation, err := stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
-					s.Require().NoError(err, "expected delegation, found delegation no delegation")
+					s.Require().NoError(err, "expected delegation, got error instead")
 					s.Require().Equal(balancerDelegationPre.Shares.Sub(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate)).RoundInt().String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
 					// Check what is remaining in the original gamm lock.
@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 				// Check the new superfluid staked amount.
 				clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 				delegation, err := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
-				s.Require().NoError(err, "expected delegation, found delegation no delegation")
+				s.Require().NoError(err, "expected delegation, got error instead")
 				s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(osmomath.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 			}
 
@@ -241,7 +241,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 				// The delegation from the intermediary account holder does not exist.
 				delegation, err := stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
-				s.Require().Error(err, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+				s.Require().Error(err, "expected error, found delegation w/ %d shares", delegation.Shares)
 			}
 
 			// Run slashing logic if the test case involves locks and check if the new and old locks are slashed.
@@ -356,7 +356,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 
 				// The delegation from the intermediary account holder should not exist.
 				delegation, err := stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
-				s.Require().Error(err, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+				s.Require().Error(err, "expected error, found delegation w/ %d shares", delegation.Shares)
 
 				// Check that the original gamm lockup is deleted.
 				_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 
 				// The delegation from the intermediary account holder should still exist.
 				_, err = stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
-				s.Require().NoError(err, "expected delegation, found delegation no delegation")
+				s.Require().NoError(err, "expected delegation, got error instead")
 
 				// Check what is remaining in the original gamm lock.
 				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
@@ -385,7 +385,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			// Check the new superfluid staked amount.
 			clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 			delegation, err := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
-			s.Require().NoError(err, "expected delegation, found delegation no delegation")
+			s.Require().NoError(err, "expected delegation, got error instead")
 			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(osmomath.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
 			// Check if the new intermediary account connection was created.

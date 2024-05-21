@@ -490,7 +490,7 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 
 	delegation, err := q.Keeper.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
 	if err != nil {
-		return nil, stakingtypes.ErrNoDelegation
+		return nil, err
 	}
 
 	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)

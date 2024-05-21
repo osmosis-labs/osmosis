@@ -247,7 +247,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 
 				// check if delegation has reduced from intermediary account
 				delegation, err := stakingKeeper.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
-				s.Require().Error(err, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+				s.Require().Error(err, "expected err, instead found delegation w/ %d shares", delegation.Shares)
 			}
 		})
 	}
