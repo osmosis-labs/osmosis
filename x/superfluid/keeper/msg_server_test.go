@@ -630,7 +630,7 @@ func (s *KeeperTestSuite) TestSetDenomRiskFactors() {
 			msg := &types.MsgSetDenomRiskFactor{
 				Sender:     test.sender,
 				Denom:      test.denom,
-				RiskFactor: test.riskFactor,
+				RiskFactor: osmomath.MustNewDecFromStr(test.riskFactor),
 			}
 			err := msg.ValidateBasic()
 			if err == nil {
@@ -662,7 +662,7 @@ func (s *KeeperTestSuite) TestUnsetDenomRiskFactors() {
 	_, err := msgServer.SetDenomRiskFactor(c, &types.MsgSetDenomRiskFactor{
 		Sender:     govAddr,
 		Denom:      denom,
-		RiskFactor: "0.5",
+		RiskFactor: osmomath.MustNewDecFromStr("0.5"),
 	})
 	s.Require().NoError(err)
 
