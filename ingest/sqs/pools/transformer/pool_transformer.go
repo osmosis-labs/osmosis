@@ -48,7 +48,8 @@ const (
 	spotPriceErrorFmtStr          = "error calculating spot price for denom %s, %s"
 	spotPricePrecisionErrorFmtStr = "error calculating spot price from route overwrites due to precision for denom %s"
 	multiHopSpotPriceErrorFmtStr  = "error calculating spot price via multihop swap, %s"
-	noPoolLiquidityCapError       = ""
+	// Empty string placeholder for no pool liquidity capitalization error
+	noPoolLiquidityCapError = ""
 
 	// placeholder value to disable route updates at the end of every block.
 	// nolint: unused
