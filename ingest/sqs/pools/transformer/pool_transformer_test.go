@@ -514,16 +514,16 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 		name string
 
 		balances               sdk.Coins
-		denomRoutingInfoMap    map[string]osmomath.BigDec
+		priceInfoMap           map[string]osmomath.BigDec
 		shouldSetProtorevRoute bool
 
 		expectedPoolLiquidityCap         osmomath.Int
 		expectedPoolLiquidityErrorSubstr string
 	}{
 		{
-			name:                "UOSMO balance -> returns the same amount",
-			balances:            uosmoCoins,
-			denomRoutingInfoMap: map[string]osmomath.BigDec{},
+			name:         "UOSMO balance -> returns the same amount",
+			balances:     uosmoCoins,
+			priceInfoMap: map[string]osmomath.BigDec{},
 
 			expectedPoolLiquidityCap:         defaultAmount,
 			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
@@ -531,7 +531,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 		{
 			name:                   "USDC Balance with no routing info but protorev route -> returns half by using protorev route",
 			balances:               usdcCoins,
-			denomRoutingInfoMap:    map[string]osmomath.BigDec{},
+			priceInfoMap:           map[string]osmomath.BigDec{},
 			shouldSetProtorevRoute: true,
 
 			expectedPoolLiquidityCap:         halfDefaultAmount,
@@ -540,7 +540,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 		{
 			name:     "USDC Balance with price info & protorev route present -> returns the amount using the price info price",
 			balances: usdcCoins,
-			denomRoutingInfoMap: map[string]osmomath.BigDec{
+			priceInfoMap: map[string]osmomath.BigDec{
 				USDC: osmomath.NewBigDec(4),
 			},
 			shouldSetProtorevRoute: true,
@@ -551,7 +551,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 		{
 			name:                   "USDC balance with no routing info and no protorev route -> use stables overwrite",
 			balances:               usdcCoins,
-			denomRoutingInfoMap:    map[string]osmomath.BigDec{},
+			priceInfoMap:           map[string]osmomath.BigDec{},
 			shouldSetProtorevRoute: false,
 
 			// defaultAmount from usdcCoins * spot price of 0.5
@@ -562,7 +562,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 		{
 			name:                   "USDT balance with no routing info and no protorev route -> return zero and not found error string",
 			balances:               sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount)),
-			denomRoutingInfoMap:    map[string]osmomath.BigDec{},
+			priceInfoMap:           map[string]osmomath.BigDec{},
 			shouldSetProtorevRoute: false,
 
 			expectedPoolLiquidityCap:         zeroInt,
@@ -572,7 +572,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 		{
 			name:                   "UOSMO & USDC from skip route",
 			balances:               uosmoCoins.Add(usdcCoins...),
-			denomRoutingInfoMap:    map[string]osmomath.BigDec{},
+			priceInfoMap:           map[string]osmomath.BigDec{},
 			shouldSetProtorevRoute: true,
 
 			// default for UOSMO and half for USDC
@@ -602,7 +602,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 			poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
 
 			// System under test
-			actualPoolLiquidityCap, actualPoolLiquidityCapError := poolIngester.ComputeUOSMOPoolLiquidityCap(s.Ctx, tc.balances, tc.denomRoutingInfoMap)
+			actualPoolLiquidityCap, actualPoolLiquidityCapError := poolIngester.ComputeUOSMOPoolLiquidityCap(s.Ctx, tc.balances, tc.priceInfoMap)
 
 			// Validate the results
 			s.Require().Equal(tc.expectedPoolLiquidityCap.String(), actualPoolLiquidityCap.String())

@@ -33,8 +33,8 @@ func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPai
 	return retrieveTakerFeeToMapIfNotExists(ctx, denoms, denomPairToTakerFeeMap, poolManagerKeeper)
 }
 
-func (pi *poolTransformer) ComputeUOSMOPoolLiquidityCap(ctx sdk.Context, balances sdk.Coins, denomRoutingInfoMap map[string]osmomath.BigDec) (osmomath.Int, string) {
-	return pi.computeUOSMOPoolLiquidityCap(ctx, balances, denomRoutingInfoMap)
+func (pi *poolTransformer) ComputeUOSMOPoolLiquidityCap(ctx sdk.Context, balances sdk.Coins, priceInfoMap map[string]osmomath.BigDec) (osmomath.Int, string) {
+	return pi.computeUOSMOPoolLiquidityCap(ctx, balances, priceInfoMap)
 }
 
 func FilterBalances(originalBalances sdk.Coins, poolDenomsMap map[string]struct{}) sdk.Coins {

@@ -312,7 +312,7 @@ func filterBalances(originalBalances sdk.Coins, poolDenomsMap map[string]struct{
 // computeUOSMOPoolLiquidityCap computes the pool liquidity cap in UOSMO.
 // For each denom balance has the following cases:
 // 1. The balance is UOSMO. In that case, it is added to the total.
-// 2. Routing information is present in denomRoutingInfoMap for the denom. In that case, the spot price is used to convert the balance to UOSMO.
+// 2. Routing information is present in priceInfoMap for the denom. In that case, the spot price is used to convert the balance to UOSMO.
 // 3. If there is no routing information, we attempt to get a single-hop pool from on-chain routes.
 // 4. If there is no on-chain route, we check if there is a route overwrite for the denom.
 // 5. If the denom is a stablecoin, we assume that it has the same price as USDC and use USDC routing information.
