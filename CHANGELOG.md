@@ -42,9 +42,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Breaking
+
+* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking.
+
+### State Compatible
+
 * [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 * [#8253](https://github.com/osmosis-labs/osmosis/pull/8253) Update gogoproto to v1.4.11 and golang.org/x/exp to 
 * [#8148](https://github.com/osmosis-labs/osmosis/pull/8148) Remove the deserialization time for GetDefaultTakerFee()
+
 
 ## v25.0.0
 

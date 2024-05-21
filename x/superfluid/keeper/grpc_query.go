@@ -259,7 +259,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 
 		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
 		// and twap of the denom.
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNative(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -428,7 +428,7 @@ func (q Querier) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, re
 		lockedCoins := sdk.NewCoin(req.Denom, lock.GetCoins().AmountOf(req.Denom))
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNative(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -523,7 +523,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 			amount = amount.Add(record.DelegationAmount.Amount)
 		}
 
-		equivalentAmountOSMO, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
+		equivalentAmountOSMO, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNative(ctx, req.Denom, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -695,7 +695,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNative(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}

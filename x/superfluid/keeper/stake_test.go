@@ -238,6 +238,39 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			lockIdAlreadySuperfluidDelegated: true,
 			expectedErr:                      errorsmod.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", uint64(1)),
 		},
+		{
+			name: "valid native lock",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
+			expectedErr:          nil,
+		},
+		{
+			name: "invalid native lock - asset not set",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
+		},
+		{
+			name: "invalid native lock - asset not properly configured",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative},
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
+		},
 	}
 
 	for _, test := range tests {
@@ -806,7 +839,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				// get OSMO total supply and amount to be burned
 				bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 				supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
 				s.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)
