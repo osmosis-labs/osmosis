@@ -34,7 +34,7 @@ const (
 
 	UOSMO = poolstransformer.UOSMO
 
-	noPoolLidquidityCapErrorStr = poolstransformer.NoPoolLiquidityCapError
+	noPoolLiquidityCapErrorStr = poolstransformer.NoPoolLiquidityCapError
 )
 
 var (
@@ -100,7 +100,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyPriceInfoMap_TakerFee() 
 	// 	Multiplied by two in default quote denom conversion
 	expectedPoolLiquidityCap := descaleQuoteDenomPrecisionAmount(doubleDefaultAmount)
 
-	expectPoolLiquidityCapErrorStr := noPoolLidquidityCapErrorStr
+	expectPoolLiquidityCapErrorStr := noPoolLiquidityCapErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(USDC, defaultAmount))
 	s.validatePoolConversion(pool, expectedPoolLiquidityCap, expectPoolLiquidityCapErrorStr, actualPool, expectedBalances)
 
@@ -146,7 +146,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_NonEmptyPriceInfoMap() {
 	expectedPoolLiquidityCap := defaultAmount.QuoRaw(2).Add(defaultAmount.QuoRaw(4))
 	// 	Multiplied by two in default quote denom conversion
 	expectedPoolLiquidityCap = descaleQuoteDenomPrecisionAmount(expectedPoolLiquidityCap.MulRaw(2))
-	expectPoolLiquidityCapErrorStr := noPoolLidquidityCapErrorStr
+	expectPoolLiquidityCapErrorStr := noPoolLiquidityCapErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(USDC, defaultAmount))
 	s.validatePoolConversion(pool, expectedPoolLiquidityCap, expectPoolLiquidityCapErrorStr, actualPool, expectedBalances)
 }
@@ -182,7 +182,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInO
 	expectedPoolLiquidityCap := halfDefaultAmount.Add(halfDefaultAmount)
 	// 	Multiplied by two in default quote denom conversion
 	expectedPoolLiquidityCap = descaleQuoteDenomPrecisionAmount(expectedPoolLiquidityCap.MulRaw(2))
-	expectPoolLiquidityCapErrorStr := noPoolLidquidityCapErrorStr
+	expectPoolLiquidityCapErrorStr := noPoolLiquidityCapErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.validatePoolConversion(pool, expectedPoolLiquidityCap, expectPoolLiquidityCapErrorStr, actualPool, expectedBalances)
 }
@@ -215,7 +215,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsI
 	expectedPoolLiquidityCap := halfDefaultAmount.Add(halfDefaultAmount)
 	// 	Multiplied by two in default quote denom conversion
 	expectedPoolLiquidityCap = descaleQuoteDenomPrecisionAmount(expectedPoolLiquidityCap.MulRaw(2))
-	expectPoolLiquidityCapErrorStr := noPoolLidquidityCapErrorStr
+	expectPoolLiquidityCapErrorStr := noPoolLiquidityCapErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.validatePoolConversion(pool, expectedPoolLiquidityCap, expectPoolLiquidityCapErrorStr, actualPool, expectedBalances)
 }
@@ -336,7 +336,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated() {
 	expectedPoolLiquidityCap := defaultAmount.Add(osmoBalance.Amount)
 	// 	Multiplied by two in default quote denom conversion
 	expectedPoolLiquidityCap = descaleQuoteDenomPrecisionAmount(expectedPoolLiquidityCap.MulRaw(2))
-	expectPoolLiquidityCapErrorStr := noPoolLidquidityCapErrorStr
+	expectPoolLiquidityCapErrorStr := noPoolLiquidityCapErrorStr
 	expectedBalances := sdk.NewCoins(sdk.NewCoin(USDT, defaultAmount), osmoBalance)
 	s.validatePoolConversion(concentratedPool, expectedPoolLiquidityCap, expectPoolLiquidityCapErrorStr, actualPool, expectedBalances)
 
@@ -385,7 +385,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	// osmoBalance := s.App.BankKeeper.GetBalance(s.Ctx, concentratedPool.GetAddress(), UOSMO)
 
 	expectedPoolLiquidityCap := osmomath.ZeroInt()
-	expectPoolLiquidityCapErrorStr := noPoolLidquidityCapErrorStr
+	expectPoolLiquidityCapErrorStr := noPoolLiquidityCapErrorStr
 	expectedBalances := sdk.Coins{
 		sdk.Coin{
 			Denom:  UOSMO,
@@ -528,7 +528,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 			priceInfoMap: map[string]osmomath.BigDec{},
 
 			expectedPoolLiquidityCap:         defaultAmount,
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 		{
 			name:                   "USDC Balance with no routing info but protorev route -> returns half by using protorev route",
@@ -537,7 +537,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 			shouldSetProtorevRoute: true,
 
 			expectedPoolLiquidityCap:         halfDefaultAmount,
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 		{
 			name:     "USDC Balance with price info & protorev route present -> returns the amount using the price info price",
@@ -548,7 +548,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 			shouldSetProtorevRoute: true,
 
 			expectedPoolLiquidityCap:         defaultAmount.QuoRaw(4),
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 		{
 			name:                   "USDC balance with no routing info and no protorev route -> use stables overwrite",
@@ -558,7 +558,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 
 			// defaultAmount from usdcCoins * spot price of 0.5
 			expectedPoolLiquidityCap:         halfDefaultAmount,
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 
 		{
@@ -579,7 +579,7 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 
 			// default for UOSMO and half for USDC
 			expectedPoolLiquidityCap:         defaultAmount.Add(halfDefaultAmount),
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 	}
 
@@ -634,7 +634,7 @@ func (s *PoolTransformerTestSuite) TestComputeUSDCPoolLiquidityCapFromUOSMO() {
 			uosmoPoolLiquidityCap: osmomath.ZeroInt(),
 
 			expectedPoolLiquidityCap:         zeroInt,
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 
 		{
@@ -643,7 +643,7 @@ func (s *PoolTransformerTestSuite) TestComputeUSDCPoolLiquidityCapFromUOSMO() {
 
 			// halfDefaultAmount * price of two
 			expectedPoolLiquidityCap:         defaultAmountDescaled,
-			expectedPoolLiquidityErrorSubstr: noPoolLidquidityCapErrorStr,
+			expectedPoolLiquidityErrorSubstr: noPoolLiquidityCapErrorStr,
 		},
 
 		{
