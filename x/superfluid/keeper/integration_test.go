@@ -346,6 +346,10 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	_, err := s.RunMsg(createPoolMsg)
 	s.Require().NoError(err)
 
+	// move time forward and advance a few blocks to get twaps
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(20 * time.Minute))
+	s.AdvanceToBlockNAndRunEpoch(5)
+
 	// Creating a native type without a pool should fail
 	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative})
 	s.Require().Error(err)
