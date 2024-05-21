@@ -85,7 +85,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 }
 
 // TestAutenticatorPostHandlerSuccess tests that the post handler can succeed with the default authenticator
-func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
+func (s *AuthenticatorPostSuite) TestAuthenticatorPostHandlerSuccess() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -140,7 +140,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 
 // TestAutenticatorPostHandlerReturnEarly tests that the post handler fails early on IsCircuitBreakActive
 // the transaction should pass through the normal flow.
-func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerReturnEarly() {
+func (s *AuthenticatorPostSuite) TestAuthenticatorPostHandlerReturnEarly() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -168,7 +168,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerReturnEarly() {
 }
 
 // TestAuthenticatorPostHandlerFailConfirmExecution tests how the post handler behaves when ConfirmExecution fails.
-func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution() {
+func (s *AuthenticatorPostSuite) TestAuthenticatorPostHandlerFailConfirmExecution() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	approveAndBlock := testutils.TestingAuthenticator{
