@@ -77,7 +77,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyDenomToRoutingInfoMap_Ta
 
 	// Create OSMO / USDC pool and set the protorev route
 	// Note that spot price is 1 OSMO = 2 USDC
-	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDC, usdcOsmoPoolID)
 
 	// Prepare a stablecoin pool that we attempt to convert
@@ -120,7 +120,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_NonEmptyDenomToRoutingInfoMap
 
 	// Create OSMO / USDC pool and set the protorev route
 	// Note that spot price is 1 OSMO = 2 USDC
-	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDC, usdcOsmoPoolID)
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{
@@ -162,7 +162,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInO
 	usdcOsmoPoolIDSpotPrice := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDT, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdcOsmoPoolIDSpotPrice)
 
-	defaultQuoteUOSMOPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	defaultQuoteUOSMOPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	denomToRoutingInfoMap := map[string]osmomath.BigDec{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
@@ -195,7 +195,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsI
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdtOsmoPoolIDConverted)
 
 	// Create default pool for converting between UOSMO and USDC.
-	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
@@ -223,7 +223,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsI
 func (s *PoolTransformerTestSuite) TestConvertPool_NoRouteSet() {
 	s.Setup()
 
-	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	// Create OSMO / USDT pool and set the protorev route
 	// Note that spot price is 1 OSMO = 2 USDT
@@ -264,7 +264,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_InvalidPoolSetInRoutes_Silent
 	// Purposefully set a non-existent pool
 	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, USDT, usdtOsmoPoolIDConverted+1)
 
-	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
 	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
@@ -294,7 +294,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated() {
 	s.Setup()
 
 	// Create default pool for converting between UOSMO and USDC.
-	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	// Prepare a stablecoin pool that we attempt to convert
 
@@ -361,7 +361,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	s.Setup()
 
 	// Create default pool for converting between UOSMO and USDC.
-	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	// Prepare a stablecoin pool that we attempt to convert
 
@@ -452,7 +452,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	s.Require().NoError(err)
 
 	// Create default pool for converting between UOSMO and USDC.
-	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOCPool()
+	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 	poolTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, usdcUosmoPoolID)
 
 	blockPools := domain.BlockPools{
@@ -846,9 +846,9 @@ func (s *PoolTransformerTestSuite) TestGetPoolDenomsMap() {
 	}
 }
 
-// CreateDefaultQuoteDenomUOSMOCPool Create OSMO / USDC pool with price of 1 UOSMO = 2 USDC
+// CreateDefaultQuoteDenomUOSMOPool Create OSMO / USDC pool with price of 1 UOSMO = 2 USDC
 // and return the pool ID
-func (s *PoolTransformerTestSuite) CreateDefaultQuoteDenomUOSMOCPool() uint64 {
+func (s *PoolTransformerTestSuite) CreateDefaultQuoteDenomUOSMOPool() uint64 {
 	return s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 }
 
