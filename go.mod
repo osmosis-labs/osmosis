@@ -9,16 +9,16 @@ require (
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.45.1-0.20231128163306-4b9b61faeaa3
 	github.com/CosmWasm/wasmvm v1.5.2
-	github.com/cometbft/cometbft v0.37.4
+	github.com/cometbft/cometbft v0.37.5
 	github.com/cometbft/cometbft-db v0.11.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.47.8
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk v0.47.11
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
-	github.com/cosmos/ibc-go/v7 v7.4.0
+	github.com/cosmos/ibc-go/v7 v7.5.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/golangci/golangci-lint v1.56.2
@@ -63,7 +63,7 @@ require (
 	cloud.google.com/go/storage v1.38.0 // indirect
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
-	cosmossdk.io/log v1.3.0 // indirect
+	cosmossdk.io/log v1.3.1 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/Abirdcfly/dupword v0.0.13 // indirect
 	github.com/Antonboom/testifylint v1.1.2 // indirect
@@ -164,7 +164,7 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
-	pgregory.net/rapid v0.5.5 // indirect
+	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
@@ -324,7 +324,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rs/cors v1.9.0 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
+	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/ryancurrah/gomodguard v1.3.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect
