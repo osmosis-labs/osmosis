@@ -4,6 +4,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -174,8 +175,11 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				}
 
 				if action.isAdd {
+					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * -6))
 					s.createGammPool(poolDenoms)
 					s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.STAKE, apptesting.USDC)
+					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 7))
+
 					// set superfluid assets via proposal
 					err = gov.HandleSetSuperfluidAssetsProposal(s.Ctx, *s.App.SuperfluidKeeper, *s.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",
