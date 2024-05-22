@@ -107,6 +107,10 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
+	// Submit a bank send tx using the first private key. This will fail
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg)
+	s.Require().Error(err)
+
 	// Try to send again using the original PrivKey. This will succeed with no selected authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Sending from the original PrivKey failed. This should succeed")
@@ -115,7 +119,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), sigVerAuthId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
-	// Sending from the default PrivKey now works again
+	// Sending from the default PrivKey still works
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key after removing the authenticator")
 }
