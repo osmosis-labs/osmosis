@@ -156,6 +156,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 const FirstAuthenticatorId = 1
 
 // GetNextAuthenticatorId returns the next authenticator id
+// nit: getter that mutates - should we change name to InitializeOrGetNextAuthenticatorId?
 func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextAuthenticatorId := gogotypes.UInt64Value{}

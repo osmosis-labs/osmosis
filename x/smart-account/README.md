@@ -304,7 +304,7 @@ Contract storage should be used only when the authenticator needs to track any d
 
 ### Contract Interface
 
-The contract needs to implement 3 authenticator hooks which are called by the authenticator through sudo entrypoint, it needs to handle the following messages:
+The contract needs to implement 5 authenticator hooks which are called by the authenticator through sudo entrypoint, it needs to handle the following messages:
 
 ```rs
 #[cw_serde]
