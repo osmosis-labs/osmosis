@@ -427,6 +427,10 @@ authenticator with the position of the sub-authenticator in the list. For exampl
 global id of 86, the cosmwasm authenticator will receive `86.1` as its authenticator id. If that instead was another
 composite authenticator, its first sub-authenticator would receive `86.1.0` as its authenticator id.
 
+In the general case, if we call a composite authenticator with id `a` and it has `n` sub-authenticators, the sub-authenticator
+at position `i` will receive the id `a.i`. If the sub-authenticator is itself a composite authenticator with `m` sub-authenticators,
+the sub-authenticator at position `j` will receive the id `a.i.j`.
+
 ### Composition Logic
 
 #### AllOf
