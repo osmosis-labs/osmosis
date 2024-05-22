@@ -144,7 +144,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	s.Require().NoError(err)
 	s.Require().Equal(int64(1), ctx.Priority(), "Should have disabled the full authentication flow")
 
-	// Reeactivate smart accounts
+	// Reactivate smart accounts
 	params = s.OsmosisApp.SmartAccountKeeper.GetParams(ctx)
 	params.IsSmartAccountActive = true
 	s.OsmosisApp.SmartAccountKeeper.SetParams(ctx, params)
