@@ -342,8 +342,11 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
+	// Will always approve and will consume 0 gas
 	alwaysLow := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 0}
+	// Will always approve and will consume 4k gas
 	alwaysHigh := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 4_000}
+	// Will always approve and will consume 500k gas
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysLow)
@@ -365,7 +368,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), account2.GetAddress(), acc2authId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
-	// Add two authenticators that are never high, and one always high.
+	// Add two authenticators that are always higher, and one always high.
 	// This allows account2 to execute but *only* after consuming >9k gas
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigher.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
