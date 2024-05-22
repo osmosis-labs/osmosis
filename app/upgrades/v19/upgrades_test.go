@@ -62,7 +62,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.Require().NoError(err)
 	})
 
-	synthLockedPreV18 := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	synthLockedPreV18, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	s.Require().NoError(err)
 
 	// run v18 upgrade
 	// by doing this, we should be having incorrect state of superfluid staking accumulator
@@ -77,7 +78,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// broken states (current status):
 	// synth lock accumulator is set to 0
-	totalSynthLocked := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	totalSynthLocked, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	s.Require().NoError(err)
 	s.Require().True(totalSynthLocked.Equal(osmomath.ZeroInt()))
 
 	// superfluid delegated tokens have been undelegated from validator,
@@ -98,7 +100,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// synth lock accumulator should have been fixed after v19 upgrade,
 	// and went back to normal state(pre-v18)
-	synthLockAfterV19 := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	synthLockAfterV19, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	s.Require().NoError(err)
 	s.Require().True(synthLockAfterV19.Equal(synthLockedPreV18))
 
 	// also check that we have the correct superfluid staked delegation back

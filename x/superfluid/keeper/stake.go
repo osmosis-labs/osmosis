@@ -20,16 +20,16 @@ import (
 )
 
 // GetTotalSyntheticAssetsLocked returns the total amount of the given denom locked.
-func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) osmomath.Int {
+func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) (osmomath.Int, error) {
 	unbondingTime, err := k.sk.UnbondingTime(ctx)
 	if err != nil {
-		panic(err)
+		return osmomath.Int{}, err
 	}
 	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
 		Duration:      unbondingTime,
-	})
+	}), nil
 }
 
 // GetExpectedDelegationAmount returns the total number of osmo the intermediary account
@@ -38,7 +38,10 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) osm
 // lead rounding errors from the true delegated amount.
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) (osmomath.Int, error) {
 	// (1) Find how many tokens total T are locked for (denom, validator) pair
-	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
+	totalSuperfluidDelegation, err := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
+	if err != nil {
+		return osmomath.Int{}, err
+	}
 	// (2) Multiply the T tokens, by the number of superfluid osmo per token, to get the total amount
 	// of osmo we expect.
 	refreshedAmount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
