@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
+	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens, "any")
 
 	// Check result
 	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())
@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
+	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens, "any")
 
 	// Check result
 	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())

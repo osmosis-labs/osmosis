@@ -136,7 +136,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 		},
 
 		{
-			// This test case tests if there is two messages with the same signer
+			// This test case tests if there are two messages with the same signer
 			// with two successful signatures.
 			Description: "Test: verified authenticator with 2 messages signed correctly with the same address: PASS",
 			TestData: SignatureVerificationTestData{
@@ -163,7 +163,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 		},
 
 		{
-			// This test case tests if there is two messages with the same signer
+			// This test case tests if there are two messages with the same signer
 			// with two successful signatures.
 			Description: "Test: verified authenticator with 2 messages but only first signed signed correctly: Fail",
 			TestData: SignatureVerificationTestData{
@@ -190,7 +190,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 		},
 
 		{
-			// This test case tests if there is two messages with the same signer
+			// This test case tests if there are two messages with the same signer
 			// with two successful signatures.
 			Description: "Test: verified authenticator with 2 messages but only second signed signed correctly: Fail",
 			TestData: SignatureVerificationTestData{

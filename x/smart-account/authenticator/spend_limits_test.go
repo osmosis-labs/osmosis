@@ -136,7 +136,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 
 	// always update file name to reflect the version
 	// current: https://github.com/osmosis-labs/spend-limit-authenticator/tree/1.0.0-alpha.1
-	// most test cases exists the repo above, this test file is intended to ensure that latest osmosis code
+	// most test cases exists in the repo above, this test file is intended to ensure that latest osmosis code
 	// does not break existing contract
 	codeId := s.StoreContractCode("../testutils/bytecode/spend_limit_v1.0.0-alpha.1.wasm")
 
@@ -159,7 +159,7 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 		},
 	}
 
-	// increase time for 1hr to ensure twap price is available
+	// increase time by 1hr to ensure twap price is available
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
 	bz, err := json.Marshal(msg)
