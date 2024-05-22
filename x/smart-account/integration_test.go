@@ -305,10 +305,12 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsg() {
 	_, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "MaxAmountAuthenticator", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
+	// Note that we are sending 2 messages here, so the amount should be 2_000 (2*1_000)
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1, 1}, successSendMsg, successSendMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
 
+	// This should now fail, as the max amount has been reached
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1, 1}, successSendMsg, successSendMsg)
 	s.Require().Error(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
