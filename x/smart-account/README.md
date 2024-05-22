@@ -175,8 +175,8 @@ Used in post-handler functions to enforce transaction rules like spending and tr
 
 ## Authenticator Manager
 
-The authenticator manager the chain to register authenticators and retrieve them by type. Each authenticator type
-represents the code to be executed.
+The authenticator manager allows the chain to register authenticators and retrieve them by type. Each authenticator 
+type represents the code to be executed.
 
 To determine which authenticators will be used for each account, this module's keeper stores a mapping
 between an account and a list of authenticators. A user can add or remove authenticators from their account using the
