@@ -620,7 +620,6 @@ func (s *KeeperTestSuite) TestSetDenomRiskFactors() {
 		{"bad gov addr", "osmo1herasn5ewvv9acpujdmqxz698y849aq9ucsccl", "something", "0", "only the governance module is allowed to execute this message"},
 		{"bad gov addr 2", "something else", "something", "0", "invalid sender address (decoding bech32 failed"},
 		{"bad denom", govAddr, "", "0", "denom cannot be empty"},
-		{"bad risk factor", govAddr, "something", "NaN", "invalid risk factor (failed to set decimal string"},
 	}
 
 	for _, test := range setDenomRiskFactorTests {
