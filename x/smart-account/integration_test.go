@@ -492,9 +492,10 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	}
 	// Send from account 0 the account key using the AllOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []uint64{2}, failedSendMsg,
+		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []uint64{1}, failedSendMsg,
 	)
 	s.Require().Error(err, "Should be rejected because the message filter rejects the transaction")
+	s.Require().ErrorContains(err, "message does not match pattern")
 
 	// Remove the first AllOf authenticator
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOfAuthId)
