@@ -6,10 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
@@ -264,12 +262,7 @@ func (server msgServer) SetDenomRiskFactor(goCtx context.Context, msg *types.Msg
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	riskFactor, err := osmomath.NewDecFromStr(msg.RiskFactor)
-	if err != nil {
-		return nil, err
-	}
-
-	err = server.keeper.SetDenomRiskFactor(ctx, msg.Denom, riskFactor)
+	err := server.keeper.SetDenomRiskFactor(ctx, msg.Denom, msg.RiskFactor)
 	if err != nil {
 		return nil, err
 	}

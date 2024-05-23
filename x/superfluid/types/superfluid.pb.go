@@ -485,7 +485,9 @@ func (m *ConcentratedPoolUserPositionRecord) GetEquivalentStakedAmount() *types1
 // The DenomRiskFactor stores the risk factor of a superfluid asset
 type DenomRiskFactor struct {
 	// superfluid asset denom, can be LP token or native token
-	Denom      string                      `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// risk_factor is to be cut on OSMO equivalent value of the denom tokens
+	// for superfluid staking. It defaults to params.minimum_risk_factor
 	RiskFactor cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=risk_factor,json=riskFactor,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"risk_factor" yaml:"risk_factor"`
 }
 

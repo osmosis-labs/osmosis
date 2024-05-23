@@ -176,7 +176,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
 				// Once the fee payer is authenticated, we can deduct the fee.
-				// This change will persist regardless of weather the rest of messages pass authentication
+				// This change will persist regardless of whether the rest of the messages pass authentication
 				// or not
 				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, sdk.ChainAnteDecorators(sdk.Terminator{}))
 				if err != nil {

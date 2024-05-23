@@ -447,10 +447,6 @@ func (msg *MsgSetDenomRiskFactor) ValidateBasic() error {
 	if len(msg.Denom) == 0 {
 		return fmt.Errorf("denom cannot be empty")
 	}
-	_, err = osmomath.NewDecFromStr(msg.RiskFactor)
-	if err != nil {
-		return fmt.Errorf("invalid risk factor (%s)", err)
-	}
 	return nil
 }
 

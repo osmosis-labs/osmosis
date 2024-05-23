@@ -6,6 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
+	"time"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
@@ -175,8 +177,11 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				}
 
 				if action.isAdd {
+					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * -6))
 					s.createGammPool(poolDenoms)
 					s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.STAKE, apptesting.USDC)
+					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 7))
+
 					// set superfluid assets via proposal
 					err = gov.HandleSetSuperfluidAssetsProposal(s.Ctx, *s.App.SuperfluidKeeper, *s.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",

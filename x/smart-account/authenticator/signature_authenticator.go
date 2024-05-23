@@ -53,7 +53,7 @@ func (sva SignatureVerification) Initialize(config []byte) (Authenticator, error
 }
 
 // Authenticate takes a SignaturesVerificationData struct and validates
-// each signer and signature using  signature verification
+// each signer and signature using signature verification
 func (sva SignatureVerification) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)

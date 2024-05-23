@@ -107,7 +107,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
-	// Try to send again osing the original PrivKey. This will succeed with no selected authenticator
+	// Try to send again using the original PrivKey. This will succeed with no selected authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Sending from the original PrivKey failed. This should succeed")
 

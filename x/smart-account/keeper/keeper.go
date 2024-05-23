@@ -86,7 +86,7 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 	return accountAuthenticators, nil
 }
 
-// GetSelectedAuthenticatorDataForAccount gets all authenticators from an account
+// GetSelectedAuthenticatorData gets all authenticators from an account
 // from the store, the data is  prefixed by 2|<accAddr|<keyId>
 func (k Keeper) GetSelectedAuthenticatorData(
 	ctx sdk.Context,
@@ -105,9 +105,9 @@ func (k Keeper) GetSelectedAuthenticatorData(
 	return authenticatorFromStore, nil
 }
 
-// GetSelectedAuthenticatorForAccountFromStore returns a single authenticator for the account
-// this function relies in GetAuthenticationDataForAccount, this function calls
-// Initialise on the specific authenticator
+// GetInitializedAuthenticatorForAccount returns a single authenticator for the account
+// this function relies in GetAuthenticatorDataForAccount, this function calls
+// Initialize on the specific authenticator
 func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
