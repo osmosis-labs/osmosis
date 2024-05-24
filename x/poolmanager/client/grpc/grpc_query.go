@@ -1,4 +1,3 @@
-
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -61,24 +60,24 @@ func (q Querier) TotalLiquidity(grpcCtx context.Context,
 	return q.Q.TotalLiquidity(ctx, *req)
 }
 
-func (q Querier) TakerFeeShareDenomsToAccruedValueRequest(grpcCtx context.Context,
-	req *queryproto.TakerFeeShareDenomsToAccruedValueRequestRequest,
-) (*queryproto.TakerFeeShareDenomsToAccruedValueRequestResponse, error) {
+func (q Querier) TakerFeeShareDenomsToAccruedValue(grpcCtx context.Context,
+	req *queryproto.TakerFeeShareDenomsToAccruedValueRequest,
+) (*queryproto.TakerFeeShareDenomsToAccruedValueResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.TakerFeeShareDenomsToAccruedValueRequest(ctx, *req)
+	return q.Q.TakerFeeShareDenomsToAccruedValue(ctx, *req)
 }
 
-func (q Querier) TakerFeeShareAgreementFromDenomRequest(grpcCtx context.Context,
-	req *queryproto.TakerFeeShareAgreementFromDenomRequestRequest,
-) (*queryproto.TakerFeeShareAgreementFromDenomRequestResponse, error) {
+func (q Querier) TakerFeeShareAgreementFromDenom(grpcCtx context.Context,
+	req *queryproto.TakerFeeShareAgreementFromDenomRequest,
+) (*queryproto.TakerFeeShareAgreementFromDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.TakerFeeShareAgreementFromDenomRequest(ctx, *req)
+	return q.Q.TakerFeeShareAgreementFromDenom(ctx, *req)
 }
 
 func (q Querier) SpotPrice(grpcCtx context.Context,
@@ -91,14 +90,14 @@ func (q Querier) SpotPrice(grpcCtx context.Context,
 	return q.Q.SpotPrice(ctx, *req)
 }
 
-func (q Querier) RegisteredAlloyedPoolFromDenomRequest(grpcCtx context.Context,
-	req *queryproto.RegisteredAlloyedPoolFromDenomRequestRequest,
-) (*queryproto.RegisteredAlloyedPoolFromDenomRequestResponse, error) {
+func (q Querier) RegisteredAlloyedPoolFromDenom(grpcCtx context.Context,
+	req *queryproto.RegisteredAlloyedPoolFromDenomRequest,
+) (*queryproto.RegisteredAlloyedPoolFromDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.RegisteredAlloyedPoolFromDenomRequest(ctx, *req)
+	return q.Q.RegisteredAlloyedPoolFromDenom(ctx, *req)
 }
 
 func (q Querier) Pool(grpcCtx context.Context,
@@ -211,34 +210,34 @@ func (q Querier) EstimateSinglePoolSwapExactAmountIn(grpcCtx context.Context,
 	return q.Q.EstimateSinglePoolSwapExactAmountIn(ctx, *req)
 }
 
-func (q Querier) AllTakerFeeShareAgreementsRequest(grpcCtx context.Context,
-	req *queryproto.AllTakerFeeShareAgreementsRequestRequest,
-) (*queryproto.AllTakerFeeShareAgreementsRequestResponse, error) {
+func (q Querier) AllTakerFeeShareAgreements(grpcCtx context.Context,
+	req *queryproto.AllTakerFeeShareAgreementsRequest,
+) (*queryproto.AllTakerFeeShareAgreementsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.AllTakerFeeShareAgreementsRequest(ctx, *req)
+	return q.Q.AllTakerFeeShareAgreements(ctx, *req)
 }
 
-func (q Querier) AllTakerFeeShareAccumulatorsRequest(grpcCtx context.Context,
-	req *queryproto.AllTakerFeeShareAccumulatorsRequestRequest,
-) (*queryproto.AllTakerFeeShareAccumulatorsRequestResponse, error) {
+func (q Querier) AllTakerFeeShareAccumulators(grpcCtx context.Context,
+	req *queryproto.AllTakerFeeShareAccumulatorsRequest,
+) (*queryproto.AllTakerFeeShareAccumulatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.AllTakerFeeShareAccumulatorsRequest(ctx, *req)
+	return q.Q.AllTakerFeeShareAccumulators(ctx, *req)
 }
 
-func (q Querier) AllRegisteredAlloyedPoolsRequest(grpcCtx context.Context,
-	req *queryproto.AllRegisteredAlloyedPoolsRequestRequest,
-) (*queryproto.AllRegisteredAlloyedPoolsRequestResponse, error) {
+func (q Querier) AllRegisteredAlloyedPools(grpcCtx context.Context,
+	req *queryproto.AllRegisteredAlloyedPoolsRequest,
+) (*queryproto.AllRegisteredAlloyedPoolsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.AllRegisteredAlloyedPoolsRequest(ctx, *req)
+	return q.Q.AllRegisteredAlloyedPools(ctx, *req)
 }
 
 func (q Querier) AllPools(grpcCtx context.Context,
