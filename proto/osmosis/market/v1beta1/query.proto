@@ -15,12 +15,6 @@ service Query {
     option (google.api.http).get = "/osmosis/market/v1beta1/swap";
   }
 
-  // OsmosisPoolDelta returns osmosis_pool_delta amount.
-  rpc OsmosisPoolDelta(QueryOsmosisPoolDeltaRequest)
-      returns (QueryOsmosisPoolDeltaResponse) {
-    option (google.api.http).get = "/osmosis/market/v1beta1/osmosis_pool_delta";
-  }
-
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/market/v1beta1/params";
@@ -42,21 +36,6 @@ message QuerySwapRequest {
 message QuerySwapResponse {
   // return_coin defines the coin returned as a result of the swap simulation.
   cosmos.base.v1beta1.Coin return_coin = 1 [ (gogoproto.nullable) = false ];
-}
-
-// QueryOsmosisPoolDeltaRequest is the request type for the
-// Query/OsmosisPoolDelta RPC method.
-message QueryOsmosisPoolDeltaRequest {}
-
-// QueryOsmosisPoolDeltaResponse is the response type for the
-// Query/OsmosisPoolDelta RPC method.
-message QueryOsmosisPoolDeltaResponse {
-  // osmosis_pool_delta defines the gap between the OsmosisPool and the
-  // OsmosisBasePool
-  bytes osmosis_pool_delta = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.

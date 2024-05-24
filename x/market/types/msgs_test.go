@@ -25,9 +25,9 @@ func TestMsgSwap(t *testing.T) {
 	}{
 		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, ""},
 		{sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid trader address (empty address string is not allowed): invalid address"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0uosmo: invalid coins"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000uosmo: invalid coins"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "uosmo: recursive swap"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0note: invalid coins"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000note: invalid coins"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "note: recursive swap"},
 	}
 
 	for _, tc := range tests {
@@ -58,9 +58,9 @@ func TestMsgSwapSend(t *testing.T) {
 		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, ""},
 		{addrs[0], sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid to address (empty address string is not allowed): invalid address"},
 		{sdk.AccAddress{}, addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid from address (empty address string is not allowed): invalid address"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0uosmo: invalid coins"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000uosmo: invalid coins"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "uosmo: recursive swap"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0note: invalid coins"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000note: invalid coins"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "note: recursive swap"},
 	}
 
 	for _, tc := range tests {

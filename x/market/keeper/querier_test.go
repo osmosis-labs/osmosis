@@ -57,16 +57,3 @@ func (s *KeeperTestSuite) TestQuerySwap() {
 	s.Require().True(sdk.NewInt(17).GTE(res.ReturnCoin.Amount))
 	s.Require().True(res.ReturnCoin.Amount.IsPositive())
 }
-
-func (s *KeeperTestSuite) TestQueryMintPoolDelta() {
-	ctx := sdk.WrapSDKContext(s.Ctx)
-	querier := keeper.NewQuerier(*s.App.MarketKeeper)
-
-	poolDelta := sdk.NewDecWithPrec(17, 1)
-	s.App.MarketKeeper.SetOsmosisPoolDelta(s.Ctx, poolDelta)
-
-	res, errRes := querier.OsmosisPoolDelta(ctx, &types.QueryOsmosisPoolDeltaRequest{})
-	s.Require().NoError(errRes)
-
-	s.Require().Equal(poolDelta, res.OsmosisPoolDelta)
-}

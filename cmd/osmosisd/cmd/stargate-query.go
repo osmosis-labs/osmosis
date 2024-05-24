@@ -419,9 +419,6 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			v.OfferCoin = structArguments[0]
 			v.AskDenom = structArguments[1]
 			return v, nil
-		case "OsmosisPoolDeltaRequest":
-			v := &markettypes.QueryOsmosisPoolDeltaRequest{}
-			return v, nil
 		}
 	case "txfees":
 		switch structName {

@@ -150,7 +150,6 @@ func (am AppModule) BeginBlock(sdk.Context, abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the market module.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 

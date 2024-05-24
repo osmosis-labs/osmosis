@@ -4,22 +4,19 @@ import (
 	"encoding/json"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(osmosisPoolDelta sdk.Dec, params Params) *GenesisState {
+func NewGenesisState(params Params) *GenesisState {
 	return &GenesisState{
-		OsmosisPoolDelta: osmosisPoolDelta,
-		Params:           params,
+		Params: params,
 	}
 }
 
 // DefaultGenesisState returns raw genesis raw message for testing
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		OsmosisPoolDelta: sdk.ZeroDec(),
-		Params:           DefaultParams(),
+		Params: DefaultParams(),
 	}
 }
 
