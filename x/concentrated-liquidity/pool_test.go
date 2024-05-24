@@ -806,7 +806,7 @@ func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 	_, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, poolID, s.TestAccs[0], totalIncentiveAmount, emissionRatePerSecDec, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 
-	// Increate block time
+	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
 
 	// Refetch pool
@@ -886,7 +886,7 @@ func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, poolID, s.TestAccs[0], totalIncentiveAmount, emissionRatePerSecDec, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 
-	// Increate block time
+	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
 
 	// Refetch pool
