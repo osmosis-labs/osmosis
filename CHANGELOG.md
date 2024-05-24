@@ -49,10 +49,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+## v25.0.1
+
+### Osmosis
+
+* [#8293](https://github.com/osmosis-labs/osmosis/pull/8293) Upgrade v25.x to IBC v7.4.1
 * [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 * [#8253](https://github.com/osmosis-labs/osmosis/pull/8253) Update gogoproto to v1.4.11 and golang.org/x/exp to
 * [#8148](https://github.com/osmosis-labs/osmosis/pull/8148) Remove the deserialization time for GetDefaultTakerFee()
+* [#8298](https://github.com/osmosis-labs/osmosis/pull/8298) Overwrite timeout commit from 1.5s to 1s
 
+### CometBFT
+
+* [#61](https://github.com/osmosis-labs/cometbft/pull/61) refactor(p2p/connection): Slight refactor to sendManyPackets that helps highlight performance improvements (backport #2953) (#2978)
+* [#62](https://github.com/osmosis-labs/cometbft/pull/62) perf(consensus/blockstore): Remove validate basic call from LoadBlock
+* [#69](https://github.com/osmosis-labs/cometbft/pull/69) perf: Make mempool update async from block.Commit (#3008)
+* [#67](https://github.com/osmosis-labs/cometbft/pull/67) fix: TimeoutTicker returns wrong value/timeout pair when timeouts are…
 
 ## v25.0.0
 
