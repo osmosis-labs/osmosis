@@ -146,7 +146,7 @@ func (k Keeper) ValidateNativeAsset(asset types.SuperfluidAsset) error {
 	if asset.AssetType == types.SuperfluidAssetTypeNative {
 		if len(asset.PriceRoute) == 0 ||
 			strings.TrimSpace(asset.PriceRoute[0].TokenOutDenom) == "" {
-			return errorsmod.Wrap(types.ErrNonSuperfluidAsset, "asset is not properly configured for superfluid staking (no price pool id)")
+			return errorsmod.Wrap(types.ErrNonSuperfluidAsset, "asset is not properly configured for superfluid staking: missing or empty price route")
 		}
 	}
 	return nil

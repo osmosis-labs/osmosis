@@ -23,7 +23,7 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 			}
 		}
 		if err := k.ValidateNativeAsset(asset); err != nil {
-			return fmt.Errorf("native asset (%s) must have a price pool id", asset.Denom)
+			return fmt.Errorf("native asset (%s) must have a price pool route", asset.Denom)
 		}
 		if err := k.AddNewSuperfluidAsset(ctx, asset); err != nil {
 			return err
