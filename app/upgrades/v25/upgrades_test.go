@@ -117,6 +117,7 @@ func (s *UpgradeTestSuite) PrepareSpreadRewardsMigrationTestEnv() (map[uint64]st
 
 	// Update authorized quote denoms
 	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	// concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
 
 	// Create two more concentrated pools with positions

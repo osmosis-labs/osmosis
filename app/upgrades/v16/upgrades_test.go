@@ -161,6 +161,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Check authorized denoms are set correctly.
 				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				// s.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
 				s.Require().EqualValues(params.AuthorizedUptimes, v16.AuthorizedUptimes)
 
 				// Permissionless pool creation is disabled.

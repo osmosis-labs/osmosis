@@ -49,6 +49,18 @@ var (
 	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
 	SpreadFactor = osmomath.MustNewDecFromStr("0.002")
 
+	// authorized_quote_denoms quote assets that can be used as token1
+	// when creating a pool. We limit the quote assets to a small set
+	// for the purposes of having convenient price increments stemming
+	// from tick to price conversion. These increments are in a human
+	// understandeable magnitude only for token1 as a quote.
+	// authorizedQuoteDenoms []string = []string{
+	// 	appparams.BaseCoinUnit,
+	// 	ATOMIBCDenom,
+	// 	DAIIBCDenom,
+	// 	USDCIBCDenom,
+	// }
+
 	// authorizedUptimes is the list of uptimes that are allowed to be
 	// incentivized. It is a subset of SupportedUptimes (which can be
 	// found under CL types) and is set initially to be 1ns, which is
@@ -110,6 +122,7 @@ func CreateUpgradeHandler(
 		// Although parameters are set on InitGenesis() in RunMigrations(), we reset them here
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
+		// defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
 		defaultConcentratedLiquidityParams.AuthorizedUptimes = authorizedUptimes
 		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
