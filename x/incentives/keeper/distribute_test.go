@@ -1251,8 +1251,8 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.Require().NoError(err)
 
 	// Validate Gauges
-	// clPoolExternalGaugeIdPool1 expects full because the numEpochPaidOver is 1 for that gaugeId
-	// clPoolExternalGaugeIdPool2 expects half because the numEpochPaidOver is 2 for that gaugeId
+	// clPoolExternalGaugeIdPool1 expects full because the numEpochPaidOver is 1 for that gagueId
+	// clPoolExternalGaugeIdPool2 expects half because the numEpochPaidOver is 2 for that gagueId
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool1, 1, externalGaugeCoins)
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool2, 1, halfOfExternalGaugeCoins)
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool3, 1, externalGaugeCoins)

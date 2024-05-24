@@ -59,7 +59,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	}
 
 	// 6) ExitPool with these unlocked LP shares
-	// minOutCoins is set to 0 for now, because no sandwiching can really be done atm for UST pools
+	// minOutCoins is set to 0 for now, because no sandwitching can really be done atm for UST pools
 	minOutCoins := sdk.NewCoins()
 	exitedCoins, err := k.gk.ExitPool(ctx, sender, poolId, gammSharesInLock.Amount, minOutCoins)
 	if err != nil {

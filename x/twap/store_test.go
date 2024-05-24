@@ -266,10 +266,10 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"get entry (exact) w/ a subsequent entry": {
 			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, nil,
 		},
-		"get sandwiched entry (exact)": {
+		"get sandwitched entry (exact)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil,
 		},
-		"rev sandwiched entry (exact)": {
+		"rev sandwitched entry (exact)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, nil,
 		},
 

@@ -37,7 +37,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgCreateGauge creates a gauge to distribute rewards to users
+// MsgCreateGauge creates a gague to distribute rewards to users
 type MsgCreateGauge struct {
 	// is_perpetual shows if it's a perpetual or non-perpetual gauge
 	// Non-perpetual gauges distribute their tokens equally per epoch while the
