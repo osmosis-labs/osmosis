@@ -298,6 +298,9 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	if err != nil {
 		return err
 	}
+	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+		return nil
+	}
 
 	if !h.ProperlyConfigured() {
 		// Not configured. Return from the underlying implementation
