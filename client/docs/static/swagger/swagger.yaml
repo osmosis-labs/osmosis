@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Osmosis - gRPC Gateway docs
   description: A REST interface for state queries, legacy transactions
@@ -9,7 +9,7 @@ paths:
       summary: CurrentEpoch provide current epoch of specified identifier
       operationId: CurrentEpoch
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -51,7 +51,7 @@ paths:
       summary: EpochInfos provide running epochInfos
       operationId: EpochInfos
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -195,7 +195,7 @@ paths:
         Concentrated pools.
       operationId: CFMMConcentratedPoolLinks
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -440,7 +440,7 @@ paths:
         pool that is linked with the given CFMM pool.
       operationId: ConcentratedPoolIdLinkFromCFMM
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -657,7 +657,7 @@ paths:
         parameters
       operationId: PoolsWithFilter
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1129,10 +1129,10 @@ paths:
         - Query
   /osmosis/gamm/v1beta1/num_pools:
     get:
-      summary: 'Deprecated: please use the alternative in x/poolmanager'
+      summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: NumPools
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1344,7 +1344,7 @@ paths:
         Errors if the pool is failed to be type caseted.
       operationId: PoolType
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1557,7 +1557,7 @@ paths:
     get:
       operationId: Pools
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2018,10 +2018,10 @@ paths:
         - Query
   /osmosis/gamm/v1beta1/pools/{pool_id}:
     get:
-      summary: 'Deprecated: please use the alternative in x/poolmanager'
+      summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: Pool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2202,7 +2202,7 @@ paths:
                         "@type": "type.googleapis.com/google.protobuf.Duration",
                         "value": "1.212s"
                       }
-            title: 'Deprecated: please use the alternative in x/poolmanager'
+            title: "Deprecated: please use the alternative in x/poolmanager"
         default:
           description: An unexpected error response.
           schema:
@@ -2409,7 +2409,7 @@ paths:
     get:
       operationId: CalcExitPoolCoinsFromShares
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2641,7 +2641,7 @@ paths:
     get:
       operationId: CalcJoinPoolShares
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2871,7 +2871,7 @@ paths:
     get:
       operationId: PoolParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3261,7 +3261,7 @@ paths:
         a base denomination and a quote denomination.
       operationId: SpotPrice
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3486,10 +3486,10 @@ paths:
         - Query
   /osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity:
     get:
-      summary: 'Deprecated: please use the alternative in x/poolmanager'
+      summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: TotalPoolLiquidity
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3511,7 +3511,7 @@ paths:
                     method
 
                     signatures required by gogoproto.
-            title: 'Deprecated: please use the alternative in x/poolmanager'
+            title: "Deprecated: please use the alternative in x/poolmanager"
         default:
           description: An unexpected error response.
           schema:
@@ -3718,7 +3718,7 @@ paths:
     get:
       operationId: TotalShares
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3944,7 +3944,7 @@ paths:
     get:
       operationId: TotalLiquidity
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4164,10 +4164,10 @@ paths:
         - Query
   /osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in:
     get:
-      summary: 'Deprecated: please use the alternative in x/poolmanager'
+      summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: EstimateSwapExactAmountIn
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4386,10 +4386,10 @@ paths:
         - Query
   /osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out:
     get:
-      summary: 'Deprecated: please use the alternative in x/poolmanager'
+      summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: EstimateSwapExactAmountOut
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4611,7 +4611,7 @@ paths:
       summary: ActiveGauges returns active gauges
       operationId: ActiveGauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4773,7 +4773,7 @@ paths:
                     conditions around the
 
                     duration for which a given denom is locked.
-                title: Active gagues only
+                title: Active gauges only
               pagination:
                 title: Pagination defines pagination for the response
                 type: object
@@ -4889,7 +4889,7 @@ paths:
       summary: ActiveGaugesPerDenom returns active gauges by denom
       operationId: ActiveGaugesPerDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5051,7 +5051,7 @@ paths:
                     conditions around the
 
                     duration for which a given denom is locked.
-                title: Active gagues that match denom in query
+                title: Active gauges that match denom in query
               pagination:
                 title: Pagination defines pagination for the response
                 type: object
@@ -5105,7 +5105,7 @@ paths:
                       format: byte
       parameters:
         - name: denom
-          description: Desired denom when querying active gagues.
+          description: Desired denom when querying active gauges.
           in: query
           required: false
           type: string
@@ -5172,7 +5172,7 @@ paths:
       summary: AllGroups returns all groups
       operationId: AllGroups
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5285,7 +5285,7 @@ paths:
       summary: AllGroupsGauges returns all group gauges
       operationId: AllGroupsGauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5476,7 +5476,7 @@ paths:
       summary: AllGroupsWithGauge returns all groups with their group gauge
       operationId: AllGroupsWithGauge
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5754,7 +5754,7 @@ paths:
         the last epoch given a group gauge ID
       operationId: CurrentWeightByGroupGaugeID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5804,7 +5804,7 @@ paths:
       summary: GaugeByID returns gauges by their respective ID
       operationId: GaugeByID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5962,7 +5962,7 @@ paths:
                   conditions around the
 
                   duration for which a given denom is locked.
-                title: Gauge that corresponds to provided gague ID
+                title: Gauge that corresponds to provided gauge ID
         default:
           description: An unexpected error response.
           schema:
@@ -5987,7 +5987,7 @@ paths:
                       format: byte
       parameters:
         - name: id
-          description: Gague ID being queried
+          description: Gauge ID being queried
           in: path
           required: true
           type: string
@@ -5999,7 +5999,7 @@ paths:
       summary: Gauges returns both upcoming and active gauges
       operationId: Gauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6277,7 +6277,7 @@ paths:
       summary: GroupByGroupGaugeID returns a group given its group gauge ID
       operationId: GroupByGroupGaugeID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6398,7 +6398,7 @@ paths:
         incentives for
       operationId: LockableDurations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6439,7 +6439,7 @@ paths:
       summary: ModuleToDistributeCoins returns coins that are going to be distributed
       operationId: ModuleToDistributeCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6497,7 +6497,7 @@ paths:
         for which they want to find the associated rewards
       operationId: RewardsEst
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6576,7 +6576,7 @@ paths:
       summary: Returns scheduled gauges that have not yet occurred
       operationId: UpcomingGauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6858,7 +6858,7 @@ paths:
         by denom
       operationId: UpcomingGaugesPerDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7020,7 +7020,7 @@ paths:
                     conditions around the
 
                     duration for which a given denom is locked.
-                title: Upcoming gagues that match denom in query
+                title: Upcoming gauges that match denom in query
               pagination:
                 title: Pagination defines pagination for the response
                 type: object
@@ -7074,7 +7074,7 @@ paths:
                       format: byte
       parameters:
         - name: denom
-          description: Filter for upcoming gagues that match specific denom.
+          description: Filter for upcoming gauges that match specific denom.
           in: query
           required: false
           type: string
@@ -7141,7 +7141,7 @@ paths:
       summary: Return a locked coins that can't be withdrawn
       operationId: AccountLockedCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7197,7 +7197,7 @@ paths:
       summary: Returns account locked records with a specific duration
       operationId: AccountLockedDuration
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7323,7 +7323,7 @@ paths:
       summary: Returns account locked records with longer duration
       operationId: AccountLockedLongerDuration
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7449,7 +7449,7 @@ paths:
       summary: Returns account's locked records for a denom with longer duration
       operationId: AccountLockedLongerDurationDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7581,7 +7581,7 @@ paths:
         started unlocking
       operationId: AccountLockedLongerDurationNotUnlockingOnly
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7707,7 +7707,7 @@ paths:
       summary: Returns locked records of an account with unlock time beyond timestamp
       operationId: AccountLockedPastTime
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7834,7 +7834,7 @@ paths:
       summary: Returns lock records by address, timestamp, denom
       operationId: AccountLockedPastTimeDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7967,7 +7967,7 @@ paths:
         excluding tokens started unlocking
       operationId: AccountLockedPastTimeNotUnlockingOnly
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8094,7 +8094,7 @@ paths:
       summary: Returns unlockable coins which are not withdrawn yet
       operationId: AccountUnlockableCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8150,7 +8150,7 @@ paths:
       summary: Returns unlocked records with unlock time before timestamp
       operationId: AccountUnlockedBeforeTime
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8277,7 +8277,7 @@ paths:
       summary: Returns unlocking coins
       operationId: AccountUnlockingCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8333,7 +8333,7 @@ paths:
       summary: Returns lock record by id
       operationId: LockRewardReceiver
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8375,7 +8375,7 @@ paths:
       summary: Returns lock record by id
       operationId: LockedByID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8495,7 +8495,7 @@ paths:
       summary: Returns total locked per denom with longer past given time
       operationId: LockedDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8540,7 +8540,7 @@ paths:
       summary: Return full balance of the module
       operationId: ModuleBalance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8591,7 +8591,7 @@ paths:
       summary: Return locked balance of the module
       operationId: ModuleLockedAmount
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8642,7 +8642,7 @@ paths:
       summary: Returns next lock ID
       operationId: NextLockID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8679,7 +8679,7 @@ paths:
       summary: Params returns lockup params.
       operationId: LockupParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8720,7 +8720,7 @@ paths:
       summary: Returns synthetic lockup by native lockup id
       operationId: SyntheticLockupByLockupID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8802,7 +8802,7 @@ paths:
         Deprecated: use SyntheticLockupByLockupID instead
       operationId: SyntheticLockupsByLockupID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8886,7 +8886,7 @@ paths:
       summary: EpochProvisions returns the current minting epoch provisions value.
       operationId: EpochProvisions
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9101,7 +9101,7 @@ paths:
       summary: Params returns the total set of minting parameters.
       operationId: MintParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9413,7 +9413,7 @@ paths:
       summary: DistrInfo returns the pool's matching gauge ids and weights.
       operationId: DistrInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9462,7 +9462,7 @@ paths:
       summary: ExternalIncentiveGauges returns external incentive gauges.
       operationId: ExternalIncentiveGauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9655,7 +9655,7 @@ paths:
         durations
       operationId: GaugeIds
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9707,7 +9707,7 @@ paths:
       summary: IncentivizedPools returns currently incentivized pools
       operationId: IncentivizedPools
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9754,7 +9754,7 @@ paths:
       summary: LockableDurations returns lock durations for pools.
       operationId: PoolLockableDurations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9792,7 +9792,7 @@ paths:
       summary: Params returns pool incentives params.
       operationId: PoolIncentivesParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9844,7 +9844,7 @@ paths:
         staked.
       operationId: UserConcentratedSuperfluidPositionsDelegated
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10142,7 +10142,7 @@ paths:
     get:
       operationId: UserConcentratedSuperfluidPositionsUndelegating
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10441,7 +10441,7 @@ paths:
       summary: Returns all registered superfluid assets.
       operationId: AllAssets
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10669,7 +10669,7 @@ paths:
       summary: Returns all superfluid intermediary accounts.
       operationId: AllIntermediaryAccounts
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10976,7 +10976,7 @@ paths:
         Response is denominated in uosmo.
       operationId: TotalSuperfluidDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11184,7 +11184,7 @@ paths:
       summary: Returns the osmo equivalent multiplier used in the most recent epoch.
       operationId: AssetMultiplier
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11428,7 +11428,7 @@ paths:
         share.
       operationId: AssetType
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11651,7 +11651,7 @@ paths:
       summary: Returns intermediary account connected to a superfluid staked lock by id
       operationId: ConnectedIntermediaryAccount
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11881,7 +11881,7 @@ paths:
         lead rounding errors from the true delegated amount
       operationId: EstimateSuperfluidDelegatedAmountByValidatorDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12113,7 +12113,7 @@ paths:
       summary: Params returns the total set of superfluid parameters.
       operationId: SuperfluidParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12342,7 +12342,7 @@ paths:
         triplet
       operationId: SuperfluidDelegationAmount
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12578,7 +12578,7 @@ paths:
       summary: Returns all the delegated superfluid positions for a specific delegator.
       operationId: SuperfluidDelegationsByDelegator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12870,7 +12870,7 @@ paths:
         validator
       operationId: SuperfluidDelegationsByValidatorDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13132,7 +13132,7 @@ paths:
         delegator.
       operationId: SuperfluidUndelegationsByDelegator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13452,7 +13452,7 @@ paths:
     get:
       operationId: RestSupply
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13678,7 +13678,7 @@ paths:
       summary: Returns the specified delegations for a specific delegator
       operationId: TotalDelegationByDelegator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14016,7 +14016,7 @@ paths:
       summary: Returns a list of whitelisted pool ids to unpool.
       operationId: UnpoolWhitelist
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14229,7 +14229,7 @@ paths:
         DenomAuthorityMetadata for a particular denom.
       operationId: DenomAuthorityMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14289,7 +14289,7 @@ paths:
         getting the address registered for the before send hook.
       operationId: BeforeSendHookAddress
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14337,7 +14337,7 @@ paths:
         denominations created by a specific admin/creator.
       operationId: DenomsFromCreator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14389,7 +14389,7 @@ paths:
         parameters.
       operationId: TokenfactoryParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14466,7 +14466,7 @@ paths:
       summary: Returns a list of all base denom tokens and their corresponding pools.
       operationId: TxFeesBaseDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14502,7 +14502,7 @@ paths:
       summary: Returns a list of all base denom tokens and their corresponding pools.
       operationId: GetEipBaseFee
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14538,7 +14538,7 @@ paths:
       summary: Returns the poolID for a specified denom input.
       operationId: DenomPoolId
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14586,7 +14586,7 @@ paths:
         query endpoint
       operationId: FeeTokens
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14641,7 +14641,7 @@ paths:
       summary: DenomSpotPrice returns all spot prices by each registered token denom.
       operationId: DenomSpotPrice
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14688,10 +14688,10 @@ paths:
   /cosmos/auth/v1beta1/account_info/{address}:
     get:
       summary: AccountInfo queries account info which is common to all account types.
-      description: 'Since: cosmos-sdk 0.47'
+      description: "Since: cosmos-sdk 0.47"
       operationId: AccountInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15107,7 +15107,7 @@ paths:
         Since: cosmos-sdk 0.43
       operationId: Accounts
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15578,7 +15578,7 @@ paths:
       summary: Account returns account details based on address.
       operationId: Account
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15967,17 +15967,17 @@ paths:
   /cosmos/auth/v1beta1/address_by_id/{id}:
     get:
       summary: AccountAddressByID returns account address based on account number.
-      description: 'Since: cosmos-sdk 0.46.2'
+      description: "Since: cosmos-sdk 0.46.2"
       operationId: AccountAddressByID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
             properties:
               account_address:
                 type: string
-            description: 'Since: cosmos-sdk 0.46.2'
+            description: "Since: cosmos-sdk 0.46.2"
             title: >-
               QueryAccountAddressByIDResponse is the response type for
               AccountAddressByID rpc method
@@ -16201,10 +16201,10 @@ paths:
   /cosmos/auth/v1beta1/bech32:
     get:
       summary: Bech32Prefix queries bech32Prefix
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: Bech32Prefix
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -16416,10 +16416,10 @@ paths:
   /cosmos/auth/v1beta1/bech32/{address_bytes}:
     get:
       summary: AddressBytesToString converts Account Address bytes to string
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: AddressBytesToString
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -16637,10 +16637,10 @@ paths:
   /cosmos/auth/v1beta1/bech32/{address_string}:
     get:
       summary: AddressStringToBytes converts Address string to bytes
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: AddressStringToBytes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -16858,10 +16858,10 @@ paths:
   /cosmos/auth/v1beta1/module_accounts:
     get:
       summary: ModuleAccounts returns all the existing module accounts.
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: ModuleAccounts
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17255,7 +17255,7 @@ paths:
       summary: ModuleAccountByName returns the module account info by module name
       operationId: ModuleAccountByName
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17645,7 +17645,7 @@ paths:
       summary: Params queries all parameters.
       operationId: AuthParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17873,7 +17873,7 @@ paths:
       summary: Returns list of `Authorization`, granted to the grantee by the granter.
       operationId: Grants
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18375,10 +18375,10 @@ paths:
   /cosmos/authz/v1beta1/grants/grantee/{grantee}:
     get:
       summary: GranteeGrants returns a list of `GrantAuthorization` by grantee.
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: GranteeGrants
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18865,10 +18865,10 @@ paths:
   /cosmos/authz/v1beta1/grants/granter/{granter}:
     get:
       summary: GranterGrants returns list of `GrantAuthorization`, granted by granter.
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: GranterGrants
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19362,7 +19362,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: AllBalances
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19510,7 +19510,7 @@ paths:
       summary: Balance queries the balance of a single coin for a single account.
       operationId: Balance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19585,7 +19585,7 @@ paths:
         Since: cosmos-sdk 0.46
       operationId: DenomOwners
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19746,7 +19746,7 @@ paths:
         denominations.
       operationId: DenomsMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19809,8 +19809,8 @@ paths:
                         displayed in clients.
                     name:
                       type: string
-                      description: 'Since: cosmos-sdk 0.43'
-                      title: 'name defines the name of the token (eg: Cosmos Atom)'
+                      description: "Since: cosmos-sdk 0.43"
+                      title: "name defines the name of the token (eg: Cosmos Atom)"
                     symbol:
                       type: string
                       description: >-
@@ -19955,7 +19955,7 @@ paths:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20016,8 +20016,8 @@ paths:
                       displayed in clients.
                   name:
                     type: string
-                    description: 'Since: cosmos-sdk 0.43'
-                    title: 'name defines the name of the token (eg: Cosmos Atom)'
+                    description: "Since: cosmos-sdk 0.43"
+                    title: "name defines the name of the token (eg: Cosmos Atom)"
                   symbol:
                     type: string
                     description: >-
@@ -20089,7 +20089,7 @@ paths:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadataByQueryString
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20150,8 +20150,8 @@ paths:
                       displayed in clients.
                   name:
                     type: string
-                    description: 'Since: cosmos-sdk 0.43'
-                    title: 'name defines the name of the token (eg: Cosmos Atom)'
+                    description: "Since: cosmos-sdk 0.43"
+                    title: "name defines the name of the token (eg: Cosmos Atom)"
                   symbol:
                     type: string
                     description: >-
@@ -20224,7 +20224,7 @@ paths:
       summary: Params queries the parameters of x/bank module.
       operationId: BankParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20304,7 +20304,7 @@ paths:
         Since: cosmos-sdk 0.47
       operationId: SendEnabled
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20460,7 +20460,7 @@ paths:
         Since: cosmos-sdk 0.46
       operationId: SpendableBalances
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20613,7 +20613,7 @@ paths:
         Since: cosmos-sdk 0.47
       operationId: SpendableBalanceByDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20686,7 +20686,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: TotalSupply
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20827,7 +20827,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: SupplyOf
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20890,10 +20890,10 @@ paths:
         contain
 
         a valid and supported path, including app, custom, p2p, and store.
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: ABCIQuery
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21182,7 +21182,7 @@ paths:
       summary: GetLatestBlock returns the latest block.
       operationId: GetLatestBlock
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21205,7 +21205,7 @@ paths:
                     title: PartsetHeader
                 title: BlockID
               block:
-                title: 'Deprecated: please use `sdk_block` instead'
+                title: "Deprecated: please use `sdk_block` instead"
                 type: object
                 properties:
                   header:
@@ -21789,7 +21789,7 @@ paths:
                       Commit contains the evidence that a block was committed by
                       a set of validators.
               sdk_block:
-                title: 'Since: cosmos-sdk 0.47'
+                title: "Since: cosmos-sdk 0.47"
                 type: object
                 properties:
                   header:
@@ -22588,7 +22588,7 @@ paths:
       summary: GetBlockByHeight queries block for given height.
       operationId: GetBlockByHeight
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -22611,7 +22611,7 @@ paths:
                     title: PartsetHeader
                 title: BlockID
               block:
-                title: 'Deprecated: please use `sdk_block` instead'
+                title: "Deprecated: please use `sdk_block` instead"
                 type: object
                 properties:
                   header:
@@ -23195,7 +23195,7 @@ paths:
                       Commit contains the evidence that a block was committed by
                       a set of validators.
               sdk_block:
-                title: 'Since: cosmos-sdk 0.47'
+                title: "Since: cosmos-sdk 0.47"
                 type: object
                 properties:
                   header:
@@ -24000,7 +24000,7 @@ paths:
       summary: GetNodeInfo queries the current node info.
       operationId: GetNodeInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -24072,7 +24072,7 @@ paths:
                       title: Module is the type for VersionInfo
                   cosmos_sdk_version:
                     type: string
-                    title: 'Since: cosmos-sdk 0.43'
+                    title: "Since: cosmos-sdk 0.43"
                 description: VersionInfo is the type for the GetNodeInfoResponse message.
             description: >-
               GetNodeInfoResponse is the response type for the Query/GetNodeInfo
@@ -24278,7 +24278,7 @@ paths:
       summary: GetSyncing queries node syncing.
       operationId: GetSyncing
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -24489,7 +24489,7 @@ paths:
       summary: GetLatestValidatorSet queries latest validator-set.
       operationId: GetLatestValidatorSet
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -24973,7 +24973,7 @@ paths:
       summary: GetValidatorSetByHeight queries validator-set at a given height.
       operationId: GetValidatorSetByHeight
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25467,7 +25467,7 @@ paths:
         Since: cosmos-sdk 0.50
       operationId: CommunityPool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25532,7 +25532,7 @@ paths:
         validator.
       operationId: DelegationTotalRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25623,7 +25623,7 @@ paths:
       summary: DelegationRewards queries the total rewards accrued by a delegation.
       operationId: DelegationRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25690,7 +25690,7 @@ paths:
       summary: DelegatorValidators queries the validators of a delegator.
       operationId: DelegatorValidators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25740,7 +25740,7 @@ paths:
       summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: DelegatorWithdrawAddress
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25786,7 +25786,7 @@ paths:
       summary: Params queries params of the distribution module.
       operationId: DistributionParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25847,7 +25847,7 @@ paths:
         self-delegation rewards for validator
       operationId: ValidatorDistributionInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25931,7 +25931,7 @@ paths:
       summary: ValidatorCommission queries accumulated commission for a validator.
       operationId: ValidatorCommission
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25996,7 +25996,7 @@ paths:
       summary: ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: ValidatorOutstandingRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -26068,7 +26068,7 @@ paths:
       summary: ValidatorSlashes queries slash events of a validator.
       operationId: ValidatorSlashes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -26223,7 +26223,7 @@ paths:
       summary: AllEvidence queries all evidence.
       operationId: AllEvidence
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -26693,7 +26693,7 @@ paths:
       summary: Evidence queries evidence based on evidence hash.
       operationId: Evidence
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -27095,7 +27095,7 @@ paths:
       summary: Allowance returns granted allowance to the grantee by the granter.
       operationId: Allowance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -27406,7 +27406,7 @@ paths:
       summary: Allowances returns all the grants for the given grantee address.
       operationId: Allowances
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -27782,10 +27782,10 @@ paths:
   /cosmos/feegrant/v1beta1/issued/{granter}:
     get:
       summary: AllowancesByGranter returns all the grants given by an address
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: AllowancesByGranter
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -28166,7 +28166,7 @@ paths:
       summary: Params queries all parameters of the gov module.
       operationId: GovParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -28447,7 +28447,7 @@ paths:
       summary: Proposals queries all proposals based on given status.
       operationId: Proposals
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -28665,7 +28665,7 @@ paths:
                         proposal's voting period has ended.
                       type: object
                       properties:
-                        'yes':
+                        "yes":
                           type: string
                           description: yes is the number of yes votes on a proposal.
                         abstain:
@@ -28673,7 +28673,7 @@ paths:
                           description: >-
                             abstain is the number of abstain votes on a
                             proposal.
-                        'no':
+                        "no":
                           type: string
                           description: no is the number of no votes on a proposal.
                         no_with_veto:
@@ -29040,7 +29040,7 @@ paths:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: Proposal
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -29254,13 +29254,13 @@ paths:
                       proposal's voting period has ended.
                     type: object
                     properties:
-                      'yes':
+                      "yes":
                         type: string
                         description: yes is the number of yes votes on a proposal.
                       abstain:
                         type: string
                         description: abstain is the number of abstain votes on a proposal.
-                      'no':
+                      "no":
                         type: string
                         description: no is the number of no votes on a proposal.
                       no_with_veto:
@@ -29518,7 +29518,7 @@ paths:
       summary: Deposits queries all deposits of a single proposal.
       operationId: Deposits
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -29850,7 +29850,7 @@ paths:
         depositor address.
       operationId: Deposit
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -30106,7 +30106,7 @@ paths:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: TallyResult
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -30115,13 +30115,13 @@ paths:
                 description: tally defines the requested tally.
                 type: object
                 properties:
-                  'yes':
+                  "yes":
                     type: string
                     description: yes is the number of yes votes on a proposal.
                   abstain:
                     type: string
                     description: abstain is the number of abstain votes on a proposal.
-                  'no':
+                  "no":
                     type: string
                     description: no is the number of no votes on a proposal.
                   no_with_veto:
@@ -30340,7 +30340,7 @@ paths:
       summary: Votes queries votes of a given proposal.
       operationId: Votes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -30703,7 +30703,7 @@ paths:
         has already been finished.
       operationId: Vote
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -30989,7 +30989,7 @@ paths:
       summary: AnnualProvisions current minting annual provisions value.
       operationId: AnnualProvisions
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31032,7 +31032,7 @@ paths:
       summary: Inflation returns the current minting inflation value.
       operationId: Inflation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31075,7 +31075,7 @@ paths:
       summary: Params returns the total set of minting parameters.
       operationId: CosmosMintParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31137,7 +31137,7 @@ paths:
         key.
       operationId: Params
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31195,10 +31195,10 @@ paths:
       summary: >-
         Subspaces queries for all registered subspaces and all keys for a
         subspace.
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: Subspaces
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31259,7 +31259,7 @@ paths:
       summary: Params queries the parameters of slashing module
       operationId: SlashingParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31316,7 +31316,7 @@ paths:
       summary: SigningInfos queries signing info of all validators
       operationId: SigningInfos
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31495,7 +31495,7 @@ paths:
       summary: SigningInfo queries the signing info of given cons address
       operationId: SigningInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31602,7 +31602,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: DelegatorDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -31950,7 +31950,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: Redelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -32398,7 +32398,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: DelegatorUnbondingDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -32760,7 +32760,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: StakingDelegatorValidators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -33387,7 +33387,7 @@ paths:
         pair.
       operationId: DelegatorValidator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -33936,7 +33936,7 @@ paths:
       summary: HistoricalInfo queries the historical info for given height.
       operationId: HistoricalInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -34594,7 +34594,7 @@ paths:
       summary: Parameters queries the staking parameters.
       operationId: StakingParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -34854,7 +34854,7 @@ paths:
       summary: Pool queries the pool info.
       operationId: StakingPool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -35074,7 +35074,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: Validators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -35699,7 +35699,7 @@ paths:
       summary: Validator queries validator info for given validator address.
       operationId: Validator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -36248,7 +36248,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: ValidatorDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -36588,7 +36588,7 @@ paths:
       summary: Delegation queries delegate info for given validator delegator pair.
       operationId: Delegation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -36858,7 +36858,7 @@ paths:
         pair.
       operationId: UnbondingDelegation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -37140,7 +37140,7 @@ paths:
         gas if the pagination field is incorrectly set.
       operationId: ValidatorUnbondingDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -37493,13 +37493,13 @@ paths:
   /cosmos/tx/v1beta1/decode:
     post:
       summary: TxDecode decodes the transaction.
-      description: 'Since: cosmos-sdk 0.47'
+      description: "Since: cosmos-sdk 0.47"
       operationId: TxDecode
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.TxDecodeResponse'
+            $ref: "#/definitions/cosmos.tx.v1beta1.TxDecodeResponse"
         default:
           description: An unexpected error response.
           schema:
@@ -37715,10 +37715,10 @@ paths:
   /cosmos/tx/v1beta1/decode/amino:
     post:
       summary: TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
-      description: 'Since: cosmos-sdk 0.47'
+      description: "Since: cosmos-sdk 0.47"
       operationId: TxDecodeAmino
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -37950,10 +37950,10 @@ paths:
   /cosmos/tx/v1beta1/encode:
     post:
       summary: TxEncode encodes the transaction.
-      description: 'Since: cosmos-sdk 0.47'
+      description: "Since: cosmos-sdk 0.47"
       operationId: TxEncode
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -38166,16 +38166,16 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.TxEncodeRequest'
+            $ref: "#/definitions/cosmos.tx.v1beta1.TxEncodeRequest"
       tags:
         - Service
   /cosmos/tx/v1beta1/encode/amino:
     post:
       summary: TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
-      description: 'Since: cosmos-sdk 0.47'
+      description: "Since: cosmos-sdk 0.47"
       operationId: TxEncodeAmino
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -38409,7 +38409,7 @@ paths:
       summary: Simulate simulates executing a transaction for estimating gas usage.
       operationId: Simulate
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -38876,7 +38876,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.SimulateRequest'
+            $ref: "#/definitions/cosmos.tx.v1beta1.SimulateRequest"
       tags:
         - Service
   /cosmos/tx/v1beta1/txs:
@@ -38884,10 +38884,10 @@ paths:
       summary: GetTxsEvent fetches txs by event.
       operationId: GetTxsEvent
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.GetTxsEventResponse'
+            $ref: "#/definitions/cosmos.tx.v1beta1.GetTxsEventResponse"
         default:
           description: An unexpected error response.
           schema:
@@ -39203,7 +39203,7 @@ paths:
       summary: BroadcastTx broadcast transaction.
       operationId: BroadcastTx
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -39772,13 +39772,13 @@ paths:
   /cosmos/tx/v1beta1/txs/block/{height}:
     get:
       summary: GetBlockWithTxs fetches a block with decoded txs.
-      description: 'Since: cosmos-sdk 0.45.2'
+      description: "Since: cosmos-sdk 0.45.2"
       operationId: GetBlockWithTxs
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.GetBlockWithTxsResponse'
+            $ref: "#/definitions/cosmos.tx.v1beta1.GetBlockWithTxsResponse"
         default:
           description: An unexpected error response.
           schema:
@@ -40043,10 +40043,10 @@ paths:
       summary: GetTx fetches a tx by hash.
       operationId: GetTx
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.GetTxResponse'
+            $ref: "#/definitions/cosmos.tx.v1beta1.GetTxResponse"
         default:
           description: An unexpected error response.
           schema:
@@ -40254,7 +40254,7 @@ paths:
       summary: AppliedPlan queries a previously applied upgrade plan by its name.
       operationId: AppliedPlan
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -40473,17 +40473,17 @@ paths:
   /cosmos/upgrade/v1beta1/authority:
     get:
       summary: Returns the account with authority to conduct upgrades
-      description: 'Since: cosmos-sdk 0.46'
+      description: "Since: cosmos-sdk 0.46"
       operationId: Authority
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
             properties:
               address:
                 type: string
-            description: 'Since: cosmos-sdk 0.46'
+            description: "Since: cosmos-sdk 0.46"
             title: QueryAuthorityResponse is the response type for Query/Authority
         default:
           description: An unexpected error response.
@@ -40686,7 +40686,7 @@ paths:
       summary: CurrentPlan queries the current upgrade plan.
       operationId: CurrentPlan
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -41123,10 +41123,10 @@ paths:
   /cosmos/upgrade/v1beta1/module_versions:
     get:
       summary: ModuleVersions queries the list of module versions from state.
-      description: 'Since: cosmos-sdk 0.43'
+      description: "Since: cosmos-sdk 0.43"
       operationId: ModuleVersions
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -41379,7 +41379,7 @@ paths:
         (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
       operationId: UpgradedConsensusState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -41387,7 +41387,7 @@ paths:
               upgraded_consensus_state:
                 type: string
                 format: byte
-                title: 'Since: cosmos-sdk 0.43'
+                title: "Since: cosmos-sdk 0.43"
             description: >-
               QueryUpgradedConsensusStateResponse is the response type for the
               Query/UpgradedConsensusState
@@ -42719,7 +42719,7 @@ definitions:
                 "@type": "type.googleapis.com/google.protobuf.Duration",
                 "value": "1.212s"
               }
-    title: 'Deprecated: please use the alternative in x/poolmanager'
+    title: "Deprecated: please use the alternative in x/poolmanager"
   osmosis.gamm.v1beta1.QueryPoolTypeResponse:
     type: object
     properties:
@@ -43160,7 +43160,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    title: 'Deprecated: please use the alternative in x/poolmanager'
+    title: "Deprecated: please use the alternative in x/poolmanager"
   osmosis.gamm.v1beta1.QueryTotalSharesResponse:
     type: object
     properties:
@@ -43341,7 +43341,7 @@ definitions:
             around the
 
             duration for which a given denom is locked.
-        title: Active gagues that match denom in query
+        title: Active gauges that match denom in query
       pagination:
         title: Pagination defines pagination for the response
         type: object
@@ -43518,7 +43518,7 @@ definitions:
             around the
 
             duration for which a given denom is locked.
-        title: Active gagues only
+        title: Active gauges only
       pagination:
         title: Pagination defines pagination for the response
         type: object
@@ -43821,7 +43821,7 @@ definitions:
           the
 
           duration for which a given denom is locked.
-        title: Gauge that corresponds to provided gague ID
+        title: Gauge that corresponds to provided gauge ID
   osmosis.incentives.GaugeWeight:
     type: object
     properties:
@@ -45144,7 +45144,7 @@ definitions:
             around the
 
             duration for which a given denom is locked.
-        title: Upcoming gagues that match denom in query
+        title: Upcoming gauges that match denom in query
       pagination:
         title: Pagination defines pagination for the response
         type: object
@@ -48438,7 +48438,7 @@ definitions:
     properties:
       account_address:
         type: string
-    description: 'Since: cosmos-sdk 0.46.2'
+    description: "Since: cosmos-sdk 0.46.2"
     title: >-
       QueryAccountAddressByIDResponse is the response type for
       AccountAddressByID rpc method
@@ -50485,8 +50485,8 @@ definitions:
           displayed in clients.
       name:
         type: string
-        description: 'Since: cosmos-sdk 0.43'
-        title: 'name defines the name of the token (eg: Cosmos Atom)'
+        description: "Since: cosmos-sdk 0.43"
+        title: "name defines the name of the token (eg: Cosmos Atom)"
       symbol:
         type: string
         description: >-
@@ -50664,8 +50664,8 @@ definitions:
               displayed in clients.
           name:
             type: string
-            description: 'Since: cosmos-sdk 0.43'
-            title: 'name defines the name of the token (eg: Cosmos Atom)'
+            description: "Since: cosmos-sdk 0.43"
+            title: "name defines the name of the token (eg: Cosmos Atom)"
           symbol:
             type: string
             description: >-
@@ -50757,8 +50757,8 @@ definitions:
               displayed in clients.
           name:
             type: string
-            description: 'Since: cosmos-sdk 0.43'
-            title: 'name defines the name of the token (eg: Cosmos Atom)'
+            description: "Since: cosmos-sdk 0.43"
+            title: "name defines the name of the token (eg: Cosmos Atom)"
           symbol:
             type: string
             description: >-
@@ -50913,8 +50913,8 @@ definitions:
                 displayed in clients.
             name:
               type: string
-              description: 'Since: cosmos-sdk 0.43'
-              title: 'name defines the name of the token (eg: Cosmos Atom)'
+              description: "Since: cosmos-sdk 0.43"
+              title: "name defines the name of the token (eg: Cosmos Atom)"
             symbol:
               type: string
               description: >-
@@ -51862,7 +51862,7 @@ definitions:
             title: PartsetHeader
         title: BlockID
       block:
-        title: 'Deprecated: please use `sdk_block` instead'
+        title: "Deprecated: please use `sdk_block` instead"
         type: object
         properties:
           header:
@@ -52437,7 +52437,7 @@ definitions:
               Commit contains the evidence that a block was committed by a set
               of validators.
       sdk_block:
-        title: 'Since: cosmos-sdk 0.47'
+        title: "Since: cosmos-sdk 0.47"
         type: object
         properties:
           header:
@@ -53045,7 +53045,7 @@ definitions:
             title: PartsetHeader
         title: BlockID
       block:
-        title: 'Deprecated: please use `sdk_block` instead'
+        title: "Deprecated: please use `sdk_block` instead"
         type: object
         properties:
           header:
@@ -53620,7 +53620,7 @@ definitions:
               Commit contains the evidence that a block was committed by a set
               of validators.
       sdk_block:
-        title: 'Since: cosmos-sdk 0.47'
+        title: "Since: cosmos-sdk 0.47"
         type: object
         properties:
           header:
@@ -54493,7 +54493,7 @@ definitions:
               title: Module is the type for VersionInfo
           cosmos_sdk_version:
             type: string
-            title: 'Since: cosmos-sdk 0.43'
+            title: "Since: cosmos-sdk 0.43"
         description: VersionInfo is the type for the GetNodeInfoResponse message.
     description: >-
       GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC
@@ -55084,7 +55084,7 @@ definitions:
           title: Module is the type for VersionInfo
       cosmos_sdk_version:
         type: string
-        title: 'Since: cosmos-sdk 0.43'
+        title: "Since: cosmos-sdk 0.43"
     description: VersionInfo is the type for the GetNodeInfoResponse message.
   tendermint.crypto.PublicKey:
     type: object
@@ -59032,13 +59032,13 @@ definitions:
           proposal's voting period has ended.
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
             description: yes is the number of yes votes on a proposal.
           abstain:
             type: string
             description: abstain is the number of abstain votes on a proposal.
-          'no':
+          "no":
             type: string
             description: no is the number of no votes on a proposal.
           no_with_veto:
@@ -59465,13 +59465,13 @@ definitions:
               proposal's voting period has ended.
             type: object
             properties:
-              'yes':
+              "yes":
                 type: string
                 description: yes is the number of yes votes on a proposal.
               abstain:
                 type: string
                 description: abstain is the number of abstain votes on a proposal.
-              'no':
+              "no":
                 type: string
                 description: no is the number of no votes on a proposal.
               no_with_veto:
@@ -59725,13 +59725,13 @@ definitions:
                 proposal's voting period has ended.
               type: object
               properties:
-                'yes':
+                "yes":
                   type: string
                   description: yes is the number of yes votes on a proposal.
                 abstain:
                   type: string
                   description: abstain is the number of abstain votes on a proposal.
-                'no':
+                "no":
                   type: string
                   description: no is the number of no votes on a proposal.
                 no_with_veto:
@@ -59804,13 +59804,13 @@ definitions:
         description: tally defines the requested tally.
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
             description: yes is the number of yes votes on a proposal.
           abstain:
             type: string
             description: abstain is the number of abstain votes on a proposal.
-          'no':
+          "no":
             type: string
             description: no is the number of no votes on a proposal.
           no_with_veto:
@@ -59990,13 +59990,13 @@ definitions:
   cosmos.gov.v1beta1.TallyResult:
     type: object
     properties:
-      'yes':
+      "yes":
         type: string
         description: yes is the number of yes votes on a proposal.
       abstain:
         type: string
         description: abstain is the number of abstain votes on a proposal.
-      'no':
+      "no":
         type: string
         description: no is the number of no votes on a proposal.
       no_with_veto:
@@ -64756,7 +64756,7 @@ definitions:
       signer_infos:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.SignerInfo'
+          $ref: "#/definitions/cosmos.tx.v1beta1.SignerInfo"
         description: >-
           signer_infos defines the signing modes for the required signers. The
           number
@@ -65293,7 +65293,7 @@ definitions:
       txs:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+          $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: txs are the transactions in the block.
       block_id:
         type: object
@@ -65917,7 +65917,7 @@ definitions:
     type: object
     properties:
       tx:
-        $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+        $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: tx is the queried transaction.
       tx_response:
         type: object
@@ -66236,7 +66236,7 @@ definitions:
       txs:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+          $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: txs is the list of queried transactions.
       tx_responses:
         type: array
@@ -66674,7 +66674,7 @@ definitions:
               Each new EIP191 sign mode should be accompanied by an associated
               ADR.
       multi:
-        $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo.Multi'
+        $ref: "#/definitions/cosmos.tx.v1beta1.ModeInfo.Multi"
         title: multi represents a nested multisig signer
     description: ModeInfo describes the signing mode of a single or nested multisig signer.
   cosmos.tx.v1beta1.ModeInfo.Multi:
@@ -66702,7 +66702,7 @@ definitions:
       mode_infos:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo'
+          $ref: "#/definitions/cosmos.tx.v1beta1.ModeInfo"
         title: |-
           mode_infos is the corresponding modes of the signers of the multisig
           which could include nested multisig public keys
@@ -66976,7 +66976,7 @@ definitions:
                 "value": "1.212s"
               }
       mode_info:
-        $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo'
+        $ref: "#/definitions/cosmos.tx.v1beta1.ModeInfo"
         title: |-
           mode_info describes the signing mode of the signer and is a nested
           structure to support nested multisig pubkey's
@@ -66997,7 +66997,7 @@ definitions:
     type: object
     properties:
       tx:
-        $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+        $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: |-
           tx is the transaction to simulate.
           Deprecated. Send raw tx bytes instead.
@@ -67882,7 +67882,7 @@ definitions:
               and can't be handled, they will be ignored
         description: TxBody is the body of a transaction that all signers sign over.
       auth_info:
-        $ref: '#/definitions/cosmos.tx.v1beta1.AuthInfo'
+        $ref: "#/definitions/cosmos.tx.v1beta1.AuthInfo"
         title: |-
           auth_info is the authorization related content of the transaction,
           specifically signers, signer modes and fee
@@ -68494,7 +68494,7 @@ definitions:
     type: object
     properties:
       tx:
-        $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+        $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: tx is the decoded transaction.
     description: |-
       TxDecodeResponse is the response type for the
@@ -68526,7 +68526,7 @@ definitions:
     type: object
     properties:
       tx:
-        $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+        $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: tx is the transaction to encode.
     description: |-
       TxEncodeRequest is the request type for the Service.TxEncode
@@ -68816,7 +68816,7 @@ definitions:
     properties:
       address:
         type: string
-    description: 'Since: cosmos-sdk 0.46'
+    description: "Since: cosmos-sdk 0.46"
     title: QueryAuthorityResponse is the response type for Query/Authority
   cosmos.upgrade.v1beta1.QueryCurrentPlanResponse:
     type: object
@@ -69079,7 +69079,7 @@ definitions:
       upgraded_consensus_state:
         type: string
         format: byte
-        title: 'Since: cosmos-sdk 0.43'
+        title: "Since: cosmos-sdk 0.43"
     description: >-
       QueryUpgradedConsensusStateResponse is the response type for the
       Query/UpgradedConsensusState
